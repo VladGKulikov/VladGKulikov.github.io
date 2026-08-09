@@ -76,8 +76,10 @@ $$-\log_2\frac1n=\log_2 n.$$
 
 This is already Hartley's answer: the number of equiprobable alternatives is measured logarithmically. A non-uniform source requires one additional step—average surprisal using the probabilities of the outcomes themselves:
 
-$$H(P)=\mathbb E_{X\sim P}\!\left[-\log_2 P(X)\right]
-    =-\sum_x P(x)\log_2P(x).$$
+$$
+H(P)=\mathbb E_{X\sim P}\!\left[-\log_2 P(X)\right]
+=-\sum_x P(x)\log_2P(x).
+$$
 
 This is Shannon's formula, developed in detail in Module 2. Here it appears not as notation to memorize in advance, but as the answer to two successive requirements: rare outcomes should be more surprising, and independent stages should contribute additively.
 
@@ -89,8 +91,10 @@ $$q(x_{1:T})=\prod_{t=1}^T q(x_t\mid x_{<t}).$$
 
 Taking a logarithm turns the product into a sum:
 
-$$-\log_2 q(x_{1:T})
-  =\sum_{t=1}^T -\log_2 q(x_t\mid x_{<t}).$$
+$$
+-\log_2 q(x_{1:T})
+  =\sum_{t=1}^T -\log_2 q(x_t\mid x_{<t}).
+$$
 
 For one observed sequence, this quantity is its **negative log-likelihood** (NLL). Averaging such quantities over a dataset gives the model's empirical cross-entropy against the data. This is why NLL and cross-entropy are often used side by side in ML practice, even though one names the loss of an observation or a dataset and the other names an expectation or empirical average.
 
@@ -382,15 +386,19 @@ $$s_r f(a)\le r f(n)\le(s_r+1)f(a).$$
 
 We may divide by $r f(a)$ because $r>0$ and $f(a)>0$:
 
-$$\frac{s_r}{r}
+$$
+\frac{s_r}{r}
  \le \frac{f(n)}{f(a)}
- \le \frac{s_r+1}{r}.\qquad (1)$$
+ \le \frac{s_r+1}{r}.\qquad (1)
+$$
 
 The definition of $s_r$ also gives
 
-$$\frac{s_r}{r}
+$$
+\frac{s_r}{r}
  \le \log_a n
- < \frac{s_r+1}{r}.\qquad (2)$$
+ < \frac{s_r+1}{r}.\qquad (2)
+$$
 
 Both $f(n)/f(a)$ and $\log_a n$ lie in an interval of length $1/r$. Hence
 
@@ -402,9 +410,11 @@ $$\frac{f(n)}{f(a)}=\log_a n.$$
 
 Therefore
 
-$$f(n)=f(a)\log_a n
-     =\frac{f(a)}{\ln a}\ln n
-     =c\ln n.$$
+$$
+f(n)=f(a)\log_a n
+ =\frac{f(a)}{\ln a}\ln n
+ =c\ln n.
+$$
 
 In the non-degenerate case $c>0$; including $f\equiv0$ gives $c\ge0$. $\blacksquare$
 
@@ -420,10 +430,12 @@ Consider a function $H(p_1,\ldots,p_k)$ on finite probability vectors. Relabelin
 
 The key requirement is **weighted grouping**. Suppose we first choose group $i$ with probability $p_i$, then choose outcome $j$ inside it with conditional probability $q_{j\mid i}$. Then
 
-$$H\bigl(p_iq_{j\mid i}:i,j\bigr)
+$$
+H\bigl(p_iq_{j\mid i}:i,j\bigr)
  =H(p_1,\ldots,p_m)
   +\sum_{i=1}^m p_i
-     H(q_{1\mid i},\ldots,q_{k_i\mid i}).$$
+ H(q_{1\mid i},\ldots,q_{k_i\mid i}).
+$$
 
 This is the finite chain rule: uncertainty of the first stage plus average uncertainty of the second.
 
@@ -441,12 +453,14 @@ $$f(N)=H(p_1,\ldots,p_k)+\sum_i p_i f(n_i).$$
 
 Insert the result of §1.9, $f(n)=c\ln n$:
 
-$$\begin{aligned}
+$$
+\begin{aligned}
 H(p_1,\ldots,p_k)
 &=c\ln N-c\sum_i p_i\ln n_i\\
 &=-c\sum_i p_i\ln\frac{n_i}{N}\\
 &=-c\sum_i p_i\ln p_i.
-\end{aligned}$$
+\end{aligned}
+$$
 
 Shannon's formula now holds for every distribution with rational probabilities.
 
@@ -470,8 +484,10 @@ $$H(p_1,\ldots,p_k)=-\sum_i p_i\log_2p_i.$$
 
 It is easy to draw too strong a conclusion here. Rényi entropies
 
-$$H_\alpha(P)=\frac{1}{1-\alpha}\log\sum_i p_i^\alpha,
-\qquad \alpha>0,\ \alpha\ne1,$$
+$$
+H_\alpha(P)=\frac{1}{1-\alpha}\log\sum_i p_i^\alpha,
+\qquad \alpha>0,\ \alpha\ne1,
+$$
 
 are also additive for independent distributions and also equal $\log n$ on the uniform distribution. A logarithmic scale and product additivity therefore do not single out Shannon entropy. What singles it out is **weighted** grouping: the second-stage uncertainty is weighted by the probability of reaching each branch.
 
@@ -491,13 +507,15 @@ $$H_2(U_n)=-\log_2\frac1n=\log_2n.$$
 
 **It is additive on independent products.** For independent $P=(p_i)$ and $Q=(q_j)$,
 
-$$\begin{aligned}
+$$
+\begin{aligned}
 H_2(P\otimes Q)
 &=-\log_2\sum_{i,j}(p_iq_j)^2\\
 &=-\log_2\left(\sum_i p_i^2\right)
-             \left(\sum_j q_j^2\right)\\
+         \left(\sum_j q_j^2\right)\\
 &=H_2(P)+H_2(Q).
-\end{aligned}$$
+\end{aligned}
+$$
 
 **And yet weighted grouping fails.** Let
 
@@ -509,10 +527,12 @@ $$H_2(P)=-\log_2\frac38=\log_2\frac83\approx1.415.$$
 
 Now describe the same choice in two stages: first the group $\{1\}$ or $\{2,3\}$ with probabilities $(1/2,1/2)$, then the outcome inside the selected group. The Shannon-style right-hand side would be
 
-$$H_2\!\left(\frac12,\frac12\right)
+$$
+H_2\!\left(\frac12,\frac12\right)
  +\frac12H_2(1)
  +\frac12H_2\!\left(\frac12,\frac12\right)
- =1+0+\frac12=1.5.$$
+ =1+0+\frac12=1.5.
+$$
 
 The two numbers disagree: $1.415$ against $1.5$. So $H_2$ passes both weaker tests and fails the grouping identity, which is exactly why the derivation above needed the stronger axiom. Note also what this does *not* contradict: §§1.9–1.10 never claimed that a logarithmic scale and product additivity are sufficient. They are necessary consequences of the axioms, and $H_2$ shows they are not enough on their own.
 

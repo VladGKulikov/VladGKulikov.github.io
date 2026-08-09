@@ -189,8 +189,10 @@ $$2.048\ \text{s}.$$
 
 Now imagine that an ANN structure navigates to a shortlist requiring 2000 full vector distances. The corresponding arithmetic is
 
-$$2\cdot2000\cdot1024
-=4.096\cdot10^6\ \text{FLOP},$$
+$$
+2\cdot2000\cdot1024
+=4.096\cdot10^6\ \text{FLOP},
+$$
 
 or 0.4096 ms at the same rate. The ratio of distance arithmetic is 5000.
 

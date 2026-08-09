@@ -48,7 +48,7 @@ Now let the model generate intermediate tokens
 $$
 C_1,C_2,\ldots,C_k
 $$
-before producing the answer \(A\):
+before producing the answer $A$:
 
 $$
 q_\theta(c_{1:k},a\mid x)
@@ -66,7 +66,7 @@ The qualifier *can* matters. A token is not automatically a useful operation. Th
 In the third regime, the system considers alternatives and receives feedback. Examples include:
 
 - self-consistency: sample several trajectories and vote over answers;
-- best-of-\(N\): generate several candidates and rank them with a verifier;
+- best-of-$N$: generate several candidates and rank them with a verifier;
 - beam or tree search;
 - Tree of Thoughts: branch, evaluate partial states, and backtrack;
 - calls to an interpreter, calculator, or test suite;
@@ -86,7 +86,7 @@ This spectrum is more useful than a literal analogy to Solomonoff induction. The
 
 The most direct explanation is computational. Autoregressive generation lets a model apply the same network block repeatedly while carrying forward an expanding state.
 
-Consider parity of \(n\) bits:
+Consider parity of $n$ bits:
 
 $$
 Y=X_1\oplus X_2\oplus\cdots\oplus X_n.
@@ -98,18 +98,18 @@ S_0=0,
 \qquad
 S_t=S_{t-1}\oplus X_t.
 $$
-After \(n\) steps,
+After $n$ steps,
 
 $$
 S_n=Y.
 $$
 ![](assets/information-theory-for-ml/en/module-13/M13_serial_scratchpad_EN.png)
 
-No new data were added to \(X\). The procedure changed: a restricted one-shot readout was replaced by a sequential algorithm.
+No new data were added to $X$. The procedure changed: a restricted one-shot readout was replaced by a sequential algorithm.
 
 > **Here the extra tokens act as computational clock cycles and working memory, not as new observations.**
 
-This is more than an analogy. Under carefully specified computational assumptions, formal results show that intermediate CoT steps enlarge the class of serial computations available to a decoder-only Transformer. For example, with particular restrictions on depth, precision, and representation size, \(T\) CoT steps can implement sequential circuits of size on the order of \(T\). This is not a universal theorem about every modern LLM, but it supports the mechanism: sequential decoding can add computational expressivity.
+This is more than an analogy. Under carefully specified computational assumptions, formal results show that intermediate CoT steps enlarge the class of serial computations available to a decoder-only Transformer. For example, with particular restrictions on depth, precision, and representation size, $T$ CoT steps can implement sequential circuits of size on the order of $T$. This is not a universal theorem about every modern LLM, but it supports the mechanism: sequential decoding can add computational expressivity.
 
 ### When a long scratchpad is most likely to help
 
@@ -127,7 +127,7 @@ For a simple factual query, a long chain may only increase cost and create more 
 
 We can now state the central exact result of the module.
 
-Let \((X,Y^*)\sim P\), where \(X\) is the complete task available to the model and \(Y^*\) is the correct answer. A fixed model constructs an internal chain \(C\) from \(X\) and private randomness \(U\):
+Let $(X,Y^*)\sim P$, where $X$ is the complete task available to the model and $Y^*$ is the correct answer. A fixed model constructs an internal chain $C$ from $X$ and private randomness $U$:
 
 $$
 C=G_\theta(X,U),
@@ -160,15 +160,15 @@ By construction, once the input is known, the distribution of the chain does not
 $$
 p(c\mid x,y^*)=p(c\mid x).
 $$
-Thus \(C\) and \(Y^*\) are conditionally independent given \(X\), so \(I(Y^*;C\mid X)=0\). The remaining identities follow from the definition of conditional mutual information and the chain rule. \(\blacksquare\)
+Thus $C$ and $Y^*$ are conditionally independent given $X$, so $I(Y^*;C\mid X)=0$. The remaining identities follow from the definition of conditional mutual information and the chain rule. $\blacksquare$
 
 Read in words:
 
 > **An internally generated chain tells an ideal observer no new fact about the correct answer beyond the complete input. It reorganizes information that was already available.**
 
-Why can a real model still become more accurate? Because a real model is not an ideal Bayesian observer that instantly computes \(P(Y^*\mid X)\). Its output is constrained by architecture, depth, and learned procedure. A scratchpad changes the available computational path and can make the target function easier for a downstream readout to access.
+Why can a real model still become more accurate? Because a real model is not an ideal Bayesian observer that instantly computes $P(Y^*\mid X)$. Its output is constrained by architecture, depth, and learned procedure. A scratchpad changes the available computational path and can make the target function easier for a downstream readout to access.
 
-Define the model log loss after \(j\) steps as
+Define the model log loss after $j$ steps as
 
 $$
 \mathcal L_j
@@ -179,11 +179,11 @@ $$
 (Y^*\mid X,C_{\le j})
 \right].
 $$
-This loss may decrease because the model uses its intermediate results more effectively. That is a reduction in **model loss**, not in the source quantity \(H(Y^*\mid X)\). Even monotonicity is not guaranteed for a particular model: a bad intermediate step can raise the loss.
+This loss may decrease because the model uses its intermediate results more effectively. That is a reduction in **model loss**, not in the source quantity $H(Y^*\mid X)$. Even monotonicity is not guaranteed for a particular model: a bad intermediate step can raise the loss.
 
 ### When new information really appears
 
-Suppose that after an internal step the system receives an observation \(O\): a retrieval result, database response, sensor reading, hidden test, or environmental reaction. Then
+Suppose that after an internal step the system receives an observation $O$: a retrieval result, database response, sensor reading, hidden test, or environmental reaction. Then
 
 $$
 I(Y^*;X,O)
@@ -213,7 +213,7 @@ The phrase “this step added information” may refer to several different quan
 
 ### True information gain
 
-If \(S_j\) is a random intermediate state, then
+If $S_j$ is a random intermediate state, then
 
 $$
 I(Y^*;S_j\mid S_{j-1})
@@ -234,7 +234,7 @@ So a literal claim that every internal token contributes new bits about the answ
 
 ### Improvement in an auxiliary predictor
 
-A practical alternative is to train a separate predictor \(g_j(y\mid s_j)\) to recover the answer from the state after step \(j\), and measure held-out cross-entropy:
+A practical alternative is to train a separate predictor $g_j(y\mid s_j)$ to recover the answer from the state after step $j$, and measure held-out cross-entropy:
 
 $$
 \operatorname{CE}_j
@@ -281,7 +281,7 @@ An extra budget can be spent in different ways. We can deepen one trajectory, ge
 
 ### Voting over several trajectories
 
-Suppose each independent attempt is correct with probability \(p\). For odd \(N\), the probability that a majority is correct is
+Suppose each independent attempt is correct with probability $p$. For odd $N$, the probability that a majority is correct is
 
 $$
 P_{\mathrm{maj}}(N,p)
@@ -289,13 +289,13 @@ P_{\mathrm{maj}}(N,p)
 \sum_{r=(N+1)/2}^{N}
 {N\choose r}p^r(1-p)^{N-r}.
 $$
-If \(p>1/2\) and the errors are genuinely independent, the majority becomes increasingly reliable. If \(p<1/2\), voting amplifies the systematic error.
+If $p>1/2$ and the errors are genuinely independent, the majority becomes increasingly reliable. If $p<1/2$, voting amplifies the systematic error.
 
 Self-consistency applies a related idea: sample diverse reasoning paths and choose the most frequent final answer. Empirically, this can improve many multistep tasks. Independence, however, is a strong assumption. If every trajectory repeats the same mistaken template, the effective number of independent attempts remains close to one.
 
-### Best-of-\(N\) with an ideal verifier
+### Best-of-$N$ with an ideal verifier
 
-Suppose each candidate is correct with probability \(p\), and an ideal verifier recognizes correctness. The procedure succeeds whenever at least one of \(N\) candidates is correct:
+Suppose each candidate is correct with probability $p$, and an ideal verifier recognizes correctness. The procedure succeeds whenever at least one of $N$ candidates is correct:
 
 $$
 \boxed{
@@ -307,12 +307,12 @@ This formula measures **generator coverage**: did the search produce a valid ans
 
 ### An imperfect verifier
 
-A real verifier assigns a score \(v(x,c)\) and selects the maximum. The outcome now depends on two components:
+A real verifier assigns a score $v(x,c)$ and selects the maximum. The outcome now depends on two components:
 
 1. the generator must include a correct answer;
 2. the verifier must rank it above the incorrect ones.
 
-As \(N\) increases, the first component improves while the second may deteriorate. A larger sample contains more correct solutions, but also more rare incorrect candidates that exploit a weakness of the scorer.
+As $N$ increases, the first component improves while the second may deteriorate. A larger sample contains more correct solutions, but also more rare incorrect candidates that exploit a weakness of the scorer.
 
 It is therefore useful to report two quantities:
 
@@ -333,12 +333,12 @@ There is no universal theorem here that verification is always easier than gener
 
 Intermediate chains and prompt demonstrations are both text inside the context window, but their information roles differ.
 
-Let \(Z\) be a latent task, labeling convention, or rule, and let demonstrations
+Let $Z$ be a latent task, labeling convention, or rule, and let demonstrations
 
 $$
 D=\{(x_i,y_i)\}_{i=1}^{m}
 $$
-be generated conditionally on \(Z\). Then
+be generated conditionally on $Z$. Then
 
 $$
 p(z\mid D)
@@ -464,14 +464,14 @@ We need a quality–cost frontier.
 
 ### Adaptive budgets
 
-Let \(Q(B)\) denote quality under compute budget \(B\). We care not only about the highest point but about the shape of the curve:
+Let $Q(B)$ denote quality under compute budget $B$. We care not only about the highest point but about the shape of the curve:
 
 $$
 B\longmapsto Q(B).
 $$
 Easy prompts may be solved almost immediately. Medium-difficulty prompts may benefit from several samples or a longer trajectory. For tasks beyond the current model’s coverage, extra compute may only produce many variants of the same error.
 
-A study of compute-optimal test-time scaling found that the best way to spend inference compute depends strongly on prompt difficulty. In its setting, adaptive allocation was more than four times as efficient as a best-of-\(N\) baseline; on a subset of tasks, a smaller model with extra inference compute outperformed a model with fourteen times as many parameters at matched FLOPs.
+A study of compute-optimal test-time scaling found that the best way to spend inference compute depends strongly on prompt difficulty. In its setting, adaptive allocation was more than four times as efficient as a best-of-$N$ baseline; on a subset of tasks, a smaller model with extra inference compute outperformed a model with fourteen times as many parameters at matched FLOPs.
 
 ![](assets/information-theory-for-ml/en/module-13/M13_evaluation_frontier_EN.png)
 
@@ -518,7 +518,7 @@ The final group is valuable when it leads to a testable model. It becomes danger
 
 ### Arbitrary and nested states
 
-For arbitrary \(S_{j-1}\) and \(S_j\),
+For arbitrary $S_{j-1}$ and $S_j$,
 
 $$
 I(Y;S_j\mid S_{j-1})
@@ -561,12 +561,12 @@ The nesting condition cannot be silently omitted.
 
 ### An internal step followed by an external observation
 
-Suppose that at step \(j\) the system first constructs an internal state \(C_j\) and then receives an external observation \(O_j\). Let
+Suppose that at step $j$ the system first constructs an internal state $C_j$ and then receives an external observation $O_j$. Let
 
 $$
 H_j=(H_{j-1},C_j,O_j)
 $$
-be the full history. If \(C_j\) is generated from \(H_{j-1}\) and independent randomness, then
+be the full history. If $C_j$ is generated from $H_{j-1}$ and independent randomness, then
 
 $$
 I(Y;C_j\mid H_{j-1})=0.
@@ -578,11 +578,11 @@ I(Y;C_j,O_j\mid H_{j-1})
 =
 I(Y;O_j\mid H_{j-1},C_j).
 $$
-In the complete information accounting, the new signal arrived through \(O_j\). The internal step may determine **which observation to request**, thereby making the observation more valuable, but it did not itself create an external fact.
+In the complete information accounting, the new signal arrived through $O_j$. The internal step may determine **which observation to request**, thereby making the observation more valuable, but it did not itself create an external fact.
 
 ### Cross-entropy of an auxiliary predictor
 
-Let \(g_j(y\mid s_j)\) predict the answer from state \(S_j\). Its expected cross-entropy is
+Let $g_j(y\mid s_j)$ predict the answer from state $S_j$. Its expected cross-entropy is
 
 $$
 \operatorname{CE}_j
@@ -639,7 +639,7 @@ $$
 S_j=F(S_{j-1},U_j),
 \qquad U_j\perp Y\mid S_{j-1}
 $$
-and receives neither \(X\) nor external data, the data-processing inequality gives
+and receives neither $X$ nor external data, the data-processing inequality gives
 
 $$
 I(Y;S_j)\le I(Y;S_{j-1}).
@@ -651,7 +651,7 @@ In an LLM, however, each step typically attends to the original prompt again:
 $$
 S_j=F(S_{j-1},X,U_j).
 $$
-A compressed working state \(S_j\) can therefore have greater mutual information with \(Y\) than \(S_{j-1}\): it has extracted another relevant aspect of \(X\). The complete pair \((X,C_{\le j})\), however, still carries no more information about \(Y\) than \(X\) alone.
+A compressed working state $S_j$ can therefore have greater mutual information with $Y$ than $S_{j-1}$: it has extracted another relevant aspect of $X$. The complete pair $(X,C_{\le j})$, however, still carries no more information about $Y$ than $X$ alone.
 
 This is the correct distinction:
 
@@ -662,7 +662,7 @@ This is the correct distinction:
 
 Information theory asks where the evidence came from. Computational theory asks which functions can be implemented under a budget.
 
-Under particular assumptions on precision and representation size, a fixed-depth Transformer without CoT is restricted to a class of parallel computations, while \(T\) sequential steps can realize circuits of size on the order of \(T\). The two languages therefore complement one another:
+Under particular assumptions on precision and representation size, a fixed-depth Transformer without CoT is restricted to a class of parallel computations, while $T$ sequential steps can realize circuits of size on the order of $T$. The two languages therefore complement one another:
 
 - mutual information accounts for available evidence;
 - computational expressivity accounts for the ability to transform that evidence into an answer.
