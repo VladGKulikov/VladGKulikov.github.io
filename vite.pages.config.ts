@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/open-courses/",
+  base: "/",
   plugins: [react()],
   publicDir: "public",
   build: {

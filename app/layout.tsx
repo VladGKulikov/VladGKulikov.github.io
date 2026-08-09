@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Vlad Kulikov · Open Courses",
   description:
-    "Открытая библиотека курсов по современным LLM, reinforcement learning и теории информации для машинного обучения.",
+    "Личная страница Влада Куликова и открытая библиотека курсов по современным LLM, reinforcement learning и теории информации для машинного обучения.",
   openGraph: {
     title: "Vlad Kulikov · Open Courses",
     description:

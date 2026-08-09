@@ -51,10 +51,21 @@ const copy = {
     brand: "Открытые курсы",
     author: "Влад Куликов",
     home: "Главная",
-    eyebrow: "Публичная библиотека · RU / EN",
-    heroTitle: "Три курса о том, как устроены современные интеллектуальные системы.",
+    eyebrow: "AI / ML · LLM · Образование",
+    heroTitle: "Влад Куликов",
     heroText:
-      "Канонические тексты лекций и иллюстрации — без тестов, упражнений, решений и ноутбуков. Читайте здесь или переходите к полному курсу на Stepik.",
+      "Lead AI/ML (LLMs) в FinTech. С 2017 года занимаюсь R&D, разработкой ML и GenAI-систем и консультированием бизнеса по внедрению AI.",
+    viewCourses: "Перейти к курсам",
+    stepikProfile: "Профиль на Stepik",
+    linkedIn: "LinkedIn",
+    aboutTitle: "Обо мне",
+    aboutText:
+      "Моя цель — систематизировать сложные темы и помочь выстроить их понимание на разной глубине: от инженерной интуиции и реализации в коде до математических принципов каждого механизма.",
+    experience: "Практика",
+    experienceText: "ML с 2017 года: исследования, продуктовые ML/GenAI-системы и AI-консалтинг.",
+    education: "Образование и исследования",
+    educationText:
+      "Физтех Харьковского университета; магистратура МФТИ, ФПМИ — «Современные методы искусственного интеллекта». Диссертация и публикации — LLMs, Learning and Reasoning at the Inference Stage.",
     start: "Открыть курс",
     stepik: "Полный курс на Stepik",
     modules: "модулей",
@@ -79,10 +90,21 @@ const copy = {
     brand: "Open courses",
     author: "Vlad Kulikov",
     home: "Home",
-    eyebrow: "Public library · RU / EN",
-    heroTitle: "Three courses on how modern intelligent systems work.",
+    eyebrow: "AI / ML · LLM · Education",
+    heroTitle: "Vlad Kulikov",
     heroText:
-      "Canonical lecture texts and illustrations—without quizzes, exercises, solutions, or notebooks. Read here or continue to the complete Stepik course.",
+      "Lead AI/ML (LLMs) in FinTech. Since 2017, I have worked in R&D, built ML and GenAI systems, and advised businesses on AI adoption.",
+    viewCourses: "Explore the courses",
+    stepikProfile: "Stepik profile",
+    linkedIn: "LinkedIn",
+    aboutTitle: "About",
+    aboutText:
+      "My goal is to organize difficult subjects in one place and make them understandable at several depths—from engineering intuition and code to the mathematical principles behind each mechanism.",
+    experience: "Practice",
+    experienceText: "ML since 2017: research, production ML/GenAI systems, and AI consulting.",
+    education: "Education and research",
+    educationText:
+      "Physics and Technology at Kharkiv University; MIPT master's program in Modern Artificial Intelligence. Thesis and publications: LLMs, Learning and Reasoning at the Inference Stage.",
     start: "Open course",
     stepik: "Complete course on Stepik",
     modules: "modules",
@@ -312,6 +334,20 @@ export function CourseLibrary() {
               <p className="eyebrow">{t.eyebrow}</p>
               <h1>{t.heroTitle}</h1>
               <p className="hero-lead">{t.heroText}</p>
+              <div className="hero-actions">
+                <a className="primary-link" href="#courses">
+                  {t.viewCourses}
+                  <ArrowRight size={18} />
+                </a>
+                <a href="https://stepik.org/users/29821475" target="_blank" rel="noreferrer">
+                  {t.stepikProfile}
+                  <ExternalLink size={16} />
+                </a>
+                <a href="https://www.linkedin.com/in/vlad-g-kulikoff/" target="_blank" rel="noreferrer">
+                  {t.linkedIn}
+                  <ExternalLink size={16} />
+                </a>
+              </div>
             </div>
             <div className="hero-index" aria-hidden="true">
               <span>LLM</span>
@@ -320,7 +356,26 @@ export function CourseLibrary() {
             </div>
           </section>
 
-          <section className="catalog" aria-labelledby="catalog-title">
+          <section className="about-panel" aria-labelledby="about-title">
+            <div className="about-intro">
+              <p className="eyebrow">{t.aboutTitle}</p>
+              <h2 id="about-title">{t.aboutText}</h2>
+            </div>
+            <div className="about-facts">
+              <article>
+                <span>01</span>
+                <h3>{t.experience}</h3>
+                <p>{t.experienceText}</p>
+              </article>
+              <article>
+                <span>02</span>
+                <h3>{t.education}</h3>
+                <p>{t.educationText}</p>
+              </article>
+            </div>
+          </section>
+
+          <section id="courses" className="catalog" aria-labelledby="catalog-title">
             <div className="section-heading">
               <p className="eyebrow">{t.library}</p>
               <h2 id="catalog-title">{t.allMaterials}</h2>
