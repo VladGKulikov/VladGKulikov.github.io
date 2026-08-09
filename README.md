@@ -1,5 +1,7 @@
 # Vlad Kulikov · Open Courses
 
+Personal website and course library: <https://vladgkulikov.github.io/>
+
 Public bilingual lecture library for three courses:
 
 - Modern LLMs
@@ -17,3 +19,11 @@ The repository contains lecture text and illustrations only. Quizzes, exercises,
 | Information Theory for ML | <https://stepik.org/295409> | <https://stepik.org/295411> |
 
 The canonical authoring repositories are maintained separately. This public repository is a generated, publication-safe copy.
+
+## Author
+
+Vlad Kulikov is a Lead AI/ML (LLMs) in FinTech. He has worked in ML since 2017 across R&D, ML/GenAI systems, and AI consulting.
+
+- [Stepik profile](https://stepik.org/users/29821475)
+- [LinkedIn](https://www.linkedin.com/in/vlad-g-kulikoff/)
+- [GitHub](https://github.com/VladGKulikov)
