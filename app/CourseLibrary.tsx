@@ -58,11 +58,9 @@ const copy = {
     viewCourses: "Перейти к курсам",
     stepikProfile: "Профиль на Stepik",
     linkedIn: "LinkedIn",
-    aboutTitle: "Обо мне",
+    aboutTitle: "О курсах",
     aboutText:
-      "Моя цель — систематизировать сложные темы и помочь выстроить их понимание на разной глубине: от инженерной интуиции и реализации в коде до математических принципов каждого механизма.",
-    experience: "Практика",
-    experienceText: "ML с 2017 года: исследования, продуктовые ML/GenAI-системы и AI-консалтинг.",
+      "Цель этой серии — систематизировать сложные темы и помочь выстроить их понимание на разной глубине: от инженерной интуиции и реализации в коде до математических принципов каждого механизма.",
     education: "Образование и исследования",
     educationText:
       "Физтех Харьковского университета; магистратура МФТИ, ФПМИ — «Современные методы искусственного интеллекта». Диссертация и публикации — LLMs, Learning and Reasoning at the Inference Stage.",
@@ -101,11 +99,9 @@ const copy = {
     viewCourses: "Explore the courses",
     stepikProfile: "Stepik profile",
     linkedIn: "LinkedIn",
-    aboutTitle: "About",
+    aboutTitle: "About the courses",
     aboutText:
-      "My goal is to organize difficult subjects in one place and make them understandable at several depths—from engineering intuition and code to the mathematical principles behind each mechanism.",
-    experience: "Practice",
-    experienceText: "ML since 2017: research, production ML/GenAI systems, and AI consulting.",
+      "The goal of this series is to organize difficult subjects and make them understandable at several depths—from engineering intuition and code to the mathematical principles behind each mechanism.",
     education: "Education and research",
     educationText:
       "Physics and Technology at Kharkiv University; MIPT master's program in Modern Artificial Intelligence. Thesis and publications: LLMs, Learning and Reasoning at the Inference Stage.",
@@ -346,6 +342,10 @@ export function CourseLibrary() {
               <p className="eyebrow">{t.eyebrow}</p>
               <h1>{t.heroTitle}</h1>
               <p className="hero-lead">{t.heroText}</p>
+              <div className="hero-education">
+                <p className="eyebrow">{t.education}</p>
+                <p>{t.educationText}</p>
+              </div>
               <div className="hero-actions">
                 <a className="primary-link" href="#courses">
                   {t.viewCourses}
@@ -365,18 +365,6 @@ export function CourseLibrary() {
               <div className="about-intro">
                 <p className="eyebrow">{t.aboutTitle}</p>
                 <h2 id="about-title">{t.aboutText}</h2>
-              </div>
-              <div className="about-facts">
-                <article>
-                  <span>01</span>
-                  <h3>{t.experience}</h3>
-                  <p>{t.experienceText}</p>
-                </article>
-                <article>
-                  <span>02</span>
-                  <h3>{t.education}</h3>
-                  <p>{t.educationText}</p>
-                </article>
               </div>
             </aside>
           </section>
