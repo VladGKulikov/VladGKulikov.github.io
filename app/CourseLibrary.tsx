@@ -415,6 +415,15 @@ export function CourseLibrary() {
                         {t.start}
                         <ArrowRight size={18} />
                       </button>
+                      <a
+                        className="course-stepik"
+                        href={course.stepik_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t.stepik}
+                        <ExternalLink size={15} />
+                      </a>
                     </article>
                   );
                 })}

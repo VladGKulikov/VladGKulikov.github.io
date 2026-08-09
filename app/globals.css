@@ -486,6 +486,25 @@ a {
   background: var(--card-accent);
 }
 
+.course-stepik {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--ink);
+  border-top: 0;
+  color: var(--ink);
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.course-stepik:hover {
+  background: color-mix(in srgb, var(--card-accent) 12%, var(--paper-light));
+}
+
 .boundary-note {
   display: grid;
   max-width: 1208px;
