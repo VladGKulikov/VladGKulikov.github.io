@@ -66,6 +66,10 @@ const copy = {
     education: "Образование и исследования",
     educationText:
       "Физтех Харьковского университета; магистратура МФТИ, ФПМИ — «Современные методы искусственного интеллекта». Диссертация и публикации — LLMs, Learning and Reasoning at the Inference Stage.",
+    seriesEyebrow: "Развивающаяся серия",
+    seriesTitle: "Текущие курсы",
+    seriesText:
+      "Сейчас в серии три самостоятельных курса. Каждый можно проходить отдельно; новые курсы и открытые материалы будут добавляться.",
     start: "Открыть курс",
     stepik: "Полный курс на Stepik",
     modules: "модулей",
@@ -105,6 +109,10 @@ const copy = {
     education: "Education and research",
     educationText:
       "Physics and Technology at Kharkiv University; MIPT master's program in Modern Artificial Intelligence. Thesis and publications: LLMs, Learning and Reasoning at the Inference Stage.",
+    seriesEyebrow: "An evolving series",
+    seriesTitle: "Current courses",
+    seriesText:
+      "The series currently includes three independent courses. Each stands on its own; new courses and open materials will be added over time.",
     start: "Open course",
     stepik: "Complete course on Stepik",
     modules: "modules",
@@ -140,10 +148,10 @@ function getBaseUrl() {
 
 function parseLocation() {
   if (typeof window === "undefined") {
-    return { language: "ru" as Language, courseKey: null, moduleKey: null };
+    return { language: "en" as Language, courseKey: null, moduleKey: null };
   }
   const params = new URLSearchParams(window.location.search);
-  const language = params.get("lang") === "en" ? "en" : "ru";
+  const language = params.get("lang") === "ru" ? "ru" : "en";
   const courseKey = params.get("course") as CourseKey | null;
   const moduleKey = params.get("module");
   return { language, courseKey, moduleKey };
@@ -195,6 +203,10 @@ export function CourseLibrary() {
     () => activeCourse?.modules.find((module) => module.module_key === moduleKey),
     [activeCourse, moduleKey],
   );
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const updateLocation = useCallback(
     (nextLanguage: Language, nextCourse: CourseKey | null, nextModule: string | null, push = true) => {
@@ -349,36 +361,33 @@ export function CourseLibrary() {
                 </a>
               </div>
             </div>
-            <div className="hero-index" aria-hidden="true">
-              <span>LLM</span>
-              <span>RL</span>
-              <span>IT</span>
-            </div>
-          </section>
-
-          <section className="about-panel" aria-labelledby="about-title">
-            <div className="about-intro">
-              <p className="eyebrow">{t.aboutTitle}</p>
-              <h2 id="about-title">{t.aboutText}</h2>
-            </div>
-            <div className="about-facts">
-              <article>
-                <span>01</span>
-                <h3>{t.experience}</h3>
-                <p>{t.experienceText}</p>
-              </article>
-              <article>
-                <span>02</span>
-                <h3>{t.education}</h3>
-                <p>{t.educationText}</p>
-              </article>
-            </div>
+            <aside className="hero-about" aria-labelledby="about-title">
+              <div className="about-intro">
+                <p className="eyebrow">{t.aboutTitle}</p>
+                <h2 id="about-title">{t.aboutText}</h2>
+              </div>
+              <div className="about-facts">
+                <article>
+                  <span>01</span>
+                  <h3>{t.experience}</h3>
+                  <p>{t.experienceText}</p>
+                </article>
+                <article>
+                  <span>02</span>
+                  <h3>{t.education}</h3>
+                  <p>{t.educationText}</p>
+                </article>
+              </div>
+            </aside>
           </section>
 
           <section id="courses" className="catalog" aria-labelledby="catalog-title">
             <div className="section-heading">
-              <p className="eyebrow">{t.library}</p>
-              <h2 id="catalog-title">{t.allMaterials}</h2>
+              <div>
+                <p className="eyebrow">{t.seriesEyebrow}</p>
+                <h2 id="catalog-title">{t.seriesTitle}</h2>
+              </div>
+              <p className="series-description">{t.seriesText}</p>
             </div>
             <div className="course-grid">
               {courses

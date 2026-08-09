@@ -154,33 +154,20 @@ a {
 }
 
 .hero {
-  position: relative;
   display: grid;
-  min-height: 530px;
-  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
+  min-height: calc(100vh - 72px);
+  grid-template-columns: minmax(0, 1.05fr) minmax(440px, 0.95fr);
   align-items: center;
-  gap: 64px;
+  gap: clamp(48px, 5vw, 80px);
   border-bottom: 1px solid var(--line);
   background-image: linear-gradient(to right, rgba(29, 29, 27, 0.045) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(29, 29, 27, 0.045) 1px, transparent 1px);
   background-size: 32px 32px;
-  padding: 76px max(36px, calc((100vw - 1280px) / 2));
-}
-
-.hero::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 7%;
-  width: 1px;
-  background: var(--accent);
-  content: "";
+  padding: 44px max(36px, calc((100vw - 1280px) / 2));
 }
 
 .hero-copy {
-  position: relative;
-  z-index: 1;
-  max-width: 890px;
+  max-width: 780px;
 }
 
 .eyebrow {
@@ -193,7 +180,7 @@ a {
 }
 
 .hero h1 {
-  max-width: 870px;
+  max-width: 780px;
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(48px, 6.1vw, 88px);
@@ -244,83 +231,27 @@ a {
   border-color: var(--accent);
 }
 
-.hero-index {
-  position: relative;
-  display: grid;
-  aspect-ratio: 1;
-  place-items: center;
-  border: 1px solid var(--ink);
-  border-radius: 50%;
-  background: var(--paper-light);
-}
-
-.hero-index::before,
-.hero-index::after {
-  position: absolute;
-  width: 100%;
-  height: 1px;
-  background: var(--ink);
-  content: "";
-}
-
-.hero-index::before {
-  transform: rotate(60deg);
-}
-
-.hero-index::after {
-  transform: rotate(-60deg);
-}
-
-.hero-index span {
-  position: absolute;
-  z-index: 1;
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--ink);
-  color: white;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.hero-index span:nth-child(1) {
-  top: 12%;
-}
-
-.hero-index span:nth-child(2) {
-  right: 9%;
-  bottom: 16%;
-}
-
-.hero-index span:nth-child(3) {
-  bottom: 16%;
-  left: 9%;
-}
-
-.about-panel {
-  display: grid;
-  max-width: 1280px;
-  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
-  gap: 72px;
-  margin: 0 auto;
-  padding: 96px 36px 16px;
+.hero-about {
+  align-self: center;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper-light) 84%, transparent);
+  padding: 28px 0 0;
 }
 
 .about-intro h2 {
-  max-width: 790px;
+  max-width: 540px;
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(28px, 3.1vw, 44px);
+  font-size: clamp(24px, 1.9vw, 30px);
   font-weight: 500;
-  letter-spacing: -0.035em;
-  line-height: 1.18;
+  letter-spacing: -0.025em;
+  line-height: 1.22;
 }
 
 .about-facts {
   border-top: 1px solid var(--ink);
+  margin-top: 24px;
 }
 
 .about-facts article {
@@ -328,7 +259,7 @@ a {
   grid-template-columns: 38px 1fr;
   border-bottom: 1px solid var(--line);
   column-gap: 18px;
-  padding: 22px 0;
+  padding: 18px 0;
 }
 
 .about-facts span {
@@ -362,6 +293,7 @@ a {
   display: flex;
   align-items: end;
   justify-content: space-between;
+  gap: 48px;
   margin-bottom: 34px;
 }
 
@@ -374,6 +306,15 @@ a {
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(28px, 3vw, 44px);
   font-weight: 500;
+}
+
+.series-description {
+  max-width: 540px;
+  margin: 0;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.5;
 }
 
 .course-grid {
@@ -1014,18 +955,9 @@ a {
     padding: 70px 28px;
   }
 
-  .hero::before {
-    left: 14px;
-  }
-
-  .hero-index {
-    display: none;
-  }
-
-  .about-panel {
-    grid-template-columns: 1fr;
-    gap: 42px;
-    padding: 72px 28px 0;
+  .hero-about {
+    width: 100%;
+    max-width: 780px;
   }
 
   .course-grid {
@@ -1117,8 +1049,8 @@ a {
     justify-content: space-between;
   }
 
-  .about-panel {
-    padding: 62px 18px 0;
+  .hero {
+    padding: 58px 18px;
   }
 
   .catalog {

@@ -22,7 +22,7 @@ The canonical authoring repositories are maintained separately. This public repo
 
 ## Author
 
-Vlad Kulikov is a Lead AI/ML (LLMs) in FinTech. He has worked in ML since 2017 across R&D, ML/GenAI systems, and AI consulting.
+I am a Lead AI/ML specialist focused on LLMs in FinTech. I have worked in ML since 2017 across R&D, ML/GenAI system development, and AI adoption consulting.
 
 - [Stepik profile](https://stepik.org/users/29821475)
 - [LinkedIn](https://www.linkedin.com/in/vlad-g-kulikoff/)

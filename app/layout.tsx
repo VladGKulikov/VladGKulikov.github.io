@@ -5,11 +5,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Vlad Kulikov · Open Courses",
   description:
-    "Личная страница Влада Куликова и открытая библиотека курсов по современным LLM, reinforcement learning и теории информации для машинного обучения.",
+    "Vlad Kulikov's personal website and an open bilingual course library covering modern LLMs, reinforcement learning, and information theory for machine learning.",
   openGraph: {
     title: "Vlad Kulikov · Open Courses",
     description:
-      "Три двуязычных курса: Modern LLMs, RL for LLM и Information Theory for ML.",
+      "An evolving bilingual course series: Modern LLMs, RL for LLM, Information Theory for ML, and more to come.",
     type: "website",
     images: [{ url: "/og.png", width: 1732, height: 910 }],
   },
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );
