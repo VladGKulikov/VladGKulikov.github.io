@@ -104,7 +104,7 @@ const copy = {
       "The goal of this series is to organize difficult subjects and make them understandable at several depths—from engineering intuition and code to the mathematical principles behind each mechanism.",
     education: "Education and research",
     educationText:
-      "Physics and Technology at Kharkiv University; MIPT master's program in Modern Artificial Intelligence. Thesis and publications: LLMs, Learning and Reasoning at the Inference Stage.",
+      "Physics and Technology at Kharkiv University; MIPT University master's program in Modern Artificial Intelligence. Thesis and publications: LLMs, Learning and Reasoning at the Inference Stage.",
     seriesEyebrow: "An evolving series",
     seriesTitle: "Current courses",
     seriesText:
