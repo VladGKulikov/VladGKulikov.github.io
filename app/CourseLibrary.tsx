@@ -294,7 +294,7 @@ export function CourseLibrary() {
               <Menu size={19} />
             </button>
           )}
-          <a href="https://github.com/VladGKulikov" target="_blank" rel="noreferrer">
+          <a href="https://github.com/VladGKulikov/open-courses" target="_blank" rel="noreferrer">
             <Code2 size={17} />
             <span className="desktop-label">GitHub</span>
           </a>
@@ -529,7 +529,7 @@ export function CourseLibrary() {
 
       <footer className="site-footer">
         <span>© 2026 {t.author}</span>
-        <a href="https://github.com/VladGKulikov" target="_blank" rel="noreferrer">
+        <a href="https://github.com/VladGKulikov/open-courses" target="_blank" rel="noreferrer">
           {t.openSource}
           <ExternalLink size={13} />
         </a>
