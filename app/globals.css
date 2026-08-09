@@ -257,7 +257,7 @@ a {
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--paper-light) 84%, transparent);
-  padding: 32px 0;
+  padding: 32px clamp(24px, 2.2vw, 36px);
 }
 
 .about-intro h2 {
