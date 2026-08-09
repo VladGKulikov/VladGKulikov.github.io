@@ -1,0 +1,59 @@
+<svg viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Шпаргалка модуля 9</title>
+  <desc>Формула и лестница KV, потолки и колени, системы, компрессия, метрики, грабли.</desc>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Шпаргалка · Инференс за 60 секунд</text>
+
+  <rect x="40" y="48" width="840" height="54" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="60" y="70" font-size="12.8" font-weight="600">KV/ток = 2·L·H<tspan baseline-shift="sub" font-size="8.7">kv</tspan>·d<tspan baseline-shift="sub" font-size="8.7">h</tspan>·b · лестница: MHA 2 560 → GQA-70B 320 → 8B 128 → MLA 68.625 KiB · SSM: const</text>
+    <text x="60" y="92" font-size="12.8" font-weight="600">70B@1M = 305.2 GiB (327.7 GB) > веса 130.4 GiB (140 GB) · hybrid cache требует отдельной формулы</text>
+  </g>
+
+  <rect x="40" y="116" width="410" height="118" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="140" font-size="16.2" font-weight="700" fill="#2E3440">Roofline декода</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="164" font-size="11.3">потолки: 209.4 → 196.2 @8K → 101.0 @128K → 22.8 @1M</text>
+    <text x="58" y="186" font-size="11.3">интенсивность @128K: 0.48 FLOP/Б — ×613 ниже гребня</text>
+    <text x="58" y="208" font-size="11.3">колени B<tspan baseline-shift="super" font-size="8.1">*</tspan> = W/KV: 14.9 @8K · 3.7 @32K · 0.93 @128K</text>
+    <text x="58" y="226" fill="#4C566A" font-size="13.5" font-weight="600">B=32@8K: 2 129 ток/с — KV-налог ×3.1</text>
+  </g>
+
+  <rect x="470" y="116" width="410" height="118" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="488" y="140" font-size="13.5" font-weight="700" fill="#2E3440">Paged · Prefix</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="164" font-size="10">сценарий block=16: waste 93.75% → 0.37% · арифметическая ёмкость ×16</text>
+    <text x="488" y="186" font-size="13.5" font-weight="600">CoW → префикс-шеринг · TTFT 132.4 → 8.27 мс (×16)</text>
+    <text x="488" y="208" font-size="11.3">API: Anthropic read 0.1× · GPT-5.6 write 1.25× / read 0.1×</text>
+    <text x="488" y="226" fill="#4C566A" font-size="11.3">дизайн промпта: stable — в начало</text>
+  </g>
+
+  <rect x="40" y="248" width="410" height="122" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="272" font-size="16.2" font-weight="700" fill="#2E3440">Платформа</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="296" font-size="11.3">tiers: HBM → DRAM → SSD → remote · CMX: анонс 16.03.2026</text>
+    <text x="58" y="316" font-size="11.3">LMCache: external KV layer · CPU/SSD/Redis/Mooncake/NIXL</text>
+    <text x="58" y="336" font-size="11.1">Mooncake: global pool + transfer + scheduling · reported +59–498%</text>
+    <text x="58" y="356" fill="#4C566A" font-size="11.3">stack: engine + KV tier + transport + KV-aware orchestration</text>
+  </g>
+
+  <rect x="470" y="248" width="410" height="122" rx="12" fill="#F8ECEC" stroke="#BF616A"/>
+  <text x="488" y="272" font-size="13.5" font-weight="700" fill="#2E3440">PD-развод</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="296" font-size="11.3">сценарий: spike 137 мс → chunked (512): интервал 13.1 мс</text>
+    <text x="488" y="316" font-size="11.2" font-weight="600">P/D-пулы настраиваются независимо под TTFT, ITL и transfer</text>
+    <text x="488" y="336" font-size="11.3">Dynamo 1.0: до 7× в конкретном R1 benchmark (vendor)</text>
+    <text x="488" y="356" fill="#4C566A" font-size="13.5" font-weight="600">Goodput = throughput при SLO по TTFT и ITL</text>
+  </g>
+
+  <rect x="40" y="384" width="840" height="62" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="58" y="408" font-size="16.2" font-weight="700" fill="#2E3440">Компрессия: порядок применения рычагов</text>
+  <text x="58" y="428" font-size="11.3" fill="#2E3440">архитектура (GQA/MLA/hybrid) → KV-квантование (учебный 3-bit: ceiling 101 → 174) → tiers →</text>
+  <text x="58" y="442" font-size="11.3" fill="#2E3440">eviction (последний резерв: трейс — StreamingLLM теряет {5, 7, 8}; reasoning чувствителен; защищай границы промпта)</text>
+
+  <rect x="40" y="460" width="840" height="58" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="482" font-size="16.2" font-weight="700" fill="#2E3440">Грабли</text>
+  <text x="58" y="502" font-size="11.3" fill="#2E3440">hybrid cache ≠ обычный GQA · локальный cache ограничен instance · knee @128K &lt; 1 · eviction необратим ·</text>
+  <text x="58" y="516" font-size="11.3" fill="#2E3440">SLO определяет goodput · system claims атрибутируются · arithmetic ceilings служат sanity check</text>
+
+  <text x="30" y="546" font-size="9.5" font-style="italic" fill="#4C566A">развёрнутая версия — раздел 20 лекции; значения воспроизведены проверочным кодом курса</text>
+</svg>

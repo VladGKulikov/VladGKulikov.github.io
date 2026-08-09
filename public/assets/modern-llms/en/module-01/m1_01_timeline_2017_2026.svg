@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">From Transformers to model systems</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">Each era changes the scarce resource and adds another passport field</text>
+<rect x="70" y="190" width="430" height="220" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="238" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">2017–2019</tspan>
+<tspan x="96" dy="29">Parallel training</tspan>
+</text>
+<text x="96" y="306" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="96" dy="0">Transformer · BERT · GPT-2</tspan>
+</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="510" y1="300" x2="552" y2="300" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="570" y="190" width="430" height="220" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="596" y="238" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="596" dy="0">2020–2021</tspan>
+<tspan x="596" dy="29">Scale and in-context learning</tspan>
+</text>
+<text x="596" y="306" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="596" dy="0">GPT-3 · scaling laws · sparse experts</tspan>
+</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1010" y1="300" x2="1052" y2="300" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="1070" y="190" width="430" height="220" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1096" y="238" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="1096" dy="0">2022</tspan>
+<tspan x="1096" dy="29">Controllable behaviour</tspan>
+</text>
+<text x="1096" y="306" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1096" dy="0">Chinchilla · instruction tuning · RLHF</tspan>
+</text>
+<rect x="70" y="475" width="430" height="220" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="523" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">2023</tspan>
+<tspan x="96" dy="29">Inference economics</tspan>
+</text>
+<text x="96" y="591" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="96" dy="0">Llama · GQA · FlashAttention · PEFT</tspan>
+</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="510" y1="585" x2="552" y2="585" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="570" y="475" width="430" height="220" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="596" y="523" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="596" dy="0">2024</tspan>
+<tspan x="596" dy="29">Conditional and hybrid compute</tspan>
+</text>
+<text x="596" y="591" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="596" dy="0">MoE · MLA · Mamba · multimodality</tspan>
+</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1010" y1="585" x2="1052" y2="585" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="1070" y="475" width="430" height="220" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1096" y="523" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="1096" dy="0">2025–2026</tspan>
+<tspan x="1096" dy="29">The model becomes a system</tspan>
+</text>
+<text x="1096" y="591" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1096" dy="0">reasoning effort · tools · agents ·</tspan>
+<tspan x="1096" dy="25">managed training</tspan>
+</text>
+<text x="800" y="795" text-anchor="middle" font-family="Arial,sans-serif" font-size="21" font-weight="700" fill="#4C78A8">
+<tspan x="800" dy="0">Read a release by the architecture and system contract that changed—not by the generation name alone.</tspan>
+</text>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">How to read a model release in one pass</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">Two passports, three estimates, and one evidence ladder</text>
+<rect x="55" y="170" width="470" height="260" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="83" y="222" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="83" dy="0">1 · Model</tspan>
+</text>
+<text x="83" y="264" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="83" dy="0">total/active + precision</tspan>
+<tspan x="83" dy="26">context + modalities</tspan>
+<tspan x="83" dy="26">reasoning + access</tspan>
+<tspan x="83" dy="26">latency + cost</tspan>
+</text>
+<rect x="565" y="170" width="470" height="260" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="593" y="222" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="593" dy="0">2 · System</tspan>
+</text>
+<text x="593" y="264" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="593" dy="0">tools + permissions</tspan>
+<tspan x="593" dy="26">network + sandbox</tspan>
+<tspan x="593" dy="26">shared memory</tspan>
+<tspan x="593" dy="26">evaluation + monitoring</tspan>
+</text>
+<rect x="1075" y="170" width="470" height="260" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1103" y="222" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="1103" dy="0">3 · Arithmetic</tspan>
+</text>
+<text x="1103" y="264" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="1103" dy="0">weights ≈ total × bits/8</tspan>
+<tspan x="1103" dy="26">FLOP/token ≈ 2 × active</tspan>
+<tspan x="1103" dy="26">training ≈ 6ND</tspan>
+</text>
+<rect x="160" y="520" width="1280" height="150" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="188" y="572" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="188" dy="0">4 · Evidence ladder</tspan>
+</text>
+<text x="188" y="614" text-anchor="start" font-family="Arial,sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="188" dy="0">vendor claim → reproduction → paired evaluation → private golden set → production telemetry</tspan>
+</text>
+<text x="800" y="775" text-anchor="middle" font-family="Arial,sans-serif" font-size="21" font-weight="700" fill="#4C78A8">
+<tspan x="800" dy="0">Leave an unknown field unknown: a closed architecture cannot be inferred from behaviour.</tspan>
+</text>
+</svg>

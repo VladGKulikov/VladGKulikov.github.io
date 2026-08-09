@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Online softmax: row state</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19.6" fill="#5B6472">Three quantities are enough to merge a new key tile exactly</text>
+<rect x="70" y="205" width="360" height="230" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="254" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">Tile 1</tspan>
+</text>
+<text x="96" y="295" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="96" dy="0">logits [2, 1]</tspan>
+<tspan x="96" dy="25">values [1, 2]</tspan>
+</text>
+<defs><marker id="a12" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="430" y1="320" x2="520" y2="320" stroke="#4C78A8" stroke-width="3" marker-end="url(#a12)"/>
+<rect x="520" y="190" width="420" height="260" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="546" y="239" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="546" dy="0">State after tile 1</tspan>
+</text>
+<text x="546" y="280" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="546" dy="0">m = 2</tspan>
+<tspan x="546" dy="25">l = 1.367879</tspan>
+<tspan x="546" dy="25">n = 1.735759</tspan>
+</text>
+<defs><marker id="a23" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="940" y1="320" x2="1030" y2="320" stroke="#4C78A8" stroke-width="3" marker-end="url(#a23)"/>
+<rect x="1030" y="205" width="500" height="230" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1056" y="253" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1056" dy="0">Tile 2 raises max to 3</tspan>
+</text>
+<text x="1056" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1056" dy="0">rescale old state by exp(2-3)</tspan>
+<tspan x="1056" dy="25">merge [3, 0.5]</tspan>
+</text>
+<rect x="260" y="570" width="1080" height="165" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="286" y="620" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="286" dy="0">Final state</tspan>
+</text>
+<text x="286" y="662" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="286" dy="0">m = 3 · l = 1.585300 · n = 3.966890 · output n/l = 2.502297</tspan>
+</text>
+</svg>

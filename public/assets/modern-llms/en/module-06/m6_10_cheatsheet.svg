@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="58" y="62" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#20293A">Mixture of Experts: module map</text>
+<text x="58" y="101" font-family="Arial, sans-serif" font-size="19.6" fill="#596579">Architectural sparsity, routing, and systems cost</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#465A73"/></marker></defs>
+<rect x="55" y="190" width="450" height="230" rx="18" fill="#E7F0FB" stroke="#C8D2E1" stroke-width="2"/>
+<text x="80" y="238" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="700" fill="#20293A">
+<tspan x="80" dy="0">Total / active</tspan>
+</text>
+<text x="80" y="277" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="80" dy="0">only with a declared counting convention</tspan>
+</text>
+<rect x="550" y="190" width="450" height="230" rx="18" fill="#E8F6EA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="575" y="238" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="575" dy="0">Router</tspan>
+</text>
+<text x="575" y="277" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="575" dy="0">clean score ≠ selection score ≠ gate</tspan>
+</text>
+<rect x="1045" y="190" width="450" height="230" rx="18" fill="#FFF2D3" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1070" y="238" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1070" dy="0">Balancing</tspan>
+</text>
+<text x="1070" y="277" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="1070" dy="0">aux gradient · z-loss · bias update</tspan>
+</text>
+<rect x="55" y="500" width="450" height="230" rx="18" fill="#EEE8FA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="80" y="548" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="80" dy="0">Experts</tspan>
+</text>
+<text x="80" y="587" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="600" fill="#596579">
+<tspan x="80" dy="0">fine-grained ≠ semantic skills</tspan>
+<tspan x="80" dy="24">shared ≠ known content</tspan>
+</text>
+<rect x="550" y="500" width="450" height="230" rx="18" fill="#FCE5E8" stroke="#C8D2E1" stroke-width="2"/>
+<text x="575" y="548" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="575" dy="0">Inference</tspan>
+</text>
+<text x="575" y="587" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="575" dy="0">bank storage · all-to-all · hot experts</tspan>
+</text>
+<rect x="1045" y="500" width="450" height="230" rx="18" fill="#E4F6F4" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1070" y="548" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1070" dy="0">LatentMoE</tspan>
+</text>
+<text x="1070" y="587" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="1070" dy="0">discrete top-k in a narrow latent space</tspan>
+</text>
+<text x="800" y="820" text-anchor="middle" font-family="Arial, sans-serif" font-size="23.5" font-weight="700" fill="#465A73">
+<tspan x="800" dy="0">config + code + report + workload telemetry</tspan>
+</text>
+</svg>

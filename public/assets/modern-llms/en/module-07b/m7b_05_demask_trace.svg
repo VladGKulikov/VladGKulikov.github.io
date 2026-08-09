@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4676A8"/></marker></defs>
+<text x="60" y="70" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#202A3B">Demasking: prediction and commitment are separate</text>
+<text x="60" y="108" font-family="Arial, sans-serif" font-size="19.6" fill="#56657A">One forward scores every mask; the sampler commits only a subset</text>
+<rect x="210" y="190" width="1180" height="82" rx="18" fill="#FBE5E8" stroke="#C9D4E2" stroke-width="2"/>
+<text x="228" y="226" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="228" dy="0">s0</tspan>
+</text>
+<text x="228" y="260" text-anchor="start" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#56657A">
+<tspan x="228" dy="0">□ □ □ □ □ □ □ □</tspan>
+</text>
+<line x1="800" y1="278" x2="800" y2="297" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="210" y="305" width="1180" height="82" rx="18" fill="#FFF2CF" stroke="#C9D4E2" stroke-width="2"/>
+<text x="228" y="341" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="228" dy="0">s1</tspan>
+</text>
+<text x="228" y="375" text-anchor="start" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#56657A">
+<tspan x="228" dy="0">□ □ 4 □ □ □ 4 □</tspan>
+</text>
+<line x1="800" y1="393" x2="800" y2="412" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="210" y="420" width="1180" height="82" rx="18" fill="#E8F1FB" stroke="#C9D4E2" stroke-width="2"/>
+<text x="228" y="456" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="228" dy="0">s2</tspan>
+</text>
+<text x="228" y="490" text-anchor="start" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#56657A">
+<tspan x="228" dy="0">□ 1 4 □ □ 2 4 □</tspan>
+</text>
+<line x1="800" y1="508" x2="800" y2="527" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="210" y="535" width="1180" height="82" rx="18" fill="#E8F6EC" stroke="#C9D4E2" stroke-width="2"/>
+<text x="228" y="571" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="228" dy="0">s3</tspan>
+</text>
+<text x="228" y="605" text-anchor="start" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#56657A">
+<tspan x="228" dy="0">3 1 4 □ □ 2 4 3</tspan>
+</text>
+<line x1="800" y1="623" x2="800" y2="642" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="210" y="650" width="1180" height="82" rx="18" fill="#EFE8FA" stroke="#C9D4E2" stroke-width="2"/>
+<text x="228" y="686" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="228" dy="0">s4</tspan>
+</text>
+<text x="228" y="720" text-anchor="start" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#56657A">
+<tspan x="228" dy="0">3 1 4 0 3 2 4 3</tspan>
+</text>
+<text x="800" y="820" text-anchor="middle" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="800" dy="0">Remasking returns uncertain positions to □; token editing can replace an already open token.</tspan>
+</text>
+</svg>

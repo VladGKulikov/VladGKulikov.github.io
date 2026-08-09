@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Hybrid layer schedules</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19.6" fill="#5B6472">Local state caps at the window; global state grows with context</text>
+<rect x="90" y="205" width="145" height="115" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="108" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="20.2" font-weight="700" fill="#2E3440">
+<tspan x="108" dy="0">local W=128</tspan>
+</text>
+<defs><marker id="a8" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="235" y1="262" x2="255" y2="262" stroke="#4C78A8" stroke-width="3" marker-end="url(#a8)"/>
+<rect x="270" y="205" width="145" height="115" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="288" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="19.4" font-weight="700" fill="#2E3440">
+<tspan x="288" dy="0">full context</tspan>
+</text>
+<defs><marker id="a14" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="415" y1="262" x2="435" y2="262" stroke="#4C78A8" stroke-width="3" marker-end="url(#a14)"/>
+<rect x="450" y="205" width="145" height="115" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="468" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="20.2" font-weight="700" fill="#2E3440">
+<tspan x="468" dy="0">local W=128</tspan>
+</text>
+<defs><marker id="a20" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="595" y1="262" x2="615" y2="262" stroke="#4C78A8" stroke-width="3" marker-end="url(#a20)"/>
+<rect x="630" y="205" width="145" height="115" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="648" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="19.4" font-weight="700" fill="#2E3440">
+<tspan x="648" dy="0">full context</tspan>
+</text>
+<defs><marker id="a26" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="775" y1="262" x2="795" y2="262" stroke="#4C78A8" stroke-width="3" marker-end="url(#a26)"/>
+<rect x="810" y="205" width="145" height="115" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="828" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="20.2" font-weight="700" fill="#2E3440">
+<tspan x="828" dy="0">local W=128</tspan>
+</text>
+<defs><marker id="a32" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="955" y1="262" x2="975" y2="262" stroke="#4C78A8" stroke-width="3" marker-end="url(#a32)"/>
+<rect x="990" y="205" width="145" height="115" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1008" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="19.4" font-weight="700" fill="#2E3440">
+<tspan x="1008" dy="0">full context</tspan>
+</text>
+<defs><marker id="a38" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1135" y1="262" x2="1155" y2="262" stroke="#4C78A8" stroke-width="3" marker-end="url(#a38)"/>
+<rect x="1170" y="205" width="145" height="115" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1188" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="20.2" font-weight="700" fill="#2E3440">
+<tspan x="1188" dy="0">local W=128</tspan>
+</text>
+<defs><marker id="a44" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1315" y1="262" x2="1335" y2="262" stroke="#4C78A8" stroke-width="3" marker-end="url(#a44)"/>
+<rect x="1350" y="205" width="145" height="115" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1368" y="242" text-anchor="start" font-family="Arial,sans-serif" font-size="19.4" font-weight="700" fill="#2E3440">
+<tspan x="1368" dy="0">full context</tspan>
+</text>
+<rect x="90" y="400" width="430" height="230" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="116" y="449" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="116" dy="0">Local path</tspan>
+</text>
+<text x="116" y="490" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="116" dy="0">state per layer stops after W; depth</tspan>
+<tspan x="116" dy="25">creates an indirect route</tspan>
+</text>
+<rect x="585" y="400" width="430" height="230" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="611" y="449" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="611" dy="0">Global path</tspan>
+</text>
+<text x="611" y="490" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="611" dy="0">direct edges across the context;</tspan>
+<tspan x="611" dy="25">cache grows with sequence length</tspan>
+</text>
+<rect x="1080" y="400" width="430" height="230" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1106" y="449" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="700" fill="#2E3440">
+<tspan x="1106" dy="0">gpt-oss @131K</tspan>
+</text>
+<text x="1106" y="490" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1106" dy="0">18 full = 4.5 GiB</tspan>
+<tspan x="1106" dy="25">18 window = 4.5 MiB</tspan>
+<tspan x="1106" dy="25">total = 4.504 GiB</tspan>
+</text>
+<text x="800" y="760" text-anchor="middle" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#4C78A8">
+<tspan x="800" dy="0">Path reach is not a guarantee of faithful memory.</tspan>
+</text>
+</svg>

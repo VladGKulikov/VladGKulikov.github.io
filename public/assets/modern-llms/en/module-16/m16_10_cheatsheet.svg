@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#718096"/></marker></defs>
+<rect width="1600" height="900" fill="#ffffff"/>
+<text x="60" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#17324d">Agent systems: eight control questions</text>
+<rect x="45" y="140" width="350" height="245" rx="18" fill="#e8f1fb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="83" y="195" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">1</text>
+<text x="83" y="244" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">What is</text>
+<text x="83" y="269" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">the goal?</text>
+<text x="83" y="325" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="start">state + completion</text>
+<text x="83" y="346" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">test</text>
+<rect x="435" y="140" width="350" height="245" rx="18" fill="#eaf7ef" stroke="#cbd5e1" stroke-width="2"/>
+<text x="473" y="195" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">2</text>
+<text x="473" y="244" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">How is action</text>
+<text x="473" y="269" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">expressed?</text>
+<text x="473" y="325" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="start">function · plan · code</text>
+<rect x="825" y="140" width="350" height="245" rx="18" fill="#fff5df" stroke="#cbd5e1" stroke-width="2"/>
+<text x="863" y="195" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">3</text>
+<text x="863" y="244" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">What is checked</text>
+<text x="863" y="269" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">before execution?</text>
+<text x="863" y="325" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="start">grammar · schema</text>
+<text x="863" y="346" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">authority</text>
+<rect x="1215" y="140" width="350" height="245" rx="18" fill="#f2ecfb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="1253" y="195" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">4</text>
+<text x="1253" y="244" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">Where does code</text>
+<text x="1253" y="269" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">run?</text>
+<text x="1253" y="325" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="start">sandbox · limits</text>
+<text x="1253" y="346" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">secrets</text>
+<rect x="45" y="450" width="350" height="245" rx="18" fill="#e8f7f8" stroke="#cbd5e1" stroke-width="2"/>
+<text x="83" y="505" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">5</text>
+<text x="83" y="554" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">How is history</text>
+<text x="83" y="579" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">stored?</text>
+<text x="83" y="635" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="start">cache · memory</text>
+<text x="83" y="656" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">checkpoints</text>
+<rect x="435" y="450" width="350" height="245" rx="18" fill="#fdecec" stroke="#cbd5e1" stroke-width="2"/>
+<text x="473" y="505" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">6</text>
+<text x="473" y="554" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">How is failure</text>
+<text x="473" y="579" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">handled?</text>
+<text x="473" y="635" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="start">verify · retry</text>
+<text x="473" y="656" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">idempotency</text>
+<rect x="825" y="450" width="350" height="245" rx="18" fill="#e8f1fb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="863" y="505" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">7</text>
+<text x="863" y="554" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">What can run</text>
+<text x="863" y="579" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">in parallel?</text>
+<text x="863" y="635" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">dependency graph</text>
+<text x="863" y="656" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">merge</text>
+<rect x="1215" y="450" width="350" height="245" rx="18" fill="#eaf7ef" stroke="#cbd5e1" stroke-width="2"/>
+<text x="1253" y="505" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="700" fill="#17324d" text-anchor="start">8</text>
+<text x="1253" y="554" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">What defines</text>
+<text x="1253" y="579" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">the score?</text>
+<text x="1253" y="635" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="start">model · harness</text>
+<text x="1253" y="656" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">environment</text>
+<rect x="200" y="785" width="1200" height="70" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+<text x="800" y="830" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">A strong model does not replace system invariants.</text>
+</svg>

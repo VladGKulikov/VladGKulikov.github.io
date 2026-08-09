@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#F7F9FC"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7B8794"/></marker></defs>
+<text x="70" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#263238" text-anchor="start"><tspan x="70" dy="0">ANN: choose an index by the resource that is scarce</tspan></text>
+<text x="70" y="112" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="70" dy="0">Approximate search reduces inspected state and introduces miss probability</tspan></text>
+<rect x="70" y="205" width="450" height="480" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="70" y="205" width="450" height="8" rx="4" fill="#3D6FB6"/>
+<text x="102" y="253" font-family="DejaVu Sans,Arial,sans-serif" font-size="31" font-weight="700" fill="#263238" text-anchor="start"><tspan x="102" dy="0">HNSW</tspan></text>
+<text x="102" y="307.58" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5F6B78" text-anchor="start"><tspan x="102" dy="0">In-memory graph</tspan><tspan x="102" dy="29.92">Low query latency</tspan><tspan x="102" dy="29.92">Recall tuned with efSearch</tspan><tspan x="102" dy="29.92">Cost: edges and filtering</tspan></text>
+<rect x="575" y="205" width="450" height="480" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="575" y="205" width="450" height="8" rx="4" fill="#7B5BA7"/>
+<text x="607" y="253" font-family="DejaVu Sans,Arial,sans-serif" font-size="31" font-weight="700" fill="#263238" text-anchor="start"><tspan x="607" dy="0">IVF-PQ</tspan></text>
+<text x="607" y="307.58" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="607" dy="0">Clusters plus short codes</tspan><tspan x="607" dy="29.92">Aggressive vector compression</tspan><tspan x="607" dy="29.92">nprobe controls inspection</tspan><tspan x="607" dy="29.92">Cost: quantization error</tspan></text>
+<rect x="1080" y="205" width="450" height="480" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="1080" y="205" width="450" height="8" rx="4" fill="#C77A32"/>
+<text x="1112" y="253" font-family="DejaVu Sans,Arial,sans-serif" font-size="31" font-weight="700" fill="#263238" text-anchor="start"><tspan x="1112" dy="0">DiskANN</tspan></text>
+<text x="1112" y="307.58" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="1112" dy="0">Large body on SSD</tspan><tspan x="1112" dy="29.92">RAM for navigation and cache</tspan><tspan x="1112" dy="29.92">Fits memory-constrained systems</tspan><tspan x="1112" dy="29.92">Cost: I/O-aware layout</tspan></text>
+<rect x="240" y="735" width="1120" height="95" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="240" y="735" width="1120" height="8" rx="4" fill="#5B8F52"/>
+<text x="272" y="783" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="272" dy="0">How to choose</tspan></text>
+<text x="272" y="828.14" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="272" dy="0">Measure recall, latency, memory, and update cost on the target query distribution</tspan></text>
+</svg>

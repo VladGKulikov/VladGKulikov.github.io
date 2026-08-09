@@ -1,0 +1,55 @@
+<svg viewBox="0 0 940 340" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>PagedAttention</title>
+  <desc>Two sequences' page tables over a pool of physical blocks; the fragmentation numbers.</desc>
+  <defs><marker id="a95" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">PagedAttention: pages instead of buffers (block = 16 tokens)</text>
+
+  <rect x="40" y="54" width="180" height="52" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="130" y="76" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">Seq 1 · 39 tokens</text>
+  <text x="130" y="94" text-anchor="middle" font-size="13.8" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#4C566A" font-weight="600">table: [0, 5, 8]</text>
+  <rect x="40" y="118" width="180" height="52" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/>
+  <text x="130" y="140" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">Seq 2 · 27 tokens</text>
+  <text x="130" y="158" text-anchor="middle" font-size="13.8" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#4C566A" font-weight="600">table: [2, 7]</text>
+
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="9.5" text-anchor="middle">
+    <rect x="300" y="54" width="66" height="34" rx="5" fill="#E8EEF5" stroke="#5E81AC"/><text x="333" y="75" fill="#2E3440" font-size="13.8" font-weight="600">B0</text>
+    <rect x="374" y="54" width="66" height="34" rx="5" fill="#ECEFF4" stroke="#D8DEE9"/><text x="407" y="75" fill="#4C566A" font-size="13.8" font-weight="600">B1</text>
+    <rect x="448" y="54" width="66" height="34" rx="5" fill="#F3EEF3" stroke="#B48EAD"/><text x="481" y="75" fill="#2E3440" font-size="13.8" font-weight="600">B2</text>
+    <rect x="522" y="54" width="66" height="34" rx="5" fill="#ECEFF4" stroke="#D8DEE9"/><text x="555" y="75" fill="#4C566A" font-size="13.8" font-weight="600">B3</text>
+    <rect x="596" y="54" width="66" height="34" rx="5" fill="#ECEFF4" stroke="#D8DEE9"/><text x="629" y="75" fill="#4C566A" font-size="13.8" font-weight="600">B4</text>
+    <rect x="300" y="96" width="66" height="34" rx="5" fill="#E8EEF5" stroke="#5E81AC"/><text x="333" y="117" fill="#2E3440" font-size="13.8" font-weight="600">B5</text>
+    <rect x="374" y="96" width="66" height="34" rx="5" fill="#ECEFF4" stroke="#D8DEE9"/><text x="407" y="117" fill="#4C566A" font-size="13.8" font-weight="600">B6</text>
+    <rect x="448" y="96" width="66" height="34" rx="5" fill="#F3EEF3" stroke="#B48EAD"/><text x="481" y="117" fill="#2E3440" font-size="13.8" font-weight="600">B7</text>
+    <rect x="522" y="96" width="66" height="34" rx="5" fill="#E8EEF5" stroke="#5E81AC"/><text x="555" y="117" fill="#2E3440" font-weight="600">B8 (7 tok.)</text>
+    <rect x="596" y="96" width="66" height="34" rx="5" fill="#ECEFF4" stroke="#D8DEE9"/><text x="629" y="117" fill="#4C566A" font-size="13.8" font-weight="600">B9</text>
+  </g>
+  <text x="481" y="150" text-anchor="middle" font-size="11.5" fill="#4C566A">the physical block pool: no contiguity needed — fragmentation vanishes as a class</text>
+  <g stroke="#4C566A" stroke-width="1" fill="none">
+    <path d="M222 76 C 258 76, 268 71, 296 71" marker-end="url(#a95)"/>
+    <path d="M222 82 C 258 86, 270 108, 296 111" marker-end="url(#a95)"/>
+    <path d="M222 140 C 258 140, 400 74, 444 71" marker-end="url(#a95)"/>
+    <path d="M222 146 C 258 150, 410 112, 444 112" marker-end="url(#a95)"/>
+  </g>
+
+  <rect x="700" y="54" width="200" height="116" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="718" y="76" font-size="13.8" font-weight="700" fill="#2E3440">Copy-on-write</text>
+  <text x="718" y="96" font-size="10.7" fill="#2E3440">a shared prefix = shared blocks:</text>
+  <text x="718" y="112" font-size="10.7" fill="#2E3440">pointers get copied, not bytes —</text>
+  <text x="718" y="128" font-size="10.6" fill="#4C566A">the bridge to prefix caching (§9)</text>
+  <text x="718" y="152" font-size="9.8" fill="#4C566A">and to RadixAttention (a tree, §16)</text>
+
+  <rect x="40" y="192" width="420" height="90" rx="12" fill="#F8ECEC" stroke="#BF616A"/>
+  <text x="58" y="214" font-size="16.6" font-weight="700" fill="#2E3440">Naive preallocation (max_seq = 32K)</text>
+  <text x="58" y="236" font-size="11.5" fill="#2E3440">an average 2K request → <tspan font-weight="700" fill="#BF616A">93.75%</tspan> of the reserve wasted;</text>
+  <text x="58" y="254" font-size="11.5" fill="#2E3440">contiguous slabs → fragmentation: memory exists,</text>
+  <text x="58" y="272" font-size="11.5" fill="#2E3440">but nowhere to put things</text>
+
+  <rect x="480" y="192" width="420" height="90" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="498" y="214" font-size="16.6" font-weight="700" fill="#2E3440">Paged (vLLM)</text>
+  <text x="498" y="236" font-size="11.5" fill="#2E3440">internal loss ≤ half a block: <tspan font-weight="700" fill="#A3BE8C">0.37%</tspan> on a 2K request;</text>
+  <text x="498" y="254" font-size="11.5" fill="#2E3440">memory capacity <tspan font-weight="700">×16</tspan> arithmetically</text>
+  <text x="498" y="272" font-size="11.5" fill="#4C566A">(the slot's Q2: “5–10×” with overheads — conservative)</text>
+
+  <text x="30" y="312" font-size="11.5" fill="#2E3440">The idea comes verbatim from the OS: virtual memory, a page table, CoW; at 1M contexts, serving without paging is impossible in principle.</text>
+  <text x="898" y="332" font-size="9.7" font-style="italic" fill="#4C566A" text-anchor="end">Kwon et al., arXiv 2309.06180; course-verified values</text>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4676A8"/></marker></defs>
+<text x="60" y="70" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#202A3B">Паспорт DiffusionGemma</text>
+<text x="60" y="108" font-family="Arial, sans-serif" font-size="19.6" fill="#56657A">Реальная MoE-модель с блочной диффузией — отдельно от учебной roofline-модели плотной 8B-сети</text>
+<rect x="60" y="190" width="350" height="270" rx="18" fill="#E8F1FB" stroke="#C9D4E2" stroke-width="2"/>
+<text x="85" y="237" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="85" dy="0">Энкодер промпта</tspan>
+</text>
+<text x="85" y="276" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="85" dy="0">Авторегрессионный prefill</tspan>
+<tspan x="85" dy="22">Стабильный KV-cache</tspan>
+<tspan x="85" dy="22">Текст + визуальные признаки</tspan>
+</text>
+<rect x="510" y="190" width="410" height="270" rx="18" fill="#E8F6EC" stroke="#C9D4E2" stroke-width="2"/>
+<text x="535" y="237" text-anchor="start" font-family="Arial, sans-serif" font-size="26.1" font-weight="700" fill="#202A3B">
+<tspan x="535" dy="0">Двунаправленный decoder</tspan>
+<tspan x="535" dy="29">холста</tspan>
+</text>
+<text x="535" y="305" text-anchor="start" font-family="Arial, sans-serif" font-size="18.5" font-weight="400" fill="#56657A">
+<tspan x="535" dy="0">Холст 256</tspan>
+<tspan x="535" dy="22">Cross-attention к контексту</tspan>
+<tspan x="535" dy="22">~15–20 финальных токенов за проход</tspan>
+</text>
+<rect x="1020" y="190" width="520" height="270" rx="18" fill="#FFF2CF" stroke="#C9D4E2" stroke-width="2"/>
+<text x="1045" y="237" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="1045" dy="0">Разреженная MoE</tspan>
+</text>
+<text x="1045" y="276" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="1045" dy="0">25.2B total / 3.8B active</tspan>
+<tspan x="1045" dy="22">128 routed, top-8 + 1 shared</tspan>
+<tspan x="1045" dy="22">30 слоёв · окно 1024</tspan>
+</text>
+<line x1="420" y1="325" x2="495" y2="325" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="930" y1="325" x2="1005" y2="325" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="90" y="590" width="680" height="180" rx="18" fill="#FBE5E8" stroke="#C9D4E2" stroke-width="2"/>
+<text x="115" y="637" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="115" dy="0">Контракт H100</tspan>
+</text>
+<text x="115" y="676" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="115" dy="0">&gt;1100 ток/с · FP8 · малый пакет</tspan>
+<tspan x="115" dy="22">Результат разработчика, не независимое измерение.</tspan>
+</text>
+<rect x="830" y="590" width="680" height="180" rx="18" fill="#EFE8FA" stroke="#C9D4E2" stroke-width="2"/>
+<text x="855" y="637" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="855" dy="0">Контракт Blackwell</tspan>
+</text>
+<text x="855" y="676" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="855" dy="0">Отдельный артефакт NVFP4.</tspan>
+<tspan x="855" dy="22">12.6 / 1.9 GB — лишь идеализированный объём параметров.</tspan>
+</text>
+</svg>

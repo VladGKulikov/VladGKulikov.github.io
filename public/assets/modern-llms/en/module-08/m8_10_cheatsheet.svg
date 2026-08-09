@@ -1,0 +1,59 @@
+<svg viewBox="0 0 920 575" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Module 8 cheat sheet</title>
+  <desc>The law and the optimum, inference-aware, data and the wall, Muon and QK-Clip, memory and the bubble, trends, gotchas.</desc>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Cheat sheet · Pretraining in 60 seconds</text>
+
+  <rect x="40" y="48" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="60" y="70" font-size="12.8" font-weight="600">C = 6ND · L = E + A/N<tspan baseline-shift="super" font-size="8.7">α</tspan> + B/D<tspan baseline-shift="super" font-size="8.7">β</tspan> · N<tspan baseline-shift="super" font-size="8.7">*</tspan> = [(αA/βB)(C/6)<tspan baseline-shift="super" font-size="8.7">β</tspan>]<tspan baseline-shift="super" font-size="8.7">1/(α+β)</tspan> · 7.23e23 → 35.7B/3.38T (ratio 94.7)</text>
+    <text x="60" y="92" font-size="12.8" font-weight="600">“20 tok/param” is no constant: the ratio grows with C · the shorthand (C/120)<tspan baseline-shift="super" font-size="8.7">0.5</tspan> misses N by two</text>
+  </g>
+
+  <rect x="40" y="118" width="410" height="118" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="142" font-size="13.5" font-weight="700" fill="#2E3440">Inference-aware</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="166" font-size="13.5" font-weight="600">Llama-3 8B: 1,868 tok/param · ΔL = 0.0258</text>
+    <text x="58" y="188" font-size="13.5" font-weight="600">break-even vs an equal-L 70B: T<tspan baseline-shift="super" font-size="9.2">*</tspan> = 2.12·10¹² tokens</text>
+    <text x="58" y="210" font-size="11.3">the isoFLOP valley is gentle rightward — overtraining is cheap</text>
+    <text x="58" y="228" fill="#4C566A" font-size="11.3">train once — infer trillions (Q1)</text>
+  </g>
+
+  <rect x="470" y="118" width="410" height="118" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="488" y="142" font-size="16.2" font-weight="700" fill="#2E3440">Data and the wall</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="166" font-size="11.3">pipeline: langID → repeats → heuristics → dedup →</text>
+    <text x="488" y="184" font-size="13.5" font-weight="600">classifier → PII · pool: 15T / 6.3T / 4T / 1.3T</text>
+    <text x="488" y="206" font-size="11.3">appetite: D<tspan baseline-shift="super" font-size="8.1">*</tspan> = 14.3T @1e25 · <tspan font-weight="700">50.4T @1e26</tspan></text>
+    <text x="488" y="228" fill="#4C566A" font-size="9.8">answer: mixtures · repeats · ProX synthetics · reasoning mix · the 7b trump</text>
+  </g>
+
+  <rect x="40" y="250" width="410" height="122" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="274" font-size="13.5" font-weight="700" fill="#2E3440">Muon + MuonClip</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="298" font-size="13.1" font-weight="600">momentum → the NS quintic ×5: spectrum ×5.1 → [0.68, 1.13]</text>
+    <text x="58" y="318" font-size="11.3">(+3 cubics → 0.999 — pricey; Muon declines)</text>
+    <text x="58" y="338" font-size="13.5" font-weight="600">QK-Clip: γ = τ/max · W<tspan baseline-shift="sub" font-size="9.2">Q</tspan>, W<tspan baseline-shift="sub" font-size="9.2">K</tspan> ×= √γ → (45,100,100,80)</text>
+    <text x="58" y="358" font-weight="600" font-size="13.5">K2: 1T MoE · 15.5T tokens · 0 spikes</text>
+  </g>
+
+  <rect x="470" y="250" width="410" height="122" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="488" y="274" font-size="16.2" font-weight="700" fill="#2E3440">Memory and the pipeline</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="298" font-size="11.3">the law: 16 bytes/param (2+2 bf16 + 4+4+4 fp32)</text>
+    <text x="488" y="318">7B state payload: 112 GB/rank = 104.3 GiB/rank → ZeRO-3/64: 1.75 GB/rank = 1.63 GiB/rank</text>
+    <text x="488" y="338" font-size="11.3">the 1F1B bubble = (p−1)/(m+p−1): 17.9% → 5.2%</text>
+    <text x="488" y="358" fill="#4C566A" font-size="11.3">3D+EP; Behemoth: 32K GPUs · FP8 · 390 TFLOP/s per GPU</text>
+  </g>
+
+  <rect x="40" y="386" width="840" height="62" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="58" y="410" font-size="16.2" font-weight="700" fill="#2E3440">Trends 2026</text>
+  <text x="58" y="430" font-size="12.8" fill="#2E3440" font-weight="600">curriculum/annealing · DoReMi · staged long context (up to 10M) · MTP · co-distillation · FP8 → NVFP4 (~2×, Nemotron 3) ·</text>
+  <text x="58" y="444" font-size="11.3" fill="#2E3440">µP/MetaP: the LR transfers from a proxy · synthetics and the reasoning mix in pretraining</text>
+
+  <rect x="40" y="462" width="840" height="68" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="484" font-size="16.2" font-weight="700" fill="#2E3440">Gotchas</text>
+  <text x="58" y="504" font-size="11.3" fill="#2E3440">a rule of thumb ≠ the optimum of the same law · clipping logits treats the symptom — clip the weights · mHC/Engram: experimental,</text>
+  <text x="58" y="518" font-size="11.3" fill="#2E3440">no tech report (Q5) · NVFP4 saves traffic and compute, not the state bytes · the 2022 Chinchilla fit at 10²⁶ is extrapolation</text>
+
+  <text x="30" y="558" font-size="9.5" font-style="italic" fill="#4C566A">the full version is §20 of the lecture; values reproduced by course verification code</text>
+</svg>

@@ -1,0 +1,69 @@
+<svg viewBox="0 0 1180 780" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title>Шпаргалка модуля 2</title>
+<desc>Токенизатор как детерминированная программа</desc>
+<rect width="1180" height="780" fill="#FFFFFF"/>
+<text x="45" y="50" text-anchor="start" font-size="29" font-weight="700" fill="#2E3440">
+<tspan x="45" dy="0">Токенизация за одну страницу</tspan>
+</text>
+<text x="45" y="82" text-anchor="start" font-size="17.3" font-weight="600" fill="#4C566A">
+<tspan x="45" dy="0">Строка → предварительное разбиение → UTF-8-байты → слияния по рангам → token IDs → embedding lookup</tspan>
+</text>
+<rect x="45" y="120" width="525" height="245" rx="14" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="69" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="69" dy="0">Три базовые формулы</tspan>
+</text>
+<text x="69" y="207" text-anchor="start" font-size="18" font-weight="700" fill="#2E3440" font-family="ui-monospace, Menlo, Consolas, monospace">
+<tspan x="69" dy="0">1) V = 256 + M + |S|</tspan>
+</text>
+<text x="69" y="239" text-anchor="start" font-size="18" font-weight="700" fill="#2E3440" font-family="ui-monospace, Menlo, Consolas, monospace">
+<tspan x="69" dy="0">2) P</tspan><tspan baseline-shift="sub" font-size="13">emb</tspan><tspan> = V·d (tied); 2V·d (untied)</tspan>
+</text>
+<text x="69" y="271" text-anchor="start" font-size="18" font-weight="700" fill="#2E3440" font-family="ui-monospace, Menlo, Consolas, monospace">
+<tspan x="69" dy="0">3) bytes/token = B</tspan><tspan baseline-shift="sub" font-size="13">corpus</tspan><tspan> / N</tspan><tspan baseline-shift="sub" font-size="13">tokens</tspan>
+</text>
+<text x="69" y="313" text-anchor="start" font-size="14.4" font-weight="400" fill="#4C566A">
+<tspan x="69" dy="0">M — число слияний; |S| — число special IDs. Полный битовый</tspan>
+<tspan x="69" dy="19">коэффициент также учитывает разрядность ID, словарь и</tspan>
+<tspan x="69" dy="19">метаданные.</tspan>
+</text>
+<rect x="610" y="120" width="525" height="245" rx="14" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="634" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="634" dy="0">Harmony без арифметической загадки</tspan>
+</text>
+<text x="634" y="203" text-anchor="start" font-size="17" font-weight="400" fill="#4C566A">
+<tspan x="634" dy="0">199 998 mergeable IDs</tspan>
+<tspan x="634" dy="24">+ 1 090 уникальных special IDs</tspan>
+<tspan x="634" dy="24">= 201 088</tspan>
+<tspan x="634" dy="24">Имён 1 091: endofprompt и reserved_200018</tspan>
+<tspan x="634" dy="24">являются алиасами одного ID. GPT-5 →</tspan>
+<tspan x="634" dy="24">o200k_base; gpt-oss → o200k_harmony.</tspan>
+</text>
+<rect x="45" y="405" width="525" height="245" rx="14" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="69" y="451" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="69" dy="0">Как читать качество словаря</tspan>
+</text>
+<text x="69" y="488" text-anchor="start" font-size="17" font-weight="400" fill="#4C566A">
+<tspan x="69" dy="0">Измеряйте bytes/token и fertility на</tspan>
+<tspan x="69" dy="24">фиксированном корпусе и с явным правилом</tspan>
+<tspan x="69" dy="24">подсчёта слов. Большой словарь не автоматически</tspan>
+<tspan x="69" dy="24">лучше для каждого языка. Разрыв train/held-out</tspan>
+<tspan x="69" dy="24">говорит о распределении данных, а не задаёт</tspan>
+<tspan x="69" dy="24">универсальный рейтинг языков.</tspan>
+</text>
+<rect x="610" y="405" width="525" height="245" rx="14" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="634" y="451" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="634" dy="0">Что входит в спецификацию</tspan>
+</text>
+<text x="634" y="488" text-anchor="start" font-size="17" font-weight="400" fill="#4C566A">
+<tspan x="634" dy="0">Таблицы token→ID недостаточно. Сохраняйте</tspan>
+<tspan x="634" dy="24">pre-tokenization, normalizer, ранги слияний,</tspan>
+<tspan x="634" dy="24">decoder, политику special-токенов и chat</tspan>
+<tspan x="634" dy="24">template. По умолчанию tiktoken.encode отклоняет</tspan>
+<tspan x="634" dy="24">зарегистрированные специальные написания, пока</tspan>
+<tspan x="634" dy="24">приложение явно не выберет другую политику.</tspan>
+</text>
+<rect x="110" y="690" width="960" height="55" rx="12" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.5"/>
+<text x="590" y="725" text-anchor="middle" font-size="19" font-weight="700" fill="#2E3440">
+<tspan x="590" dy="0">Токенизатор — часть контракта модели: измените программу, и тот же текст даст другие ID.</tspan>
+</text>
+</svg>

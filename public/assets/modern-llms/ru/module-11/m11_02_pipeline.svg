@@ -1,0 +1,32 @@
+<svg viewBox="0 0 940 250" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Конвейер SFT</title>
+  <desc>Семь ступеней: база, шаблон, данные, упаковка, целевая маска, полное дообучение или LoRA, итоговая модель.</desc>
+  <defs><marker id="a112" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Конвейер SFT: семь ступеней одного этапа</text>
+
+  <g font-size="9" text-anchor="middle">
+    <rect x="36" y="58" width="118" height="58" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/><text x="95" y="82" font-weight="700" font-size="12.2" fill="#2E3440">Базовая модель</text><text x="95" y="100" font-size="13.8" fill="#4C566A">после М8</text>
+    <rect x="168" y="58" width="118" height="58" rx="8" fill="#E8EEF5" stroke="#5E81AC"/><text x="227" y="78" font-weight="700" font-size="11.9" fill="#2E3440">Шаблон диалога</text><text x="227" y="94" font-size="10.2" fill="#2E3440" font-weight="600">+ спец-токены (§4)</text><text x="227" y="108" font-size="11.4" fill="#4C566A">контракт модели</text>
+    <rect x="300" y="58" width="130" height="58" rx="8" fill="#EFF4EA" stroke="#A3BE8C"/><text x="365" y="78" font-weight="700" font-size="16.6" fill="#2E3440">Микс данных</text><text x="365" y="94" font-size="8.3" fill="#2E3440">покрытие целевых навыков</text><text x="365" y="108" font-size="8.3" fill="#4C566A" font-weight="600">+ решения и инструменты</text>
+    <rect x="444" y="58" width="128" height="58" rx="8" fill="#FAF5E3" stroke="#EBCB8B"/><text x="508" y="78" font-weight="700" font-size="15.3" fill="#2E3440">Упаковка FFD</text><text x="508" y="94" font-size="8.7" fill="#2E3440" font-weight="600">границы + изоляция (§6)</text><text x="508" y="108" font-size="8.9" fill="#4C566A">24 → 5 строк в сценарии</text>
+    <rect x="586" y="58" width="128" height="58" rx="8" fill="#F8ECEC" stroke="#BF616A"/><text x="650" y="78" font-weight="700" font-size="14.4" fill="#2E3440">Целевая маска</text><text x="650" y="94" font-size="10.5" fill="#2E3440">−100 вне ответа (§5)</text><text x="650" y="108" font-size="12" fill="#4C566A">обучаемо 37,5%</text>
+    <rect x="728" y="58" width="128" height="58" rx="8" fill="#F3EEF3" stroke="#B48EAD"/><text x="792" y="78" font-weight="700" font-size="13.8" fill="#2E3440">Полное / LoRA</text><text x="792" y="94" font-size="13.8" fill="#2E3440" font-weight="600">r = 8–64 (§16)</text><text x="792" y="108" font-size="8.3" fill="#4C566A">выбор проверяется сравнением</text>
+  </g>
+  <g stroke="#4C566A" stroke-width="1.05">
+    <line x1="154" y1="87" x2="164" y2="87" marker-end="url(#a112)"/>
+    <line x1="286" y1="87" x2="296" y2="87" marker-end="url(#a112)"/>
+    <line x1="430" y1="87" x2="440" y2="87" marker-end="url(#a112)"/>
+    <line x1="572" y1="87" x2="582" y2="87" marker-end="url(#a112)"/>
+    <line x1="714" y1="87" x2="724" y2="87" marker-end="url(#a112)"/>
+  </g>
+  <path d="M792 116 C 792 152, 500 160, 132 158" fill="none" stroke="#A3BE8C" stroke-width="1.3" marker-end="url(#a112)"/>
+  <rect x="36" y="140" width="92" height="36" rx="7" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="82" y="156" text-anchor="middle" font-size="10.7" font-weight="700" fill="#2E3440">Диалоговая /</text>
+  <text x="82" y="169" text-anchor="middle" font-size="9.4" font-weight="700" fill="#2E3440">рассуждающая</text>
+
+  <text x="470" y="150" text-anchor="middle" font-size="11.5" fill="#4C566A">1–3 эпохи и малый шаг — лишь отправные точки; длину, пакет и график подбирают по задаче (§7)</text>
+
+  <line x1="36" y1="192" x2="904" y2="192" stroke="#D8DEE9" stroke-width="0.75"/>
+  <text x="36" y="214" font-size="11" fill="#2E3440">Экономика ступени: C = 3.5·10¹⁹ FLOPs — в 20 833 раз ниже заданного сценария претрейна (24 ч — арифметическая оценка) — потому эпоха SFT живёт</text>
+  <text x="36" y="232" font-size="11.5" fill="#2E3440">быстрыми итерациями по данным: качество микса — главный рычаг, остальное — чтобы рычаг не заедал (§1, §7).</text>
+</svg>

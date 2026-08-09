@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">FlashAttention: меняется IO, не dense-арифметика</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19.6" fill="#5B6472">Тайлы живут в SRAM; полная score matrix не становится объектом HBM</text>
+<rect x="70" y="180" width="430" height="250" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="229" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">Материализующий путь</tspan>
+</text>
+<text x="96" y="270" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="96" dy="0">QKᵀ → HBM scores</tspan>
+<tspan x="96" dy="25">softmax → HBM probabilities</tspan>
+<tspan x="96" dy="25">probabilities × V</tspan>
+</text>
+<rect x="585" y="180" width="430" height="250" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="611" y="229" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="611" dy="0">Тайловый путь</tspan>
+</text>
+<text x="611" y="270" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="611" dy="0">load Q tile</tspan>
+<tspan x="611" dy="25">stream K/V tiles through SRAM</tspan>
+<tspan x="611" dy="25">carry (m, l, n)</tspan>
+</text>
+<rect x="1100" y="180" width="430" height="250" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1126" y="229" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1126" dy="0">Сложность</tspan>
+</text>
+<text x="1126" y="270" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1126" dy="0">dense FLOPs: O(N²d)</tspan>
+<tspan x="1126" dy="25">extra storage: O(N)</tspan>
+<tspan x="1126" dy="25">HBM IO: reduced, M-dependent</tspan>
+</text>
+<rect x="150" y="560" width="1300" height="170" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="176" y="609" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="176" dy="0">Конкретное рабочее множество</tspan>
+</text>
+<text x="176" y="650" text-anchor="start" font-family="Arial,sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="176" dy="0">8192×8192 fp32 score matrix = 256 MiB/head · 128×128 fp32 tile = 64 KiB</tspan>
+</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<text x="70" y="70" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="700" fill="#2E3440">Точный бюджет блока Llama-3.1-8B</text>
+<text x="70" y="108" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#5B6472">Привычные 13d² считают матрицы, но не две шкалы RMSNorm</text>
+<rect x="85" y="215" width="420" height="280" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="115" y="269" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="115" dy="0">Attention</tspan>
+</text>
+<text x="115" y="313" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="115" dy="0">2.5d²</tspan>
+<tspan x="115" dy="28">Q/O: 2d²; K/V при GQA: 0.5d²</tspan>
+</text>
+<rect x="565" y="215" width="420" height="280" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="595" y="269" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="595" dy="0">SwiGLU FFN</tspan>
+</text>
+<text x="595" y="313" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="595" dy="0">10.5d²</tspan>
+<tspan x="595" dy="28">3·d·dFFN при dFFN=3.5d</tspan>
+</text>
+<rect x="1045" y="215" width="420" height="280" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1075" y="269" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="1075" dy="0">Две шкалы RMSNorm</tspan>
+</text>
+<text x="1075" y="313" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="1075" dy="0">2d</tspan>
+<tspan x="1075" dy="28">По одному вектору масштаба перед</tspan>
+<tspan x="1075" dy="28">подслоем</tspan>
+</text>
+<rect x="225" y="575" width="1150" height="180" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="257" y="631" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="257" dy="0">Матричная прикидка</tspan>
+</text>
+<text x="257" y="675" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="21" font-weight="400" fill="#5B6472">
+<tspan x="257" dy="0">Pmat = 13d² = 218 103 808</tspan>
+<tspan x="257" dy="29">Pblock = 13d² + 2d = 218 112 000</tspan>
+<tspan x="257" dy="29">Вся модель = 8 030 261 248 параметров</tspan>
+</text>
+<text x="800" y="820" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="700" fill="#4C78A8">
+<tspan x="800" dy="0">Вклад норм мал, но в точном подсчёте «мало» не означает «ноль».</tspan>
+</text>
+</svg>

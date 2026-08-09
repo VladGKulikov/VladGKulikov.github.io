@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 650" width="920" height="650">
+  <title>Базовый Transformer за 60 секунд</title>
+  <desc>Финальная шпаргалка по тензорным формам, формулам attention, блоку и типичным ошибкам.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">Базовый Transformer за 60 секунд</text>
+  <rect x="35" y="70" width="405" height="235" rx="7" fill="#FFFFFF" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="55" y="100" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Формы тензоров</text>
+  <text x="57" y="128" text-anchor="start" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="57" dy="0" font-weight="500">X: B × T × d<tspan baseline-shift="sub" font-size="7.14px">model</tspan></tspan>
+    <tspan x="57" dy="25" font-weight="500">Q,K: B × h × T × d<tspan baseline-shift="sub" font-size="7.14px">k</tspan></tspan>
+    <tspan x="57" dy="25" font-weight="500">V: B × h × T × d<tspan baseline-shift="sub" font-size="7.14px">v</tspan></tspan>
+    <tspan x="57" dy="25" font-weight="500">A: B × h × T<tspan baseline-shift="sub" font-size="7.14px">q</tspan> × T<tspan baseline-shift="sub" font-size="7.14px">k</tspan></tspan>
+    <tspan x="57" dy="25" font-weight="500">Z: B × h × T<tspan baseline-shift="sub" font-size="7.14px">q</tspan> × d<tspan baseline-shift="sub" font-size="7.14px">v</tspan></tspan>
+    <tspan x="57" dy="25" font-weight="500">MHA: B × T<tspan baseline-shift="sub" font-size="7.14px">q</tspan> × d<tspan baseline-shift="sub" font-size="7.14px">model</tspan></tspan>
+  </text>
+  <rect x="480" y="70" width="405" height="235" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="500" y="100" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Ключевые формулы</text>
+  <text x="502" y="128" text-anchor="start" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="502" dy="0" font-weight="500">Q=XW<tspan baseline-shift="sub" font-size="7.14px">Q</tspan>, K=XW<tspan baseline-shift="sub" font-size="7.14px">K</tspan>, V=XW<tspan baseline-shift="sub" font-size="7.14px">V</tspan></tspan>
+    <tspan x="502" dy="25" font-weight="500">S=QKᵀ/√d<tspan baseline-shift="sub" font-size="7.14px">k</tspan></tspan>
+    <tspan x="502" dy="25" font-weight="500">A=softmax(S), Z=AV</tspan>
+    <tspan x="502" dy="25" font-weight="500">маска: запрещённые S<tspan baseline-shift="sub" font-size="7.14px">ij</tspan> → −∞</tspan>
+    <tspan x="502" dy="25" font-weight="500">FFN(x)=W₂σ(W₁x+b₁)+b₂</tspan>
+    <tspan x="502" dy="25" font-weight="500">L=−Σ<tspan baseline-shift="sub" font-size="7.14px">t</tspan> log p(y<tspan baseline-shift="sub" font-size="7.14px">t</tspan> | y<tspan baseline-shift="sub" font-size="7.14px">&lt;t</tspan>,x)</tspan>
+  </text>
+  <rect x="35" y="335" width="405" height="235" rx="7" fill="#FFFFFF" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="55" y="365" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Что проверять в коде</text>
+  <text x="57" y="393" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="57" dy="0" font-weight="500">• softmax по оси ключей T<tspan baseline-shift="sub" font-size="7.14px">k</tspan></tspan>
+    <tspan x="57" dy="25" font-weight="500">• causal mask до softmax</tspan>
+    <tspan x="57" dy="25" font-weight="500">• запрещённые веса ровно 0</tspan>
+    <tspan x="57" dy="25" font-weight="500">• residual сохраняет d<tspan baseline-shift="sub" font-size="7.14px">model</tspan></tspan>
+    <tspan x="57" dy="25" font-weight="500">• LayerNorm по последней оси</tspan>
+    <tspan x="57" dy="25" font-weight="500">• target сдвинут на один токен</tspan>
+  </text>
+  <rect x="480" y="335" width="405" height="235" rx="7" fill="#FFFFFF" stroke="#D08770" stroke-width="1.5"/>
+  <text x="500" y="365" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Не путать</text>
+  <text x="502" y="393" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="502" dy="0" font-weight="500">• self- и cross-attention</tspan>
+    <tspan x="502" dy="25" font-weight="500">• padding- и causal mask</tspan>
+    <tspan x="502" dy="25" font-weight="500">• post-norm и pre-norm</tspan>
+    <tspan x="502" dy="25" font-weight="500">• attention weights и объяснение</tspan>
+    <tspan x="502" dy="25" font-weight="500">• обучение параллельно и генерацию</tspan>
+    <tspan x="502" dy="25" font-weight="500">  последовательно</tspan>
+  </text>
+  <rect x="35" y="595" width="850" height="36" rx="7" fill="#ECEFF4" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="460" y="619" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#2E3440">Можете восстановить эти четыре панели без подсказки — входного барьера больше нет; переходите к модулю 1.</text>
+</svg>

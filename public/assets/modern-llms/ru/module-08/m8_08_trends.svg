@@ -1,0 +1,65 @@
+<svg viewBox="0 0 940 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Тренды претрейна 2026</title>
+  <desc>Четыре колонки: данные, длина, сигнал, числовые форматы.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Что фронтир добавил поверх «данные + закон + оптимизатор»</text>
+
+  <rect x="40" y="52" width="205" height="200" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Данные</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">curriculum by quality:</text>
+    <text x="58" y="114" fill="#4C566A" font-size="11.5">финиш на edu-срезе</text>
+    <text x="58" y="136" font-size="11.5">annealing: последние ~10%</text>
+    <text x="58" y="150" fill="#4C566A" font-size="11.5">на лучших данных</text>
+    <text x="58" y="172" font-size="11.5">DoReMi: веса смеси доменов</text>
+    <text x="58" y="186" fill="#4C566A" font-size="11.5">как отдельная оптимизация</text>
+    <text x="58" y="208" font-size="11.5">синтетика: ProX, Cosmopedia</text>
+    <text x="58" y="230" font-size="12.6" font-weight="600">reasoning-mix: CoT и proofs</text>
+    <text x="58" y="244" fill="#4C566A" font-size="11.5">до всякого SFT</text>
+  </g>
+
+  <rect x="260" y="52" width="205" height="200" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="278" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Длина</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="278" y="100" font-size="13.8">staged long-context:</text>
+    <text x="278" y="114" fill="#4C566A" font-size="11.5">короткий претрейн →</text>
+    <text x="278" y="128" fill="#4C566A" font-size="11.5">continued на длинном</text>
+    <text x="278" y="150" font-size="11.5">до 1M (Maverick),</text>
+    <text x="278" y="164" font-size="11.5">до 10M (Scout)</text>
+    <text x="278" y="186" font-size="11.5">публичный фронтир,</text>
+    <text x="278" y="200" fill="#4C566A" font-size="11.5">но отдельная фаза;</text>
+    <text x="278" y="222" font-size="11.5">длинные позиции —</text>
+    <text x="278" y="236" fill="#4C566A" font-size="11.5">механика из М3</text>
+  </g>
+
+  <rect x="480" y="52" width="205" height="200" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/>
+  <text x="498" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Сигнал</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="498" y="100" font-size="13.8">MTP: 2–4 токена</text>
+    <text x="498" y="114" fill="#4C566A" font-size="11.5">параллельными головами</text>
+    <text x="498" y="128" fill="#4C566A" font-size="11.5">(DeepSeek V3/V4)</text>
+    <text x="498" y="150" font-size="11.2">плотнее градиентный сигнал;</text>
+    <text x="498" y="164" font-size="11.5">даром совместимо со</text>
+    <text x="498" y="178" fill="#4C566A" font-size="11.5">speculative decoding (М10)</text>
+    <text x="498" y="200" font-size="13.8" font-weight="600">co-distillation:</text>
+    <text x="498" y="214" fill="#4C566A" font-size="13.8" font-weight="600">Behemoth → Maverick,</text>
+    <text x="498" y="228" fill="#4C566A" font-size="11.5">V4 Pro → V4 Flash</text>
+  </g>
+
+  <rect x="700" y="52" width="205" height="200" rx="8" fill="#FAF0E8" stroke="#D08770" stroke-width="1.2"/>
+  <text x="718" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Числа</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="718" y="100" font-size="13.2">FP8 — массовый стандарт</text>
+    <text x="718" y="114" fill="#4C566A" font-size="11.5">эпохи H100/H200</text>
+    <text x="718" y="136" font-size="13.8" font-weight="600">NVFP4-претрейн:</text>
+    <text x="718" y="150" font-size="11.3">Nemotron 3 Ultra: 20T токенов</text>
+    <text x="718" y="164" font-weight="600" font-size="10.6">550B/55B; mixed-precision recipe</text>
+    <text x="718" y="186" fill="#4C566A" font-size="10.4">block scaling, stochastic rounding</text>
+    <text x="718" y="200" fill="#4C566A">и higher precision для чувствит. слоёв</text>
+    <text x="718" y="222" font-size="11.5">перекличка с 7b §11:</text>
+    <text x="718" y="236" fill="#4C566A" font-size="11.5">формат — сквозная валюта</text>
+  </g>
+
+  <rect x="40" y="268" width="865" height="42" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="288" font-size="11.5" fill="#2E3440">Общий вектор: претрейн перестал быть «одним проходом по вебу» — это программируемый конвейер со стадиями, смесями,</text>
+  <text x="58" y="304" font-size="11.5" fill="#2E3440">учителями и числовыми форматами; каждая колонка — свой множитель к эффективному бюджету C.</text>
+</svg>

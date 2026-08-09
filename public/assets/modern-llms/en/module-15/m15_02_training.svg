@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#F7F9FC"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7B8794"/></marker></defs>
+<text x="70" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#263238" text-anchor="start"><tspan x="70" dy="0">How a dense retriever learns</tspan></text>
+<text x="70" y="112" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="70" dy="0">A positive pair becomes useful only relative to informative negatives</tspan></text>
+<rect x="70" y="180" width="420" height="230" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="70" y="180" width="420" height="8" rx="4" fill="#5B8F52"/>
+<text x="102" y="228" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="102" dy="0">Query and positive</tspan><tspan x="102" dy="31.86">document</tspan></text>
+<text x="102" y="309.72" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="102" dy="0">Similarity should rise</tspan><tspan x="102" dy="29.92">for the relevant pair</tspan></text>
+<rect x="590" y="180" width="420" height="230" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="590" y="180" width="420" height="8" rx="4" fill="#3D6FB6"/>
+<text x="622" y="228" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="700" fill="#263238" text-anchor="start"><tspan x="622" dy="0">In-batch negatives</tspan></text>
+<text x="622" y="277.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="622" dy="0">Cheap and scalable</tspan><tspan x="622" dy="29.92">Risk: false negatives</tspan></text>
+<rect x="1110" y="180" width="420" height="230" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="1110" y="180" width="420" height="8" rx="4" fill="#C77A32"/>
+<text x="1142" y="228" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="1142" dy="0">Hard negatives</tspan></text>
+<text x="1142" y="277.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="1142" dy="0">Plausible near misses</tspan><tspan x="1142" dy="29.92">Shape the decision boundary</tspan></text>
+<line x1="490" y1="295" x2="578" y2="295" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="1010" y1="295" x2="1098" y2="295" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="180" y="515" width="1240" height="235" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="180" y="515" width="1240" height="8" rx="4" fill="#7B5BA7"/>
+<text x="212" y="563" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="212" dy="0">Contrastive objective</tspan></text>
+<text x="212" y="614.04" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="212" dy="0">Raise the positive document score relative to the selected negatives</tspan><tspan x="212" dy="31.28">The denominator defines which confusions the model learns to separate</tspan><tspan x="212" dy="31.28">A second stage can mine harder negatives with the first retriever</tspan></text>
+</svg>

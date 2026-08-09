@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">MLA: cache a latent</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19.6" fill="#5B6472">Matrix absorption changes the stored object; RoPE keeps a separate branch</text>
+<rect x="70" y="240" width="300" height="210" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="290" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">hidden state</tspan>
+</text>
+<text x="96" y="332" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="96" dy="0">h(t)</tspan>
+</text>
+<defs><marker id="a11" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="370" y1="345" x2="450" y2="345" stroke="#4C78A8" stroke-width="3" marker-end="url(#a11)"/>
+<rect x="450" y="205" width="370" height="280" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="476" y="254" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="476" dy="0">joint KV latent</tspan>
+</text>
+<text x="476" y="295" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="476" dy="0">c(KV): 512</tspan>
+<tspan x="476" dy="25">decoupled RoPE: 64</tspan>
+<tspan x="476" dy="25">cache: 576 values/layer</tspan>
+</text>
+<defs><marker id="a22" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="820" y1="345" x2="900" y2="345" stroke="#4C78A8" stroke-width="3" marker-end="url(#a22)"/>
+<rect x="900" y="180" width="620" height="330" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="926" y="229" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="926" dy="0">Absorbed computation</tspan>
+</text>
+<text x="926" y="270" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="926" dy="0">key up-projection combines with the query side</tspan>
+<tspan x="926" dy="25">value up-projection combines with output</tspan>
+<tspan x="926" dy="25">projection</tspan>
+<tspan x="926" dy="25">full K/V need not be materialized</tspan>
+</text>
+<rect x="220" y="610" width="1160" height="145" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="246" y="658" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="246" dy="0">Raw storage comparison</tspan>
+</text>
+<text x="246" y="697" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="246" dy="0">MHA baseline 3.8125 MiB/token ÷ MLA 68.625 KiB/token = 56.89×</tspan>
+<tspan x="246" dy="25">Paper result: 93.3% reduction uses a different system baseline.</tspan>
+</text>
+</svg>

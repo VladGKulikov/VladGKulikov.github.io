@@ -1,0 +1,35 @@
+<svg viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The worked relativity example</title>
+  <desc>The head dimension is 4: the diagram shows the two pair angles, the rotated vectors, and three position pairs with one difference yielding one logit.</desc>
+  <text x="30" y="30" font-size="22" font-weight="700" fill="#2E3440">Relativity in numbers (worked example): d<tspan baseline-shift="sub" font-size="15">head</tspan> = 4, Δ = 2</text>
+
+  <g font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="11">
+    <text x="30" y="66" fill="#4C566A" font-weight="600">q = (1, 0, 0.5, 0.5)   k = (0, 1, 1, -0.5)   θ₀ = 1 rad/pos · θ₁ = 0.01</text>
+  </g>
+
+  <rect x="30" y="84" width="410" height="120" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="48" y="108" font-size="15.9" font-weight="700" fill="#2E3440">Steps 1–2 · rotation at m = 3, n = 1</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" fill="#2E3440">
+    <text x="48" y="132" font-size="12.4" font-weight="600">pair-0 angle: 3.000 rad (≈172°) · pair 1: 0.030</text>
+    <text x="48" y="154" font-size="13.2" font-weight="600">R₃q = (-0.990, 0.141, 0.485, 0.515)</text>
+    <text x="48" y="176" font-size="13.2" font-weight="600">R₁k = (-0.842, 0.540, 1.005, -0.490)</text>
+  </g>
+  <text x="48" y="196" font-size="9.2" fill="#4C566A" font-style="italic">pair norms unchanged — a rotation is a rotation</text>
+
+  <rect x="460" y="84" width="410" height="120" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="478" y="108" font-size="15.9" font-weight="700" fill="#2E3440">Step 3 · three placements, one difference</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="11" fill="#2E3440">
+    <text x="478" y="134" font-size="13.2" font-weight="600">&lt;R₃q, R₁k&gt; = 1.144248</text>
+    <text x="478" y="156" font-size="13.2" font-weight="600">&lt;R₇q, R₅k&gt; = 1.144248</text>
+    <text x="478" y="178" font-size="13.2" font-weight="600">&lt;R₂q, R₀k&gt; = 1.144248</text>
+  </g>
+  <text x="478" y="197" font-size="9.2" fill="#4C566A" font-style="italic">|Δ| under 1e-12: shifting both positions is invisible</text>
+
+  <line x1="30" y1="228" x2="870" y2="228" stroke="#D8DEE9" stroke-width="0.75"/>
+  <g font-size="10.5" fill="#2E3440">
+    <text x="30" y="254" font-size="11">Why: &lt;Rₘq, Rₙk&gt; = qᵀRₘᵀRₙk = qᵀRₙ₋ₘk — the absolute positions cancel identically.</text>
+    <text x="30" y="276" font-size="11">The fast pair (θ₀ = 1) covered nearly half a turn at m = 3; the slow one (θ₁ = 0.01) — a mere 0.03 rad:</text>
+    <text x="30" y="296" font-size="11">the position is written in "digits" of different granularity — the same principle as Vaswani's sinusoids.</text>
+    <text x="30" y="326" fill="#4C566A" font-style="italic">course verification pins the example with an assert over hundreds of random position triples (tolerance 1e-10)</text>
+  </g>
+</svg>

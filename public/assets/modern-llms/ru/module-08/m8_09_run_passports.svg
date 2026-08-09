@@ -1,0 +1,49 @@
+<svg viewBox="0 0 940 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Паспорта тренировочных забегов</title>
+  <desc>K2, Nemotron 3 Ultra и DeepSeek V4; строка инфраструктуры Behemoth.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Читаем техрепорт забега: три паспорта 2025–26</text>
+
+  <rect x="40" y="52" width="278" height="168" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Kimi K2 (Moonshot)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">масштаб: 1T MoE</text>
+    <text x="58" y="120" font-size="11.5">данные: 15.5T токенов</text>
+    <text x="58" y="140" font-size="11.5">оптимизатор: <tspan font-weight="600">MuonClip</tspan> (§10–11)</text>
+    <text x="58" y="160" font-size="11.5">стабильность: <tspan font-weight="700" fill="#A3BE8C">0 training spikes</tspan></text>
+    <text x="58" y="180" fill="#4C566A" font-size="13.1" font-weight="600">token-efficient: качество «больших</text>
+    <text x="58" y="196" fill="#4C566A" font-size="11.5">объёмов на AdamW» меньшими данными</text>
+    <text x="58" y="212" font-size="11.5" fill="#4C566A">arXiv 2507.20534</text>
+  </g>
+
+  <rect x="332" y="52" width="278" height="168" rx="8" fill="#FAF0E8" stroke="#D08770" stroke-width="1.3"/>
+  <text x="350" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Nemotron 3 Ultra (NVIDIA)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="350" y="100" font-size="13.8">масштаб: <tspan font-weight="700">550B / 55B active</tspan></text>
+    <text x="350" y="120" font-size="11.5">данные: <tspan font-weight="700">20T текстовых токенов</tspan></text>
+    <text x="350" y="140" font-size="11.5">формат: <tspan font-weight="600">NVFP4 training recipe</tspan></text>
+    <text x="350" y="160" font-size="11.5">включает MTP-слои и LatentMoE (М6)</text>
+    <text x="350" y="180" fill="#4C566A" font-size="11.5">block scaling · stochastic rounding</text>
+    <text x="350" y="196" fill="#4C566A" font-size="10.9">higher precision для чувствит. компонентов</text>
+    <text x="350" y="212" font-size="11.5" fill="#4C566A">tech report: 9 июня 2026</text>
+  </g>
+
+  <rect x="624" y="52" width="278" height="168" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/>
+  <text x="642" y="76" font-size="13.6" font-weight="700" fill="#2E3440">DeepSeek V4 (Pro 1.6T / Flash 284B)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="642" y="100" font-size="13.8">оптимизатор: Muon в стеке</text>
+    <text x="642" y="120" font-size="11.5">архитектура: Hybrid Attention (CSA+HCA)</text>
+    <text x="642" y="140" font-size="11.2">новации: <tspan font-weight="600">mHC</tspan> (Birkhoff Polytope, sigmoid)</text>
+  </g>
+  <rect x="642" y="152" width="242" height="56" rx="8" fill="#E9F0E4" stroke="#A3BE8C"/>
+  <text x="654" y="170" font-size="13.6" font-weight="700" fill="#2E3440">✓ tech report: arXiv 2606.19348</text>
+  <text x="654" y="186" font-size="11.5" fill="#2E3440">arXiv v1: 26 апреля 2026;</text>
+  <text x="654" y="200" font-size="11.5" fill="#2E3440">NIST CAISI evaluation: 1 мая 2026</text>
+
+  <rect x="40" y="236" width="862" height="42" rx="8" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="256" font-size="10" font-weight="700" fill="#2E3440">Инфраструктурная строка:</text>
+  <text x="230" y="256" font-size="11.5" fill="#2E3440">Llama 4 Behemoth — 32K GPU · FP8 · 390 TFLOP/s per GPU · 3D+EP (§15); co-distillation: Behemoth → Maverick.</text>
+  <text x="58" y="270" font-size="11.5" fill="#4C566A">паспорт забега = масштаб + данные + оптимизатор + формат + параллелизм + (честный статус новаций)</text>
+
+  <text x="30" y="310" font-size="11.5" fill="#2E3440">Навык модуля: читать паспорт по слоям (масштаб · данные · оптимизатор · формат · параллелизм · статус новаций);</text>
+  <text x="30" y="324" font-size="11.5" fill="#2E3440">учебный пример смены статуса mHC: paper (31 декабря 2025) → компонент V4 (tech report, апрель 2026).</text>
+</svg>

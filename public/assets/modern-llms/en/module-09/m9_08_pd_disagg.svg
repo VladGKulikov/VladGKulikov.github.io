@@ -1,0 +1,41 @@
+<svg viewBox="0 0 940 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>PD disaggregation</title>
+  <desc>The client, the Dynamo router, the prefill pool, the NIXL transfer, the decode pool; the interference numbers.</desc>
+  <defs><marker id="a98" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Each phase gets its own hardware: PD disaggregation (the 2026 standard)</text>
+
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="40" y="70" width="120" height="48" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/><text x="100" y="91" font-weight="700" fill="#2E3440" font-size="16.6">Client</text><text x="100" y="108" font-size="12" fill="#4C566A" font-weight="600">request · stream</text>
+    <rect x="200" y="70" width="150" height="48" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/><text x="275" y="91" font-weight="700" fill="#2E3440" font-size="16.6">Dynamo Router</text><text x="275" y="108" font-size="13.8" fill="#4C566A" font-weight="600">KV-aware · xPyD</text>
+    <rect x="392" y="56" width="210" height="76" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/><text x="497" y="80" font-weight="700" fill="#2E3440" font-size="16.6">Prefill pool · TP=2</text><text x="497" y="98" font-size="9.2" fill="#4C566A" font-weight="600">compute-bound: computes the prompt's KV</text><text x="497" y="114" font-size="8.5" fill="#4C566A">a smaller TP — the phase hits the compute ceiling (FLOP/s)</text>
+    <rect x="690" y="56" width="210" height="76" rx="8" fill="#F8ECEC" stroke="#BF616A" stroke-width="1.3"/><text x="795" y="80" font-weight="700" fill="#2E3440" font-size="16.6">Decode pool · TP=8</text><text x="795" y="98" font-size="9.3" fill="#4C566A" font-weight="600">memory-bound: a fat KV on top of weights</text><text x="795" y="114" font-size="12" fill="#4C566A">a larger TP — the phase hits BW</text>
+  </g>
+  <g stroke="#4C566A" stroke-width="1.1">
+    <line x1="160" y1="94" x2="196" y2="94" marker-end="url(#a98)"/>
+    <line x1="350" y1="94" x2="388" y2="94" marker-end="url(#a98)"/>
+    <line x1="602" y1="94" x2="686" y2="94" marker-end="url(#a98)"/>
+  </g>
+  <text x="644" y="86" text-anchor="middle" font-size="13.8" font-weight="600" fill="#2E3440">NIXL: the KV transfer</text>
+  <text x="644" y="110" text-anchor="middle" font-size="13.8" fill="#4C566A" font-weight="600">NVLink / RDMA</text>
+  <path d="M795 132 C 795 168, 420 180, 108 176 C 104 176, 102 150, 102 122" fill="none" stroke="#A3BE8C" stroke-width="1.2" marker-end="url(#a98)"/>
+  <text x="450" y="168" text-anchor="middle" font-size="13.8" fill="#A3BE8C" font-weight="600">a token stream uninterrupted by others' prefills</text>
+
+  <rect x="40" y="196" width="430" height="92" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="218" font-size="16.6" font-weight="700" fill="#2E3440">The sheet's interference arithmetic (one GPU)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="240" font-size="11.5">a monolithic 8K prefill: 132 ms → an ITL spike of <tspan font-weight="700" fill="#BF616A">137 ms</tspan> (SLO 20–50)</text>
+    <text x="58" y="260" font-size="11.5">chunked (a 512 chunk = 8.27 ms between decodes) → ITL ≤ <tspan font-weight="700" fill="#A3BE8C">13.1 ms</tspan></text>
+    <text x="58" y="278" fill="#4C566A" font-size="11">in the PD world chunked remains the local fallback inside the P pool (Q4)</text>
+  </g>
+
+  <rect x="490" y="196" width="410" height="92" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="508" y="218" font-size="16.6" font-weight="700" fill="#2E3440">NVIDIA Dynamo 1.0 (GA 16.03.2026)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="240" font-size="11.5">orchestration over vLLM/SGLang/TRT-LLM;</text>
+    <text x="508" y="260" font-size="11.5">the claims: up to <tspan font-weight="700">7×</tspan> throughput on DeepSeek-R1,</text>
+    <text x="508" y="278" font-size="11.5">up to <tspan font-weight="700">50×</tspan> on MoE via GB300 NVL72 (vendor figures)</text>
+  </g>
+
+  <text x="30" y="314" font-size="11.5" fill="#2E3440">Continuous batching (Orca) has not gone anywhere — it runs inside each pool; the split's price is KV transfer, RDMA and orchestration:</text>
+  <text x="30" y="328" font-size="11.5" fill="#2E3440">on small workloads PD is overkill (Q5).</text>
+</svg>

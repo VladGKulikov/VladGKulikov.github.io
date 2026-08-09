@@ -1,0 +1,52 @@
+<svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Конвейер токенизации</title>
+  <desc>Путь строки до векторов: pre-tokenization, байты UTF-8, BPE-слияния по рангам, идентификаторы, embedding-lookup; обратный путь decode.</desc>
+  <defs><marker id="a21" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Конвейер: от строки до векторов</text>
+
+  <g font-size="11" fill="#2E3440" text-anchor="middle">
+    <rect x="30" y="70" width="120" height="56" rx="8" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
+    <text x="90" y="94" font-family="ui-monospace, Menlo, monospace" font-size="13.8" font-weight="600">"строка"</text>
+    <text x="90" y="112" font-size="12" fill="#4C566A">любой Unicode</text>
+
+    <rect x="186" y="70" width="130" height="56" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/>
+    <text x="251" y="90" font-weight="600" font-size="13.2">pre-tokenization</text>
+    <text x="251" y="106" font-size="11.2" fill="#4C566A" font-weight="600">регулярка → чанки;</text>
+    <text x="251" y="118" font-size="9" fill="#4C566A">границы неприкосновенны</text>
+
+    <rect x="352" y="70" width="120" height="56" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+    <text x="412" y="90" font-weight="600" font-size="13.8">UTF-8</text>
+    <text x="412" y="106" font-size="9.5" fill="#4C566A">байты, алфавит 256;</text>
+    <text x="412" y="118" font-size="11.9" fill="#4C566A">OOV невозможен</text>
+
+    <rect x="508" y="70" width="150" height="56" rx="8" fill="#FAF0E8" stroke="#D08770" stroke-width="1.2"/>
+    <text x="583" y="90" font-weight="600" font-size="13.8">BPE-слияния</text>
+    <text x="583" y="106" font-size="10.9" fill="#4C566A">по возрастанию ранга;</text>
+    <text x="583" y="118" font-size="11.5" fill="#4C566A" font-weight="600">tie-break фиксирован</text>
+
+    <rect x="694" y="70" width="100" height="56" rx="8" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
+    <text x="744" y="94" font-family="ui-monospace, Menlo, monospace" font-size="11.8" font-weight="600">id ∈ [0, V)</text>
+    <text x="744" y="112" font-size="9.4" fill="#4C566A" font-weight="600">+ special-токены</text>
+
+    <rect x="820" y="70" width="100" height="56" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+    <text x="870" y="90" font-weight="600" font-size="13.8">E-lookup</text>
+    <text x="870" y="106" font-size="9.8" fill="#4C566A">строка матрицы</text>
+    <text x="870" y="118" font-size="11.4" fill="#4C566A" font-weight="600">V × d → вектор</text>
+  </g>
+  <g stroke="#4C566A" stroke-width="1.2">
+    <line x1="150" y1="98" x2="182" y2="98" marker-end="url(#a21)"/>
+    <line x1="316" y1="98" x2="348" y2="98" marker-end="url(#a21)"/>
+    <line x1="472" y1="98" x2="504" y2="98" marker-end="url(#a21)"/>
+    <line x1="658" y1="98" x2="690" y2="98" marker-end="url(#a21)"/>
+    <line x1="794" y1="98" x2="816" y2="98" marker-end="url(#a21)"/>
+  </g>
+
+  <path d="M744 132 L744 176 L90 176 L90 132" fill="none" stroke="#4C566A" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#a21)"/>
+  <text x="417" y="170" text-anchor="middle" font-size="10" fill="#4C566A" font-style="italic">decode: id → байты → UTF-8 (невалидные хвосты чинятся) — lossless round-trip</text>
+
+  <g font-size="9.5" fill="#4C566A">
+    <text x="30" y="222" font-size="11.5">Пример (значения проверены кодом курса): <tspan font-family="ui-monospace, Menlo, monospace" fill="#2E3440">"Привет"</tspan> → чанк → 12 байт → при обученном словаре ~2–3 токена → 2–3 вектора размерности d.</text>
+    <text x="30" y="244" font-size="11.5">Всё, что модель когда-либо «видит», — колонка id: склейки и разрезы токенизатора для неё необратимы.</text>
+    <text x="30" y="266" font-size="10.4">Зарегистрированная строка special-токена по умолчанию вызывает ошибку; приложение явно выбирает управляющий ID или обычное текстовое кодирование.</text>
+  </g>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#F7F9FC"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7B8794"/></marker></defs>
+<text x="70" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#263238" text-anchor="start"><tspan x="70" dy="0">The embedder passport: what must accompany one score</tspan></text>
+<text x="70" y="112" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="70" dy="0">Leaderboard narrows the search; local evaluation makes the decision</tspan></text>
+<rect x="70" y="180" width="450" height="245" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="70" y="180" width="450" height="8" rx="4" fill="#3D6FB6"/>
+<text x="102" y="228" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="102" dy="0">Checkpoint</tspan></text>
+<text x="102" y="277.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="102" dy="0">revision</tspan><tspan x="102" dy="28.560000000000002">license</tspan><tspan x="102" dy="28.560000000000002">model size</tspan></text>
+<rect x="565" y="180" width="450" height="245" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="565" y="180" width="450" height="8" rx="4" fill="#2D8C8C"/>
+<text x="597" y="228" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="597" dy="0">Input contract</tspan></text>
+<text x="597" y="277.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="597" dy="0">tokenizer</tspan><tspan x="597" dy="28.560000000000002">maximum length</tspan><tspan x="597" dy="28.560000000000002">query/document prompts</tspan></text>
+<rect x="1060" y="180" width="450" height="245" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="1060" y="180" width="450" height="8" rx="4" fill="#7B5BA7"/>
+<text x="1092" y="228" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="1092" dy="0">Representation</tspan></text>
+<text x="1092" y="277.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="1092" dy="0">dimension</tspan><tspan x="1092" dy="28.560000000000002">pooling</tspan><tspan x="1092" dy="28.560000000000002">normalization</tspan><tspan x="1092" dy="28.560000000000002">MRL prefixes</tspan></text>
+<rect x="70" y="500" width="450" height="245" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="70" y="500" width="450" height="8" rx="4" fill="#C77A32"/>
+<text x="102" y="548" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="102" dy="0">Corpus</tspan></text>
+<text x="102" y="597.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="102" dy="0">language</tspan><tspan x="102" dy="28.560000000000002">domain</tspan><tspan x="102" dy="28.560000000000002">chunking</tspan><tspan x="102" dy="28.560000000000002">access rules</tspan></text>
+<rect x="565" y="500" width="450" height="245" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="565" y="500" width="450" height="8" rx="4" fill="#5B8F52"/>
+<text x="597" y="548" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="597" dy="0">Index</tspan></text>
+<text x="597" y="597.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="597" dy="0">precision</tspan><tspan x="597" dy="28.560000000000002">ANN parameters</tspan><tspan x="597" dy="28.560000000000002">filtering</tspan><tspan x="597" dy="28.560000000000002">replication</tspan></text>
+<rect x="1060" y="500" width="450" height="245" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="1060" y="500" width="450" height="8" rx="4" fill="#B85B5B"/>
+<text x="1092" y="548" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="1092" dy="0">Evaluation</tspan></text>
+<text x="1092" y="597.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="1092" dy="0">local qrels</tspan><tspan x="1092" dy="28.560000000000002">Recall / nDCG</tspan><tspan x="1092" dy="28.560000000000002">latency</tspan><tspan x="1092" dy="28.560000000000002">hardware and batch</tspan></text>
+</svg>

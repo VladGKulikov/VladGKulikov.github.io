@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="58" y="62" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#20293A">Один токен проходит через небольшую часть expert bank</text>
+<text x="58" y="101" font-family="Arial, sans-serif" font-size="19.6" fill="#596579">Выбор, вес смеси и хранимая ёмкость — разные объекты</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#465A73"/></marker></defs>
+<rect x="55" y="260" width="260" height="260" rx="18" fill="#E7F0FB" stroke="#C8D2E1" stroke-width="2"/>
+<text x="80" y="307" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="80" dy="0">Residual stream</tspan>
+</text>
+<text x="80" y="344" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="80" dy="0">x ∈ R^h</tspan>
+</text>
+<line x1="315" y1="390" x2="380" y2="390" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="390" y="220" width="300" height="340" rx="18" fill="#E8F6EA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="415" y="267" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="415" dy="0">Router</tspan>
+</text>
+<text x="415" y="304" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="415" dy="0">clean scores s</tspan>
+<tspan x="415" dy="24">selection s+b</tspan>
+<tspan x="415" dy="24">top-k = T(x)</tspan>
+</text>
+<line x1="690" y1="390" x2="755" y2="390" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="770" y="170" width="510" height="440" rx="18" fill="#FFF2D3" stroke="#C8D2E1" stroke-width="2"/>
+<text x="795" y="217" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="795" dy="0">Expert bank</tspan>
+</text>
+<text x="795" y="254" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="795" dy="0">E routed experts хранятся; для токена</tspan>
+<tspan x="795" dy="24">работают k.</tspan>
+<tspan x="795" dy="24">Shared experts работают всегда.</tspan>
+</text>
+<rect x="810" y="360" width="115" height="65" rx="12" fill="#FFFFFF" stroke="#C8D2E1"/>
+<text x="867" y="399" text-anchor="middle" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="867" dy="0">E0</tspan>
+</text>
+<rect x="955" y="360" width="115" height="65" rx="12" fill="#FCE5E8" stroke="#C8D2E1"/>
+<text x="1012" y="399" text-anchor="middle" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1012" dy="0">E1</tspan>
+</text>
+<rect x="1100" y="360" width="115" height="65" rx="12" fill="#FFFFFF" stroke="#C8D2E1"/>
+<text x="1157" y="399" text-anchor="middle" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1157" dy="0">E2</tspan>
+</text>
+<rect x="810" y="455" width="115" height="65" rx="12" fill="#FFFFFF" stroke="#C8D2E1"/>
+<text x="867" y="494" text-anchor="middle" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="867" dy="0">E3</tspan>
+</text>
+<rect x="955" y="455" width="115" height="65" rx="12" fill="#FCE5E8" stroke="#C8D2E1"/>
+<text x="1012" y="494" text-anchor="middle" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1012" dy="0">E4</tspan>
+</text>
+<rect x="1100" y="455" width="115" height="65" rx="12" fill="#FFFFFF" stroke="#C8D2E1"/>
+<text x="1157" y="494" text-anchor="middle" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1157" dy="0">E5</tspan>
+</text>
+<line x1="1280" y1="390" x2="1345" y2="390" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="1360" y="260" width="185" height="260" rx="18" fill="#EEE8FA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1378" y="298" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1378" dy="0">Mixture</tspan>
+</text>
+<text x="1378" y="333" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="1378" dy="0">Σ gᵢ FFNᵢ(x)</tspan>
+</text>
+<rect x="180" y="680" width="1240" height="130" rx="18" fill="#E4F6F4" stroke="#C8D2E1" stroke-width="2"/>
+<text x="205" y="727" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="205" dy="0">Паспорт подсчёта</tspan>
+</text>
+<text x="205" y="764" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="205" dy="0">Total: весь bank + общие веса. Active: выбранные routed + shared + общая часть по объявленной конвенции.</tspan>
+</text>
+</svg>

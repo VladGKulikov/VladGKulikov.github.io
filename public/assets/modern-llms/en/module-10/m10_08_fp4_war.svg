@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>NVFP4 versus MXFP4</title>
+  <desc>Two microscaling formats, a teaching dynamic-range example, W4A4, and BitNet.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Four bits: value format, scales, and execution path</text>
+
+  <rect x="40" y="52" width="430" height="140" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">MXFP4 (OCP Microscaling)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">a group of <tspan font-weight="700">32</tspan> E2M1 values × one E8M0 scale</text>
+    <text x="58" y="120" font-size="11.5">32 values plus a local scale → 4.25 bits/weight</text>
+    <text x="58" y="140" font-size="11.5">speed requires a compatible hardware kernel</text>
+    <text x="58" y="158" fill="#4C566A" font-size="11.5">emulation and native execution are different regimes</text>
+    <text x="58" y="180" fill="#4C566A" font-size="11.5">quality depends on calibration and model sensitivity</text>
+  </g>
+
+  <rect x="490" y="52" width="410" height="140" rx="12" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/>
+  <text x="508" y="76" font-size="16.6" font-weight="700" fill="#2E3440">NVFP4 (NVIDIA format)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="100" font-size="13.1">a group of <tspan font-weight="700">16</tspan> × an E4M3 scale <tspan font-weight="700">+ an FP32 scale per tensor</tspan></text>
+    <text x="508" y="120" font-size="13.8" font-weight="600">two-level microscaling · 4.5 bits/weight</text>
+    <text x="508" y="140" font-size="11.5">native support in the current NVIDIA documentation: <tspan font-weight="600">Blackwell</tspan></text>
+    <text x="508" y="160" font-size="11.5">speed depends on the executed <tspan font-weight="700" fill="#A3BE8C">hardware kernel</tspan></text>
+    <text x="508" y="180" fill="#4C566A" font-size="11.5">the smaller group tracks local range more closely</text>
+  </g>
+
+  <rect x="40" y="208" width="430" height="66" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="58" y="230" font-size="16.6" font-weight="700" fill="#2E3440">Teaching illustration of dynamic range</text>
+  <text x="58" y="250" font-size="11.3" fill="#2E3440">one outlier-containing vector: uniform INT4 versus an E2M1-like grid</text>
+  <text x="58" y="266" font-size="11.5" fill="#4C566A">the E2M1-like grid has 3.32× lower MSE here; not a general result</text>
+
+  <rect x="490" y="208" width="410" height="66" rx="12" fill="#FAF0E8" stroke="#D08770" stroke-width="1.2"/>
+  <text x="508" y="230" font-size="14.8" font-weight="700" fill="#2E3440">The W4A4 floor: weights AND activations at 4 bits</text>
+  <text x="508" y="250" font-size="11.5" fill="#2E3440">Cohere reports W4A4 deployment for Command A+ <tspan font-weight="700">(218B/25B)</tspan>:</text>
+  <text x="508" y="266" font-size="10.4" fill="#2E3440">one B200 or two H100s; the result belongs to that checkpoint and stack</text>
+
+  <rect x="40" y="290" width="860" height="40" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="308" font-size="11.5" fill="#2E3440"><tspan font-weight="700">The choice (Q5):</tspan> hardware support, scale geometry, calibration, and model-specific quality jointly determine the format</text>
+  <text x="58" y="324" font-size="11.5" fill="#4C566A">BitNet b1.58: ternary weights require co-designed training, packing, and kernels; a small file does not create fast arithmetic</text>
+</svg>

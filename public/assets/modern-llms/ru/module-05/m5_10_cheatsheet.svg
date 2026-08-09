@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<text x="70" y="70" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="700" fill="#2E3440">Модуль 5 на одной странице</text>
+<text x="70" y="108" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#5B6472">Разделяйте вычислительный граф, численный контракт и статус свидетельства</text>
+<rect x="70" y="180" width="420" height="235" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="98" y="230" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="98" dy="0">Residual-путь</tspan>
+</text>
+<text x="98" y="271" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="98" dy="0">Pre-LN сохраняет тождественный</tspan>
+<tspan x="98" dy="25">маршрут. Он помогает оптимизации;</tspan>
+<tspan x="98" dy="25">удаление обученного слоя проверяется</tspan>
+<tspan x="98" dy="25">эмпирически.</tspan>
+</text>
+<rect x="555" y="180" width="420" height="235" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="583" y="230" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="583" dy="0">Размещение нормы</tspan>
+</text>
+<text x="583" y="271" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="583" dy="0">Post-LN, Pre-LN, Peri-LN и норма</tspan>
+<tspan x="583" dy="25">выхода подслоя в стиле OLMo2 —</tspan>
+<tspan x="583" dy="25">четыре разных графа.</tspan>
+</text>
+<rect x="1040" y="180" width="420" height="235" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1068" y="230" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="1068" dy="0">Стабилизация Q/K</tspan>
+</text>
+<text x="1068" y="271" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1068" dy="0">Исходная L2-QKNorm, RMSNorm для Q/K,</tspan>
+<tspan x="1068" dy="25">soft-capping и clipping родственны,</tspan>
+<tspan x="1068" dy="25">но не тождественны.</tspan>
+</text>
+<rect x="70" y="470" width="420" height="235" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="98" y="520" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="98" dy="0">Гейтованный FFN</tspan>
+</text>
+<text x="98" y="561" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="98" dy="0">SwiGLU использует три матрицы и</tspan>
+<tspan x="98" dy="25">мультипликативный гейт. gpt-oss</tspan>
+<tspan x="98" dy="25">добавляет фиксированное ограничение</tspan>
+<tspan x="98" dy="25">и сдвиг up+1 в обучаемый граф.</tspan>
+</text>
+<rect x="555" y="470" width="420" height="235" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="583" y="520" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="583" dy="0">Точный бюджет</tspan>
+</text>
+<text x="583" y="561" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="583" dy="0">Матричная часть Llama = 13d²; полный</tspan>
+<tspan x="583" dy="25">блок = 13d²+2d. Доля FFN ≈80.8%.</tspan>
+</text>
+<rect x="1040" y="470" width="420" height="235" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1068" y="520" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="1068" dy="0">Исследовательская граница</tspan>
+</text>
+<text x="1068" y="561" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1068" dy="0">DyT/DyISRU поэлементны. mHC</tspan>
+<tspan x="1068" dy="25">ограничивает матрицы</tspan>
+<tspan x="1068" dy="25">residual-смешивания нескольких</tspan>
+<tspan x="1068" dy="25">потоков, а не скрытые состояния на</tspan>
+<tspan x="1068" dy="25">низкоразмерном многообразии.</tspan>
+</text>
+<text x="800" y="830" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#4C78A8">
+<tspan x="800" dy="0">Читайте конфигурацию, код и статьи вместе; перед публикацией утверждения пересчитывайте</tspan>
+<tspan x="800" dy="27">арифметику заново.</tspan>
+</text>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 510" width="920" height="510">
+  <title>Three families from one construction kit</title>
+  <desc>Encoder-only, decoder-only, and encoder-decoder architectures share the same basic parts but differ in masks, information flow, and training objective.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">Three families from one construction kit</text>
+  <rect x="300" y="70" width="320" height="112" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="2"/>
+  <text x="460" y="96" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.0" font-weight="700" fill="#2E3440">
+    <tspan x="460" dy="0" font-weight="700">Shared core</tspan>
+    <tspan x="460" dy="17" font-weight="700">embedding + position + attention</tspan>
+    <tspan x="460" dy="17" font-weight="700">FFN + residual + norm</tspan>
+  </text>
+  <line x1="380" y1="182" x2="175" y2="245" stroke="#A3BE8C" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="45" y="245" width="260" height="150" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.8"/>
+  <text x="175" y="275" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">BERT · encoder-only</text>
+  <text x="175" y="300" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="175" dy="0" font-weight="500">bidirectional self-attention</tspan>
+    <tspan x="175" dy="19" font-weight="500">masked-token / representation tasks</tspan>
+    <tspan x="175" dy="19" font-weight="500">full context is available at once</tspan>
+  </text>
+  <line x1="460" y1="182" x2="460" y2="245" stroke="#D08770" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="330" y="245" width="260" height="150" rx="7" fill="#FFFFFF" stroke="#D08770" stroke-width="1.8"/>
+  <text x="460" y="275" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">GPT · decoder-only</text>
+  <text x="460" y="300" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="460" dy="0" font-weight="500">causal self-attention</tspan>
+    <tspan x="460" dy="19" font-weight="500">next-token objective</tspan>
+    <tspan x="460" dy="19" font-weight="500">foundation of most LLMs</tspan>
+  </text>
+  <line x1="540" y1="182" x2="745" y2="245" stroke="#B48EAD" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="615" y="245" width="260" height="150" rx="7" fill="#FFFFFF" stroke="#B48EAD" stroke-width="1.8"/>
+  <text x="745" y="275" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">T5 / original · encoder-decoder</text>
+  <text x="745" y="300" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="745" dy="0" font-weight="500">encoder reads the source</tspan>
+    <tspan x="745" dy="19" font-weight="500">decoder generates the target</tspan>
+    <tspan x="745" dy="19" font-weight="500">cross-attention connects stacks</tspan>
+  </text>
+  <rect x="45" y="425" width="830" height="48" rx="7" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.2"/>
+  <text x="460" y="445" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.2" font-weight="600" fill="#2E3440">
+    <tspan x="460" dy="0" font-weight="600">Next in Modern LLMs: M2 tokens → M3 positions → M4 modern attention → M5 modern block → M9 KV cache</tspan>
+  </text>
+  <text x="45" y="496" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#4C566A" font-style="italic">“Transformer” names a family. Always ask: encoder-only, decoder-only, or encoder-decoder—and which mask?</text>
+</svg>

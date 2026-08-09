@@ -1,0 +1,25 @@
+<svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Таймлайн SFT</title>
+  <desc>От FLAN и InstructGPT через LIMA и Magpie к переносу решений и структурированным форматам.</desc>
+  <defs><marker id="a111" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">SFT: пять лет от инструкций до трёх каналов</text>
+
+  <line x1="50" y1="96" x2="900" y2="96" stroke="#5E81AC" stroke-width="1.4" marker-end="url(#a111)"/>
+  <g text-anchor="middle" font-size="9.5">
+    <circle cx="100" cy="96" r="5" fill="#4C566A"/><text x="100" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'21 FLAN · T0</text><text x="100" y="114" font-size="12" fill="#4C566A">инструкции как задачи;</text><text x="100" y="126" font-size="8.5" fill="#4C566A">перенос без примеров (zero-shot)</text>
+    <circle cx="240" cy="96" r="5" fill="#5E81AC"/><text x="240" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'22 InstructGPT</text><text x="240" y="114" font-size="12" fill="#4C566A">SFT — первый этаж</text><text x="240" y="126" font-size="12" fill="#4C566A">выравнивания</text>
+    <circle cx="390" cy="96" r="5" fill="#88C0D0"/><text x="390" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'23 LIMA · открытые рецепты</text><text x="390" y="114" font-size="12" fill="#4C566A">тщательный отбор;</text><text x="390" y="126" font-size="12" fill="#4C566A">1K отобранных демонстраций</text>
+    <circle cx="540" cy="96" r="5" fill="#B48EAD"/><text x="540" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'24 Magpie · Tülu 3</text><text x="540" y="114" font-size="12" fill="#4C566A">синтетика из пустого шаблона;</text><text x="540" y="126" font-size="12" fill="#4C566A">открытые смеси данных</text>
+    <circle cx="700" cy="96" r="6" fill="#D08770"/><text x="700" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'25 R1-Distill · s1</text><text x="700" y="114" font-size="12" fill="#4C566A">перенос решений в меньшие модели;</text><text x="700" y="126" font-size="12" fill="#4C566A">s1K: 1000 отобранных задач</text>
+    <circle cx="850" cy="96" r="6" fill="#A3BE8C"/><text x="850" y="80" font-weight="600" fill="#2E3440">'25–26 · форматы и инструменты</text><text x="850" y="114" font-size="11.1" fill="#4C566A">явные каналы ответа;</text><text x="850" y="126" font-size="9.8" fill="#4C566A">упаковка — частый приём</text>
+  </g>
+
+  <rect x="50" y="152" width="850" height="124" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="66" y="176" font-size="16.6" font-weight="700" fill="#2E3440">Две части модуля — механика и данные (числа листа)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="66" y="200" font-size="11.5"><tspan font-weight="600" fill="#5E81AC">Механика:</tspan> шаблон = контракт · маска −100: обучаемо 37,5% диалога · FFD: 24 → 5 строк; скорость измеряем отдельно (§4–6)</text>
+    <text x="66" y="222" font-size="11.2"><tspan font-weight="600" fill="#D08770">Экономика:</tspan> C<tspan baseline-shift="sub" font-size="8.3">SFT</tspan> = 3.5·10¹⁹ — в 20 833 раз меньше сценария претрейна; 24 ч — арифметическая оценка; s1: 9 мин за один проход (§7, §11)</text>
+    <text x="66" y="244" font-size="11.5"><tspan font-weight="600" fill="#A3BE8C">Данные:</tspan> LIMA и качество · Magpie и проверяемая синтетика · общий диалог, решения и инструменты (§8–12)</text>
+  </g>
+  <text x="66" y="264" font-size="9.7" font-style="italic" fill="#4C566A">все числа воспроизводятся локальными расчётами; внешние результаты сохраняют условия источников</text>
+</svg>

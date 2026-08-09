@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="58" y="62" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#20293A">Selection bias меняет команду, но не gate scores</text>
+<text x="58" y="101" font-family="Arial, sans-serif" font-size="19.6" fill="#596579">Числовая трасса одного top-4 решения</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#465A73"/></marker></defs>
+<rect x="70" y="220" width="285" height="350" rx="18" fill="#E7F0FB" stroke="#C8D2E1" stroke-width="2"/>
+<text x="92" y="263" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="92" dy="0">1 · Logits</tspan>
+</text>
+<text x="92" y="299" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="92" dy="0">[1.2, −0.3, 2.1, 0.4,</tspan>
+<tspan x="92" dy="23"> 1.7, −1.0, 0.9, 2.5]</tspan>
+</text>
+<rect x="405" y="220" width="285" height="350" rx="18" fill="#E8F6EA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="427" y="263" text-anchor="start" font-family="Arial, sans-serif" font-size="27.5" font-weight="700" fill="#20293A">
+<tspan x="427" dy="0">2 · Sigmoid scores</tspan>
+</text>
+<text x="427" y="299" text-anchor="start" font-family="Arial, sans-serif" font-size="18.5" font-weight="400" fill="#596579">
+<tspan x="427" dy="0">[.7685, .4256, .8909, .5987,</tspan>
+<tspan x="427" dy="23"> .8455, .2689, .7109, .9241]</tspan>
+</text>
+<rect x="740" y="220" width="285" height="350" rx="18" fill="#FFF2D3" stroke="#C8D2E1" stroke-width="2"/>
+<text x="762" y="263" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="762" dy="0">3 · Top-4</tspan>
+</text>
+<text x="762" y="299" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="762" dy="0">без bias: [7, 2, 4, 0]</tspan>
+<tspan x="762" dy="23">with b₃=+0.35: [3, 7, 2, 4]</tspan>
+</text>
+<rect x="1075" y="220" width="285" height="350" rx="18" fill="#EEE8FA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1097" y="263" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1097" dy="0">4 · Gates</tspan>
+</text>
+<text x="1097" y="299" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="1097" dy="0">без bias:</tspan>
+<tspan x="1097" dy="23">[.2695,.2598,.2466,.2241]</tspan>
+<tspan x="1097" dy="23">with bias:</tspan>
+<tspan x="1097" dy="23">[.1837,.2835,.2733,.2594]</tspan>
+</text>
+<line x1="355" y1="395" x2="395" y2="395" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="690" y1="395" x2="730" y2="395" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="1025" y1="395" x2="1065" y2="395" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="220" y="665" width="1160" height="135" rx="18" fill="#FCE5E8" stroke="#C8D2E1" stroke-width="2"/>
+<text x="245" y="712" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="245" dy="0">Ключевое различие</tspan>
+</text>
+<text x="245" y="749" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="245" dy="0">Expert 3 входит в top-k благодаря selection score s₃+b₃, но его вклад нормируется из чистого</tspan>
+<tspan x="245" dy="26">s₃=0.5987.</tspan>
+</text>
+</svg>

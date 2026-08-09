@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#718096"/></marker></defs>
+<rect width="1600" height="900" fill="#ffffff"/>
+<text x="60" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#17324d">Как агентный цикл стал исполняющей системой</text>
+<rect x="40" y="150" width="280" height="575" rx="18" fill="#e8f1fb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="202" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#17324d" text-anchor="middle">2022</text>
+<text x="180" y="265" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">ReAct</text>
+<text x="65" y="360" font-family="DejaVu Sans,Arial,sans-serif" font-size="18.7" font-weight="600" fill="#263238" text-anchor="start">рассуждение + действие</text>
+<text x="65" y="387" font-family="DejaVu Sans,Arial,sans-serif" font-size="17.3" font-weight="400" fill="#263238" text-anchor="start">замкнутая обратная связь</text>
+<line x1="320" y1="440" x2="335" y2="440" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="350" y="150" width="280" height="575" rx="18" fill="#eaf7ef" stroke="#cbd5e1" stroke-width="2"/>
+<text x="490" y="202" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#17324d" text-anchor="middle">2023</text>
+<text x="490" y="265" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">Вызов функций</text>
+<text x="490" y="296" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="700" fill="#263238" text-anchor="middle">Управляемая генерация</text>
+<text x="375" y="385" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#263238" text-anchor="start">машино-читаемое</text>
+<text x="375" y="412" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">действие</text>
+<text x="375" y="439" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">грамматика и схема</text>
+<line x1="630" y1="440" x2="645" y2="440" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="660" y="150" width="280" height="575" rx="18" fill="#fff5df" stroke="#cbd5e1" stroke-width="2"/>
+<text x="800" y="202" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#17324d" text-anchor="middle">2024</text>
+<text x="800" y="265" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">CodeAct</text>
+<text x="800" y="296" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="700" fill="#263238" text-anchor="middle">SWE-agent / ACI</text>
+<text x="685" y="385" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">код как действие</text>
+<text x="685" y="412" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">интерфейс меняет</text>
+<text x="685" y="439" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">результат</text>
+<line x1="940" y1="440" x2="955" y2="440" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="970" y="150" width="280" height="575" rx="18" fill="#f2ecfb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="1110" y="202" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#17324d" text-anchor="middle">2024–26</text>
+<text x="1110" y="265" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">MCP</text>
+<text x="995" y="360" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">стандарт соединения</text>
+<text x="995" y="387" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">хост ↔ сервер</text>
+<text x="995" y="414" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">возможностей</text>
+<line x1="1250" y1="440" x2="1265" y2="440" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1280" y="150" width="280" height="575" rx="18" fill="#e8f7f8" stroke="#cbd5e1" stroke-width="2"/>
+<text x="1420" y="202" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#17324d" text-anchor="middle">2025–26</text>
+<text x="1420" y="265" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">Агентные SDK</text>
+<text x="1420" y="296" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">Компьютерное</text>
+<text x="1420" y="327" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="700" fill="#263238" text-anchor="middle">управление · субагенты</text>
+<text x="1305" y="410" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.4" font-weight="400" fill="#263238" text-anchor="start">долговечное состояние</text>
+<text x="1305" y="437" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">оркестрация</text>
+<text x="1305" y="464" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#263238" text-anchor="start">и восстановление</text>
+<rect x="145" y="755" width="1310" height="105" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+<text x="800" y="800" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#263238" text-anchor="middle">Сдвиг: от текстового шаблона к системе с протоколом,</text>
+<text x="800" y="831" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#263238" text-anchor="middle">состоянием, полномочиями и проверкой.</text>
+</svg>

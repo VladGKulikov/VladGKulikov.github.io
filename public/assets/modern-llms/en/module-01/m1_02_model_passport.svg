@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">Two passports for one product</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">The checkpoint describes the model; tools and environment define the acting system</text>
+<rect x="120" y="180" width="600" height="570" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="156" y="243" text-anchor="start" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#2E3440">
+<tspan x="156" dy="0">Model passport</tspan>
+</text>
+<text x="156" y="289" text-anchor="start" font-family="Arial,sans-serif" font-size="21" font-weight="400" fill="#5B6472">
+<tspan x="156" dy="0">I  total / active / precision</tspan>
+<tspan x="156" dy="29">II  nominal + working context</tspan>
+<tspan x="156" dy="29">III input and output modalities</tspan>
+<tspan x="156" dy="29">IV reasoning / effort</tspan>
+<tspan x="156" dy="29">V  weights, licence, artefacts</tspan>
+<tspan x="156" dy="29">VI latency, throughput, cost</tspan>
+</text>
+<rect x="880" y="180" width="600" height="570" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="916" y="243" text-anchor="start" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#2E3440">
+<tspan x="916" dy="0">System passport</tspan>
+</text>
+<text x="916" y="289" text-anchor="start" font-family="Arial,sans-serif" font-size="21" font-weight="400" fill="#5B6472">
+<tspan x="916" dy="0">exact version and safeguards</tspan>
+<tspan x="916" dy="29">tools + agent harness</tspan>
+<tspan x="916" dy="29">permissions + secrets</tspan>
+<tspan x="916" dy="29">network + sandbox</tspan>
+<tspan x="916" dy="29">shared memory + channels</tspan>
+<tspan x="916" dy="29">evaluation protocol</tspan>
+<tspan x="916" dy="29">monitoring + stop conditions</tspan>
+</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="730" y1="460" x2="860" y2="460" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
+<text x="795" y="415" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#4C78A8">
+<tspan x="795" dy="0">weights</tspan>
+</text>
+<text x="795" y="515" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#4C78A8">
+<tspan x="795" dy="0">actions</tspan>
+</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<text x="70" y="70" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="700" fill="#2E3440">Читаем gpt-oss: конфигурация вместе с кодом</text>
+<text x="70" y="108" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#5B6472">Не каждое архитектурное решение хранится в одноимённом поле</text>
+<rect x="75" y="190" width="650" height="485" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="107" y="247" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#2E3440">
+<tspan x="107" dy="0">Поля ModelConfig</tspan>
+</text>
+<text x="107" y="292" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="107" dy="0">hidden_size = 2880</tspan>
+<tspan x="107" dy="28">intermediate_size = 2880</tspan>
+<tspan x="107" dy="28">num_experts = 128</tspan>
+<tspan x="107" dy="28">experts_per_token = 4</tspan>
+<tspan x="107" dy="28">swiglu_limit = 7.0</tspan>
+<tspan x="107" dy="28"></tspan>
+<tspan x="107" dy="28">В эталонном классе конфигурации нет поля</tspan>
+<tspan x="107" dy="28">hidden_act.</tspan>
+</text>
+<rect x="875" y="190" width="650" height="485" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="907" y="247" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#2E3440">
+<tspan x="907" dy="0">Что показывает только model.py</tspan>
+</text>
+<text x="907" y="292" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="907" dy="0">RMSNorm считает редукцию в float32 в эталонном</tspan>
+<tspan x="907" dy="28">пути</tspan>
+<tspan x="907" dy="28">SwiGLU gpt-oss с фиксированным ограничением,</tspan>
+<tspan x="907" dy="28">alpha=1.702 и up+1</tspan>
+<tspan x="907" dy="28">Pre-LN-порядок блока</tspan>
+<tspan x="907" dy="28">маршрутизация экспертов и layout тензоров</tspan>
+<tspan x="907" dy="28"></tspan>
+<tspan x="907" dy="28">Паспорт архитектуры = конфигурация + реализация.</tspan>
+</text>
+<line x1="725" y1="430" x2="875" y2="430" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="310" y="735" width="980" height="100" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="333" y="779" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="21" font-weight="700" fill="#2E3440">
+<tspan x="333" dy="0">Правило чтения</tspan>
+</text>
+<text x="333" y="819" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#5B6472">
+<tspan x="333" dy="0">Не придумывайте hidden_act и не выводите причину ограничения из имени поля.</tspan>
+<tspan x="333" dy="24">Прослеживайте фактически исполняемый прямой проход.</tspan>
+</text>
+</svg>

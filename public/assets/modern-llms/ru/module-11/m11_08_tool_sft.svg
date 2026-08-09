@@ -1,0 +1,38 @@
+<svg viewBox="0 0 940 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Tool-use SFT</title>
+  <desc>Траектория с вызовом и результатом инструмента; решения, которым должна научиться модель.</desc>
+  <defs><marker id="a118" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">SFT для работы с инструментами (§12)</text>
+
+  <rect x="40" y="52" width="560" height="180" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="74" font-size="16.6" font-weight="700" fill="#2E3440">Формат данных: диалог с двумя новыми жанрами реплик</text>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="8.8" fill="#2E3440">
+    <text x="58" y="98" font-size="13.8" font-weight="600">[user] What's the weather in Tel Aviv?</text>
+    <text x="58" y="120" fill="#5E81AC" font-size="13.8" font-weight="600">[assistant] &lt;tool_call&gt;{"name": "get_weather",</text>
+    <text x="58" y="136" fill="#5E81AC" font-size="13.8" font-weight="600">            "arguments": {"city": "Tel Aviv"}}&lt;/tool_call&gt;</text>
+    <text x="58" y="158" fill="#D08770" font-size="13.8" font-weight="600">[tool_response] {"temp": 28, "condition": "sunny"}</text>
+    <text x="58" y="180" fill="#A3BE8C" font-size="13.8" font-weight="600">[assistant] It's currently 28°C and sunny in Tel Aviv.</text>
+  </g>
+  <text x="58" y="206" font-size="10.9" fill="#4C566A">вызов — строгий JSON в тегах; после tool_response модель формулирует ответ человеку;</text>
+  <text x="58" y="220" font-size="11.5" fill="#4C566A">источники данных: xLAM и ToolACE; синтетика требует проверки и происхождения</text>
+
+  <rect x="620" y="52" width="280" height="180" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="638" y="74" font-size="15.8" font-weight="700" fill="#2E3440">Каким решениям учит SFT (В6)</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="638" y="98" font-size="13.8">1 · строгая структура вызова:</text>
+    <text x="638" y="114" fill="#4C566A" font-size="11.5">аргументы, обязательные поля</text>
+    <text x="638" y="136" font-size="11.5">2 · чтение результатов</text>
+    <text x="638" y="158" font-size="11.5">3 · многошаговые цепочки</text>
+    <text x="638" y="174" fill="#4C566A" font-size="11.5">и параллельные вызовы</text>
+    <text x="638" y="196" font-size="11.5">4 · эскалация к пользователю,</text>
+    <text x="638" y="212" fill="#4C566A" font-size="11.5">когда инструмент не помог</text>
+  </g>
+
+  <rect x="40" y="250" width="860" height="52" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="58" y="272" font-size="15.4" font-weight="700" fill="#2E3440">Оценивать нужно раздельно:</text>
+  <text x="330" y="272" font-size="11.5" fill="#2E3440">Оценивать: схему · выбор · исполнение · многоходовое завершение</text>
+  <text x="58" y="292" font-size="11.5" fill="#4C566A">«умеет генерировать JSON» ≠ «умеет пользоваться инструментами»: важны аргументы, результаты, ошибки и повторные действия</text>
+
+  <text x="30" y="330" font-size="11.5" fill="#2E3440">Протокол вызова живёт в шаблоне (§4): теги, JSON-объект или канал Harmony должны совпадать с целевой моделью;</text>
+  <text x="30" y="346" font-size="11.5" fill="#2E3440">результат среды служит контекстом, а вызов и реакция ассистента — целевыми действиями.</text>
+</svg>

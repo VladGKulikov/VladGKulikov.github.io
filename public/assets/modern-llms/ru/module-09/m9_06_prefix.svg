@@ -1,0 +1,42 @@
+<svg viewBox="0 0 940 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Prefix caching</title>
+  <desc>TTFT-экономика cache hit, API-контракты и правило дизайна промпта.</desc>
+  <defs><marker id="a96" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Prefix caching: общий префикс как вычислительный актив</text>
+
+  <rect x="40" y="52" width="530" height="108" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="74" font-size="13.8" font-weight="700" fill="#2E3440">TTFT-арифметика сценария (8B, промпт 8K, hit 7.5K)</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="58" y="98" font-size="13.8" font-weight="600">полный префилл : 2·P·8192 / R<tspan baseline-shift="sub" font-size="9.4">compute</tspan> = 132.4 мс</text>
+    <text x="58" y="120" font-size="13.8" font-weight="600">кэш-хит 7.5K   : считаем хвост 512 →  8.27 мс</text>
+    <text x="58" y="142" font-weight="700" font-size="12.5">отношение ×16   (runtime измеряется с lookup/transfer/batching)</text>
+  </g>
+
+  <rect x="590" y="52" width="310" height="108" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="608" y="74" font-size="16.6" font-weight="700" fill="#2E3440">Механика: CoW на блоках (§8)</text>
+  <text x="608" y="96" font-size="13.8" fill="#2E3440">общие блоки префикса разделяются</text>
+  <text x="608" y="114" font-size="11.5" fill="#2E3440">физически; новый запрос получает</text>
+  <text x="608" y="132" font-size="11.5" fill="#2E3440">указатели и платит только за хвост;</text>
+  <text x="608" y="150" font-size="11.5" fill="#4C566A">RadixAttention: то же деревом (SGLang)</text>
+
+  <rect x="40" y="176" width="530" height="102" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="58" y="198" font-size="13.8" font-weight="700" fill="#2E3440">API-контракты на 3 августа 2026 года</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="220" font-size="11.5">Anthropic: cache read = 0.1× базового input rate</text>
+    <text x="58" y="238" font-size="13.8" font-weight="600">GPT-5.6: write 1.25× · read 0.1× · min TTL 30 минут</text>
+    <text x="58" y="260" font-size="11.5">Kimi K3: раздельные hit/miss цены; &gt;90% hit на coding workload Moonshot</text>
+  </g>
+
+  <rect x="590" y="176" width="310" height="102" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="608" y="198" font-size="10.5" font-weight="700" fill="#2E3440">Правило дизайна промпта</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="9" text-anchor="middle">
+    <rect x="608" y="210" width="130" height="24" rx="4" fill="#EFF4EA" stroke="#A3BE8C"/><text x="673" y="226" fill="#2E3440" font-size="13.8" font-weight="600">instructions</text>
+    <rect x="744" y="210" width="70" height="24" rx="4" fill="#EFF4EA" stroke="#A3BE8C"/><text x="779" y="226" fill="#2E3440" font-size="13.8" font-weight="600">docs</text>
+    <rect x="820" y="210" width="64" height="24" rx="4" fill="#F8ECEC" stroke="#BF616A"/><text x="852" y="226" fill="#BF616A" font-size="13.8" font-weight="600">query</text>
+  </g>
+  <text x="608" y="256" font-size="11.5" fill="#2E3440">стабильное — в начало, изменчивое — в конец:</text>
+  <text x="608" y="272" font-size="11.5" fill="#4C566A">hit rate управляет счётом напрямую</text>
+
+  <text x="30" y="304" font-size="11.5" fill="#2E3440">Границы (В3): слабый эффект при редких совпадениях и коротких prompts; локальный кэш связан</text>
+  <text x="30" y="320" font-size="11.5" fill="#2E3440">с engine instance и памятью узла; внешний KV-tier расширяет область reuse (§10).</text>
+</svg>

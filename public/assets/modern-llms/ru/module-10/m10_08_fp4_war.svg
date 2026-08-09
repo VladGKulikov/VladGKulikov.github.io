@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>NVFP4 против MXFP4</title>
+  <desc>Два формата микромасштабирования, учебный опыт с динамическим диапазоном, W4A4 и BitNet.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Четыре бита: формат, масштабы и аппаратный путь</text>
+
+  <rect x="40" y="52" width="430" height="140" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">MXFP4 (OCP Microscaling)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">группа <tspan font-weight="700">32</tspan> значений E2M1 × один масштаб E8M0</text>
+    <text x="58" y="120" font-size="11.5">32 значения + локальный масштаб → 4.25 бит/вес</text>
+    <text x="58" y="140" font-size="11.5">ускорение требует совместимого аппаратного ядра</text>
+    <text x="58" y="158" fill="#4C566A" font-size="11.5">эмуляция и нативное исполнение — разные режимы</text>
+    <text x="58" y="180" fill="#4C566A" font-size="11.5">качество зависит от калибровки и модели</text>
+  </g>
+
+  <rect x="490" y="52" width="410" height="140" rx="12" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/>
+  <text x="508" y="76" font-size="16.6" font-weight="700" fill="#2E3440">NVFP4 (схема NVIDIA)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="100" font-size="13.4">группа <tspan font-weight="700">16</tspan> × масштаб E4M3 <tspan font-weight="700">+ FP32-масштаб на тензор</tspan></text>
+    <text x="508" y="120" font-size="11.5">двухуровневое микромасштабирование · 4.5 бит/вес</text>
+    <text x="508" y="140" font-size="11.4">нативная поддержка в текущей документации NVIDIA: <tspan font-weight="600">Blackwell</tspan></text>
+    <text x="508" y="160" font-size="11.5">скорость зависит от исполняемого <tspan font-weight="700" fill="#A3BE8C">аппаратного ядра</tspan></text>
+    <text x="508" y="180" fill="#4C566A" font-size="11.5">меньшая группа точнее подстраивает локальный диапазон</text>
+  </g>
+
+  <rect x="40" y="208" width="430" height="66" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="58" y="230" font-size="15.4" font-weight="700" fill="#2E3440">Учебная иллюстрация динамического диапазона</text>
+  <text x="58" y="250" font-size="9.5" fill="#2E3440">один вектор с выбросом: сравниваются равномерная INT4 и E2M1-подобная сетка</text>
+  <text x="58" y="266" font-size="9.2" fill="#4C566A">в этом примере MSE E2M1-подобной сетки в 3.32 раза ниже; это не общий вывод</text>
+
+  <rect x="490" y="208" width="410" height="66" rx="12" fill="#FAF0E8" stroke="#D08770" stroke-width="1.2"/>
+  <text x="508" y="230" font-size="16.6" font-weight="700" fill="#2E3440">Этаж W4A4: веса И активации по 4 бита</text>
+  <text x="508" y="250" font-size="9.5" fill="#2E3440">Cohere сообщает W4A4-развёртывание Command A+ <tspan font-weight="700">(218B всего / 25B активных)</tspan>:</text>
+  <text x="508" y="266" font-size="9.5" fill="#2E3440">1×B200 или 2×H100; результат относится к конкретному чекпойнту и стеку</text>
+
+  <rect x="40" y="290" width="860" height="40" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="308" font-size="11.5" fill="#2E3440"><tspan font-weight="700">Выбор (В5):</tspan> формат определяют поддержка оборудования, схема масштабов, калибровка и качество конкретной модели</text>
+  <text x="58" y="324" font-size="10.2" fill="#4C566A">BitNet b1.58: тернарные веса требуют совместного проектирования обучения, упаковки и ядер; маленький файл ещё не создаёт быструю арифметику</text>
+</svg>

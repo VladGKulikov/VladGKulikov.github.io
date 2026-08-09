@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="white"/>
+<text x="70" y="70" font-family="Arial" font-size="39.1" font-weight="700" fill="#2E3440">From linear systems to hybrid LLMs</text>
+<text x="70" y="110" font-family="Arial" font-size="19.6" fill="#5B6472">Each step repairs a concrete limitation of sequence memory</text>
+<rect x="35" y="220" width="270" height="300" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="57" y="263" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="700" fill="#2E3440">
+<tspan x="57" dy="0">HiPPO / S4</tspan>
+</text>
+<text x="57" y="303" text-anchor="start" font-family="Arial" font-size="19.2" font-weight="400" fill="#5B6472">
+<tspan x="57" dy="0">structured long-memory</tspan>
+<tspan x="57" dy="24">dynamics</tspan>
+</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="313" y1="370" x2="335" y2="370" stroke="#4C78A8" stroke-width="3" marker-end="url(#a)"/>
+<rect x="345" y="220" width="270" height="300" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="367" y="263" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="367" dy="0">Mamba 2023</tspan>
+</text>
+<text x="367" y="303" text-anchor="start" font-family="Arial" font-size="19.1" font-weight="600" fill="#5B6472">
+<tspan x="367" dy="0">input-dependent writing</tspan>
+<tspan x="367" dy="24">and forgetting</tspan>
+</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="623" y1="370" x2="645" y2="370" stroke="#4C78A8" stroke-width="3" marker-end="url(#a)"/>
+<rect x="655" y="220" width="270" height="300" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="677" y="263" text-anchor="start" font-family="Arial" font-size="22.9" font-weight="700" fill="#2E3440">
+<tspan x="677" dy="0">Mamba-2 / DeltaNet</tspan>
+<tspan x="677" dy="28">2024</tspan>
+</text>
+<text x="677" y="331" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="677" dy="0">SSD, chunks, and</tspan>
+<tspan x="677" dy="24">editable memory</tspan>
+</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="933" y1="370" x2="955" y2="370" stroke="#4C78A8" stroke-width="3" marker-end="url(#a)"/>
+<rect x="965" y="220" width="270" height="300" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="987" y="263" text-anchor="start" font-family="Arial" font-size="25.1" font-weight="700" fill="#2E3440">
+<tspan x="987" dy="0">Hybrids 2024–2026</tspan>
+</text>
+<text x="987" y="303" text-anchor="start" font-family="Arial" font-size="22.6" font-weight="600" fill="#5B6472">
+<tspan x="987" dy="0">Jamba · Falcon-H1 ·</tspan>
+<tspan x="987" dy="24">Qwen3.5 · Kimi</tspan>
+</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1243" y1="370" x2="1265" y2="370" stroke="#4C78A8" stroke-width="3" marker-end="url(#a)"/>
+<rect x="1275" y="220" width="270" height="300" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1297" y="263" text-anchor="start" font-family="Arial" font-size="22.4" font-weight="700" fill="#2E3440">
+<tspan x="1297" dy="0">New branches in 2026</tspan>
+</text>
+<text x="1297" y="303" text-anchor="start" font-family="Arial" font-size="18.5" font-weight="600" fill="#5B6472">
+<tspan x="1297" dy="0">Mamba-3 · SISA · sparse</tspan>
+<tspan x="1297" dy="24">attention</tspan>
+</text>
+<rect x="190" y="650" width="1220" height="130" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="216" y="698" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="216" dy="0">The recurring</tspan>
+<tspan x="216" dy="29">question</tspan>
+</text>
+<text x="216" y="768" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="216" dy="0">What can be compressed into fixed state, and where is addressable memory still required?</tspan>
+</text>
+</svg>

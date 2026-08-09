@@ -1,0 +1,25 @@
+<svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The SFT timeline</title>
+  <desc>From FLAN and InstructGPT through LIMA and Magpie to reasoning transfer and structured formats.</desc>
+  <defs><marker id="a111" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">SFT: five years from instructions to three channels</text>
+
+  <line x1="50" y1="96" x2="900" y2="96" stroke="#5E81AC" stroke-width="1.4" marker-end="url(#a111)"/>
+  <g text-anchor="middle" font-size="9.5">
+    <circle cx="100" cy="96" r="5" fill="#4C566A"/><text x="100" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'21 FLAN · T0</text><text x="100" y="114" font-size="12" fill="#4C566A">instructions as tasks;</text><text x="100" y="126" font-size="13.8" fill="#4C566A" font-weight="600">zero-shot transfer</text>
+    <circle cx="240" cy="96" r="5" fill="#5E81AC"/><text x="240" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'22 InstructGPT</text><text x="240" y="114" font-size="12" fill="#4C566A">SFT — the first floor</text><text x="240" y="126" font-size="12" fill="#4C566A">of alignment</text>
+    <circle cx="390" cy="96" r="5" fill="#88C0D0"/><text x="390" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'23 LIMA · open recipes</text><text x="390" y="114" font-size="12" fill="#4C566A">careful curation;</text><text x="390" y="126" font-size="12" fill="#4C566A">1K selected demonstrations</text>
+    <circle cx="540" cy="96" r="5" fill="#B48EAD"/><text x="540" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'24 Magpie · Tülu 3</text><text x="540" y="114" font-size="12" fill="#4C566A">synthetics from an empty template;</text><text x="540" y="126" font-size="12" fill="#4C566A">open mixtures</text>
+    <circle cx="700" cy="96" r="6" fill="#D08770"/><text x="700" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'25 R1-Distill · s1</text><text x="700" y="114" font-size="12" fill="#4C566A">reasoning transfer to smaller models;</text><text x="700" y="126" font-size="12" fill="#4C566A">s1K: 1,000 selected problems</text>
+    <circle cx="850" cy="96" r="6" fill="#A3BE8C"/><text x="850" y="80" font-weight="600" fill="#2E3440" font-size="9.8">'25–26 · formats and tools</text><text x="850" y="114" font-size="9.6" fill="#4C566A">explicit response channels;</text><text x="850" y="126" font-size="9.1" fill="#4C566A">packing — a common technique</text>
+  </g>
+
+  <rect x="50" y="152" width="850" height="124" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="66" y="176" font-size="16.6" font-weight="700" fill="#2E3440">The module's two halves — mechanics and data (the sheet's numbers)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="66" y="200" font-size="11.5"><tspan font-weight="600" fill="#5E81AC">Mechanics:</tspan> the template = the contract · the −100 mask: 37.5% supervised · FFD: 24 → 5 rows; measure runtime separately (§4–6)</text>
+    <text x="66" y="222" font-size="11.5"><tspan font-weight="600" fill="#D08770">Economics:</tspan> C<tspan baseline-shift="sub" font-size="8.3">SFT</tspan> = 3.5·10¹⁹ — 20,833× below the declared pretraining scenario; 24 h is arithmetic; s1: 9 min for one pass (§7, §11)</text>
+    <text x="66" y="244" font-size="11.5"><tspan font-weight="600" fill="#A3BE8C">Data:</tspan> LIMA and curation · Magpie and verified synthesis · general dialogue, reasoning, and tools (§8–12)</text>
+  </g>
+  <text x="66" y="264" font-size="9.7" font-style="italic" fill="#4C566A">values reproduced by course verification code; external results retain source conditions</text>
+</svg>

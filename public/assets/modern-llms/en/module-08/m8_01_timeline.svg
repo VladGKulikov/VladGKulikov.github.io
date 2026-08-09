@@ -1,0 +1,25 @@
+<svg viewBox="0 0 940 296" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The pretraining timeline</title>
+  <desc>From Kaplan's power laws to Chinchilla, inference-aware training, Muon/K2 and the NVFP4 runs of 2026.</desc>
+  <defs><marker id="a81" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="22.6" font-weight="700" fill="#2E3440">Pretraining: six years from “loss is a power law” to NVFP4 trillion-scale runs</text>
+
+  <line x1="50" y1="96" x2="900" y2="96" stroke="#5E81AC" stroke-width="1.4" marker-end="url(#a81)"/>
+  <g text-anchor="middle" font-size="9.5">
+    <circle cx="105" cy="96" r="5" fill="#4C566A"/><text x="105" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2020 Kaplan</text><text x="105" y="114" font-size="12" fill="#4C566A">power laws;</text><text x="105" y="126" font-size="9.3" fill="#4C566A">“grow the model faster than data”</text>
+    <circle cx="250" cy="96" r="6" fill="#5E81AC"/><text x="250" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2022 Chinchilla</text><text x="250" y="114" font-size="13.8" fill="#4C566A" font-weight="600">compute-optimal;</text><text x="250" y="126" font-size="13.8" fill="#4C566A" font-weight="600">≈20 tok/param</text>
+    <circle cx="405" cy="96" r="5" fill="#88C0D0"/><text x="405" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2024 Beyond + data</text><text x="405" y="114" font-size="13.8" fill="#4C566A" font-weight="600">inference-aware; FineWeb,</text><text x="405" y="126" font-size="12" fill="#4C566A">DCLM 240T→4T; the FP8 era</text>
+    <circle cx="565" cy="96" r="6" fill="#D08770"/><text x="565" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2024–25 Muon</text><text x="565" y="114" font-size="12" fill="#4C566A">NS orthogonalization;</text><text x="565" y="126" font-size="12" fill="#4C566A">speedrun records</text>
+    <circle cx="715" cy="96" r="6" fill="#A3BE8C"/><text x="715" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2025 K2 · MuonClip</text><text x="715" y="114" font-size="12" fill="#4C566A">1T MoE · 15.5T tokens;</text><text x="715" y="126" font-size="12" fill="#4C566A">0 training spikes</text>
+    <circle cx="855" cy="96" r="7" fill="#B48EAD"/><text x="855" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2026</text><text x="855" y="114" font-size="8.6" fill="#4C566A">Nemotron 3 NVFP4 pretrain;</text><text x="855" y="126" font-size="11.5" fill="#4C566A">V4: Muon + mHC (exp.)</text>
+  </g>
+
+  <rect x="50" y="150" width="850" height="118" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="66" y="174" font-size="16.6" font-weight="700" fill="#2E3440">Three degrees of freedom of a run — the module's three plots</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="66" y="198" font-size="11.5"><tspan font-weight="600" fill="#5E81AC">What to feed it:</tspan> the six-stage pipeline, the 15T/4T/6.3T pool — and the wall: an appetite of D* = 50.4T at C = 10²⁶ (§5, §9)</text>
+    <text x="66" y="222" font-size="11.5"><tspan font-weight="600" fill="#D08770">How much of what:</tspan> the exact optimum N* = [(αA/βB)(C/6)^β]^{1/(α+β)} — “20 tok/param” is no constant; the overtraining ΔL = 0.0258 (§4–8)</text>
+    <text x="66" y="246" font-size="11.5"><tspan font-weight="600" fill="#A3BE8C">How to step:</tspan> Muon — the update's spectrum into the band [0.68, 1.13] in 5 iterations; MuonClip — trimming weights, not logits (§10–11)</text>
+  </g>
+  <text x="66" y="262" font-size="9.7" font-style="italic" fill="#4C566A">values reproduced by course verification code; dates follow the program slot</text>
+</svg>

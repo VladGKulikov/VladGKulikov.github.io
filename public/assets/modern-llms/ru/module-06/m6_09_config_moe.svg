@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="58" y="62" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#20293A">gpt-oss-120b: паспорт из открытого кода</text>
+<text x="58" y="101" font-family="Arial, sans-serif" font-size="23.5" fill="#596579" font-weight="600">Bias-параметры и active convention входят в результат</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#465A73"/></marker></defs>
+<rect x="45" y="235" width="340" height="390" rx="18" fill="#E7F0FB" stroke="#C8D2E1" stroke-width="2"/>
+<text x="70" y="282" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="70" dy="0">Router</tspan>
+</text>
+<text x="70" y="319" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="70" dy="0">W: 2880×128</tspan>
+<tspan x="70" dy="24">bias: 128</tspan>
+<tspan x="70" dy="24">top-4 logits</tspan>
+<tspan x="70" dy="24">softmax по выбранным</tspan>
+</text>
+<rect x="430" y="235" width="340" height="390" rx="18" fill="#E8F6EA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="455" y="282" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="455" dy="0">Expert bank</tspan>
+</text>
+<text x="455" y="319" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="455" dy="0">128 experts × 36 layers</tspan>
+<tspan x="455" dy="24">packed gate/up + down</tspan>
+<tspan x="455" dy="24">веса и bias</tspan>
+</text>
+<rect x="815" y="235" width="340" height="390" rx="18" fill="#FFF2D3" stroke="#C8D2E1" stroke-width="2"/>
+<text x="840" y="282" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="840" dy="0">Общие компоненты</tspan>
+</text>
+<text x="840" y="319" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="840" dy="0">GQA attention с bias</tspan>
+<tspan x="840" dy="24">2 vocab matrices</tspan>
+<tspan x="840" dy="24">RMSNorm · sinks</tspan>
+</text>
+<rect x="1200" y="235" width="340" height="390" rx="18" fill="#EEE8FA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1225" y="282" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1225" dy="0">Паспорт</tspan>
+</text>
+<text x="1225" y="319" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="1225" dy="0">Total 116 829 156 672</tspan>
+<tspan x="1225" dy="24">Active 5 132 849 472</tspan>
+<tspan x="1225" dy="24">ratio 22.761×</tspan>
+</text>
+<rect x="190" y="690" width="1220" height="120" rx="18" fill="#E4F6F4" stroke="#C8D2E1" stroke-width="2"/>
+<text x="215" y="736" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="215" dy="0">Объявленная конвенция</tspan>
+</text>
+<text x="215" y="772" text-anchor="start" font-family="Arial, sans-serif" font-size="21.2" font-weight="600" fill="#596579">
+<tspan x="215" dy="0">Matrix-only total недосчитывал 40 105 728 параметров. Active включает одну полную vocab projection;</tspan>
+<tspan x="215" dy="23">embedding lookup не заряжается как полный matmul.</tspan>
+</text>
+</svg>

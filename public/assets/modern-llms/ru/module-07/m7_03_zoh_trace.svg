@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="white"/>
+<text x="70" y="70" font-family="Arial" font-size="39.1" font-weight="700" fill="#2E3440">ZOH: точная дискретизация и цена приближения</text>
+<text x="70" y="110" font-family="Arial" font-size="19.6" fill="#5B6472">Для a = −1 сравниваем 1 − exp(−Δ) с Δ</text>
+<text x="220" y="235" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="220" dy="0">Шаг</tspan>
+</text>
+<text x="550" y="235" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="550" dy="0">Точный B̄</tspan>
+</text>
+<text x="880" y="235" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="880" dy="0">ΔB</tspan>
+</text>
+<text x="1210" y="235" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1210" dy="0">Ошибка</tspan>
+</text>
+<rect x="170" y="262" width="1260" height="72" rx="12" fill="#EAF1FB"/>
+<text x="220" y="300" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="220" dy="0">Δ=0.1</tspan>
+</text>
+<text x="550" y="300" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="550" dy="0">0.09516</tspan>
+</text>
+<text x="880" y="300" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="880" dy="0">0.10000</tspan>
+</text>
+<text x="1210" y="300" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="1210" dy="0">5.08%</tspan>
+</text>
+<rect x="170" y="362" width="1260" height="72" rx="12" fill="#EDF7ED"/>
+<text x="220" y="400" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="220" dy="0">Δ=0.5</tspan>
+</text>
+<text x="550" y="400" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="550" dy="0">0.39347</tspan>
+</text>
+<text x="880" y="400" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="880" dy="0">0.50000</tspan>
+</text>
+<text x="1210" y="400" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="1210" dy="0">27.07%</tspan>
+</text>
+<rect x="170" y="462" width="1260" height="72" rx="12" fill="#FFF5DD"/>
+<text x="220" y="500" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="220" dy="0">Δ=1.0</tspan>
+</text>
+<text x="550" y="500" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="550" dy="0">0.63212</tspan>
+</text>
+<text x="880" y="500" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="880" dy="0">1.00000</tspan>
+</text>
+<text x="1210" y="500" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#2E3440">
+<tspan x="1210" dy="0">58.20%</tspan>
+</text>
+<rect x="280" y="650" width="1040" height="120" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="306" y="698" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="306" dy="0">10% error</tspan>
+</text>
+<text x="306" y="739" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="306" dy="0">Δ ≈ 0.193747558</tspan>
+</text>
+</svg>

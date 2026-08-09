@@ -1,0 +1,44 @@
+<svg viewBox="0 0 940 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Карта параллелизма</title>
+  <desc>DP и ZeRO с числами памяти, TP, PP с формулой bubble, EP и сборка 3D+EP.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Четыре ножа для одной модели — и числа листа</text>
+
+  <rect x="40" y="52" width="430" height="102" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="58" y="74" font-size="13.8" font-weight="700" fill="#2E3440">DP → ZeRO/FSDP (шардинг состояний)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="96" font-size="13.8">закон: смешанная точность AdamW = <tspan font-weight="700">16 B/parameter</tspan></text>
+    <text x="58" y="114" font-size="11.5">7B, ZeRO-0: <tspan font-weight="700" fill="#BF616A">112.0 GB/rank = 104.3 GiB/rank</tspan></text>
+    <text x="58" y="132" font-size="13.8" font-weight="600">ZeRO-3/64 ideal: <tspan font-weight="700" fill="#A3BE8C">1.75 GB/rank = 1.63 GiB/rank</tspan></text>
+    <text x="58" y="148" font-size="11.5" fill="#4C566A">только state payload: без активаций/буферов; цена — all-gather</text>
+  </g>
+
+  <rect x="490" y="52" width="410" height="102" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="508" y="74" font-size="13.8" font-weight="700" fill="#2E3440">PP + 1F1B (конвейер по слоям)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="96" font-size="13.8" font-weight="600">bubble = (p − 1) / (m + p − 1)</text>
+    <text x="508" y="114" font-size="13.8" font-weight="600">p = 8, m = 32 → <tspan font-weight="700" fill="#D08770">17.9%</tspan> простоя</text>
+    <text x="508" y="132" font-size="13.5" font-weight="600">p = 8, m = 128 → <tspan font-weight="700" fill="#A3BE8C">5.2%</tspan> — пузырь лечат микробатчи (У3.2)</text>
+    <text x="508" y="148" font-size="11.5" fill="#4C566A">наивный конвейер без 1F1B простаивал бы куда дольше</text>
+  </g>
+
+  <rect x="40" y="170" width="430" height="82" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="192" font-size="16.6" font-weight="700" fill="#2E3440">TP (Megatron): шардинг матриц</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="214" font-size="13.8" font-weight="600">строки/столбцы W между GPU; all-reduce на стыках;</text>
+    <text x="58" y="232" font-size="11.5">живёт внутри узла — там, где NVLink</text>
+  </g>
+
+  <rect x="490" y="170" width="410" height="82" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="508" y="192" font-size="16.6" font-weight="700" fill="#2E3440">EP: экспертный параллелизм (М6)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="214" font-size="11.5">эксперты MoE по GPU; all-to-all токенов на роутинге;</text>
+    <text x="508" y="232" font-size="11.5">балансировка нагрузки — та самая из М6</text>
+  </g>
+
+  <rect x="40" y="268" width="860" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="290" font-size="16.6" font-weight="700" fill="#2E3440">Сборка 3D + EP</text>
+  <text x="58" y="310" font-size="10.4" fill="#2E3440" font-weight="600">DP×TP×PP×EP одновременно; паспорт Llama 4 Behemoth: <tspan font-weight="600">32K GPU · FP8 · 390 TFLOP/s per GPU</tspan> — инженерия расписаний важнее любой отдельной оси.</text>
+
+  <text x="30" y="352" font-size="11.5" fill="#2E3440">Выбор осей = профиль узких мест: память (ZeRO), матмул-ширина (TP), глубина (PP), MoE-раздутость (EP);</text>
+  <text x="30" y="368" font-size="11.5" fill="#2E3440">все четыре встретятся снова в М9 — у инференса своя версия каждой оси.</text>
+</svg>

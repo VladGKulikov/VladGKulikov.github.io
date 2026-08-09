@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<text x="70" y="70" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="700" fill="#2E3440">Module 5 in one page</text>
+<text x="70" y="108" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#5B6472">Separate computation graphs, numerical contracts, and evidence status</text>
+<rect x="70" y="180" width="420" height="235" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="98" y="230" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="98" dy="0">Residual path</tspan>
+</text>
+<text x="98" y="271" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="98" dy="0">Pre-LN preserves an identity route.</tspan>
+<tspan x="98" dy="25">This helps optimization; removal of</tspan>
+<tspan x="98" dy="25">a trained layer remains empirical.</tspan>
+</text>
+<rect x="555" y="180" width="420" height="235" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="583" y="230" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="583" dy="0">Norm placement</tspan>
+</text>
+<text x="583" y="271" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="583" dy="0">Post-LN, Pre-LN, Peri-LN, and</tspan>
+<tspan x="583" dy="25">OLMo2-style post-sublayer norm are</tspan>
+<tspan x="583" dy="25">four distinct graphs.</tspan>
+</text>
+<rect x="1040" y="180" width="420" height="235" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1068" y="230" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="1068" dy="0">Q/K stabilization</tspan>
+</text>
+<text x="1068" y="271" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1068" dy="0">Original L2-QKNorm, Q/K RMSNorm,</tspan>
+<tspan x="1068" dy="25">soft-capping, and clipping are</tspan>
+<tspan x="1068" dy="25">related but not identical.</tspan>
+</text>
+<rect x="70" y="470" width="420" height="235" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="98" y="520" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="98" dy="0">Gated FFN</tspan>
+</text>
+<text x="98" y="561" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="98" dy="0">SwiGLU uses three matrices and</tspan>
+<tspan x="98" dy="25">multiplicative interaction. gpt-oss</tspan>
+<tspan x="98" dy="25">adds fixed clipping and the up+1</tspan>
+<tspan x="98" dy="25">shift to the trained graph.</tspan>
+</text>
+<rect x="555" y="470" width="420" height="235" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="583" y="520" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="583" dy="0">Exact budget</tspan>
+</text>
+<text x="583" y="561" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="583" dy="0">Llama matrix block = 13d²; complete</tspan>
+<tspan x="583" dy="25">block = 13d²+2d. FFN share ≈80.8%.</tspan>
+</text>
+<rect x="1040" y="470" width="420" height="235" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1068" y="520" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="1068" dy="0">Research frontier</tspan>
+</text>
+<text x="1068" y="561" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1068" dy="0">DyT/DyISRU are element-wise. mHC</tspan>
+<tspan x="1068" dy="25">constrains multi-stream</tspan>
+<tspan x="1068" dy="25">residual-mixing matrices, not</tspan>
+<tspan x="1068" dy="25">hidden-state manifolds.</tspan>
+</text>
+<text x="800" y="830" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#4C78A8">
+<tspan x="800" dy="0">Read configs, code, and papers together; re-run the arithmetic before publishing a claim.</tspan>
+</text>
+</svg>

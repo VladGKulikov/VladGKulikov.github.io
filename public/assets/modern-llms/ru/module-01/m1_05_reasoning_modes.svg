@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">Кто управляет test-time compute?</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">Reasoning mode — это бюджет и контроллер, а не отдельный биологический вид</text>
+<rect x="50" y="220" width="330" height="430" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="78" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="78" dy="0">Instant</tspan>
+</text>
+<text x="78" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="78" dy="0">малый фиксированный бюджет</tspan>
+<tspan x="78" dy="26"></tspan>
+<tspan x="78" dy="26">низкая и предсказуемая</tspan>
+<tspan x="78" dy="26">задержка</tspan>
+</text>
+<rect x="440" y="220" width="330" height="430" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="468" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="468" dy="0">Configurable effort</tspan>
+</text>
+<text x="468" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="468" dy="0">бюджет задаёт вызывающая</tspan>
+<tspan x="468" dy="26">сторона</tspan>
+<tspan x="468" dy="26"></tspan>
+<tspan x="468" dy="26">явный компромисс</tspan>
+<tspan x="468" dy="26">цена/качество</tspan>
+</text>
+<rect x="830" y="220" width="330" height="430" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="858" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="858" dy="0">Adaptive thinking</tspan>
+</text>
+<text x="858" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="858" dy="0">бюджет выбирает модель</tspan>
+<tspan x="858" dy="26"></tspan>
+<tspan x="858" dy="26">проще UX, плавающая</tspan>
+<tspan x="858" dy="26">стоимость</tspan>
+</text>
+<rect x="1220" y="220" width="330" height="430" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1248" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="1248" dy="0">Multi-agent</tspan>
+</text>
+<text x="1248" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="1248" dy="0">работу распределяет harness</tspan>
+<tspan x="1248" dy="26"></tspan>
+<tspan x="1248" dy="26">параллельные траектории +</tspan>
+<tspan x="1248" dy="26">merge</tspan>
+</text>
+<rect x="220" y="700" width="1160" height="110" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="244" y="746" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="244" dy="0">Правило паспорта</tspan>
+</text>
+<text x="244" y="785" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="244" dy="0">Оценивайте точную пару «модель + effort + инструменты + число агентов», а не одно имя</tspan>
+<tspan x="244" dy="26">семейства.</tspan>
+</text>
+</svg>

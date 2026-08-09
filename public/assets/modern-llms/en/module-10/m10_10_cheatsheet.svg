@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Module 10 cheat sheet</title>
+  <desc>The algorithm and the guarantee, the E and S formulas, the zoo, the bits ladder and the FP4 war, the assembly, the gotchas.</desc>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Cheat sheet · Two levers and one measurement discipline</text>
+
+  <rect x="40" y="48" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="60" y="70" font-size="10.9" font-weight="600">accept with min(1, p/q) · rejection → norm((p−q)₊) · all γ accepted → the bonus · the emitted law ≡ p (a theorem)</text>
+    <text x="60" y="92" font-size="10.4" font-weight="600">the trace: α = Σ min(p,q) = 0.85 = 1 − TV(p,q) · the balance min(p,q) + (1−α)·resid = p ✓ (verified by Monte Carlo)</text>
+  </g>
+
+  <rect x="40" y="118" width="410" height="118" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="142" font-size="16.2" font-weight="700" fill="#2E3440">The cycle formulas</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="166" font-size="13.5" font-weight="600">E = (1 − α^{γ+1})/(1 − α) · the 1/(1−α) asymptote</text>
+    <text x="58" y="186" font-size="13.5" font-weight="600">S = E/(1 + γc) · an external draft: γ* = 6 → 2.47× (flat)</text>
+    <text x="58" y="208" font-weight="700" font-size="11.8">MTP scenario: α=0.875, γ=1, c=0.05 → 1.79× (stated parameters)</text>
+    <text x="58" y="228" fill="#4C566A" font-size="13.5" font-weight="600">γ = 1 ⇒ E ≤ 2 · hunt for α, not γ · S&lt;1 when E&lt;1+γc</text>
+  </g>
+
+  <rect x="470" y="118" width="410" height="118" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="488" y="142" font-size="16.2" font-weight="700" fill="#2E3440">The drafter zoo</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="166" font-size="11.3">vanilla (legacy) · Medusa (heads+tree) · n-gram for free</text>
+    <text x="488" y="186" font-size="10" font-weight="600">EAGLE-3: direct token prediction with features fused from several layers</text>
+    <text x="488" y="206" font-size="11.3">MTP: a native proposer for supported models; benefit is measured</text>
+    <text x="488" y="226" fill="#BF616A" font-size="11.2">risks: low α · expensive proposal · saturated load · incompatibility</text>
+  </g>
+
+  <rect x="40" y="250" width="410" height="122" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="274" font-size="16.2" font-weight="700" fill="#2E3440">The bits ladder (8B, the M9 ceilings)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="298" font-size="11.3">16 → 8 → 4.5 → 4.25 → 4 bits/weight (payload)</text>
+    <text x="58" y="318" font-size="11.3">209 → 419 → 744 → 788 → 838 tok/s</text>
+    <text x="58" y="338" font-size="11.3">on the teaching outlier vector: the FP4-grid MSE is 3.3× lower</text>
+    <text x="58" y="358" fill="#4C566A" font-size="10.3" font-weight="600">MR-GPTQ: format-aware PTQ; FP4 is not automatically better than INT4</text>
+  </g>
+
+  <rect x="470" y="250" width="410" height="122" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="488" y="274" font-size="16.2" font-weight="700" fill="#2E3440">The FP4 war and the floors</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="298" font-size="11.3">NVFP4: E2M1 + E4M3 per 16 values + a global FP32 scale</text>
+    <text x="488" y="318" font-size="10">MXFP4: E2M1 + E8M0 per 32 values; quality and speed depend on the stack</text>
+    <text x="488" y="338" font-size="11.3">Command A+: reported W4A4 deployment on one B200 or two H100s</text>
+    <text x="488" y="358" fill="#4C566A" font-size="11.3">BitNet {−1,0,+1}: benefit requires specialized execution</text>
+  </g>
+
+  <rect x="40" y="386" width="840" height="62" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="58" y="410" font-size="16.2" font-weight="700" fill="#2E3440">The assembly</text>
+  <text x="58" y="430" font-size="11.3" fill="#2E3440">wider verification → a 594 tok/s scenario · NVFP4-like payload + MTP scenario → 1,329 tok/s; both are upper estimates</text>
+  <text x="58" y="444" font-size="13.5" fill="#2E3440" font-weight="600">quant + spec + serving + architecture can compose, but each step changes the bottleneck</text>
+
+  <rect x="40" y="462" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="484" font-size="16.2" font-weight="700" fill="#2E3440">Gotchas</text>
+  <text x="58" y="504" font-size="11.3" fill="#2E3440">the exact guarantee is w.r.t. the quantized model · group size alone does not identify a format · scenarios are upper estimates,</text>
+  <text x="58" y="518" font-size="11.3" fill="#2E3440">not benchmarks · developer results retain their conditions · decide from your own workload profile</text>
+
+  <text x="30" y="546" font-size="9.5" font-style="italic" fill="#4C566A">the full version is §20 of the lecture; values reproduced by course verification code</text>
+</svg>

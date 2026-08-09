@@ -1,0 +1,46 @@
+<svg viewBox="0 0 940 350" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Muon and Newton–Schulz orthogonalization</title>
+  <desc>Momentum, Jordan's quintic, the singular-value band; an inset on the cubic tail.</desc>
+  <defs><marker id="a85" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Muon: equalizing the update's spectrum (the sheet's numbers: 64×32, seed 7)</text>
+
+  <rect x="40" y="56" width="200" height="80" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="140" y="80" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">momentum</text>
+  <text x="140" y="100" text-anchor="middle" font-size="13.8" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">M = μ·M + g</text>
+  <text x="140" y="120" text-anchor="middle" font-size="11" fill="#4C566A">σ(M): 13.81 … 2.70 — a ×5.1 spread</text>
+
+  <line x1="240" y1="96" x2="284" y2="96" stroke="#4C566A" stroke-width="1.2" marker-end="url(#a85)"/>
+
+  <rect x="290" y="56" width="340" height="80" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.4"/>
+  <text x="460" y="78" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">Newton–Schulz ×5: Jordan's quintic</text>
+  <text x="460" y="98" text-anchor="middle" font-size="10.9" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">X ← 3.4445·X − 4.7750·(XXᵀ)X + 2.0315·(XXᵀ)²X</text>
+  <text x="460" y="118" text-anchor="middle" font-size="10.8" fill="#4C566A">the input is ‖·‖<tspan baseline-shift="sub" font-size="8.3">F</tspan>-normalized; matmuls only — bf16-friendly</text>
+
+  <line x1="630" y1="96" x2="674" y2="96" stroke="#4C566A" stroke-width="1.2" marker-end="url(#a85)"/>
+
+  <rect x="680" y="56" width="220" height="80" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="790" y="80" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">the step θ ← θ − η·O</text>
+  <text x="790" y="100" text-anchor="middle" font-size="13.8" fill="#2E3440">σ(O) ∈ [0.682, 1.133]</text>
+  <text x="790" y="118" text-anchor="middle" font-size="12" fill="#4C566A">equal weight to all directions</text>
+
+  <rect x="40" y="160" width="560" height="96" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="58" y="184" font-size="16.6" font-weight="700" fill="#2E3440">The band is a deliberate trade, not a defect</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="206" font-size="11.5">‖OᵀO − I‖ = 2.16 after the quintic — Muon is fine with that: step speed beats cosmetics.</text>
+    <text x="58" y="226" font-size="11.5">The sheet: +3 classical cubics (X ← 1.5X − 0.5·XXᵀX) → σ ∈ [0.998968, 1.0], error 4.9·10⁻³ —</text>
+    <text x="58" y="246" font-size="11.1">but that is ×1.6 the orthogonalization cost; “the band suffices” is Jordan's engineering call.</text>
+  </g>
+
+  <rect x="620" y="160" width="280" height="96" rx="8" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="638" y="184" font-size="16.6" font-weight="700" fill="#2E3440">Why it helps</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="638" y="206" font-size="13.8" font-weight="600">Adam-like steps disproportionately</text>
+    <text x="638" y="224" font-size="11.5">feed a matrix's dominant directions;</text>
+    <text x="638" y="242" font-size="10.9">orthogonalization splits the step evenly (§10)</text>
+  </g>
+
+  <rect x="40" y="272" width="860" height="50" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="292" font-size="11.5" fill="#2E3440">For 2D parameters (matrices) only; embeddings/norms stay on AdamW. By 2026: the NanoGPT speedrun, Kimi K2 (15.5T, MuonClip),</text>
+  <text x="58" y="310" font-size="11.5" fill="#2E3440">DeepSeek V4 — Muon as the frontier's choice; the §3 second-order ladder: diagonal (Adam) → Kronecker (Shampoo) → spectrum (Muon).</text>
+  <text x="898" y="342" font-size="9.7" font-style="italic" fill="#4C566A" text-anchor="end">all σ values reproduced by course verification code; coefficients — github.com/KellerJordan/Muon</text>
+</svg>

@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>MTP-as-speculative</title>
+  <desc>A shared model trunk, an MTP module as a native proposer, a teaching scenario, and runtime support requirements.</desc>
+  <defs><marker id="a106" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">MTP at inference: a native source of proposals</text>
+
+  <rect x="40" y="56" width="250" height="88" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="165" y="80" text-anchor="middle" font-size="14.2" font-weight="700" fill="#2E3440">The target model's shared trunk</text>
+  <text x="165" y="100" text-anchor="middle" font-size="13.8" fill="#2E3440">predicts t+1 and verifies</text>
+  <text x="165" y="118" text-anchor="middle" font-size="12" fill="#2E3440">the draft in the same forward</text>
+  <text x="165" y="134" text-anchor="middle" font-size="12" fill="#4C566A">no second model</text>
+
+  <rect x="340" y="56" width="250" height="88" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="465" y="80" text-anchor="middle" font-size="12.9" font-weight="700" fill="#2E3440">The MTP module = a native proposer</text>
+  <text x="465" y="100" text-anchor="middle" font-size="13.8" fill="#2E3440">trained to predict future tokens</text>
+  <text x="465" y="118" text-anchor="middle" font-size="11.3" fill="#2E3440">no separate full draft model is required;</text>
+  <text x="465" y="134" text-anchor="middle" font-size="11.5" fill="#4C566A">acceptance remains a measured quantity</text>
+
+  <rect x="640" y="56" width="260" height="88" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/>
+  <text x="770" y="80" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">Teaching scenario (§7)</text>
+  <text x="770" y="102" text-anchor="middle" font-size="13.4" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">E = (1−0.875²)/0.125 = 1.875</text>
+  <text x="770" y="122" text-anchor="middle" font-size="13.8" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">S = 1.875/1.05 = 1.79×</text>
+  <text x="770" y="138" text-anchor="middle" font-size="12.9" fill="#4C566A" font-weight="600">= the result of the stated α, γ, and c</text>
+
+  <line x1="290" y1="100" x2="336" y2="100" stroke="#4C566A" stroke-width="1.1" marker-end="url(#a106)"/>
+  <line x1="590" y1="100" x2="636" y2="100" stroke="#4C566A" stroke-width="1.1" marker-end="url(#a106)"/>
+
+  <rect x="40" y="164" width="560" height="130" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="186" font-size="16.6" font-weight="700" fill="#2E3440">Requirements for native MTP</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="208" font-size="11.5">the model retains a supported MTP module · checkpoint and tokenizer match the runtime</text>
+    <text x="58" y="228" font-size="11.5">the engine can propose tokens and perform the intended verification</text>
+    <text x="58" y="248" font-size="13.8" font-weight="600">multi-step MTP can raise the E ceiling, but it also increases proposal cost</text>
+    <text x="58" y="268" font-size="11.5">the benefit is validated on the target workload and concurrency</text>
+    <text x="58" y="286" fill="#4C566A" font-size="11.5">the approach's ceiling: γ = 1 ⇒ E ≤ 2 — hence the hunt for multi-step</text>
+  </g>
+
+  <rect x="620" y="164" width="280" height="130" rx="8" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="638" y="186" font-size="10.9" font-weight="700" fill="#2E3440">Configuration may be compact, but not magical</text>
+  <text x="638" y="210" font-size="12.2" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">--speculative_config '{"method":</text>
+  <text x="638" y="226" font-size="11.5" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">"mtp","num_speculative_tokens":1}'</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="638" y="252" font-size="11.5">a supported architecture may not require</text>
+    <text x="638" y="268" font-size="10.9">a separate proposer checkpoint; performance</text>
+    <text x="638" y="284" fill="#4C566A" font-size="11.5">still depends on measurement (Q6)</text>
+  </g>
+
+  <text x="30" y="322" font-size="11.5" fill="#2E3440">The stack is simpler without a separate full draft model; proposal and verification costs remain.</text>
+  <text x="30" y="340" font-size="11.5" fill="#2E3440">The practical choice (Q7): native MTP, EAGLE or another head, an external model, or lookup—selected by workload profile.</text>
+</svg>

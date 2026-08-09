@@ -1,0 +1,25 @@
+<svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The inference-stack timeline</title>
+  <desc>From MQA through PagedAttention and MLA to Mooncake, Dynamo and TurboQuant 2026.</desc>
+  <defs><marker id="a91" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">The inference stack: from “just a buffer” to a KV-centric platform</text>
+
+  <line x1="50" y1="96" x2="900" y2="96" stroke="#5E81AC" stroke-width="1.4" marker-end="url(#a91)"/>
+  <g text-anchor="middle" font-size="9.5">
+    <circle cx="100" cy="96" r="4" fill="#4C566A"/><text x="100" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2019 MQA</text><text x="100" y="114" font-size="12" fill="#4C566A">one KV head;</text><text x="100" y="126" font-size="12" fill="#4C566A">the first cache savings</text>
+    <circle cx="235" cy="96" r="5" fill="#5E81AC"/><text x="235" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2023 GQA · vLLM</text><text x="235" y="114" font-size="12" fill="#4C566A">PagedAttention (blocks+CoW);</text><text x="235" y="126" font-size="12" fill="#4C566A">StreamingLLM: sinks</text>
+    <circle cx="390" cy="96" r="5" fill="#88C0D0"/><text x="390" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2024 MLA</text><text x="390" y="114" font-size="12" fill="#4C566A">the V2 latent cache (−93%);</text><text x="390" y="126" font-size="12" fill="#4C566A">prefix caching → an API feature</text>
+    <circle cx="545" cy="96" r="6" fill="#D08770"/><text x="545" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2025 Mooncake</text><text x="545" y="114" font-size="12" fill="#4C566A">Best Paper FAST'25; the Kimi stack;</text><text x="545" y="126" font-size="12" fill="#4C566A">PD disaggregation in the engines</text>
+    <circle cx="700" cy="96" r="6" fill="#A3BE8C"/><text x="700" y="80" font-weight="600" fill="#2E3440" font-size="13.8">2026 Dynamo 1.0</text><text x="700" y="114" font-size="12" fill="#4C566A">GA 16.03: 7×/50×;</text><text x="700" y="126" font-size="12" fill="#4C566A">NIXL, KV-aware routing</text>
+    <circle cx="845" cy="96" r="6" fill="#B48EAD"/><text x="845" y="80" font-weight="600" fill="#2E3440" font-size="10.9">2026 TurboQuant · ICMSP</text><text x="845" y="114" font-size="12" fill="#4C566A">3 bits (ICLR); NVMe KV</text><text x="845" y="126" font-size="12" fill="#4C566A">in the address space</text>
+  </g>
+
+  <rect x="50" y="152" width="850" height="124" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="66" y="176" font-size="16.6" font-weight="700" fill="#2E3440">Four waves — the module's four floors</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="66" y="200" font-size="11.5"><tspan font-weight="600" fill="#5E81AC">Architecture:</tspan> MQA → GQA → MLA — the ladder 2,560 → 320 → 68.625 KiB/token (§4); DSA cuts FLOPs, not bytes</text>
+    <text x="66" y="222" font-size="11.5"><tspan font-weight="600" fill="#88C0D0">Systems:</tspan> Orca batching → PagedAttention (93.75% → 0.37% waste) → chunked prefill (§8, §11)</text>
+    <text x="66" y="244" font-size="11.5"><tspan font-weight="600" fill="#D08770">Platform:</tspan> prefix pricing ×120 → the LMCache/Mooncake hierarchy → the PD split with Dynamo (§9–11)</text>
+    <text x="66" y="266" font-size="11.5"><tspan font-weight="600" fill="#A3BE8C">Compression:</tspan> eviction → KIVI → TurboQuant: 3 bits within 2.7× of the info limit; the ceiling 101 → 174 tok/s (§14–15)</text>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 300" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Таймлайн спекулятива и квантизации</title>
+  <desc>От rejection-схемы Leviathan к MTP-стандарту и войне FP4-форматов 2026.</desc>
+  <defs><marker id="a101" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Два рычага: от точного алгоритма к системному инструменту</text>
+
+  <line x1="50" y1="96" x2="900" y2="96" stroke="#5E81AC" stroke-width="1.4" marker-end="url(#a101)"/>
+  <g text-anchor="middle" font-size="9.5">
+    <circle cx="105" cy="96" r="5" fill="#4C566A"/><text x="105" y="80" font-weight="600" fill="#2E3440" font-size="13.3">'22–23 точная выборка</text><text x="105" y="114" font-size="12" fill="#4C566A">предложение и проверка</text><text x="105" y="126" font-size="12" fill="#4C566A">с сохранением закона p</text>
+    <circle cx="255" cy="96" r="5" fill="#88C0D0"/><text x="255" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'22–23 GPTQ · AWQ</text><text x="255" y="114" font-size="12" fill="#4C566A">практичная INT4-PTQ;</text><text x="255" y="126" font-size="12" fill="#4C566A">активации и вращения</text>
+    <circle cx="405" cy="96" r="5" fill="#5E81AC"/><text x="405" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'24 Medusa · EAGLE</text><text x="405" y="114" font-size="12" fill="#4C566A">головы, деревья, признаки;</text><text x="405" y="126" font-size="12" fill="#4C566A">новые источники черновика</text>
+    <circle cx="545" cy="96" r="6" fill="#D08770"/><text x="545" y="80" font-weight="600" fill="#2E3440" font-size="13.8">дек '24 MTP в V3</text><text x="545" y="114" font-size="12" fill="#4C566A">нативное предсказание будущих токенов;</text><text x="545" y="126" font-size="12" fill="#4C566A">возможный встроенный черновик</text>
+    <circle cx="695" cy="96" r="5" fill="#B48EAD"/><text x="695" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'25 EAGLE-3</text><text x="695" y="114" font-size="12" fill="#4C566A">прямое предсказание токенов;</text><text x="695" y="126" font-size="12" fill="#4C566A">многоуровневые признаки</text>
+    <circle cx="845" cy="96" r="7" fill="#A3BE8C"/><text x="845" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'26 движки и FP4</text><text x="845" y="114" font-size="8.5" fill="#4C566A" font-weight="600">формат-специфичная PTQ; NVFP4/MXFP4;</text><text x="845" y="126" font-size="8.5" fill="#4C566A">аппаратно поддерживаемый W4A4</text>
+  </g>
+
+  <rect x="50" y="152" width="850" height="124" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="66" y="176" font-size="16.6" font-weight="700" fill="#2E3440">Одна модель стоимости — два независимых рычага (учебный сценарий 8B)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="66" y="200" font-size="11.1"><tspan font-weight="600" fill="#5E81AC">Уменьшаем знаменатель (байты/шаг):</tspan> читать меньше байтов: 16 → 8 → 4.5 → 4 бит/вес поднимают потолок 209 → 419 → 744 → 838 ток/с (§11)</text>
+    <text x="66" y="222" font-size="11.5"><tspan font-weight="600" fill="#D08770">Числитель — спекулятив:</tspan> за одно чтение весов принять E токенов: E = (1−α^{γ+1})/(1−α); MTP-вывод 1.79× (§6–7)</text>
+    <text x="66" y="244" font-size="11.5"><tspan font-weight="600" fill="#A3BE8C">Вместе:</tspan> условный NVFP4 + MTP-сценарий → 1 329 ток/с (×6.3 к bf16); затем профиль измеряется заново (§15)</text>
+  </g>
+  <text x="66" y="264" font-size="9.7" font-style="italic" fill="#4C566A">значения сценария воспроизведены проверочным кодом курса; результаты читаются вместе с условиями</text>
+</svg>

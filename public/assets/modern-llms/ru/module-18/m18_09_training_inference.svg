@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 500" width="920" height="500">
+  <title>Один objective, два режима вычисления</title>
+  <desc>При teacher forcing все целевые позиции обучаются параллельно, а при генерации модель создаёт токены последовательно и подаёт собственный выход обратно на вход.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">Один objective, два режима вычисления</text>
+  <text x="40" y="72" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Обучение: teacher forcing и один параллельный forward</text>
+  <rect x="45" y="95" width="90" height="45" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="90" y="123" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">&lt;BOS&gt;</text>
+  <line x1="90" y1="140" x2="90" y2="188" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <rect x="45" y="188" width="90" height="45" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="90" y="216" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">Я</text>
+  <rect x="155" y="95" width="90" height="45" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="200" y="123" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">Я</text>
+  <line x1="200" y1="140" x2="200" y2="188" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <rect x="155" y="188" width="90" height="45" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="200" y="216" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">люблю</text>
+  <rect x="265" y="95" width="90" height="45" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="310" y="123" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">люблю</text>
+  <line x1="310" y1="140" x2="310" y2="188" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <rect x="265" y="188" width="90" height="45" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="310" y="216" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">модели</text>
+  <rect x="375" y="95" width="90" height="45" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="420" y="123" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">модели</text>
+  <line x1="420" y1="140" x2="420" y2="188" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <rect x="375" y="188" width="90" height="45" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="420" y="216" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">&lt;EOS&gt;</text>
+  <rect x="485" y="95" width="90" height="45" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="530" y="123" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">&lt;EOS&gt;</text>
+  <line x1="530" y1="140" x2="530" y2="188" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <rect x="485" y="188" width="90" height="45" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="530" y="216" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="600" fill="#2E3440">—</text>
+  <text x="45" y="255" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#4C566A">Позиция t получает истинный префикс и предсказывает токен t+1; causal mask сохраняет корректность.</text>
+  <line x1="40" y1="280" x2="880" y2="280" stroke="#D8DEE9" stroke-width="1"/>
+  <text x="40" y="315" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Инференс: авторегрессивный цикл</text>
+  <rect x="45" y="340" width="135" height="55" rx="7" fill="#ECEFF4" stroke="#D08770" stroke-width="1.5"/>
+  <text x="112.5" y="362" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="112.5" dy="0" font-weight="600">&lt;BOS&gt;</tspan>
+    <tspan x="112.5" dy="16" font-weight="600">→ p(y₁)</tspan>
+  </text>
+  <line x1="180" y1="367" x2="210" y2="367" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="210" y="340" width="135" height="55" rx="7" fill="#ECEFF4" stroke="#D08770" stroke-width="1.5"/>
+  <text x="277.5" y="362" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="277.5" dy="0" font-weight="600">выбрать y₁</tspan>
+    <tspan x="277.5" dy="16" font-weight="600">→ p(y₂)</tspan>
+  </text>
+  <line x1="345" y1="367" x2="375" y2="367" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="375" y="340" width="135" height="55" rx="7" fill="#ECEFF4" stroke="#D08770" stroke-width="1.5"/>
+  <text x="442.5" y="362" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="442.5" dy="0" font-weight="600">выбрать y₂</tspan>
+    <tspan x="442.5" dy="16" font-weight="600">→ …</tspan>
+  </text>
+  <line x1="510" y1="367" x2="540" y2="367" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="540" y="340" width="135" height="55" rx="7" fill="#ECEFF4" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="607.5" y="362" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="607.5" dy="0" font-weight="600">&lt;EOS&gt;</tspan>
+    <tspan x="607.5" dy="16" font-weight="600">стоп</tspan>
+  </text>
+  <text x="45" y="425" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#4C566A">Ошибки могут накапливаться: на инференсе префикс содержит уже сгенерированные, а не эталонные токены.</text>
+  <rect x="650" y="438" width="230" height="38" rx="7" fill="#FFFFFF" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="765" y="463" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">KV-кэш: прошлые K,V не пересчитываем</text>
+</svg>

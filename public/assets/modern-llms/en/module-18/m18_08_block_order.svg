@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 500" width="920" height="500">
+  <title>Where LayerNorm sits: the 2017 original and the modern LLM block</title>
+  <desc>A comparison of the post-norm order in Attention Is All You Need with the pre-norm order common in modern decoder-only LLMs.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">Where LayerNorm sits: the 2017 original and the modern LLM block</text>
+  <rect x="45" y="72" width="385" height="350" rx="7" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.4"/>
+  <text x="237.5" y="100" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Post-norm (original)</text>
+  <text x="237.5" y="123" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#4C566A">y = LN(x + Sublayer(x))</text>
+  <rect x="85" y="150" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="237.5" y="173" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">Self-attention</text>
+  <line x1="237.5" y1="186" x2="237.5" y2="205" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="85" y="205" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="237.5" y="228" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">Add residual + LayerNorm</text>
+  <line x1="237.5" y1="241" x2="237.5" y2="260" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="85" y="260" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="237.5" y="283" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">FFN</text>
+  <line x1="237.5" y1="296" x2="237.5" y2="315" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="85" y="315" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="237.5" y="338" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">Add residual + LayerNorm</text>
+  <rect x="490" y="72" width="385" height="350" rx="7" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.4"/>
+  <text x="682.5" y="100" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#2E3440">Pre-norm (modern)</text>
+  <text x="682.5" y="123" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#4C566A">y = x + Sublayer(LN(x))</text>
+  <rect x="530" y="150" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="682.5" y="173" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">LayerNorm</text>
+  <line x1="682.5" y1="186" x2="682.5" y2="205" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="530" y="205" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="682.5" y="228" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">Self-attention + residual</text>
+  <line x1="682.5" y1="241" x2="682.5" y2="260" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="530" y="260" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="682.5" y="283" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">LayerNorm</text>
+  <line x1="682.5" y1="296" x2="682.5" y2="315" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="530" y="315" width="305" height="36" rx="7" fill="#ECEFF4" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="682.5" y="338" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">FFN + residual</text>
+  <text x="237" y="445" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="600" fill="#5E81AC">Vaswani et al., 2017: Add &amp; Norm after the sublayer</text>
+  <text x="682" y="445" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="600" fill="#A3BE8C">GPT/Llama lineage: normalize before the sublayer</text>
+  <text x="45" y="480" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#4C566A" font-style="italic">Both orders preserve a stable residual route, but they are different computation graphs and must not be conflated in an equation.</text>
+</svg>

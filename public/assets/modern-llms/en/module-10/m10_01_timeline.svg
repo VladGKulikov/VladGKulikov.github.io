@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 300" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The speculation and quantization timeline</title>
+  <desc>From Leviathan's rejection scheme to the MTP standard and the FP4 format war of 2026.</desc>
+  <defs><marker id="a101" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Two levers: from exact algorithms to systems tools</text>
+
+  <line x1="50" y1="96" x2="900" y2="96" stroke="#5E81AC" stroke-width="1.4" marker-end="url(#a101)"/>
+  <g text-anchor="middle" font-size="9.5">
+    <circle cx="105" cy="96" r="5" fill="#4C566A"/><text x="105" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'22–23 exact sampling</text><text x="105" y="114" font-size="12" fill="#4C566A">propose, verify, correct</text><text x="105" y="126" font-size="12" fill="#4C566A">while preserving p</text>
+    <circle cx="255" cy="96" r="5" fill="#88C0D0"/><text x="255" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'22–23 GPTQ · AWQ</text><text x="255" y="114" font-size="12" fill="#4C566A">practical INT4 PTQ;</text><text x="255" y="126" font-size="12" fill="#4C566A">activation and rotation methods</text>
+    <circle cx="405" cy="96" r="5" fill="#5E81AC"/><text x="405" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'24 Medusa · EAGLE</text><text x="405" y="114" font-size="12" fill="#4C566A">heads, trees, learned proposers;</text><text x="405" y="126" font-size="12" fill="#4C566A">new sources of draft tokens</text>
+    <circle cx="545" cy="96" r="6" fill="#D08770"/><text x="545" y="80" font-weight="600" fill="#2E3440" font-size="13.8">Dec '24 MTP in V3</text><text x="545" y="114" font-size="12" fill="#4C566A">native future-token prediction;</text><text x="545" y="126" font-size="12" fill="#4C566A">a possible internal proposer</text>
+    <circle cx="695" cy="96" r="5" fill="#B48EAD"/><text x="695" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'25 EAGLE-3</text><text x="695" y="114" font-size="12" fill="#4C566A">direct token prediction;</text><text x="695" y="126" font-size="13.8" fill="#4C566A" font-weight="600">multi-layer feature fusion</text>
+    <circle cx="845" cy="96" r="7" fill="#A3BE8C"/><text x="845" y="80" font-weight="600" fill="#2E3440" font-size="13.8">'26 engines and FP4</text><text x="845" y="114" font-size="8.5" fill="#4C566A" font-weight="600">format-aware PTQ · NVFP4/MXFP4;</text><text x="845" y="126" font-size="8.5" fill="#4C566A" font-weight="600">hardware-backed W4A4 deployments</text>
+  </g>
+
+  <rect x="50" y="152" width="850" height="124" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="66" y="176" font-size="16.6" font-weight="700" fill="#2E3440">One cost model — two independent levers (an 8B teaching scenario)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="66" y="200" font-size="11.5"><tspan font-weight="600" fill="#5E81AC">Shrink the denominator (bytes/step):</tspan> read fewer bytes: 16 → 8 → 4.5 → 4 bits/weight lift the ceiling 209 → 419 → 744 → 838 tok/s (§11)</text>
+    <text x="66" y="222" font-size="11.5"><tspan font-weight="600" fill="#D08770">The numerator — speculation:</tspan> accept E tokens per weight read: E = (1−α^{γ+1})/(1−α); the 1.79× MTP derivation (§6–7)</text>
+    <text x="66" y="244" font-size="11.5"><tspan font-weight="600" fill="#A3BE8C">Together:</tspan> an NVFP4-like payload + MTP scenario → 1,329 tok/s (×6.3 over bf16); then re-profile (§15)</text>
+  </g>
+  <text x="66" y="264" font-size="9.7" font-style="italic" fill="#4C566A">scenario values reproduced by course verification code; paper results retain their conditions</text>
+</svg>

@@ -1,0 +1,39 @@
+<svg viewBox="0 0 1100 600" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title>Tied and untied embeddings</title>
+<desc>Documented open configurations</desc>
+<rect width="1100" height="600" fill="#FFFFFF"/>
+<text x="45" y="50" text-anchor="start" font-size="28" font-weight="700" fill="#2E3440">
+<tspan x="45" dy="0">One vocabulary—one matrix or two</tspan>
+</text>
+<text x="45" y="82" text-anchor="start" font-size="16.1" font-weight="400" fill="#4C566A">
+<tspan x="45" dy="0">Read tie_word_embeddings from the actual configuration; do not infer it from model size.</tspan>
+</text>
+<rect x="55" y="120" width="470" height="345" rx="14" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="79" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="79" dy="0">Tied: one matrix E</tspan>
+</text>
+<text x="79" y="203" text-anchor="start" font-size="18" font-weight="400" fill="#4C566A">
+<tspan x="79" dy="0">Input lookup uses E; output logits use Eᵀ.</tspan>
+<tspan x="79" dy="25">Parameters: V·d.</tspan>
+<tspan x="79" dy="25">Savings versus untied: V·d.</tspan>
+<tspan x="79" dy="25">Documented example: Gemma</tspan>
+<tspan x="79" dy="25">(tie_word_embeddings=true).</tspan>
+</text>
+<rect x="575" y="120" width="470" height="345" rx="14" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="599" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="599" dy="0">Untied: independent E and U</tspan>
+</text>
+<text x="599" y="203" text-anchor="start" font-size="18" font-weight="400" fill="#4C566A">
+<tspan x="599" dy="0">E maps input token IDs; U projects hidden</tspan>
+<tspan x="599" dy="25">states to logits.</tspan>
+<tspan x="599" dy="25">Parameters: 2V·d.</tspan>
+<tspan x="599" dy="25">The two roles may diverge.</tspan>
+<tspan x="599" dy="25">Documented examples: Llama 2/3/4, DeepSeek</tspan>
+<tspan x="599" dy="25">V4, Kimi K3.</tspan>
+</text>
+<rect x="135" y="492" width="830" height="84" rx="12" fill="#FAF5E3" stroke="#EBCB8B" stroke-width="1.5"/>
+<text x="550" y="532" text-anchor="middle" font-size="19" font-weight="700" fill="#2E3440">
+<tspan x="550" dy="0">V=16,384, d=512 → one matrix = 8,388,608 parameters;</tspan>
+<tspan x="550" dy="25">untied doubles the vocabulary-facing matrices.</tspan>
+</text>
+</svg>

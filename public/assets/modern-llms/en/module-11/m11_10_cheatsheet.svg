@@ -1,0 +1,60 @@
+<svg viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Module 11 cheat sheet</title>
+  <desc>Template, target mask, packing, compute, data, reasoning, tools, LoRA, and failure modes.</desc>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Cheat sheet · SFT in 60 seconds</text>
+
+  <rect x="40" y="48" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="60" y="70" font-size="11" font-weight="600">the template = the contract (Llama-3 · ChatML · Harmony channels · think tags) · labels = −100 outside assistant</text>
+    <text x="60" y="92" font-size="13.5" font-weight="600">37.5% supervised (21/56) · the reply EOT is a target · FFD: 24 → 5 rows</text>
+  </g>
+
+  <rect x="40" y="118" width="410" height="118" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="142" font-size="16.2" font-weight="700" fill="#2E3440">The stage's price</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="166" font-size="11.1" font-weight="600">C<tspan baseline-shift="sub" font-size="8.1">SFT</tspan> = 3.5·10¹⁹ — 20,833× below the declared pretraining scenario</text>
+    <text x="58" y="186" font-size="11.3">24.3 h is arithmetic; measure realized utilization</text>
+    <text x="58" y="206" font-size="11.3">1–3 epochs · full-FT LR 5e-6…2e-5 · LoRA 1e-4…3e-4</text>
+    <text x="58" y="226" fill="#4C566A" font-size="11.3">schedule, warmup, and clipping require task-specific tuning</text>
+  </g>
+
+  <rect x="470" y="118" width="410" height="118" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="488" y="142" font-size="16.2" font-weight="700" fill="#2E3440">Data</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="166" font-size="11.3">general dialogue · reasoning demonstrations · tool trajectories</text>
+    <text x="488" y="186" font-size="11.3">LIMA: quality and diversity matter more than mechanical scale</text>
+    <text x="488" y="206" font-size="10.3">synthetics: Self-Instruct → Evol-Instruct → Magpie (the empty template)</text>
+    <text x="488" y="226" fill="#4C566A" font-size="12.8" font-weight="600">best-of-N: coverage grows while yield per generation falls</text>
+  </g>
+
+  <rect x="40" y="250" width="410" height="122" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="274" font-size="16.2" font-weight="700" fill="#2E3440">Reasoning SFT</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="298" font-size="11.3">traces of 5–30K tokens · packing is critical · loss on all</text>
+    <text x="58" y="318" font-size="13.4" font-weight="600">R1-Distill: author-reported results depend on protocol</text>
+    <text x="58" y="338" font-size="13.3" font-weight="600">s1-like scenario: one pass = 1.73·10¹⁸ FLOP = 9 minutes</text>
+    <text x="58" y="358" fill="#BF616A" font-weight="600" font-size="11.9">SFT demonstrates behavior; RL optimizes against reward (M12)</text>
+  </g>
+
+  <rect x="470" y="250" width="410" height="122" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="488" y="274" font-size="13.5" font-weight="700" fill="#2E3440">Tool-use SFT</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="298" font-size="13.5" font-weight="600">call → environment observation → next action or answer</text>
+    <text x="488" y="318" font-size="11.3">teaches: schema · selection · observation handling · completion</text>
+    <text x="488" y="338" font-weight="700" font-size="15.3">evaluate on target schemas and multi-turn tasks</text>
+    <text x="488" y="358" fill="#4C566A" font-size="11.3">“writes JSON” ≠ “uses tools reliably”</text>
+  </g>
+
+  <rect x="40" y="386" width="840" height="62" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="58" y="410" font-size="14" font-weight="700" fill="#2E3440">PEFT</text>
+  <text x="130" y="410" font-size="13.2" fill="#2E3440" font-weight="600">ΔW = (α/r)·B·A atop a frozen W · the sheet: 13.63M = 0.17% of the base · states 119.7 GiB → 208 MiB (×589)</text>
+  <text x="58" y="430" font-size="11.3" fill="#2E3440">QLoRA floor: 3.97 GiB before activations · evaluate DoRA/rsLoRA/PiSSA separately;</text>
+  <text x="58" y="444" font-size="11.3" fill="#2E3440">full FT supports deep shifts; adapters change memory accounting but still require comparison</text>
+
+  <rect x="40" y="462" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="484" font-size="16.2" font-weight="700" fill="#2E3440">Gotchas</text>
+  <text x="58" y="504" font-size="11.3" fill="#2E3440">a foreign template is a silent catastrophe · an &lt;|eot_id|&gt; left out of the target — the model never stops · packing without isolation —</text>
+  <text x="58" y="518" font-size="13.5" fill="#2E3440" font-weight="600">cross-example attention leakage · data quality matters · mask analysis only deliberately</text>
+
+  <text x="30" y="546" font-size="9.5" font-style="italic" fill="#4C566A">the full version is lecture §20; teaching values reproduced by course verification code</text>
+</svg>

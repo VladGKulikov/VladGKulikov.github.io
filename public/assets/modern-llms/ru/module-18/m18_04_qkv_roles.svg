@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 510" width="920" height="510">
+  <title>Q, K, V: не три вида токенов, а три обучаемые роли</title>
+  <desc>Входное представление проецируется в запросы, ключи и значения; запросы сопоставляются с ключами, softmax превращает оценки в веса, а веса смешивают значения.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">Q, K, V: не три вида токенов, а три обучаемые роли</text>
+  <rect x="35" y="78" width="150" height="78" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="110" y="106" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#2E3440">
+    <tspan x="42.239999999999995" dy="0" font-weight="700">X: контекстные векторы</tspan>
+    <tspan x="71.80799999999999" dy="17" font-weight="700">B × T × d<tspan baseline-shift="sub" font-size="7.48px">model</tspan></tspan>
+  </text>
+  <line x1="185" y1="117" x2="245" y2="117" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <text x="209.876" y="105" text-anchor="start" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="600" fill="#5E81AC">W<tspan baseline-shift="sub" font-size="6.80px">Q</tspan></text>
+  <rect x="245" y="72" width="180" height="90" rx="7" fill="#FFFFFF" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="335" y="100" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">Q — запрос</text>
+  <text x="335" y="122" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="400" fill="#4C566A">
+    <tspan x="335" dy="0" font-weight="400">что текущей позиции</tspan>
+    <tspan x="335" dy="15" font-weight="400">нужно найти</tspan>
+  </text>
+  <line x1="425" y1="117" x2="455" y2="117" stroke="#88C0D0" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="434.876" y="105" text-anchor="start" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="600" fill="#88C0D0">W<tspan baseline-shift="sub" font-size="6.80px">K</tspan></text>
+  <rect x="455" y="72" width="180" height="90" rx="7" fill="#FFFFFF" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="545" y="100" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">K — ключ</text>
+  <text x="545" y="122" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="400" fill="#4C566A">
+    <tspan x="545" dy="0" font-weight="400">по каким признакам</tspan>
+    <tspan x="545" dy="15" font-weight="400">меня находить</tspan>
+  </text>
+  <line x1="635" y1="117" x2="665" y2="117" stroke="#B48EAD" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="644.876" y="105" text-anchor="start" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="600" fill="#B48EAD">W<tspan baseline-shift="sub" font-size="6.80px">V</tspan></text>
+  <rect x="665" y="72" width="180" height="90" rx="7" fill="#FFFFFF" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="755" y="100" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">V — значение</text>
+  <text x="755" y="122" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="400" fill="#4C566A">
+    <tspan x="755" dy="0" font-weight="400">что передать, если</tspan>
+    <tspan x="755" dy="15" font-weight="400">меня выбрали</tspan>
+  </text>
+  <line x1="335" y1="162" x2="335" y2="240" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <line x1="545" y1="162" x2="545" y2="240" stroke="#88C0D0" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="310" y="240" width="260" height="58" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="440" y="264" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E3440">
+    <tspan x="400.9456" dy="0" font-weight="600">S = QKᵀ / √d<tspan baseline-shift="sub" font-size="7.48px">k</tspan></tspan>
+    <tspan x="359.91999999999996" dy="17" font-weight="600">сходство запросов и ключей</tspan>
+  </text>
+  <line x1="570" y1="269" x2="640" y2="269" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="640" y="235" width="205" height="68" rx="7" fill="#FFFFFF" stroke="#D08770" stroke-width="1.5"/>
+  <text x="742" y="261" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E3440">
+    <tspan x="698.88" dy="0" font-weight="600">A = softmax(S)</tspan>
+    <tspan x="646.52" dy="17" font-weight="600">построчно по ключам; маски — §5</tspan>
+  </text>
+  <line x1="742" y1="303" x2="742" y2="375" stroke="#D08770" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="845" y1="117" x2="878" y2="117" stroke="#B48EAD" stroke-width="1.3"/>
+  <line x1="878" y1="117" x2="878" y2="340" stroke="#B48EAD" stroke-width="1.3"/>
+  <line x1="878" y1="340" x2="742" y2="340" stroke="#B48EAD" stroke-width="1.3" marker-end="url(#arr)"/>
+  <rect x="625" y="375" width="235" height="72" rx="7" fill="#ECEFF4" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="742" y="402" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#2E3440">
+    <tspan x="723.52" dy="0" font-weight="700">Z = AV</tspan>
+    <tspan x="665.0" dy="17" font-weight="700">взвешенная смесь значений</tspan>
+  </text>
+  <rect x="35" y="225" width="215" height="222" rx="7" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.2"/>
+  <text x="142" y="252" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#2E3440">Линза «поиск в таблице»</text>
+  <text x="55" y="282" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#4C566A">
+    <tspan x="55" dy="0" font-weight="400">query  → поисковый запрос</tspan>
+    <tspan x="55" dy="19" font-weight="400">key    → индекс записи</tspan>
+    <tspan x="55" dy="19" font-weight="400">value  → полезная нагрузка</tspan>
+    <tspan x="55" dy="19" font-weight="400">softmax→ мягкий top-1</tspan>
+    <tspan x="55" dy="19" font-weight="400"></tspan>
+    <tspan x="55" dy="19" font-weight="400">Граница аналогии:</tspan>
+    <tspan x="55" dy="19" font-weight="400">индекс и запрос обучаются вместе.</tspan>
+  </text>
+  <text x="35" y="482" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#4C566A" font-style="italic">Self-attention: Q, K и V получены из одного X. Cross-attention: Q приходит из decoder, K и V — из encoder.</text>
+</svg>

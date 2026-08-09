@@ -1,0 +1,65 @@
+<svg viewBox="0 0 940 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Pretraining trends of 2026</title>
+  <desc>Four columns: data, length, signal, numeric formats.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">What the frontier added on top of “data + law + optimizer”</text>
+
+  <rect x="40" y="52" width="205" height="200" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Data</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">curriculum by quality:</text>
+    <text x="58" y="114" fill="#4C566A" font-size="11.5">finish on the edu slice</text>
+    <text x="58" y="136" font-size="11.5">annealing: the final ~10%</text>
+    <text x="58" y="150" fill="#4C566A" font-size="11.5">on the best data</text>
+    <text x="58" y="172" font-size="11.4">DoReMi: the domain-mix weights</text>
+    <text x="58" y="186" fill="#4C566A" font-size="11.5">as a separate optimization</text>
+    <text x="58" y="208" font-size="11.5">synthetics: ProX, Cosmopedia</text>
+    <text x="58" y="230" font-size="11.5">reasoning mix: CoT and proofs</text>
+    <text x="58" y="244" fill="#4C566A" font-size="11.5">before any SFT</text>
+  </g>
+
+  <rect x="260" y="52" width="205" height="200" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="278" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Length</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="278" y="100" font-size="13.8">staged long-context:</text>
+    <text x="278" y="114" fill="#4C566A" font-size="11.5">a short pretrain →</text>
+    <text x="278" y="128" fill="#4C566A" font-size="11.5">continued on long context</text>
+    <text x="278" y="150" font-size="11.5">up to 1M (Maverick),</text>
+    <text x="278" y="164" font-size="11.5">up to 10M (Scout)</text>
+    <text x="278" y="186" font-size="11.5">the 2026 standard,</text>
+    <text x="278" y="200" fill="#4C566A" font-size="11.5">not an exotic;</text>
+    <text x="278" y="222" font-size="11.5">the long positions —</text>
+    <text x="278" y="236" fill="#4C566A" font-size="11.5">M3 machinery</text>
+  </g>
+
+  <rect x="480" y="52" width="205" height="200" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/>
+  <text x="498" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Signal</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="498" y="100" font-size="13.8">MTP: 2–4 tokens</text>
+    <text x="498" y="114" fill="#4C566A" font-size="11.5">with parallel heads</text>
+    <text x="498" y="128" fill="#4C566A" font-size="11.5">(DeepSeek V3/V4)</text>
+    <text x="498" y="150" font-size="11.5">a denser gradient signal;</text>
+    <text x="498" y="164" font-size="11.5">free compatibility with</text>
+    <text x="498" y="178" fill="#4C566A" font-size="11.5">speculative decoding (M10)</text>
+    <text x="498" y="200" font-size="13.8" font-weight="600">co-distillation:</text>
+    <text x="498" y="214" fill="#4C566A" font-size="13.8" font-weight="600">Behemoth → Maverick,</text>
+    <text x="498" y="228" fill="#4C566A" font-size="11.5">V4 Pro → V4 Flash</text>
+  </g>
+
+  <rect x="700" y="52" width="205" height="200" rx="8" fill="#FAF0E8" stroke="#D08770" stroke-width="1.2"/>
+  <text x="718" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Numerics</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="718" y="100" font-size="13.8">FP8 — the mass standard</text>
+    <text x="718" y="114" fill="#4C566A" font-size="11.5">of the H100/H200 era</text>
+    <text x="718" y="136" font-size="11.5">the NVFP4 pretrain:</text>
+    <text x="718" y="150" font-size="11.5">Nemotron 3 Ultra (06.2026)</text>
+    <text x="718" y="164" font-weight="600" font-size="13.8">~2× throughput vs FP8</text>
+    <text x="718" y="186" fill="#4C566A" font-size="11.1" font-weight="600">MR-GPTQ and calibration-aware</text>
+    <text x="718" y="200" fill="#4C566A" font-size="11.5">made the format practical</text>
+    <text x="718" y="222" font-size="11.5">the echo of 7b §11:</text>
+    <text x="718" y="236" fill="#4C566A" font-size="10.6">the format is a through currency</text>
+  </g>
+
+  <rect x="40" y="268" width="865" height="42" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="288" font-size="11.5" fill="#2E3440">The common vector: pretraining stopped being “one pass over the web” — it is a programmable pipeline with stages, mixtures,</text>
+  <text x="58" y="304" font-size="11.5" fill="#2E3440">teachers and numeric formats; each column is its own multiplier on the effective budget C.</text>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="72" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Почему attention нужен позиционный сигнал</text>
+<text x="70" y="112" font-family="Arial, sans-serif" font-size="19.6" fill="#5B6472">Эквивариантность, причинная маска и отдельная геометрия расстояния</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<rect x="80" y="240" width="420" height="300" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="108" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="108" dy="0">Двунаправленный</tspan>
+<tspan x="108" dy="29">self-attention</tspan>
+</text>
+<text x="108" y="358" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="108" dy="0">Без PE: Attn(PX)=P Attn(X). Порядок</tspan>
+<tspan x="108" dy="25">строк переносится, но не</tspan>
+<tspan x="108" dy="25">интерпретируется.</tspan>
+</text>
+<line x1="510" y1="390" x2="560" y2="390" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="575" y="240" width="420" height="300" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="603" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="603" dy="0">Причинная маска (causal</tspan>
+<tspan x="603" dy="29">mask)</tspan>
+</text>
+<text x="603" y="358" text-anchor="start" font-family="Arial, sans-serif" font-size="18.3" font-weight="400" fill="#5B6472">
+<tspan x="603" dy="0">Позиция видит только префикс. Это</tspan>
+<tspan x="603" dy="25">добавляет асимметрию доступа, но не</tspan>
+<tspan x="603" dy="25">точную метрику расстояния.</tspan>
+</text>
+<line x1="1005" y1="390" x2="1055" y2="390" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1070" y="240" width="420" height="300" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1098" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1098" dy="0">Позиционный механизм</tspan>
+</text>
+<text x="1098" y="329" text-anchor="start" font-family="Arial, sans-serif" font-size="18.2" font-weight="400" fill="#5B6472">
+<tspan x="1098" dy="0">Абсолютная или относительная фаза,</tspan>
+<tspan x="1098" dy="25">позиционное смещение либо</tspan>
+<tspan x="1098" dy="25">координатные оси сообщают порядок,</tspan>
+<tspan x="1098" dy="25">расстояние и структуру.</tspan>
+</text>
+<rect x="250" y="650" width="1100" height="130" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="278" y="700" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="278" dy="0">Правило чтения</tspan>
+</text>
+<text x="278" y="739" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="278" dy="0">Ключевое различие: перестановочная эквивариантность ≠ инвариантность. Выход переставляется</tspan>
+<tspan x="278" dy="25">вместе со входом.</tspan>
+</text>
+</svg>

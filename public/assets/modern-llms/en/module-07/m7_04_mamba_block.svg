@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="white"/>
+<text x="70" y="70" font-family="Arial" font-size="39.1" font-weight="700" fill="#2E3440">A Mamba block: local filtering and selective state</text>
+<text x="70" y="110" font-family="Arial" font-size="19.6" fill="#5B6472">Decode retains two distinct cache states</text>
+<rect x="55" y="260" width="330" height="250" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="81" y="308" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="81" dy="0">Input projection</tspan>
+</text>
+<text x="81" y="349" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="81" dy="0">x and gate branches</tspan>
+</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="393" y1="385" x2="437" y2="385" stroke="#4C78A8" stroke-width="3" marker-end="url(#a)"/>
+<rect x="445" y="260" width="330" height="250" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="471" y="308" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="471" dy="0">Depthwise conv</tspan>
+</text>
+<text x="471" y="349" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="471" dy="0">local patterns</tspan>
+<tspan x="471" dy="25">conv_state</tspan>
+</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="783" y1="385" x2="827" y2="385" stroke="#4C78A8" stroke-width="3" marker-end="url(#a)"/>
+<rect x="835" y="260" width="330" height="250" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="861" y="308" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="861" dy="0">Selective SSM</tspan>
+</text>
+<text x="861" y="349" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="861" dy="0">Bₜ, Cₜ, Δₜ</tspan>
+<tspan x="861" dy="25">ssm_state</tspan>
+</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1173" y1="385" x2="1217" y2="385" stroke="#4C78A8" stroke-width="3" marker-end="url(#a)"/>
+<rect x="1225" y="260" width="330" height="250" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1251" y="308" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="700" fill="#2E3440">
+<tspan x="1251" dy="0">Gate + output</tspan>
+</text>
+<text x="1251" y="349" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1251" dy="0">mixing and residual</tspan>
+</text>
+<rect x="250" y="640" width="1100" height="130" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="276" y="688" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="276" dy="0">Serving cache</tspan>
+</text>
+<text x="276" y="729" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="276" dy="0">SSM state + causal-convolution tail; both are constant in context length.</tspan>
+</text>
+</svg>

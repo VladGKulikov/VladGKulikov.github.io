@@ -1,0 +1,42 @@
+<svg viewBox="0 0 940 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Prefix caching</title>
+  <desc>The cache-hit TTFT economics, provider pricing, the prompt-design rule.</desc>
+  <defs><marker id="a96" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Prefix caching: field order now costs money</text>
+
+  <rect x="40" y="52" width="530" height="108" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="74" font-size="16.6" font-weight="700" fill="#2E3440">The sheet's TTFT economics (8B, an 8K prompt, a 7.5K hit)</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="58" y="98" font-size="13.8" font-weight="600">full prefill    : 2·P·8192 / R<tspan baseline-shift="sub" font-size="9.4">compute</tspan> = 132.4 ms</text>
+    <text x="58" y="120" font-size="13.8" font-weight="600">7.5K cache hit  : compute the 512 tail → 8.27 ms</text>
+    <text x="58" y="142" font-weight="700" font-size="13.8">a ×16 gain    (real systems: 2–10× with overheads)</text>
+  </g>
+
+  <rect x="590" y="52" width="310" height="108" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="608" y="74" font-size="16.6" font-weight="700" fill="#2E3440">The mechanics: CoW on blocks (§8)</text>
+  <text x="608" y="96" font-size="13.8" fill="#2E3440">the prefix's shared blocks are shared</text>
+  <text x="608" y="114" font-size="11.5" fill="#2E3440">physically; a new request receives</text>
+  <text x="608" y="132" font-size="11.5" fill="#2E3440">pointers and pays only for the tail;</text>
+  <text x="608" y="150" font-size="11.5" fill="#4C566A">RadixAttention: the same via a tree (SGLang)</text>
+
+  <rect x="40" y="176" width="530" height="102" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="58" y="198" font-size="16.6" font-weight="700" fill="#2E3440">API pricing 2026</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="220" font-size="11.5">Anthropic Prompt Caching: cache_control, −90% on repeats</text>
+    <text x="58" y="238" font-size="11.4">Gemini Context Caching: documents for minutes to hours · OpenAI: automatic by prefix</text>
+    <text x="58" y="260" font-size="11.5">DeepSeek V4: $0.435/M against $0.003625/M cache-hit — <tspan font-weight="700" fill="#D08770">×120 cheaper</tspan></text>
+  </g>
+
+  <rect x="590" y="176" width="310" height="102" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="608" y="198" font-size="10.5" font-weight="700" fill="#2E3440">The prompt-design rule</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="9" text-anchor="middle">
+    <rect x="608" y="210" width="130" height="24" rx="4" fill="#EFF4EA" stroke="#A3BE8C"/><text x="673" y="226" fill="#2E3440" font-size="13.8" font-weight="600">instructions</text>
+    <rect x="744" y="210" width="70" height="24" rx="4" fill="#EFF4EA" stroke="#A3BE8C"/><text x="779" y="226" fill="#2E3440" font-size="13.8" font-weight="600">docs</text>
+    <rect x="820" y="210" width="64" height="24" rx="4" fill="#F8ECEC" stroke="#BF616A"/><text x="852" y="226" fill="#BF616A" font-size="13.8" font-weight="600">query</text>
+  </g>
+  <text x="608" y="256" font-size="11.5" fill="#2E3440">the stable to the front, the volatile to the end:</text>
+  <text x="608" y="272" font-size="11.5" fill="#4C566A">the hit rate steers the bill directly</text>
+
+  <text x="30" y="304" font-size="11.5" fill="#2E3440">The honest limits (Q3): no help with non-overlapping prefixes or short prompts; the engine cache dies</text>
+  <text x="30" y="320" font-size="11.5" fill="#2E3440">with the process and cannot outgrow the GPU — the cure is one floor up: LMCache/Mooncake (§10).</text>
+</svg>

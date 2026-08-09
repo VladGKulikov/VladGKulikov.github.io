@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">Openness is a multidimensional contract</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">Weight artefact, licence, code, and training reproducibility are separate axes</text>
+<rect x="35" y="245" width="280" height="330" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="60" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="60" dy="0">API only</tspan>
+</text>
+<text x="60" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="60" dy="0">behaviour without</tspan>
+<tspan x="60" dy="25">weights</tspan>
+</text>
+<rect x="345" y="245" width="280" height="330" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="370" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="370" dy="0">Open weights</tspan>
+</text>
+<text x="370" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="370" dy="0">checkpoint available</tspan>
+</text>
+<rect x="655" y="245" width="280" height="330" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="680" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="680" dy="0">Open inference</tspan>
+</text>
+<text x="680" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="680" dy="0">code and kernels</tspan>
+<tspan x="680" dy="25">available</tspan>
+</text>
+<rect x="965" y="245" width="280" height="330" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="990" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="990" dy="0">Open training</tspan>
+</text>
+<text x="990" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="990" dy="0">data, recipe,</tspan>
+<tspan x="990" dy="25">checkpoints, logs</tspan>
+</text>
+<rect x="1275" y="245" width="280" height="330" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1300" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="1300" dy="0">Managed adaptation</tspan>
+</text>
+<text x="1300" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1300" dy="0">training exposed as a</tspan>
+<tspan x="1300" dy="25">service</tspan>
+</text>
+<rect x="150" y="650" width="1300" height="130" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="176" y="698" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="176" dy="0">Engineering consequence</tspan>
+</text>
+<text x="176" y="737" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="176" dy="0">No column follows from another: open weights do not guarantee a permissive licence, a full recipe, or cheap</tspan>
+<tspan x="176" dy="26">self-hosting.</tspan>
+</text>
+</svg>

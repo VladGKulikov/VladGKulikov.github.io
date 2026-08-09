@@ -1,0 +1,44 @@
+<svg viewBox="0 0 940 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The parallelism map</title>
+  <desc>DP and ZeRO with the memory numbers, TP, PP with the bubble formula, EP and the 3D+EP assembly.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Four knives for one model — and the sheet's numbers</text>
+
+  <rect x="40" y="52" width="430" height="102" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="58" y="74" font-size="13.8" font-weight="700" fill="#2E3440">DP → ZeRO/FSDP (state sharding)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="96" font-size="13.8">the law: mixed-precision AdamW = <tspan font-weight="700">16 bytes/param</tspan></text>
+    <text x="58" y="114" font-size="11.5">7B, ZeRO-0: <tspan font-weight="700" fill="#BF616A">112.0 GB/rank = 104.3 GiB/rank</tspan></text>
+    <text x="58" y="132" font-size="13.8" font-weight="600">ZeRO-3/64 ideal: <tspan font-weight="700" fill="#A3BE8C">1.75 GB/rank = 1.63 GiB/rank</tspan></text>
+    <text x="58" y="148" font-size="11.5" fill="#4C566A">the price — parameter all-gather on the fly (E3.1)</text>
+  </g>
+
+  <rect x="490" y="52" width="410" height="102" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="508" y="74" font-size="13.8" font-weight="700" fill="#2E3440">PP + 1F1B (a pipeline over layers)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="96" font-size="13.8" font-weight="600">bubble = (p − 1) / (m + p − 1)</text>
+    <text x="508" y="114" font-size="13.8" font-weight="600">p = 8, m = 32 → <tspan font-weight="700" fill="#D08770">17.9%</tspan> idle</text>
+    <text x="508" y="132" font-size="13" font-weight="600">p = 8, m = 128 → <tspan font-weight="700" fill="#A3BE8C">5.2%</tspan> — microbatches cure the bubble (E3.2)</text>
+    <text x="508" y="148" font-size="11.5" fill="#4C566A">a naive pipeline without 1F1B would idle far longer</text>
+  </g>
+
+  <rect x="40" y="170" width="430" height="82" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="192" font-size="16.6" font-weight="700" fill="#2E3440">TP (Megatron): matrix sharding</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="214" font-size="11.5">W's rows/columns across GPUs; all-reduce at the seams;</text>
+    <text x="58" y="232" font-size="11.5">lives inside a node — where NVLink is</text>
+  </g>
+
+  <rect x="490" y="170" width="410" height="82" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="508" y="192" font-size="16.6" font-weight="700" fill="#2E3440">EP: expert parallelism (M6)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="214" font-size="11.5">MoE experts across GPUs; token all-to-all at routing;</text>
+    <text x="508" y="232" font-size="11.5">the load balancing — the very one from M6</text>
+  </g>
+
+  <rect x="40" y="268" width="860" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="290" font-size="16.6" font-weight="700" fill="#2E3440">The 3D + EP assembly</text>
+  <text x="58" y="310" font-size="10.6" fill="#2E3440" font-weight="600">DP×TP×PP×EP at once; the Llama 4 Behemoth passport: <tspan font-weight="600">32K GPUs · FP8 · 390 TFLOP/s per GPU</tspan> — schedule engineering matters more than any single axis.</text>
+
+  <text x="30" y="352" font-size="11.5" fill="#2E3440">The choice of axes = the bottleneck profile: memory (ZeRO), matmul width (TP), depth (PP), MoE bloat (EP);</text>
+  <text x="30" y="368" font-size="11.5" fill="#2E3440">all four return in M9 — inference has its own version of every axis.</text>
+</svg>

@@ -1,0 +1,71 @@
+<svg viewBox="0 0 1180 780" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title>Module 2 cheat sheet</title>
+<desc>A tokenizer as a deterministic program</desc>
+<rect width="1180" height="780" fill="#FFFFFF"/>
+<text x="45" y="50" text-anchor="start" font-size="29" font-weight="700" fill="#2E3440">
+<tspan x="45" dy="0">Tokenization on one page</tspan>
+</text>
+<text x="45" y="82" text-anchor="start" font-size="17.3" font-weight="600" fill="#4C566A">
+<tspan x="45" dy="0">String → pre-tokenization → UTF-8 bytes → ranked merges → token IDs → embedding lookup</tspan>
+</text>
+<rect x="45" y="120" width="525" height="245" rx="14" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="69" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="69" dy="0">Three core formulas</tspan>
+</text>
+<text x="69" y="207" text-anchor="start" font-size="18" font-weight="700" fill="#2E3440" font-family="ui-monospace, Menlo, Consolas, monospace">
+<tspan x="69" dy="0">1) V = 256 + M + |S|</tspan>
+</text>
+<text x="69" y="239" text-anchor="start" font-size="18" font-weight="700" fill="#2E3440" font-family="ui-monospace, Menlo, Consolas, monospace">
+<tspan x="69" dy="0">2) P</tspan><tspan baseline-shift="sub" font-size="13">emb</tspan><tspan> = V·d (tied); 2V·d (untied)</tspan>
+</text>
+<text x="69" y="271" text-anchor="start" font-size="18" font-weight="700" fill="#2E3440" font-family="ui-monospace, Menlo, Consolas, monospace">
+<tspan x="69" dy="0">3) bytes/token = B</tspan><tspan baseline-shift="sub" font-size="13">corpus</tspan><tspan> / N</tspan><tspan baseline-shift="sub" font-size="13">tokens</tspan>
+</text>
+<text x="69" y="313" text-anchor="start" font-size="14.4" font-weight="400" fill="#4C566A">
+<tspan x="69" dy="0">M is the merge count; |S| is the number of special IDs.</tspan>
+<tspan x="69" dy="19">Full bit compression also counts ID width, vocabulary, and</tspan>
+<tspan x="69" dy="19">metadata.</tspan>
+</text>
+<rect x="610" y="120" width="525" height="245" rx="14" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="634" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="634" dy="0">Harmony without an arithmetic</tspan>
+<tspan x="634" dy="29">mystery</tspan>
+</text>
+<text x="634" y="232" text-anchor="start" font-size="17" font-weight="400" fill="#4C566A">
+<tspan x="634" dy="0">199 998 mergeable IDs</tspan>
+<tspan x="634" dy="24">+ 1 090 unique special IDs</tspan>
+<tspan x="634" dy="24">= 201 088</tspan>
+<tspan x="634" dy="24">1 091 names because endofprompt and</tspan>
+<tspan x="634" dy="24">reserved_200018 alias one ID. GPT-5 →</tspan>
+<tspan x="634" dy="24">o200k_base; gpt-oss → o200k_harmony.</tspan>
+</text>
+<rect x="45" y="405" width="525" height="245" rx="14" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="69" y="451" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="69" dy="0">How to read vocabulary quality</tspan>
+</text>
+<text x="69" y="488" text-anchor="start" font-size="17" font-weight="400" fill="#4C566A">
+<tspan x="69" dy="0">Measure bytes/token and fertility on a fixed</tspan>
+<tspan x="69" dy="24">corpus and word-counting protocol. A larger</tspan>
+<tspan x="69" dy="24">vocabulary is not automatically better for every</tspan>
+<tspan x="69" dy="24">language. A train/held-out gap is evidence about</tspan>
+<tspan x="69" dy="24">data allocation, not a universal language</tspan>
+<tspan x="69" dy="24">ranking.</tspan>
+</text>
+<rect x="610" y="405" width="525" height="245" rx="14" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.5"/>
+<text x="634" y="451" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="634" dy="0">What belongs to the</tspan>
+<tspan x="634" dy="29">specification</tspan>
+</text>
+<text x="634" y="517" text-anchor="start" font-size="17" font-weight="400" fill="#4C566A">
+<tspan x="634" dy="0">The token-to-ID table is not enough. Preserve</tspan>
+<tspan x="634" dy="24">pre-tokenization, normalization, merge ranks,</tspan>
+<tspan x="634" dy="24">decoder behavior, special-token policy, and chat</tspan>
+<tspan x="634" dy="24">template. Default tiktoken.encode rejects</tspan>
+<tspan x="634" dy="24">registered special spellings unless the caller</tspan>
+<tspan x="634" dy="24">chooses another policy.</tspan>
+</text>
+<rect x="110" y="690" width="960" height="55" rx="12" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.5"/>
+<text x="590" y="725" text-anchor="middle" font-size="19" font-weight="700" fill="#2E3440">
+<tspan x="590" dy="0">The tokenizer is part of the model contract: change the program, and the same text produces different IDs.</tspan>
+</text>
+</svg>

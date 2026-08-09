@@ -1,0 +1,45 @@
+<svg viewBox="0 0 940 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Conversation templates</title>
+  <desc>Llama-like, ChatML-like, and Harmony serializations of one interaction.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Four protocols for one dialogue (§4)</text>
+
+  <rect x="40" y="52" width="430" height="120" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="58" y="74" font-size="13.8" font-weight="700" fill="#2E3440">Llama-like format</text>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="8.6" fill="#2E3440">
+    <text x="58" y="94" font-size="10.4" font-weight="600">&lt;|begin_of_text|&gt;&lt;|start_header_id|&gt;system&lt;|end_header_id|&gt;</text>
+    <text x="58" y="110" font-size="13.8" font-weight="600">You are a helpful assistant.&lt;|eot_id|&gt;</text>
+    <text x="58" y="126" font-size="9.9" font-weight="600">&lt;|start_header_id|&gt;user&lt;|end_header_id|&gt;What is 2+2?&lt;|eot_id|&gt;</text>
+    <text x="58" y="142" font-size="10.8" font-weight="600">&lt;|start_header_id|&gt;assistant&lt;|end_header_id|&gt;4.<tspan fill="#A3BE8C" font-weight="700">&lt;|eot_id|&gt;</tspan></text>
+  </g>
+  <text x="58" y="162" font-size="10.9" fill="#4C566A">role headers + a terminator; the green eot is trained with the reply (§5)</text>
+
+  <rect x="490" y="52" width="410" height="120" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="508" y="74" font-size="13.8" font-weight="700" fill="#2E3440">ChatML-like format</text>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="8.6" fill="#2E3440">
+    <text x="508" y="94" font-size="13.8" font-weight="600">&lt;|im_start|&gt;system … &lt;|im_end|&gt;</text>
+    <text x="508" y="110" font-size="13.8" font-weight="600">&lt;|im_start|&gt;user What is 2+2?&lt;|im_end|&gt;</text>
+    <text x="508" y="126" font-size="13.8" font-weight="600">&lt;|im_start|&gt;assistant 4.&lt;|im_end|&gt;</text>
+  </g>
+  <text x="508" y="148" font-size="11.5" fill="#4C566A">base delimiters may be extended with reasoning tokens</text>
+  <text x="508" y="162" font-size="11.5" fill="#4C566A">and tool tokens; the tokenizer is the source of truth</text>
+
+  <rect x="40" y="188" width="620" height="120" rx="12" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/>
+  <text x="58" y="210" font-size="16.6" font-weight="700" fill="#2E3440">Harmony — the gpt-oss format with explicit channels</text>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="8.6" fill="#2E3440">
+    <text x="58" y="230" font-size="13.8" font-weight="600">&lt;|start|&gt;user&lt;|message|&gt;What is 2+2?&lt;|end|&gt;</text>
+    <text x="58" y="246" font-size="11.1" font-weight="600">&lt;|start|&gt;assistant<tspan fill="#D08770" font-weight="700">&lt;|channel|&gt;analysis</tspan>&lt;|message|&gt;This is simple arithmetic.&lt;|end|&gt;</text>
+    <text x="58" y="262" font-size="13.8" font-weight="600">&lt;|start|&gt;assistant<tspan fill="#A3BE8C" font-weight="700">&lt;|channel|&gt;final</tspan>&lt;|message|&gt;4.&lt;|end|&gt;</text>
+  </g>
+  <text x="58" y="284" font-size="11.5" fill="#2E3440">analysis, commentary, and final distinguish response components and tool actions</text>
+  <text x="58" y="300" font-size="11.5" fill="#4C566A">the separation became formal, not heuristic; the spec — github.com/openai/harmony</text>
+
+  <rect x="680" y="188" width="220" height="120" rx="8" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="698" y="210" font-size="16.6" font-weight="700" fill="#2E3440">Other service formats</text>
+  <text x="698" y="232" font-size="11.5" fill="#2E3440">may remain proprietary;</text>
+  <text x="698" y="250" font-size="9.9" fill="#2E3440">the API exposes the external contract</text>
+  <text x="698" y="268" font-size="11.5" fill="#2E3440">(system/user/assistant)</text>
+  <text x="698" y="286" font-size="13.3" fill="#4C566A" font-weight="600">+ optional structured blocks</text>
+
+  <text x="30" y="334" font-size="13.8" font-weight="600" fill="#2E3440">The template = the model's contract: SFT on a foreign template is a silent mismatch: loss falls while behavior degrades.</text>
+  <text x="30" y="350" font-size="11.5" fill="#4C566A">in code: tokenizer.apply_chat_template; the protocol lives as a Jinja string in tokenizer_config.json (§17)</text>
+</svg>

@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 535" width="920" height="535">
+  <title>Attention руками: оценки → маска → вероятности → смесь</title>
+  <desc>Числовой трейс каузального scaled dot-product attention для трёх токенов и двумерных значений.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">Attention руками: оценки → маска → вероятности → смесь</text>
+  <text x="90" y="68" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#2E3440">QKᵀ / √2</text>
+  <text x="335" y="68" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#2E3440">+ causal mask</text>
+  <text x="580" y="68" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#2E3440">A = softmax</text>
+  <text x="805" y="68" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#2E3440">Z = AV</text>
+  <rect x="25" y="85" width="129" height="108" rx="2" fill="#FFFFFF" stroke="#5E81AC" stroke-width="1"/>
+  <text x="46.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="68" y1="85" x2="68" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="89.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.000</text>
+  <line x1="111" y1="85" x2="111" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="132.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="25" y1="121" x2="68" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="46.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.000</text>
+  <line x1="68" y1="121" x2="68" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="68" y1="121" x2="111" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="89.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="111" y1="121" x2="111" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="111" y1="121" x2="154" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="132.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="25" y1="157" x2="68" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="46.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="68" y1="157" x2="68" y2="193" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="68" y1="157" x2="111" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="89.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="111" y1="157" x2="111" y2="193" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="111" y1="157" x2="154" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="132.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">1.414</text>
+  <rect x="270" y="85" width="129" height="108" rx="2" fill="#FFFFFF" stroke="#D08770" stroke-width="1"/>
+  <text x="291.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="313" y1="85" x2="313" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="334.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#BF616A">−∞</text>
+  <line x1="356" y1="85" x2="356" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="377.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#BF616A">−∞</text>
+  <line x1="270" y1="121" x2="313" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="291.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.000</text>
+  <line x1="313" y1="121" x2="313" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="313" y1="121" x2="356" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="334.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="356" y1="121" x2="356" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="356" y1="121" x2="399" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="377.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#BF616A">−∞</text>
+  <line x1="270" y1="157" x2="313" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="291.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="313" y1="157" x2="313" y2="193" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="313" y1="157" x2="356" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="334.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.707</text>
+  <line x1="356" y1="157" x2="356" y2="193" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="356" y1="157" x2="399" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="377.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">1.414</text>
+  <rect x="515" y="85" width="129" height="108" rx="2" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1"/>
+  <text x="536.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">1.000</text>
+  <line x1="558" y1="85" x2="558" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="579.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.000</text>
+  <line x1="601" y1="85" x2="601" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="622.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.000</text>
+  <line x1="515" y1="121" x2="558" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="536.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.330</text>
+  <line x1="558" y1="121" x2="558" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="558" y1="121" x2="601" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="579.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.670</text>
+  <line x1="601" y1="121" x2="601" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="601" y1="121" x2="644" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="622.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.000</text>
+  <line x1="515" y1="157" x2="558" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="536.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.248</text>
+  <line x1="558" y1="157" x2="558" y2="193" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="558" y1="157" x2="601" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="579.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.248</text>
+  <line x1="601" y1="157" x2="601" y2="193" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="601" y1="157" x2="644" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="622.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.503</text>
+  <rect x="750" y="85" width="110" height="108" rx="2" fill="#FFFFFF" stroke="#B48EAD" stroke-width="1"/>
+  <text x="777.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">1.000</text>
+  <line x1="805" y1="85" x2="805" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="832.5" y="108.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.000</text>
+  <line x1="750" y1="121" x2="805" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="777.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">0.330</text>
+  <line x1="805" y1="121" x2="805" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="805" y1="121" x2="860" y2="121" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="832.5" y="144.4" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">1.340</text>
+  <line x1="750" y1="157" x2="805" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="777.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">1.759</text>
+  <line x1="805" y1="157" x2="805" y2="193" stroke="#D8DEE9" stroke-width="0.6"/>
+  <line x1="805" y1="157" x2="860" y2="157" stroke="#D8DEE9" stroke-width="0.6"/>
+  <text x="832.5" y="180.39999999999998" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" font-weight="500" fill="#2E3440">1.000</text>
+  <line x1="154" y1="139" x2="255" y2="139" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="205" y="124" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#4C566A">запрет будущего</text>
+  <line x1="399" y1="139" x2="500" y2="139" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="450" y="124" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="9.5" font-weight="600" fill="#4C566A">softmax</text>
+  <line x1="644" y1="139" x2="735" y2="139" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="690" y="124" text-anchor="middle" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="9.5" font-weight="600" fill="#4C566A">× V</text>
+  <rect x="25" y="235" width="870" height="225" rx="7" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.2"/>
+  <text x="45" y="264" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#2E3440">Как читать третью строку</text>
+  <text x="55" y="294" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#4C566A">
+    <tspan x="55" dy="0" font-weight="400">q₃ видит k₁, k₂, k₃</tspan>
+    <tspan x="55" dy="25" font-weight="400">логиты: [0.707, 0.707, 1.414]</tspan>
+    <tspan x="55" dy="25" font-weight="400">веса:  [0.248, 0.248, 0.503]</tspan>
+    <tspan x="55" dy="25" font-weight="400">V₁=[1,0], V₂=[0,2], V₃=[3,1]</tspan>
+    <tspan x="55" dy="25" font-weight="400">Z₃ = 0.248V₁ + 0.248V₂ + 0.503V₃</tspan>
+    <tspan x="55" dy="25" font-weight="400">   = [1.759, 1.000]</tspan>
+  </text>
+  <rect x="590" y="292" width="270" height="132" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="725" y="319" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#2E3440">Три инварианта для отладки</text>
+  <text x="610" y="347" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="500" fill="#4C566A">
+    <tspan x="610" dy="0" font-weight="500">1. Каждая строка A даёт сумму 1.</tspan>
+    <tspan x="610" dy="20" font-weight="500">2. Запрещённые веса равны 0.</tspan>
+    <tspan x="610" dy="20" font-weight="500">3. Z имеет столько же строк, сколько Q.</tspan>
+  </text>
+  <text x="25" y="505" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#4C566A" font-style="italic">Значения воспроизводятся проверочным кодом курса; округление на схеме — до трёх знаков.</text>
+</svg>

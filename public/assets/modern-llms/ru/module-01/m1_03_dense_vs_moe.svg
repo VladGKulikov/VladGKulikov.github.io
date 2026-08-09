@@ -1,0 +1,77 @@
+<svg viewBox="0 0 860 458" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Dense против MoE: два размера модели</title>
+  <desc>Слева dense FFN, где каждый токен проходит через все параметры; справа MoE gpt-oss-120b: router активирует top-4 из 128 экспертов, активно 5.1B из 117B.</desc>
+  <defs>
+    <marker id="arr13" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker>
+  </defs>
+  <text x="30" y="28" font-size="21" font-weight="700" fill="#2E3440">Dense против MoE: почему у модели «два размера»</text>
+
+  <!-- ===== левая панель: Dense ===== -->
+  <rect x="30" y="50" width="380" height="350" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1"/>
+  <text x="220" y="78" text-anchor="middle" font-size="15.1" font-weight="700" fill="#2E3440">Dense</text>
+
+  <rect x="175" y="96" width="90" height="26" rx="4" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
+  <text x="220" y="113" text-anchor="middle" font-size="12.6" fill="#2E3440" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600">токен</text>
+  <line x1="220" y1="122" x2="220" y2="150" stroke="#4C566A" stroke-width="1" marker-end="url(#arr13)"/>
+
+  <rect x="95" y="158" width="250" height="100" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="220" y="202" text-anchor="middle" font-size="13" font-weight="600" fill="#2E3440">FFN</text>
+  <text x="220" y="220" text-anchor="middle" font-size="10.9" fill="#4C566A">все параметры блока — в работе</text>
+
+  <line x1="220" y1="258" x2="220" y2="286" stroke="#4C566A" stroke-width="1" marker-end="url(#arr13)"/>
+  <rect x="175" y="292" width="90" height="26" rx="4" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
+  <text x="220" y="309" text-anchor="middle" font-size="12.6" fill="#2E3440" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600">выход</text>
+
+  <text x="220" y="352" text-anchor="middle" font-size="10.9" fill="#4C566A">на каждый токен — все N параметров</text>
+  <text x="220" y="368" text-anchor="middle" font-size="10.9" fill="#4C566A">пример: Gemma 4 31B → 31B активны всегда</text>
+
+  <!-- ===== правая панель: MoE ===== -->
+  <rect x="450" y="50" width="380" height="350" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1"/>
+  <text x="640" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#2E3440">Mixture of Experts</text>
+
+  <rect x="595" y="96" width="90" height="26" rx="4" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
+  <text x="640" y="113" text-anchor="middle" font-size="12.6" fill="#2E3440" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600">токен</text>
+  <line x1="640" y1="122" x2="640" y2="136" stroke="#4C566A" stroke-width="1" marker-end="url(#arr13)"/>
+
+  <rect x="575" y="142" width="130" height="26" rx="4" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="640" y="159" text-anchor="middle" font-size="12.6" fill="#2E3440" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600">router · top-4</text>
+  <line x1="640" y1="168" x2="640" y2="184" stroke="#4C566A" stroke-width="1" marker-end="url(#arr13)"/>
+
+  <!-- сетка экспертов 8×2 (показаны 16 из 128) -->
+  <g stroke-width="1">
+    <rect x="492" y="192" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="530" y="192" width="30" height="30" rx="4" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="2"/>
+    <rect x="568" y="192" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="606" y="192" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="644" y="192" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="682" y="192" width="30" height="30" rx="4" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="2"/>
+    <rect x="720" y="192" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="758" y="192" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="492" y="230" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="530" y="230" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="568" y="230" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="606" y="230" width="30" height="30" rx="4" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="2"/>
+    <rect x="644" y="230" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="682" y="230" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+    <rect x="720" y="230" width="30" height="30" rx="4" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="2"/>
+    <rect x="758" y="230" width="30" height="30" rx="4" fill="#ECEFF4" stroke="#D8DEE9"/>
+  </g>
+  <!-- shared expert -->
+  <rect x="452" y="211" width="30" height="30" rx="4" fill="#EAF3F5" stroke="#88C0D0" stroke-width="2"/>
+  <text x="467" y="254" text-anchor="middle" font-size="8" fill="#4C566A">shared</text>
+
+  <text x="640" y="278" text-anchor="middle" font-size="10.6" fill="#4C566A">…показаны 16 из 128 экспертов; зелёные — выбраны router'ом</text>
+
+  <line x1="640" y1="284" x2="640" y2="294" stroke="#4C566A" stroke-width="1" marker-end="url(#arr13)"/>
+  <circle cx="640" cy="309" r="13" fill="#FFFFFF" stroke="#4C566A" stroke-width="1.5"/>
+  <text x="640" y="313.5" text-anchor="middle" font-size="12.6" font-weight="600" fill="#2E3440">Σ</text>
+  <line x1="640" y1="322" x2="640" y2="336" stroke="#4C566A" stroke-width="1" marker-end="url(#arr13)"/>
+  <rect x="595" y="342" width="90" height="26" rx="4" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
+  <text x="640" y="359" text-anchor="middle" font-size="12.6" fill="#2E3440" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600">выход</text>
+
+  <text x="640" y="388" text-anchor="middle" font-size="12.6" font-weight="600" fill="#2E3440">gpt-oss-120b: активно 5.1B из 117B на токен</text>
+
+  <!-- нижняя строка-вывод -->
+  <text x="430" y="428" text-anchor="middle" font-size="12.6" font-weight="600" fill="#2E3440">total → память и «ёмкость знаний»&#160;&#160;&#160;·&#160;&#160;&#160;active → FLOPs и цена токена</text>
+  <text x="430" y="446" text-anchor="middle" font-size="9.5" font-style="italic" fill="#4C566A">сравнивать модели по одному числу параметров бессмысленно — у MoE их два</text>
+</svg>

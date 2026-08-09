@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="white"/>
+<text x="70" y="70" font-family="Arial" font-size="39.1" font-weight="700" fill="#2E3440">Гибриды: три способа вернуть адресуемую память</text>
+<text x="70" y="110" font-family="Arial" font-size="19.6" fill="#5B6472">Пропорция слоёв — свойство checkpoint, а не универсальный стандарт</text>
+<rect x="90" y="230" width="410" height="330" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="116" y="278" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="116" dy="0">Interleaved</tspan>
+</text>
+<text x="116" y="319" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="116" dy="0">Jamba</tspan>
+<tspan x="116" dy="25">Qwen3.5: 3 DeltaNet + 1 attention</tspan>
+</text>
+<rect x="595" y="230" width="410" height="330" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="621" y="278" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="621" dy="0">Parallel</tspan>
+</text>
+<text x="621" y="319" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="621" dy="0">Falcon-H1</tspan>
+<tspan x="621" dy="25">Mamba-2 ∥ attention</tspan>
+</text>
+<rect x="1100" y="230" width="410" height="330" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1126" y="278" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1126" dy="0">Specialized</tspan>
+</text>
+<text x="1126" y="319" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1126" dy="0">Kimi K3: 69 KDA + 24 Gated MLA</tspan>
+<tspan x="1126" dy="25">Nemotron Super/Ultra</tspan>
+</text>
+<rect x="220" y="650" width="1160" height="130" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="246" y="698" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="246" dy="0">Важная развилка</tspan>
+</text>
+<text x="246" y="739" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="246" dy="0">MiniMax M2 перешла к full attention, а M3 — к sparse attention: имя семейства не является</tspan>
+<tspan x="246" dy="25">архитектурным паспортом.</tspan>
+</text>
+</svg>

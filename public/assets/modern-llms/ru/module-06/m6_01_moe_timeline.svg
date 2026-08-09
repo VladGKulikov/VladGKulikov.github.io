@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="58" y="62" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#20293A">Эволюция Mixture of Experts</text>
+<text x="58" y="101" font-family="Arial, sans-serif" font-size="19.6" fill="#596579">Каждый этап решает новый статистический или системный долг</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#465A73"/></marker></defs>
+<rect x="45" y="230" width="225" height="350" rx="18" fill="#E7F0FB" stroke="#C8D2E1" stroke-width="2"/>
+<text x="65" y="270" text-anchor="start" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#20293A">
+<tspan x="65" dy="0">1991</tspan>
+<tspan x="65" dy="27">Локальные experts</tspan>
+</text>
+<text x="65" y="332" text-anchor="start" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#596579">
+<tspan x="65" dy="0">Обучаемый gating</tspan>
+<tspan x="65" dy="23">network распределяет</tspan>
+<tspan x="65" dy="23">примеры.</tspan>
+</text>
+<line x1="275" y1="405" x2="292" y2="405" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="300" y="230" width="225" height="350" rx="18" fill="#E8F6EA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="320" y="270" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="320" dy="0">2017</tspan>
+<tspan x="320" dy="27">Sparse top-k</tspan>
+</text>
+<text x="320" y="332" text-anchor="start" font-family="Arial, sans-serif" font-size="18.7" font-weight="400" fill="#596579">
+<tspan x="320" dy="0">Огромный bank;</tspan>
+<tspan x="320" dy="23">появляется routing</tspan>
+<tspan x="320" dy="23">collapse.</tspan>
+</text>
+<line x1="530" y1="405" x2="547" y2="405" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="555" y="230" width="225" height="350" rx="18" fill="#FFF2D3" stroke="#C8D2E1" stroke-width="2"/>
+<text x="575" y="270" text-anchor="start" font-family="Arial, sans-serif" font-size="24.2" font-weight="700" fill="#20293A">
+<tspan x="575" dy="0">2020–2021</tspan>
+<tspan x="575" dy="27">GShard / Switch</tspan>
+</text>
+<text x="575" y="332" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="575" dy="0">Expert Parallelism,</tspan>
+<tspan x="575" dy="23">capacity и</tspan>
+<tspan x="575" dy="23">all-to-all.</tspan>
+</text>
+<line x1="785" y1="405" x2="802" y2="405" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="810" y="230" width="225" height="350" rx="18" fill="#EEE8FA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="830" y="270" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="830" dy="0">2023–2024</tspan>
+<tspan x="830" dy="27">Mixtral /</tspan>
+<tspan x="830" dy="27">DeepSeekMoE</tspan>
+</text>
+<text x="830" y="359" text-anchor="start" font-family="Arial, sans-serif" font-size="17.3" font-weight="400" fill="#596579">
+<tspan x="830" dy="0">Открытые модели,</tspan>
+<tspan x="830" dy="23">fine-grained и shared</tspan>
+<tspan x="830" dy="23">experts.</tspan>
+</text>
+<line x1="1040" y1="405" x2="1057" y2="405" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="1065" y="230" width="225" height="350" rx="18" fill="#FCE5E8" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1085" y="270" text-anchor="start" font-family="Arial, sans-serif" font-size="26.5" font-weight="700" fill="#20293A">
+<tspan x="1085" dy="0">2024–2025</tspan>
+<tspan x="1085" dy="27">V3 и loss-free</tspan>
+</text>
+<text x="1085" y="332" text-anchor="start" font-family="Arial, sans-serif" font-size="17.6" font-weight="400" fill="#596579">
+<tspan x="1085" dy="0">Sigmoid scores, group</tspan>
+<tspan x="1085" dy="23">selection и bias</tspan>
+<tspan x="1085" dy="23">balancing.</tspan>
+</text>
+<line x1="1295" y1="405" x2="1312" y2="405" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="1320" y="230" width="225" height="350" rx="18" fill="#E4F6F4" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1340" y="270" text-anchor="start" font-family="Arial, sans-serif" font-size="20.5" font-weight="700" fill="#20293A">
+<tspan x="1340" dy="0">2026</tspan>
+<tspan x="1340" dy="27">Несколько ветвей</tspan>
+</text>
+<text x="1340" y="332" text-anchor="start" font-family="Arial, sans-serif" font-size="17.6" font-weight="400" fill="#596579">
+<tspan x="1340" dy="0">LatentMoE,</tspan>
+<tspan x="1340" dy="23">differentiable и</tspan>
+<tspan x="1340" dy="23">routing-free методы.</tspan>
+</text>
+<rect x="190" y="660" width="1220" height="135" rx="18" fill="#F7F9FC" stroke="#C8D2E1" stroke-width="2"/>
+<text x="215" y="707" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="215" dy="0">Сквозная идея</tspan>
+</text>
+<text x="215" y="744" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="215" dy="0">Общий принцип сохраняется: полный bank велик, активный маршрут мал; router и runtime остаются частью</tspan>
+<tspan x="215" dy="26">архитектуры.</tspan>
+</text>
+</svg>

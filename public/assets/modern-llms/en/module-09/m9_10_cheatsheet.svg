@@ -1,0 +1,59 @@
+<svg viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Module 9 cheat sheet</title>
+  <desc>The KV formula and ladder, the ceilings and knees, the systems, compression, the metrics, the gotchas.</desc>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Cheat sheet · Inference in 60 seconds</text>
+
+  <rect x="40" y="48" width="840" height="54" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="60" y="70" font-size="13.1" font-weight="600">KV/tok = 2·L·H<tspan baseline-shift="sub" font-size="8.9">kv</tspan>·d<tspan baseline-shift="sub" font-size="8.9">h</tspan>·b · ladder: MHA 2,560 → GQA-70B 320 → 8B 128 → MLA 68.625 KiB · SSM: const</text>
+    <text x="60" y="92" font-size="13.5" font-weight="600">70B@1M = 305.2 GiB (327.7 GB) > weights 130.4 GiB (140 GB) · DSA: −98% FLOPs, full memory</text>
+  </g>
+
+  <rect x="40" y="116" width="410" height="118" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="140" font-size="16.2" font-weight="700" fill="#2E3440">The decode roofline</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="164" font-size="11.3">ceilings: 209.4 → 196.2 @8K → 101.0 @128K → 22.8 @1M</text>
+    <text x="58" y="186" font-size="11.3">intensity @128K: 0.48 FLOP/B — ×613 below the ridge</text>
+    <text x="58" y="208" font-size="11.3">knees B<tspan baseline-shift="super" font-size="8.1">*</tspan> = W/KV: 14.9 @8K · 3.7 @32K · 0.93 @128K</text>
+    <text x="58" y="226" fill="#4C566A" font-size="13.5" font-weight="600">B=32@8K: 2,129 tok/s — a ×3.1 KV tax</text>
+  </g>
+
+  <rect x="470" y="116" width="410" height="118" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="488" y="140" font-size="13.5" font-weight="700" fill="#2E3440">Paged · Prefix</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="164" font-size="11.3">blocks of 16 + a page table: waste 93.75% → 0.37% · capacity ×16</text>
+    <text x="488" y="186" font-size="13.5" font-weight="600">CoW → prefix sharing · TTFT 132.4 → 8.27 ms (×16)</text>
+    <text x="488" y="208" font-size="11.3">pricing: DeepSeek cache-hit ×120 · Anthropic −90%</text>
+    <text x="488" y="226" fill="#4C566A" font-size="11.3">prompt design: the stable to the front</text>
+  </g>
+
+  <rect x="40" y="248" width="410" height="122" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="272" font-size="16.2" font-weight="700" fill="#2E3440">Platform</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="296" font-size="11.3">tiers: HBM → DRAM → NVMe → RDMA · ICMSP: NVMe KV</text>
+    <text x="58" y="316" font-size="11.3">LMCache: persistent, cross-request · 3–10× · 11 s → 1.5</text>
+    <text x="58" y="336" font-size="11.3">Mooncake: the pool + NIXL + early rejection · +498%</text>
+    <text x="58" y="356" fill="#4C566A" font-size="11.3">the 1M stack: vLLM/SGLang + LMCache + Mooncake + Dynamo</text>
+  </g>
+
+  <rect x="470" y="248" width="410" height="122" rx="12" fill="#F8ECEC" stroke="#BF616A"/>
+  <text x="488" y="272" font-size="16.2" font-weight="700" fill="#2E3440">The PD split</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="296" font-size="11.3">the ITL spike 137 ms → chunked (512): 13.1 ms — in SLO</text>
+    <text x="488" y="316" font-size="11.3">P: a smaller TP (compute) · D: a larger TP (memory)</text>
+    <text x="488" y="336" font-size="11.3">Dynamo 1.0: 7× on R1 · 50× MoE (vendor claims)</text>
+    <text x="488" y="356" fill="#4C566A" font-size="13.5" font-weight="600">Goodput = throughput under the TTFT and ITL SLO</text>
+  </g>
+
+  <rect x="40" y="384" width="840" height="62" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="58" y="408" font-size="16.2" font-weight="700" fill="#2E3440">Compression: the four-layer rule</text>
+  <text x="58" y="428" font-size="11.3" fill="#2E3440">architecture (MLA 93.3% / DSA) → quantization (TurboQuant 3 bits · 2.7× of the limit · the ceiling 101 → 174) → storage →</text>
+  <text x="58" y="442" font-size="11.3" fill="#2E3440">eviction (the last reserve: the trace — StreamingLLM loses {5, 7, 8}; reasoning is sensitive; protect the prompt boundaries)</text>
+
+  <rect x="40" y="460" width="840" height="58" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="482" font-size="16.2" font-weight="700" fill="#2E3440">Gotchas</text>
+  <text x="58" y="502" font-size="11.3" fill="#2E3440">DSA ≠ memory savings · the engine cache dies with the process · the batch knee @128K &lt; 1 · eviction is irreversible ·</text>
+  <text x="58" y="516" font-size="11.3" fill="#2E3440">metrics without an SLO are a showcase (see Goodput) · the vendor 7×/50× are claims; our floors are arithmetic</text>
+
+  <text x="30" y="546" font-size="9.5" font-style="italic" fill="#4C566A">the full version is §20 of the lecture; values reproduced by course verification code</text>
+</svg>

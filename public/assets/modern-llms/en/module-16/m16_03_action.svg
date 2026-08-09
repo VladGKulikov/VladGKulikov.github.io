@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#718096"/></marker></defs>
+<rect width="1600" height="900" fill="#ffffff"/>
+<text x="60" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#17324d">Three ways to express the next step</text>
+<rect x="50" y="145" width="480" height="570" rx="18" fill="#e8f1fb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="290" y="220" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="700" fill="#263238" text-anchor="middle">ReAct</text>
+<text x="92" y="315" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• act after each observation</text>
+<text x="92" y="354" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• high local adaptability</text>
+<text x="92" y="393" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• more round trips and</text>
+<text x="92" y="432" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">  a longer history</text>
+<rect x="560" y="145" width="480" height="570" rx="18" fill="#eaf7ef" stroke="#cbd5e1" stroke-width="2"/>
+<text x="800" y="220" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="700" fill="#263238" text-anchor="middle">Plan-and-Execute</text>
+<text x="602" y="315" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• explicit obligations</text>
+<text x="602" y="354" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• plan can be checked first</text>
+<text x="602" y="393" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• must replan after</text>
+<text x="602" y="432" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">  unexpected results</text>
+<rect x="1070" y="145" width="480" height="570" rx="18" fill="#fff5df" stroke="#cbd5e1" stroke-width="2"/>
+<text x="1310" y="220" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="700" fill="#263238" text-anchor="middle">CodeAct</text>
+<text x="1112" y="315" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• loops and branches in code</text>
+<text x="1112" y="354" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• composition in one action</text>
+<text x="1112" y="393" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">• requires a real sandbox</text>
+<rect x="165" y="750" width="1270" height="105" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+<text x="800" y="793" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#263238" text-anchor="middle">Teaching CodeAct scenario: 450 → 160 tokens (2.8125×);</text>
+<text x="800" y="822" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#263238" text-anchor="middle">5 → 1 round trip (5×). This is not a method benchmark.</text>
+</svg>

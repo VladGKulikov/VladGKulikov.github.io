@@ -1,0 +1,59 @@
+<svg viewBox="0 0 920 575" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Шпаргалка модуля 8</title>
+  <desc>Закон и оптимум, inference-aware, данные и стена, Muon и QK-Clip, память и bubble, тренды, грабли.</desc>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Шпаргалка · Претрейн за 60 секунд</text>
+
+  <rect x="40" y="48" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="60" y="70" font-size="12.8" font-weight="600">C = 6ND · L = E + A/N<tspan baseline-shift="super" font-size="8.7">α</tspan> + B/D<tspan baseline-shift="super" font-size="8.7">β</tspan> · N<tspan baseline-shift="super" font-size="8.7">*</tspan> = [(αA/βB)(C/6)<tspan baseline-shift="super" font-size="8.7">β</tspan>]<tspan baseline-shift="super" font-size="8.7">1/(α+β)</tspan> · 7.23e23 → 35.7B/3.38T (ratio 94.7)</text>
+    <text x="60" y="92" font-size="13.3" font-weight="600">«20 ток/парам» не константа: ratio растёт с C · упрощёнка (C/120)<tspan baseline-shift="super" font-size="9">0.5</tspan> промахивается по N вдвое</text>
+  </g>
+
+  <rect x="40" y="118" width="410" height="118" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="142" font-size="13.5" font-weight="700" fill="#2E3440">Inference-aware</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="166" font-size="13.5" font-weight="600">Llama-3 8B: 1868 ток/парам · ΔL = 0.0258</text>
+    <text x="58" y="188" font-size="12.3" font-weight="600">брейк-ивен против 70B того же L: T<tspan baseline-shift="super" font-size="8.4">*</tspan> = 2.12·10¹² токенов</text>
+    <text x="58" y="210" font-size="11.3">долина isoFLOP полога вправо — перетренировка дёшева</text>
+    <text x="58" y="228" fill="#4C566A" font-size="11.3">тренируем один раз — инференсим триллионы (В1)</text>
+  </g>
+
+  <rect x="470" y="118" width="410" height="118" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="488" y="142" font-size="16.2" font-weight="700" fill="#2E3440">Данные и стена</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="166" font-size="11.3">конвейер: langID → повторы → эвристики → дедуп →</text>
+    <text x="488" y="184" font-size="13" font-weight="600">классификатор → PII · корпуса: 15T / 6.3T / 2.6T / 1.3T</text>
+    <text x="488" y="206" font-size="11.3">аппетит: D<tspan baseline-shift="super" font-size="8.1">*</tspan> = 14.3T @1e25 · <tspan font-weight="700">50.4T @1e26</tspan></text>
+    <text x="488" y="228" fill="#4C566A" font-size="10.1">ответ: смеси · повторы · ProX-синтетика · reasoning-mix · 7b-козырь</text>
+  </g>
+
+  <rect x="40" y="250" width="410" height="122" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="274" font-size="13.5" font-weight="700" fill="#2E3440">Muon + MuonClip</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="298" font-size="13.5" font-weight="600">momentum → NS-квинтика ×5: спектр ×5.1 → [0.68, 1.13]</text>
+    <text x="58" y="318" font-size="11.3">(+3 кубики → 0.999 — дорого, Muon не делает)</text>
+    <text x="58" y="338" font-size="13.5" font-weight="600">QK-Clip: γ = τ/max · W<tspan baseline-shift="sub" font-size="9.2">Q</tspan>, W<tspan baseline-shift="sub" font-size="9.2">K</tspan> ×= √γ → (45,100,100,80)</text>
+    <text x="58" y="358" font-weight="600" font-size="13.5">K2: 1T MoE · 15.5T токенов · 0 spikes</text>
+  </g>
+
+  <rect x="470" y="250" width="410" height="122" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="488" y="274" font-size="16.2" font-weight="700" fill="#2E3440">Память и конвейер</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="298" font-size="11.3">закон: 16 B/parameter (2+2 bf16 + 4+4+4 fp32)</text>
+    <text x="488" y="318">7B state payload: 112 GB/rank = 104.3 GiB/rank → ZeRO-3/64: 1.75 GB/rank = 1.63 GiB/rank</text>
+    <text x="488" y="338" font-size="11.3">bubble 1F1B = (p−1)/(m+p−1): 17.9% → 5.2%</text>
+    <text x="488" y="358" fill="#4C566A" font-size="11.3">3D+EP; Behemoth: 32K GPU · FP8 · 390 TFLOP/s per GPU</text>
+  </g>
+
+  <rect x="40" y="386" width="840" height="62" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="58" y="410" font-size="13.5" font-weight="700" fill="#2E3440">Тренды-2026</text>
+  <text x="58" y="430" font-size="11.5" fill="#2E3440" font-weight="600">curriculum/annealing · DoReMi · staged long-context (до 10M) · MTP · co-distillation · FP8 → NVFP4 (Nemotron 3: 20T training recipe) ·</text>
+  <text x="58" y="444" font-size="11.3" fill="#2E3440">µP/MetaP: LR переносится с прокси · синтетика и reasoning-mix в претрейне</text>
+
+  <rect x="40" y="462" width="840" height="68" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="484" font-size="16.2" font-weight="700" fill="#2E3440">Грабли</text>
+  <text x="58" y="504" font-size="11.6" fill="#2E3440" font-weight="600">rule-of-thumb ≠ оптимум того же закона · клип логитов лечит симптом — воздействуй на WQ/WK · mHC: paper ≠ production default</text>
+  <text x="58" y="518" font-size="10.9" fill="#2E3440">developer claims маркируй отдельно · NVFP4 — mixed-precision recipe, не универсальные «×2» · Chinchilla-fit 2022 на 10²⁶ — экстраполяция</text>
+
+  <text x="30" y="558" font-size="9.5" font-style="italic" fill="#4C566A">развёрнутая версия — раздел 20 лекции; значения воспроизведены проверочным кодом курса</text>
+</svg>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4676A8"/></marker></defs>
+<text x="60" y="70" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#202A3B">Absorbing-mask forward process</text>
+<text x="60" y="108" font-family="Arial, sans-serif" font-size="19.6" fill="#56657A">In this module a token is either retained or replaced by a special mask</text>
+<rect x="70" y="240" width="305" height="230" rx="18" fill="#E8F6EC" stroke="#C9D4E2" stroke-width="2"/>
+<text x="95" y="287" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="700" fill="#202A3B">
+<tspan x="95" dy="0">t = 0</tspan>
+</text>
+<text x="95" y="326" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="95" dy="0">A B C D E F</tspan>
+</text>
+<line x1="383" y1="355" x2="443" y2="355" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="455" y="240" width="305" height="230" rx="18" fill="#E8F1FB" stroke="#C9D4E2" stroke-width="2"/>
+<text x="480" y="287" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="700" fill="#202A3B">
+<tspan x="480" dy="0">t = 0.35</tspan>
+</text>
+<text x="480" y="326" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="480" dy="0">A [MASK] C [MASK] E F</tspan>
+</text>
+<line x1="768" y1="355" x2="828" y2="355" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="840" y="240" width="305" height="230" rx="18" fill="#FFF2CF" stroke="#C9D4E2" stroke-width="2"/>
+<text x="865" y="287" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="700" fill="#202A3B">
+<tspan x="865" dy="0">t = 0.70</tspan>
+</text>
+<text x="865" y="326" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="865" dy="0">[MASK] [MASK] C [MASK]</tspan>
+<tspan x="865" dy="24">[MASK] F</tspan>
+</text>
+<line x1="1153" y1="355" x2="1213" y2="355" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1225" y="240" width="305" height="230" rx="18" fill="#FBE5E8" stroke="#C9D4E2" stroke-width="2"/>
+<text x="1250" y="287" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="700" fill="#202A3B">
+<tspan x="1250" dy="0">t = 1</tspan>
+</text>
+<text x="1250" y="326" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#56657A">
+<tspan x="1250" dy="0">[MASK] [MASK] [MASK] [MASK]</tspan>
+<tspan x="1250" dy="24">[MASK] [MASK]</tspan>
+</text>
+<rect x="260" y="590" width="1080" height="135" rx="18" fill="#E4F5F3" stroke="#C9D4E2" stroke-width="2"/>
+<text x="285" y="637" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="285" dy="0">The selected kernel</tspan>
+</text>
+<text x="285" y="676" text-anchor="start" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#56657A">
+<tspan x="285" dy="0">q(xₜⁱ=x₀ⁱ)=1−t     q(xₜⁱ=[MASK])=t</tspan>
+</text>
+<text x="800" y="790" text-anchor="middle" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="800" dy="0">Other dLLMs may use substitution or general categorical transitions.</tspan>
+</text>
+</svg>

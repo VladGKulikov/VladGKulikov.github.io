@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<text x="70" y="70" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="700" fill="#2E3440">Reading gpt-oss: configuration plus model code</text>
+<text x="70" y="108" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#5B6472">Not every architectural choice is stored in a field named after it</text>
+<rect x="75" y="190" width="650" height="485" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="107" y="247" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#2E3440">
+<tspan x="107" dy="0">ModelConfig fields</tspan>
+</text>
+<text x="107" y="292" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="107" dy="0">hidden_size = 2880</tspan>
+<tspan x="107" dy="28">intermediate_size = 2880</tspan>
+<tspan x="107" dy="28">num_experts = 128</tspan>
+<tspan x="107" dy="28">experts_per_token = 4</tspan>
+<tspan x="107" dy="28">swiglu_limit = 7.0</tspan>
+<tspan x="107" dy="28"></tspan>
+<tspan x="107" dy="28">No hidden_act field in the reference dataclass.</tspan>
+</text>
+<rect x="875" y="190" width="650" height="485" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="907" y="247" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#2E3440">
+<tspan x="907" dy="0">What only model.py reveals</tspan>
+</text>
+<text x="907" y="292" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#5B6472">
+<tspan x="907" dy="0">RMSNorm reduces in float32 in the reference path</tspan>
+<tspan x="907" dy="28">gpt-oss SwiGLU with fixed clipping, alpha=1.702,</tspan>
+<tspan x="907" dy="28">and up+1</tspan>
+<tspan x="907" dy="28">Pre-LN-style block ordering</tspan>
+<tspan x="907" dy="28">expert routing and tensor layout</tspan>
+<tspan x="907" dy="28"></tspan>
+<tspan x="907" dy="28">Architecture passport = config + implementation.</tspan>
+</text>
+<line x1="725" y1="430" x2="875" y2="430" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="310" y="735" width="980" height="100" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="333" y="779" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="21" font-weight="700" fill="#2E3440">
+<tspan x="333" dy="0">Reading rule</tspan>
+</text>
+<text x="333" y="819" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#5B6472">
+<tspan x="333" dy="0">Do not invent hidden_act or infer the reason for clipping from a field name. Trace the</tspan>
+<tspan x="333" dy="24">executed forward path.</tspan>
+</text>
+</svg>

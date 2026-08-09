@@ -1,0 +1,60 @@
+<svg viewBox="0 0 940 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Карта данных для SFT</title>
+  <desc>Три направления: общий диалог, решения и инструменты; смесь собирается под профиль модели.</desc>
+  <defs><marker id="a116" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Три полки одного микса (§8)</text>
+
+  <rect x="40" y="52" width="278" height="230" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Общие инструкции</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="100" fill="#4C566A" font-size="13.8" font-weight="600">OpenAssistant · UltraChat</text>
+    <text x="58" y="122" font-weight="600" font-size="13.8">семейство MAGPIE (§10)</text>
+    <text x="58" y="138" fill="#4C566A" font-size="11.5">синтетика из пустого шаблона</text>
+    <text x="58" y="160" font-weight="600" font-size="13.8">Tülu 3: открытая смесь</text>
+    <text x="58" y="176" fill="#4C566A" font-size="11" font-weight="600">диалог · математика · код · безопасность</text>
+    <text x="58" y="198" font-weight="600" font-size="13.8">роль: следование инструкциям</text>
+    <text x="58" y="214" fill="#4C566A" font-size="11.5">и общий стиль ответа</text>
+    <text x="58" y="236" font-size="11.5">проверять лицензии и дубли</text>
+    <text x="58" y="262" fill="#4C566A" font-size="11.5">покрытие важнее числа строк</text>
+  </g>
+
+  <rect x="332" y="52" width="278" height="230" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/>
+  <text x="350" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Развёрнутые решения</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="350" y="100" font-weight="600" font-size="13.8">R1-Distill: около 800K примеров</text>
+    <text x="350" y="116" fill="#4C566A" font-size="11.5">600K с решениями + 200K общих</text>
+    <text x="350" y="138" font-weight="600" font-size="13.8">s1K: 1000 отобранных задач</text>
+    <text x="350" y="154" fill="#4C566A" font-size="11.5">пять эпох; 26 мин на 16 H100</text>
+    <text x="350" y="176" font-size="11.5">открытые наборы требуют аудита</text>
+    <text x="350" y="192" fill="#4C566A" font-size="11.5">утечек, стиля и верификатора</text>
+    <text x="350" y="214" font-size="13.8" font-weight="600">математика · код · наука</text>
+    <text x="350" y="240" fill="#4C566A" font-size="11.5">длинные решения меняют память,</text>
+    <text x="350" y="256" fill="#4C566A" font-size="11.5">упаковку и распределение токенов</text>
+  </g>
+
+  <rect x="624" y="52" width="276" height="230" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="642" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Работа с инструментами</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="642" y="100" font-weight="600" font-size="13.8">xLAM / Tool-Calling Trove</text>
+    <text x="642" y="116" fill="#4C566A" font-size="11.1" font-weight="600">Salesforce · 60K однопроходных примеров</text>
+    <text x="642" y="138" font-size="11.5">ToolACE: большой пул API</text>
+    <text x="642" y="154" fill="#4C566A" font-size="13.8" font-weight="600">правила + модельная проверка</text>
+    <text x="642" y="176" font-size="11.5">многоходовые данные</text>
+    <text x="642" y="192" fill="#4C566A" font-size="11.5">добавляют зависимые действия</text>
+    <text x="642" y="218" font-weight="600" font-size="13.8">измерять раздельно:</text>
+    <text x="642" y="234" font-weight="600" font-size="11.6">схему · выбор · исполнение · итог (§12)</text>
+    <text x="642" y="258" fill="#4C566A" font-size="11.5">нет универсального множителя</text>
+  </g>
+
+  <g stroke="#4C566A" stroke-width="1.1" fill="none">
+    <path d="M179 282 C 179 306, 340 312, 452 316" marker-end="url(#a116)"/>
+    <path d="M471 282 L 471 312" marker-end="url(#a116)"/>
+    <path d="M762 282 C 762 306, 600 312, 490 316" marker-end="url(#a116)"/>
+  </g>
+  <rect x="261" y="318" width="420" height="46" rx="12" fill="#FAF5E3" stroke="#EBCB8B" stroke-width="1.3"/>
+  <text x="471" y="334" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">Микс собирается под профиль</text>
+  <text x="471" y="348" text-anchor="middle" font-size="12" fill="#4C566A">доли задаются целевыми навыками и рисками;</text>
+  <text x="471" y="359" text-anchor="middle" font-size="12" fill="#4C566A">качество проверяется на удержанной выборке (§9)</text>
+
+  <text x="30" y="376" font-size="9.7" font-style="italic" fill="#4C566A">размер не заменяет происхождение, лицензию, качество и покрытие</text>
+</svg>

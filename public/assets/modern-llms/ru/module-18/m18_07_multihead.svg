@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 455" width="920" height="455">
+  <title>Multi-head attention: несколько подпространств, один residual-поток</title>
+  <desc>Общая ширина модели разбивается на головы; каждая голова независимо строит attention, результаты конкатенируются и возвращаются в d_model выходной проекцией.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">Multi-head attention: несколько подпространств, один residual-поток</text>
+  <rect x="35" y="155" width="145" height="75" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="107" y="183" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#2E3440">
+    <tspan x="103.92" dy="0" font-weight="700">X</tspan>
+    <tspan x="68.80799999999999" dy="17" font-weight="700">B × T × d<tspan baseline-shift="sub" font-size="7.48px">model</tspan></tspan>
+  </text>
+  <line x1="180" y1="192" x2="250" y2="192" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="250" y="135" width="150" height="115" rx="7" fill="#FFFFFF" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="325" y="164" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E3440">
+    <tspan x="297.1568" dy="0" font-weight="600">W<tspan baseline-shift="sub" font-size="7.48px">Q</tspan>, W<tspan baseline-shift="sub" font-size="7.48px">K</tspan>, W<tspan baseline-shift="sub" font-size="7.48px">V</tspan></tspan>
+    <tspan x="260.32" dy="18" font-weight="600">три линейные проекции</tspan>
+    <tspan x="263.4" dy="18" font-weight="600">и reshape по головам</tspan>
+  </text>
+  <line x1="400" y1="192" x2="465" y2="192" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="465" y="70" width="155" height="52" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="542" y="91" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="518.48" dy="0" font-weight="600">голова 1</tspan>
+    <tspan x="513.5408" dy="16" font-weight="600">B × T × d<tspan baseline-shift="sub" font-size="7.14px">h</tspan></tspan>
+  </text>
+  <line x1="620" y1="96" x2="680" y2="192" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <rect x="465" y="145" width="155" height="52" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="542" y="166" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="518.48" dy="0" font-weight="600">голова 2</tspan>
+    <tspan x="513.5408" dy="16" font-weight="600">B × T × d<tspan baseline-shift="sub" font-size="7.14px">h</tspan></tspan>
+  </text>
+  <line x1="620" y1="171" x2="680" y2="192" stroke="#88C0D0" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="465" y="220" width="155" height="52" rx="7" fill="#ECEFF4" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="542" y="241" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="518.48" dy="0" font-weight="600">голова 3</tspan>
+    <tspan x="513.5408" dy="16" font-weight="600">B × T × d<tspan baseline-shift="sub" font-size="7.14px">h</tspan></tspan>
+  </text>
+  <line x1="620" y1="246" x2="680" y2="192" stroke="#B48EAD" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="465" y="295" width="155" height="52" rx="7" fill="#ECEFF4" stroke="#D08770" stroke-width="1.5"/>
+  <text x="542" y="316" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="518.48" dy="0" font-weight="600">голова 4</tspan>
+    <tspan x="513.5408" dy="16" font-weight="600">B × T × d<tspan baseline-shift="sub" font-size="7.14px">h</tspan></tspan>
+  </text>
+  <line x1="620" y1="321" x2="680" y2="192" stroke="#D08770" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="680" y="145" width="100" height="94" rx="7" fill="#FFFFFF" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="730" y="176" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#2E3440">
+    <tspan x="712.36" dy="0" font-weight="700">Concat</tspan>
+    <tspan x="695.6608" dy="18" font-weight="700">B × T × h·d<tspan baseline-shift="sub" font-size="7.14px">v</tspan></tspan>
+  </text>
+  <line x1="780" y1="192" x2="825" y2="192" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="825" y="155" width="70" height="75" rx="7" fill="#ECEFF4" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="860" y="182" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#2E3440">
+    <tspan x="855.0608" dy="0" font-weight="700">W<tspan baseline-shift="sub" font-size="7.14px">O</tspan></tspan>
+    <tspan x="841.184" dy="17" font-weight="700">→ d<tspan baseline-shift="sub" font-size="7.14px">model</tspan></tspan>
+  </text>
+  <rect x="35" y="355" width="860" height="58" rx="7" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.2"/>
+  <text x="465" y="379" text-anchor="start" font-family="DejaVu Sans Mono, ui-monospace, 'SF Mono', Menlo, monospace" font-size="10.5" font-weight="500" fill="#4C566A">
+    <tspan x="376.2267" dy="0" font-weight="500">head<tspan baseline-shift="sub" font-size="7.14px">i</tspan> = Attention(Q<tspan baseline-shift="sub" font-size="7.14px">i</tspan>, K<tspan baseline-shift="sub" font-size="7.14px">i</tspan>, V<tspan baseline-shift="sub" font-size="7.14px">i</tspan>)</tspan>
+    <tspan x="310.89570000000003" dy="18" font-weight="500">MHA(X) = Concat(head<tspan baseline-shift="sub" font-size="7.14px">1</tspan>,…,head<tspan baseline-shift="sub" font-size="7.14px">h</tspan>)W<tspan baseline-shift="sub" font-size="7.14px">O</tspan>;   d<tspan baseline-shift="sub" font-size="7.14px">h</tspan> = d<tspan baseline-shift="sub" font-size="7.14px">model</tspan> / h</tspan>
+  </text>
+  <text x="35" y="438" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#4C566A" font-style="italic">Голова — не отдельная нейросеть и не гарантированная «лингвистическая функция»: это обучаемое подпространство и маршрут смешивания.</text>
+</svg>

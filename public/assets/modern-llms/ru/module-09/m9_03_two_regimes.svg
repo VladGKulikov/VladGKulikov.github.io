@@ -1,0 +1,42 @@
+<svg viewBox="0 0 940 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Два режима инференса</title>
+  <desc>Prefill и decode как разные режимы; раскладка памяти и метрики учебного сценария.</desc>
+  <defs><marker id="a93" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Две фазы одного запроса (сценарий: 8B bf16, H100)</text>
+
+  <rect x="40" y="52" width="430" height="128" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Prefill — часто ближе к compute-bound</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">весь промпт одной матричной операцией:</text>
+    <text x="58" y="118" font-size="11.5">тысячи токенов на одно чтение весов, интенсивность ~N</text>
+    <text x="58" y="140" font-size="11.5">метрика: <tspan font-weight="700">TTFT</tspan> · пример SLO 200–500 мс</text>
+    <text x="58" y="162" font-size="11.5">floor 8K-промпта: <tspan font-weight="700" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace">132.4 мс</tspan> чистого compute</text>
+  </g>
+
+  <rect x="490" y="52" width="410" height="128" rx="12" fill="#F8ECEC" stroke="#BF616A" stroke-width="1.3"/>
+  <text x="508" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Decode — часто ближе к memory-bound</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="100" font-size="13.8">токен за форвард: читаем веса + весь KV запроса</text>
+    <text x="508" y="118" font-size="11.5">интенсивность @128K: <tspan font-weight="700">0.48 FLOP/Б</tspan> — гребень 296 → <tspan font-weight="700" fill="#BF616A">×613 ниже</tspan></text>
+    <text x="508" y="140" font-size="11.5">метрика: <tspan font-weight="700">ITL</tspan> · пример SLO 20–50 мс</text>
+    <text x="508" y="162" font-size="11.5">floor: <tspan font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace">4.78 мс</tspan> (пустой) → <tspan font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace">9.90 мс</tspan> @128K</text>
+  </g>
+
+  <rect x="40" y="196" width="560" height="86" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="218" font-size="10.5" font-weight="700" fill="#2E3440">Раскладка GPU-памяти на сервинге</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="58" y="230" width="150" height="36" rx="5" fill="#E8EEF5" stroke="#5E81AC"/><text x="133" y="246" fill="#2E3440" font-size="12">веса</text><text x="133" y="260" fill="#4C566A">фикс (14.90 GiB / 16 GB у 8B)</text>
+    <rect x="216" y="230" width="230" height="36" rx="5" fill="#F8ECEC" stroke="#BF616A"/><text x="331" y="246" fill="#2E3440" font-size="13.8" font-weight="600">KV-кэш</text><text x="331" y="260" fill="#4C566A" font-size="11">растёт с N × батч — доминанта 128K+</text>
+    <rect x="454" y="230" width="126" height="36" rx="5" fill="#FAF5E3" stroke="#EBCB8B"/><text x="517" y="246" fill="#2E3440" font-size="12">активации</text><text x="517" y="260" fill="#4C566A" font-size="12">текущий слой</text>
+  </g>
+
+  <rect x="620" y="196" width="280" height="86" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="638" y="218" font-size="13.8" font-weight="700" fill="#2E3440">Метрика-2026: Goodput</text>
+  <text x="638" y="240" font-size="11.5" fill="#2E3440">throughput при соблюдении SLO</text>
+  <text x="638" y="258" font-size="11.5" fill="#2E3440">по TTFT <tspan font-weight="600">и</tspan> ITL одновременно —</text>
+  <text x="638" y="276" font-size="11.5" fill="#4C566A">её оптимизирует весь стек §8–11</text>
+
+  <line x1="40" y1="300" x2="900" y2="300" stroke="#D8DEE9" stroke-width="0.75"/>
+  <text x="40" y="324" font-size="11.5" fill="#2E3440">Фазы используют железо по-разному: монолитный prefill может задерживать decode других запросов (сценарий: spike 137 мс, §11);</text>
+  <text x="40" y="344" font-size="11.5" fill="#2E3440">chunked prefill и раздельные P/D-пулы уменьшают interference; конфигурацию фаз измеряют независимо.</text>
+</svg>

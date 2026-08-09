@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="58" y="62" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#20293A">DeepSeek-V3: reconstruction and published passport</text>
+<text x="58" y="101" font-family="Arial, sans-serif" font-size="19.6" fill="#596579">Main model, active convention, and MTP package are kept separate</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#465A73"/></marker></defs>
+<rect x="80" y="220" width="430" height="365" rx="18" fill="#E7F0FB" stroke="#C8D2E1" stroke-width="2"/>
+<text x="105" y="268" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="105" dy="0">Architecture</tspan>
+</text>
+<text x="105" y="307" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="105" dy="0">61 layers: 3 dense + 58 MoE</tspan>
+<tspan x="105" dy="24">256 routed + 1 shared</tspan>
+<tspan x="105" dy="24">top-8 · sigmoid · group selection</tspan>
+</text>
+<rect x="585" y="220" width="430" height="365" rx="18" fill="#E8F6EA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="610" y="268" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="610" dy="0">Course reconstruction</tspan>
+</text>
+<text x="610" y="307" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="610" dy="0">Total 671,026,419,200</tspan>
+<tspan x="610" dy="24">Active 36,625,618,432</tspan>
+<tspan x="610" dy="24">explicit counting convention</tspan>
+</text>
+<rect x="1090" y="220" width="430" height="365" rx="18" fill="#FFF2D3" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1115" y="268" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1115" dy="0">Published passport</tspan>
+</text>
+<text x="1115" y="307" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="1115" dy="0">Main model: 671B / 37B</tspan>
+<tspan x="1115" dy="24">HF package with MTP: ≈685B</tspan>
+</text>
+<line x1="515" y1="400" x2="575" y2="400" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<line x1="1020" y1="400" x2="1080" y2="400" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="230" y="665" width="1140" height="130" rx="18" fill="#E4F6F4" stroke="#C8D2E1" stroke-width="2"/>
+<text x="255" y="712" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="255" dy="0">Reading rule</tspan>
+</text>
+<text x="255" y="749" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="255" dy="0">The rounded headline and exact reconstruction agree, but they answer different package and</tspan>
+<tspan x="255" dy="26">active-path conventions.</tspan>
+</text>
+</svg>

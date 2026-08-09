@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#F7F9FC"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7B8794"/></marker></defs>
+<text x="70" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#263238" text-anchor="start"><tspan x="70" dy="0">Один запрос через RAG-каскад</tspan></text>
+<text x="70" y="112" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="70" dy="0">На каждой стадии фиксируйте потерю, метрику и следующий ремонт</tspan></text>
+<rect x="45" y="190" width="340" height="410" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="45" y="190" width="340" height="8" rx="4" fill="#3D6FB6"/>
+<text x="77" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="77" dy="0">1. Фрагментация</tspan></text>
+<text x="77" y="284.32" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="77" dy="0">Потеря: разрыв контекста</tspan><tspan x="77" dy="27.200000000000003">Метрика: полнота фрагментов</tspan><tspan x="77" dy="27.200000000000003">Ремонт: перекрытие / структура</tspan></text>
+<line x1="385" y1="395" x2="425" y2="395" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="435" y="190" width="340" height="410" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="435" y="190" width="340" height="8" rx="4" fill="#2D8C8C"/>
+<text x="467" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="467" dy="0">2. Представление</tspan></text>
+<text x="467" y="284.32" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="467" dy="0">Потеря: термы или структура</tspan><tspan x="467" dy="27.200000000000003">Метрика: Recall / nDCG</tspan><tspan x="467" dy="27.200000000000003">Ремонт: гибрид / late interaction</tspan></text>
+<line x1="775" y1="395" x2="815" y2="395" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="825" y="190" width="340" height="410" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="825" y="190" width="340" height="8" rx="4" fill="#7B5BA7"/>
+<text x="857" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="27.3" font-weight="700" fill="#263238" text-anchor="start"><tspan x="857" dy="0">3. Отбор кандидатов</tspan></text>
+<text x="857" y="284.32" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="857" dy="0">Потеря: пропуск ANN</tspan><tspan x="857" dy="27.200000000000003">Метрика: полнота против точного поиска</tspan><tspan x="857" dy="27.200000000000003">Ремонт: efSearch / nprobe</tspan></text>
+<line x1="1165" y1="395" x2="1205" y2="395" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1215" y="190" width="340" height="410" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="1215" y="190" width="340" height="8" rx="4" fill="#C77A32"/>
+<text x="1247" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="27.3" font-weight="700" fill="#263238" text-anchor="start"><tspan x="1247" dy="0">4. Сборка контекста</tspan></text>
+<text x="1247" y="284.32" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="1247" dy="0">Потеря: исключение по бюджету</tspan><tspan x="1247" dy="27.200000000000003">Метрика: покрытие свидетельств</tspan><tspan x="1247" dy="27.200000000000003">Ремонт: реранкинг / маршрутизация</tspan></text>
+<rect x="180" y="670" width="1240" height="145" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="180" y="670" width="1240" height="8" rx="4" fill="#5B8F52"/>
+<text x="212" y="718" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="212" dy="0">Системный результат</tspan></text>
+<text x="212" y="765.5" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="212" dy="0">RAG выигрывает, когда сохраняет нужное свидетельство дешевле полного контекста</tspan><tspan x="212" dy="28.560000000000002">Оценка должна разделять поиск, генерацию и стоимость</tspan></text>
+</svg>

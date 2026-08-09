@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">Config + implementation = architecture passport</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">JSON defines shapes; code reveals details outside the schema</text>
+<rect x="70" y="180" width="500" height="560" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="104" y="241" text-anchor="start" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#2E3440">
+<tspan x="104" dy="0">config.json</tspan>
+</text>
+<text x="104" y="287" text-anchor="start" font-family="Arial,sans-serif" font-size="21" font-weight="400" fill="#5B6472">
+<tspan x="104" dy="0">vocab_size → M2</tspan>
+<tspan x="104" dy="29">rope_parameters → M3</tspan>
+<tspan x="104" dy="29">Q/KV heads → M4</tspan>
+<tspan x="104" dy="29">hidden/intermediate → M5</tspan>
+<tspan x="104" dy="29">experts/top-k → M6</tspan>
+<tspan x="104" dy="29">layer types / context → M7–M9</tspan>
+</text>
+<rect x="1030" y="180" width="500" height="560" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1064" y="241" text-anchor="start" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#2E3440">
+<tspan x="1064" dy="0">model.py / kernels</tspan>
+</text>
+<text x="1064" y="287" text-anchor="start" font-family="Arial,sans-serif" font-size="21" font-weight="400" fill="#5B6472">
+<tspan x="1064" dy="0">biases + learned sinks</tspan>
+<tspan x="1064" dy="29">exact activation</tspan>
+<tspan x="1064" dy="29">routing details</tspan>
+<tspan x="1064" dy="29">packing and numerical formats</tspan>
+<tspan x="1064" dy="29">operation order</tspan>
+<tspan x="1064" dy="29">hardware path</tspan>
+</text>
+<rect x="640" y="300" width="320" height="310" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="668" y="352" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="668" dy="0">Model card</tspan>
+</text>
+<text x="668" y="394" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="668" dy="0">training/post-training</tspan>
+<tspan x="668" dy="26">licence and intended use</tspan>
+<tspan x="668" dy="26">rounded total/active</tspan>
+<tspan x="668" dy="26">reported evaluations</tspan>
+</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="580" y1="455" x2="625" y2="455" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="975" y1="455" x2="1020" y2="455" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
+</svg>

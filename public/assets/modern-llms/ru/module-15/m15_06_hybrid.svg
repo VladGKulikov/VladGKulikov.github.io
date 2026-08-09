@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#F7F9FC"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7B8794"/></marker></defs>
+<text x="70" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#263238" text-anchor="start"><tspan x="70" dy="0">Гибридный поиск: расширить список, затем уточнить порядок</tspan></text>
+<text x="70" y="112" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="70" dy="0">Слияние списков и реранкинг исправляют разные ошибки</tspan></text>
+<rect x="70" y="190" width="330" height="210" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="70" y="190" width="330" height="8" rx="4" fill="#3D6FB6"/>
+<text x="102" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="102" dy="0">BM25</tspan></text>
+<text x="102" y="287.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="102" dy="0">Редкие термы</tspan><tspan x="102" dy="29.92">Идентификаторы</tspan><tspan x="102" dy="29.92">Буквальные совпадения</tspan></text>
+<rect x="70" y="500" width="330" height="210" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="70" y="500" width="330" height="8" rx="4" fill="#2D8C8C"/>
+<text x="102" y="548" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="700" fill="#263238" text-anchor="start"><tspan x="102" dy="0">Плотная / LSA</tspan></text>
+<text x="102" y="597.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="102" dy="0">Перефразировки</tspan><tspan x="102" dy="29.92">Семантическая близость</tspan><tspan x="102" dy="29.92">Другой класс ошибок</tspan></text>
+<rect x="540" y="300" width="320" height="300" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="540" y="300" width="320" height="8" rx="4" fill="#7B5BA7"/>
+<text x="572" y="348" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="572" dy="0">RRF</tspan></text>
+<text x="572" y="397.86" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="572" dy="0">Суммирует 1/(k+rank)</tspan><tspan x="572" dy="29.92">Не требует калибровать оценки</tspan><tspan x="572" dy="29.92">Не создаёт новых кандидатов</tspan></text>
+<rect x="1000" y="300" width="420" height="300" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="1000" y="300" width="420" height="8" rx="4" fill="#C77A32"/>
+<text x="1032" y="348" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="1032" dy="0">Взаимодействующий</tspan><tspan x="1032" dy="31.86">реранкер</tspan></text>
+<text x="1032" y="429.72" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="1032" dy="0">Заново читает пары</tspan><tspan x="1032" dy="29.92">Меняет порядок top-N</tspan><tspan x="1032" dy="29.92">Не вернёт пропущенный документ</tspan></text>
+<line x1="400" y1="295" x2="525" y2="375" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="400" y1="605" x2="525" y2="525" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="860" y1="450" x2="985" y2="450" stroke="#7B8794" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="800" y="790" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle"><tspan x="800" dy="0">Замороженный пример RU: BM25 nDCG@5 0.872 → RRF 0.866 → reranker 0.928</tspan></text>
+<text x="800" y="830" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="middle"><tspan x="800" dy="0">Слияние списков не обязано выигрывать на каждом наборе</tspan></text>
+</svg>

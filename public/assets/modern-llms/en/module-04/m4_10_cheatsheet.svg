@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Attention passport: four independent axes</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="19.6" fill="#5B6472">A context length becomes meaningful only after these fields are known</text>
+<rect x="70" y="180" width="700" height="235" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="231" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">1. KV geometry</tspan>
+</text>
+<text x="96" y="274" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="96" dy="0">MHA / MQA / GQA / MLA</tspan>
+<tspan x="96" dy="25">heads · latent · dtype</tspan>
+</text>
+<rect x="830" y="180" width="700" height="235" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="856" y="231" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="856" dy="0">2. Layer schedule</tspan>
+</text>
+<text x="856" y="274" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="856" dy="0">full · window · sparse</tspan>
+<tspan x="856" dy="25">which layers retain what</tspan>
+</text>
+<rect x="70" y="480" width="700" height="235" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="531" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">3. Position selection</tspan>
+</text>
+<text x="96" y="574" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="96" dy="0">geometric window</tspan>
+<tspan x="96" dy="25">learned block/token routing</tspan>
+</text>
+<rect x="830" y="480" width="700" height="235" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="856" y="531" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="856" dy="0">4. Kernel</tspan>
+</text>
+<text x="856" y="574" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="856" dy="0">materialized · Flash</tspan>
+<tspan x="856" dy="25">mask support · precision</tspan>
+</text>
+</svg>

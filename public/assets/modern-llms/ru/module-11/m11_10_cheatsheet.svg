@@ -1,0 +1,60 @@
+<svg viewBox="0 0 920 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Шпаргалка модуля 11</title>
+  <desc>Шаблон, маска, упаковка, стоимость, данные, решения, инструменты, LoRA и типичные ошибки.</desc>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Шпаргалка · SFT за 60 секунд</text>
+
+  <rect x="40" y="48" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="10" fill="#2E3440">
+    <text x="60" y="70" font-size="12.6" font-weight="600">шаблон = контракт (Llama-3 · ChatML · каналы Harmony · теги &lt;think&gt;) · labels = −100 вне assistant</text>
+    <text x="60" y="92" font-size="13.5" font-weight="600">обучаемо 37,5% диалога (21/56) · &lt;|eot_id|&gt; ответа входит в цель · FFD: 24 → 5 строк</text>
+  </g>
+
+  <rect x="40" y="118" width="410" height="118" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="142" font-size="16.2" font-weight="700" fill="#2E3440">Цена этапа</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="166" font-size="10.5" font-weight="600">C<tspan baseline-shift="sub" font-size="8.1">SFT</tspan> = 3.5·10¹⁹ — в 20 833 раз ниже заданного сценария претрейна</text>
+    <text x="58" y="186">24,3 ч — арифметическая оценка; проверять реальное использование ускорителя</text>
+    <text x="58" y="206" font-size="11.3">эпохи 1–3 · шаг: полное 5e-6…2e-5 · LoRA 1e-4…3e-4</text>
+    <text x="58" y="226" fill="#4C566A" font-size="10.4">график, разогрев и ограничение градиента подбираются по задаче</text>
+  </g>
+
+  <rect x="470" y="118" width="410" height="118" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="488" y="142" font-size="16.2" font-weight="700" fill="#2E3440">Данные</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="166" font-size="11.3">общий диалог · развёрнутые решения · инструменты</text>
+    <text x="488" y="186" font-size="11.3">LIMA: качество и разнообразие важнее механического роста</text>
+    <text x="488" y="206" font-size="10.8">синтетика: Self-Instruct → Evol-Instruct → Magpie (пустой шаблон)</text>
+    <text x="488" y="226" fill="#4C566A" font-size="12.2" font-weight="600">best-of-N: покрытие растёт, отдача на генерацию падает</text>
+  </g>
+
+  <rect x="40" y="250" width="410" height="122" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="274" font-size="16.2" font-weight="700" fill="#2E3440">SFT на решениях</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="298" font-size="10.6">длинные решения · корректная упаковка · явная целевая область</text>
+    <text x="58" y="318" font-size="13.2" font-weight="600">R1-Distill: результаты авторов зависят от протокола</text>
+    <text x="58" y="338" font-size="11.3">сценарий s1: 1 проход = 1,73·10¹⁸ FLOP = 9 минут</text>
+    <text x="58" y="358" fill="#BF616A" font-weight="600">SFT задаёт демонстрируемое поведение; RL оптимизирует по награде (М12)</text>
+  </g>
+
+  <rect x="470" y="250" width="410" height="122" rx="12" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="488" y="274" font-size="16.2" font-weight="700" fill="#2E3440">SFT для инструментов</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="488" y="298" font-size="12.7" font-weight="600">вызов → наблюдение среды → следующий шаг или ответ</text>
+    <text x="488" y="318" font-size="11.3">учит: схеме · выбору · обработке результата · завершению</text>
+    <text x="488" y="338" font-weight="700" font-size="10.5">результат измеряется на целевых схемах и многоходовых задачах</text>
+    <text x="488" y="358" fill="#4C566A" font-size="11.3">«пишет JSON» ≠ «умеет пользоваться инструментами»</text>
+  </g>
+
+  <rect x="40" y="386" width="840" height="62" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="58" y="410" font-size="14" font-weight="700" fill="#2E3440">PEFT</text>
+  <text x="130" y="410" font-size="12.9" fill="#2E3440" font-weight="600">ΔW = (α/r)·B·A поверх замороженной W · лист: 13.63M = 0.17% базы · состояния 119.7 GiB → 208 MiB (×589)</text>
+  <text x="58" y="430" font-size="11.3" fill="#2E3440">QLoRA: нижняя оценка 3,97 GiB без активаций · варианты DoRA/rsLoRA/PiSSA проверяются отдельно;</text>
+  <text x="58" y="444" font-size="11.3" fill="#2E3440">полное дообучение — для глубоких сдвигов; адаптеры меняют бухгалтерию памяти, но не отменяют сравнение</text>
+
+  <rect x="40" y="462" width="840" height="56" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="484" font-size="16.2" font-weight="700" fill="#2E3440">Грабли</text>
+  <text x="58" y="504" font-size="11.3" fill="#2E3440">чужой шаблон — тихая катастрофа · исключённый из цели &lt;|eot_id|&gt; — нет прямого сигнала остановки · упаковка без изоляции —</text>
+  <text x="58" y="518" font-size="11.3" fill="#2E3440">межпримерная утечка внимания · качество данных важнее объёма · канал analysis маскировать только осознанно</text>
+
+  <text x="30" y="546" font-size="9.5" font-style="italic" fill="#4C566A">развёрнутая версия — раздел 20 лекции; все учебные числа воспроизводятся локальными расчётами</text>
+</svg>

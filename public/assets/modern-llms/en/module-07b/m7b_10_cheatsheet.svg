@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4676A8"/></marker></defs>
+<text x="60" y="70" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#202A3B">dLLM: one-page control map</text>
+<text x="60" y="108" font-family="Arial, sans-serif" font-size="19.6" fill="#56657A">Do not confuse objective, sampler, architecture, and measured system performance</text>
+<rect x="60" y="185" width="430" height="230" rx="18" fill="#E8F1FB" stroke="#C9D4E2" stroke-width="2"/>
+<text x="85" y="232" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="85" dy="0">Kernel</tspan>
+</text>
+<text x="85" y="271" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="85" dy="0">[MASK] is one discrete corruption</tspan>
+<tspan x="85" dy="24">choice.</tspan>
+</text>
+<rect x="555" y="185" width="430" height="230" rx="18" fill="#E8F6EC" stroke="#C9D4E2" stroke-width="2"/>
+<text x="580" y="232" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="580" dy="0">Loss</tspan>
+</text>
+<text x="580" y="271" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="580" dy="0">Time weighting and sum/mean must be</tspan>
+<tspan x="580" dy="24">explicit.</tspan>
+</text>
+<rect x="1050" y="185" width="430" height="230" rx="18" fill="#FFF2CF" stroke="#C9D4E2" stroke-width="2"/>
+<text x="1075" y="232" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="1075" dy="0">Sampler</tspan>
+</text>
+<text x="1075" y="271" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="1075" dy="0">Token prediction ≠ reveal order;</tspan>
+<tspan x="1075" dy="24">remasking is possible.</tspan>
+</text>
+<rect x="60" y="500" width="430" height="230" rx="18" fill="#FBE5E8" stroke="#C9D4E2" stroke-width="2"/>
+<text x="85" y="547" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="85" dy="0">Roofline</tspan>
+</text>
+<text x="85" y="586" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="85" dy="0">A dense-8B arithmetic scenario, not</tspan>
+<tspan x="85" dy="24">a released model.</tspan>
+</text>
+<rect x="555" y="500" width="430" height="230" rx="18" fill="#EFE8FA" stroke="#C9D4E2" stroke-width="2"/>
+<text x="580" y="547" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="580" dy="0">Cache</tspan>
+</text>
+<text x="580" y="586" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="580" dy="0">The current canvas changes; a</tspan>
+<tspan x="580" dy="24">completed prefix is stable.</tspan>
+</text>
+<rect x="1050" y="500" width="430" height="230" rx="18" fill="#E4F5F3" stroke="#C9D4E2" stroke-width="2"/>
+<text x="1075" y="547" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="1075" dy="0">Evidence</tspan>
+</text>
+<text x="1075" y="586" text-anchor="start" font-family="Arial, sans-serif" font-size="23.1" font-weight="600" fill="#56657A">
+<tspan x="1075" dy="0">tok/s needs hardware, precision,</tspan>
+<tspan x="1075" dy="24">sampler, and quality.</tspan>
+</text>
+<text x="800" y="810" text-anchor="middle" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#4676A8">
+<tspan x="800" dy="0">The central KPI is finalized tokens per model call at the required quality.</tspan>
+</text>
+</svg>

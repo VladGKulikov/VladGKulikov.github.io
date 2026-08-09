@@ -1,0 +1,18 @@
+import react from "@vitejs/plugin-react";
+import { resolve } from "node:path";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  base: "/open-courses/",
+  plugins: [react()],
+  publicDir: "public",
+  build: {
+    outDir: "dist-pages",
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        index: resolve(__dirname, "index.html"),
+      },
+    },
+  },
+});

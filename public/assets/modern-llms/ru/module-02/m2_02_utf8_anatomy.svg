@@ -1,0 +1,41 @@
+<svg viewBox="0 0 860 310" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Анатомия UTF-8</title>
+  <desc>Строка Пр🚀t посимвольно: кириллица — 2 байта, эмодзи — 4, латиница — 1; стартовая последовательность byte-level BPE.</desc>
+  <text x="30" y="30" font-size="21" font-weight="700" fill="#2E3440">UTF-8: сколько байтов в символе</text>
+  <text x="30" y="50" font-size="12.6" fill="#4C566A">строка <tspan font-family="ui-monospace, Menlo, monospace" fill="#2E3440">"Пр🚀t"</tspan> — 4 символа → 9 байтов → 9 стартовых токенов byte-level BPE</text>
+
+  <!-- символы -->
+  <g text-anchor="middle" font-family="ui-monospace, Menlo, monospace">
+    <rect x="80"  y="80" width="120" height="46" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/><text x="140" y="110" font-size="20" fill="#2E3440" font-weight="600">П</text>
+    <rect x="220" y="80" width="120" height="46" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/><text x="280" y="110" font-size="20" fill="#2E3440" font-weight="600">р</text>
+    <rect x="360" y="80" width="240" height="46" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/><text x="480" y="110" font-size="20" fill="#2E3440" font-weight="600">🚀</text>
+    <rect x="620" y="80" width="70" height="46" rx="6" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/><text x="655" y="110" font-size="20" fill="#2E3440" font-weight="600">t</text>
+  </g>
+  <!-- скобки-связи -->
+  <g stroke="#D8DEE9" stroke-width="1">
+    <line x1="140" y1="126" x2="140" y2="150"/><line x1="280" y1="126" x2="280" y2="150"/>
+    <line x1="480" y1="126" x2="480" y2="150"/><line x1="655" y1="126" x2="655" y2="150"/>
+  </g>
+  <!-- байты -->
+  <g text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12">
+    <rect x="82"  y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="109" y="174" fill="#2E3440" font-size="12.6" font-weight="600">D0</text>
+    <rect x="144" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="171" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9F</text>
+    <rect x="222" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="249" y="174" fill="#2E3440" font-size="12.6" font-weight="600">D1</text>
+    <rect x="284" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="311" y="174" fill="#2E3440" font-size="12.6" font-weight="600">80</text>
+    <rect x="362" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="389" y="174" fill="#2E3440" font-size="12.6" font-weight="600">F0</text>
+    <rect x="424" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="451" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9F</text>
+    <rect x="486" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="513" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9A</text>
+    <rect x="548" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="575" y="174" fill="#2E3440" font-size="12.6" font-weight="600">80</text>
+    <rect x="628" y="152" width="54" height="34" rx="4" fill="#EFF4EA" stroke="#A3BE8C"/><text x="655" y="174" fill="#2E3440" font-size="12.6" font-weight="600">74</text>
+  </g>
+  <g font-size="9.5" fill="#4C566A" text-anchor="middle">
+    <text x="210" y="204" font-size="10.9">кириллица: 2 байта / символ</text>
+    <text x="480" y="204">эмодзи: 4 байта</text>
+    <text x="655" y="204">ASCII: 1 байт</text>
+  </g>
+  <g font-size="10" fill="#4C566A">
+    <text x="30" y="240" font-size="10.5">Следствия: <tspan fill="#2E3440">«Привет» = 12 стартовых токенов</tspan>, «Hello» = 5 — языки стартуют с неравных позиций ещё до словаря.</text>
+    <text x="30" y="260" font-size="10.5">Каждый одиночный байт D0/D1 сам по себе — невалидный UTF-8: словарь сначала «собирает буквы» (см. трейс m2/03).</text>
+    <text x="30" y="280" font-size="10.5">Ведущий байт кодирует длину: 0xxxxxxx — 1 байт · 110xxxxx — 2 · 1110xxxx — 3 · 11110xxx — 4; продолжения — 10xxxxxx.</text>
+  </g>
+</svg>

@@ -1,0 +1,49 @@
+<svg viewBox="0 0 940 330" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Training-run passports</title>
+  <desc>K2, Nemotron 3 Ultra, DeepSeek V4 with the full tech report 2606.19348, the Behemoth line.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Reading a run's tech report: three passports of 2025–26</text>
+
+  <rect x="40" y="52" width="278" height="168" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Kimi K2 (Moonshot)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">scale: 1T MoE</text>
+    <text x="58" y="120" font-size="11.5">data: 15.5T tokens</text>
+    <text x="58" y="140" font-size="11.5">optimizer: <tspan font-weight="600">MuonClip</tspan> (§10–11)</text>
+    <text x="58" y="160" font-size="11.5">stability: <tspan font-weight="700" fill="#A3BE8C">0 training spikes</tspan></text>
+    <text x="58" y="180" fill="#4C566A" font-size="13.8" font-weight="600">token-efficient: the quality of “big</text>
+    <text x="58" y="196" fill="#4C566A" font-size="11.5">volumes on AdamW” from less data</text>
+    <text x="58" y="212" font-size="11.5" fill="#4C566A">arXiv 2507.20534</text>
+  </g>
+
+  <rect x="332" y="52" width="278" height="168" rx="8" fill="#FAF0E8" stroke="#D08770" stroke-width="1.3"/>
+  <text x="350" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Nemotron 3 Ultra (NVIDIA)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="350" y="100" font-size="13.8">format: <tspan font-weight="700">an NVFP4 pretrain</tspan></text>
+    <text x="350" y="120" font-size="11.5">the first public one at trillion scale</text>
+    <text x="350" y="140" font-size="11.5">throughput: <tspan font-weight="600">~2× over FP8</tspan> (Blackwell)</text>
+    <text x="350" y="160" font-size="11.5">includes MTP layers and LatentMoE (M6)</text>
+    <text x="350" y="180" fill="#4C566A" font-size="11.5">a calibration-aware stack (MR-GPTQ)</text>
+    <text x="350" y="196" fill="#4C566A" font-size="11.5">made 4 bits practical</text>
+    <text x="350" y="212" font-size="11.5" fill="#4C566A">June 2026; the echo of 7b §11</text>
+  </g>
+
+  <rect x="624" y="52" width="278" height="168" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/>
+  <text x="642" y="76" font-size="13.6" font-weight="700" fill="#2E3440">DeepSeek V4 (Pro 1.6T / Flash 284B)</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="642" y="100" font-size="13.8">optimizer: Muon in the stack</text>
+    <text x="642" y="120" font-size="11.5">architecture: Hybrid Attention (CSA+HCA)</text>
+    <text x="642" y="140" font-size="11">novelties: <tspan font-weight="600">mHC</tspan> (Birkhoff Polytope, sigmoid)</text>
+  </g>
+  <rect x="642" y="152" width="242" height="56" rx="8" fill="#E9F0E4" stroke="#A3BE8C"/>
+  <text x="654" y="170" font-size="13.6" font-weight="700" fill="#2E3440">✓ tech report: arXiv 2606.19348</text>
+  <text x="654" y="186" font-size="11.5" fill="#2E3440">April 24, 2026, shipped with the model;</text>
+  <text x="654" y="200" font-size="11.5" fill="#2E3440">NIST CAISI confirmation (May 2, 2026)</text>
+
+  <rect x="40" y="236" width="862" height="42" rx="8" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="256" font-size="11.2" font-weight="700" fill="#2E3440">The infrastructure line:</text>
+  <text x="230" y="256" font-size="11.4" fill="#2E3440">Llama 4 Behemoth — 32K GPUs · FP8 · 390 TFLOP/s per GPU · 3D+EP (§15); co-distillation: Behemoth → Maverick.</text>
+  <text x="58" y="270" font-size="11.5" fill="#4C566A">a run's passport = scale + data + optimizer + format + parallelism + (an honest status of the novelties)</text>
+
+  <text x="30" y="310" font-size="11.5" fill="#2E3440">The module's skill: reading a passport by layers (scale · data · optimizer · format · parallelism · status of novelties);</text>
+  <text x="30" y="324" font-size="11.5" fill="#2E3440">a textbook mHC status change: preview (January 2026) → working technique (V4 tech report, April 2026).</text>
+</svg>

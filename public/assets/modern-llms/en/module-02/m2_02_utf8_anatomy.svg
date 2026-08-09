@@ -1,0 +1,41 @@
+<svg viewBox="0 0 860 310" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>UTF-8 anatomy</title>
+  <desc>The string Пр🚀t character by character: Cyrillic — 2 bytes, emoji — 4, Latin — 1; the starting sequence of byte-level BPE.</desc>
+  <text x="30" y="30" font-size="21" font-weight="700" fill="#2E3440">UTF-8: how many bytes per character</text>
+  <text x="30" y="50" font-size="12.6" fill="#4C566A">the string <tspan font-family="ui-monospace, Menlo, monospace" fill="#2E3440">"Пр🚀t"</tspan> — 4 characters → 9 bytes → 9 starting tokens of byte-level BPE</text>
+
+  <!-- -->
+  <g text-anchor="middle" font-family="ui-monospace, Menlo, monospace">
+    <rect x="80"  y="80" width="120" height="46" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/><text x="140" y="110" font-size="20" fill="#2E3440" font-weight="600">П</text>
+    <rect x="220" y="80" width="120" height="46" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/><text x="280" y="110" font-size="20" fill="#2E3440" font-weight="600">р</text>
+    <rect x="360" y="80" width="240" height="46" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/><text x="480" y="110" font-size="20" fill="#2E3440" font-weight="600">🚀</text>
+    <rect x="620" y="80" width="70" height="46" rx="6" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/><text x="655" y="110" font-size="20" fill="#2E3440" font-weight="600">t</text>
+  </g>
+  <!-- -->
+  <g stroke="#D8DEE9" stroke-width="1">
+    <line x1="140" y1="126" x2="140" y2="150"/><line x1="280" y1="126" x2="280" y2="150"/>
+    <line x1="480" y1="126" x2="480" y2="150"/><line x1="655" y1="126" x2="655" y2="150"/>
+  </g>
+  <!-- -->
+  <g text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12">
+    <rect x="82"  y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="109" y="174" fill="#2E3440" font-size="12.6" font-weight="600">D0</text>
+    <rect x="144" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="171" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9F</text>
+    <rect x="222" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="249" y="174" fill="#2E3440" font-size="12.6" font-weight="600">D1</text>
+    <rect x="284" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="311" y="174" fill="#2E3440" font-size="12.6" font-weight="600">80</text>
+    <rect x="362" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="389" y="174" fill="#2E3440" font-size="12.6" font-weight="600">F0</text>
+    <rect x="424" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="451" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9F</text>
+    <rect x="486" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="513" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9A</text>
+    <rect x="548" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="575" y="174" fill="#2E3440" font-size="12.6" font-weight="600">80</text>
+    <rect x="628" y="152" width="54" height="34" rx="4" fill="#EFF4EA" stroke="#A3BE8C"/><text x="655" y="174" fill="#2E3440" font-size="12.6" font-weight="600">74</text>
+  </g>
+  <g font-size="9.5" fill="#4C566A" text-anchor="middle">
+    <text x="210" y="204" font-size="10.9">Cyrillic: 2 bytes / char</text>
+    <text x="480" y="204">emoji: 4 bytes</text>
+    <text x="655" y="204">ASCII: 1 byte</text>
+  </g>
+  <g font-size="10" fill="#4C566A">
+    <text x="30" y="240" font-size="10.5">Consequences: <tspan fill="#2E3440">«Привет» = 12 starting tokens</tspan>, "Hello" = 5 — languages start unequal before any vocabulary.</text>
+    <text x="30" y="260" font-size="10.5">A lone D0/D1 byte is invalid UTF-8 by itself: the vocabulary first "assembles letters" (see trace m2/03).</text>
+    <text x="30" y="280" font-size="10.5">The leading byte encodes length: 0xxxxxxx — 1 byte · 110xxxxx — 2 · 1110xxxx — 3 · 11110xxx — 4; continuations — 10xxxxxx.</text>
+  </g>
+</svg>

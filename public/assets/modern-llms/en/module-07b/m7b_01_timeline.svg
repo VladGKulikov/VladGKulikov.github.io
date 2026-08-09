@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4676A8"/></marker></defs>
+<text x="60" y="70" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#202A3B">The evolution of diffusion LMs</text>
+<text x="60" y="108" font-family="Arial, sans-serif" font-size="19.6" fill="#56657A">From discrete corruption to block generation and open models</text>
+<rect x="45" y="210" width="270" height="320" rx="18" fill="#E8F1FB" stroke="#C9D4E2" stroke-width="2"/>
+<text x="68" y="253" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="68" dy="0">2021 · D3PM</tspan>
+</text>
+<text x="68" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="18.5" font-weight="400" fill="#56657A">
+<tspan x="68" dy="0">Discrete transition</tspan>
+<tspan x="68" dy="22">kernels and an absorbing</tspan>
+<tspan x="68" dy="22">[MASK] state.</tspan>
+</text>
+<line x1="323" y1="370" x2="343" y2="370" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="355" y="210" width="270" height="320" rx="18" fill="#E8F6EC" stroke="#C9D4E2" stroke-width="2"/>
+<text x="378" y="253" text-anchor="start" font-family="Arial, sans-serif" font-size="22.7" font-weight="700" fill="#202A3B">
+<tspan x="378" dy="0">2022 · Diffusion-LM</tspan>
+</text>
+<text x="378" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="378" dy="0">A continuous branch in</tspan>
+<tspan x="378" dy="22">embedding space.</tspan>
+</text>
+<line x1="633" y1="370" x2="653" y2="370" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="665" y="210" width="270" height="320" rx="18" fill="#FFF2CF" stroke="#C9D4E2" stroke-width="2"/>
+<text x="688" y="253" text-anchor="start" font-family="Arial, sans-serif" font-size="22.4" font-weight="700" fill="#202A3B">
+<tspan x="688" dy="0">2024 · SEDD / MDLM</tspan>
+</text>
+<text x="688" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="19.4" font-weight="600" fill="#56657A">
+<tspan x="688" dy="0">Score-based and</tspan>
+<tspan x="688" dy="22">likelihood-based masked</tspan>
+<tspan x="688" dy="22">formulations.</tspan>
+</text>
+<line x1="943" y1="370" x2="963" y2="370" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="975" y="210" width="270" height="320" rx="18" fill="#EFE8FA" stroke="#C9D4E2" stroke-width="2"/>
+<text x="998" y="253" text-anchor="start" font-family="Arial, sans-serif" font-size="23.7" font-weight="700" fill="#202A3B">
+<tspan x="998" dy="0">2025 · BD3 / LLaDA</tspan>
+</text>
+<text x="998" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="998" dy="0">Block diffusion,</tspan>
+<tspan x="998" dy="22">flexible length, and 8B</tspan>
+<tspan x="998" dy="22">scale.</tspan>
+</text>
+<line x1="1253" y1="370" x2="1273" y2="370" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1285" y="210" width="270" height="320" rx="18" fill="#FBE5E8" stroke="#C9D4E2" stroke-width="2"/>
+<text x="1308" y="253" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="1308" dy="0">2026 · scale</tspan>
+</text>
+<text x="1308" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="1308" dy="0">LLaDA2.1, iLLaDA,</tspan>
+<tspan x="1308" dy="22">DiffusionGemma, and</tspan>
+<tspan x="1308" dy="22">commercial APIs.</tspan>
+</text>
+<rect x="180" y="625" width="1240" height="145" rx="18" fill="#E4F5F3" stroke="#C9D4E2" stroke-width="2"/>
+<text x="205" y="672" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="205" dy="0">The main shift</tspan>
+</text>
+<text x="205" y="711" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="205" dy="0">Not one linear ladder: full-canvas, block diffusion, token editing, and variable-length sampling evolve</tspan>
+<tspan x="205" dy="25">in parallel.</tspan>
+</text>
+</svg>

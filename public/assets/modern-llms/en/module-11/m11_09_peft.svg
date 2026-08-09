@@ -1,0 +1,48 @@
+<svg viewBox="0 0 940 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The PEFT map</title>
+  <desc>LoRA mechanics, the sheet's arithmetic, the QLoRA estimate, the variant family and the selection rule.</desc>
+  <defs><marker id="a119" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Low-rank adaptation: LoRA as a strong baseline (§16)</text>
+
+  <rect x="40" y="52" width="400" height="150" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="58" y="74" font-size="16.6" font-weight="700" fill="#2E3440">Mechanics</text>
+  <text x="58" y="100" font-size="13.8" font-family="ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">h = W·x + (α/r)·B·A·x</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="124" font-size="11.5"><tspan font-weight="600" fill="#4C566A">W is frozen</tspan> · A (r×d<tspan baseline-shift="sub" font-size="8.3">in</tspan>) and B (d<tspan baseline-shift="sub" font-size="8.3">out</tspan>×r) train</text>
+    <text x="58" y="142" font-size="11.5">parameters per matrix: r·(d<tspan baseline-shift="sub" font-size="8.3">in</tspan> + d<tspan baseline-shift="sub" font-size="8.3">out</tspan>)</text>
+    <text x="58" y="164" fill="#4C566A" font-size="11.3">a small trainable set supports a different learning-rate search:</text>
+    <text x="58" y="180" fill="#4C566A" font-size="11.5">LoRA often 1e-4…3e-4; full FT 5e-6…2e-5 (§7)</text>
+  </g>
+
+  <rect x="460" y="52" width="440" height="150" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="478" y="74" font-size="16.3" font-weight="700" fill="#2E3440">The sheet's arithmetic (8B · GQA · q,k,v,o · r=16)</text>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="9.3" fill="#2E3440">
+    <text x="478" y="98" font-size="11.9" font-weight="600">per layer: 425,984 → 13.63M total = 0.17% of the base</text>
+    <text x="478" y="118" font-size="13.8" font-weight="600">states: full 119.7 GiB → LoRA 208 MiB (×589)</text>
+  </g>
+  <g font-size="9" fill="#2E3440">
+    <text x="478" y="142" font-weight="600" font-size="13.8">QLoRA floor (M10 §15): 4-bit payload ≈ 3.74 GiB</text>
+    <text x="478" y="158" font-size="13.8" font-weight="600">+ bf16 adapters 26 MiB + states 208 MiB</text>
+    <text x="478" y="176" fill="#A3BE8C" font-weight="700" font-size="13.8">→ parameter-state floor ≈ 3.97 GiB;</text>
+    <text x="478" y="192" fill="#4C566A" font-size="11.5">activations, temporary buffers, and allocator overhead are excluded</text>
+  </g>
+
+  <rect x="40" y="218" width="560" height="98" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="58" y="240" font-size="16.6" font-weight="700" fill="#2E3440">The 2026 family</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="262" font-size="11.5"><tspan font-weight="600">DoRA</tspan> separates update magnitude and direction</text>
+    <text x="58" y="280" font-size="11.5"><tspan font-weight="600">rsLoRA</tspan> changes scaling · <tspan font-weight="600">PiSSA</tspan> uses SVD initialization</text>
+    <text x="58" y="298" font-size="13.8" font-weight="600"><tspan font-weight="600">LoRA+ / LoRA-FA</tspan> alter A/B optimization; gains are task-dependent</text>
+  </g>
+
+  <rect x="620" y="218" width="280" height="98" rx="8" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="638" y="240" font-size="16.6" font-weight="700" fill="#2E3440">The selection rule (Q7)</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="638" y="262" font-size="10.6">full FT — a deep shift and sufficient resources</text>
+    <text x="638" y="280" font-size="10.8" font-weight="600"><tspan font-weight="700">LoRA/QLoRA — a practical comparison baseline</tspan></text>
+    <text x="638" y="298" fill="#4C566A" font-size="11.5">evaluate variants on held-out tasks</text>
+  </g>
+
+  <text x="30" y="342" font-size="11.5" fill="#2E3440">The adapter bonus: ~26 MiB files — stored, versioned and juggled like ordinary artifacts; ranks 8/16 —</text>
+  <text x="30" y="358" font-size="11.5" fill="#2E3440">select rank and target matrices by quality and cost; GQA narrows k/v projections (M4).</text>
+</svg>

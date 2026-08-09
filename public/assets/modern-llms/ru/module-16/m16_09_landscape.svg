@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#718096"/></marker></defs>
+<rect width="1600" height="900" fill="#ffffff"/>
+<text x="60" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#17324d">Четыре поверхности агентной работы</text>
+<rect x="55" y="155" width="730" height="270" rx="18" fill="#e8f1fb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="95" y="220" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">API и SDK</text>
+<text x="95" y="280" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">типизированные функции ·</text>
+<text x="95" y="310" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">передача управления · трассировка</text>
+<text x="95" y="360" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">риск: неверные полномочия</text>
+<rect x="815" y="155" width="730" height="270" rx="18" fill="#eaf7ef" stroke="#cbd5e1" stroke-width="2"/>
+<text x="855" y="220" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">Терминал и код</text>
+<text x="855" y="280" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#263238" text-anchor="start">файлы · команды · тесты ·</text>
+<text x="855" y="310" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">система версий</text>
+<text x="855" y="345" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">риск: небезопасное исполнение ·</text>
+<text x="855" y="372" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">дрейф интерфейса</text>
+<rect x="55" y="480" width="730" height="270" rx="18" fill="#fff5df" stroke="#cbd5e1" stroke-width="2"/>
+<text x="95" y="545" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">Браузер и рабочий стол</text>
+<text x="95" y="605" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">снимки экрана · клики · формы ·</text>
+<text x="95" y="635" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">приложения</text>
+<text x="95" y="670" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">риск: неверная привязка ·</text>
+<text x="95" y="697" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">внедрение инструкций</text>
+<rect x="815" y="480" width="730" height="270" rx="18" fill="#f2ecfb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="855" y="545" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start">Долговечные процессы</text>
+<text x="855" y="605" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#263238" text-anchor="start">очереди · контрольные точки ·</text>
+<text x="855" y="635" font-family="DejaVu Sans,Arial,sans-serif" font-size="20" font-weight="400" fill="#263238" text-anchor="start">субагенты</text>
+<text x="855" y="670" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">риск: устаревшее состояние ·</text>
+<text x="855" y="697" font-family="DejaVu Sans,Arial,sans-serif" font-size="19.6" font-weight="400" fill="#52606d" text-anchor="start">повтор побочных эффектов</text>
+<text x="800" y="835" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">Результат принадлежит тройке: модель + обвязка + среда</text>
+</svg>

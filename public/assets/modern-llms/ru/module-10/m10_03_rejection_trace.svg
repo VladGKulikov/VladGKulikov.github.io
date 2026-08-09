@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 320" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Численный след точного спекулятивного шага</title>
+  <desc>Таблица p, q, вероятностей приёма и остатка; альфа и покомпонентный баланс несмещённости.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Решённый пример A: несмещённость числом (словарь из 5 токенов)</text>
+
+  <rect x="40" y="52" width="620" height="168" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="10.5" fill="#2E3440">
+    <text x="60" y="78" font-size="13.8" font-weight="600">токен            0      1      2      3      4</text>
+    <line x1="60" y1="86" x2="640" y2="86" stroke="#D8DEE9" stroke-width="0.8"/>
+    <text x="60" y="106" font-size="13.8" font-weight="600">p (основная)     0.40   0.30   0.15   0.10   0.05</text>
+    <text x="60" y="128" font-size="13.8" font-weight="600">q (черновая)      0.25   0.35   0.20   0.10   0.10</text>
+    <text x="60" y="150" font-size="13.8" font-weight="600">min(1, p/q)    <tspan fill="#A3BE8C" font-weight="700">1</tspan>      0.857  0.75   <tspan fill="#A3BE8C" font-weight="700">1</tspan>      0.5</text>
+    <text x="60" y="172" font-size="13.8" font-weight="600">(p − q)₊       <tspan fill="#D08770" font-weight="700">0.15</tspan>   0      0      0      0</text>
+    <text x="60" y="194" font-size="13.8" font-weight="600">min(p,q)+0.15·остаток = <tspan font-weight="700">0.40   0.30   0.15   0.10   0.05  = p ✓</tspan></text>
+  </g>
+
+  <rect x="680" y="52" width="220" height="168" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="698" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Что тут видно</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="698" y="98" font-size="13.8" font-weight="600">α = Σ min(p, q) = <tspan font-weight="700">0.85</tspan></text>
+    <text x="698" y="116" fill="#4C566A" font-size="13.1" font-weight="600">= 1 − TV(p, q): доля принятия</text>
+    <text x="698" y="132" fill="#4C566A" font-size="10.5">измеряет близость распределений</text>
+    <text x="698" y="156" font-size="13.8" font-weight="600">остаток → токен 0: вся</text>
+    <text x="698" y="172" font-size="11.1">недостающая у черновика масса</text>
+    <text x="698" y="196" fill="#4C566A" font-size="11.5">E(0.85, γ=4) = 3.71 ток/цикл (§6)</text>
+  </g>
+
+  <rect x="40" y="236" width="860" height="48" rx="12" fill="#E8EEF5" stroke="#5E81AC"/>
+  <text x="58" y="256" font-size="11.3" font-weight="700" fill="#2E3440">Баланс несмещённости:</text>
+  <text x="235" y="256" font-size="9.8" fill="#2E3440">P(выдать t) = min(pₜ, qₜ) + (1 − α)·rₜ ≡ pₜ — покомпонентно; отказ не теряется, а превращается в корректирующую выборку.</text>
+  <text x="58" y="274" font-size="11.5" fill="#4C566A">проверочный код подтверждает равенство методом Монте-Карло на 20 000 циклах (§14)</text>
+
+  <text x="898" y="310" font-size="9.7" font-style="italic" fill="#4C566A" text-anchor="end">схема — Leviathan et al., arXiv 2211.17192; значения проверены кодом курса</text>
+</svg>

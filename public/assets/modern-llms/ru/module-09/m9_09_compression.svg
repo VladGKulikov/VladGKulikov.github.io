@@ -1,0 +1,69 @@
+<svg viewBox="0 0 940 400" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Карта компрессии KV</title>
+  <desc>Eviction, квантование, low-rank/architecture, research frontier и порядок применения рычагов.</desc>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Сжать, но не потерять: четыре подхода к содержимому KV</text>
+
+  <rect x="40" y="52" width="212" height="150" rx="8" fill="#F8ECEC" stroke="#BF616A" stroke-width="1.2"/>
+  <text x="58" y="74" font-size="16.6" font-weight="700" fill="#2E3440">1 · Eviction</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="96" font-size="10">StreamingLLM: sinks + recent window</text>
+    <text x="58" y="112" fill="#4C566A" font-size="13.8" font-weight="600">position-only policy</text>
+    <text x="58" y="132" font-size="11.5">H2O: recent + heavy hitters</text>
+    <text x="58" y="148" font-size="11.5">SnapKV: observation window</text>
+    <text x="58" y="164" fill="#4C566A" font-size="11.5">QUEST и другие: query-aware</text>
+    <text x="58" y="186" fill="#BF616A" font-weight="600" font-size="12.7">токены теряются навсегда</text>
+  </g>
+
+  <rect x="268" y="52" width="212" height="150" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="286" y="74" font-size="16.6" font-weight="700" fill="#2E3440">2 · Квантование</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="286" y="96" font-size="13.8">KIVI 2-bit: per-channel K,</text>
+    <text x="286" y="112" font-size="11.1" font-weight="600">per-token V; до 2.6× peak memory</text>
+    <text x="286" y="132" font-size="11.5">KVQuant: 3-bit pre-RoPE</text>
+    <text x="286" y="152" font-weight="700" font-size="9.9">TurboQuant: ~3.5 bpc quality-neutral</text>
+    <text x="286" y="168" font-weight="600" font-size="12.7">4-bit K logits: до 8× vs FP32</text>
+    <text x="286" y="186" fill="#4C566A" font-size="11.2">учебный 3-bit storage: 101→174</text>
+  </g>
+
+  <rect x="496" y="52" width="212" height="150" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="514" y="74" font-size="16.6" font-weight="700" fill="#2E3440">3 · Low-rank</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="514" y="96" font-size="13.8" font-weight="600">Palu / LoRC: пост-хок</text>
+    <text x="514" y="116" font-weight="600" font-size="13.1">MLA (V2): 93.3% экономии —</text>
+    <text x="514" y="132" font-size="11.5">архитектурное решение,</text>
+    <text x="514" y="148" fill="#4C566A" font-size="11.5">не post-hoc компрессия;</text>
+    <text x="514" y="168" fill="#4C566A" font-size="11.5">граница «архитектура ↔</text>
+    <text x="514" y="184" fill="#4C566A" font-size="10.7">компрессия» размыта намеренно</text>
+  </g>
+
+  <rect x="724" y="52" width="176" height="150" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/>
+  <text x="742" y="74" font-size="13.4" font-weight="700" fill="#2E3440">4 · Research frontier</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="742" y="96" font-size="9.2" font-weight="600">learned / latent KV compression</text>
+    <text x="742" y="116">качество проверяется по task suite</text>
+    <text x="742" y="132" fill="#4C566A">особенно на reasoning и long decode;</text>
+    <text x="742" y="148" fill="#4C566A">статус методов быстро меняется</text>
+  </g>
+
+  <rect x="40" y="218" width="560" height="98" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="240" font-size="13.8" font-weight="700" fill="#2E3440">Eviction-трейс листа (16 токенов, бюджет 8, сид 7)</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" font-size="9.5" fill="#2E3440">
+    <text x="58" y="262" font-size="13.8" font-weight="600">H2O (top-8 по массе):     {0, 1, 2, 5, 7, 8, 14, 15}</text>
+    <text x="58" y="282" font-size="13.8" font-weight="600">StreamingLLM (4 + 4):     {0, 1, 2, 3, 12, 13, 14, 15}</text>
+    <text x="58" y="302" font-size="13.8" font-weight="600">слепое правило теряет тяжеловесов: <tspan fill="#BF616A" font-weight="700">{5, 7, 8}</tspan></text>
+  </g>
+
+  <rect x="620" y="218" width="280" height="98" rx="8" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="638" y="240" font-size="16.6" font-weight="700" fill="#2E3440">Два предупреждения 2026</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="638" y="262" font-size="10.9" font-weight="600">reasoning-модели чувствительны к eviction</text>
+    <text x="638" y="278" fill="#4C566A" font-size="11.5">(2512.12008: H2O/SnapKV > StreamingLLM)</text>
+    <text x="638" y="296" font-size="11.4">защита границ промпта важнее скоринга</text>
+    <text x="638" y="310" fill="#4C566A" font-size="11.5">(2605.18053: атрибуция — конфаунд)</text>
+  </g>
+
+  <rect x="40" y="332" width="860" height="46" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="58" y="352" font-size="10.5" font-weight="700" fill="#2E3440">Порядок применения рычагов:</text>
+  <text x="250" y="352" font-size="11.5" fill="#2E3440">(1) архитектура: GQA/MLA/hybrid · (2) KV-квантование с quality и kernel validation ·</text>
+  <text x="58" y="370" font-size="11.5" fill="#2E3440">(3) tiers: HBM/DRAM/SSD/remote · (4) eviction после менее разрушительных рычагов (§15).</text>
+</svg>

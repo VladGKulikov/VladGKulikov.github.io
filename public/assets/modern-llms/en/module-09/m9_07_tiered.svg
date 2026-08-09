@@ -1,0 +1,49 @@
+<svg viewBox="0 0 940 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Tiered offloading</title>
+  <desc>The memory hierarchy and the two standards: LMCache and Mooncake; the ICMSP floor.</desc>
+  <defs><marker id="a97" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Where to offload the gigabytes: the hierarchy and the two standards</text>
+
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="40" y="56" width="190" height="46" rx="8" fill="#F8ECEC" stroke="#BF616A" stroke-width="1.2"/><text x="135" y="76" font-weight="700" fill="#2E3440" font-size="16.6">GPU HBM</text><text x="135" y="93" font-size="11.2" fill="#4C566A">vendor 80–192 GB · fast, small</text>
+    <rect x="40" y="118" width="190" height="46" rx="8" fill="#FAF5E3" stroke="#EBCB8B"/><text x="135" y="138" font-weight="700" fill="#2E3440" font-size="16.6">CPU DRAM</text><text x="135" y="155" font-size="12" fill="#4C566A">vendor 1–2 TB/node</text>
+    <rect x="40" y="180" width="190" height="46" rx="8" fill="#EFF4EA" stroke="#A3BE8C"/><text x="135" y="200" font-weight="700" fill="#2E3440" font-size="16.6">NVMe SSD</text><text x="135" y="217" font-size="12" fill="#4C566A">vendor 30+ TB · slow, vast</text>
+    <rect x="40" y="242" width="190" height="46" rx="8" fill="#E8EEF5" stroke="#5E81AC"/><text x="135" y="262" font-weight="700" fill="#2E3440" font-size="13.8">Network / RDMA</text><text x="135" y="279" font-size="13.8" fill="#4C566A" font-weight="600">multi-node backends</text>
+  </g>
+  <g stroke="#4C566A" stroke-width="1.1">
+    <line x1="135" y1="102" x2="135" y2="114" marker-end="url(#a97)"/>
+    <line x1="135" y1="164" x2="135" y2="176" marker-end="url(#a97)"/>
+    <line x1="135" y1="226" x2="135" y2="238" marker-end="url(#a97)"/>
+  </g>
+  <text x="135" y="312" text-anchor="middle" font-size="9.7" fill="#4C566A">the §6 motivation: 1M KV = 122.1 GiB (131 GB)</text>
+  <text x="135" y="326" text-anchor="middle" font-size="12" fill="#4C566A">does not fit an H100 even at B=1</text>
+
+  <rect x="270" y="56" width="310" height="136" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="288" y="78" font-size="16.6" font-weight="700" fill="#2E3440">LMCache — the engine-side layer</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="288" y="100" font-size="9.3">a daemon outside the engine: KV survives crash and restart</text>
+    <text x="288" y="118" font-size="10.4">tiers: GPU → CPU → NVMe → remote (Mooncake, ValKey)</text>
+    <text x="288" y="136" font-size="10.4" font-weight="600">cross-request: any repeat, not just the prefix (RAG)</text>
+    <text x="288" y="156" font-weight="600" font-size="13.8">3–10× latency on multi-turn;</text>
+    <text x="288" y="174" font-weight="600" font-size="13.8">VAST @128K: TTFT 11 s → 1.5 s</text>
+  </g>
+
+  <rect x="600" y="56" width="300" height="136" rx="12" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="618" y="78" font-size="16.6" font-weight="700" fill="#2E3440">Mooncake — the Kimi platform</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="618" y="100" font-size="11">Store: a global KV pool over idle CPU/DRAM/SSD</text>
+    <text x="618" y="118" font-size="10.6">Transfer Engine: RDMA transport between P and D</text>
+    <text x="618" y="136" font-size="10.7">Conductor: a KV-aware scheduler, early rejection</text>
+    <text x="618" y="156" font-weight="600" font-size="12.9">+498% effective capacity under the SLO;</text>
+    <text x="618" y="174" font-weight="600" font-size="13.8">Best Paper FAST'25 · 100+ bn tok/day</text>
+  </g>
+
+  <rect x="270" y="208" width="630" height="58" rx="12" fill="#F3EEF3" stroke="#B48EAD"/>
+  <text x="288" y="230" font-size="13.8" font-weight="700" fill="#2E3440">Complementarity → the typical 1M stack of 2026</text>
+  <text x="288" y="250" font-size="11" fill="#2E3440">since May 2026 LMCache uses Mooncake as a remote backend; vLLM v1 ships native Mooncake connectors:</text>
+  <text x="288" y="262" font-size="13.8" font-weight="600" fill="#2E3440">vLLM/SGLang + LMCache + Mooncake + Dynamo on Blackwell</text>
+
+  <rect x="270" y="282" width="630" height="48" rx="12" fill="#FAF0E8" stroke="#D08770"/>
+  <text x="288" y="304" font-size="16.6" font-weight="700" fill="#2E3440">The hardware floor — NVIDIA ICMSP (CES 2026)</text>
+  <text x="288" y="322" font-size="12.3" fill="#2E3440" font-weight="600">NVMe-resident KV in the context address space via BlueField-4 DPUs; persistent across runs.</text>
+</svg>

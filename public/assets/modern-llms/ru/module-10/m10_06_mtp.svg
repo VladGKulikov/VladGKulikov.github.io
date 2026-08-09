@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>MTP как источник спекулятивных предложений</title>
+  <desc>Общий ствол модели, MTP-модуль как встроенный источник предложений, учебный сценарий и условия поддержки движком.</desc>
+  <defs><marker id="a106" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">MTP на инференсе: встроенный источник предложений</text>
+
+  <rect x="40" y="56" width="250" height="88" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="165" y="80" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2E3440">Общий ствол основной модели</text>
+  <text x="165" y="100" text-anchor="middle" font-size="13.6" fill="#2E3440">предсказывает t+1 и проверяет</text>
+  <text x="165" y="118" text-anchor="middle" font-size="12" fill="#2E3440">предложения одним проходом</text>
+  <text x="165" y="134" text-anchor="middle" font-size="12" fill="#4C566A">никакой второй модели</text>
+
+  <rect x="340" y="56" width="250" height="88" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.3"/>
+  <text x="465" y="80" text-anchor="middle" font-size="12.9" font-weight="700" fill="#2E3440">MTP-модуль = нативный черновик</text>
+  <text x="465" y="100" text-anchor="middle" font-size="10.9" fill="#2E3440">обучен предсказывать будущие токены</text>
+  <text x="465" y="118" text-anchor="middle" font-size="10.5" fill="#2E3440">отдельная полноценная модель не нужна;</text>
+  <text x="465" y="134" text-anchor="middle" font-size="9.2" fill="#4C566A">доля принятия остаётся измеряемой величиной</text>
+
+  <rect x="640" y="56" width="260" height="88" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.3"/>
+  <text x="770" y="80" text-anchor="middle" font-size="16.6" font-weight="700" fill="#2E3440">Учебный сценарий (§7)</text>
+  <text x="770" y="102" text-anchor="middle" font-size="13.4" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">E = (1−0.875²)/0.125 = 1.875</text>
+  <text x="770" y="122" text-anchor="middle" font-size="13.8" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">S = 1.875/1.05 = 1.79×</text>
+  <text x="770" y="138" text-anchor="middle" font-size="13.8" fill="#4C566A" font-weight="600">= результат заданных α, γ и c</text>
+
+  <line x1="290" y1="100" x2="336" y2="100" stroke="#4C566A" stroke-width="1.1" marker-end="url(#a106)"/>
+  <line x1="590" y1="100" x2="636" y2="100" stroke="#4C566A" stroke-width="1.1" marker-end="url(#a106)"/>
+
+  <rect x="40" y="164" width="560" height="130" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="186" font-size="16.6" font-weight="700" fill="#2E3440">Что нужно для нативного MTP</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="58" y="208" font-size="10.5">модель содержит сохранённый MTP-модуль · чекпойнт и токенизатор совместимы с движком</text>
+    <text x="58" y="228" font-size="11.5">движок умеет строить предложения и выполнять точную проверку</text>
+    <text x="58" y="248" font-size="11.4">многошаговый MTP может поднять предел E, но увеличивает стоимость предложения</text>
+    <text x="58" y="268" font-size="11.5">выигрыш проверен на нужной нагрузке и при нужной конкурентности</text>
+    <text x="58" y="286" fill="#4C566A" font-size="11.5">потолок подхода: γ = 1 ⇒ E ≤ 2 — отсюда охота за многошаговостью</text>
+  </g>
+
+  <rect x="620" y="164" width="280" height="130" rx="8" fill="#FAF5E3" stroke="#EBCB8B"/>
+  <text x="638" y="186" font-size="11.7" font-weight="700" fill="#2E3440">Конфигурация компактна, но не магична</text>
+  <text x="638" y="210" font-size="12.2" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">--speculative_config '{"method":</text>
+  <text x="638" y="226" font-size="11.5" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace" fill="#2E3440" font-weight="600">"mtp","num_speculative_tokens":1}'</text>
+  <g font-size="9" fill="#2E3440">
+    <text x="638" y="252" font-size="9.4">поддерживаемая архитектура может не требовать</text>
+    <text x="638" y="268" font-size="10.8">отдельного чернового чекпойнта; скорость</text>
+    <text x="638" y="284" fill="#4C566A" font-size="11.5">всё равно определяется измерением (В6)</text>
+  </g>
+
+  <text x="30" y="322" font-size="11.5" fill="#2E3440">Упрощается стек: нет отдельной полной черновой модели; стоимость предложения и проверка остаются.</text>
+  <text x="30" y="340" font-size="11.5" fill="#2E3440">Выбор на практике (В7): нативный MTP, EAGLE/другая голова, внешняя модель или поиск повторов — по профилю нагрузки.</text>
+</svg>

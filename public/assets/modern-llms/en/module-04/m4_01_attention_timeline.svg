@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="70" font-family="Arial,sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Attention evolution: two resource bills</text>
+<text x="70" y="108" font-family="Arial,sans-serif" font-size="23.5" fill="#5B6472" font-weight="600">Per-position state and data movement evolve independently</text>
+<rect x="65" y="180" width="320" height="170" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="91" y="228" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="91" dy="0">MHA 2017</tspan>
+</text>
+<text x="91" y="267" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="91" dy="0">K/V per query head</tspan>
+</text>
+<defs><marker id="a11" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="385" y1="265" x2="430" y2="265" stroke="#4C78A8" stroke-width="3" marker-end="url(#a11)"/>
+<rect x="445" y="180" width="320" height="170" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="471" y="228" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="471" dy="0">MQA 2019</tspan>
+</text>
+<text x="471" y="267" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="471" dy="0">one K/V head</tspan>
+</text>
+<defs><marker id="a20" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="765" y1="265" x2="810" y2="265" stroke="#4C78A8" stroke-width="3" marker-end="url(#a20)"/>
+<rect x="825" y="180" width="320" height="170" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="851" y="228" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="851" dy="0">GQA 2023</tspan>
+</text>
+<text x="851" y="267" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="851" dy="0">query-head groups</tspan>
+</text>
+<defs><marker id="a29" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1145" y1="265" x2="1190" y2="265" stroke="#4C78A8" stroke-width="3" marker-end="url(#a29)"/>
+<rect x="1205" y="180" width="320" height="170" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1231" y="228" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1231" dy="0">MLA 2024</tspan>
+</text>
+<text x="1231" y="267" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1231" dy="0">joint latent + position</tspan>
+</text>
+<rect x="65" y="465" width="320" height="170" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="91" y="513" text-anchor="start" font-family="Arial,sans-serif" font-size="27.1" font-weight="700" fill="#2E3440">
+<tspan x="91" dy="0">FlashAttention 2022</tspan>
+</text>
+<text x="91" y="552" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="91" dy="0">exact dense attention</tspan>
+<tspan x="91" dy="25">without full HBM matrix</tspan>
+</text>
+<defs><marker id="a46" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="385" y1="550" x2="430" y2="550" stroke="#4C78A8" stroke-width="3" marker-end="url(#a46)"/>
+<rect x="445" y="465" width="320" height="170" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="471" y="513" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="471" dy="0">StreamingLLM 2023</tspan>
+</text>
+<text x="471" y="552" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="471" dy="0">keep initial real sinks</tspan>
+</text>
+<defs><marker id="a55" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="765" y1="550" x2="810" y2="550" stroke="#4C78A8" stroke-width="3" marker-end="url(#a55)"/>
+<rect x="825" y="465" width="320" height="170" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="851" y="513" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="700" fill="#2E3440">
+<tspan x="851" dy="0">MoBA / NSA 2025</tspan>
+</text>
+<text x="851" y="552" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="851" dy="0">learned sparse selection</tspan>
+</text>
+<defs><marker id="a64" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1145" y1="550" x2="1190" y2="550" stroke="#4C78A8" stroke-width="3" marker-end="url(#a64)"/>
+<rect x="1205" y="465" width="320" height="170" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1231" y="513" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1231" dy="0">DSA 2025</tspan>
+</text>
+<text x="1231" y="552" text-anchor="start" font-family="Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="1231" dy="0">indexer + top-k tokens</tspan>
+</text>
+<rect x="250" y="710" width="1100" height="115" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="276" y="759" text-anchor="start" font-family="Arial,sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="276" dy="0">Attention passport</tspan>
+</text>
+<text x="276" y="800" text-anchor="start" font-family="Arial,sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="276" dy="0">KV geometry · layer schedule · position selection · execution kernel</tspan>
+</text>
+</svg>

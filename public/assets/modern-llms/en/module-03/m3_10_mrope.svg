@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="72" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">M-RoPE: one operation, several coordinates</text>
+<text x="70" y="112" font-family="Arial, sans-serif" font-size="19.6" fill="#5B6472">Temporal, height and width IDs are assigned to sections of rotary channels</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<rect x="60" y="235" width="325" height="275" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="88" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="88" dy="0">Text</tspan>
+</text>
+<text x="88" y="324" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="88" dy="0">IDs: (m,m,m)</tspan>
+<tspan x="88" dy="25">Equivalent to ordinary 1D</tspan>
+<tspan x="88" dy="25">RoPE</tspan>
+</text>
+<line x1="395" y1="372" x2="430" y2="372" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="445" y="235" width="325" height="275" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="473" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="473" dy="0">Image</tspan>
+</text>
+<text x="473" y="324" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="473" dy="0">IDs: (t₀,h,w)</tspan>
+<tspan x="473" dy="25">Time is fixed; h/w vary</tspan>
+</text>
+<line x1="780" y1="372" x2="815" y2="372" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="830" y="235" width="325" height="275" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="858" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="858" dy="0">Video</tspan>
+</text>
+<text x="858" y="324" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="858" dy="0">IDs: (t,h,w)</tspan>
+<tspan x="858" dy="25">Time and space both vary</tspan>
+</text>
+<line x1="1165" y1="372" x2="1200" y2="372" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1215" y="235" width="325" height="275" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1243" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1243" dy="0">TMRoPE</tspan>
+</text>
+<text x="1243" y="324" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1243" dy="0">Qwen2.5-Omni (2025)</tspan>
+<tspan x="1243" dy="25">Aligned audio/video time</tspan>
+</text>
+<rect x="215" y="620" width="1170" height="150" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="243" y="670" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="243" dy="0">Concrete reading</tspan>
+</text>
+<text x="243" y="709" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="243" dy="0">Image example: (0,0,0), (0,0,1), (0,1,0), (0,1,1). In Qwen2.5-Omni one temporal ID corresponds to 40</tspan>
+<tspan x="243" dy="25">ms; that value is model-specific.</tspan>
+</text>
+</svg>

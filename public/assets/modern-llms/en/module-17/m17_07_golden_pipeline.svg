@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="72" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">A private golden set in seven steps</text>
+<text x="70" y="112" font-family="Arial, sans-serif" font-size="19.6" fill="#5B6472">Product evaluation begins with a decision and ends by refreshing the instrument</text>
+<rect x="55" y="200" width="320" height="210" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="79" y="245" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="79" dy="0">1. Decision</tspan>
+</text>
+<text x="79" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="79" dy="0">What are we selecting or</tspan>
+<tspan x="79" dy="24">releasing?</tspan>
+</text>
+<rect x="430" y="200" width="320" height="210" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="454" y="245" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="454" dy="0">2. Taxonomy</tspan>
+</text>
+<text x="454" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="454" dy="0">Which failures actually</tspan>
+<tspan x="454" dy="24">matter?</tspan>
+</text>
+<rect x="805" y="200" width="320" height="210" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="829" y="245" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="829" dy="0">3. Items and rubric</tspan>
+</text>
+<text x="829" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="829" dy="0">Private cases, criteria, and</tspan>
+<tspan x="829" dy="24">acceptable outputs</tspan>
+</text>
+<rect x="1180" y="200" width="320" height="210" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1204" y="245" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1204" dy="0">4. Execution</tspan>
+</text>
+<text x="1204" y="285" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1204" dy="0">One call → stored output →</tspan>
+<tspan x="1204" dy="24">every metric</tspan>
+</text>
+<rect x="245" y="505" width="320" height="210" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="269" y="550" text-anchor="start" font-family="Arial, sans-serif" font-size="25.4" font-weight="700" fill="#2E3440">
+<tspan x="269" dy="0">5. Privacy and version</tspan>
+</text>
+<text x="269" y="590" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="269" dy="0">Canary, access, date, and</tspan>
+<tspan x="269" dy="24">change history</tspan>
+</text>
+<rect x="620" y="505" width="320" height="210" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="644" y="550" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="644" dy="0">6. CI and monitoring</tspan>
+</text>
+<text x="644" y="590" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="644" dy="0">Slices, cost, latency, and</tspan>
+<tspan x="644" dy="24">uncertainty</tspan>
+</text>
+<rect x="995" y="505" width="320" height="210" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1019" y="550" text-anchor="start" font-family="Arial, sans-serif" font-size="26.1" font-weight="700" fill="#2E3440">
+<tspan x="1019" dy="0">7. Review and refresh</tspan>
+</text>
+<text x="1019" y="590" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1019" dy="0">Human error analysis, new</tspan>
+<tspan x="1019" dy="24">cases, retired items</tspan>
+</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="382" y1="305" x2="418" y2="305" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="757" y1="305" x2="793" y2="305" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1132" y1="305" x2="1168" y2="305" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="572" y1="610" x2="608" y2="610" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="947" y1="610" x2="983" y2="610" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1340" y1="420" x2="1315" y2="495" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="245" y1="610" x2="180" y2="420" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/></svg>

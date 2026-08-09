@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#F7F9FC"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7B8794"/></marker></defs>
+<text x="70" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#263238" text-anchor="start"><tspan x="70" dy="0">The evolution of RAG: repair the measured failure</tspan></text>
+<text x="70" y="112" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="70" dy="0">No request needs every mechanism by default</tspan></text>
+<rect x="70" y="190" width="450" height="240" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="70" y="190" width="450" height="8" rx="4" fill="#3D6FB6"/>
+<text x="102" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="102" dy="0">Query mismatch</tspan><tspan x="102" dy="29.5">→ HyDE</tspan></text>
+<text x="102" y="315.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="102" dy="0">Question and answer use</tspan><tspan x="102" dy="28.560000000000002">different language</tspan></text>
+<rect x="565" y="190" width="450" height="240" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="565" y="190" width="450" height="8" rx="4" fill="#2D8C8C"/>
+<text x="597" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="597" dy="0">Uncertain evidence</tspan><tspan x="597" dy="29.5">→ CRAG / Self-RAG</tspan></text>
+<text x="597" y="315.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="597" dy="0">Judge retrieval quality</tspan><tspan x="597" dy="28.560000000000002">and decide whether to retry</tspan></text>
+<rect x="1060" y="190" width="450" height="240" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="1060" y="190" width="450" height="8" rx="4" fill="#7B5BA7"/>
+<text x="1092" y="238" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="1092" dy="0">Several scales</tspan><tspan x="1092" dy="29.5">→ RAPTOR</tspan></text>
+<text x="1092" y="315.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="1092" dy="0">Retrieve fine chunks</tspan><tspan x="1092" dy="28.560000000000002">and hierarchical summaries</tspan></text>
+<rect x="320" y="520" width="450" height="240" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="320" y="520" width="450" height="8" rx="4" fill="#C77A32"/>
+<text x="352" y="568" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="start"><tspan x="352" dy="0">Global corpus view</tspan><tspan x="352" dy="29.5">→ GraphRAG</tspan></text>
+<text x="352" y="645.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="400" fill="#5F6B78" text-anchor="start"><tspan x="352" dy="0">Entities, relations,</tspan><tspan x="352" dy="28.560000000000002">and community summaries</tspan></text>
+<rect x="815" y="520" width="450" height="240" rx="22" fill="#FFFFFF" stroke="#C7D0DC" stroke-width="2"/>
+<rect x="815" y="520" width="450" height="8" rx="4" fill="#5B8F52"/>
+<text x="847" y="568" font-family="DejaVu Sans,Arial,sans-serif" font-size="25" font-weight="700" fill="#263238" text-anchor="start"><tspan x="847" dy="0">Multi-hop task</tspan><tspan x="847" dy="29.5">→ agent loop</tspan></text>
+<text x="847" y="645.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#5F6B78" text-anchor="start"><tspan x="847" dy="0">Search → read → reformulate</tspan><tspan x="847" dy="28.560000000000002">→ stop when evidence is enough</tspan></text>
+<text x="800" y="825" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle"><tspan x="800" dy="0">Rule: add the smallest mechanism that fixes the observed failure</tspan></text>
+</svg>

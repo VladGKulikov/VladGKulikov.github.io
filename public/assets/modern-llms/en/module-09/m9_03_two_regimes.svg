@@ -1,0 +1,42 @@
+<svg viewBox="0 0 940 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>The two inference regimes</title>
+  <desc>Compute-bound prefill and memory-bound decode; the memory layout and the metrics.</desc>
+  <defs><marker id="a93" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M1 1 L8 4.5 L1 8 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">Two physics of one request (the sheet's numbers: 8B bf16, H100)</text>
+
+  <rect x="40" y="52" width="430" height="128" rx="12" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.3"/>
+  <text x="58" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Prefill — compute-bound</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="58" y="100" font-size="13.8">the whole prompt in one matrix operation:</text>
+    <text x="58" y="118" font-size="11.5">thousands of tokens per weight read, intensity ~N</text>
+    <text x="58" y="140" font-size="11.5">metric: <tspan font-weight="700">TTFT</tspan> · target 200–500 ms</text>
+    <text x="58" y="162" font-size="11.5">the 8K-prompt floor: <tspan font-weight="700" font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace">132.4 ms</tspan> of pure compute</text>
+  </g>
+
+  <rect x="490" y="52" width="410" height="128" rx="12" fill="#F8ECEC" stroke="#BF616A" stroke-width="1.3"/>
+  <text x="508" y="76" font-size="16.6" font-weight="700" fill="#2E3440">Decode — memory-bound</text>
+  <g font-size="9.5" fill="#2E3440">
+    <text x="508" y="100" font-size="11.3">a token per forward: we read the weights + the request's whole KV</text>
+    <text x="508" y="118" font-size="11.5">intensity @128K: <tspan font-weight="700">0.48 FLOP/B</tspan> — the ridge 296 → <tspan font-weight="700" fill="#BF616A">×613 below</tspan></text>
+    <text x="508" y="140" font-size="11.5">metric: <tspan font-weight="700">ITL</tspan> · target 20–50 ms</text>
+    <text x="508" y="162" font-size="11.5">floor: <tspan font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace">4.78 ms</tspan> (empty) → <tspan font-family="DejaVu Sans Mono, ui-monospace, Menlo, monospace">9.90 ms</tspan> @128K</text>
+  </g>
+
+  <rect x="40" y="196" width="560" height="86" rx="12" fill="#ECEFF4" stroke="#D8DEE9"/>
+  <text x="58" y="218" font-size="10.5" font-weight="700" fill="#2E3440">The GPU memory layout at serving time</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="58" y="230" width="150" height="36" rx="5" fill="#E8EEF5" stroke="#5E81AC"/><text x="133" y="246" fill="#2E3440" font-size="12">weights</text><text x="133" y="260" fill="#4C566A">fixed (14.90 GiB / 16 GB for 8B)</text>
+    <rect x="216" y="230" width="230" height="36" rx="5" fill="#F8ECEC" stroke="#BF616A"/><text x="331" y="246" fill="#2E3440" font-size="12">KV cache</text><text x="331" y="260" fill="#4C566A" font-size="10.3">grows with N × batch — dominant at 128K+</text>
+    <rect x="454" y="230" width="126" height="36" rx="5" fill="#FAF5E3" stroke="#EBCB8B"/><text x="517" y="246" fill="#2E3440" font-size="12">activations</text><text x="517" y="260" fill="#4C566A" font-size="12">the current layer</text>
+  </g>
+
+  <rect x="620" y="196" width="280" height="86" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
+  <text x="638" y="218" font-size="16.6" font-weight="700" fill="#2E3440">The 2026 metric: Goodput</text>
+  <text x="638" y="240" font-size="11.5" fill="#2E3440">throughput while meeting the SLO</text>
+  <text x="638" y="258" font-size="11.5" fill="#2E3440">on TTFT <tspan font-weight="600">and</tspan> ITL at once —</text>
+  <text x="638" y="276" font-size="11.5" fill="#4C566A">the whole §8–11 stack optimizes it</text>
+
+  <line x1="40" y1="300" x2="900" y2="300" stroke="#D8DEE9" stroke-width="0.75"/>
+  <text x="40" y="324" font-size="11.5" fill="#2E3440">Since the physics are opposite, mixing hurts: a monolithic prefill blocks other users' decodes (a 137 ms ITL spike, §11);</text>
+  <text x="40" y="344" font-size="11.5" fill="#2E3440">the cures are chunked prefill inside a GPU and the PD split across pools; the phases' TP mappings are tuned separately.</text>
+</svg>

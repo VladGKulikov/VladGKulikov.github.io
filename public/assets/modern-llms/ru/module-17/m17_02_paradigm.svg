@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="72" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Жизненный цикл бенчмарка</text>
+<text x="70" y="112" font-family="Arial, sans-serif" font-size="19.6" fill="#5B6472">Измеритель силён только пока понятны его версия, данные и пределы</text>
+<rect x="45" y="230" width="270" height="300" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="69" y="276" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="69" dy="0">1. Новизна</tspan>
+</text>
+<text x="69" y="317" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="69" dy="0">Новые задачи, скрытые</tspan>
+<tspan x="69" dy="25">ответы, ясный протокол</tspan>
+</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="323" y1="380" x2="343" y2="380" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="355" y="230" width="270" height="300" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="379" y="276" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="379" dy="0">2. Публикация</tspan>
+</text>
+<text x="379" y="317" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="379" dy="0">Сравнимость растёт;</tspan>
+<tspan x="379" dy="25">начинается оптимизация</tspan>
+<tspan x="379" dy="25">под набор</tspan>
+</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="633" y1="380" x2="653" y2="380" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="665" y="230" width="270" height="300" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="689" y="276" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="689" dy="0">3. Экспозиция</tspan>
+</text>
+<text x="689" y="317" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="689" dy="0">Задания попадают в логи,</tspan>
+<tspan x="689" dy="25">статьи, синтетику и</tspan>
+<tspan x="689" dy="25">обучение</tspan>
+</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="943" y1="380" x2="963" y2="380" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="975" y="230" width="270" height="300" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="999" y="276" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="999" dy="0">4. Насыщение</tspan>
+</text>
+<text x="999" y="317" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="999" dy="0">Сильные системы сжимаются</tspan>
+<tspan x="999" dy="25">у потолка; малые разницы</tspan>
+<tspan x="999" dy="25">шумны</tspan>
+</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<line x1="1253" y1="380" x2="1273" y2="380" stroke="#4C78A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1285" y="230" width="270" height="300" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1309" y="276" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1309" dy="0">5. Обновление</tspan>
+</text>
+<text x="1309" y="317" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1309" dy="0">Аудит, новые версии,</tspan>
+<tspan x="1309" dy="25">приватные срезы и замена</tspan>
+<tspan x="1309" dy="25">задач</tspan>
+</text>
+<rect x="200" y="645" width="1200" height="135" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="228" y="695" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="228" dy="0">Правило чтения</tspan>
+</text>
+<text x="228" y="736" text-anchor="start" font-family="Arial, sans-serif" font-size="19.5" font-weight="400" fill="#5B6472">
+<tspan x="228" dy="0">Ни один score не «вечен». Паспорт результата должен фиксировать версию набора, дату, prompt/scaffolding,</tspan>
+<tspan x="228" dy="26">sampling, инструменты и стоимость.</tspan>
+</text></svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4676A8"/></marker></defs>
+<text x="60" y="70" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#202A3B">Masked diffusion objective</text>
+<text x="60" y="108" font-family="Arial, sans-serif" font-size="19.6" fill="#56657A">Kernel, time weighting, and reduction belong in the public contract</text>
+<rect x="80" y="210" width="420" height="250" rx="18" fill="#E8F1FB" stroke="#C9D4E2" stroke-width="2"/>
+<text x="105" y="257" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="105" dy="0">1 · Corruption</tspan>
+</text>
+<text x="105" y="296" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="105" dy="0">Mₜ contains positions replaced by</tspan>
+<tspan x="105" dy="22">[MASK].</tspan>
+<tspan x="105" dy="22">t ∈ (0,1].</tspan>
+</text>
+<rect x="590" y="210" width="420" height="250" rx="18" fill="#E8F6EC" stroke="#C9D4E2" stroke-width="2"/>
+<text x="615" y="257" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="615" dy="0">2 · Prediction</tspan>
+</text>
+<text x="615" y="296" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#56657A">
+<tspan x="615" dy="0">A bidirectional model returns</tspan>
+<tspan x="615" dy="22">pθ(x₀ᶦ | xₜ, t).</tspan>
+</text>
+<rect x="1100" y="210" width="420" height="250" rx="18" fill="#FFF2CF" stroke="#C9D4E2" stroke-width="2"/>
+<text x="1125" y="257" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="1125" dy="0">3 · Reduction</tspan>
+</text>
+<text x="1125" y="296" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="600" fill="#56657A">
+<tspan x="1125" dy="0">Lₜ = (1/t) Σᵢ∈M −log pθ.</tspan>
+<tspan x="1125" dy="22">Here: sum over masks.</tspan>
+</text>
+<line x1="510" y1="335" x2="575" y2="335" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="1020" y1="335" x2="1085" y2="335" stroke="#4676A8" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="220" y="590" width="1160" height="145" rx="18" fill="#EFE8FA" stroke="#C9D4E2" stroke-width="2"/>
+<text x="245" y="637" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#202A3B">
+<tspan x="245" dy="0">Numerical example</tspan>
+</text>
+<text x="245" y="676" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="600" fill="#56657A">
+<tspan x="245" dy="0">p = [0.9, 0.7, 0.6, 0.8],  t = 0.5  ⇒  summed loss = 2.392009269; mean over masks = 0.598002317</tspan>
+</text>
+</svg>

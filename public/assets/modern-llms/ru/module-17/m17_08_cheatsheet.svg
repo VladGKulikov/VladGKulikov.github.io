@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="72" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Оценка LLM за одну страницу</text>
+<text x="70" y="112" font-family="Arial, sans-serif" font-size="19.6" fill="#5B6472">Хороший score — не финиш, а один элемент цепочки доказательств</text>
+<rect x="70" y="200" width="420" height="230" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="98" y="250" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="98" dy="0">1. Решение</tspan>
+</text>
+<text x="98" y="291" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="98" dy="0">Сначала фиксируем продуктовый выбор,</tspan>
+<tspan x="98" dy="25">риск и ограничение бюджета.</tspan>
+</text>
+<rect x="555" y="200" width="420" height="230" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="583" y="250" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="583" dy="0">2. Измерительные оси</tspan>
+</text>
+<text x="583" y="291" text-anchor="start" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="583" dy="0">Способности, безопасность, стоимость,</tspan>
+<tspan x="583" dy="25">задержка и критические срезы.</tspan>
+</text>
+<rect x="1040" y="200" width="420" height="230" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1068" y="250" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1068" dy="0">3. Протокол</tspan>
+</text>
+<text x="1068" y="291" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1068" dy="0">Версия набора, prompt, scaffolding,</tspan>
+<tspan x="1068" dy="25">sampling, инструменты и число</tspan>
+<tspan x="1068" dy="25">попыток.</tspan>
+</text>
+<rect x="70" y="500" width="420" height="230" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="98" y="550" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="98" dy="0">4. Неопределённость</tspan>
+</text>
+<text x="98" y="591" text-anchor="start" font-family="Arial, sans-serif" font-size="18.6" font-weight="400" fill="#5B6472">
+<tspan x="98" dy="0">Парные исходы, интервалы, pass@k и</tspan>
+<tspan x="98" dy="25">размер выборки.</tspan>
+</text>
+<rect x="555" y="500" width="420" height="230" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="583" y="550" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="583" dy="0">5. Наблюдаемость</tspan>
+</text>
+<text x="583" y="591" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="583" dy="0">Один вызов на пример; сохраняем</tspan>
+<tspan x="583" dy="25">ответ, стоимость, время и ошибку.</tspan>
+</text>
+<rect x="1040" y="500" width="420" height="230" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1068" y="550" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1068" dy="0">6. Решение и обновление</tspan>
+</text>
+<text x="1068" y="591" text-anchor="start" font-family="Arial, sans-serif" font-size="18.8" font-weight="400" fill="#5B6472">
+<tspan x="1068" dy="0">Читаем ошибки, проверяем перенос в</tspan>
+<tspan x="1068" dy="25">продукт и обновляем золотой набор.</tspan>
+</text></svg>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#718096"/></marker></defs>
+<rect width="1600" height="900" fill="#ffffff"/>
+<text x="60" y="72" font-family="DejaVu Sans,Arial,sans-serif" font-size="39.1" font-weight="700" fill="#17324d">Agent loop: model proposals inside deterministic boundaries</text>
+<rect x="45" y="165" width="340" height="145" rx="18" fill="#e8f1fb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="215.0" y="208" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">1. Goal and state</text>
+<text x="215.0" y="257" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">task · authority</text>
+<text x="215.0" y="277" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">budget</text>
+<rect x="435" y="165" width="340" height="145" rx="18" fill="#eaf7ef" stroke="#cbd5e1" stroke-width="2"/>
+<text x="605.0" y="208" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">2. Step context</text>
+<text x="605.0" y="257" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">history · memory</text>
+<text x="605.0" y="277" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">schemas</text>
+<rect x="825" y="165" width="340" height="145" rx="18" fill="#fff5df" stroke="#cbd5e1" stroke-width="2"/>
+<text x="995.0" y="208" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">3. Model proposal</text>
+<text x="995.0" y="257" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">answer · call</text>
+<text x="995.0" y="277" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">code · plan</text>
+<rect x="1215" y="165" width="340" height="145" rx="18" fill="#f2ecfb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="1385.0" y="208" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">4. Protocol</text>
+<text x="1385.0" y="257" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">grammar · types</text>
+<rect x="1215" y="430" width="340" height="145" rx="18" fill="#fdecec" stroke="#cbd5e1" stroke-width="2"/>
+<text x="1385.0" y="473" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">5. Authorization</text>
+<text x="1385.0" y="522" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">resource · side effect</text>
+<text x="1385.0" y="542" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">confirmation</text>
+<rect x="825" y="430" width="340" height="145" rx="18" fill="#e8f7f8" stroke="#cbd5e1" stroke-width="2"/>
+<text x="995.0" y="473" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">6. Execution</text>
+<text x="995.0" y="522" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">sandbox · timeout</text>
+<text x="995.0" y="542" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">idempotency</text>
+<rect x="435" y="430" width="340" height="145" rx="18" fill="#eaf7ef" stroke="#cbd5e1" stroke-width="2"/>
+<text x="605.0" y="473" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">7. Observation</text>
+<text x="605.0" y="522" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">result · error</text>
+<text x="605.0" y="542" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">changed state</text>
+<rect x="45" y="430" width="340" height="145" rx="18" fill="#e8f1fb" stroke="#cbd5e1" stroke-width="2"/>
+<text x="215.0" y="473" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">8. Verify and stop</text>
+<text x="215.0" y="522" font-family="DejaVu Sans,Arial,sans-serif" font-size="23.5" font-weight="600" fill="#52606d" text-anchor="middle">complete · repair</text>
+<text x="215.0" y="542" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">escalate</text>
+<line x1="385" y1="237" x2="420" y2="237" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="775" y1="237" x2="810" y2="237" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="1165" y1="237" x2="1200" y2="237" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="1385" y1="310" x2="1385" y2="415" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="1215" y1="502" x2="1180" y2="502" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="825" y1="502" x2="790" y2="502" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<line x1="435" y1="502" x2="400" y2="502" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M215 430 C215 350,215 335,215 320" fill="none" stroke="#718096" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="210" y="650" width="1180" height="125" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+<text x="800" y="690" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">The model selects an action; the harness decides</text>
+<text x="800" y="715" font-family="DejaVu Sans,Arial,sans-serif" font-size="28.2" font-weight="700" fill="#263238" text-anchor="middle">whether it may become a world event.</text>
+<text x="800" y="748" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">Protocol, policy, environment, and goal failures</text>
+<text x="800" y="770" font-family="DejaVu Sans,Arial,sans-serif" font-size="20.4" font-weight="400" fill="#52606d" text-anchor="middle">must remain distinct in the trace.</text>
+</svg>

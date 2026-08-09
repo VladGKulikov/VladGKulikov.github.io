@@ -1,0 +1,67 @@
+<svg viewBox="0 0 920 430" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Токенизация других модальностей</title>
+  <desc>Изображение через сетку патчей и линейную проекцию; аудио через нейрокодек с дискретными кодбуками; текстовая труба для сравнения.</desc>
+  <defs><marker id="a29" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+  <text x="30" y="30" font-size="22.5" font-weight="700" fill="#2E3440">Мультимодальная проекция: «токенизация» без текста</text>
+
+  <!-- текстовая полоса-справка -->
+  <g font-size="9.5" fill="#4C566A">
+    <text x="30" y="62">текст:</text>
+    <text x="90" y="62" font-family="ui-monospace, Menlo, monospace" fill="#2E3440" font-size="12.7" font-weight="600">строка → байты → BPE → id → E-lookup</text>
+    <text x="420" y="62" font-size="13.5">— дискретно на каждом шаге (softmax по словарю определён)</text>
+  </g>
+  <line x1="30" y1="74" x2="890" y2="74" stroke="#D8DEE9" stroke-width="0.75"/>
+
+  <!-- изображение -->
+  <text x="30" y="102" font-size="13.5" font-weight="700" fill="#2E3440">Изображение → патчи (ViT)</text>
+  <g stroke="#88C0D0" stroke-width="1">
+    <rect x="40" y="116" width="120" height="120" fill="#EAF3F5" rx="8"/>
+    <line x1="70" y1="116" x2="70" y2="236"/><line x1="100" y1="116" x2="100" y2="236"/><line x1="130" y1="116" x2="130" y2="236"/>
+    <line x1="40" y1="146" x2="160" y2="146"/><line x1="40" y1="176" x2="160" y2="176"/><line x1="40" y1="206" x2="160" y2="206"/>
+  </g>
+  <rect x="70" y="146" width="30" height="30" fill="#5E81AC" fill-opacity="0.35" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="100" y="256" text-anchor="middle" font-size="11.7" fill="#4C566A">сетка 14×14 px патчей</text>
+  <line x1="168" y1="176" x2="212" y2="176" stroke="#4C566A" stroke-width="1.2" marker-end="url(#a29)"/>
+  <rect x="216" y="150" width="128" height="52" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
+  <text x="280" y="172" text-anchor="middle" font-size="11" font-weight="600" fill="#2E3440">линейная проекция</text>
+  <text x="280" y="188" text-anchor="middle" font-size="13.5" fill="#4C566A" font-weight="600">патч → вектор d</text>
+  <line x1="348" y1="176" x2="392" y2="176" stroke="#4C566A" stroke-width="1.2" marker-end="url(#a29)"/>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="9" text-anchor="middle">
+    <rect x="398" y="160" width="34" height="30" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="415" y="179" fill="#2E3440" font-size="13.5" font-weight="600">v₁</text>
+    <rect x="438" y="160" width="34" height="30" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="455" y="179" fill="#2E3440" font-size="13.5" font-weight="600">v₂</text>
+    <rect x="478" y="160" width="34" height="30" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="495" y="179" fill="#2E3440" font-size="13.5" font-weight="600">…</text>
+  </g>
+  <g font-size="9.5" fill="#4C566A">
+    <text x="540" y="158" font-size="11.3">«визуальные токены» — непрерывные векторы,</text>
+    <text x="540" y="174" font-size="11.3">идентификаторов нет; 896×896 при патче 14 →</text>
+    <text x="540" y="190" font-size="11.3"><tspan fill="#2E3440" font-weight="600">4 096 токенов</tspan> в контексте и KV (→ модуль 9)</text>
+    <text x="540" y="212" font-style="italic">роль pre-tok — фиксированная сетка; адаптивности BPE нет</text>
+  </g>
+
+  <line x1="30" y1="240" x2="890" y2="240" stroke="#D8DEE9" stroke-width="0.75"/>
+
+  <!-- аудио -->
+  <text x="30" y="268" font-size="13.5" font-weight="700" fill="#2E3440">Аудио → кодек-токены (EnCodec / RVQ)</text>
+  <path d="M40 316 q10 -22 20 0 t20 0 t20 0 t20 0 t20 0" fill="none" stroke="#B48EAD" stroke-width="1.6"/>
+  <text x="110" y="344" text-anchor="middle" font-size="11.7" fill="#4C566A">волна</text>
+  <line x1="168" y1="316" x2="212" y2="316" stroke="#4C566A" stroke-width="1.2" marker-end="url(#a29)"/>
+  <rect x="216" y="290" width="128" height="52" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/>
+  <text x="280" y="312" text-anchor="middle" font-size="12.7" font-weight="600" fill="#2E3440">нейрокодек, RVQ</text>
+  <text x="280" y="328" text-anchor="middle" font-size="9.7" fill="#4C566A">кодбуки ~1024 записи</text>
+  <line x1="348" y1="316" x2="392" y2="316" stroke="#4C566A" stroke-width="1.2" marker-end="url(#a29)"/>
+  <g font-family="ui-monospace, Menlo, monospace" font-size="9" text-anchor="middle">
+    <rect x="398" y="300" width="42" height="30" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="419" y="319" fill="#2E3440" font-size="13.4" font-weight="600">417</text>
+    <rect x="446" y="300" width="42" height="30" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="467" y="319" fill="#2E3440" font-size="13.5" font-weight="600">88</text>
+    <rect x="494" y="300" width="42" height="30" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="515" y="319" fill="#2E3440" font-size="13.4" font-weight="600">903</text>
+  </g>
+  <g font-size="9.5" fill="#4C566A">
+    <text x="560" y="298" font-size="11.3">настоящие <tspan fill="#2E3440" font-weight="600">дискретные id</tspan> из конечного словаря,</text>
+    <text x="560" y="314" font-size="11.3">десятки токенов/сек; decode → волна;</text>
+    <text x="560" y="330" font-size="11.3">омнимодальный выход = next-token по этим id</text>
+    <text x="560" y="352" font-style="italic">(Qwen3.5-Omni, Thinker-Talker — модуль 14)</text>
+  </g>
+
+  <line x1="30" y1="372" x2="890" y2="372" stroke="#D8DEE9" stroke-width="0.75"/>
+  <text x="30" y="398" font-size="11.3" fill="#2E3440"><tspan font-weight="700">Где аналогия ломается:</tspan> патчи непрерывны и сетка не адаптивна к содержимому — «BPE по пикселям» в mainstream-2026 нет;</text>
+  <text x="30" y="416" font-size="11.3" fill="#2E3440">динамические патчи по энтропии (BLT) — попытка вернуть адаптивность, пока research (§9 лекции).</text>
+</svg>

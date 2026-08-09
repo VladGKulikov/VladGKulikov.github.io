@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="58" y="62" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#20293A">Expert parallelism: sparse compute still requires communication</text>
+<text x="58" y="101" font-family="Arial, sans-serif" font-size="19.6" fill="#596579">Dispatch, grouped GEMM, return, and the batch-union baseline</text>
+<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#465A73"/></marker></defs>
+<rect x="60" y="250" width="250" height="250" rx="18" fill="#E7F0FB" stroke="#C8D2E1" stroke-width="2"/>
+<text x="85" y="297" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="85" dy="0">Tokens</tspan>
+</text>
+<text x="85" y="334" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="600" fill="#596579">
+<tspan x="85" dy="0">T × h</tspan>
+</text>
+<line x1="310" y1="375" x2="390" y2="375" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="405" y="210" width="330" height="330" rx="18" fill="#E8F6EA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="430" y="257" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="700" fill="#20293A">
+<tspan x="430" dy="0">Router + dispatch</tspan>
+</text>
+<text x="430" y="294" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="600" fill="#596579">
+<tspan x="430" dy="0">top-k assignments</tspan>
+<tspan x="430" dy="24">all-to-all</tspan>
+<tspan x="430" dy="24">metadata and padding</tspan>
+<tspan x="430" dy="24">separate</tspan>
+</text>
+<line x1="735" y1="375" x2="815" y2="375" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="830" y="210" width="330" height="330" rx="18" fill="#FFF2D3" stroke="#C8D2E1" stroke-width="2"/>
+<text x="855" y="257" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="855" dy="0">Expert devices</tspan>
+</text>
+<text x="855" y="294" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="855" dy="0">grouped GEMM</tspan>
+<tspan x="855" dy="24">hot experts</tspan>
+<tspan x="855" dy="24">sharding / replication</tspan>
+</text>
+<line x1="1160" y1="375" x2="1240" y2="375" stroke="#465A73" stroke-width="3" marker-end="url(#arr)"/>
+<rect x="1255" y="250" width="285" height="250" rx="18" fill="#EEE8FA" stroke="#C8D2E1" stroke-width="2"/>
+<text x="1280" y="297" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="1280" dy="0">Return</tspan>
+</text>
+<text x="1280" y="334" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#596579">
+<tspan x="1280" dy="0">weighted combine</tspan>
+</text>
+<rect x="250" y="625" width="1100" height="180" rx="18" fill="#FCE5E8" stroke="#C8D2E1" stroke-width="2"/>
+<text x="275" y="672" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#20293A">
+<tspan x="275" dy="0">Two teaching estimates</tspan>
+</text>
+<text x="275" y="709" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="600" fill="#596579">
+<tspan x="275" dy="0">Mcomm = 2·T·h·k·b</tspan>
+<tspan x="275" dy="24">2048×7168×8×2×2 = 448 MiB</tspan>
+<tspan x="275" dy="24"></tspan>
+<tspan x="275" dy="24">f(touched) = 1 − (1 − k/E)^N</tspan>
+<tspan x="275" dy="24">assumption: independent uniform routing</tspan>
+</text>
+</svg>

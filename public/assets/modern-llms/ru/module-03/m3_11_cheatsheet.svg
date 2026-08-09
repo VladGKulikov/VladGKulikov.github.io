@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<text x="70" y="72" font-family="Arial, sans-serif" font-size="39.1" font-weight="700" fill="#2E3440">Позиционные механизмы: карта решений</text>
+<text x="70" y="112" font-family="Arial, sans-serif" font-size="19.6" fill="#5B6472">Математическая гарантия, инженерная эвристика и открытая конфигурация — разные виды свидетельств</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<rect x="65" y="190" width="430" height="235" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="93" y="240" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="93" dy="0">Симметрия</tspan>
+</text>
+<text x="93" y="279" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="93" dy="0">Без PE: перестановочная</tspan>
+<tspan x="93" dy="25">эквивариантность</tspan>
+<tspan x="93" dy="25">Причинная маска задаёт порядок</tspan>
+<tspan x="93" dy="25">доступа</tspan>
+</text>
+<rect x="560" y="190" width="430" height="235" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="588" y="240" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="588" dy="0">RoPE</tspan>
+</text>
+<text x="588" y="279" text-anchor="start" font-family="Arial, sans-serif" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="588" dy="0">RₘᵀRₙ = Rₙ₋ₘ</tspan>
+<tspan x="588" dy="25">Относительная фаза в QKᵀ</tspan>
+</text>
+<rect x="1055" y="190" width="430" height="235" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1083" y="240" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1083" dy="0">Спектр</tspan>
+</text>
+<text x="1083" y="279" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1083" dy="0">base меняет лестницу волн</tspan>
+<tspan x="1083" dy="25">Одна λ не является пределом</tspan>
+</text>
+<rect x="65" y="505" width="430" height="235" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="93" y="555" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="93" dy="0">Расширение контекста</tspan>
+</text>
+<text x="93" y="594" text-anchor="start" font-family="Arial, sans-serif" font-size="21.4" font-weight="600" fill="#5B6472">
+<tspan x="93" dy="0">PI · NTK-aware · YaRN · LongRoPE</tspan>
+<tspan x="93" dy="25">Качество нужно измерять</tspan>
+</text>
+<rect x="560" y="505" width="430" height="235" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="588" y="555" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="588" dy="0">Альтернативы</tspan>
+</text>
+<text x="588" y="594" text-anchor="start" font-family="Arial, sans-serif" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="588" dy="0">ALiBi: линейное смещение ·</tspan>
+<tspan x="588" dy="25">чистый/гибридный NoPE</tspan>
+<tspan x="588" dy="25">локальное и блочное attention</tspan>
+</text>
+<rect x="1055" y="505" width="430" height="235" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1083" y="555" text-anchor="start" font-family="Arial, sans-serif" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1083" dy="0">Мультимодальность</tspan>
+</text>
+<text x="1083" y="594" text-anchor="start" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#5B6472">
+<tspan x="1083" dy="0">Текст (m,m,m) · изображение (t₀,h,w)</tspan>
+<tspan x="1083" dy="25">синхронизация времени видео и аудио</tspan>
+</text>
+</svg>

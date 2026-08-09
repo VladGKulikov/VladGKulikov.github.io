@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 690" width="920" height="690">
+  <title>The original Transformer: two stacks, one probability flow</title>
+  <desc>The complete 2017 encoder-decoder architecture: source and shifted target tokens, positional encodings, encoder, decoder with cross-attention, and the output softmax head.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#5E81AC"/>
+    </marker>
+  </defs>
+  <text x="460.0" y="28" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#2E3440">The original Transformer: two stacks, one probability flow</text>
+  <rect x="40" y="92" width="150" height="60" rx="7" fill="#FFFFFF" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="115" y="118" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E3440">
+    <tspan x="115" dy="0" font-weight="600">Source tokens</tspan>
+  </text>
+  <line x1="190" y1="122" x2="250" y2="122" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="250" y="80" width="170" height="84" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="335" y="107" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E3440">
+    <tspan x="281.408" dy="0" font-weight="600">Embedding × √d<tspan baseline-shift="sub" font-size="7.48px">model</tspan></tspan>
+    <tspan x="270.32" dy="17" font-weight="600">+ positional encoding</tspan>
+  </text>
+  <line x1="420" y1="122" x2="485" y2="122" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="485" y="55" width="190" height="248" rx="7" fill="#FFFFFF" stroke="#5E81AC" stroke-width="2"/>
+  <text x="580" y="83" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">Encoder × N</text>
+  <rect x="515" y="102" width="130" height="31" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="580" y="122" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.8" font-weight="600" fill="#2E3440">self-attention</text>
+  <rect x="515" y="140" width="130" height="31" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="580" y="160" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.8" font-weight="600" fill="#2E3440">Add &amp; Norm</text>
+  <rect x="515" y="178" width="130" height="31" rx="7" fill="#ECEFF4" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="580" y="198" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.8" font-weight="600" fill="#2E3440">position-wise FFN</text>
+  <rect x="515" y="216" width="130" height="31" rx="7" fill="#ECEFF4" stroke="#88C0D0" stroke-width="1.5"/>
+  <text x="580" y="236" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.8" font-weight="600" fill="#2E3440">Add &amp; Norm</text>
+  <text x="580" y="282" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="600" fill="#4C566A">repeat N times</text>
+  <line x1="675" y1="174" x2="800" y2="174" stroke="#5E81AC" stroke-width="1.2" marker-end="url(#arrBlue)"/>
+  <rect x="800" y="137" width="90" height="74" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="845" y="164" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#2E3440">
+    <tspan x="845" dy="0" font-weight="700">Encoder</tspan>
+    <tspan x="845" dy="16" font-weight="700">memory</tspan>
+  </text>
+  <rect x="40" y="415" width="150" height="60" rx="7" fill="#FFFFFF" stroke="#D08770" stroke-width="1.5"/>
+  <text x="115" y="440" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E3440">
+    <tspan x="115" dy="0" font-weight="600">Shifted target</tspan>
+    <tspan x="115" dy="16" font-weight="600">tokens</tspan>
+  </text>
+  <line x1="190" y1="445" x2="250" y2="445" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="250" y="403" width="170" height="84" rx="7" fill="#ECEFF4" stroke="#EBCB8B" stroke-width="1.5"/>
+  <text x="335" y="430" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E3440">
+    <tspan x="281.408" dy="0" font-weight="600">Embedding × √d<tspan baseline-shift="sub" font-size="7.48px">model</tspan></tspan>
+    <tspan x="270.32" dy="17" font-weight="600">+ positional encoding</tspan>
+  </text>
+  <line x1="420" y1="445" x2="485" y2="445" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="485" y="332" width="190" height="314" rx="7" fill="#FFFFFF" stroke="#D08770" stroke-width="2"/>
+  <text x="580" y="360" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#2E3440">Decoder × N</text>
+  <rect x="505" y="378" width="150" height="30" rx="7" fill="#ECEFF4" stroke="#D08770" stroke-width="1.5"/>
+  <text x="580" y="397" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#2E3440">masked self-attention</text>
+  <rect x="505" y="415" width="150" height="30" rx="7" fill="#ECEFF4" stroke="#EBCB8B" stroke-width="1.5"/>
+  <text x="580" y="434" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#2E3440">Add &amp; Norm</text>
+  <rect x="505" y="452" width="150" height="30" rx="7" fill="#ECEFF4" stroke="#5E81AC" stroke-width="1.5"/>
+  <text x="580" y="471" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#2E3440">cross-attention</text>
+  <rect x="505" y="489" width="150" height="30" rx="7" fill="#ECEFF4" stroke="#EBCB8B" stroke-width="1.5"/>
+  <text x="580" y="508" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#2E3440">Add &amp; Norm</text>
+  <rect x="505" y="526" width="150" height="30" rx="7" fill="#ECEFF4" stroke="#B48EAD" stroke-width="1.5"/>
+  <text x="580" y="545" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#2E3440">position-wise FFN</text>
+  <rect x="505" y="563" width="150" height="30" rx="7" fill="#ECEFF4" stroke="#EBCB8B" stroke-width="1.5"/>
+  <text x="580" y="582" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#2E3440">Add &amp; Norm</text>
+  <text x="580" y="628" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="600" fill="#4C566A">repeat N times</text>
+  <line x1="845" y1="211" x2="845" y2="467" stroke="#5E81AC" stroke-width="1.4"/>
+  <line x1="845" y1="467" x2="655" y2="467" stroke="#5E81AC" stroke-width="1.4" marker-end="url(#arrBlue)"/>
+  <text x="750" y="455" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="600" fill="#5E81AC">K, V from encoder</text>
+  <line x1="675" y1="578" x2="735" y2="550" stroke="#4C566A" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="735" y="505" width="155" height="88" rx="7" fill="#ECEFF4" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="812" y="531" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#2E3440">
+    <tspan x="757.904" dy="0" font-weight="600">Linear: d<tspan baseline-shift="sub" font-size="7.14px">model</tspan> → |V|</tspan>
+    <tspan x="744.38" dy="18" font-weight="600">softmax over vocabulary</tspan>
+  </text>
+  <line x1="812" y1="593" x2="812" y2="625" stroke="#A3BE8C" stroke-width="1.2" marker-end="url(#arr)"/>
+  <rect x="735" y="625" width="155" height="38" rx="7" fill="#FFFFFF" stroke="#A3BE8C" stroke-width="1.5"/>
+  <text x="812" y="649" text-anchor="middle" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#2E3440">p(next token)</text>
+  <text x="40" y="679" text-anchor="start" font-family="DejaVu Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="400" fill="#4C566A" font-style="italic">Encoder self-attention is bidirectional; the decoder mask forbids access to future target positions.</text>
+</svg>

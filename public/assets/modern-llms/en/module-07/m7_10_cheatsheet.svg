@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1600" height="900" fill="white"/>
+<text x="70" y="70" font-family="Arial" font-size="39.1" font-weight="700" fill="#2E3440">SSMs and hybrids: a decision map</text>
+<text x="70" y="110" font-family="Arial" font-size="19.6" fill="#5B6472">Memory savings must be read together with the cost of addressability</text>
+<rect x="70" y="210" width="420" height="220" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="258" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">ZOH</tspan>
+</text>
+<text x="96" y="299" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="96" dy="0">exact held-input transition</tspan>
+</text>
+<rect x="555" y="210" width="420" height="220" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="581" y="258" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="581" dy="0">Mamba</tspan>
+</text>
+<text x="581" y="299" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="581" dy="0">input-dependent writing and</tspan>
+<tspan x="581" dy="25">forgetting</tspan>
+</text>
+<rect x="1040" y="210" width="420" height="220" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1066" y="258" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1066" dy="0">Cache</tspan>
+</text>
+<text x="1066" y="299" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1066" dy="0">SSM state + convolution state</tspan>
+</text>
+<rect x="70" y="510" width="420" height="220" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="96" y="558" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="96" dy="0">SSD</tspan>
+</text>
+<text x="96" y="599" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="96" dy="0">recurrence · scan · chunks</tspan>
+</text>
+<rect x="555" y="510" width="420" height="220" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="581" y="558" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="581" dy="0">Delta rule</tspan>
+</text>
+<text x="581" y="599" text-anchor="start" font-family="Arial" font-size="23.5" font-weight="600" fill="#5B6472">
+<tspan x="581" dy="0">address-specific correction</tspan>
+</text>
+<rect x="1040" y="510" width="420" height="220" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1066" y="558" text-anchor="start" font-family="Arial" font-size="28.2" font-weight="700" fill="#2E3440">
+<tspan x="1066" dy="0">Hybrid</tspan>
+</text>
+<text x="1066" y="599" text-anchor="start" font-family="Arial" font-size="19.6" font-weight="400" fill="#5B6472">
+<tspan x="1066" dy="0">fixed state + some KV</tspan>
+</text>
+</svg>

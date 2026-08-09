@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#FFFFFF"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
+<text x="70" y="70" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="700" fill="#2E3440">Четыре размещения нормализации</text>
+<text x="70" y="108" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" fill="#5B6472">Peri-LN и OLMo2 — разные вычислительные графы</text>
+<rect x="55" y="210" width="320" height="410" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
+<text x="80" y="259" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="80" dy="0">Post-LN</tspan>
+</text>
+<text x="80" y="303" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="80" dy="0">N(h + F(h))</tspan>
+<tspan x="80" dy="25">Норма лежит на прямом пути.</tspan>
+<tspan x="80" dy="25">Прогрев (warmup) или другие</tspan>
+<tspan x="80" dy="25">стабилизаторы могут помочь.</tspan>
+</text>
+<rect x="445" y="210" width="320" height="410" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
+<text x="470" y="259" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="470" dy="0">Pre-LN</tspan>
+</text>
+<text x="470" y="303" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="470" dy="0">h + F(N(h))</tspan>
+<tspan x="470" dy="25">Тождественный путь</tspan>
+<tspan x="470" dy="25">сохранён; масштаб</tspan>
+<tspan x="470" dy="25">residual-потока может</tspan>
+<tspan x="470" dy="25">дрейфовать.</tspan>
+</text>
+<rect x="835" y="210" width="320" height="410" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
+<text x="860" y="259" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="860" dy="0">Peri-LN</tspan>
+</text>
+<text x="860" y="303" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="860" dy="0">h + Nₒᵤₜ(F(Nᵢₙ(h)))</tspan>
+<tspan x="860" dy="25">Нормируются чтение и</tspan>
+<tspan x="860" dy="25">запись; обучаемый масштаб γ</tspan>
+<tspan x="860" dy="25">по-прежнему важен.</tspan>
+</text>
+<rect x="1225" y="210" width="320" height="410" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
+<text x="1250" y="259" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700" fill="#2E3440">
+<tspan x="1250" dy="0">OLMo2-style</tspan>
+</text>
+<text x="1250" y="303" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="1250" dy="0">h + N(F(h))</tspan>
+<tspan x="1250" dy="25">Входной нормы этого подслоя</tspan>
+<tspan x="1250" dy="25">нет; Q и K получают</tspan>
+<tspan x="1250" dy="25">отдельную RMSNorm.</tspan>
+</text>
+<rect x="180" y="700" width="1240" height="125" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
+<text x="208" y="750" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440">
+<tspan x="208" dy="0">Правило чтения</tspan>
+</text>
+<text x="208" y="791" text-anchor="start" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#5B6472">
+<tspan x="208" dy="0">Не выводите placement из имени семейства. Читайте forward decoder-слоя и отдельно отмечайте входную норму,</tspan>
+<tspan x="208" dy="25">норму выхода ветви и Q/K-нормализацию.</tspan>
+</text>
+</svg>
