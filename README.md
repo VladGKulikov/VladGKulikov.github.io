@@ -1,5 +1,7 @@
 # Vlad Kulikov · Open Courses
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21877456.svg)](https://doi.org/10.5281/zenodo.21877456)
+
 Personal website and course library: <https://vladgkulikov.github.io/>
 
 Public bilingual lecture library for three courses:
@@ -56,8 +58,10 @@ covered by these licenses.
 ## Citation
 
 GitHub-compatible citation metadata is provided in
-[`CITATION.cff`](CITATION.cff). Until course-specific DOI records are issued,
-cite the author, course title, public edition `2026.1`, and the stable site URL.
+[`CITATION.cff`](CITATION.cff). The DOI for the current public Reader Edition
+`2026.1` is <https://doi.org/10.5281/zenodo.21877457>. Use
+<https://doi.org/10.5281/zenodo.21877456> when linking to the collection across
+all current and future editions.
 
 ## Author
 

@@ -747,6 +747,14 @@ export function CourseLibrary() {
             {t.citation}
             <ExternalLink size={13} />
           </a>
+          <a
+            href={`https://doi.org/${publication.concept_doi}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            DOI
+            <ExternalLink size={13} />
+          </a>
           <a href="https://github.com/VladGKulikov/open-courses" target="_blank" rel="noreferrer">
             {t.openSource}
             <ExternalLink size={13} />

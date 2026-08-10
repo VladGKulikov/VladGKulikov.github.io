@@ -12,6 +12,7 @@ abstract: >-
   notebooks, projects, and grading materials.
 version: "2026.1"
 date-released: 2026-08-10
+doi: "10.5281/zenodo.21877457"
 url: "https://vladgkulikov.github.io/"
 repository-code: "https://github.com/VladGKulikov/open-courses"
 license: CC-BY-NC-SA-4.0
