@@ -28,6 +28,12 @@ if (!/^\d{4}\.\d+$/.test(publication.edition)) {
 if (!/^\d{4}-\d{2}-\d{2}$/.test(publication.release_date)) {
   errors.push(`Invalid release date: ${publication.release_date}`);
 }
+if (!/^10\.5281\/zenodo\.\d+$/.test(publication.concept_doi)) {
+  errors.push(`Invalid concept DOI: ${publication.concept_doi}`);
+}
+if (!/^10\.5281\/zenodo\.\d+$/.test(publication.version_doi)) {
+  errors.push(`Invalid version DOI: ${publication.version_doi}`);
+}
 if (publication.content_license !== "CC-BY-NC-SA-4.0") {
   errors.push("Unexpected content license");
 }
@@ -41,6 +47,9 @@ if (!citation.includes(`version: "${publication.edition}"`)) {
 }
 if (!citation.includes(`date-released: ${publication.release_date}`)) {
   errors.push("CITATION.cff release date does not match PUBLICATION.json");
+}
+if (!citation.includes(`doi: "${publication.version_doi}"`)) {
+  errors.push("CITATION.cff DOI does not match PUBLICATION.json");
 }
 
 const notices = read("THIRD_PARTY_NOTICES.md");
@@ -81,6 +90,8 @@ console.log(
       status: "PASS",
       edition: publication.edition,
       releaseDate: publication.release_date,
+      conceptDoi: publication.concept_doi,
+      versionDoi: publication.version_doi,
       requiredFiles: requiredFiles.length,
       declaredRuntimeDependencies: Object.keys(packageJson.dependencies).length,
     },
