@@ -89,8 +89,6 @@ const copy = {
     boundary:
       "В этой версии публикуются только лекционные тексты и изображения. Тесты, упражнения, решения, проекты и вычислительная практика остаются частью полного курса на Stepik.",
     allMaterials: "Все материалы",
-    readTime: "около",
-    hours: "ч чтения",
     noResults: "Ничего не найдено",
     menu: "Открыть содержание",
   },
@@ -135,8 +133,6 @@ const copy = {
     boundary:
       "This edition contains lecture text and images only. Tests, exercises, solutions, projects, and computational practice remain part of the complete Stepik course.",
     allMaterials: "All materials",
-    readTime: "about",
-    hours: "h reading",
     noResults: "No modules found",
     menu: "Open contents",
   },
@@ -462,7 +458,6 @@ export function CourseLibrary() {
                 .filter((course) => course.language === language)
                 .map((course) => {
                   const imageCount = course.modules.reduce((sum, module) => sum + module.image_count, 0);
-                  const readingHours = Math.max(1, Math.round(course.characters / 60000));
                   return (
                     <article className="course-card" key={course.course_key} data-accent={course.course_key}>
                       <div className="course-card-top">
@@ -479,10 +474,6 @@ export function CourseLibrary() {
                         <div>
                           <dt>{imageCount}</dt>
                           <dd>{t.illustrations}</dd>
-                        </div>
-                        <div>
-                          <dt>{readingHours}</dt>
-                          <dd>{t.hours}</dd>
                         </div>
                       </dl>
                       <div className="stepik-volume">
