@@ -71,7 +71,7 @@ const copy = {
       "Сейчас в серии три самостоятельных курса. Каждый можно проходить отдельно; новые курсы и открытые материалы будут добавляться.",
     start: "Открыть курс",
     stepik: "Полный курс на Stepik",
-    completeCourse: "Полный курс на Stepik включает",
+    completeCourse: "Дополнительно на Stepik",
     leanpub: "PDF / EPUB бесплатно · Поддержать автора",
     modules: "модулей",
     illustrations: "иллюстраций",
@@ -117,7 +117,7 @@ const copy = {
       "The series currently includes three independent courses. Each stands on its own; new courses and open materials will be added over time.",
     start: "Open course",
     stepik: "Complete course on Stepik",
-    completeCourse: "The complete Stepik course includes",
+    completeCourse: "Additional material on Stepik",
     leanpub: "Free PDF / EPUB · Support the author",
     modules: "modules",
     illustrations: "illustrations",
@@ -163,16 +163,29 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
   },
 };
 
+const stepikCtas: Record<CourseKey, Record<Language, string>> = {
+  "modern-llms": {
+    ru: "Полный курс + 299 тестов и практика на Stepik",
+    en: "Complete course + 299 tests & practice on Stepik",
+  },
+  "rl-for-llm": {
+    ru: "Полный курс + 109 тестов и практика на Stepik",
+    en: "Complete course + 109 tests & practice on Stepik",
+  },
+  "information-theory-for-ml": {
+    ru: "Полный БЕСПЛАТНЫЙ курс + 377 тестов и все упражнения на Stepik",
+    en: "Complete FREE course + 377 tests & all exercises on Stepik",
+  },
+};
+
 const stepikVolumes: Record<CourseKey, Record<Language, string[]>> = {
   "modern-llms": {
     ru: [
-      "368 текстовых уроков",
       "299 автопроверяемых вопросов",
       "137 самопроверок · 65 упражнений",
       "36 проектных упражнений · 40 ноутбуков",
     ],
     en: [
-      "368 text lessons",
       "299 auto-graded questions",
       "137 self-checks · 65 exercises",
       "36 project exercises · 40 notebooks",
@@ -180,13 +193,11 @@ const stepikVolumes: Record<CourseKey, Record<Language, string[]>> = {
   },
   "rl-for-llm": {
     ru: [
-      "114 уроков",
       "109 тестов Stepik · 151 самопроверка",
       "77 аналитических · 77 программных заданий",
       "13 ноутбуков",
     ],
     en: [
-      "114 lessons",
       "109 Stepik tests · 151 self-checks",
       "77 analytical · 77 programming tasks",
       "13 notebooks",
@@ -194,15 +205,13 @@ const stepikVolumes: Record<CourseKey, Record<Language, string[]>> = {
   },
   "information-theory-for-ml": {
     ru: [
-      "205 уроков",
       "377 автопроверяемых вопросов",
-      "78 упражнений с подробными решениями",
+      "Все 78 упражнений с подробными решениями · бесплатно",
       "12 упражнений с Python",
     ],
     en: [
-      "204 lessons",
       "377 auto-graded questions",
-      "78 exercises with detailed solutions",
+      "All 78 exercises with detailed solutions · free",
       "12 Python exercises",
     ],
   },
@@ -497,7 +506,7 @@ export function CourseLibrary() {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        {t.stepik}
+                        {stepikCtas[course.course_key][language]}
                         <ExternalLink size={15} />
                       </a>
                       <a
