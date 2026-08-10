@@ -1,0 +1,9 @@
+{
+  "edition": "2026.1",
+  "release_date": "2026-08-10",
+  "status": "public",
+  "courses": 3,
+  "languages": ["en", "ru"],
+  "content_license": "CC-BY-NC-SA-4.0",
+  "code_license": "Apache-2.0"
+}

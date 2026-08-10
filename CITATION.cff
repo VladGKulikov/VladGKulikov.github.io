@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use these open course materials, please cite them using this metadata."
+title: "Vlad Kulikov Open Courses: Public Reader Editions"
+type: dataset
+authors:
+  - family-names: Kulikov
+    given-names: Vlad
+abstract: >-
+  Bilingual public Reader Editions of Modern LLMs, RL for LLM, and
+  Information Theory for Machine Learning. The collection contains lecture
+  text and illustrations and excludes assessments, exercises, solutions,
+  notebooks, projects, and grading materials.
+version: "2026.1"
+date-released: 2026-08-10
+url: "https://vladgkulikov.github.io/"
+repository-code: "https://github.com/VladGKulikov/open-courses"
+license: CC-BY-NC-SA-4.0
+keywords:
+  - artificial intelligence
+  - machine learning
+  - large language models
+  - reinforcement learning
+  - information theory
+  - education

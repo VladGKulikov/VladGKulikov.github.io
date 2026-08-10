@@ -20,6 +20,35 @@ The repository contains lecture text and illustrations only. Quizzes, exercises,
 
 The canonical authoring repositories are maintained separately. This public repository is a generated, publication-safe copy.
 
+## Publication edition
+
+The current public Reader Edition is **2026.1**, released on 2026-08-10. Its
+machine-readable metadata is recorded in [`PUBLICATION.json`](PUBLICATION.json).
+
+## Licensing
+
+This is a mixed-license repository:
+
+- lecture text, course illustrations, course metadata, and author-written
+  explanatory prose: **CC BY-NC-SA 4.0**;
+- site source code, build tooling, and standalone publication software:
+  **Apache-2.0**;
+- third-party components: their respective original licenses.
+
+See [`LICENSE.md`](LICENSE.md) for the scope, the
+[`LICENSE-CONTENT.md`](LICENSE-CONTENT.md) notice for course content,
+[`LICENSE-CODE`](LICENSE-CODE) for the Apache-2.0 text, and
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for dependencies.
+
+Restricted Stepik materials that are absent from this repository are not
+covered by these licenses.
+
+## Citation
+
+GitHub-compatible citation metadata is provided in
+[`CITATION.cff`](CITATION.cff). Until course-specific DOI records are issued,
+cite the author, course title, public edition `2026.1`, and the stable site URL.
+
 ## Author
 
 I am a Lead AI/ML specialist focused on LLMs in FinTech. I have worked in ML since 2017 across R&D, ML/GenAI system development, and AI adoption consulting.

@@ -18,6 +18,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import publication from "../PUBLICATION.json";
 import content from "./generated/content.json";
 
 type Language = "ru" | "en";
@@ -80,6 +81,9 @@ const copy = {
     loading: "Загружаю лекцию…",
     error: "Не удалось открыть текст лекции.",
     openSource: "Исходник сайта",
+    licenses: "Лицензии",
+    citation: "Цитирование",
+    edition: "Редакция",
     boundary:
       "В этой версии публикуются только лекционные тексты и изображения. Проверочные материалы и практические ноутбуки остаются частью полного курса.",
     allMaterials: "Все материалы",
@@ -121,6 +125,9 @@ const copy = {
     loading: "Loading lecture…",
     error: "The lecture text could not be opened.",
     openSource: "Site source",
+    licenses: "Licenses",
+    citation: "Citation",
+    edition: "Edition",
     boundary:
       "This edition contains lecture text and images only. Assessments and practical notebooks remain part of the complete course.",
     allMaterials: "All materials",
@@ -589,11 +596,29 @@ export function CourseLibrary() {
       )}
 
       <footer className="site-footer">
-        <span>© 2026 {t.author}</span>
-        <a href="https://github.com/VladGKulikov/open-courses" target="_blank" rel="noreferrer">
-          {t.openSource}
-          <ExternalLink size={13} />
-        </a>
+        <span>© 2026 {t.author} · {t.edition} {publication.edition}</span>
+        <nav aria-label="Publication information">
+          <a
+            href="https://github.com/VladGKulikov/open-courses/blob/main/LICENSE.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t.licenses}
+            <ExternalLink size={13} />
+          </a>
+          <a
+            href="https://github.com/VladGKulikov/open-courses/blob/main/CITATION.cff"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t.citation}
+            <ExternalLink size={13} />
+          </a>
+          <a href="https://github.com/VladGKulikov/open-courses" target="_blank" rel="noreferrer">
+            {t.openSource}
+            <ExternalLink size={13} />
+          </a>
+        </nav>
       </footer>
     </div>
   );

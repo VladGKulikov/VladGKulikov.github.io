@@ -10,6 +10,7 @@
     "build": "vinext build",
     "build:pages": "vite build --config vite.pages.config.ts",
     "check:math": "node scripts/validate-math.mjs",
+    "check:publication": "node scripts/validate-publication.mjs",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-pages --ignore-pattern .next"
   },

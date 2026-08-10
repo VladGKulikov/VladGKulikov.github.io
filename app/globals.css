@@ -898,6 +898,16 @@ a {
   text-decoration: none;
 }
 
+.site-footer nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.site-footer a:hover {
+  color: var(--ink);
+}
+
 .drawer-scrim {
   display: none;
 }
@@ -1093,8 +1103,14 @@ a {
   }
 
   .site-footer {
+    flex-wrap: wrap;
     gap: 18px;
     padding: 22px 18px;
+  }
+
+  .site-footer nav {
+    flex-wrap: wrap;
+    gap: 12px 18px;
   }
 }
 
