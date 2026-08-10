@@ -393,6 +393,41 @@ a {
   text-transform: uppercase;
 }
 
+.stepik-volume {
+  margin: 0 0 24px;
+  border-left: 3px solid var(--card-accent);
+  background: color-mix(in srgb, var(--card-accent) 7%, var(--paper-light));
+  padding: 14px 16px;
+}
+
+.stepik-volume p {
+  margin: 0 0 9px;
+  color: var(--card-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stepik-volume ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepik-volume li {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.stepik-volume li::before {
+  content: "— ";
+  color: var(--card-accent);
+}
+
 .course-open {
   display: flex;
   width: 100%;

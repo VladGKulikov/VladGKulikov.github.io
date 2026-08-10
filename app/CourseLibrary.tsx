@@ -71,6 +71,7 @@ const copy = {
       "Сейчас в серии три самостоятельных курса. Каждый можно проходить отдельно; новые курсы и открытые материалы будут добавляться.",
     start: "Открыть курс",
     stepik: "Полный курс на Stepik",
+    completeCourse: "Полный курс на Stepik включает",
     leanpub: "PDF / EPUB бесплатно · Поддержать автора",
     modules: "модулей",
     illustrations: "иллюстраций",
@@ -86,7 +87,7 @@ const copy = {
     citation: "Цитирование",
     edition: "Редакция",
     boundary:
-      "В этой версии публикуются только лекционные тексты и изображения. Проверочные материалы и практические ноутбуки остаются частью полного курса.",
+      "В этой версии публикуются только лекционные тексты и изображения. Тесты, упражнения, решения, проекты и вычислительная практика остаются частью полного курса на Stepik.",
     allMaterials: "Все материалы",
     readTime: "около",
     hours: "ч чтения",
@@ -116,6 +117,7 @@ const copy = {
       "The series currently includes three independent courses. Each stands on its own; new courses and open materials will be added over time.",
     start: "Open course",
     stepik: "Complete course on Stepik",
+    completeCourse: "The complete Stepik course includes",
     leanpub: "Free PDF / EPUB · Support the author",
     modules: "modules",
     illustrations: "illustrations",
@@ -131,7 +133,7 @@ const copy = {
     citation: "Citation",
     edition: "Edition",
     boundary:
-      "This edition contains lecture text and images only. Assessments and practical notebooks remain part of the complete course.",
+      "This edition contains lecture text and images only. Tests, exercises, solutions, projects, and computational practice remain part of the complete Stepik course.",
     allMaterials: "All materials",
     readTime: "about",
     hours: "h reading",
@@ -158,6 +160,51 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
   "information-theory-for-ml": {
     en: "https://leanpub.com/information-theory-for-ml",
     ru: "https://leanpub.com/information-theory-for-ml-ru",
+  },
+};
+
+const stepikVolumes: Record<CourseKey, Record<Language, string[]>> = {
+  "modern-llms": {
+    ru: [
+      "368 текстовых уроков",
+      "299 автопроверяемых вопросов",
+      "137 самопроверок · 65 упражнений",
+      "36 проектных упражнений · 40 ноутбуков",
+    ],
+    en: [
+      "368 text lessons",
+      "299 auto-graded questions",
+      "137 self-checks · 65 exercises",
+      "36 project exercises · 40 notebooks",
+    ],
+  },
+  "rl-for-llm": {
+    ru: [
+      "114 уроков",
+      "109 тестов Stepik · 151 самопроверка",
+      "77 аналитических · 77 программных заданий",
+      "13 ноутбуков",
+    ],
+    en: [
+      "114 lessons",
+      "109 Stepik tests · 151 self-checks",
+      "77 analytical · 77 programming tasks",
+      "13 notebooks",
+    ],
+  },
+  "information-theory-for-ml": {
+    ru: [
+      "205 уроков",
+      "377 автопроверяемых вопросов",
+      "78 упражнений с подробными решениями",
+      "12 упражнений с Python",
+    ],
+    en: [
+      "204 lessons",
+      "377 auto-graded questions",
+      "78 exercises with detailed solutions",
+      "12 Python exercises",
+    ],
   },
 };
 
@@ -429,6 +476,14 @@ export function CourseLibrary() {
                           <dd>{t.hours}</dd>
                         </div>
                       </dl>
+                      <div className="stepik-volume">
+                        <p>{t.completeCourse}</p>
+                        <ul>
+                          {stepikVolumes[course.course_key][language].map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
                       <button
                         className="course-open"
                         onClick={() => selectModule(course.course_key, course.modules[0].module_key)}
