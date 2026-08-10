@@ -69,11 +69,21 @@ const copy = {
     seriesTitle: "Текущие курсы",
     seriesText:
       "Сейчас в серии три самостоятельных курса. Каждый можно проходить отдельно; новые курсы и открытые материалы будут добавляться.",
-    start: "Открыть курс",
+    start: "Открыть материалы курса",
     stepik: "Полный курс на Stepik",
-    completeCourse: "Дополнительно на Stepik",
     leanpub: "PDF / EPUB бесплатно · Поддержать автора",
+    openCourseTitle: "Материалы открытого курса",
+    openCourseText: "Полный открытый лекционный материал",
+    completeCourseTitle: "Полный курс на Stepik",
+    completeFreeCourseTitle: "Полный бесплатный курс на Stepik",
+    paidPracticeText:
+      "Материалы открытого курса + дополнительные платные практические материалы",
+    openPracticeText:
+      "Материалы открытого курса + дополнительные открытые практические материалы",
+    bookTitle: "Бесплатные PDF / EPUB",
+    bookText: "Скачать бесплатно или поддержать автора на Leanpub",
     modules: "модулей",
+    pages: "страниц",
     illustrations: "иллюстраций",
     library: "Библиотека",
     search: "Найти модуль",
@@ -87,7 +97,7 @@ const copy = {
     citation: "Цитирование",
     edition: "Редакция",
     boundary:
-      "В этой версии публикуются только лекционные тексты и изображения. Тесты, упражнения, решения, проекты и вычислительная практика остаются частью полного курса на Stepik.",
+      "Открытая версия содержит лекционные тексты и изображения. Полные курсы на Stepik дополняют их тестами, упражнениями, решениями, проектами и вычислительной практикой; условия доступа указаны отдельно для каждого курса.",
     allMaterials: "Все материалы",
     noResults: "Ничего не найдено",
     menu: "Открыть содержание",
@@ -113,11 +123,21 @@ const copy = {
     seriesTitle: "Current courses",
     seriesText:
       "The series currently includes three independent courses. Each stands on its own; new courses and open materials will be added over time.",
-    start: "Open course",
+    start: "Open course materials",
     stepik: "Complete course on Stepik",
-    completeCourse: "Additional material on Stepik",
     leanpub: "Free PDF / EPUB · Support the author",
+    openCourseTitle: "Open course materials",
+    openCourseText: "Full open lecture materials",
+    completeCourseTitle: "Complete course on Stepik",
+    completeFreeCourseTitle: "Complete free course on Stepik",
+    paidPracticeText:
+      "Open course materials + additional paid practical materials",
+    openPracticeText:
+      "Open course materials + additional open practical materials",
+    bookTitle: "Free PDF / EPUB",
+    bookText: "Download free or support the author on Leanpub",
     modules: "modules",
+    pages: "pages",
     illustrations: "illustrations",
     library: "Library",
     search: "Find a module",
@@ -131,7 +151,7 @@ const copy = {
     citation: "Citation",
     edition: "Edition",
     boundary:
-      "This edition contains lecture text and images only. Tests, exercises, solutions, projects, and computational practice remain part of the complete Stepik course.",
+      "The open edition contains lecture text and images. The complete Stepik courses add tests, exercises, solutions, projects, and computational practice; access terms are shown separately for each course.",
     allMaterials: "All materials",
     noResults: "No modules found",
     menu: "Open contents",
@@ -159,18 +179,18 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
   },
 };
 
-const stepikCtas: Record<CourseKey, Record<Language, string>> = {
+const coursePageCounts: Record<CourseKey, Record<Language, number>> = {
   "modern-llms": {
-    ru: "Полный курс + 299 тестов и практика на Stepik",
-    en: "Complete course + 299 tests & practice on Stepik",
+    ru: 375,
+    en: 336,
   },
   "rl-for-llm": {
-    ru: "Полный курс + 109 тестов и практика на Stepik",
-    en: "Complete course + 109 tests & practice on Stepik",
+    ru: 286,
+    en: 262,
   },
   "information-theory-for-ml": {
-    ru: "Полный БЕСПЛАТНЫЙ курс + 377 тестов и все упражнения на Stepik",
-    en: "Complete FREE course + 377 tests & all exercises on Stepik",
+    ru: 335,
+    en: 320,
   },
 };
 
@@ -458,6 +478,7 @@ export function CourseLibrary() {
                 .filter((course) => course.language === language)
                 .map((course) => {
                   const imageCount = course.modules.reduce((sum, module) => sum + module.image_count, 0);
+                  const isFullyOpen = course.course_key === "information-theory-for-ml";
                   return (
                     <article className="course-card" key={course.course_key} data-accent={course.course_key}>
                       <div className="course-card-top">
@@ -466,49 +487,70 @@ export function CourseLibrary() {
                       </div>
                       <h3>{course.title}</h3>
                       <p>{course.description}</p>
-                      <dl className="course-stats">
-                        <div>
-                          <dt>{course.module_count}</dt>
-                          <dd>{t.modules}</dd>
-                        </div>
-                        <div>
-                          <dt>{imageCount}</dt>
-                          <dd>{t.illustrations}</dd>
-                        </div>
-                      </dl>
-                      <div className="stepik-volume">
-                        <p>{t.completeCourse}</p>
-                        <ul>
-                          {stepikVolumes[course.course_key][language].map((item) => (
-                            <li key={item}>{item}</li>
-                          ))}
-                        </ul>
+                      <div className="course-access">
+                        <section className="access-panel access-panel-open">
+                          <p className="access-title">{t.openCourseTitle}</p>
+                          <p className="access-description">{t.openCourseText}</p>
+                          <dl className="course-stats">
+                            <div>
+                              <dt>{course.module_count}</dt>
+                              <dd>{t.modules}</dd>
+                            </div>
+                            <div>
+                              <dt>{coursePageCounts[course.course_key][language]}</dt>
+                              <dd>{t.pages}</dd>
+                            </div>
+                            <div>
+                              <dt>{imageCount}</dt>
+                              <dd>{t.illustrations}</dd>
+                            </div>
+                          </dl>
+                          <button
+                            className="course-open"
+                            onClick={() => selectModule(course.course_key, course.modules[0].module_key)}
+                          >
+                            {t.start}
+                            <ArrowRight size={18} />
+                          </button>
+                        </section>
+
+                        <section className={`access-panel access-panel-stepik ${isFullyOpen ? "is-free" : "is-paid"}`}>
+                          <p className="access-title">
+                            {isFullyOpen ? t.completeFreeCourseTitle : t.completeCourseTitle}
+                          </p>
+                          <p className="access-description">
+                            {isFullyOpen ? t.openPracticeText : t.paidPracticeText}
+                          </p>
+                          <ul className="stepik-volume">
+                            {stepikVolumes[course.course_key][language].map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                          <a
+                            className="course-stepik"
+                            href={course.stepik_url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {isFullyOpen ? t.completeFreeCourseTitle : t.completeCourseTitle}
+                            <ExternalLink size={15} />
+                          </a>
+                        </section>
+
+                        <section className="access-panel access-panel-book">
+                          <p className="access-title">{t.bookTitle}</p>
+                          <p className="access-description">{t.bookText}</p>
+                          <a
+                            className="course-leanpub"
+                            href={leanpubUrls[course.course_key][language]}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {t.leanpub}
+                            <ExternalLink size={15} />
+                          </a>
+                        </section>
                       </div>
-                      <button
-                        className="course-open"
-                        onClick={() => selectModule(course.course_key, course.modules[0].module_key)}
-                      >
-                        {t.start}
-                        <ArrowRight size={18} />
-                      </button>
-                      <a
-                        className="course-stepik"
-                        href={course.stepik_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {stepikCtas[course.course_key][language]}
-                        <ExternalLink size={15} />
-                      </a>
-                      <a
-                        className="course-leanpub"
-                        href={leanpubUrls[course.course_key][language]}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {t.leanpub}
-                        <ExternalLink size={15} />
-                      </a>
                     </article>
                   );
                 })}
