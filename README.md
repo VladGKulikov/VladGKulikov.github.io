@@ -26,7 +26,7 @@ This repository is the open lecture reader. The complete Stepik editions add the
 |---|---|
 | Modern LLMs | 299 auto-graded questions; 137 self-checks; 65 analytical and computational exercises; 36 project exercises; 19 main, 17 project-demo, and 4 Capstone notebooks |
 | Reinforcement Learning for LLM | 109 native Stepik tests; 151 self-checks; 77 analytical and computational tasks; 77 programming tasks; 13 notebooks |
-| Information Theory for ML | 377 auto-graded questions; 78 exercises with detailed solutions, including 12 Python exercises. The course is completely free |
+| Information Theory for ML | 377 auto-graded questions; all 78 exercises with detailed solutions, including 12 Python exercises. The complete course is free on Stepik |
 
 The canonical authoring repositories are maintained separately. This public repository is a generated, publication-safe copy.
 
