@@ -314,7 +314,7 @@ a {
 .course-card {
   --card-accent: #e75033;
   display: flex;
-  min-height: 500px;
+  min-height: 760px;
   flex-direction: column;
   border-right: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
@@ -367,12 +367,60 @@ a {
   line-height: 1.55;
 }
 
+.course-access {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 36px;
+}
+
+.access-panel {
+  border: 1px solid var(--ink);
+  background: color-mix(in srgb, var(--paper-light) 94%, var(--card-accent));
+  padding: 16px;
+}
+
+.access-panel-open {
+  border-top: 3px solid var(--ink);
+}
+
+.access-panel-stepik {
+  border-left: 3px solid var(--card-accent);
+  background: color-mix(in srgb, var(--card-accent) 7%, var(--paper-light));
+}
+
+.access-panel-stepik.is-free {
+  background: color-mix(in srgb, var(--card-accent) 12%, var(--paper-light));
+}
+
+.access-panel-book {
+  border-color: color-mix(in srgb, var(--card-accent) 60%, var(--ink));
+}
+
+.access-title {
+  margin: 0;
+  color: var(--card-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.access-description {
+  min-height: 42px;
+  margin: 7px 0 0;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .course-stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin: auto 0 28px;
-  padding-top: 42px;
+  margin: 16px 0 0;
+  padding: 0;
 }
 
 .course-stats div {
@@ -394,25 +442,10 @@ a {
 }
 
 .stepik-volume {
-  margin: 0 0 24px;
-  border-left: 3px solid var(--card-accent);
-  background: color-mix(in srgb, var(--card-accent) 7%, var(--paper-light));
-  padding: 14px 16px;
-}
-
-.stepik-volume p {
-  margin: 0 0 9px;
-  color: var(--card-accent);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.stepik-volume ul {
   display: grid;
   gap: 5px;
-  margin: 0;
+  min-height: 72px;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -430,9 +463,10 @@ a {
 
 .course-open {
   display: flex;
-  width: 100%;
+  width: calc(100% + 32px);
   align-items: center;
   justify-content: space-between;
+  margin: 16px -16px -16px;
   border: 0;
   border-radius: 0;
   background: var(--ink);
@@ -454,13 +488,15 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--ink);
-  border-top: 0;
+  margin: 16px -16px -16px;
+  border: 0;
+  border-top: 1px solid var(--ink);
   color: var(--ink);
-  padding: 12px 16px;
-  font-size: 11px;
+  padding: 13px 16px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
+  line-height: 1.35;
   text-decoration: none;
   text-transform: uppercase;
 }
@@ -471,6 +507,7 @@ a {
 }
 
 .course-leanpub {
+  border-top-color: color-mix(in srgb, var(--card-accent) 60%, var(--ink));
   color: color-mix(in srgb, var(--card-accent) 82%, var(--ink));
 }
 
