@@ -1,6 +1,8 @@
 {
   "edition": "2026.1",
   "release_date": "2026-08-10",
+  "concept_doi": "10.5281/zenodo.21877456",
+  "version_doi": "10.5281/zenodo.21877457",
   "status": "public",
   "courses": 3,
   "languages": ["en", "ru"],
