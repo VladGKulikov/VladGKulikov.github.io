@@ -414,7 +414,8 @@ a {
   background: var(--card-accent);
 }
 
-.course-stepik {
+.course-stepik,
+.course-leanpub {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -429,8 +430,13 @@ a {
   text-transform: uppercase;
 }
 
-.course-stepik:hover {
+.course-stepik:hover,
+.course-leanpub:hover {
   background: color-mix(in srgb, var(--card-accent) 12%, var(--paper-light));
+}
+
+.course-leanpub {
+  color: color-mix(in srgb, var(--card-accent) 82%, var(--ink));
 }
 
 .boundary-note {
@@ -517,7 +523,12 @@ a {
   line-height: 1.15;
 }
 
-.sidebar-head > a {
+.sidebar-course-links {
+  display: grid;
+  gap: 8px;
+}
+
+.sidebar-course-links a {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -525,6 +536,10 @@ a {
   font-size: 11px;
   font-weight: 700;
   text-decoration: none;
+}
+
+.sidebar-course-links a:last-child {
+  color: white;
 }
 
 .drawer-close {

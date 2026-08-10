@@ -71,6 +71,7 @@ const copy = {
       "Сейчас в серии три самостоятельных курса. Каждый можно проходить отдельно; новые курсы и открытые материалы будут добавляться.",
     start: "Открыть курс",
     stepik: "Полный курс на Stepik",
+    leanpub: "PDF / EPUB бесплатно · Поддержать автора",
     modules: "модулей",
     illustrations: "иллюстраций",
     library: "Библиотека",
@@ -115,6 +116,7 @@ const copy = {
       "The series currently includes three independent courses. Each stands on its own; new courses and open materials will be added over time.",
     start: "Open course",
     stepik: "Complete course on Stepik",
+    leanpub: "Free PDF / EPUB · Support the author",
     modules: "modules",
     illustrations: "illustrations",
     library: "Library",
@@ -142,6 +144,21 @@ const courseNumbers: Record<CourseKey, string> = {
   "modern-llms": "01",
   "rl-for-llm": "02",
   "information-theory-for-ml": "03",
+};
+
+const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
+  "modern-llms": {
+    en: "https://leanpub.com/modern-llms",
+    ru: "https://leanpub.com/modern-llms-ru",
+  },
+  "rl-for-llm": {
+    en: "https://leanpub.com/reinforcement-learning-for-llm",
+    ru: "https://leanpub.com/reinforcement-learning-for-llm-ru",
+  },
+  "information-theory-for-ml": {
+    en: "https://leanpub.com/information-theory-for-ml",
+    ru: "https://leanpub.com/information-theory-for-ml-ru",
+  },
 };
 
 function getBaseUrl() {
@@ -428,6 +445,15 @@ export function CourseLibrary() {
                         {t.stepik}
                         <ExternalLink size={15} />
                       </a>
+                      <a
+                        className="course-leanpub"
+                        href={leanpubUrls[course.course_key][language]}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t.leanpub}
+                        <ExternalLink size={15} />
+                      </a>
                     </article>
                   );
                 })}
@@ -452,10 +478,20 @@ export function CourseLibrary() {
               </button>
               <span className="sidebar-course-number">{courseNumbers[activeCourse.course_key]}</span>
               <h2>{activeCourse.title}</h2>
-              <a href={activeCourse.stepik_url} target="_blank" rel="noreferrer">
-                {t.stepik}
-                <ExternalLink size={14} />
-              </a>
+              <div className="sidebar-course-links">
+                <a href={activeCourse.stepik_url} target="_blank" rel="noreferrer">
+                  {t.stepik}
+                  <ExternalLink size={14} />
+                </a>
+                <a
+                  href={leanpubUrls[activeCourse.course_key][language]}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t.leanpub}
+                  <ExternalLink size={14} />
+                </a>
+              </div>
             </div>
             <label className="module-search">
               <Search size={16} />
