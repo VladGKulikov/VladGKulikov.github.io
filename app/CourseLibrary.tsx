@@ -52,19 +52,21 @@ const copy = {
     brand: "Открытые курсы",
     author: "Влад Куликов",
     home: "Главная",
-    eyebrow: "AI / ML · LLM · Образование",
-    heroTitle: "Влад Куликов",
+    eyebrow: "AI / ML · LLM · ОБРАЗОВАНИЕ · ТРИ УГЛУБЛЁННЫХ КУРСА · RU / EN",
+    heroTitle: "ВЛАД КУЛИКОВ",
     heroText:
-      "Lead AI/ML (LLMs) в FinTech. С 2017 года занимаюсь R&D, разработкой ML и GenAI-систем и консультированием бизнеса по внедрению AI.",
+      "AI/ML-инженер и исследователь, AI Function Lead в FinTech. С 2017 года занимаюсь R&D, создаю ML- и GenAI-системы и консультирую компании по внедрению AI.",
     viewCourses: "Перейти к курсам",
     stepikProfile: "Профиль на Stepik",
     linkedIn: "LinkedIn",
     aboutTitle: "О курсах",
     aboutText:
-      "Цель этой серии — систематизировать сложные темы и помочь выстроить их понимание на разной глубине: от инженерной интуиции и реализации в коде до математических принципов каждого механизма.",
+      "Я создаю эти курсы в том виде, которого мне самому не хватало при изучении этих тем: как цельные маршруты от интуиции и математики к реализации и инженерной практике.",
+    aboutAudience:
+      "Для ML-практиков и подготовленных слушателей. Предполагаются базовая вузовская математика и Python.",
     education: "Образование и исследования",
     educationText:
-      "Физтех Харьковского университета; магистратура МФТИ, ФПМИ — «Современные методы искусственного интеллекта». Диссертация и публикации — LLMs, Learning and Reasoning at the Inference Stage.",
+      "Физика — Харьковский университет. Прикладная математика и информатика, специализация «Современные методы искусственного интеллекта» — магистратура МФТИ. Моя диссертация и публикации посвящены LLM — прежде всего обучению и рассуждению моделей на этапе инференса.",
     seriesEyebrow: "Развивающаяся серия",
     seriesTitle: "Текущие курсы",
     seriesText:
@@ -106,19 +108,21 @@ const copy = {
     brand: "Open courses",
     author: "Vlad Kulikov",
     home: "Home",
-    eyebrow: "AI / ML · LLM · Education",
-    heroTitle: "Vlad Kulikov",
+    eyebrow: "AI / ML · LLM · EDUCATION · THREE IN-DEPTH COURSES · EN / RU",
+    heroTitle: "VLAD KULIKOV",
     heroText:
-      "Lead AI/ML (LLMs) in FinTech. Since 2017, I have worked in R&D, built ML and GenAI systems, and advised businesses on AI adoption.",
+      "AI/ML Engineer & Researcher — AI Function Lead in FinTech. Since 2017, I have worked in R&D, built ML and GenAI systems, and advised businesses on AI adoption.",
     viewCourses: "Explore the courses",
     stepikProfile: "Stepik profile",
     linkedIn: "LinkedIn",
     aboutTitle: "About the courses",
     aboutText:
-      "The goal of this series is to organize difficult subjects and make them understandable at several depths—from engineering intuition and code to the mathematical principles behind each mechanism.",
-    education: "Education and research",
+      "I create these courses in the form I wish I had when learning the subjects myself: coherent paths from intuition and mathematics to implementation and engineering practice.",
+    aboutAudience:
+      "For ML practitioners and advanced learners. Basic university mathematics and Python are assumed.",
+    education: "Education and research:",
     educationText:
-      "Physics and Technology at Kharkiv University; MIPT University master's program in Modern Artificial Intelligence. Thesis and publications: LLMs, Learning and Reasoning at the Inference Stage.",
+      "Physics — Kharkiv University; M.Sc. in Applied Mathematics & Computer Science — MIPT University, “Modern State of Artificial Intelligence” program. My thesis and publications focus on LLMs — particularly on learning and reasoning at inference time.",
     seriesEyebrow: "An evolving series",
     seriesTitle: "Current courses",
     seriesText:
@@ -461,6 +465,7 @@ export function CourseLibrary() {
               <div className="about-intro">
                 <p className="eyebrow">{t.aboutTitle}</p>
                 <h2 id="about-title">{t.aboutText}</h2>
+                <p className="about-audience">{t.aboutAudience}</p>
               </div>
             </aside>
           </section>
