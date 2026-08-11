@@ -49,7 +49,7 @@ const courses = content.courses as Course[];
 
 const copy = {
   ru: {
-    brand: "Открытые курсы",
+    brand: "Открытые лекции",
     author: "Влад Куликов",
     home: "Главная",
     eyebrow: "AI / ML · LLM · ОБРАЗОВАНИЕ · ТРИ УГЛУБЛЁННЫХ КУРСА · RU / EN",
@@ -106,7 +106,7 @@ const copy = {
     menu: "Открыть содержание",
   },
   en: {
-    brand: "Open courses",
+    brand: "Public / lectures",
     author: "Vlad Kulikov",
     home: "Home",
     eyebrow: "AI / ML · LLM · EDUCATION · THREE IN-DEPTH COURSES · EN / RU",
@@ -244,12 +244,25 @@ function getBaseUrl() {
   return value.endsWith("/") ? value : `${value}/`;
 }
 
-function parseLocation() {
+function getLanguagePath(language: Language) {
+  return `${getBaseUrl()}${language === "ru" ? "ru/" : ""}`;
+}
+
+function buildLocation(language: Language, courseKey: CourseKey | null, moduleKey: string | null) {
+  const params = new URLSearchParams();
+  if (courseKey) params.set("course", courseKey);
+  if (moduleKey) params.set("module", moduleKey);
+  const query = params.toString();
+  return `${getLanguagePath(language)}${query ? `?${query}` : ""}`;
+}
+
+function parseLocation(fallbackLanguage: Language) {
   if (typeof window === "undefined") {
-    return { language: "en" as Language, courseKey: null, moduleKey: null };
+    return { language: fallbackLanguage, courseKey: null, moduleKey: null };
   }
   const params = new URLSearchParams(window.location.search);
-  const language = params.get("lang") === "ru" ? "ru" : "en";
+  const russianPath = /\/ru\/?$/.test(window.location.pathname);
+  const language = params.get("lang") === "ru" || russianPath ? "ru" : fallbackLanguage;
   const courseKey = params.get("course") as CourseKey | null;
   const moduleKey = params.get("module");
   return { language, courseKey, moduleKey };
@@ -281,8 +294,8 @@ function findInternalModule(href: string | undefined) {
   return `module-${match[1].toLowerCase().padStart(2, "0")}`;
 }
 
-export function CourseLibrary() {
-  const initial = parseLocation();
+export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: Language }) {
+  const initial = parseLocation(initialLanguage);
   const [language, setLanguage] = useState<Language>(initial.language);
   const [courseKey, setCourseKey] = useState<CourseKey | null>(initial.courseKey);
   const [moduleKey, setModuleKey] = useState<string | null>(initial.moduleKey);
@@ -309,11 +322,7 @@ export function CourseLibrary() {
   const updateLocation = useCallback(
     (nextLanguage: Language, nextCourse: CourseKey | null, nextModule: string | null, push = true) => {
       if (typeof window === "undefined") return;
-      const params = new URLSearchParams();
-      params.set("lang", nextLanguage);
-      if (nextCourse) params.set("course", nextCourse);
-      if (nextModule) params.set("module", nextModule);
-      const url = `${window.location.pathname}?${params.toString()}`;
+      const url = buildLocation(nextLanguage, nextCourse, nextModule);
       window.history[push ? "pushState" : "replaceState"]({}, "", url);
     },
     [],
@@ -340,20 +349,19 @@ export function CourseLibrary() {
 
   const switchLanguage = useCallback(() => {
     const nextLanguage: Language = language === "ru" ? "en" : "ru";
-    setLanguage(nextLanguage);
-    updateLocation(nextLanguage, courseKey, moduleKey, false);
-  }, [courseKey, language, moduleKey, updateLocation]);
+    window.location.assign(buildLocation(nextLanguage, courseKey, moduleKey));
+  }, [courseKey, language, moduleKey]);
 
   useEffect(() => {
     const onPopState = () => {
-      const next = parseLocation();
+      const next = parseLocation(initialLanguage);
       setLanguage(next.language);
       setCourseKey(next.courseKey);
       setModuleKey(next.moduleKey);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [initialLanguage]);
 
   useEffect(() => {
     if (!activeModule) {
@@ -657,7 +665,7 @@ export function CourseLibrary() {
                       if (internalModule && activeCourse.modules.some((module) => module.module_key === internalModule)) {
                         return (
                           <a
-                            href={`?lang=${language}&course=${activeCourse.course_key}&module=${internalModule}`}
+                            href={buildLocation(language, activeCourse.course_key, internalModule)}
                             onClick={(event) => {
                               event.preventDefault();
                               openInternalModule(internalModule);
