@@ -270,6 +270,14 @@ a {
   line-height: 1.22;
 }
 
+.about-audience {
+  max-width: 540px;
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
 .catalog {
   max-width: 1280px;
   margin: 0 auto;
