@@ -71,18 +71,18 @@ const copy = {
     seriesTitle: "Текущие курсы",
     seriesText:
       "Сейчас в серии три самостоятельных курса. Каждый можно проходить отдельно; новые курсы и открытые материалы будут добавляться.",
-    start: "Открыть материалы курса",
+    start: "Читать на сайте",
     stepik: "Полный курс на Stepik",
     leanpub: "PDF / EPUB бесплатно · Поддержать автора",
-    openCourseTitle: "Материалы открытого курса",
-    openCourseText: "Полный открытый лекционный материал",
+    openCourseTitle: "Открытая лекционная версия",
+    openCourseText: "Лекции и иллюстрации",
     completeCourseTitle: "Полный курс на Stepik",
-    completeFreeCourseTitle: "Полный бесплатный курс на Stepik",
+    completeFreeCourseTitle: "Полный курс на Stepik · Бесплатно",
     paidPracticeText:
-      "Материалы открытого курса + дополнительные платные практические материалы",
+      "Лекции, тесты, упражнения, решения, проекты и ноутбуки",
     openPracticeText:
-      "Материалы открытого курса + дополнительные открытые практические материалы",
-    bookTitle: "Бесплатные PDF / EPUB",
+      "Лекции, тесты, упражнения, решения, проекты и ноутбуки — всё бесплатно",
+    bookTitle: "PDF / EPUB",
     bookText: "Скачать бесплатно или поддержать автора на Leanpub",
     modules: "модулей",
     pages: "страниц",
@@ -98,8 +98,9 @@ const copy = {
     licenses: "Лицензии",
     citation: "Цитирование",
     edition: "Редакция",
+    boundaryLabel: "Лекционная версия / полный курс",
     boundary:
-      "Открытая версия содержит лекционные тексты и изображения. Полные курсы на Stepik дополняют их тестами, упражнениями, решениями, проектами и вычислительной практикой; условия доступа указаны отдельно для каждого курса.",
+      "Открытая лекционная версия содержит тексты лекций и иллюстрации. Полные курсы на Stepik добавляют тесты, упражнения, решения, проекты и ноутбуки; условия доступа указаны отдельно для каждого курса.",
     allMaterials: "Все материалы",
     noResults: "Ничего не найдено",
     menu: "Открыть содержание",
@@ -127,18 +128,18 @@ const copy = {
     seriesTitle: "Current courses",
     seriesText:
       "The series currently includes three independent courses. Each stands on its own; new courses and open materials will be added over time.",
-    start: "Open course materials",
+    start: "Read online",
     stepik: "Complete course on Stepik",
     leanpub: "Free PDF / EPUB · Support the author",
-    openCourseTitle: "Open course materials",
-    openCourseText: "Full open lecture materials",
+    openCourseTitle: "Open Reader Edition",
+    openCourseText: "Lecture texts and illustrations",
     completeCourseTitle: "Complete course on Stepik",
-    completeFreeCourseTitle: "Complete free course on Stepik",
+    completeFreeCourseTitle: "Complete course on Stepik · Free",
     paidPracticeText:
-      "Open course materials + additional paid practical materials",
+      "Reader Edition plus assessments, exercises, solutions, projects, and notebooks",
     openPracticeText:
-      "Open course materials + additional open practical materials",
-    bookTitle: "Free PDF / EPUB",
+      "Reader Edition plus assessments, exercises, solutions, projects, and notebooks — all free",
+    bookTitle: "PDF / EPUB",
     bookText: "Download free or support the author on Leanpub",
     modules: "modules",
     pages: "pages",
@@ -154,8 +155,9 @@ const copy = {
     licenses: "Licenses",
     citation: "Citation",
     edition: "Edition",
+    boundaryLabel: "Reader Edition / complete course",
     boundary:
-      "The open edition contains lecture text and images. The complete Stepik courses add tests, exercises, solutions, projects, and computational practice; access terms are shown separately for each course.",
+      "The open Reader Edition contains lecture texts and illustrations. The complete Stepik courses add assessments, exercises, solutions, projects, and notebooks; access terms are shown separately for each course.",
     allMaterials: "All materials",
     noResults: "No modules found",
     menu: "Open contents",
@@ -563,7 +565,7 @@ export function CourseLibrary() {
           </section>
 
           <aside className="boundary-note">
-            <span>PUBLIC / LECTURES</span>
+            <span>{t.boundaryLabel}</span>
             <p>{t.boundary}</p>
           </aside>
         </main>
