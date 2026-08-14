@@ -77,7 +77,7 @@ const copy = {
     openCourseTitle: "Открытая лекционная версия",
     openCourseText: "Лекции и иллюстрации",
     completeCourseTitle: "Полный курс на Stepik",
-    completeFreeCourseTitle: "Полный курс на Stepik · Бесплатно",
+    completeFreeCourseTitle: "Полный курс на Stepik - Бесплатно",
     paidPracticeText:
       "Лекции, тесты, упражнения, решения, проекты и ноутбуки",
     openPracticeText:
@@ -134,7 +134,7 @@ const copy = {
     openCourseTitle: "Open Reader Edition",
     openCourseText: "Lecture texts and illustrations",
     completeCourseTitle: "Complete course on Stepik",
-    completeFreeCourseTitle: "Complete course on Stepik · Free",
+    completeFreeCourseTitle: "Complete course on Stepik - Free",
     paidPracticeText:
       "Reader Edition plus assessments, exercises, solutions, projects, and notebooks",
     openPracticeText:
