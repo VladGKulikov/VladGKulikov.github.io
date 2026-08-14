@@ -17,7 +17,7 @@ The repository contains lecture text and illustrations only. Quizzes, exercises,
 | Course | English | Russian |
 |---|---|---|
 | Modern LLMs | <https://stepik.org/a/294814> | <https://stepik.org/a/294813> |
-| RL for LLM | <https://stepik.org/a/294393> | <https://stepik.org/a/293294> |
+| RL for LLM | <https://stepik.org/296686> | <https://stepik.org/296688> |
 | Information Theory for ML | <https://stepik.org/295409> | <https://stepik.org/295411> |
 
 ## What the complete Stepik courses add

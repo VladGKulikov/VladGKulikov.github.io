@@ -493,7 +493,8 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                 .filter((course) => course.language === language)
                 .map((course) => {
                   const imageCount = course.modules.reduce((sum, module) => sum + module.image_count, 0);
-                  const isFullyOpen = course.course_key === "information-theory-for-ml";
+                  const isFullyOpen =
+                    course.course_key === "information-theory-for-ml" || course.course_key === "rl-for-llm";
                   return (
                     <article className="course-card" key={course.course_key} data-accent={course.course_key}>
                       <div className="course-card-top">
