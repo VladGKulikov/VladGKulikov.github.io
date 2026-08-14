@@ -77,7 +77,7 @@ const copy = {
     openCourseTitle: "Открытая лекционная версия",
     openCourseText: "Лекции и иллюстрации",
     completeCourseTitle: "Полный курс на Stepik",
-    completeFreeCourseTitle: "Полный курс на Stepik - Бесплатно",
+    completeFreeCourseTitle: "Полный курс на Stepik · Бесплатно",
     paidPracticeText:
       "Лекции, тесты, упражнения, решения, проекты и ноутбуки",
     openPracticeText:
@@ -134,7 +134,7 @@ const copy = {
     openCourseTitle: "Open Reader Edition",
     openCourseText: "Lecture texts and illustrations",
     completeCourseTitle: "Complete course on Stepik",
-    completeFreeCourseTitle: "Complete course on Stepik - Free",
+    completeFreeCourseTitle: "Complete course on Stepik · Free",
     paidPracticeText:
       "Reader Edition plus assessments, exercises, solutions, projects, and notebooks",
     openPracticeText:
@@ -184,6 +184,8 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
     ru: "https://leanpub.com/information-theory-for-ml-ru",
   },
 };
+
+const fullyOpenCourseKeys = new Set<CourseKey>(["rl-for-llm", "information-theory-for-ml"]);
 
 const coursePageCounts: Record<CourseKey, Record<Language, number>> = {
   "modern-llms": {
@@ -493,8 +495,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                 .filter((course) => course.language === language)
                 .map((course) => {
                   const imageCount = course.modules.reduce((sum, module) => sum + module.image_count, 0);
-                  const isFullyOpen =
-                    course.course_key === "information-theory-for-ml" || course.course_key === "rl-for-llm";
+                  const isFullyOpen = fullyOpenCourseKeys.has(course.course_key);
                   return (
                     <article className="course-card" key={course.course_key} data-accent={course.course_key}>
                       <div className="course-card-top">
