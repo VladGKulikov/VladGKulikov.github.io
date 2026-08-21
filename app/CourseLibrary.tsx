@@ -185,7 +185,11 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
   },
 };
 
-const fullyOpenCourseKeys = new Set<CourseKey>(["rl-for-llm", "information-theory-for-ml"]);
+const fullyOpenCourseKeys = new Set<CourseKey>([
+  "modern-llms",
+  "rl-for-llm",
+  "information-theory-for-ml",
+]);
 
 const coursePageCounts: Record<CourseKey, Record<Language, number>> = {
   "modern-llms": {

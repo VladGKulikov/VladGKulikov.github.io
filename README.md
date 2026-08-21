@@ -16,7 +16,7 @@ The repository contains lecture text and illustrations only. Quizzes, exercises,
 
 | Course | English | Russian |
 |---|---|---|
-| Modern LLMs | <https://stepik.org/a/294814> | <https://stepik.org/a/294813> |
+| Modern LLMs | <https://stepik.org/297276> | <https://stepik.org/297275> |
 | RL for LLM | <https://stepik.org/296686> | <https://stepik.org/296688> |
 | Information Theory for ML | <https://stepik.org/295409> | <https://stepik.org/295411> |
 
@@ -26,7 +26,7 @@ This repository is the open lecture reader. The complete Stepik editions add the
 
 | Course | Additional assessment and practice on Stepik |
 |---|---|
-| Modern LLMs | 299 auto-graded questions; 137 self-checks; 65 analytical and computational exercises; 36 project exercises; 19 main, 17 project-demo, and 4 Capstone notebooks |
+| Modern LLMs | 299 auto-graded questions; 137 self-checks; 65 analytical and computational exercises; 36 project exercises; 19 main, 17 project-demo, and 4 Capstone notebooks. The complete course is free on Stepik |
 | Reinforcement Learning for LLM | 109 native Stepik tests; 151 self-checks; 77 analytical and computational tasks; 77 programming tasks; 13 notebooks |
 | Information Theory for ML | 377 auto-graded questions; all 78 exercises with detailed solutions, including 12 Python exercises. The complete course is free on Stepik |
 
