@@ -9,6 +9,7 @@
   --accent: #e75033;
   --accent-soft: #f4c6b8;
   --sidebar: #22221f;
+  --reader-header-height: 72px;
 }
 
 * {
@@ -745,6 +746,7 @@ a {
 .reading-column {
   grid-column: 2;
   min-width: 0;
+  overflow-wrap: anywhere;
   border-right: 1px solid var(--line);
   background: var(--paper-light);
   padding: 64px clamp(34px, 5vw, 76px) 80px;
@@ -754,11 +756,16 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   color: var(--accent);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.reading-meta > :last-child {
+  flex-shrink: 0;
 }
 
 .reading-title {
@@ -912,6 +919,8 @@ a {
 
 .table-scroll {
   overflow-x: auto;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
   margin: 1.8em 0;
   border: 1px solid var(--line);
 }
@@ -943,7 +952,14 @@ a {
 .katex-display {
   overflow-x: auto;
   overflow-y: hidden;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
   padding: 0.5em 0;
+}
+
+.katex-display > .katex {
+  width: max-content;
+  min-width: 100%;
 }
 
 .module-pagination {
@@ -1071,10 +1087,14 @@ a {
   .toc-rail {
     position: fixed;
     z-index: 100;
-    top: 72px;
+    top: var(--reader-header-height);
     right: 0;
     display: none;
     width: min(88vw, 320px);
+    height: calc(100vh - var(--reader-header-height));
+    height: calc(100dvh - var(--reader-header-height));
+    overscroll-behavior-y: contain;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
     background: var(--paper-light);
     box-shadow: -12px 0 32px rgba(0, 0, 0, 0.12);
   }
@@ -1088,8 +1108,8 @@ a {
     top: 16px;
     right: 16px;
     display: grid;
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
     place-items: center;
     border: 1px solid var(--line);
     background: transparent;
@@ -1101,7 +1121,8 @@ a {
     position: fixed;
     z-index: 90;
     display: block;
-    inset: 0;
+    inset: var(--reader-header-height) 0 0;
+    touch-action: none;
     border: 0;
     background: rgba(0, 0, 0, 0.5);
   }
@@ -1112,6 +1133,10 @@ a {
 }
 
 @media (max-width: 900px) {
+  :root {
+    --reader-header-height: 64px;
+  }
+
   .topbar {
     min-height: 64px;
     padding: 0 18px;
@@ -1136,8 +1161,19 @@ a {
   }
 
   .toc-rail {
-    top: 64px;
-    height: calc(100vh - 64px);
+    padding-top: 72px;
+  }
+
+  .toc-rail nav {
+    gap: 0;
+  }
+
+  .toc-rail a {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
   }
 
   .hero {
@@ -1170,11 +1206,13 @@ a {
   .course-sidebar {
     position: fixed;
     z-index: 100;
-    top: 0;
+    top: var(--reader-header-height);
     bottom: 0;
     left: 0;
     width: min(88vw, 340px);
-    height: 100vh;
+    height: calc(100vh - var(--reader-header-height));
+    height: calc(100dvh - var(--reader-header-height));
+    overscroll-behavior-y: contain;
     visibility: hidden;
     transform: translateX(-105%);
     transition: transform 220ms ease;
@@ -1190,8 +1228,8 @@ a {
     top: 18px;
     right: 18px;
     display: grid;
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
     place-items: center;
     border: 1px solid #4a4a44;
     background: transparent;
@@ -1202,7 +1240,8 @@ a {
     position: fixed;
     z-index: 90;
     display: block;
-    inset: 0;
+    inset: var(--reader-header-height) 0 0;
+    touch-action: none;
     border: 0;
     background: rgba(0, 0, 0, 0.5);
   }
@@ -1213,6 +1252,46 @@ a {
 
   .lecture-prose {
     font-size: 17px;
+  }
+
+  .sidebar-head {
+    padding: 18px 20px 16px;
+  }
+
+  .sidebar-course-number {
+    margin: 18px 0 8px;
+    font-size: 30px;
+  }
+
+  .sidebar-head h2 {
+    font-size: 22px;
+  }
+
+  .module-list {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .module-list button {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 500px) {
+  .sidebar-head {
+    padding: 12px 20px;
+  }
+
+  .sidebar-course-number {
+    display: none;
+  }
+
+  .sidebar-head h2 {
+    margin: 12px 0 10px;
+    font-size: 20px;
+  }
+
+  .sidebar-course-links {
+    gap: 4px;
   }
 }
 

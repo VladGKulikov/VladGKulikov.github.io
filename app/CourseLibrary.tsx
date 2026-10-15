@@ -348,6 +348,25 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [drawerOpen, tocDrawerOpen]);
 
+  useEffect(() => {
+    if (!drawerOpen && !tocDrawerOpen) return;
+    const modulesScreen = window.matchMedia("(max-width: 900px)");
+    const outlineScreen = window.matchMedia("(max-width: 1180px)");
+    const previousOverflow = document.body.style.overflow;
+    const update = () => {
+      const overlayOpen = (drawerOpen && modulesScreen.matches) || (tocDrawerOpen && outlineScreen.matches);
+      document.body.style.overflow = overlayOpen ? "hidden" : previousOverflow;
+    };
+    update();
+    modulesScreen.addEventListener("change", update);
+    outlineScreen.addEventListener("change", update);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      modulesScreen.removeEventListener("change", update);
+      outlineScreen.removeEventListener("change", update);
+    };
+  }, [drawerOpen, tocDrawerOpen]);
+
   const updateLocation = useCallback(
     (nextLanguage: Language, nextCourse: CourseKey | null, nextModule: string | null, push = true) => {
       if (typeof window === "undefined") return;

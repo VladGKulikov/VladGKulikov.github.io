@@ -1,0 +1,115 @@
+{
+  "status": "PASS",
+  "documents": 98,
+  "layoutViewport": {
+    "width": 320,
+    "height": 740
+  },
+  "additionalPortraitWidths": [
+    360,
+    390
+  ],
+  "landscapeViewport": {
+    "width": 740,
+    "height": 360
+  },
+  "layoutFailures": 0,
+  "horizontalScrollChecks": [
+    {
+      "course": "modern-llms",
+      "kind": "table-scroll",
+      "pass": true
+    },
+    {
+      "course": "modern-llms",
+      "kind": "math-scroll",
+      "pass": true
+    },
+    {
+      "course": "rl-for-llm",
+      "kind": "table-scroll",
+      "pass": true
+    },
+    {
+      "course": "rl-for-llm",
+      "kind": "math-scroll",
+      "pass": true
+    },
+    {
+      "course": "information-theory-for-ml",
+      "kind": "table-scroll",
+      "pass": true
+    },
+    {
+      "course": "information-theory-for-ml",
+      "kind": "math-scroll",
+      "pass": true
+    }
+  ],
+  "menuChecks": [
+    {
+      "course": "modern-llms",
+      "checks": 12,
+      "failures": 0
+    },
+    {
+      "course": "rl-for-llm",
+      "checks": 12,
+      "failures": 0
+    },
+    {
+      "course": "information-theory-for-ml",
+      "checks": 12,
+      "failures": 0
+    }
+  ],
+  "landscapeChecks": [
+    {
+      "course": "information-theory-for-ml",
+      "kind": "landscape-menu",
+      "lastBottom": 336.09597396850586,
+      "lastTop": 288.0959777832031,
+      "listHeight": 89,
+      "panelBottom": 360.1799850463867,
+      "pass": true,
+      "screen": 360
+    },
+    {
+      "course": "modern-llms",
+      "kind": "landscape-menu",
+      "lastBottom": 335.81997299194336,
+      "listHeight": 112,
+      "panelBottom": 360.1799850463867,
+      "pass": true
+    },
+    {
+      "course": "modern-llms",
+      "kind": "landscape-outline",
+      "lastBottom": 336.23998260498047,
+      "panelBottom": 360.1799850463867,
+      "pass": true
+    },
+    {
+      "course": "rl-for-llm",
+      "kind": "landscape-menu",
+      "lastBottom": 336.25197982788086,
+      "listHeight": 112,
+      "panelBottom": 360.1799850463867,
+      "pass": true
+    },
+    {
+      "course": "rl-for-llm",
+      "kind": "landscape-outline",
+      "lastBottom": 336.8159713745117,
+      "panelBottom": 360.1799850463867,
+      "pass": true
+    },
+    {
+      "course": "information-theory-for-ml",
+      "kind": "landscape-outline",
+      "lastBottom": 223.8959846496582,
+      "panelBottom": 360.1799850463867,
+      "pass": true
+    }
+  ]
+}
