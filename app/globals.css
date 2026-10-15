@@ -145,6 +145,11 @@ a {
   border-color: var(--ink);
 }
 
+.top-actions .language-toggle:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
 .mobile-menu,
 .mobile-right-toggle {
   display: none !important;
@@ -548,6 +553,7 @@ a {
 }
 
 .reader-layout {
+  overflow-anchor: none;
   --reader-left: 312px;
   --reader-right: 220px;
   --reader-text: 850px;

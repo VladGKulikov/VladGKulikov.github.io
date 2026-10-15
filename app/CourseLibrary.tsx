@@ -16,13 +16,14 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import publication from "../PUBLICATION.json";
 import content from "./generated/content.json";
+import { captureReadingPosition, restoreReadingPosition, type ReadingPosition } from "./reading-position";
 
 type Language = "ru" | "en";
 type CourseKey = "modern-llms" | "rl-for-llm" | "information-theory-for-ml";
@@ -281,7 +282,7 @@ function parseLocation(fallbackLanguage: Language) {
   }
   const params = new URLSearchParams(window.location.search);
   const russianPath = /\/ru\/?$/.test(window.location.pathname);
-  const language = params.get("lang") === "ru" || russianPath ? "ru" : fallbackLanguage;
+  const language: Language = params.get("lang") === "ru" || russianPath ? "ru" : "en";
   const courseKey = params.get("course") as CourseKey | null;
   const moduleKey = params.get("module");
   return { language, courseKey, moduleKey };
@@ -326,6 +327,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [tocHidden, setTocHidden] = useState(false);
   const [tocDrawerOpen, setTocDrawerOpen] = useState(false);
+  const pendingReadingPosition = useRef<ReadingPosition | null>(null);
   const t = copy[language];
 
   const activeCourse = useMemo(
@@ -364,6 +366,8 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
 
   const selectModule = useCallback(
     (nextCourse: CourseKey, nextModule: string, push = true) => {
+      pendingReadingPosition.current = null;
+      if (nextCourse !== courseKey || nextModule !== moduleKey) setMarkdown("");
       setCourseKey(nextCourse);
       setModuleKey(nextModule);
       setDrawerOpen(false);
@@ -371,10 +375,12 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
       updateLocation(language, nextCourse, nextModule, push);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [language, updateLocation],
+    [courseKey, language, moduleKey, updateLocation],
   );
 
   const goHome = useCallback(() => {
+    pendingReadingPosition.current = null;
+    setMarkdown("");
     setCourseKey(null);
     setModuleKey(null);
     setDrawerOpen(false);
@@ -385,19 +391,24 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
 
   const switchLanguage = useCallback(() => {
     const nextLanguage: Language = language === "ru" ? "en" : "ru";
-    window.location.assign(buildLocation(nextLanguage, courseKey, moduleKey));
-  }, [courseKey, language, moduleKey]);
+    pendingReadingPosition.current = captureReadingPosition();
+    setLanguage(nextLanguage);
+    updateLocation(nextLanguage, courseKey, moduleKey);
+  }, [courseKey, language, moduleKey, updateLocation]);
 
   useEffect(() => {
     const onPopState = () => {
       const next = parseLocation(initialLanguage);
+      pendingReadingPosition.current = next.language !== language && next.courseKey === courseKey && next.moduleKey === moduleKey
+        ? captureReadingPosition() : null;
+      if (next.courseKey !== courseKey || next.moduleKey !== moduleKey) setMarkdown("");
       setLanguage(next.language);
       setCourseKey(next.courseKey);
       setModuleKey(next.moduleKey);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [initialLanguage]);
+  }, [initialLanguage, language, courseKey, moduleKey]);
 
   useEffect(() => {
     if (!activeModule) {
@@ -412,13 +423,56 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.text();
       })
-      .then((value) => setMarkdown(value))
-      .catch((error) => {
-        if (error.name !== "AbortError") setLoadError(true);
+      .then((value) => {
+        if (!controller.signal.aborted) setMarkdown(value);
       })
-      .finally(() => setLoading(false));
+      .catch((error) => {
+        if (!controller.signal.aborted && error.name !== "AbortError") setLoadError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
     return () => controller.abort();
   }, [activeModule]);
+
+  useLayoutEffect(() => {
+    const position = pendingReadingPosition.current;
+    const prose = document.querySelector(".lecture-prose");
+    if (!position || loading || loadError || !markdown || !prose) return;
+    let stopped = false;
+    let timeout: number | undefined;
+    let frame: number | undefined;
+    const restore = () => {
+      if (!stopped && pendingReadingPosition.current === position) restoreReadingPosition(position);
+    };
+    const observer = new ResizeObserver(restore);
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      if (pendingReadingPosition.current === position) pendingReadingPosition.current = null;
+      observer.disconnect();
+      window.clearTimeout(timeout);
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+      for (const event of ["wheel", "touchstart", "pointerdown", "keydown"]) window.removeEventListener(event, stop);
+    };
+    restore();
+    observer.observe(prose);
+    // Load pictures above the reading position before the final adjustment.
+    // Stop correcting as soon as the reader interacts with the page.
+    const pictures = Array.from(prose.querySelectorAll("img"))
+      .filter((picture) => picture.getBoundingClientRect().top < window.innerHeight);
+    for (const picture of pictures) picture.loading = "eager";
+    for (const event of ["wheel", "touchstart", "pointerdown", "keydown"]) window.addEventListener(event, stop, { passive: true });
+    timeout = window.setTimeout(stop, 5000);
+    void Promise.allSettled([...pictures.map((picture) => picture.decode()), document.fonts.ready]).then(() => {
+      if (stopped) return;
+      frame = window.requestAnimationFrame(() => {
+        restore();
+        stop();
+      });
+    });
+    return stop;
+  }, [markdown, loading, loadError]);
 
   const visibleModules = useMemo(() => {
     if (!activeCourse) return [];
@@ -519,7 +573,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
             <Code2 size={17} />
             <span className="desktop-label">GitHub</span>
           </a>
-          <button className="language-toggle" onClick={switchLanguage} aria-label="Switch language">
+          <button className="language-toggle" onClick={switchLanguage} aria-label="Switch language" disabled={loading}>
             <Languages size={17} />
             {language === "ru" ? "EN" : "RU"}
           </button>
@@ -734,10 +788,10 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
               <span style={{ width: `${((moduleIndex + 1) / activeCourse.modules.length) * 100}%` }} />
             </div>
 
-            {loading && <div className="lecture-state">{t.loading}</div>}
+            {loading && !markdown && <div className="lecture-state">{t.loading}</div>}
             {loadError && <div className="lecture-state error">{t.error}</div>}
-            {!loading && !loadError && (
-              <div className="lecture-prose">
+            {markdown && !loadError && (
+              <div className="lecture-prose" aria-busy={loading}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkMath]}
                   rehypePlugins={[rehypeKatex]}
