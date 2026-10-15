@@ -174,7 +174,7 @@ The factor of two counts one multiplication and one addition per participating m
 
 It excludes context-dependent attention, routing, normalization, sampling, communication, and poor hardware utilization.
 
-**<strong>Second pass: training compute</strong>**
+**Second pass: training compute**
 
 Training uses a different approximation,
 
@@ -202,7 +202,7 @@ This is why MoE cards often report two sizes:
 - **total parameters**: the full bank that the system must store and make available;
 - **active parameters**: a declared or reconstructed convention for the path used by one token.
 
-**<strong>Second pass: active-count conventions and expert geometry</strong>**
+**Second pass: active-count conventions and expert geometry**
 
 The active count depends on how operations are charged. An input embedding maps an ID to a vector; the output projection maps a model vector to scores for all next-token IDs. Module 2 develops both operations. Some cards include the full vocabulary projection, others report only the Transformer core; an input embedding may be charged as a row lookup rather than a full active matrix. A precise passport names the convention.
 
@@ -302,7 +302,7 @@ Context-window numbers look simple—128K, 1M, 10M—but encode at least three c
 ![VIZ m1/04 — context-window growth](assets/modern-llms/en/module-01/m1_04_context_growth.png)
 *Selected declared context windows, 2019–2026. A logarithmic axis shows the range of advertised capacities; the points say nothing about answer quality, latency, or cost.*
 
-**<strong>Second pass: the memory cost of context</strong>**
+**Second pass: the memory cost of context**
 
 Attention reads earlier positions through key and value vectors retained in a KV cache. Multiple attention heads can perform these operations in parallel. Grouped-Query Attention (GQA) shares keys and values across groups of query heads, so storage depends on the KV-head count. For a conventional cache, bytes per token across all cached layers are
 
@@ -509,7 +509,7 @@ A modern model race cannot be summarized by one bar chart. One result may use a 
 | **Private golden set** | relevance to your data, risks, and SLO | maintenance cost and leakage |
 | **Production telemetry** | utility, latency, errors, and cost in operation | selection effects, incomplete quality labels, and evidence arriving after deployment |
 
-**<strong>Optional case: how the environment changes an evaluation</strong>**
+**Optional case: how the environment changes an evaluation**
 
 ### 15.1. The OpenAI–Hugging Face incident: reading the completed reports
 
@@ -680,7 +680,7 @@ print(passport(config))
 
 The result reports GQA with 64 query and 8 KV heads, MoE with 32 experts and top-4 selection, a 131,072-position context, and a 201,088-entry vocabulary. These fields identify supported configuration conventions, not measured quality. Change the KV-head count to 3: validation should reject it. The notebook adds strict JSON checks and full parameter accounting.
 
-**<strong>Optional case: loading a primary source</strong>**
+**Optional case: loading a primary source**
 
 ```python
 import json

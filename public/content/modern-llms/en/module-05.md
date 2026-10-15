@@ -99,7 +99,7 @@ Approximate invariance requires both $\operatorname{mean}(x^2)\gg\epsilon$ and $
 
 FP16 squaring can overflow or underflow **before** reduction. Promoting only the mean cannot restore lost information; promote the input before squaring. Our bridge works in at least FP32 and preserves FP64 inputs. A model implementation may choose a different contract: gpt-oss explicitly uses FP32.
 
-**<strong>Second pass: RMSNorm from NumPy to PyTorch, including gradients</strong>**
+**Second pass: RMSNorm from NumPy to PyTorch, including gradients**
 
 ### NumPy → PyTorch · B07 — RMSNorm: reduction, dtype, and autograd
 
@@ -172,7 +172,7 @@ def torch_rms_norm(x: torch.Tensor, weight: torch.Tensor | None = None, *, eps: 
 | Accumulation | float64 reference | explicit path: at least FP32; check API separately |
 | Gradient | none | checked with `gradcheck` |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 rng = np.random.default_rng(7)
@@ -318,7 +318,7 @@ For the diagnostic slice $g=u=z$, the product before the down projection is:
 
 A gate-factor curve alone cannot reproduce the product table. At $z=-9$, a small negative gate factor multiplies $-6$, giving a small positive product. At 7 and 9 the two clamped inputs coincide exactly.
 
-**<strong>Second pass: stable activation code and gradient checks</strong>**
+**Second pass: stable activation code and gradient checks**
 
 ### NumPy → PyTorch · B08 — SwiGLU and a bounded variant
 
@@ -401,7 +401,7 @@ NumPy uses `logaddexp` for a stable sigmoid; PyTorch uses `torch.sigmoid`, retai
 | Standard SwiGLU | no limits, `shift_up=0` | same contract |
 | Gradients | none | autograd; clamp kinks are tested separately |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 rng = np.random.default_rng(8)
@@ -514,7 +514,7 @@ On a second pass, follow an input matrix `x[T, d]` through this listing. The gat
 
 RMSNorm promotes low-precision values before squaring, and the sigmoid is evaluated in a stable form. The two FFN functions differ only in the activation between the projections: ordinary SwiGLU or the clamped gpt-oss variant. `PreNormStep` receives an attention function that must return the input shape; the notebook supplies the full GQA implementation.
 
-**<strong>Second pass: RMSNorm, two FFNs, and sequential residual updates</strong>**
+**Second pass: RMSNorm, two FFNs, and sequential residual updates**
 
 ```python
 import math

@@ -203,7 +203,7 @@ The explicit kernel assumes matching one-dimensional p and q vectors with at lea
 | Sampling | outside the mathematical kernel | `torch.rand` / `multinomial` with a generator |
 | Test | exact reconstruction of p | Monte Carlo plus algebraic parity |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 p_np = np.array([0.40,0.30,0.15,0.10,0.05]); q_np = np.array([0.25,0.35,0.20,0.10,0.10])
@@ -524,7 +524,7 @@ The explicit kernel assumes finite real floating arrays with nonempty axes; use 
 | Code | `argmin` over the grid | `argmin(dim=-1)` |
 | Result | dequantized array | dequantized tensor, not packed bits |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 rng = np.random.default_rng(19)

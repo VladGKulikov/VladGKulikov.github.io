@@ -83,7 +83,7 @@ $$
 
 For dense IDs, $R$ equals the number of vocabulary entries. Holes make those quantities different (§9). A complete archive must also store the vocabulary, merge rules, and metadata. LLM engineering usually cares first about shortening the sequence the network processes.
 
-**<strong>Optional detail: distribution mismatch and the word2vec connection</strong>**
+**Optional detail: distribution mismatch and the word2vec connection**
 
 If a source emits $x$ with probability $p(x)$ but a probabilistic code uses $q(x)$, its ideal expected length is
 

@@ -379,7 +379,11 @@ def sanitize_markdown(
     markdown = remove_internal_markup(markdown)
     # ReactMarkdown does not execute raw HTML. Preserve optional explanations
     # and their labels as ordinary Markdown instead of dropping <summary> text.
-    markdown = re.sub(r"<summary>(.*?)</summary>", r"**\1**", markdown, flags=re.DOTALL | re.IGNORECASE)
+    def summary_label(match: re.Match[str]) -> str:
+        label = re.sub(r"</?strong\b[^>]*>", "", match.group(1), flags=re.IGNORECASE).strip()
+        return f"**{label}**"
+
+    markdown = re.sub(r"<summary>(.*?)</summary>", summary_label, markdown, flags=re.DOTALL | re.IGNORECASE)
     markdown = re.sub(r"</?details\b[^>]*>", "", markdown, flags=re.IGNORECASE)
     markdown = normalize_math_delimiters(markdown)
     markdown = remove_notebook_routes(
@@ -487,6 +491,7 @@ def module_document(
         "title": title,
         "source_file": source_file.relative_to(source_root).as_posix(),
         "content_file": relative_path.as_posix(),
+        "content_hash": hashlib.sha256(markdown.encode("utf-8")).hexdigest(),
         "markdown": markdown,
         "characters": len(markdown),
         "image_count": len(MARKDOWN_IMAGE_RE.findall(markdown)) + len(HTML_IMAGE_RE.findall(markdown)),
@@ -661,7 +666,7 @@ def course_catalog(documents: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
                     "modules": [
                         {
                             key: module[key]
-                            for key in ("id", "module_key", "position", "title", "content_file", "characters", "image_count")
+                            for key in ("id", "module_key", "position", "title", "content_file", "content_hash", "characters", "image_count")
                         }
                         for module in modules
                     ],
@@ -674,7 +679,10 @@ def validate_output(documents: list[dict[str, Any]], context: BuildContext) -> d
     notebook_leaks = []
     private_headings = []
     math_delimiter_issues = []
+    html_formatting_leaks = []
     for document in documents:
+        if re.search(r"</?(?:summary|details|strong)\b", document["markdown"], re.IGNORECASE):
+            html_formatting_leaks.append(document["id"])
         if NOTEBOOK_ROUTE_RE.search(document["markdown"]):
             notebook_leaks.append(document["id"])
         for heading in H2_RE.findall(document["markdown"]):
@@ -691,6 +699,7 @@ def validate_output(documents: list[dict[str, Any]], context: BuildContext) -> d
         and not private_headings
         and not context.missing_assets
         and not math_delimiter_issues
+        and not html_formatting_leaks
         else "REVIEW",
         "documents": len(documents),
         "assets": len(context.copied_assets),
@@ -698,6 +707,7 @@ def validate_output(documents: list[dict[str, Any]], context: BuildContext) -> d
         "private_headings": private_headings,
         "missing_assets": context.missing_assets,
         "math_delimiter_issues": math_delimiter_issues,
+        "html_formatting_leaks": html_formatting_leaks,
         "removed_notebook_blocks": len(context.removed_notebook_blocks),
         "omitted_private_sections": len(context.omitted_sections),
     }

@@ -232,7 +232,7 @@ Phase construction and rotation use at least float32 before conversion back to t
 | Precision | float64 calculation and output | float32/64 phases; output keeps input dtype |
 | Absolute position | explicit `position_ids` | must agree with cached-key positions |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 rng = np.random.default_rng(2)

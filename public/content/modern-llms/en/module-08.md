@@ -405,7 +405,7 @@ AdamW remains a strong and well-understood baseline. Its practical advantage is 
 
 The learning rate $\eta_t$ controls the overall step size. Momentum carries a decaying history of gradients, smoothing changes in direction. Weight decay shrinks the parameters themselves. AdamW applies that shrinkage separately from its adaptive gradient scaling, so adding an L2 penalty to the loss generally produces a different update.
 
-**<strong>Second pass: trace one AdamW step</strong>**
+**Second pass: trace one AdamW step**
 
 Write $\theta_{t-1}$ for the parameters and $g_t$ for the loss gradient. Initialize two running averages at $m_0=v_0=0$, with decay coefficients $\beta_1,\beta_2\in[0,1)$. All operations are coordinate-wise:
 

@@ -490,7 +490,7 @@ The tensor version validates dtype and device, then owns the retained window. Th
 | Rollback | truncates the retained suffix | same contract |
 | Storage allocation | reference container with copying | engines usually use a buffer or block pool |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 np_cache = NumpyKVCacheExplicit(window=3); t_cache = TorchKVCacheExplicit(window=3)

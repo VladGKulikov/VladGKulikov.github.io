@@ -237,7 +237,7 @@ This separation is broadly useful: a system can have one quantity for *who is el
 
 Top-k indices are discrete. While membership stays fixed, selected mixture weights can carry gradients. With renormalized top-1, the single gate is identically one and this path cannot train the router. Gate normalization and other learning signals must therefore be inspected together; not every top-1 architecture renormalizes its selected gate to one.
 
-**<strong>Implementation and checks: B09</strong>**
+**Implementation and checks: B09**
 
 ### NumPy → PyTorch · B09 — Top-k MoE: expert selection and mixture weights
 
@@ -311,7 +311,7 @@ PyTorch uses log-sigmoid, topk, and gather, promoting FP16/BF16 to FP32. Gradien
 | Bias | selection only | same contract |
 | Ties | stable reference sort | ordering is not guaranteed |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 logits_np = np.array([[2.1, -0.4, 0.8, 1.3], [0.2, 1.9, -1.1, 0.7]])
@@ -565,7 +565,7 @@ def router_z_loss(logits: Any) -> float:
     return float(np.mean(log_partition**2))
 ```
 
-**<strong>Implementation and checks: B10</strong>**
+**Implementation and checks: B10**
 
 ### NumPy → PyTorch · B10 — MoE dispatch and combine
 
@@ -640,7 +640,7 @@ PyTorch changes the execution order: assignments are batched per expert, then re
 | Autograd | none | through expert matmul and combine |
 | CUDA determinism | CPU reference | `index_add_` may depend on atomic-add ordering |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 rng = np.random.default_rng(10)

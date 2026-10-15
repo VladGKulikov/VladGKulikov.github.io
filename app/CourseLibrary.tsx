@@ -34,6 +34,7 @@ type Module = {
   position: number;
   title: string;
   content_file: string;
+  content_hash: string;
   characters: number;
   image_count: number;
 };
@@ -418,7 +419,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     const controller = new AbortController();
     setLoading(true);
     setLoadError(false);
-    fetch(`${getBaseUrl()}content/${activeModule.content_file}?v=${publication.content_updated}`, { signal: controller.signal })
+    fetch(`${getBaseUrl()}content/${activeModule.content_file}?v=${activeModule.content_hash}`, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.text();

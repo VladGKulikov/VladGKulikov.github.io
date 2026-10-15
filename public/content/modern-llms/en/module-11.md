@@ -210,7 +210,7 @@ Use nonnegative `np.int64` / `torch.long` IDs and a boolean mask of the same sha
 | Shape | must match the mask | validated before the operation |
 | Autograd | not applicable to integer labels | loss differentiates logits, not labels |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 ids_np = np.array([10,11,12,13,14,15]); mask_np = np.array([0,0,0,1,1,1], dtype=bool)
@@ -356,7 +356,7 @@ PyTorch builds the same `run_ids`, mask, and positions on the tensor device. Con
 | Padding | segment `-1` is forbidden | same contract |
 | Regression | change A; B stays fixed | SDPA checks B logits/output |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 segments_np = np.array([0,0,0,1,1,1,-1]); np_pos = numpy_segment_position_ids(segments_np); np_mask = numpy_block_causal_mask(segments_np)
@@ -521,7 +521,7 @@ With $p_{\mathrm{correct}}=0.3$, $s=0.9$, and $f=0.1$, the accepted mass is $0.2
 
 The table's final column measures retained examples per generation when at most one answer is kept. It divides coverage by the $N$ generations paid for; it does not estimate the correctness of the selected answer.
 
-**<strong>Second pass: pairwise correlation does not determine coverage</strong>**
+**Second pass: pairwise correlation does not determine coverage**
 
 Take three candidates and assign their success count $K$ the probabilities $P(K=0,1,2,3)=(0.1,0.5,0.2,0.2)$. Conditional on $K$, choose successful positions uniformly. Every candidate then has success probability $E[K]/3=0.5$. Each pair succeeds jointly with probability $E[K(K-1)]/6=4/15>1/4$, so pairwise correlations are positive. Yet coverage is 0.9, **above** the independent value $1-0.5^3=0.875$. The complete joint law matters. At the other extreme, perfectly identical outcomes leave coverage unchanged as candidates are added. The notebook checks both cases.
 

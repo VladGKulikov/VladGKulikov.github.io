@@ -100,7 +100,7 @@ Without scaling, the typical logit magnitude grows as $\sqrt{d_h}$ and softmax b
 
 A fully masked row has no probability distribution. Stable softmax implementations usually subtract the row maximum; for all-$-\infty$ input, that already creates $-\infty-(-\infty)$ and can propagate NaNs. An API must choose a policy: reject the mask, return a defined zero output for known padding rows, or supply a finite extra score with a zero value (the learned sink in §10). The notebook tests all three cases explicitly.
 
-**<strong>Implementation pass: NumPy → PyTorch → API</strong>**
+**Implementation pass: NumPy → PyTorch → API**
 
 ### NumPy → PyTorch · B04 — SDPA line by line
 
@@ -210,7 +210,7 @@ The one-line API hands the same operator to PyTorch's dispatcher, which may sele
 | Dropout | none | evaluation must pass `dropout_p=0.0` |
 | Backend | a sequence of NumPy operations | eager or fused kernel |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 rng = np.random.default_rng(4)
@@ -321,7 +321,7 @@ Functionally, correct GQA equals MHA with repeated K/V heads. Different fused ke
 
 The architectural tradeoff is straightforward. Fewer KV heads reduce cache and memory bandwidth. More KV heads provide more distinct key/value subspaces. GQA offers discrete choices between those endpoints; it does not make group size eight a theorem.
 
-**<strong>Implementation pass: NumPy → PyTorch → API</strong>**
+**Implementation pass: NumPy → PyTorch → API**
 
 ### NumPy → PyTorch · B05 — GQA: repeating K/V and `enable_gqa`
 
@@ -406,7 +406,7 @@ def torch_gqa_optimized(
 | Optimized path | none | `enable_gqa=True` |
 | Test | matches MHA after repetition | explicit path ↔ API |
 
-**<strong>Executable parity and edge-case check</strong>**
+**Executable parity and edge-case check**
 
 ```python
 rng = np.random.default_rng(5)
@@ -566,7 +566,7 @@ As of October 10, 2026, this direction also includes compressing several positio
 
 The reference uses an additive mask: 0 allows a pair and `-inf` forbids it. It makes shapes and empty-row behavior explicit on small inputs. Section 13 and the notebook add streaming execution and MLA experiments.
 
-**<strong>Open the SDPA and GQA implementation</strong>**
+**Open the SDPA and GQA implementation**
 
 ```python
 import math
