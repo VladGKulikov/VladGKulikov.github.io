@@ -9,7 +9,10 @@ import {
   ExternalLink,
   Home,
   Languages,
-  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   Search,
   X,
 } from "lucide-react";
@@ -103,7 +106,12 @@ const copy = {
       "Открытая лекционная версия содержит тексты лекций и иллюстрации. Полные курсы на Stepik добавляют тесты, упражнения, решения, проекты и ноутбуки; условия доступа указаны отдельно для каждого курса.",
     allMaterials: "Все материалы",
     noResults: "Ничего не найдено",
-    menu: "Открыть содержание",
+    modulesMenu: "Список модулей",
+    outlineMenu: "Оглавление лекции",
+    showModules: "Показать список модулей",
+    hideModules: "Скрыть список модулей",
+    showOutline: "Показать оглавление",
+    hideOutline: "Скрыть оглавление",
   },
   en: {
     brand: "Public / lectures",
@@ -160,7 +168,12 @@ const copy = {
       "The open Reader Edition contains lecture texts and illustrations. The complete Stepik courses add assessments, exercises, solutions, projects, and notebooks; access terms are shown separately for each course.",
     allMaterials: "All materials",
     noResults: "No modules found",
-    menu: "Open contents",
+    modulesMenu: "Course modules",
+    outlineMenu: "Lecture outline",
+    showModules: "Show course modules",
+    hideModules: "Hide course modules",
+    showOutline: "Show lecture outline",
+    hideOutline: "Hide lecture outline",
   },
 } as const;
 
@@ -310,6 +323,9 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
   const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [tocHidden, setTocHidden] = useState(false);
+  const [tocDrawerOpen, setTocDrawerOpen] = useState(false);
   const t = copy[language];
 
   const activeCourse = useMemo(
@@ -325,6 +341,18 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     document.documentElement.lang = language;
   }, [language]);
 
+  useEffect(() => {
+    if (!drawerOpen && !tocDrawerOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        setTocDrawerOpen(false);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [drawerOpen, tocDrawerOpen]);
+
   const updateLocation = useCallback(
     (nextLanguage: Language, nextCourse: CourseKey | null, nextModule: string | null, push = true) => {
       if (typeof window === "undefined") return;
@@ -339,6 +367,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
       setCourseKey(nextCourse);
       setModuleKey(nextModule);
       setDrawerOpen(false);
+      setTocDrawerOpen(false);
       updateLocation(language, nextCourse, nextModule, push);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
@@ -349,6 +378,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     setCourseKey(null);
     setModuleKey(null);
     setDrawerOpen(false);
+    setTocDrawerOpen(false);
     updateLocation(language, null, null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [language, updateLocation]);
@@ -435,10 +465,55 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
           </span>
         </button>
         <nav className="top-actions" aria-label="Site navigation">
-          {activeCourse && (
-            <button className="mobile-menu" onClick={() => setDrawerOpen(true)} aria-label={t.menu}>
-              <Menu size={19} />
-            </button>
+          {activeCourse && activeModule && (
+            <>
+              <button
+                className="desktop-left-toggle"
+                onClick={() => setSidebarHidden((hidden) => !hidden)}
+                aria-label={sidebarHidden ? t.showModules : t.hideModules}
+                title={sidebarHidden ? t.showModules : t.hideModules}
+                aria-controls="course-menu"
+                aria-expanded={!sidebarHidden}
+              >
+                {sidebarHidden ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
+              </button>
+              <button
+                className="mobile-menu"
+                onClick={() => {
+                  setDrawerOpen((open) => !open);
+                  setTocDrawerOpen(false);
+                }}
+                aria-label={drawerOpen ? t.hideModules : t.showModules}
+                title={drawerOpen ? t.hideModules : t.showModules}
+                aria-controls="course-menu"
+                aria-expanded={drawerOpen}
+              >
+                {drawerOpen ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
+              </button>
+              <button
+                className="desktop-right-toggle"
+                onClick={() => setTocHidden((hidden) => !hidden)}
+                aria-label={tocHidden ? t.showOutline : t.hideOutline}
+                title={tocHidden ? t.showOutline : t.hideOutline}
+                aria-controls="lecture-outline"
+                aria-expanded={!tocHidden}
+              >
+                {tocHidden ? <PanelRightOpen size={19} /> : <PanelRightClose size={19} />}
+              </button>
+              <button
+                className="mobile-right-toggle"
+                onClick={() => {
+                  setTocDrawerOpen((open) => !open);
+                  setDrawerOpen(false);
+                }}
+                aria-label={tocDrawerOpen ? t.hideOutline : t.showOutline}
+                title={tocDrawerOpen ? t.hideOutline : t.showOutline}
+                aria-controls="lecture-outline"
+                aria-expanded={tocDrawerOpen}
+              >
+                {tocDrawerOpen ? <PanelRightClose size={19} /> : <PanelRightOpen size={19} />}
+              </button>
+            </>
           )}
           <a href="https://github.com/VladGKulikov/VladGKulikov.github.io" target="_blank" rel="noreferrer">
             <Code2 size={17} />
@@ -584,14 +659,14 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
           </aside>
         </main>
       ) : (
-        <main className="reader-layout">
-          <aside className={`course-sidebar ${drawerOpen ? "is-open" : ""}`}>
+        <main className={`reader-layout ${sidebarHidden ? "left-menu-hidden" : ""} ${tocHidden ? "right-menu-hidden" : ""}`}>
+          <aside id="course-menu" aria-label={t.modulesMenu} className={`course-sidebar ${drawerOpen ? "is-open" : ""}`}>
             <div className="sidebar-head">
               <button className="back-home" onClick={goHome}>
                 <Home size={16} />
                 {t.home}
               </button>
-              <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Close">
+              <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label={t.hideModules}>
                 <X size={20} />
               </button>
               <span className="sidebar-course-number">{courseNumbers[activeCourse.course_key]}</span>
@@ -636,7 +711,16 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
               )}
             </nav>
           </aside>
-          {drawerOpen && <button className="drawer-scrim" onClick={() => setDrawerOpen(false)} aria-label="Close" />}
+          {(drawerOpen || tocDrawerOpen) && (
+            <button
+              className={`drawer-scrim ${tocDrawerOpen ? "toc-scrim" : "module-scrim"}`}
+              onClick={() => {
+                setDrawerOpen(false);
+                setTocDrawerOpen(false);
+              }}
+              aria-label={tocDrawerOpen ? t.hideOutline : t.hideModules}
+            />
+          )}
 
           <article className="reading-column">
             <div className="reading-meta">
@@ -740,11 +824,14 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
             </nav>
           </article>
 
-          <aside className="toc-rail">
+          <aside id="lecture-outline" aria-label={t.outlineMenu} className={`toc-rail ${tocDrawerOpen ? "is-open" : ""}`}>
+            <button className="drawer-close" onClick={() => setTocDrawerOpen(false)} aria-label={t.hideOutline}>
+              <X size={20} />
+            </button>
             <p>{t.contents}</p>
             <nav>
               {headings.map((heading, index) => (
-                <a key={`${heading}-${index}`} href={`#${slugify(heading)}`}>
+                <a key={`${heading}-${index}`} href={`#${slugify(heading)}`} onClick={() => setTocDrawerOpen(false)}>
                   {heading.replace(/^\d+[.:]\s*/, "")}
                 </a>
               ))}
