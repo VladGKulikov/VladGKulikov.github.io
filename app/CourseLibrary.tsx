@@ -353,15 +353,27 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     const modulesScreen = window.matchMedia("(max-width: 900px)");
     const outlineScreen = window.matchMedia("(max-width: 1180px)");
     const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
     const update = () => {
       const overlayOpen = (drawerOpen && modulesScreen.matches) || (tocDrawerOpen && outlineScreen.matches);
-      document.body.style.overflow = overlayOpen ? "hidden" : previousOverflow;
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+      if (overlayOpen) {
+        // Keep the reading column unchanged when a classic scrollbar disappears.
+        // Mobile browsers with overlay scrollbars need no compensation.
+        const viewportWidth = document.documentElement.getBoundingClientRect().width;
+        const paddingRight = parseFloat(window.getComputedStyle(document.body).paddingRight) || 0;
+        document.body.style.overflow = "hidden";
+        const scrollbarWidth = document.documentElement.getBoundingClientRect().width - viewportWidth;
+        if (scrollbarWidth > 0) document.body.style.paddingRight = `${paddingRight + scrollbarWidth}px`;
+      }
     };
     update();
     modulesScreen.addEventListener("change", update);
     outlineScreen.addEventListener("change", update);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
       modulesScreen.removeEventListener("change", update);
       outlineScreen.removeEventListener("change", update);
     };

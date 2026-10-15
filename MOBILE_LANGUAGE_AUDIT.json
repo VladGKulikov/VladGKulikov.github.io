@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-15",
+  "result": "PASS",
+  "environment": "Chromium browser with 390 x 844 mobile viewport and fractional device scale",
+  "method": "Native header clicks, rendered DOM inspection, and semantic paragraph/progress comparison at the reading line below the sticky header",
+  "courses": [
+    { "course": "modern-llms", "module": "module-01", "reading_point": "Section 8, paragraph about the KV cache" },
+    { "course": "rl-for-llm", "module": "module-02", "reading_point": "Step 2.3.2, paragraph about practical Monte Carlo estimators" },
+    { "course": "information-theory-for-ml", "module": "module-08", "reading_point": "Temperature as a trade-off parameter, paragraph below the numerical table" }
+  ],
+  "scenarios_per_course": [
+    "RU to EN to RU with both menus closed",
+    "Open modules menu, RU to EN to RU, close menu",
+    "Open lecture outline, RU to EN to RU, close outline"
+  ],
+  "assertions": [
+    "The corresponding translated paragraph remains at the reading line",
+    "Progress within the paragraph differs by less than one percentage point",
+    "Both menu expanded/collapsed states survive language switches",
+    "Background remains locked while a menu is open and unlocks when closed",
+    "Opening and closing menus preserve the reading column width and paragraph position"
+  ],
+  "fix": "Reserve the root scrollbar gutter while scrolling is locked; compensate any remaining gutter with its measured fractional width for browsers without stable gutter support."
+}
