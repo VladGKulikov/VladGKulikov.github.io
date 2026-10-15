@@ -3,6 +3,7 @@ export type ReadingPosition = {
   sectionIndex: number;
   blockKind: string;
   blockOrdinal: number;
+  blockCount: number;
   blockProgress: number;
   sectionProgress: number;
   headerProgress: number | null;
@@ -19,7 +20,7 @@ function readingSections(): ReadingSection[] {
   if (!prose) return [];
   const sections: ReadingSection[] = [{ key: "preamble", blocks: [] }];
   for (const block of Array.from(prose.children) as HTMLElement[]) {
-    if (block.tagName === "H2") {
+    if (block.tagName === "H2" || block.tagName === "H3") {
       // Section numbers are shared by the translations; heading slugs are not.
       const number = (block.textContent ?? "").match(/^(?:(?:Lesson|Урок)\s+)?(\d+(?:\.\d+)*)(?:[.:]|\s|$)/i)?.[1];
       sections.push({ key: number ? `number:${number}` : `index:${sections.length}`, blocks: [] });
@@ -52,6 +53,7 @@ export function captureReadingPosition(): ReadingPosition | null {
     sectionIndex,
     blockKind: kind,
     blockOrdinal: section.blocks.slice(0, blockIndex).filter((candidate) => blockKind(candidate) === kind).length,
+    blockCount: section.blocks.filter((candidate) => blockKind(candidate) === kind).length,
     blockProgress: clamp((inset - rect.top) / Math.max(rect.height, 1)),
     sectionProgress: clamp((inset - start) / Math.max(last.bottom - start, 1)),
     headerProgress: sections[0].blocks[0].getBoundingClientRect().top > inset
@@ -71,7 +73,11 @@ export function restoreReadingPosition(position: ReadingPosition): void {
   const section = sections.find((candidate) => candidate.key === position.sectionKey)
     ?? sections[Math.min(position.sectionIndex, sections.length - 1)];
   const matchingBlocks = section.blocks.filter((candidate) => blockKind(candidate) === position.blockKind);
-  const block = matchingBlocks[position.blockOrdinal];
+  // Some translations split or combine paragraphs. Preserve relative progress
+  // through that block type instead of drifting toward the start of the section.
+  const ordinal = matchingBlocks.length === position.blockCount ? position.blockOrdinal
+    : Math.round(position.blockOrdinal / Math.max(position.blockCount - 1, 1) * (matchingBlocks.length - 1));
+  const block = matchingBlocks[ordinal];
   let top: number;
   if (block) {
     const rect = block.getBoundingClientRect();
