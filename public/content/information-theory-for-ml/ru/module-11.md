@@ -154,7 +154,7 @@ $$
 | Обратная KL $D_{\mathrm{KL}}(Q\|P)$ | $-\log t$ | $\int q\log(q/p)$ |
 | $\chi^2$ Пирсона | $(t-1)^2$ | $\int q(p/q-1)^2$ |
 | Квадрат расстояния Хеллингера | $\tfrac12(\sqrt t-1)^2$ | $\tfrac12\int(\sqrt p-\sqrt q)^2$ |
-| Полная вариация (TV) | $\tfrac12|t-1|$ | $\tfrac12\int|p-q|$ |
+| Полная вариация (TV) | $\tfrac12\vert t-1\vert $ | $\tfrac12\int\vert p-q\vert $ |
 | Jensen–Shannon | $\tfrac12\!\left[t\log\frac{2t}{1+t}+\log\frac{2}{1+t}\right]$ | $\tfrac12D_{\mathrm{KL}}(P\|M)+\tfrac12D_{\mathrm{KL}}(Q\|M)$, $M=(P+Q)/2$ |
 
 При этой нормировке

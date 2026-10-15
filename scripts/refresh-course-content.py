@@ -126,9 +126,12 @@ def strip_number_prefix(title: str) -> str:
 
 
 def public_title(title: str) -> str:
+    numbered = re.match(r"^(\d+(?:\.\d+)*\.\s+)(.*)$", title)
+    prefix, title = numbered.groups() if numbered else ("", title)
     replacements = (
         (r"(?i)^notebook\s+and\s+sources$", "Sources"),
         (r"(?i)^ноутбук\s+и\s+источники$", "Источники"),
+        (r"(?i)^notebook\s+и\s+источники$", "Источники"),
         (r"(?i),?\s*notebook,?\s+and\s+sources", " and sources"),
         (r"(?i),?\s*ноутбук\s+и\s+источники", " и источники"),
         (r"(?i),?\s*notebook\s+и\s+источники", " и источники"),
@@ -141,7 +144,7 @@ def public_title(title: str) -> str:
     value = re.sub(r"(?i)(?:Jupyter-)?(?:ноутбук|notebook),?\s+и\s+", "", value)
     value = re.sub(r"\s+,", ",", value)
     value = re.sub(r"\s{2,}", " ", value).strip(" ,")
-    return value
+    return prefix + value
 
 
 def remove_internal_markup(markdown: str) -> str:
@@ -228,6 +231,52 @@ def normalize_math_delimiters(markdown: str) -> str:
         else:
             output.append(f"{display_prefix}{body}" if display_prefix else body)
 
+    return "\n".join(output)
+
+
+def normalize_reader_markup(markdown: str) -> str:
+    """Repair Markdown delimiters while preserving code and mathematical values."""
+    lines = markdown.splitlines()
+    output: list[str] = []
+    fence: tuple[str, int] | None = None
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        index += 1
+        marker = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = (token[0], len(token))
+            elif token[0] == fence[0] and len(token) >= fence[1]:
+                fence = None
+            output.append(line)
+            continue
+        if fence is not None:
+            output.append(line)
+            continue
+
+        # A closing emphasis delimiter after punctuation needs a word boundary.
+        line = re.sub(r"(\*\*[^*\n]+[—–])\*\*(?=\w)", r"\1** ", line)
+        if line.lstrip().startswith("|"):
+            # Source tables may wrap one inline formula over several physical
+            # lines. GFM requires each table row to occupy a single line.
+            dollar_count = lambda value: len(re.findall(r"(?<!\\)\$", value))
+            while dollar_count(line) % 2 and index < len(lines):
+                continuation = lines[index].strip()
+                if not continuation or continuation.startswith("|"):
+                    break
+                line += " " + continuation
+                index += 1
+
+            # Raw vertical bars in math are GFM column separators, even inside
+            # dollar delimiters. Use TeX's explicit single-bar command instead.
+            line = re.sub(
+                r"(?<!\\)\$([^$\n]+)\$",
+                lambda match: "$" + re.sub(r"(?<!\\)\|", r"\\vert ", match.group(1)) + "$",
+                line,
+            )
+        output.append(line)
     return "\n".join(output)
 
 
@@ -386,6 +435,7 @@ def sanitize_markdown(
     markdown = re.sub(r"<summary>(.*?)</summary>", summary_label, markdown, flags=re.DOTALL | re.IGNORECASE)
     markdown = re.sub(r"</?details\b[^>]*>", "", markdown, flags=re.IGNORECASE)
     markdown = normalize_math_delimiters(markdown)
+    markdown = normalize_reader_markup(markdown)
     markdown = remove_notebook_routes(
         markdown,
         context=context,

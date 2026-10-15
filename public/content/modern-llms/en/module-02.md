@@ -356,7 +356,7 @@ A BPE `tokenizer.json` typically contains `model.vocab`, `model.merges`, pre-tok
 2. $R=\max(I)+1$: the ID range starting at zero, including holes.
 3. $V$: the model's allocated vocabulary dimension, normally `vocab_size`, which sets the input table's row count and the output score count. Direct indexing requires $V\ge R$.
 
-| Exact artifact | Ordinary IDs | Additional unique IDs | $|I|$ | $R$ | Model $V$ |
+| Exact artifact | Ordinary IDs | Additional unique IDs | $\vert I\vert $ | $R$ | Model $V$ |
 |---|---:|---:|---:|---:|---:|
 | `o200k_base` | 199,998 | 2 | 200,000 | 200,019 | not established by the tokenizer |
 | `o200k_harmony` / gpt-oss-120b | 199,998 | 1,090 | 201,088 | 201,088 | 201,088 |
@@ -543,7 +543,7 @@ The byte alphabet covers valid UTF-8, but preserving the original spelling also 
 - Weight tying saves $Vd$ parameters. Output projection predicts an ID; decoding maps already selected IDs to text.
 - A lookup row accumulates gradient from every use. A complete language-model objective adds computational paths absent from the isolated quadratic example in §11.4.
 
-## 17. and sources
+## 17. Sources
 
 **Primary and technical sources:**
 

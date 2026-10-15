@@ -773,7 +773,7 @@ The notebook implements exponentiation, sorting, cumulative mass, and renormaliz
 
 ### 12.1.1. Stopping the loop
 
-After selection, the new token joins the prefix used by the next forward pass. An **EOS token—end of sequence—**terminates the sequence. Dialogue formats may instead define particular end-of-turn markers; Module 13 explains that contract. A separate cap limits the number of new tokens. Reaching the cap is a different stopping reason from the model emitting an end marker.
+After selection, the new token joins the prefix used by the next forward pass. An **EOS token—end of sequence—** terminates the sequence. Dialogue formats may instead define particular end-of-turn markers; Module 13 explains that contract. A separate cap limits the number of new tokens. Reaching the cap is a different stopping reason from the model emitting an end marker.
 
 A filter can exclude EOS at one step, while the next step has a different logit vector. Neither greedy decoding nor sampling by itself guarantees that an end marker will arrive in time. The notebook checks EOS termination and length termination on prepared score traces. These traces isolate loop control; they do not evaluate a trained model's answer quality.
 

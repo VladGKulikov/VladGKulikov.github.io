@@ -426,7 +426,7 @@
       "description": "Архитектура, обучение, инференс, агенты и оценивание современных языковых моделей.",
       "stepik_url": "https://stepik.org/297275",
       "module_count": 20,
-      "characters": 1065809,
+      "characters": 1065811,
       "modules": [
         {
           "id": "modern-llms:ru:module-01",
@@ -434,8 +434,8 @@
           "position": 1.0,
           "title": "Модуль 1. Современный ландшафт LLM",
           "content_file": "modern-llms/ru/module-01.md",
-          "content_hash": "80162145a03200999dede12286242978b9abf682ca102c6070623b56448c3c36",
-          "characters": 79833,
+          "content_hash": "51a81f5128eb51ef0abe96c877362d8c4c51bd284a14c384f4d473b862a17dad",
+          "characters": 79831,
           "image_count": 11
         },
         {
@@ -444,8 +444,8 @@
           "position": 2.0,
           "title": "Модуль 2. Токенизация и эмбеддинги",
           "content_file": "modern-llms/ru/module-02.md",
-          "content_hash": "80b3c29d66221919162347fe274de45e248aac6d6f8d9748309021c49dce1f4d",
-          "characters": 49202,
+          "content_hash": "9ea97eb21b0da9ffeebb973a5708cbb5a63511f3376ad70b834c2f601834451b",
+          "characters": 49210,
           "image_count": 10
         },
         {
@@ -474,8 +474,8 @@
           "position": 5.0,
           "title": "Модуль 5. Современные механизмы внимания",
           "content_file": "modern-llms/ru/module-04.md",
-          "content_hash": "be7ff2372c2ac628459f8ca43c2fcf9b5315297795c4f5a257b1eac18f23240d",
-          "characters": 53189,
+          "content_hash": "b049564aa9ffec17d1f7de8bd2017bceb922ff3ff54c6e89ade6b258037c65ff",
+          "characters": 53187,
           "image_count": 10
         },
         {
@@ -494,8 +494,8 @@
           "position": 7.0,
           "title": "Модуль 7. Mixture of Experts",
           "content_file": "modern-llms/ru/module-06.md",
-          "content_hash": "59dee18750c323a484ecf6e0f49b976fd6d578195a1d90b5d62f6bd7f013d7b5",
-          "characters": 48903,
+          "content_hash": "65bec562103a601e1dfd21ad4557e47fd686edf51a371f2a91e6e30a73db2d97",
+          "characters": 48901,
           "image_count": 10
         },
         {
@@ -637,7 +637,7 @@
       "description": "Architecture, training, inference, agents, and evaluation of modern language-model systems.",
       "stepik_url": "https://stepik.org/297276",
       "module_count": 20,
-      "characters": 982513,
+      "characters": 982516,
       "modules": [
         {
           "id": "modern-llms:en:module-01",
@@ -645,8 +645,8 @@
           "position": 1.0,
           "title": "Module 1. The Modern LLM Landscape",
           "content_file": "modern-llms/en/module-01.md",
-          "content_hash": "ce25c4c0a724c227dce230570c5919b0ac6821e2b208ab26834e945ee63500c0",
-          "characters": 74959,
+          "content_hash": "28833815598546717b633cc53c99a79e95dbc96a363bbafd5b38fd430c383d51",
+          "characters": 74955,
           "image_count": 11
         },
         {
@@ -655,8 +655,8 @@
           "position": 2.0,
           "title": "Module 2. Tokenization and Embeddings",
           "content_file": "modern-llms/en/module-02.md",
-          "content_hash": "dc4d70badc7506f64ad170ad58e5839f8dc646a3015e8c004abc6ed9dfe25e3f",
-          "characters": 46610,
+          "content_hash": "6ec9442b24b61bb67d4f49c10960977916b11c7e83a58d3e5cf5c099179a5327",
+          "characters": 46616,
           "image_count": 10
         },
         {
@@ -665,8 +665,8 @@
           "position": 3.0,
           "title": "Module 3. The Basic Transformer",
           "content_file": "modern-llms/en/module-18.md",
-          "content_hash": "5cc9a1546d29c93d3f25cebc81dfd9e5abcd25b8a880409875713700770d70ef",
-          "characters": 55514,
+          "content_hash": "a87328b8c4a6537ef3cc326f91036613d7067eb7db396bfbd75f2983326a7aad",
+          "characters": 55515,
           "image_count": 12
         },
         {
@@ -1130,7 +1130,7 @@
       "description": "Теория информации: от энтропии и кодирования до NLP, LLM, компьютерного зрения и обучения с подкреплением.",
       "stepik_url": "https://stepik.org/295411",
       "module_count": 16,
-      "characters": 588700,
+      "characters": 588720,
       "modules": [
         {
           "id": "information-theory-for-ml:ru:module-01",
@@ -1238,8 +1238,8 @@
           "position": 11.0,
           "title": "Модуль 11. Сравнение распределений: f-дивергенции, вариационные критики и расстояние Вассерштейна",
           "content_file": "information-theory-for-ml/ru/module-11.md",
-          "content_hash": "6317d504793c6fd8e3f30c52b35d4f6921d7cc549a4fda69428c0e0f60ff0a3a",
-          "characters": 35557,
+          "content_hash": "012b1aabc24446dbc4bfdc0c92a7162d1ccd79b4b16671690e24ea6788cc2c31",
+          "characters": 35577,
           "image_count": 9
         },
         {
@@ -1301,7 +1301,7 @@
       "description": "Information theory from entropy and coding to NLP, LLMs, computer vision, and reinforcement learning.",
       "stepik_url": "https://stepik.org/295409",
       "module_count": 16,
-      "characters": 570311,
+      "characters": 570331,
       "modules": [
         {
           "id": "information-theory-for-ml:en:module-01",
@@ -1379,7 +1379,7 @@
           "position": 8.0,
           "title": "Module 8. Maximum entropy, exponential models, and KL regularization",
           "content_file": "information-theory-for-ml/en/module-08.md",
-          "content_hash": "1ae1dd629881cfc6cfbca3bf278bd99be9ba4073d5cab6989bae987839900827",
+          "content_hash": "5ef3ffe2a4aab254f455082822a7c74870faba6c7d368bebdac29aefba435b0f",
           "characters": 69911,
           "image_count": 13
         },
@@ -1409,8 +1409,8 @@
           "position": 11.0,
           "title": "Module 11. Comparing distributions: f-divergences, variational critics, and Wasserstein distance",
           "content_file": "information-theory-for-ml/en/module-11.md",
-          "content_hash": "ba73e378bc7f8596003f616dd5adf2b0c346db67b16217c50ea4d93d3aae4d28",
-          "characters": 34677,
+          "content_hash": "9e0b57eb1eb5335377ae258f428fa10ddb589ff12ff6da02014180191425442a",
+          "characters": 34697,
           "image_count": 9
         },
         {

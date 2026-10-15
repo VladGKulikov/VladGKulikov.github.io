@@ -23,6 +23,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import publication from "../PUBLICATION.json";
 import content from "./generated/content.json";
+import { markdownHeadings } from "./markdown-headings";
 import { captureReadingPosition, restoreReadingPosition, type ReadingPosition } from "./reading-position";
 
 type Language = "ru" | "en";
@@ -299,15 +300,6 @@ function formatModuleNumber(module: Module) {
   return String(module.position).padStart(2, "0");
 }
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[`*_()[\]{}]/g, "")
-    .replace(/[^a-zа-яё0-9]+/gi, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80);
-}
-
 function findInternalModule(href: string | undefined) {
   if (!href || /^https?:|^mailto:|^#/.test(href)) return null;
   const match = href.match(/module[-_](\d{1,2}b?)/i);
@@ -493,13 +485,12 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
       ? activeCourse.modules[moduleIndex + 1]
       : undefined;
   const displayMarkdown = markdown.replace(/^#\s+.+?\r?\n+/, "");
-  const headings = useMemo(
-    () =>
-      [...displayMarkdown.matchAll(/^##\s+(.+)$/gm)]
-        .map((match) => match[1].replace(/[`*_]/g, ""))
-        .slice(0, 24),
+  const headingIndex = useMemo(
+    () => markdownHeadings(displayMarkdown),
     [displayMarkdown],
   );
+  const headingIds = useMemo(() => new Map(headingIndex.map((heading) => [heading.line, heading.id])), [headingIndex]);
+  const headings = headingIndex.filter((heading) => heading.depth === 2);
 
   const openInternalModule = useCallback(
     (target: string) => {
@@ -798,16 +789,13 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                   rehypePlugins={[rehypeKatex]}
                   components={{
                     h2: ({ children, node }) => {
-                      const label = node?.position
-                        ? displayMarkdown.split("\n")[node.position.start.line - 1].replace(/^##\s+/, "")
-                        : String(children);
-                      return <h2 id={slugify(label)}>{children}</h2>;
+                      return <h2 id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</h2>;
                     },
                     h3: ({ children, node }) => {
-                      const label = node?.position
-                        ? displayMarkdown.split("\n")[node.position.start.line - 1].replace(/^###\s+/, "")
-                        : String(children);
-                      return <h3 id={slugify(label)}>{children}</h3>;
+                      return <h3 id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</h3>;
+                    },
+                    h4: ({ children, node }) => {
+                      return <h4 id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</h4>;
                     },
                     a: ({ href, children, ...props }) => {
                       const internalModule = findInternalModule(href);
@@ -885,9 +873,9 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
             </button>
             <p>{t.contents}</p>
             <nav>
-              {headings.map((heading, index) => (
-                <a key={`${heading}-${index}`} href={`#${slugify(heading)}`} onClick={() => setTocDrawerOpen(false)}>
-                  {heading.replace(/^\d+[.:]\s*/, "")}
+              {headings.map((heading) => (
+                <a key={heading.id} href={`#${heading.id}`} onClick={() => setTocDrawerOpen(false)}>
+                  {heading.label.replace(/^\d+[.:]\s*/, "")}
                 </a>
               ))}
             </nav>

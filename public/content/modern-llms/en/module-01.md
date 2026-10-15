@@ -793,7 +793,7 @@ $$
 
 **Selection procedure:** verify availability → evaluate your tasks → charge all attempts per accepted task → check latency and operating constraints. Label active count by phase, input and output limits separately, and prices by date and conditions.
 
-## 23. and sources
+## 23. Sources
 
 ### Foundational papers
 

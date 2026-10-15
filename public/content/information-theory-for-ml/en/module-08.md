@@ -775,15 +775,9 @@ For $z=(2,1,0)$,
 
 | $\tau$ | $q^*=\operatorname{softmax}(z/\tau)$ | $H(q^*)$, nats |
 |---:|---:|---:|
-| $0.5$ | $(0.867,
-\ 0.117,
-\ 0.016)$ | $0.441$ |
-| $1$ | $(0.665,
-\ 0.245,
-\ 0.090)$ | $0.832$ |
-| $2$ | $(0.506,
-\ 0.307,
-\ 0.186)$ | $1.020$ |
+| $0.5$ | $(0.867, \ 0.117, \ 0.016)$ | $0.441$ |
+| $1$ | $(0.665, \ 0.245, \ 0.090)$ | $0.832$ |
+| $2$ | $(0.506, \ 0.307, \ 0.186)$ | $1.020$ |
 
 At low temperature, one extra unit of logit matters greatly and the distribution concentrates quickly. At high temperature, the same logit gap has less influence on probability, so entropy grows.
 

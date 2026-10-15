@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "totals": {
+    "documents": 98,
+    "headings": 3489,
+    "tables": 336,
+    "lists": 1495,
+    "listItems": 7725,
+    "images": 857,
+    "links": 2007,
+    "formulas": 13732,
+    "codeBlocks": 230
+  },
+  "courses": {
+    "information-theory-for-ml": {
+      "en": 16,
+      "ru": 16
+    },
+    "modern-llms": {
+      "en": 20,
+      "ru": 20
+    },
+    "rl-for-llm": {
+      "en": 13,
+      "ru": 13
+    }
+  },
+  "errors": []
+}
