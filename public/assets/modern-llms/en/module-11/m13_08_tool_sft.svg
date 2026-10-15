@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="704" viewBox="0 0 1100 704">
+<title>Actions and observations in one conversation</title>
+<desc>Supervised tokens belong to the assistant behavior being learned.</desc>
+<rect width="1100" height="704" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Actions and observations in one conversation</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Supervised tokens belong to the assistant behavior being learned.</text>
+<rect x="180" y="132" width="740" height="100" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="200" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">user</text>
+<text x="200" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Request and available tools → context</text>
+<path d="M550,235 L550,260" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="180" y="267" width="740" height="100" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="200" y="305" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">assistant</text>
+<text x="200" y="344" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Call name and arguments → target</text>
+<path d="M550,370 L550,395" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="180" y="402" width="740" height="100" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="200" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">tool</text>
+<text x="200" y="479" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Execution result → context</text>
+<path d="M550,505 L550,530" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="180" y="537" width="740" height="100" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="200" y="575" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">assistant</text>
+<text x="200" y="614" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Next action or answer → target</text>
+</svg>

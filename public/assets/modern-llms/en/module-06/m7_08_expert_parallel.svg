@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="689" viewBox="0 0 1100 689">
+<title>Assign → dispatch → compute → combine</title>
+<desc>Expert parallelism distributes experts across devices</desc>
+<rect width="1100" height="689" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Assign → dispatch → compute → combine</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Expert parallelism distributes experts across devices</text>
+<rect x="40" y="132" width="234" height="155" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Router</text>
+<text x="60" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Tk assignments</text>
+<path d="M277,208 L298,208" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="302" y="132" width="234" height="155" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="322" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Dispatch</text>
+<text x="322" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Vectors to owners</text>
+<path d="M539,208 L560,208" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="564" y="132" width="234" height="155" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="584" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Experts</text>
+<text x="584" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">grouped GEMM</text>
+<path d="M801,208 L822,208" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="826" y="132" width="234" height="155" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="846" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Combine</text>
+<text x="846" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Weighted sum</text>
+<rect x="40" y="322" width="1020" height="51" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="352" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Logical estimate</text>
+<text x="434" y="352" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Assumptions and result</text>
+<rect x="40" y="377" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="407" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">2Thkb</text>
+<text x="434" y="407" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">One layer; entire batch; dispatch and return</text>
+<rect x="40" y="432" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="462" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">T=2048, h=7168, k=8, b=2 B</text>
+<text x="434" y="462" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">448 MiB</text>
+<rect x="40" y="487" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="517" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">1 − (1 − k/E)ᴺ</text>
+<text x="434" y="517" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Expected fraction of touched experts</text>
+<rect x="40" y="542" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="572" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">E=128, k=4, N=64</text>
+<text x="434" y="572" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">86.9%</text>
+<text x="40" y="626" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Local routes and aggregated sends can reduce network bytes; protocol and padding can increase them. The fraction</text>
+<text x="40" y="650" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">assumes independent uniform token choices.</text>
+</svg>

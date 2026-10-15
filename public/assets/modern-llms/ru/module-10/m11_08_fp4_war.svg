@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="421" viewBox="0 0 1100 421">
+<title>Формат — значения плюс масштабы</title>
+<desc>Подсчёт для полной одномерной группы; глобальные масштабы отдельно.</desc>
+<rect width="1100" height="421" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Формат — значения плюс масштабы</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Подсчёт для полной одномерной группы; глобальные масштабы отдельно.</text>
+<rect x="40" y="132" width="1020" height="51" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Схема</text>
+<text x="289" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Значения</text>
+<text x="534" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Локальный масштаб</text>
+<text x="814" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Бит / значение</text>
+<rect x="40" y="187" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">NVFP4 (1D)</text>
+<text x="289" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">16 × 4 bit</text>
+<text x="534" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">8 bit · E4M3</text>
+<text x="814" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">4 + 8/16 = 4.5</text>
+<rect x="40" y="242" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">MXFP4</text>
+<text x="289" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">32 × 4 bit</text>
+<text x="534" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">8 bit · E8M0</text>
+<text x="814" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">4 + 8/32 = 4.25</text>
+<text x="40" y="334" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">E2M1: ±{0, 0.5, 1, 1.5, 2, 3, 4, 6}; два знака нуля.</text>
+<text x="40" y="358" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">W4A4 указывает разрядность весов и активаций, а не всю схему.</text>
+<text x="40" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Рецепт NVFP4 для обучения может использовать группы весов 16 × 16.</text>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="686" viewBox="0 0 1100 686">
+<title>DiffusionGemma: от контекста к новому холсту</title>
+<desc>Паспорт разработчика, проверка 11.10.2026; скорость зависит от протокола.</desc>
+<rect width="1100" height="686" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">DiffusionGemma: от контекста к новому холсту</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Паспорт разработчика, проверка 11.10.2026; скорость зависит от протокола.</text>
+<rect x="40" y="132" width="300" height="150" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Кодировщик</text>
+<text x="60" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Промпт → кэш K/V</text>
+<rect x="390" y="132" width="300" height="150" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="410" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Декодер</text>
+<text x="410" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Холст 256 токенов.</text>
+<text x="410" y="234" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Повторные уточнения.</text>
+<rect x="740" y="132" width="320" height="150" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="760" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Фиксация</text>
+<text x="760" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Чистый холст → кодировщик</text>
+<text x="760" y="234" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">→ кэш.</text>
+<path d="M345,207 L385,207" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M695,207 L735,207" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="40" y="312" width="1020" height="51" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="342" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Компонент</text>
+<text x="384" y="342" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Опубликованное свойство</text>
+<rect x="40" y="367" width="1020" height="76" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="397" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Параметры / эксперты</text>
+<text x="384" y="397" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">25.2B всего · 3.8B активных на токен</text>
+<text x="384" y="422" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">128 экспертов / выбор 8 + один общий</text>
+<rect x="40" y="447" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="477" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Семплер</text>
+<text x="384" y="477" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">EB; до 48 шагов; адаптивная остановка</text>
+<rect x="40" y="502" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="532" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Измерение карточки</text>
+<text x="384" y="532" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">&gt;1100 tokens/s · H100 · FP8 · малый пакет</text>
+<rect x="40" y="557" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="587" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Низкобитный путь</text>
+<text x="384" y="587" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">NVFP4 · NVIDIA Blackwell</text>
+<text x="40" y="647" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">3.8B на токен не определяет объединение экспертов для всего холста.</text>
+</svg>

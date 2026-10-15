@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="447" viewBox="0 0 1100 447">
+<title>DeepSeek-V3: accounting boundaries</title>
+<desc>61 layers = 3 dense + 58 MoE; 256 routed + 1 shared expert; top-8</desc>
+<rect width="1100" height="447" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">DeepSeek-V3: accounting boundaries</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">61 layers = 3 dense + 58 MoE; 256 routed + 1 shared expert; top-8</text>
+<rect x="40" y="132" width="1020" height="51" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Scope</text>
+<text x="449" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Total</text>
+<text x="759" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Active</text>
+<rect x="40" y="187" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Course reconstruction</text>
+<text x="449" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">671,026,419,200</text>
+<text x="759" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">36,625,618,432</text>
+<rect x="40" y="242" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Main model: developer headline</text>
+<text x="449" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">671B</text>
+<text x="759" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">37B</text>
+<rect x="40" y="297" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Package including auxiliary MTP</text>
+<text x="449" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">≈685B</text>
+<text x="759" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Depends on execution path</text>
+<text x="40" y="384" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">B = 10⁹. Active accounting includes the full output vocabulary projection and selected expert matrices. MTP is a</text>
+<text x="40" y="408" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">separate multi-token prediction module.</text>
+</svg>

@@ -1,5 +1,7 @@
 # Модуль 4. Неравенство Йенсена: когда среднее встречает нелинейность
 
+> Открытая лекционная версия. Самопроверка, упражнения, решения и ноутбуки, упомянутые в маршрутах чтения, доступны в [полном курсе на Stepik](https://stepik.org/295411).
+
 > **Как читать этот модуль.** Основной маршрут — §§4.1–4.5. Одна теорема пройдёт через три знакомые ML-конструкции: ансамбли, ELBO и уменьшение KL при укрупнении состояний. Математическое углубление о разрыве Йенсена и дивергенции Брэгмана можно оставить на второй проход. Для перехода к Модулю 5 достаточно понимать направление неравенства, условия равенства и два рабочих следствия — для ансамблей и log-sum inequality.
 
 ## 4.1. Сначала усреднить или сначала посчитать функцию потерь?
@@ -794,8 +796,8 @@ $$
 
 ## 4.9. Литература и первоисточники
 
-- Boyd & Vandenberghe, *Convex Optimization* — выпуклые функции, опорные гиперплоскости, `logsumexp` и неравенство Йенсена.
-- Cover & Thomas, *Elements of Information Theory* — log-sum inequality, совместная выпуклость KL и неравенство обработки данных.
-- Kingma & Welling, *Auto-Encoding Variational Bayes* — вариационная нижняя граница и амортизованный вывод в моделях с непрерывными латентными переменными.
-- Lakshminarayanan, Pritzel & Blundell, *Simple and Scalable Predictive Uncertainty Estimation Using Deep Ensembles* — практический контекст для усреднения вероятностных предсказаний.
-- Bregman, *The relaxation method of finding the common point of convex sets and its application to the solution of problems in convex programming* — исходная конструкция дивергенций Брэгмана.
+- Boyd & Vandenberghe, [*Convex Optimization*](https://web.stanford.edu/~boyd/cvxbook/) — выпуклые функции, опорные гиперплоскости, `logsumexp` и неравенство Йенсена.
+- Cover & Thomas, [*Elements of Information Theory*](https://onlinelibrary.wiley.com/doi/book/10.1002/047174882X) — log-sum inequality, совместная выпуклость KL и неравенство обработки данных.
+- Kingma & Welling, [*Auto-Encoding Variational Bayes*](https://arxiv.org/abs/1312.6114) — вариационная нижняя граница и амортизованный вывод в моделях с непрерывными латентными переменными.
+- Lakshminarayanan, Pritzel & Blundell, [*Simple and Scalable Predictive Uncertainty Estimation Using Deep Ensembles*](https://proceedings.neurips.cc/paper/2017/hash/9ef2ed4b7fd2c810847ffa5fa85bce38-Abstract.html) — практический контекст для усреднения вероятностных предсказаний.
+- Bregman, [*The relaxation method of finding the common point of convex sets and its application to the solution of problems in convex programming*](https://doi.org/10.1016/0041-5553(67)90040-7) — исходная конструкция дивергенций Брэгмана.

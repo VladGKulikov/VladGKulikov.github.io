@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="507" viewBox="0 0 1100 507">
+<title>Four ways to change the cost of state</title>
+<desc>Identify which model term changed</desc>
+<rect width="1100" height="507" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Four ways to change the cost of state</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Identify which model term changed</text>
+<rect x="40" y="132" width="1020" height="51" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Mechanism</text>
+<text x="304" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Changed term</text>
+<text x="674" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Required check</text>
+<rect x="40" y="187" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Architecture</text>
+<text x="304" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">State shape and size</text>
+<text x="674" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">What does each layer retain?</text>
+<rect x="40" y="242" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Quantization</text>
+<text x="304" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Bits per coordinate</text>
+<text x="674" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Output error + metadata</text>
+<rect x="40" y="297" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Placement</text>
+<text x="304" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Storage tier and data path</text>
+<text x="674" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Restore or recompute?</text>
+<rect x="40" y="352" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Eviction</text>
+<text x="304" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Number of retained positions</text>
+<text x="674" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Was a needed fact removed?</text>
+<text x="40" y="444" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Teaching payload, 16→3 bits: 128→24 KiB/token before metadata. Lower K/V error or greater retained norm does not</text>
+<text x="40" y="468" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">guarantee answer quality.</text>
+</svg>

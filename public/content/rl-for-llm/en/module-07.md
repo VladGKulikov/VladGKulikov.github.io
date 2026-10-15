@@ -1,5 +1,7 @@
 # Module 7. Reward models and preference data
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.19  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
@@ -122,7 +124,7 @@ Three common mistakes look deceptively harmless.
 
 The minimum protocol therefore includes generator blinding, position randomization, prompt-level splitting, and provenance tracking. Multiple independent judgments on important examples reveal ambiguity rather than hiding it behind one label.
 
-**Cross-course link.** Dialogue data and chat templates are covered in *Modern LLMs*, Module 11 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`). Here the focus is narrower: how an annotation protocol defines the statistical target of the RM.
+**Cross-course link.** Dialogue data and chat templates are covered in *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`). Here the focus is narrower: how an annotation protocol defines the statistical target of the RM.
 
 ---
 
@@ -457,7 +459,7 @@ Use it as one layer:
 
 ### Step 7.3.4 — Annotator disagreement is not a universal ceiling
 
-A previous draft treated “70–80% agreement” as an industry constant and an RM ceiling. That is too strong. Agreement varies with domain, rubric, pair difficulty, evaluator population, aggregation, and metric definition.
+There is no universal “70–80% agreement” constant or RM ceiling. Agreement varies with domain, rubric, pair difficulty, evaluator population, aggregation, and metric definition.
 
 A narrow model does yield an exact ceiling. Suppose each pair has a hidden strict order and the observed label is independently flipped with probability $\eta$. A model that always recovers the hidden order agrees with **one noisy label** with probability
 
@@ -546,7 +548,7 @@ $$
 \varepsilon(x,y)=r_{\mathrm{proxy}}(x,y)-r_{\mathrm{goal}}(x,y)
 $$
 
-has any variation, maximizing the proxy favors candidates with both high quality **and positive error**. More candidates or stronger policy updates increase selection pressure on the error.
+varies across candidates, maximizing the proxy can favor favorable errors as well as quality. The usual upward-selection argument assumes, for example, independent additive noise independent of candidate utilities; variation or zero unconditional mean alone is insufficient. Increasing search or policy-optimization pressure can then amplify exploitation of the error.
 
 This resembles maximization bias from Module 2 “State, Value, and Bellman Equations” (`rl_llm.module_02_values_bellman`), but here the policy changes the data distribution and pushes the RM beyond familiar examples.
 
@@ -837,4 +839,4 @@ The next module asks the natural follow-up: **how do preference pairs and an RM 
 - [Gao, Schulman, and Hilton (2022), *Scaling Laws for Reward Model Overoptimization*](https://arxiv.org/abs/2210.10760) — a controlled study in which proxy and independent target scores diverge under optimization pressure.
 - [Zheng et al. (2023), *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena*](https://arxiv.org/abs/2306.05685) — empirical judge limitations and motivation for order-swap diagnostics.
 
-The line-by-line registry of claims and limitations is `Module_7_Sources.md`. Dialogue-data engineering is extended in *Modern LLMs*, Module 11 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`); policy optimization begins in Module 8 “RLHF and direct preference optimization” (`rl_llm.module_08_rlhf_dpo`); overoptimization and safety evaluation continue in Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety” (`rl_llm.module_13_evaluation`).
+The line-by-line registry of claims and limitations is `Module_7_Sources.md`. Dialogue-data engineering is extended in *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`); policy optimization begins in Module 8 “RLHF and direct preference optimization” (`rl_llm.module_08_rlhf_dpo`); overoptimization and safety evaluation continue in Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety” (`rl_llm.module_13_evaluation`).

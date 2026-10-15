@@ -1,16 +1,19 @@
-# Module 12. Learning from Feedback: RLHF, DPO, RLOO, and GRPO
+# Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO
 
-*Modern LLMs · Module 12 lecture · revision 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module is about.** Module 11 taught a model to imitate demonstrations. That is enough when the target behaviour can be expressed as a strong reference answer. Many alignment goals are different: two responses may both be valid yet differ in usefulness, calibration, tone, or safety. Other tasks admit a direct signal from unit tests, a theorem checker, a simulator, or an interactive environment.
+*Modern LLMs · Module 14 lecture · revision 2026.10.28*
+
+> **What this module is about.** Module 13 taught a model to imitate demonstrations. That is enough when the target behaviour can be expressed as a strong reference answer. Many alignment goals are different: two responses may both be valid yet differ in usefulness, calibration, tone, or safety. Other tasks admit a direct signal from unit tests, a theorem checker, a simulator, or an interactive environment.
 >
-> Those cases lead to two adjacent but distinct families. **Preference optimization** learns from comparative judgments. Classical **reinforcement learning from human feedback (RLHF)** fits a reward model and then updates the policy with PPO, whereas **Direct Preference Optimization (DPO)** turns offline preference pairs into a direct loss. **Reinforcement learning from explicit or verifiable rewards** receives its signal from a rule, checker, or environment; group estimators such as **RLOO** and **GRPO** are especially useful in that setting. RLHF, DPO, and GRPO therefore belong to the broader landscape of feedback-based post-training, but GRPO is not preference optimization in the narrow data-modeling sense.
+> A comparison tells us which response is preferred; a checker reports an outcome for a task. Neither signal specifies how the model should learn from it. We will develop three routes: fit a separate evaluator, turn preference pairs directly into a training loss, or compare several fresh responses to the same prompt. The method names will become useful once these choices are clear.
 >
 > The module keeps an engineering perspective. We will identify the signal consumed by each method, the models and data it requires, what its equations estimate, and why rollout generation can cost more than the parameter update itself.
 >
 > **Further study.** The module is self-contained. The author's companion course *RL for LLM* develops policy gradients, reward models, PPO, DPO, RLOO, GRPO/RLVR, interactive environments, rollout infrastructure, and reward hacking in substantially greater depth.
 >
-> **Prerequisites.** You should be comfortable with SFT from Module 11, the parameter-state memory estimates used in Modules 8 and 11, and the prefill/decode distinction from Module 9. Everything required for the derivations below is restated here, so the module remains self-contained.
+> **Prerequisites.** You should be comfortable with SFT from Module 13, the parameter-state memory estimates used in Modules 9 and 13, and the prefill/decode distinction from Module 10. Everything required for the derivations below is restated here, so the module remains self-contained.
+> **Reading routes.** On a first pass, follow §§1, 3–7 and 9: identify the feedback signal, then trace how it changes the probability of an answer. In §8, focus on the data each method needs. Use §§10–11 to interpret the costs, then read §15 on verifiable rewards and checker limitations. Run §14 and answer Q1–Q4 in §18; Q5 follows the reference discussion in §17. On a second pass, work through the DPO derivation, the weighting and bias questions in §§9 and 12, and the projects in §19. Treat §§2, 8 and 16–17 as a reference map; learning the method names can wait until the mechanics are clear.
 
 ---
 
@@ -22,18 +25,22 @@ That difference matters whenever there is no canonical target. Suppose two expla
 
 There is a second source of supervision that is particularly important for reasoning. A completion may be checked by unit tests, a symbolic verifier, an exact answer, or the terminal state of an environment. In that case the feedback need not express a human taste at all. It is a measurable outcome.
 
-These signals lead to two broad training regimes.
+A **policy** is the trainable model viewed as a distribution over answers. We write $\pi_\theta(y\mid x)$ for the probability of completion $y$ given prompt $x$ and parameters $\theta$. A sampled response, its context and its feedback form a trajectory; producing it is a rollout. In a noninteractive task, one complete answer can be the whole trajectory. “Online” means that training collects new data as the policy changes; it does not mean an internet connection is required.
 
-- **Offline preference optimization** consumes a fixed collection of pairs or labels. DPO and most direct preference losses belong here.
+The source of feedback and the timing of data collection are separate choices. Human or model judgments and programmatic checks can be applied to stored responses or to newly collected ones. We will contrast two common workflows.
+
+- **Offline preference optimization** consumes a fixed collection of pairs or labels. The original DPO recipe is an example.
 - **Online reinforcement learning** samples fresh completions from the policy being trained, scores them, and updates the policy from those trajectories. PPO, RLOO, and GRPO belong here.
 
 Offline training is easier to reproduce and does not pay for generation at every optimizer step. Its blind spot is distribution shift: the dataset reflects policies that produced the stored answers, not necessarily the policy after several epochs of training. Online RL follows the moving policy distribution, but the system must now generate, score, transport, and sometimes discard a large number of trajectories.
 
 The rest of the module can be read as three different answers to one design question: **what mathematical object should a comparison become?** A scalar reward model, a pairwise classification loss, or a relative advantage inside a group of sampled completions.
 
+Keep the objective separate from the collection procedure. We study the original fixed-pair DPO recipe, but one can collect fresh preference pairs between DPO rounds. Likewise, a verifier defines where rewards come from, not which optimizer or group estimator must consume them.
+
 ## 2. From reward modelling to environment-scale RL
 
-![VIZ m12/01 — the changing post-training loop](assets/modern-llms/en/module-12/m12_01_timeline.svg)
+![VIZ m14/01 — the changing post-training loop](assets/modern-llms/en/module-12/m14_01_timeline.svg)
 
 The modern pipeline did not appear all at once.
 
@@ -41,7 +48,7 @@ The modern pipeline did not appear all at once.
 
 **DPO (2023)** removed the online RL stage for a particular class of preference objectives. By expressing the optimal reward through a ratio between the trained and reference policies, it turned the problem into a supervised pairwise loss.
 
-In 2024 the field split in two useful directions. IPO, KTO, SimPO, and ORPO explored alternative direct losses and data contracts. RLOO and GRPO revisited lightweight policy-gradient methods that construct baselines from multiple answers to the same prompt instead of training a separate critic.
+By 2024, work was moving in two useful directions. IPO, KTO, SimPO, and ORPO explored alternative direct losses and data contracts. RLOO and GRPO revisited lightweight policy-gradient methods that construct baselines from multiple answers to the same prompt instead of training a separate critic.
 
 The open releases around **DeepSeek-R1**, **DAPO**, and **Dr. GRPO** in 2025 made verifier-based RL a central topic in reasoning-model research. The next step was architectural rather than merely algorithmic. By 2026, open stacks such as **verl**, **NeMo RL**, and **NeMo Gym** expose rollout workers, interactive environments, asynchronous queues, and trajectory-freshness controls as first-class components.
 
@@ -68,9 +75,11 @@ $$
 
 is therefore logistic pairwise modelling, not an LLM-specific invention.
 
+Here $\sigma(u)=1/(1+e^{-u})$ is the sigmoid, which maps a real score gap to a probability between zero and one. Subscripts $w$ and $l$ denote the preferred and rejected answers. Rejected means that the answer lost this comparison; it need not be factually wrong.
+
 ### REINFORCE: reduce variance without changing the expectation
 
-The score-function estimator gives
+Let $J(\theta)$ be the expected reward under parameters $\theta$. For a one-step task, $J(\theta)=\mathbb E_{s,a\sim\pi_\theta}[R]$; in a multi-step task, $R$ denotes the future return. The score-function estimator gives
 
 $$
 \nabla J(\theta)
@@ -86,6 +95,8 @@ $$
 
 RLOO forms $b$ from the other completions sampled for the same prompt. GRPO uses statistics of the entire group. The latter is convenient, but it is not automatically an unbiased substitute for a value function.
 
+In these equations, $s$ is the context before an action, $a$ is the sampled action and $R$ is its reward. An action can be a complete answer or one token; in the latter interpretation, the context includes the generated prefix. The residual $A=R-b$ is called an **advantage**. Treat the baseline as a constant when taking this policy gradient. Rewards of the other responses provide an action-independent baseline when responses are conditionally independent draws from the same frozen sampler for that prompt.
+
 ### Prospect theory: utility relative to a reference point
 
 Human judgments are often asymmetric around a reference point: gains and losses of the same magnitude need not have the same subjective effect. KTO uses this perspective to learn from individual desirable and undesirable examples rather than explicit pairs.
@@ -96,7 +107,7 @@ These three ideas give us three different geometries: pairwise score gaps, polic
 
 ## 4. Classical RLHF as an algorithmic contract
 
-Let $\pi_{\mathrm{ref}}$ denote the policy obtained after SFT.
+**RLHF** means reinforcement learning from human feedback. Let $\pi_{\mathrm{ref}}$ denote the policy obtained after SFT.
 
 **Stage 1: supervised fine-tuning.** Demonstrations move the base model into a useful response distribution.
 
@@ -107,20 +118,29 @@ $$
 =-\log\sigma\left(r_\phi(x,y_w)-r_\phi(x,y_l)\right).
 $$
 
-**Stage 3: policy optimization.** The current policy samples completions and is optimized against the learned reward while remaining close to the reference:
+**Stage 3: policy optimization with PPO (Proximal Policy Optimization).** The current policy samples completions and is optimized against the learned reward while remaining close to the reference:
 
 $$
 \max_\theta\;
 \mathbb E_{x,\,y\sim\pi_\theta}
 \left[r_\phi(x,y)\right]
--\beta\,\mathrm{KL}\!\left(\pi_\theta\|\pi_{\mathrm{ref}}\right).
+-\beta\,\mathbb E_x\!\left[\mathrm{KL}\!\left(\pi_\theta(\cdot\mid x)\|\pi_{\mathrm{ref}}(\cdot\mid x)\right)\right].
 $$
 
-The KL term is a trust-region-like control, not a proof of alignment. It slows distributional drift and often makes reward exploitation harder, but it cannot repair a systematically wrong reward model.
+The positive coefficient $\beta$ sets the penalty for departing from the reference, and $\mathbb E_x$ averages over training prompts. Recall the KL definition from M13; the direction used here is
+
+$$
+\mathrm{KL}(\pi_\theta\|\pi_{\mathrm{ref}}\mid x)
+=\sum_y\pi_\theta(y\mid x)\log\frac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}.
+$$
+
+The sum runs over complete responses, with the log ratio averaged under the current policy. This is a soft incentive to stay near a fixed reference, not a bound on the size or speed of each update. PPO also modifies the objective relative to the policy that collected the current batch; §9 treats that mechanism separately. Neither mechanism repairs an incorrect reward or guarantees safe behaviour.
+
+**The critic** predicts expected future reward from the current context. Comparing the observed return with this prediction helps estimate advantage: how much better the action turned out than expected. The reward model has a different role: it scores a response using learned preferences.
 
 The canonical pipeline contains four logical roles: policy, reference policy, reward model, and critic/value model. A production implementation may share backbones, shard states, quantize frozen models, or place the roles on separate machines. “Four models” is therefore an algorithmic description, not a claim that four independent full checkpoints must remain resident on every accelerator.
 
-![VIZ m12/02 — the classical RLHF contract](assets/modern-llms/en/module-12/m12_02_rlhf.svg)
+![VIZ m14/02 — the classical RLHF contract](assets/modern-llms/en/module-12/m14_02_rlhf.svg)
 
 ## 5. Worked example A: invert a Bradley–Terry model
 
@@ -149,7 +169,7 @@ This does not reveal an objective human utility. It maps an empirical win rate i
 
 ## 6. DPO: eliminate the explicit reward model
 
-For the KL-regularized objective above, the optimal policy has the form
+**DPO (Direct Preference Optimization)** starts from the KL-regularized objective in §4. For that objective, the optimal policy has the form
 
 $$
 \pi^*(y\mid x)
@@ -158,7 +178,13 @@ $$
 \exp\!\left(\frac{r(x,y)}{\beta}\right).
 $$
 
-Rearranging gives
+The proportional weights become probabilities after division by the normalizing sum
+
+$$
+Z(x)=\sum_y\pi_{\mathrm{ref}}(y\mid x)\exp\!\left(\frac{r(x,y)}{\beta}\right).
+$$
+
+Assume this sum is finite and the reference assigns positive probability to the responses under consideration. Rearranging then gives
 
 $$
 r(x,y)
@@ -188,9 +214,13 @@ $$
 
 is commonly called an **implicit reward**. The phrase is useful as long as its scope is remembered: DPO has not produced a standalone reward function that can score arbitrary model outputs independently. The reward is defined through two policies under the assumed preference model.
 
-DPO is offline. The training loop need not generate new completions. If the pair dataset is fixed, reference log probabilities can be computed once and stored. The reference checkpoint can then be removed from the optimization phase. If the data changes online, or if augmentations alter tokenization, those cached values are no longer sufficient.
+The original DPO recipe trains on fixed pairs without generating at each step. Precompute the reference log probabilities for those pairs and the reference checkpoint need not remain in the optimization process. Newly collected pairs require new reference values; changes to tokenization or the reference policy invalidate the corresponding cache. Refreshing the dataset therefore adds bookkeeping and scoring work rather than making caching impossible.
 
-![VIZ m12/03 — direct optimization on preference pairs](assets/modern-llms/en/module-12/m12_03_dpo.svg)
+The implicit score can be evaluated on a new answer wherever both policies assign positive probability. It requires both policies, however; it is not an independently trained judge. A positive implicit reward gap describes ordering relative to the reference and does not establish answer quality beyond the comparisons used in training.
+
+For a completion, $\log\pi_\theta(y\mid x)$ is the sum of $\log\pi_\theta(y_t\mid x,y_{<t})$ over its target tokens. As in M13, align the preceding-position logits with each target exactly once, then exclude prompt and padding positions. Both policies must use the same dialogue template, tokenization and end-of-answer convention. Otherwise their difference also measures a mismatch in representation.
+
+![VIZ m14/03 — direct optimization on preference pairs](assets/modern-llms/en/module-12/m14_03_dpo.svg)
 
 ## 7. Worked example B: read the DPO margin carefully
 
@@ -211,11 +241,11 @@ $$
 =\sigma(-z)=0.4576.
 $$
 
-Pair II has a smaller separation. Its $z$ is 0.065 and the local derivative is 0.4838, closer to the maximum value of 0.5. Near-boundary pairs therefore exert a stronger local pull.
+For pair II, keep the policy values and use reference log probabilities $(-12.8,-11.65)$ for the preferred and rejected answers. The log ratios are $0.8$ and $0.15$, a gap of $0.65$. Thus $z=0.065$ and the derivative magnitude is 0.4838. At the decision boundary $z=0$, the magnitude is 0.5; for a misordered pair with $z<0$, it exceeds 0.5 and approaches 1 as $z$ becomes very negative. A near-boundary pair therefore pulls harder than an already well-ordered pair, while a strongly misordered pair receives an even larger local weight.
 
 If pair I is evaluated with $\beta=0.5$, then $z=0.85$, the loss falls to 0.356, and $\sigma(-z)$ becomes 0.299. This number alone does not say that training has become weaker. The gradient with respect to model parameters also carries the factor $\beta$, and $\beta$ changes the scale at which policy movement is judged relative to the reference. In practice it should be tuned with KL drift, response quality, and the distribution of pair margins in view.
 
-![VIZ m12/04 — one sigmoid, two interpretations](assets/modern-llms/en/module-12/m12_04_bt_dpo.png)
+![VIZ m14/04 — one sigmoid, two interpretations](assets/modern-llms/en/module-12/m14_04_bt_dpo.png)
 
 ## 8. Direct preference losses differ by contract, not branding
 
@@ -231,13 +261,15 @@ The finite target is an inductive bias, not a free correction. A poor target can
 
 **Kahneman–Tversky Optimization (KTO)** removes the requirement that every label come as a pair. An example is marked desirable or undesirable and evaluated relative to a reference point.
 
-This matches many product feedback streams, where a user rates one answer. The signal is cheaper to collect but less informative: it does not tell the learner which alternative was considered or how large the preference gap was.
+A single-answer rating can be easier to collect because no alternative needs to be shown. What it omits is the identity of a comparison response. Neither one binary rating nor one binary pairwise choice directly specifies preference strength or a reason; those require additional annotations or explanations. The usefulness of pointwise feedback depends on negative-example quality, class balance and the reference point.
 
 ### SimPO: a reference-free sequence reward
 
-**Simple Preference Optimization (SimPO)** uses average sequence log probability as its implicit reward and adds a target margin. The length normalization aligns the training score more closely with sequence-level generation, while the absence of a separate reference model reduces memory and compute.
+**Simple Preference Optimization (SimPO)** uses average sequence log probability as its implicit reward and adds a target margin. Length normalization replaces the sum of token log probabilities with their average, while the absence of a separate reference model reduces memory and compute.
 
 Length normalization changes the incentive; it does not guarantee that response length will be neutral under every dataset and evaluation protocol.
+
+Write $\bar\ell_\theta(y)=\log\pi_\theta(y\mid x)/|y|$ for a completion's mean token log probability. A SimPO pair then contributes $-\log\sigma(\beta[\bar\ell_\theta(y_w)-\bar\ell_\theta(y_l)]-\gamma)$, where $\gamma$ specifies the target margin. Ordinary autoregressive sampling follows the product of token probabilities; it does not rank complete answers by this average. Length normalization is therefore an objective choice whose effect must be checked on generated lengths and quality.
 
 ### ORPO: preference alignment inside instruction tuning
 
@@ -247,7 +279,7 @@ The simplified pipeline comes with tighter coupling. When results deteriorate, t
 
 DPO remains a strong reproducible baseline. KTO is attractive for pointwise feedback, SimPO for a reference-free setup, ORPO for a single joint stage, and IPO when a finite target gap is a better model of the annotations.
 
-![VIZ m12/05 — a map of direct preference methods](assets/modern-llms/en/module-12/m12_05_dpo_family.svg)
+![VIZ m14/05 — a map of direct preference methods](assets/modern-llms/en/module-12/m14_05_dpo_family.svg)
 
 ## 9. RLOO and GRPO: construct a baseline from sibling rollouts
 
@@ -300,11 +332,25 @@ $$
 
 Such a group contains no relative ranking signal. Skipping it, resampling it, or assigning zero advantages are explicit policy choices; adding epsilon to the denominator only prevents a numerical exception.
 
-![VIZ m12/06 — group-relative advantages](assets/modern-llms/en/module-12/m12_06_grpo.svg)
+Our arithmetic uses the population standard deviation, `ddof=0`. Switching to `ddof=1` multiplies the advantages by $\sqrt{(G-1)/G}$, changing the update scale at the same learning rate. Equal rewards produce zero policy-gradient advantages, but a separate KL penalty can still update the model. Dropping a group also changes the averaging denominator; collecting a replacement costs additional rollouts.
+
+**Turning an advantage into an update.** Freeze the sampling policy $\pi_{\mathrm{old}}$ for a batch of trajectories. It is distinct from $\pi_{\mathrm{ref}}$: the former follows successive rollout batches, whereas the latter supplies a longer-term anchor. For completion token $t$ in answer $i$, define
+$$
+\rho_{i,t}=\frac{\pi_\theta(y_{i,t}\mid x,y_{i,<t})}
+{\pi_{\mathrm{old}}(y_{i,t}\mid x,y_{i,<t})},
+\qquad
+q_{i,t}=\min\!\left(\rho_{i,t}A_i,\,
+\operatorname{clip}(\rho_{i,t},1-\epsilon_{\mathrm{low}},1+\epsilon_{\mathrm{high}})A_i\right).
+$$
+Maximize an average of $q$, or minimize its negative, treating the old probabilities and advantages as constants. For positive advantage, increasing the ratio past its upper threshold stops improving this term; negative advantage produces the corresponding limit on decreasing the ratio. Clipping shapes the objective. It does not guarantee that every probability ratio after an optimizer step stays inside the interval.
+
+The denominator is part of the algorithm. Original GRPO averages tokens within each response, then responses: $G^{-1}\sum_i |y_i|^{-1}\sum_t q_{i,t}$. A token mean divides $\sum_{i,t}q_{i,t}$ by $\sum_i|y_i|$; the notebook's numerical example uses this normalization, as in that component of DAPO. If responses have lengths 1 and 3 and constant per-token values 2 and 0, these averages are 1 and 0.5 respectively. Padding enters neither sum. If KL regularization is used, specify its coefficient and normalization separately.
+
+![VIZ m14/06 — group-relative advantages](assets/modern-llms/en/module-12/m14_06_grpo.svg)
 
 ## 10. Worked example D: a deliberately simplified memory model
 
-Assume an 8.03B-parameter model. Use 16 bytes per parameter for a trainable Adam stack and 2 bytes per parameter for a frozen bf16 copy.
+Assume an 8.03B-parameter model. Use 16 bytes per parameter for the teaching Adam stack: bf16 weights (2), bf16 gradients (2), an fp32 master copy (4), and two fp32 Adam states (4 + 4). A frozen bf16 copy costs 2 bytes per parameter. Other precision and optimizer choices change this accounting.
 
 A trainable model then occupies
 
@@ -318,13 +364,13 @@ while a frozen copy occupies 14.96 GiB.
 For a transparent PPO teaching configuration, count two trainable full-sized networks—policy and critic—and two frozen ones—reference and reward model:
 
 $$
-2\times119.7+2\times14.96=269.2\ \text{GiB}.
+\frac{36\cdot8.03\cdot10^9}{2^{30}}\approx269.2\ \text{GiB}.
 $$
 
 DPO with a resident reference policy uses
 
 $$
-119.7+14.96=134.6\ \text{GiB}.
+\frac{18\cdot8.03\cdot10^9}{2^{30}}\approx134.6\ \text{GiB}.
 $$
 
 The ratio is exactly 2.00 under these assumptions, and the critic accounts for roughly 44% of the PPO total.
@@ -357,12 +403,12 @@ $$
 =81.5\ \text{min}.
 $$
 
-Estimate one training pass with $6ND$ for an 8.03B model. At 990 TFLOP/s per accelerator and 40% MFU across eight accelerators, the estimate is 2.08 minutes.
+Estimate one training pass with $6ND$ for an 8.03B model. At 990 TFLOP/s per accelerator and 40% MFU across eight accelerators, the estimate is $6\cdot8.03\cdot10^9\cdot8{,}192{,}000/(8\cdot990\cdot10^{12}\cdot0.4\cdot60)\approx2.076444$ minutes.
 
-The ratio is therefore about
+Compute the ratio before rounding either time; displaying six decimal places gives
 
 $$
-81.5/2.08\approx39.3.
+81.502706/2.076444\approx39.2511.
 $$
 
 Nothing in GRPO guarantees this number. It comes from the chosen completion length, throughput, model size, and utilization. What the example exposes is the possibility that autoregressive decode—not backpropagation—sets the wall-clock scale of RL.
@@ -376,7 +422,9 @@ That observation motivates four systems techniques:
 
 verl and NeMo RL both expose separated or asynchronous rollout/training architectures. The gain is not free: trajectories produced by older parameters become increasingly off-policy as they wait in queues.
 
-![VIZ m12/07 — the economics of group-based RL](assets/modern-llms/en/module-12/m12_07_grpo_memory.png)
+Here 209.4 tokens/s is an assumed aggregate per-device rate at a chosen batching setup, not a promised per-user rate. The calculation counts generated tokens and one training pass over them. Prompt processing, prefill, reward and reference evaluation, extra optimization epochs and communication add work. Account for these separately before using the estimate to size a system.
+
+![VIZ m14/07 — the economics of group-based RL](assets/modern-llms/en/module-12/m14_07_grpo_memory.png)
 
 ## 12. What later GRPO variants are actually fixing
 
@@ -386,8 +434,8 @@ GRPO's adoption exposed several independent failure modes: groups with no relati
 
 **Decoupled Clip and Dynamic sAmpling Policy Optimization (DAPO)** combines four mechanisms.
 
-1. **Clip-Higher** gives low-probability tokens more room to increase than high-probability tokens have to decrease, supporting exploration.
-2. **Dynamic Sampling** removes all-correct and all-incorrect groups.
+1. **Clip-Higher** sets a wider upper than lower ratio threshold, supporting exploration.
+2. **Dynamic Sampling** discards equal-reward groups and continues collecting until enough informative groups fill the batch.
 3. **Token-Level Policy Gradient Loss** changes the averaging unit so long and short completions contribute differently from response-level averaging.
 4. **Overlong Reward Shaping** smooths the reward near the truncation boundary.
 
@@ -399,7 +447,7 @@ The published recipe also sets the explicit KL penalty to zero. That is an empir
 
 The paper also makes a broader methodological point: the base checkpoint already determines what behaviours RL can amplify. An “aha moment” observed during training should not automatically be interpreted as a capability created from nothing.
 
-### 2026: group-relative advantage under theoretical scrutiny
+### 2025–2026: group-relative advantage under theoretical scrutiny
 
 Recent analyses study systematic bias with respect to prompt difficulty and reinterpret GRPO as a contrastive objective. These results do not make GRPO useless. They replace an overly simple story—“the group mean is a free critic”—with a more accurate one: group-relative normalization is a practical estimator with identifiable inductive biases.
 
@@ -412,7 +460,11 @@ A serious implementation must document at least six choices:
 - freshness of rollout data;
 - evolution of prompt difficulty and completion length.
 
-![VIZ m12/08 — a taxonomy of GRPO repairs](assets/modern-llms/en/module-12/m12_08_grpo_line.svg)
+A small exact example exposes one source of bias. Let $a$ be Bernoulli with $p=\sigma(\theta)$ and reward $a$. The true reward gradient is $p(1-p)$. Subtracting the full-group mean, which includes the sample itself, gives expectation $(G-1)p(1-p)/G$; a leave-one-out baseline preserves $p(1-p)$. At $p=0.3$ and $G=8$, these are 0.18375 and 0.21. This calculation does not divide by standard deviation; doing so introduces another dependence on the sampled group. The notebook enumerates all $2^8$ groups before comparing the result with simulation.
+
+Dr. GRPO uses a constant token denominator $G L_{\max}$ and removes group-standard-deviation reward scaling. A constant denominator differs from both a response mean and a mean over the actual number of generated tokens. Consequently, “GRPO” alone is not enough information to reproduce a training run.
+
+![VIZ m14/08 — a taxonomy of GRPO repairs](assets/modern-llms/en/module-12/m14_08_grpo_line.svg)
 
 ## 13. Level-one code: the numerical core
 
@@ -423,12 +475,12 @@ import math
 import numpy as np
 
 def stable_sigmoid(x):
-    """A sigmoid implementation that remains stable for large magnitudes."""
+    """Numerically stable sigmoid."""
     x = np.asarray(x, dtype=np.float64)
     return np.exp(-np.logaddexp(0.0, -x))
 
 def dpo_loss(policy_lp_w, policy_lp_l, ref_lp_w, ref_lp_l, beta=0.1):
-    """DPO from completion-only sequence log probabilities."""
+    """DPO from completion-token log-probability sums."""
     if not math.isfinite(beta) or beta <= 0:
         raise ValueError("beta must be finite and positive")
 
@@ -439,7 +491,7 @@ def dpo_loss(policy_lp_w, policy_lp_l, ref_lp_w, ref_lp_l, beta=0.1):
         np.asarray(ref_lp_l, dtype=float),
     )
     if not all(np.all(np.isfinite(v)) for v in (pw, pl, rw, rl)):
-        raise ValueError("sequence log probabilities must be finite")
+        raise ValueError("log probabilities must be finite")
 
     z = beta * ((pw - rw) - (pl - rl))
     loss = np.logaddexp(0.0, -z)
@@ -447,20 +499,24 @@ def dpo_loss(policy_lp_w, policy_lp_l, ref_lp_w, ref_lp_l, beta=0.1):
     return loss, local_slope, z > 0
 
 def grpo_advantages(rewards, *, on_degenerate="raise"):
-    """Population z-scores with an explicit zero-variance policy."""
+    """Population normalization with explicit zero-variance handling."""
     r = np.asarray(rewards, dtype=np.float64)
     if r.ndim != 1 or r.size < 2 or not np.all(np.isfinite(r)):
-        raise ValueError("expected a finite one-dimensional group of size >= 2")
+        raise ValueError("rewards must be a finite one-dimensional group of size >= 2")
 
+    if on_degenerate not in ("raise", "zeros"):
+        raise ValueError("on_degenerate must be raise or zeros")
     std = float(r.std(ddof=0))
     if std == 0.0:
         if on_degenerate == "zeros":
             return np.zeros_like(r)
-        raise ValueError("the group contains no relative reward signal")
+        raise ValueError("the group contains no relative signal")
     return (r - r.mean()) / std
 
 def stage_memory_gib(n_params, stack):
-    """Teaching estimate for persistent model states only."""
+    """Teaching estimate of persistent model states, excluding activations."""
+    if not math.isfinite(n_params) or n_params <= 0:
+        raise ValueError("n_params must be finite and positive")
     bytes_per_parameter = {"train": 16, "frozen_bf16": 2}
     return sum(bytes_per_parameter[kind] * n_params for kind in stack) / 2**30
 
@@ -471,7 +527,7 @@ ppo = stage_memory_gib(
 dpo = stage_memory_gib(8.03e9, ["train", "frozen_bf16"])
 ```
 
-`np.logaddexp(0, -z)` is the stable form of $-\log\sigma(z)$. `local_slope` is the derivative with respect to the scalar margin, not the norm of the parameter gradient. `grpo_advantages` forces the caller to decide what a zero-variance group means. `stage_memory_gib` states its limitation in the name and docstring: activations and rollout state are outside the model.
+`np.logaddexp(0, -z)` is the stable form of $-\log\sigma(z)$. `local_slope` is the derivative magnitude with respect to the scalar margin, not the norm of the parameter gradient. `grpo_advantages` forces the caller to decide what a zero-variance group means. `stage_memory_gib` states its limitation in the name and docstring: activations and rollout state are outside the model.
 
 ## 15. RLVR still obeys Goodhart's law
 
@@ -514,9 +570,9 @@ A single-turn math problem can be represented by a prompt, a completion, and a c
 
 **NeMo Gym** treats an environment as a combination of data, agent harness, tools, and verification logic. **NeMo RL** and **verl** support multi-turn rollouts and separated generation/training systems. This is the operational meaning of environment-native RL: the environment is part of the training specification, not merely a final reward function.
 
-As of August 4, 2026, many proprietary model families do not publish a complete post-training recipe. Adjustable reasoning effort, hidden chains of thought, or strong tool use do not uniquely identify PPO, DPO, GRPO, distillation, or any particular mixture. Public behaviour should not be presented as evidence for an undisclosed algorithm.
+When a proprietary model has no complete public post-training recipe, its behaviour cannot fill that evidential gap. Adjustable reasoning effort, hidden chains of thought, or strong tool use do not uniquely identify PPO, DPO, GRPO, distillation, or any particular mixture. Public behaviour should not be presented as evidence for an undisclosed algorithm.
 
-![VIZ m12/09 — from pairs to environments](assets/modern-llms/en/module-12/m12_09_landscape.svg)
+![VIZ m14/09 — from pairs to environments](assets/modern-llms/en/module-12/m14_09_landscape.svg)
 
 ## 17. How to read a post-training passport
 
@@ -555,15 +611,15 @@ When these fields are absent, the honest conclusion is “the exact recipe is no
 
 ## 20. Key takeaways and sources
 
-![VIZ m12/10 — preference optimization on one page](assets/modern-llms/en/module-12/m12_10_cheatsheet.svg)
+![VIZ m14/10 — preference optimization on one page](assets/modern-llms/en/module-12/m14_10_cheatsheet.svg)
 
-**The signal determines the method.** Demonstrations specify a target. Preferences rank alternatives. Verifiers score outcomes. They are not interchangeable data formats.
+**Distinguish the signals.** Demonstrations specify a target. Preferences rank alternatives. Verifiers score outcomes. Specify the feedback format, data-collection procedure and update rule separately.
 
 **Classical RLHF.** SFT feeds reward modelling, which feeds PPO under KL control. The four logical roles need not be four unshared full checkpoints in every implementation.
 
 **Bradley–Terry.** $P(y_w\succ y_l)=\sigma(r_w-r_l)$. A 75% win rate maps to $\log3\approx1.099$ inside this comparison model.
 
-**DPO.** The implicit reward is a current/reference policy ratio. DPO is an offline pairwise method and does not require rollout generation or a separately trained reward model.
+**DPO.** The implicit reward is a current/reference policy ratio. The original DPO recipe is an offline pairwise method and does not require rollout generation or a separately trained reward model.
 
 **Direct variants.** IPO targets a different margin geometry; KTO consumes pointwise desirable/undesirable labels; SimPO is reference-free and length-normalized; ORPO combines supervised likelihood and preference pressure in one objective.
 
@@ -597,8 +653,8 @@ When these fields are absent, the honest conclusion is “the exact recipe is no
 - NeMo RL — [github.com/NVIDIA-NeMo/RL](https://github.com/NVIDIA-NeMo/RL)
 - verl — [github.com/verl-project/verl](https://github.com/verl-project/verl)
 
-**Next:** Module 13 studies reasoning models and test-time compute. Here we changed the policy; next we decide how much computation an already trained policy should spend on a particular request.
+**Next:** Module 15 studies reasoning models and test-time compute. Here we changed the policy; next we decide how much computation an already trained policy should spend on a particular request.
 
 ---
 
-*Landscape verified: August 4, 2026. Current claims were checked against primary sources; exact recipes for closed models are not reconstructed from external behavior. Teaching estimates for memory and time are reproduced by local calculations and apply only under the stated assumptions.*
+*Landscape verified: October 11, 2026. Current claims were checked against primary sources; exact recipes for closed models are not reconstructed from external behavior. Teaching estimates for memory and time are reproduced by local calculations and apply only under the stated assumptions.*

@@ -1,14 +1,24 @@
-# Module 8. Pretraining: Data, Scaling Laws, and Optimizers
+# Module 9. Pretraining: Data, Scaling Laws, and Optimizers
 
-*“Modern LLMs” course · Module 8 lecture · edition 2026.8.1*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
+
+*“Modern LLMs” course · Module 9 lecture · edition 2026.10.25*
 
 > **What this module is about.** The previous modules assembled the machine: tokenization, positional mechanisms, attention, Transformer blocks, mixture-of-experts routing, and alternative architectural branches. A model with those components is still only an untrained dynamical system. Pretraining is the stage at which architecture, data, optimization, numerical precision, and cluster topology must work together for months without a cheap reset button.
 >
-> We will follow three decisions that belong to the same training run. **What data should the model see?** **How should a fixed compute budget be divided between parameters and tokens?** **Which optimization and systems choices can carry the run through trillions of tokens without instability?** The mathematical path starts from $C\approx6ND$, derives the analytic optimum of a particular Chinchilla-style fit, measures the cost of moving away from that optimum, and adds inference to the lifecycle objective. The engineering path leads through data curation, Muon, MuonClip, µP-style transfer, ZeRO/FSDP, and large-run passports.
+> We will follow three decisions that belong to the same training run. **What data should the model see?** **How should a fixed compute budget be divided between parameters and tokens?** **Which optimization and systems choices can carry the run through trillions of tokens without instability?** The mathematical path starts from $C\approx6ND$, derives the analytic optimum of a particular Chinchilla-style fit, measures the cost of moving away from that optimum, and adds inference to the lifecycle objective. The practical path covers data curation, Muon, MuonClip, µP-style transfer, and the memory accounting behind ZeRO/FSDP. We use these mechanisms to read large-run reports and their resource constraints. Implementing a distributed training runtime or GPU kernels requires a separate course.
 >
 > The module distinguishes exact algebra inside an assumed model from empirical fit, vendor-reported run results, and broader conclusions. That distinction matters more at frontier scale, where a memorable number can travel farther than the conditions under which it was measured.
 >
-> **Useful background.** Modules 5–6 specify the architectures being trained. Module 7b provides roofline intuition. Modules 4 and 6 supply the memory and expert-parallel context used later in the distributed-training section.
+> **Useful background.** Modules 3 and 6 explain the computation and decoder block; Modules 5 and 7 provide the attention and expert-parallel context. For the compute estimates here, distinguish work in FLOP from throughput in FLOP/s: their ratio gives compute time. Device utilization, communication, and data movement reduce sustained throughput below the hardware peak. Module 10 develops the fuller roofline model.
+
+### Reading routes
+
+- **First pass:** read §§1–3 and 5 for the problem and the data pipeline. In §4, focus on the variables and final allocation formula; continue with §§6–11 and 15, then try Q1–Q7 in §18 and E1–E3. Return to Q8 after reading the run passports in §17.
+- **Second pass:** work through the derivation in §4 and execute the code and notebooks in §§12–13. Follow with hyperparameter transfer (§14), precision (§16), and selected run reports (§17).
+- **Reference:** use §4 for equations, §§10–11 for optimizer mechanics, §15 for state accounting, and §20 for sources. The run reports can be read independently.
+
+Pretraining builds a base model from a large data mixture, usually through next-token prediction. Later training that shapes its behavior is a separate stage.
 
 ---
 
@@ -26,7 +36,8 @@ The choices interact. Data quality changes the observed scaling curve. The chose
 
 ## 2. The historical arc: the objective kept expanding
 
-![VIZ m8/01 — the expanding pretraining objective](assets/modern-llms/en/module-08/m8_01_timeline.svg)
+![VIZ m9/01 — the expanding pretraining objective](assets/modern-llms/en/module-08/m9_01_timeline.svg)
+*From Kaplan’s empirical power laws to Chinchilla’s compute-optimal balance, inference-aware allocation, reproducible data pipelines, Muon/MuonClip, low-precision pretraining, and the 2026 public run reports.*
 
 The modern story begins with a narrower question than the one posed in this module. Kaplan et al. showed in 2020 that language-model loss followed smooth power-law trends over the model, data, and compute ranges they studied. Their fitted regime encouraged parameter growth faster than token growth and matched the design instincts of the GPT-3 era: very large models trained on corpora that now look comparatively small.
 
@@ -52,7 +63,7 @@ $$
 y(x)=a x^{-\alpha}+b
 $$
 
-becomes approximately linear in suitable log coordinates and can compress many experiments into a few coefficients. That is the appeal of scaling laws. It is also the danger. A fit is only as universal as the architectures, tokenizers, datasets, numerical formats, and scale range behind it. Kaplan and Chinchilla are a useful reminder that a smooth line may change when the experimental regime changes.
+has an exact straight-line form after subtracting the floor: for $a>0$ and $x>0$, $\log(y-b)=\log a-\alpha\log x$. Plotting $\log y$ itself is only approximately linear where $a x^{-\alpha}$ dominates $b$. Fitting such a relation can compress many experiments into a few coefficients. That is the appeal of scaling laws. It is also the danger. A fit is only as universal as the architectures, tokenizers, datasets, numerical formats, and scale range behind it. Kaplan and Chinchilla are a useful reminder that a smooth line may change when the experimental regime changes.
 
 A responsible use of a scaling law therefore has three layers: fit the observed region, optimize the fitted function, and label any extrapolation beyond the observed region. The second step can be exact mathematics while the third remains uncertain science.
 
@@ -66,13 +77,15 @@ The scale changes the algorithms. Pairwise document comparison is impossible, so
 
 It is useful to separate three families rather than place every method on one “approximate Hessian” ladder.
 
-- **Adaptive first-order methods**, such as AdamW and Lion, use gradient history to rescale coordinates.
+- **First-order methods with gradient history**, such as AdamW and Lion, adapt updates in different ways: AdamW rescales by moment estimates, while Lion uses the sign of a momentum-based update.
 - **Preconditioning or curvature-oriented methods**, such as Shampoo, SOAP, and Sophia, construct richer approximations to local geometry.
 - **Matrix-geometric methods**, represented here by Muon, transform a momentum update using the fact that many parameters are matrices.
 
 Muon does not explicitly build a Hessian. Its practical operation is easier to understand through singular values: it turns a highly anisotropic matrix update into one with a much narrower spectrum. That is the mechanism we will derive in §10.
 
 > **Optional depth.** Cross-entropy, KL divergence, coding length, and the limits of interpreting loss as “information learned” are developed in *Information Theory for ML*. The present module remains self-contained and uses cross-entropy only as the measured pretraining objective.
+
+The calculations use mean cross-entropy in nats per token. Enter $N$ and $D$ as counts, not as numbers measured in billions. Table suffixes B and T mean $10^9$ and $10^{12}$. Loss values from different tokenizers are not directly comparable.
 
 ## 4. Formalism: compute, a fitted loss surface, and its analytic optimum
 
@@ -170,6 +183,8 @@ The thresholds are engineering choices, not universal constants. A repetition ru
 
 ### 5.3 Deduplicate across documents
 
+A shingle is a short sequence of adjacent words or tokens. For shingle sets $A$ and $B$, Jaccard similarity is $J(A,B)=|A\cap B|/|A\cup B|$. MinHash compresses the sets while approximately preserving this similarity; locality-sensitive hashing (LSH) finds likely matches without an exhaustive pairwise scan. Candidate detection still needs a retention policy.
+
 Licenses, syndicated news, mirrored documentation, e-commerce templates, and copied articles can appear across thousands of domains. Repetition wastes training mass and increases the chance of benchmark contamination.
 
 All-pairs comparison is infeasible. Documents are represented by shingle sets, compressed into MinHash signatures, and grouped through locality-sensitive hashing. Candidate near-duplicates can then be compared more carefully, and each cluster can retain the most complete or highest-quality representative.
@@ -182,7 +197,7 @@ FineWeb-Edu is a clear example. Llama 3 70B scored the educational value of roug
 
 ### 5.5 Apply safety, privacy, and legal policy
 
-Quality and admissibility are different axes. Email addresses, phone numbers, identifiers, and other PII may be detected with regular expressions and NER systems. Toxicity or policy categories require classifiers and an explicit governance decision. A high-quality document may be excluded for policy reasons; a harmless document may still be useless for training.
+Quality and admissibility are different axes. Email addresses, phone numbers, identifiers, and other personally identifiable information (PII) may be detected with regular expressions and named entity recognition (NER) systems. Toxicity or policy categories require classifiers and an explicit governance decision. A high-quality document may be excluded for policy reasons; a harmless document may still be useless for training.
 
 ### 5.6 Build the mixture and its schedule
 
@@ -199,7 +214,8 @@ Code, mathematics, scientific documents, and multimodal data usually require spe
 
 The preprocessing system is also a software supply chain. Dataset loaders and conversion tools execute code and may access external storage. A July 2026 Hugging Face incident demonstrated that a data-processing path could become an intrusion path. Immutable images, allow-listed loaders, restricted network egress, secret isolation, pinned versions, and configuration review therefore belong to corpus engineering as surely as quality filters do.
 
-![VIZ m8/02 — a corpus is a pipeline](assets/modern-llms/en/module-08/m8_02_pipeline.svg)
+![VIZ m9/02 — a corpus is a pipeline](assets/modern-llms/en/module-08/m9_02_pipeline.svg)
+*Extraction and language identification → heuristics → near-duplicate removal → model-based quality scoring → privacy/policy checks → domain mixture. The diagram distinguishes a candidate pool from the token count of a particular training run.*
 
 ## 6. Worked example A: two budgets and the cost of a mnemonic
 
@@ -222,7 +238,7 @@ The arithmetic is internally consistent, but the token-to-parameter ratio was fi
 | $7.23\cdot10^{23}$ FLOP | **35.7B** | **3.38T** | 94.7 | 77.6B, 1.55T |
 | $2.6\cdot10^{24}$ FLOP | **63.6B** | **6.82T** | 107.2 | 147.2B, 2.94T |
 
-The first budget is the $6ND$ value of the 8.03B/15T teaching scenario. The second corresponds to a simple 1,000-H100, 30-day scenario under the notebook’s utilization assumptions.
+The first budget is the rounded $6ND$ value of the 8.03B/15T teaching scenario. The second is a separate illustrative FLOP budget; it is not a hardware runtime estimate.
 
 The gap is not evidence for a new “correct” ratio of one hundred tokens per parameter. It is evidence that three objects must not be conflated:
 
@@ -238,7 +254,8 @@ At fixed $C$, every parameter count determines exactly one token count, $D=C/(6N
 
 On the left, the model is small and the capacity term $A/N^\alpha$ dominates. On the right, the model is large but receives too little data, so the data term dominates. Between them lies a broad valley.
 
-![VIZ m8/03 — equal-compute valleys](assets/modern-llms/en/module-08/m8_03_isoflop.png)
+![VIZ m9/03 — equal-compute valleys](assets/modern-llms/en/module-08/m9_03_isoflop.png)
+*IsoFLOP curves for two budgets. The analytic optimum, the imposed 20-token rule, and the 8.03B/15T point are shown on the same fitted surface.*
 
 The shape of the valley matters for lifecycle design. Moving toward a smaller model and more tokens can add relatively little fitted loss while reducing the active parameter count—and therefore the cost of every future dense decode token.
 
@@ -276,10 +293,10 @@ $$
 L(N^*,D^*)=1.922505.
 $$
 
-Thus
+Taking the difference before rounding the losses gives
 
 $$
-\Delta L=0.025804.
+\Delta L\approx0.025804.
 $$
 
 This number is a counterfactual inside the selected fit. It is not a measured penalty of Llama 3 8B and does not claim that the real team “paid 0.0258 loss.” The architecture, data mixture, and training recipe differ from the experiments behind the coefficients. The calculation says only: if we take this fitted surface literally, moving from 35.7B/3.38T to 8.03B/15T raises fitted loss by 0.0258 while making the model about 4.4 times smaller.
@@ -337,7 +354,8 @@ $$
 
 Beyond roughly 2.12T generated tokens, the 8.03B configuration becomes cheaper in the sum of training compute plus this simple dense-decode estimate.
 
-![VIZ m8/04 — the lifecycle crossing and the data wall](assets/modern-llms/en/module-08/m8_04_inference_wall.png)
+![VIZ m9/04 — the lifecycle crossing and the data wall](assets/modern-llms/en/module-08/m9_04_inference_wall.png)
+*Lifecycle compute for two equal-fitted-loss configurations, and the token demand implied by extrapolating the selected fit to larger budgets.*
 
 The simplification omits batching, memory bandwidth, KV cache, quantization, speculative decoding, and the possibility that equal average loss does not mean equal task utility. The point is methodological: **the training-compute optimum and the product-cost optimum need not coincide**.
 
@@ -379,9 +397,25 @@ A masked diffusion language model can revisit the same document under different 
 
 The “data wall” is not a date on which the internet runs out. It is a gradual decline in the marginal value of the next token and a rise in the cost of cleaning, licensing, verifying, and scheduling it.
 
+The notebook makes repetition concrete. A 15T-token run with a 15% mathematics share allocates 2.25T token presentations to mathematics. A unique pool of 0.4T tokens therefore receives $2.25/0.4=5.625$ effective epochs. This measures average reuse, not the arrival of 5.625 new corpora.
+
 ## 10. Muon: change the spectrum of a matrix update
 
 AdamW remains a strong and well-understood baseline. Its practical advantage is coordinate-wise adaptation: parameters with different gradient histories receive different effective step sizes.
+
+The learning rate $\eta_t$ controls the overall step size. Momentum carries a decaying history of gradients, smoothing changes in direction. Weight decay shrinks the parameters themselves. AdamW applies that shrinkage separately from its adaptive gradient scaling, so adding an L2 penalty to the loss generally produces a different update.
+
+**<strong>Second pass: trace one AdamW step</strong>**
+
+Write $\theta_{t-1}$ for the parameters and $g_t$ for the loss gradient. Initialize two running averages at $m_0=v_0=0$, with decay coefficients $\beta_1,\beta_2\in[0,1)$. All operations are coordinate-wise:
+
+$$m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,\qquad v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2,$$
+$$\hat m_t=\frac{m_t}{1-\beta_1^t},\qquad\hat v_t=\frac{v_t}{1-\beta_2^t},$$
+$$\theta_t=(1-\eta_t\lambda)\theta_{t-1}-\eta_t\frac{\hat m_t}{\sqrt{\hat v_t}+\varepsilon}.$$
+
+The hats correct for initializing the averages at zero. Here $\lambda\ge0$ controls weight decay and $\varepsilon>0$ keeps the denominator positive. This is the common API convention in which decay is multiplied by the current learning rate.
+
+For $\theta_0=(1,-2)$, $g_1=(0.2,-0.4)$, $\eta_1=0.01$, $\lambda=0.1$, $\beta_1=0.9$, $\beta_2=0.999$, and $\varepsilon=10^{-8}$, the first result is approximately $(0.989,-1.988)$. Decay alone gives $(0.999,-1.998)$; the adaptive term contributes roughly $(-0.01,+0.01)$. The notebook follows another step after the gradient changes sign, exposing the role of history. [AdamW](https://arxiv.org/abs/1711.05101).
 
 Large Transformer parameters, however, are naturally matrices. Attention and MLP projections are not merely long vectors with arbitrary reshaping. Suppose a matrix update has a few dominant singular directions and many weak ones. A step can then concentrate most of its effect in a narrow subspace.
 
@@ -397,7 +431,11 @@ $$
 O\approx(MM^\top)^{-1/2}M.
 $$
 
-If $M=U\Sigma V^\top$, the ideal polar factor is $UV^\top$. The singular-vector directions remain; the diagonal spectrum $\Sigma$ is replaced by ones. In practical terms, Muon narrows the spread of singular values and makes the update more isotropic in matrix geometry.
+Here $M$ is the update matrix and SVD means singular value decomposition. The inverse-square-root expression requires full row rank; a tall matrix has singular $MM^\top$. In general, use the pseudoinverse square root and retain zeros in null directions. The expression $UV^\top$ uses the compact SVD on the nonzero singular subspace. The code transposes tall inputs so the Gram matrix is only $\min(m,n)\times\min(m,n)$.
+
+If $M=U\Sigma V^\top$, the ideal polar factor is $UV^\top$. The singular-vector directions remain; the nonzero singular values are replaced by ones. In practical terms, Muon narrows the spread of singular values and makes the update more isotropic in matrix geometry.
+
+The momentum equation isolates accumulation. A complete implementation also chooses momentum normalization, optional Nesterov mixing, shape-dependent step scaling, and weight decay. The notebook starts with a prepared update matrix. GEMM means matrix multiplication; the five iterations below are only one part of an optimizer step.
 
 Computing an SVD for every large matrix on every step would be too expensive. Muon therefore uses a small number of Newton–Schulz matrix iterations implemented through GEMM. The teaching trace uses the quintic coefficients
 
@@ -415,7 +453,8 @@ For the fixed $64\times32$ matrix in the notebook, the initial singular-value sp
 
 This is not an exact orthogonal factor. $\|O^\top O-I\|$ remains nonzero. Three additional classical cubic iterations can move the band to approximately $[0.998968,1.0]$, but exactness costs more GEMM work. An optimizer needs a useful geometric transformation, not a perfect numerical linear-algebra result.
 
-![VIZ m8/05 — flattening the update spectrum](assets/modern-llms/en/module-08/m8_05_muon.svg)
+![VIZ m9/05 — flattening the update spectrum](assets/modern-llms/en/module-08/m9_05_muon.svg)
+*Momentum update → five Newton–Schulz quintic iterations → a much narrower singular-value band. The inset contrasts the practical approximation with near-exact orthogonalization.*
 
 Calling Muon “second order” can obscure more than it clarifies. Some analyses connect it to Newton-like geometry, but the practical algorithm does not construct a Hessian. The robust statement is narrower: Muon exploits the matrix structure of the update and changes its spectrum.
 
@@ -427,10 +466,10 @@ Spectral normalization of the update does not prevent every instability. During 
 
 Clipping the logits in one forward pass treats the symptom. The matrices $W_Q$ and $W_K$ that produced the extreme value remain unchanged and may recreate it on the next step. QK-Clip instead rescales those parameters after the optimizer step.
 
-Let $m_h$ be the monitored maximum for head $h$ and let $\tau$ be the threshold. Define
+Let $m_h$ be the maximum positive, unmasked, scaled attention logit for head $h$, clamped below at zero and let $\tau$ be the threshold. Define
 
 $$
-\gamma_h=\min\left(1,\frac{\tau}{m_h}\right).
+\gamma_h=\begin{cases}1,&m_h\le\tau,\\ \tau/m_h,&m_h>\tau.\end{cases}.
 $$
 
 Then apply
@@ -467,9 +506,10 @@ $$
 (45,100,100,80).
 $$
 
-Heads below the threshold are untouched; the two problematic heads return exactly to the threshold in this simplified bilinear trace.
+For the same inputs, the two excessive heads return to the threshold in this simplified bilinear model. A new batch may exceed it again. Shared keys in GQA also prevent treating every Q/K head pair as independently rescalable.
 
-![VIZ m8/06 — clip the cause, not only the symptom](assets/modern-llms/en/module-08/m8_06_qkclip.svg)
+![VIZ m9/06 — clip the cause, not only the symptom](assets/modern-llms/en/module-08/m9_06_qkclip.svg)
+*Head maxima → $\gamma$ → symmetric rescaling of $W_Q$ and $W_K$ → corrected maxima. The lower strip contrasts parameter correction with one-pass logit clipping.*
 
 The next optimizer steps can grow the weights again, so QK-Clip is part of a monitoring loop rather than a permanent vaccine. The Kimi K2 report associates the mechanism with MuonClip and reports 15.5T pretraining tokens with zero loss spikes. That is a result of one documented run, not a theorem that MuonClip prevents divergence on every architecture.
 
@@ -482,11 +522,15 @@ Most equations in this module fit into a few lines of Python. That brevity is us
 The first function below validates positive scalar inputs. `ScalingLaw` keeps the fitted coefficients and the compute convention $C=\kappa ND$ in one object. `newton_schulz` accepts both tall and wide matrices and makes the transpose convention explicit. `qk_clip_scales` computes the intervention without mutating model parameters, which makes the arithmetic independently testable.
 
 ```python
+"""Minimal mechanisms embedded verbatim in the lecture and notebook."""
 from dataclasses import dataclass
 import math
+from numbers import Real
 import numpy as np
 
 def positive(name, value):
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
+        raise ValueError(f"{name} must be a real number")
     value = float(value)
     if not math.isfinite(value) or value <= 0:
         raise ValueError(f"{name} must be positive and finite")
@@ -500,6 +544,15 @@ class ScalingLaw:
     alpha: float = 0.34
     beta: float = 0.28
     kappa: float = 6.0
+
+    def __post_init__(self):
+        for name in ("A", "B", "alpha", "beta", "kappa"):
+            object.__setattr__(self, name, positive(name, getattr(self, name)))
+        if isinstance(self.E, (bool, np.bool_)) or not isinstance(self.E, Real):
+            raise ValueError("E must be a real number")
+        if not math.isfinite(self.E) or self.E < 0:
+            raise ValueError("E must be finite and non-negative")
+        object.__setattr__(self, "E", float(self.E))
 
     def loss(self, N, D):
         N, D = positive("N", N), positive("D", D)
@@ -518,11 +571,14 @@ def newton_schulz(G, quintic_steps=5):
     X = np.asarray(G, dtype=np.float64)
     if X.ndim != 2 or 0 in X.shape or not np.isfinite(X).all():
         raise ValueError("G must be a finite non-empty matrix")
-    norm = np.linalg.norm(X, ord="fro")
-    if norm == 0:
+    if isinstance(quintic_steps, bool) or not isinstance(quintic_steps, int) or quintic_steps < 0:
+        raise ValueError("quintic_steps must be a non-negative integer")
+    scale = np.max(np.abs(X))
+    if scale == 0:
         raise ValueError("G must not be all zeros")
-    transposed = X.shape[0] < X.shape[1]
-    X = (X.T if transposed else X) / norm
+    transposed = X.shape[0] > X.shape[1]
+    X = (X.T if transposed else X) / scale
+    X /= np.linalg.norm(X, ord="fro")
     for _ in range(quintic_steps):
         XXt = X @ X.T
         X = 3.4445 * X - 4.7750 * XXt @ X + 2.0315 * XXt @ XXt @ X
@@ -542,6 +598,7 @@ def qk_clip_scales(max_logits, tau=100.0, split=0.5):
     q_scale = gamma**split
     k_scale = gamma**(1 - split)
     return gamma, q_scale, k_scale, maxima * q_scale * k_scale
+
 ```
 
 These are diagnostic primitives, not production optimizer implementations. A complete Muon stack needs parameter groups, momentum buffers, weight decay, distributed state, mixed precision, and a policy for tensors that should remain on AdamW. A complete QK-Clip implementation must collect the appropriate statistics for the model’s attention parameterization and apply the scales to the actual parameters.
@@ -581,6 +638,8 @@ $$
 
 per fully replicated data-parallel rank. Adding GPUs increases aggregate throughput but does not reduce this replicated payload.
 
+A distributed process is called a **rank**; the example maps one rank to one device. **ZeRO** means Zero Redundancy Optimizer; **FSDP**, Fully Sharded Data Parallel, denotes implementations that distribute parameters, gradients, and optimizer state. A recipe that stores gradients in fp32 needs a different byte accounting from the 16-byte policy here.
+
 ### ZeRO and FSDP: shard duplicated state
 
 ZeRO removes duplication in stages: optimizer state first, then gradients, then parameters. Under an idealized ZeRO-3 split across 64 ranks, the listed 112 GB becomes
@@ -597,7 +656,7 @@ When a layer is itself too large or its compute needs to be distributed, tensor 
 
 ### Pipeline parallelism: split the network by depth
 
-Pipeline parallelism assigns groups of layers to stages. Its characteristic cost is idle time while the pipeline fills and drains. For a simple 1F1B schedule, the bubble fraction is
+Pipeline parallelism assigns groups of layers to stages. Its characteristic cost is idle time while the pipeline fills and drains. For balanced 1F1B (one forward, one backward) stages with communication time omitted, the bubble fraction is
 
 $$
 f=\frac{p-1}{m+p-1},
@@ -615,7 +674,7 @@ $$
 f=\frac{7}{135}=5.2\%.
 $$
 
-Microbatches amortize the fill-and-drain cost; they do not abolish it. They also affect activation memory, optimizer semantics, and latency, so “use more microbatches” is not a free universal remedy.
+More microbatches amortize filling and draining the pipeline. With local microbatch size fixed, they also enlarge the global batch per optimizer step. In 1F1B, the number of live activation sets is bounded by pipeline depth once the steady schedule is reached; it need not grow linearly with the microbatch count. GPipe, which accumulates all forward passes before backward passes, has different activation storage requirements.
 
 ### Expert parallelism: place sparse capacity
 
@@ -623,7 +682,8 @@ MoE adds a different partitioning problem. The full parameter set is large, but 
 
 Frontier runs combine these axes: data or FSDP sharding, tensor parallelism, pipeline parallelism, context parallelism for long sequences, and expert parallelism for MoE. The correct combination follows the topology. A parallelism plan that is efficient on an NVSwitch island can become communication-bound when the same collectives cross racks.
 
-![VIZ m8/07 — four ways to partition one training run](assets/modern-llms/en/module-08/m8_07_parallelism.svg)
+![VIZ m9/07 — four ways to partition one training run](assets/modern-llms/en/module-08/m9_07_parallelism.svg)
+*The memory and parallelism ladder: replicated AdamW state, ideal ZeRO-3/64, tensor partitioning, a pipeline with its 1F1B bubble, expert placement, and a combined frontier-scale layout.*
 
 Distributed training deserves its own course. The next layer includes topology-aware placement, context parallelism, bidirectional pipeline schedules, NCCL/RCCL behavior, asynchronous checkpointing, fault recovery, silent data corruption, and elastic response to failed nodes. The arithmetic here is enough to read a training passport and to understand why a run combines several forms of parallelism; it is not a substitute for operating a 10,000-GPU cluster.
 
@@ -639,11 +699,11 @@ DoReMi makes the domain weights themselves an optimization problem. Synthetic te
 
 ### 16.2. Long context is often a staged capability
 
-Training the entire base run at extreme sequence length is expensive and may waste compute before the model has learned basic syntax, knowledge, and local dependencies. A common pattern is a shorter-context base phase followed by continued training or specialized extension at longer lengths. The exact recipe depends on the attention architecture and positional scheme, but the economic motivation is stable: pay the long-context cost when the model can benefit from it.
+Training the entire base run at extreme sequence length is expensive and may waste compute before the model has learned basic syntax, knowledge, and local dependencies. A common pattern is a shorter-context base phase followed by continued training or specialized extension at longer lengths. Meta describes Scout as pretrained and post-trained at 256K before generalizing to 10M; a final context limit does not mean every pretraining example used that length. The exact recipe depends on the attention architecture and positional scheme, but the economic motivation is stable: pay the long-context cost when the model can benefit from it.
 
 ### 16.3. One forward pass can carry a denser target
 
-Multi-token prediction adds auxiliary heads that predict several future tokens, increasing the supervision extracted from each hidden state and potentially supporting speculative decoding later. Distillation also moves earlier in the lifecycle: a larger family member can shape a smaller sibling during or around pretraining, rather than serving only as a post-training teacher.
+Multi-token prediction adds auxiliary heads that predict several future tokens, increasing the supervision extracted from each hidden state and potentially supporting speculative decoding later. Meta reports co-distilling Maverick from Behemoth. Distillation also moves earlier in the lifecycle: a larger family member can shape a smaller sibling during or around pretraining, rather than serving only as a post-training teacher.
 
 These methods do not create information from nothing. They change how strongly and how early the available information constrains the model.
 
@@ -653,7 +713,8 @@ FP8 established low-precision training as a mainstream systems choice on Hopper-
 
 A low-precision result should be read with three questions: which tensors use the format, where accumulation happens, and whether the reported gain is a throughput measurement under a specified setup or only a storage/operation-count argument. Precision is now part of optimizer and kernel design, not a serialization detail added after training.
 
-![VIZ m8/08 — four directions beyond a simple scaling-law plan](assets/modern-llms/en/module-08/m8_08_trends.svg)
+![VIZ m9/08 — four directions beyond a simple scaling-law plan](assets/modern-llms/en/module-08/m9_08_trends.svg)
+*Four coordinated changes: scheduled data, staged context extension, denser learning signals, and numerical formats treated as part of the training algorithm.*
 
 ## 17. Run passports: how to read public evidence
 
@@ -671,11 +732,15 @@ The claim should remain scoped to that run. It does not establish that MuonClip 
 
 Nemotron 3 Ultra reports 550B total and 55B active parameters and 20T text tokens. Its distinguishing systems choice is NVFP4 pretraining. The report also discusses numerical incidents and the controls used to recover or prevent them.
 
+The report describes two-dimensional block scaling, stochastic rounding, randomized Hadamard transforms, and sensitive operations kept at higher precision. BF16 branches at 5T, 10T, and 16T tokens showed an average relative training-loss gap below 0.4%. Around 8T, lowering local output-gradient accumulation from FP32 to BF16 caused instability; rolling back and restoring FP32 stabilized the run. The second divergence near 16T was not resolved by switching everything to BF16; its cause remained undetermined, and earlier learning-rate decay mitigated it.
+
 That failure record is scientifically useful. A polished final loss curve alone cannot tell an engineer which tensors were sensitive, how scaling was managed, or where four-bit training departed from an FP8 recipe.
 
 ### DeepSeek V4: one stack, several coupled innovations
 
-The first DeepSeek V4 technical report describes the Pro model at 1.6T total and 49B active parameters and a smaller Flash model at 284B total and 13B active. The family combines hybrid attention, mHC residual connections, Muon, and more than 32T training tokens. Here the lesson is coupling: attention geometry, residual transport, optimizer behavior, and data scale are parts of one system rather than independent switches.
+The first DeepSeek V4 technical report describes the Pro model at 1.6T total and 49B active parameters and a smaller Flash model at 284B total and 13B active. The family combines hybrid attention, mHC residual connections, Muon, and more than 32T training tokens. mHC (Manifold-Constrained Hyper-Connections) extends a residual stream into interacting channels and constrains their mixing matrices. The Birkhoff-polytope structure restricts mixing to a doubly stochastic form, helping control signal amplification; a stable component in one architecture does not establish transfer to every other family. Module 6 supplies the residual-path background.
+
+Here the lesson is coupling: attention geometry, residual transport, optimizer behavior, and data scale are parts of one system rather than independent switches.
 
 The report’s first version is dated 26 April 2026. NIST CAISI published an evaluation of DeepSeek V4 Pro on 1 May 2026. The two sources answer different questions: the technical report documents the developer’s architecture and run; the external evaluation studies model behavior under its own protocol.
 
@@ -683,13 +748,15 @@ The report’s first version is dated 26 April 2026. NIST CAISI published an eva
 
 Kimi K3 was released with a technical report and full weights on 27 July 2026. The model has 2.8T total parameters and 104B active parameters, supports a 1M-token context, and uses architectural components including Kimi Delta Attention, Attention Residuals, and a Stable LatentMoE design with 16 active experts out of 896. The report also describes head-wise Muon and a developer-reported improvement in scaling efficiency relative to K2.
 
-The last number is a result reported by the model’s developers. It is valuable evidence about their training program, but it is not an independently measured universal law.
+The reported gain is about 2.5× within the developers' scaling comparison with K2. K3 also separates pretraining optimization from post-training quantization: QAT starts during SFT with MXFP4 weights and MXFP8 activations. Quantile Balancing controls expert load. These are different interventions, not consequences of a single optimizer choice.
 
-### Qwen3.8-Max: a product release with an incomplete training passport
+The scaling gain is a result reported by the model’s developers. It is valuable evidence about their training program, but it is not an independently measured universal law.
 
-Qwen3.8-Max became available as a product/API release on 3 August 2026. The announcement gives 2.4T total and 95B active parameters and a 1M-token context. It scheduled publication of open weights for one week after the announcement.
+### Qwen3.8-Max: downloadable weights, incomplete run evidence
 
-At that snapshot, the public information was sufficient to describe the model’s scale and access but not to reconstruct the full pretraining run. That distinction is useful: product availability, open-weight availability, and training transparency are three separate axes.
+As of 11 October 2026, both the Max API and [Qwen3.8-2.4T-A95B text weights](https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B) are available. The checkpoint uses the `qwen3.8-max` license and reports 2.4T total parameters, 95B active parameters, and a 1M-token context. The API product and downloadable text model have different feature sets.
+
+A model card still leaves substantial gaps in a reproducible training account: the data mixture, optimizer and precision policies, context schedule, and stability history need their own evidence. Developer benchmarks describe outcomes without isolating the contribution of each pretraining choice. Access, licensing, and training transparency should be recorded separately.
 
 ### Inkling: multimodal scale and a hybrid optimizer policy
 
@@ -701,13 +768,15 @@ This is a concrete example of a parameter-class optimizer policy. “Trained wit
 
 Meta’s Llama 4 announcement described Behemoth as a training-stage model rather than a completed public release. The infrastructure account reports FP8 training on 32K GPUs at 390 TFLOP/s per GPU and a mixture exceeding 30T tokens. It is therefore useful as evidence about training infrastructure and MetaP, but not as a completed open model passport.
 
-![VIZ m8/09 — selected training-run passports](assets/modern-llms/en/module-08/m8_09_run_passports.svg)
+![VIZ m9/09 — selected training-run passports](assets/modern-llms/en/module-08/m9_09_run_passports.svg)
+*Seven public cases compared by scale, data, optimizer or numerical method, transparency, and release status. The purpose is to read evidence, not to rank model quality.*
 
 A good reading habit is to separate five verbs: **measured**, **derived**, **reported**, **released**, and **planned**. Many apparent contradictions disappear once each sentence uses the correct one.
 
 ## 20. Key takeaways and sources
 
-![VIZ m8/10 — a compact map of pretraining decisions](assets/modern-llms/en/module-08/m8_10_cheatsheet.svg)
+![VIZ m9/10 — a compact map of pretraining decisions](assets/modern-llms/en/module-08/m9_10_cheatsheet.svg)
+*The module on one page: fitted scaling law, analytic split, inference-aware break-even, data pipeline and data wall, Muon and QK-Clip, training-state memory, parallelism, and public run passports.*
 
 A pretraining plan is a coupled decision about **data**, **scale**, and **optimization**.
 
@@ -737,7 +806,7 @@ Muon treats large updates as matrices and reshapes their singular spectrum throu
 
 Memory arithmetic constrains every optimizer choice. In the module’s convention, mixed-precision AdamW state occupies 16 bytes per parameter. A 7B model therefore carries 112 GB = 104.31 GiB of fully replicated state; ideal ZeRO-3/64 reduces the enumerated payload to 1.75 GB = 1.63 GiB per rank. Tensor, pipeline, context, and expert parallelism solve different placement and communication problems.
 
-Public training systems should be read through passports rather than slogans. Kimi K2 documents MuonClip and a 15.5T-token run; Nemotron 3 Ultra documents NVFP4 training and its numerical controls; DeepSeek V4 combines Muon, mHC, hybrid attention, and more than 32T tokens; Kimi K3 was released with full weights at 2.8T total and 104B active parameters; Inkling reports a hybrid Muon/Adam policy over 45T multimodal tokens. Qwen3.8-Max illustrates the separate axes of API release, planned open weights, and incomplete pretraining disclosure.
+Public training systems should be read through passports rather than slogans. Kimi K2 documents MuonClip and a 15.5T-token run; Nemotron 3 Ultra documents NVFP4 training and its numerical controls; DeepSeek V4 combines Muon, mHC, hybrid attention, and more than 32T tokens; Kimi K3 was released with full weights at 2.8T total and 104B active parameters; Inkling reports a hybrid Muon/Adam policy over 45T multimodal tokens. Qwen3.8-Max illustrates the separate axes of API access, published text weights, and incomplete pretraining disclosure.
 
 ### Primary sources
 
@@ -763,10 +832,8 @@ Public training systems should be read through passports rather than slogans. Ki
 - [Llama 4, MetaP, and FP8 infrastructure](https://ai.meta.com/blog/llama-4-multimodal-intelligence/)
 - [NIST CAISI evaluation of DeepSeek V4 Pro](https://www.nist.gov/news-events/news/2026/05/caisi-evaluation-deepseek-v4-pro)
 
-**Next.** Module 9 moves from the cost of creating a model to the cost of serving it. KV state, memory bandwidth, batching, and cache placement will show why two models with similar parameter counts can behave very differently under a real inference workload.
+**Next.** Module 10 moves from the cost of creating a model to the cost of serving it. KV state, memory bandwidth, batching, and cache placement will show why two models with similar parameter counts can behave very differently under a real inference workload.
 
 ---
 
-*Landscape snapshot: 3 August 2026. DeepSeek V4 report v1 is dated 26 April 2026; NIST CAISI published its evaluation on 1 May 2026. The Kimi K3 report and full weights were released on 27 July 2026. Qwen3.8-Max became available through the product/API on 3 August 2026, and its announcement scheduled open-weight publication for one week later. The Chinchilla coefficients are used as a historical fitted approximation; calculations beyond the original fitted regime are explicitly illustrative extrapolations.*
-
-*Landscape verified: 4 August 2026; dated claims about models, optimizers, APIs, and serving systems were checked against primary sources, while pricing and availability should be rechecked before operational use.*
+*Sources and access checked on 11 October 2026. Run results retain their developer-reported status; calculations from the historical fit are illustrative, not quality forecasts for current models.*

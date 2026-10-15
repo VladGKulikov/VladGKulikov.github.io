@@ -1,37 +1,41 @@
-# Module 7b. Diffusion Language Models
+# Module 12. Diffusion Language Models
 
-*Modern LLMs · Module 7b lecture · 2026.8 edition*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module changes.** Earlier modules altered the internals of a language model: attention, recurrence, MoE routing, normalization, and cache geometry. Here the architecture can remain recognizably Transformer-like while the **generation protocol** changes. An autoregressive (**AR**) model commits one token at a time. A diffusion large language model (**dLLM**) starts from a corrupted draft and repeatedly revises many positions. We will derive the absorbing-mask objective, execute a transparent denoising trace, examine reveal and remasking policies, and build a deliberately generic 8B roofline scenario. Only after that will we read the actual DiffusionGemma passport, keeping a teaching bound separate from a released system measurement.
+*Modern LLMs · Module 12 lecture · 11 October 2026 edition*
+
+> **What this module changes.** We have built and trained an autoregressive model, studied its serving costs, and seen how speculative decoding can accelerate generation while preserving its target distribution. Here the architecture can remain recognizably Transformer-like while the **generation protocol** changes. An autoregressive (**AR**) model commits one token at a time. A diffusion large language model (**dLLM**) starts from a corrupted draft and repeatedly predicts many positions. The working sequence is called a **canvas**; recovering its tokens is **denoising**. We will derive the absorbing-mask objective, execute a transparent denoising trace, examine reveal and remasking policies, and build a deliberately generic 8B roofline scenario. Only after that will we read the actual DiffusionGemma passport, keeping a teaching bound separate from a released system measurement.
 >
-> **Prerequisites.** Module 5 for Transformer blocks, Module 6 for sparse MoE, and Module 7 for the difference between a growing KV cache and fixed recurrent state. The chapter is otherwise self-contained.
+> **Prerequisites.** We build on autoregressive generation from Module 3, pretraining from Module 9, the serving cost model from Module 10, and speculative decoding from Module 11. Together they make a fair comparison of generation protocols possible. The sparse-model discussion also uses MoE from Module 7.
+
+**First pass:** read Sections 1 and 4–9 for the mechanism, Section 10 for one cost calculation, and Section 14 for block generation. In Section 7, focus on what the loss measures and the worked example; return to the expectation formula later. Use Section 18 to check your understanding.
+
+**Second pass:** work through the objective in Section 7, batching in Section 11, and the implementation in Sections 12–13 before doing the notebook and Section 19 exercises. **Reference pass:** Sections 2–3 explain the origins of the ideas; Sections 15–17 are a dated guide to released systems.
 
 **Contents**
 
-1. [The sequential unit of work](#m7b-01)
-2. [How the field arrived here](#m7b-02)
-3. [Three intellectual ancestors](#m7b-03)
-4. [A two-axis map](#m7b-04)
-5. [The absorbing-mask forward process](#m7b-05)
-6. [Worked example A: a mask schedule](#m7b-06)
-7. [Training objective and likelihood](#m7b-07)
-8. [Any-order training and its limits](#m7b-08)
-9. [Sampling and worked example B](#m7b-09)
-10. [A generic roofline calculation](#m7b-10)
-11. [Steps, batching, and weight precision](#m7b-11)
-12. [Level-1 code](#m7b-12)
-13. [What the notebook verifies](#m7b-13)
-14. [Block diffusion, length, and caching](#m7b-14)
-15. [Reading the DiffusionGemma passport](#m7b-15)
-16. [The dLLM landscape on 6 August 2026](#m7b-16)
-17. [Multimodal diffusion systems](#m7b-17)
-18. [Self-check questions](#m7b-18)
-19. [Exercises](#m7b-19)
-20. [Takeaways and sources](#m7b-20)
+1. [The sequential unit of work](#1-the-sequential-unit-of-work)
+2. [How the field arrived here](#2-how-the-field-arrived-here)
+3. [Three intellectual ancestors](#3-three-intellectual-ancestors)
+4. [A two-axis map](#4-a-two-axis-map)
+5. [The absorbing-mask forward process](#5-the-absorbing-mask-forward-process)
+6. [Worked example A: a mask schedule](#6-worked-example-a-a-mask-schedule)
+7. [Training objective and likelihood](#7-training-objective-and-likelihood)
+8. [Any-order training and its limits](#8-any-order-training-and-its-limits)
+9. [Sampling and worked example B](#9-sampling-and-worked-example-b)
+10. [A generic roofline calculation](#10-a-generic-roofline-calculation)
+11. [Steps, batching, and weight precision](#11-steps-batching-and-weight-precision)
+12. [Level-1 code](#12-level-1-code)
+13. [What the notebook verifies (Stepik)](https://stepik.org/297276)
+14. [Block diffusion, length, and caching](#14-block-diffusion-length-and-caching)
+15. [Reading the DiffusionGemma passport](#15-reading-the-diffusiongemma-passport)
+16. [The dLLM landscape on 11 October 2026](#16-the-dllm-landscape-on-11-october-2026)
+17. [Multimodal diffusion systems](#17-multimodal-diffusion-systems)
+18. [Self-check questions (Stepik)](https://stepik.org/297276)
+19. [Exercises (Stepik)](https://stepik.org/297276)
+20. [Takeaways and sources](#20-takeaways-and-sources)
 
 ---
-
-<a id="m7b-01"></a>
 
 ## 1. The sequential unit of work
 
@@ -53,7 +57,7 @@ $$
  \approx16.16\ \mu\mathrm{s}.
 $$
 
-The ratio, 0.338%, is not a measured GPU-utilization number. It is the share of this simplified step lower bound occupied by ideal arithmetic. Under these assumptions the batch-one ceiling is 209.375 tokens/s.
+The ratio $t_{\mathrm{compute}}/t_{\mathrm{mem}}$, 0.338%, is not a measured GPU-utilization number. It is the share of this simplified step lower bound occupied by ideal arithmetic. Under these assumptions the batch-one ceiling is 209.375 tokens/s.
 
 A diffusion sampler changes the granularity. One network invocation scores an entire canvas of $N$ positions. The price is $S$ denoising calls rather than one causal call per token. The rough arithmetic becomes
 
@@ -67,11 +71,10 @@ This apparent paradox is the core engineering proposition of diffusion decoding:
 
 There is also a behavioral distinction. A masked-diffusion sampler can reopen a weak position and revise it in the next iteration. A standard ancestral AR decode does not revise its committed prefix. AR systems can of course add a verifier, a second editing pass, Fill-in-the-Middle (**FIM**), or an agent loop; diffusion places revision inside the sampling algorithm itself.
 
-<a id="m7b-02"></a>
-
 ## 2. How the field arrived here
 
-![VIZ m7b/01 — the diffusion-LM timeline](assets/modern-llms/en/module-07b/m7b_01_timeline.svg)
+![VIZ m12/01 — the diffusion-LM timeline](assets/modern-llms/en/module-07b/m12_01_timeline.svg)
+*The line from discrete transition kernels to masked likelihood models, block diffusion, open-weight systems, and commercial APIs. Each milestone addresses a different obstacle rather than replacing all earlier methods.*
 
 The first problem was mathematical: what does “add noise” mean when the object is a token ID? **D3PM — Discrete Denoising Diffusion Probabilistic Models** (2021) answered with transition matrices over discrete states. One option was an absorbing state: a token may become `[MASK]` and remains masked in the forward process.
 
@@ -86,8 +89,6 @@ The 2025–2026 wave broadened both routes. **LLaDA2.0** converted 16B and 100B 
 Product releases developed on a separate evidence track. Mercury 2, Gemini Diffusion, Seed Diffusion, and DiffusionGemma reported very high generation rates, but on different accelerators, workloads, precision formats, and latency boundaries. Their numbers are useful only when those conditions remain attached.
 
 The outcome is not one canonical dLLM. We now have full-canvas masked models, block-autoregressive models, token-editing samplers, insertion-based flexible-length methods, and proprietary systems whose exact objectives are not public.
-
-<a id="m7b-03"></a>
 
 ## 3. Three intellectual ancestors
 
@@ -105,9 +106,8 @@ $$
 
 A masked objective exposes the model to many observed/hidden subsets. Some objectives can be interpreted as averaging autoregressive factorizations over token orders. That interpretation belongs to the training objective; it does not make every dLLM computationally identical to an ensemble of all possible AR models.
 
-![VIZ m7b/02 — a paradigm map](assets/modern-llms/en/module-07b/m7b_02_axes.svg)
-
-<a id="m7b-04"></a>
+![VIZ m12/02 — a paradigm map](assets/modern-llms/en/module-07b/m12_02_axes.svg)
+*Two independent design axes: causal versus bidirectional conditioning, and token versus block versus canvas as the unit of sequential progress.*
 
 ## 4. A two-axis map
 
@@ -116,7 +116,7 @@ It helps to ask two questions separately:
 1. Which positions may condition one another inside a network call?
 2. How much of the output becomes stable before the next call?
 
-| Regime | Stable state before a call | Progress made by a call | Cache implication |
+| Regime | Stable state before a call | Positions updated by a call | Cache implication |
 |---|---|---|---|
 | AR | causal prefix | one new token | exact prefix KV cache |
 | full masked diffusion | fixed condition plus mutable canvas | many canvas positions | mutable canvas is recomputed |
@@ -124,9 +124,7 @@ It helps to ask two questions separately:
 | token editing | a partially stable draft | selected replacements | depends on which regions remain stable |
 | flexible masked diffusion | current variable-length draft | unmasking and/or insertion | method-specific |
 
-The map prevents two common errors. A diffusion model is not necessarily restricted to a fixed final length. Conversely, block diffusion does not become ordinary AR merely because blocks are ordered causally: the active block is still modeled with bidirectional, any-order refinement.
-
-<a id="m7b-05"></a>
+A call can refine positions in the current block without completing that block. Several calls may be needed before its tokens become stable. The map prevents two common errors. A diffusion model is not necessarily restricted to a fixed final length. Conversely, block diffusion does not become ordinary AR merely because blocks are ordered causally: the active block is still modeled with bidirectional, any-order refinement.
 
 ## 5. The absorbing-mask forward process
 
@@ -142,13 +140,14 @@ q(x_t^i\mid x_0^i)
 \qquad t\in[0,1].
 $$
 
+The symbol $\delta_a(z)$ is 1 for $z=a$ and 0 otherwise. This equation specifies a marginal at a single time. A monotone sample path can be constructed by drawing one threshold $u_i\sim U(0,1)$ per position and masking that position whenever $t\ge u_i$. Resampling fresh Bernoulli variables at every time gives the right marginals but does not trace one absorbing path.
+
 “Absorbing” describes the forward chain: after entering the mask state, the position does not spontaneously return to content. The learned reverse model predicts clean tokens from the partially observed sequence.
 
 For conditional generation, a prompt can be marked ineligible for corruption. Only the answer region follows the mask process. This separation becomes important in systems such as DiffusionGemma, where the prompt is encoded and cached while the generation canvas is repeatedly recomputed.
 
-![VIZ m7b/03 — the forward process](assets/modern-llms/en/module-07b/m7b_03_forward.svg)
-
-<a id="m7b-06"></a>
+![VIZ m12/03 — the forward process](assets/modern-llms/en/module-07b/m12_03_forward.svg)
+*Absorbing masking is the chapter’s reference kernel. Other discrete diffusion models may use substitution noise or a general transition matrix.*
 
 ## 6. Worked example A: a mask schedule
 
@@ -167,13 +166,13 @@ $$
 
 Exactly two positions become stable after each call. When $S>N$, duplicate counts can appear; a model call may then perform work without revealing a new token.
 
-For a continuous linear masking process, the slice weight is $1/t$. At $t=0.25,0.5,0.75$, the values are $4$, $2$, and $4/3$. Early-time slices contain fewer corrupted positions, so each receives greater weight. This may increase estimator variance and motivates alternative schedules or time-sampling strategies in practical training.
-
-<a id="m7b-07"></a>
+Here $s$ is a discrete iteration index, whereas $t$ in the forward process is a continuous corruption time. The count schedule tells us how many positions to reveal; we still need an objective that teaches the network what to put there.
 
 ## 7. Training objective and likelihood
 
-For the linear absorbing process, a continuous-time ELBO-derived slice reduces to weighted cross-entropy over corrupted positions:
+Training requires an objective before it requires a reveal policy. Ideally we would maximize the probability of a clean sequence, summing over all hidden paths that could have produced it. That sum is generally difficult. An **evidence lower bound (ELBO)** provides a tractable lower bound on log probability; its negative, **NELBO**, is an upper bound on negative log-likelihood.
+
+For a linear absorbing-mask process, a clean-token parameterization that copies observed tokens and excludes mask from clean predictions simplifies the continuous-time objective. One sampled slice contributes:
 
 $$
 L_t
@@ -183,7 +182,18 @@ L_t
 -\log p_\theta(x_0^i\mid x_t,t).
 $$
 
-The module uses **sum reduction**. A trainer that averages over $|M_t|$ will report a different number even with identical logits.
+Here $M_t$ denotes the masked positions, and natural logarithms give the loss in nats. Averaging the slice over uniform time and the corruption process gives
+
+$$
+\mathcal L(x_0)=\mathbb E_{t\sim U(0,1)}\mathbb E_{q(x_t\mid x_0)}L_t,
+\qquad -\log p_\theta(x_0)\le\mathcal L(x_0).
+$$
+
+The bound applies to this complete objective, not to every sampled slice individually. With retention probability $\alpha(t)=1-t$, the general weighting $-\alpha'(t)/(1-\alpha(t))$ becomes $1/t$. Low-noise slices hide fewer positions, so a hidden position receives greater weight.
+
+For a continuous linear masking process, the slice weight is $1/t$. At $t=0.25,0.5,0.75$, the values are $4$, $2$, and $4/3$. Early-time slices contain fewer corrupted positions, so each receives greater weight. This may increase estimator variance and motivates alternative schedules or time-sampling strategies in practical training.
+
+Reduction is part of the objective. Dividing by a fixed sequence length changes a constant scale. Dividing by the random mask count changes the relative weight of examples and requires a correction if the same estimator is intended. A corruption sample with no masks contributes zero to the sum. Discarding it, or forcing one position to be masked, changes the sampling law.
 
 Suppose four masked target tokens receive probabilities
 
@@ -197,16 +207,15 @@ $$
 L_{0.5}
 =
 2[-\log0.9-\log0.7-\log0.6-\log0.8]
-=2.392009269.
+\approx2.392009269.
 $$
 
-![VIZ m7b/04 — the masked-diffusion objective](assets/modern-llms/en/module-07b/m7b_04_loss.svg)
+![VIZ m12/04 — the masked-diffusion objective](assets/modern-llms/en/module-07b/m12_04_loss.svg)
+*The loss contract: masked positions, time weighting, and an explicit reduction convention. Likelihood interpretation depends on the forward process and estimator.*
 
 The value $t=0$ has zero measure under a continuous sampler but remains a software edge case because $1/t$ is undefined.
 
 Likelihood language also needs care. AR provides a direct left-to-right **NLL — Negative Log-Likelihood**. Many diffusion models optimize an **ELBO — Evidence Lower Bound** or report **NELBO — Negative Evidence Lower Bound**. Yet masked diffusion can be designed as a likelihood-oriented language model, as MDLM demonstrates. A fair comparison records the estimator, time discretization, and number of Monte Carlo samples instead of treating every reported “perplexity” as the same object.
-
-<a id="m7b-08"></a>
 
 ## 8. Any-order training and its limits
 
@@ -214,35 +223,38 @@ Random corruption turns one document into many conditional prediction tasks. A p
 
 For a uniform-order objective, masked diffusion can be related to autoregressive factorizations averaged over permutations. The Any-Order GPT study also finds that many orders are less informative than natural left-to-right structure. The result is a design trade-off, not a contradiction: order diversity is useful, but language still has asymmetric sequential regularities.
 
-The same caution applies to the reversal curse. LLaDA reported a striking reversal-poem result. Later work, DiffER, found that dLLMs can still fail reversed relations because of fragmented entities, asymmetric training data, or entirely missing reverse facts. Bidirectional conditioning removes one architectural asymmetry; it does not invent absent evidence.
+The same caution applies to the **reversal curse**. Consider the fictional fact “Anna Vetrova wrote *The Quiet Harbour*.” A model may complete the author’s name with the book title yet fail to name the author when asked who wrote that book. Reversing the question is not the same as claiming that authorship is a symmetric relation. LLaDA reported a striking reversal-poem result. Later work, DiffER, found that dLLMs can still fail reversed relations because of fragmented entities, asymmetric training data, or entirely missing reverse facts. Bidirectional conditioning removes one architectural asymmetry; it does not invent absent evidence.
 
 A related empirical result appears in data-constrained training. When a finite corpus is reused for many epochs, masked diffusion exposes the model to varied conditional tasks. *Diffusion Beats Autoregressive in Data-Constrained Settings* reports an advantage under the studied data/compute regimes. The claim should remain local to those regimes rather than becoming a universal statement about data efficiency.
 
-<a id="m7b-09"></a>
-
 ## 9. Sampling and worked example B
 
-The reverse model produces distributions for the entire canvas, but a sampler must decide which positions become stable.
+A denoising network returns token distributions, while a sampler defines how to use them. For the linear absorbing process, one standard reverse transition from time $t$ to $\tau<t$ leaves a masked position masked with probability $\tau/t$ and reveals it with probability $(t-\tau)/t$, using the predicted clean-token distribution. Visible positions are copied. This connects the forward kernel to a reverse transition; deployed policies often alter the schedule or position choices to trade quality for speed.
+
+Our teaching trace uses a fixed mask-count schedule and greedy token choices. It makes the operations inspectable but does not establish exact sampling from the data distribution. Confidence-based reveal has no universal distribution-correction guarantee analogous to the speculative algorithm in Module 11.
 
 A generic iteration performs five operations:
 
-1. evaluate the model once over the current canvas;
-2. select token candidates;
-3. assign a confidence or entropy score to positions;
+1. optionally remask open positions using scores saved from earlier predictions;
+2. call the model once on that actual corrupted canvas;
+3. choose candidates and rank masked positions;
 4. reveal enough positions to meet the next mask count;
-5. optionally remask weak committed positions.
+5. save the result and confidence scores for the next iteration.
 
 Possible ordering rules include random reveal, maximum candidate probability, minimum entropy, a learned policy, block-specific schedules, and task-dependent heuristics.
 
-The frozen toy example reveals two positions at each step. High-confidence anchors are opened early, and the final sequence matches six of eight target tokens. The example is intentionally synthetic: it demonstrates how reveal order changes an outcome without pretending to benchmark real checkpoints.
+Candidate confidence is the single probability $p_i(v_i)$, whereas entropy $H(p_i)=-\sum_v p_i(v)\log p_i(v)$ measures uncertainty across the whole positional distribution. Low entropy means that probability is concentrated among fewer alternatives. The rankings can differ, especially when a candidate is sampled rather than chosen by argmax.
 
-![VIZ m7b/05 — a denoising trace](assets/modern-llms/en/module-07b/m7b_05_demask_trace.svg)
+The first frozen trace uses fixed logits and opens two positions per step. Six of eight final tokens match the targets, regardless of the order in which all greedy candidates are eventually revealed. It tests scheduling, not context sensitivity. A second notebook experiment makes predictions depend on previously revealed anchors; there the order can change the final answer.
 
-Remasking can revisit a poor early choice after more context becomes available. That revision is native to the sampler, but it consumes further calls. The useful metric is therefore not “tokens predicted per pass” alone; it is final committed output per pass at a target quality.
+![VIZ m12/05 — a denoising trace](assets/modern-llms/en/module-07b/m12_05_demask_trace.svg)
+*One call per iteration, candidate tokens for every position, a confidence ranking, and an exact target mask count.*
 
-DiffusionGemma illustrates a more sophisticated policy. Its recommended **EB — Entropy Bound** sampler selects low-entropy positions subject to a mutual-information bound, renoises unselected positions, and stops only when entropy and prediction stability criteria are satisfied. The sampler is part of the released system contract, not an interchangeable afterthought.
+A two-token example explains why extra passes can matter. Suppose the source emits only $AA$ or $BB$, each with probability $1/2$. With both positions masked, each marginal assigns $1/2$ to A and B. Sampling them independently in one pass produces $AA,AB,BA,BB$ with probability $1/4$ each; half the outputs violate the source's dependency. Reveal one token and recompute the other conditional, and the dependency can be recovered. Parallel predictions may be individually well calibrated while their product is a poor joint model.
 
-<a id="m7b-10"></a>
+Remasking can revisit a poor early choice after more context becomes available. Revision spends extra calls or reduces net progress at a fixed call budget. In our implementation, selected positions are masked before the network is invoked; logits computed while a token was still visible are not treated as predictions from a masked input. The useful metric is therefore not “tokens predicted per pass” alone; it is final committed output per pass at a target quality.
+
+DiffusionGemma illustrates a more sophisticated policy. Its recommended **EB — Entropy Bound** sampler selects low-entropy positions subject to a bound on dependence between jointly revealed positions (a mutual-information bound), renoises unselected positions, and stops only when entropy and prediction stability criteria are satisfied. The sampler is part of the released system contract, not an interchangeable afterthought.
 
 ## 10. A generic roofline calculation
 
@@ -278,11 +290,10 @@ $$
 
 The continuous parity point with the batch-one AR ceiling is approximately $S=295.5$. Integer call counts give 295 as the largest value still above that ceiling.
 
-![VIZ m7b/06 — the teaching roofline](assets/modern-llms/en/module-07b/m7b_06_roofline.png)
+![VIZ m12/06 — the teaching roofline](assets/modern-llms/en/module-07b/m12_06_roofline.png)
+*Generic dense-8B roofline. The 0.338% figure is ideal compute time divided by the simplified step floor, not measured accelerator utilization.*
 
 The calculation is useful precisely because it is narrow. It excludes attention’s sequence-length cost, KV traffic, activations, communication, routing, batching, kernel overhead, and actual utilization.
-
-<a id="m7b-11"></a>
 
 ## 11. Steps, batching, and weight precision
 
@@ -296,26 +307,27 @@ This is not a claim that the fifth concurrent request always erases the benefit.
 
 The same dense model gives a second teaching comparison at a 256-token block. The compute floor is 4.137 ms. With 16 GB of bf16 weights, the 4.776-ms memory floor still dominates. If every parameter were ideally stored in four bits, the payload would be 4 GB and the memory floor 1.194 ms; the block would become compute-bound. At 16 calls, the arithmetic ceiling is again 3867.2 tok/s.
 
-![VIZ m7b/07 — calls versus throughput](assets/modern-llms/en/module-07b/m7b_07_tps.png)
+![VIZ m12/07 — calls versus throughput](assets/modern-llms/en/module-07b/m12_07_tps.png)
+*Throughput versus call count for the generic dense-8B scenario. The four-bit line is an arithmetic payload hypothesis, not a DiffusionGemma checkpoint measurement.*
 
 A sparse MoE invalidates a naive substitution of “active parameters” for bytes per call. Different canvas positions can select different experts, so the union of touched expert weights may be much larger than a single token’s active count. This is the key reason to keep the following released-model passport separate.
-
-<a id="m7b-12"></a>
 
 ## 12. Level-1 code
 
 The minimal implementation must make two contracts visible: the loss only includes corrupted positions, and one sampler iteration makes exactly one network call before revealing the scheduled number of tokens.
 
 ```python
-import math
+"""M12: summed masked loss and deterministic reveal schedule."""
 import numpy as np
 
 def linear_mask_schedule(length: int, steps: int) -> tuple[int, ...]:
     """Target counts from fully masked to fully revealed."""
-    if length <= 0 or steps <= 0:
+    if any(isinstance(v, (bool, np.bool_)) or
+           not isinstance(v, (int, np.integer)) or v <= 0
+           for v in (length, steps)):
         raise ValueError("length and steps must be positive")
     return tuple(
-        math.ceil(length * remaining / steps)
+        (int(length) * remaining + int(steps) - 1) // int(steps)
         for remaining in range(steps, -1, -1)
     )
 
@@ -326,10 +338,14 @@ def dllm_loss(logits, target_ids, loss_mask, time: float) -> float:
     loss_mask = np.asarray(loss_mask)
     if logits.ndim != 2 or target_ids.shape != (logits.shape[0],):
         raise ValueError("expected logits [T,V] and target_ids [T]")
+    if logits.shape[1] == 0 or target_ids.dtype.kind not in "iu":
+        raise ValueError("target_ids must be integers and vocabulary non-empty")
+    if np.any(target_ids < 0) or np.any(target_ids >= logits.shape[1]):
+        raise ValueError("target IDs must be in [0, V)")
     if loss_mask.shape != target_ids.shape or loss_mask.dtype.kind != "b":
         raise ValueError("loss_mask must be boolean [T]")
-    if not (0.0 < time <= 1.0) or not loss_mask.any():
-        raise ValueError("time must be in (0,1] and loss_mask must be non-empty")
+    if isinstance(time, (bool, np.bool_)) or not (0.0 < time <= 1.0):
+        raise ValueError("time must be in (0,1]")
     if not np.isfinite(logits).all():
         raise ValueError("logits must be finite")
     shifted = logits - logits.max(axis=-1, keepdims=True)
@@ -340,13 +356,19 @@ def dllm_loss(logits, target_ids, loss_mask, time: float) -> float:
 def sample_dllm(predict, length: int, steps: int, mask_id: int):
     """Greedy confidence reveal with one model invocation per iteration."""
     schedule = linear_mask_schedule(length, steps)
+    if isinstance(mask_id, (bool, np.bool_)) or not isinstance(mask_id, (int, np.integer)):
+        raise ValueError("mask_id must be an integer")
+    vocabulary = None
     tokens = np.full(length, mask_id, dtype=np.int64)
     trace = []
     for step, target_masked in enumerate(schedule[1:], start=1):
         logits = np.asarray(predict(tokens.copy(), step), dtype=np.float64)
-        if logits.ndim != 2 or logits.shape[0] != length or not np.isfinite(logits).all():
+        if logits.ndim != 2 or logits.shape[0] != length or logits.shape[1] == 0 or not np.isfinite(logits).all():
             raise ValueError("predict must return finite logits [T,V]")
-        if 0 <= mask_id < logits.shape[1]:
+        if vocabulary is not None and logits.shape[1] != vocabulary:
+            raise ValueError("predict changed vocabulary size")
+        vocabulary = logits.shape[1]
+        if 0 <= mask_id < vocabulary:
             raise ValueError("mask_id must lie outside the vocabulary")
         shifted = logits - logits.max(axis=-1, keepdims=True)
         probs = np.exp(shifted)
@@ -360,19 +382,23 @@ def sample_dllm(predict, length: int, steps: int, mask_id: int):
         tokens[opened] = candidates[opened]
         trace.append((tuple(opened), tokens.copy()))
     return tokens, trace
+
 ```
 
-A production sampler adds categorical draws, entropy policies, adaptive stopping, remasking, protected prompt regions, and fused kernels. The visible invariants remain useful in every implementation.
+Read the loop as an execution record: one copied input goes into the network, the stored output supplies both candidates and scores, and only then does the state change. Equal scores choose the lower position index. A schedule with more calls than tokens may include calls that reveal nothing.
 
-<a id="m7b-13"></a>
+Using −1 outside the output vocabulary is a teaching interface, not a universal model requirement. Real models often include a special mask token in their vocabulary and exclude it from final clean-token predictions through parameterization or filtering. The notebook adds categorical draws, entropy ranking, and remasking. Adaptive production samplers need not follow our fixed mask counts.
 
 ## 14. Block diffusion, length, and caching
 
 A mutable bidirectional canvas cannot use an ordinary causal KV cache internally: changing one position can change representations at every other position on the next call.
 
-Block diffusion introduces a stable boundary. Completed blocks form a causal prefix. The active block attends to that prefix and bidirectionally to itself. Prefix K/V can therefore be reused across denoising calls, while active-block states are recomputed.
+Block diffusion separates completed history from a mutable block of length $L_b$. Cache validity requires the history's states to be independent of future blocks. It does not require token-wise causal attention within every completed block: bidirectional attention inside an already completed block is compatible with block causality. Section 19 uses the simpler special case of a token-causal prefix.
 
-![VIZ m7b/08 — block-diffusion spectrum](assets/modern-llms/en/module-07b/m7b_08_block_spectrum.svg)
+The active block reads that history and all of its own positions. After final token choices, the cache must represent the clean block. The last denoising call may have seen masks or earlier values, so its K/V cannot automatically serve as the completed history. BD3-LM runs the clean block to obtain cache states; DiffusionGemma uses its encoder for this step. That pass and prompt processing contribute to end-to-end latency, though they are omitted from the narrow arithmetic in Sections 10–11.
+
+![VIZ m12/08 — block-diffusion spectrum](assets/modern-llms/en/module-07b/m12_08_block_spectrum.svg)
+*The teaching attention mask makes the completed prefix independent of the active block. Cache states must correspond to the finalized history.*
 
 As $L_b$ changes:
 
@@ -390,15 +416,14 @@ $$
 1\rightarrow4\rightarrow32\rightarrow64\rightarrow4096.
 $$
 
-The stable phase trains full-sequence masked diffusion; decay returns to smaller blocks for efficient inference. LLaDA2.1 adds Token-to-Token editing so a revealed value may later be replaced. It should not be described as a published `INSERT/DELETE` length-editing model.
-
-<a id="m7b-15"></a>
+The stable phase trains full-sequence masked diffusion; decay returns to smaller blocks for efficient inference. LLaDA2.1 adds Token-to-Token editing so a revealed value may later be replaced. The published mechanism revises values while keeping the current positions.
 
 ## 15. Reading the DiffusionGemma passport
 
 DiffusionGemma is a useful case because its model card exposes architecture, sampler, and hardware conditions rather than only a headline TPS number.
 
-![VIZ m7b/09 — DiffusionGemma passport](assets/modern-llms/en/module-07b/m7b_09_gemma_passport.svg)
+![VIZ m12/09 — DiffusionGemma passport](assets/modern-llms/en/module-07b/m12_09_gemma_passport.svg)
+*An autoregressive prompt encoder, cacheable context, a bidirectional diffusion canvas, sparse MoE routing, and separate H100 FP8 and Blackwell NVFP4 paths.*
 
 | Field | Released contract |
 |---|---|
@@ -430,11 +455,11 @@ $$
 
 Neither is measured bytes per diffusion call. The full bank includes heterogeneous tensors; a 256-position canvas can route tokens to different experts; actual traffic depends on the expert union, precision, metadata, caches, and kernels.
 
+The joint vLLM release report gives 1008 tokens/s on H100 FP8 in its own experiment. That is a separate protocol record from the model card’s “over 1100,” not a number to average into it.
+
 The quality side matters as much as speed. The model card reports lower scores than AR Gemma 4 on many benchmarks, with some exceptions. DiffusionGemma is therefore a point on a quality–latency curve, not proof that a generation paradigm dominates every task.
 
-<a id="m7b-16"></a>
-
-## 16. The dLLM landscape on 6 August 2026
+## 16. The dLLM landscape on 11 October 2026
 
 The following rows deliberately include the measurement context. Tokens per second without hardware, sampler, and overhead is not a comparable metric.
 
@@ -448,13 +473,11 @@ The following rows deliberately include the measurement context. Tokens per seco
 | Mercury 2 | commercial API | 1009 tok/s on Blackwell, 128K | developer-reported product configuration |
 | Gemini Diffusion | experimental demo | 1479 tok/s sampling, 0.84 s overhead excluded | sampling rate is not end-to-end latency |
 | Seed Diffusion Preview | experimental, code-focused | 2146 tok/s on H20 | developer result on coding workloads |
-| DiffusionGemma | open weights | >1100 tok/s, H100 FP8; 15–20 committed tokens/pass | most detailed open system passport in this list |
+| DiffusionGemma | open weights | >1100 tok/s, H100 FP8; 15–20 committed tokens/pass | detailed open passport with stated measurement conditions |
 
 Mercury 2 adds reasoning controls, tool use, and schema-constrained JSON to a commercial dLLM API. Gemini Diffusion makes the measurement boundary unusually explicit: 1479 tok/s excludes 0.84 seconds of fixed overhead. Seed Diffusion targets code and reports H20 throughput. None of those numbers can be ranked fairly without rerunning a shared workload.
 
 iLLaDA highlights a different frontier: improving a from-scratch bidirectional model rather than solely accelerating a converted checkpoint. Its 12T-token pretraining run and variable-length generation show that the research space includes foundation-model quality, not only sampler speed.
-
-<a id="m7b-17"></a>
 
 ## 17. Multimodal diffusion systems
 
@@ -472,13 +495,12 @@ The useful passport question is:
 
 Without that distinction, two systems bearing the same label may have entirely different compute and memory profiles.
 
-<a id="m7b-18"></a>
-
 ## 20. Takeaways and sources
 
-![VIZ m7b/10 — diffusion language models at a glance](assets/modern-llms/en/module-07b/m7b_10_cheatsheet.svg)
+![VIZ m12/10 — diffusion language models at a glance](assets/modern-llms/en/module-07b/m12_10_cheatsheet.svg)
+*The forward kernel, loss, sampler, teaching roofline, block spectrum, and a released-system evidence passport on one page.*
 
-**Generation protocol.** AR commits one token. Masked diffusion revises a canvas. Block diffusion makes completed blocks causal and cacheable.
+**Generation protocol.** AR commits one token. Masked diffusion revises a canvas. Block diffusion makes completed history independent of future blocks and cacheable.
 
 **Forward process.** The chapter uses an absorbing mask; discrete diffusion supports other kernels.
 
@@ -497,6 +519,8 @@ Without that distinction, two systems bearing the same label may have entirely d
 - [D3PM](https://arxiv.org/abs/2107.03006)
 - [Diffusion-LM](https://arxiv.org/abs/2205.14217)
 - [SEDD](https://arxiv.org/abs/2310.16834)
+- [FlexMDM](https://arxiv.org/abs/2509.01025)
+- [DiffusionGemma in vLLM](https://vllm-project.github.io/2026/06/10/diffusion-gemma)
 - [MDLM](https://arxiv.org/abs/2406.07524)
 - [LLaDA](https://arxiv.org/abs/2502.09992)
 - [BD3-LM](https://arxiv.org/abs/2503.09573)
@@ -513,8 +537,8 @@ Without that distinction, two systems bearing the same label may have entirely d
 - [Gemini Diffusion](https://deepmind.google/models/gemini-diffusion/)
 - [Seed Diffusion](https://seed.bytedance.com/en/public_papers/seed-diffusion-a-large-scale-diffusion-language-model-with-high-speed-inference)
 
-**Next:** Module 8 returns to pretraining. Its treatment of data reuse and compute budgets will provide a broader context for the data-constrained result discussed here.
+**Next:** Module 13 returns to the autoregressive path for supervised fine-tuning: preparing demonstrations and teaching a pretrained model the response patterns expected of an assistant.
 
 ---
 
-*Landscape verified: 6 August 2026. Product throughput figures are developer-reported results under different hardware and sampling protocols. Sections 10–11 describe a separate generic dense-8B teaching scenario.*
+*Landscape verified: 11 October 2026. Product throughput figures are developer-reported results under different hardware and sampling protocols. Sections 10–11 describe a separate generic dense-8B teaching scenario.*

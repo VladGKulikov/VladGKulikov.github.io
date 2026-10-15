@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="684" viewBox="0 0 1100 684">
+<title>RLHF: четыре роли, три стадии</title>
+<desc>Роли могут разделять веса и размещаться на разных устройствах.</desc>
+<rect width="1100" height="684" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">RLHF: четыре роли, три стадии</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Роли могут разделять веса и размещаться на разных устройствах.</text>
+<rect x="140" y="132" width="820" height="135" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="160" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">1. Демонстрации → SFT</text>
+<text x="160" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Исходная политика умеет отвечать в нужном формате.</text>
+<path d="M550,269 L550,299" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="140" y="307" width="820" height="135" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="160" y="345" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2. Сравнения → модель награды</text>
+<text x="160" y="384" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Замороженный оценщик выдаёт скалярную оценку ответа.</text>
+<path d="M550,444 L550,474" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="140" y="482" width="820" height="135" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="160" y="520" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">3. Новые ответы → PPO</text>
+<text x="160" y="559" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Обучаются политика и критик; референс задаёт KL-якорь.</text>
+</svg>

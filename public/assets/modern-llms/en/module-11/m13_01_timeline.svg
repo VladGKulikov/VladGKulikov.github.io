@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="791" viewBox="0 0 1100 791">
+<title>From instructions to actions</title>
+<desc>Different methods address different problems; this is not a quality ranking.</desc>
+<rect width="1100" height="791" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">From instructions to actions</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Different methods address different problems; this is not a quality ranking.</text>
+<text x="40" y="171" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2021–2022</text>
+<rect x="225" y="132" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">FLAN / T0 → InstructGPT</text>
+<text x="245" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Common task formats → behavior demonstrations before preference learning.</text>
+<path d="M195,202 L195,274" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="319" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2023</text>
+<rect x="225" y="280" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="318" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Self-Instruct / LIMA</text>
+<text x="245" y="357" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">How to generate demonstrations and how to select behavior worth imitating.</text>
+<path d="M195,350 L195,422" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="467" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2024</text>
+<rect x="225" y="428" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="466" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Magpie / Tülu 3</text>
+<text x="245" y="505" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Request-and-response synthesis → an inspectable data mixture.</text>
+<path d="M195,498 L195,570" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="615" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2025–2026</text>
+<rect x="225" y="576" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="614" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">R1-Distill / s1 / tools</text>
+<text x="245" y="653" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Transfer of long solutions and environment-interaction protocols.</text>
+</svg>

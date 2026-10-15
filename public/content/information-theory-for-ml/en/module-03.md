@@ -1,5 +1,7 @@
 # Module 3. Cross-Entropy and KL Divergence
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** Sections 3.1–3.7 form the main route. We begin with log-loss, separate uncertainty in the data from model mismatch, carry the decomposition into classification and language modeling, and end with the logit gradient and perplexity. Section 3.8 is a mathematical deepening on KL direction under a restricted model family. Section 3.9 is a map of applications; read it selectively and return to it as variational inference, distillation, and RLHF become relevant.
 
 ## 3.1. The model returns a distribution; the world returns one outcome

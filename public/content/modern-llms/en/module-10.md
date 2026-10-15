@@ -1,14 +1,24 @@
-# Module 10. Speculative Decoding and Quantization
+# Module 11. Speculative Decoding and Quantization
 
-*Modern LLMs · Module 10 lecture · revision 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module is about.** Module 9 ended with an uncomfortable systems fact: during autoregressive decode, a GPU may spend more time moving model state than performing arithmetic. This module studies two ways to change that cost structure. Quantization makes each target-model step move fewer bytes. Speculative decoding tries to make one expensive target step validate several tokens. Both techniques are mature enough to appear in production engines, yet neither comes with a workload-independent speedup. We will keep the mathematics exact where it can be exact, and label every performance number according to what it actually is: a derived scenario, a paper result, or a measured deployment property.
+*Modern LLMs · Module 11 lecture · revision October 11, 2026*
+
+> **What this module is about.** Module 10 ended with an uncomfortable systems fact: during autoregressive decode, a GPU may spend more time moving model state than performing arithmetic. This module studies two ways to change that cost structure. Quantization makes each target-model step move fewer bytes. Speculative decoding tries to make one expensive target step validate several tokens. Both techniques are mature enough to appear in production engines, yet neither comes with a workload-independent speedup. We will keep the mathematics exact where it can be exact, and label every performance number according to what it actually is: a derived scenario, a paper result, or a measured deployment property.
 >
-> **Prerequisites.** The distinction between prefill and decode from Module 9 is useful, as is the multi-token prediction objective introduced in Module 8. The necessary definitions are restated here, so the lecture can be read on its own.
+> **Prerequisites.** The distinction between prefill and decode from Module 10 is useful, as is the multi-token prediction objective introduced in Module 9. The necessary definitions are restated here, so the lecture can be read on its own.
+
+> **Reading routes.** On a first pass, follow Sections 1, 3–12, and 15–20. Understand why proposals can preserve a distribution and why fewer stored bits do not imply a fixed speedup. Read the probability table and balance proof in Section 5; extended NumPy/PyTorch blocks can wait.
+>
+> On a second pass, work through Sections 13–14 and the bridges in Sections 5 and 13, then run the notebook and solve the exercises before opening the answers. The project demos extend local calculations to history-dependent generation and a layer-level quantization experiment.
+>
+> For reference, Section 2 provides historical context, Sections 8–9 locate proposer families, Sections 11–12 describe representations, and Section 17 records a reproducible run. This route assumes the sampling argument in Sections 4–5.
 
 ---
 
 ## 1. Two different ways to make a token cheaper
+
+During **prefill**, the model processes known prompt tokens and constructs the keys and values retained in the KV cache. During **decode**, it extends that prefix. Ordinary autoregressive generation feeds each selected token into the next step. Dependence between steps and the cost of each step are separate problems; this module changes their economics without assuming either disappears.
 
 Consider a model that has already processed its prompt. The KV cache is resident, and the server now needs one more token. In a common low-concurrency regime, the limiting resource is not peak FLOP/s but memory bandwidth: a large amount of model state is read for a comparatively small amount of useful work.
 
@@ -16,7 +26,7 @@ A deliberately narrow model of the weight-streaming limit is
 
 $$Q_{\text{weights}}\lesssim\frac{BW}{W},$$
 
-where $BW$ is available memory bandwidth and $W$ is the weight payload read per decode step. KV traffic, temporary storage, communication, scheduling, and imperfect utilization are absent. The expression is not a service benchmark; it is a lens for seeing two independent interventions.
+Here $Q_{\text{weights}}$ is tokens per second for one sequence, $BW$ is bytes per second, and $W$ is bytes read per step. The dense 8B example assumes one read of all weights per step. KV traffic, temporary storage, communication, scheduling, and imperfect utilization are absent. The expression is not a service benchmark; it is a lens for seeing two independent interventions.
 
 Quantization attacks $W$. If an 8B model occupies 16 decimal GB in bf16, a 3.35 TB/s memory system has an arithmetic weight-only limit of 209.4 tokens/s. Eight-bit weights halve the payload. A 4.5-bit-per-weight accounting reduces it to 4.5 GB and raises that particular ceiling to 744.4 tokens/s.
 
@@ -26,7 +36,8 @@ The two methods can be combined because they operate on different parts of the c
 
 ## 2. From exact sampling to deployable systems
 
-![VIZ m10/01 — two converging development lines](assets/modern-llms/en/module-10/m10_01_timeline.svg)
+![VIZ m11/01 — two converging development lines](assets/modern-llms/en/module-10/m11_01_timeline.svg)
+*The speculative-decoding line moves from exact rejection-based algorithms to trainable and native proposers. The quantization line moves from INT4 PTQ to microscaled FP4 and hardware-backed W4A4 execution.*
 
 The key conceptual step in speculative decoding was not merely “use a small model first.” It was showing how to do so **without changing the target distribution**. Leviathan, Kalman, and Matias, and independently related work by Chen and colleagues, turned a draft model into a proposal distribution and used a correction step to preserve exact sampling.
 
@@ -36,7 +47,7 @@ Multi-token prediction created a native path. A model trained to predict beyond 
 
 Quantization followed its own progression. GPTQ and AWQ made low-bit post-training quantization practical for LLMs. Methods such as SmoothQuant and rotation-based transforms addressed activation outliers and channel imbalance. FP4 then shifted the problem from “four bits” to **which four-bit value grid, which scale hierarchy, and which kernel**.
 
-As of August 4, 2026, both topics are better understood as design spaces than as single features. A useful deployment decision must name the proposer, verifier, sampling rule, quantization format, scale granularity, hardware path, and workload.
+As of October 11, 2026, both topics are better understood as design spaces than as single features. A useful deployment decision must name the proposer, verifier, sampling rule, quantization format, scale granularity, hardware path, and workload.
 
 ## 3. The older ideas underneath the modern stack
 
@@ -52,6 +63,10 @@ These connections also warn against superficial comparisons. A proposer is not u
 
 ## 4. The exact propose–verify–correct cycle
 
+The **target** is the model whose sampling law must be preserved. The **draft**, or proposer, supplies candidates. At position $i$, both $p_i(t)$ and $q_i(t)$ are conditioned on the same history, including earlier proposals in that cycle. Subscripts are omitted in short equations; probabilities may still change across positions.
+
+Module 3, Section 12.1, worked through temperature → top-k → top-p numerically. Here we use the resulting distributions from which tokens are actually sampled. Temperature changes logit sharpness; top-p retains a smallest set of the most probable tokens reaching a chosen cumulative mass; a grammar mask removes forbidden continuations. With these transformations enabled, $q_i$ describes the transformed proposal law and $p_i$ the transformed target law. Using raw probabilities while sampling from a filtered law breaks the proof.
+
 Let $p$ be the target distribution for the next token and $q$ the draft distribution over the same token space. The proposer generates $x_1,\ldots,x_\gamma$ autoregressively. The target then evaluates all proposed positions in a batched forward pass.
 
 At position $i$, the proposed token is accepted with probability
@@ -62,9 +77,12 @@ Verification proceeds from left to right. At the first rejection, the remaining 
 
 $$r(t)=\operatorname{norm}\bigl((p(t)-q(t))_+\bigr).$$
 
-If every proposal is accepted, the target has already evaluated one additional position and can emit a bonus token.
+The target pass remains causal: the row predicting $x_i$ cannot see later proposals. Aligning inputs and outputs matters because logits at an input position predict the following token. If all proposals survive, the next-position distribution supplies a bonus token. Otherwise, the unaccepted suffix and its cache entries are discarded before continuing from the corrected prefix.
 
-![VIZ m10/02 — one speculative cycle](assets/modern-llms/en/module-10/m10_02_spec_cycle.svg)
+The notation $(u)_+$ means $\max(u,0)$ entry by entry, and $\operatorname{norm}$ divides by the sum. A positive residual exists whenever rejection is possible. End-of-sequence and output-length limits can terminate a cycle early; the progress formula below first considers a cycle without those stopping events.
+
+![VIZ m11/02 — one speculative cycle](assets/modern-llms/en/module-10/m11_02_spec_cycle.svg)
+*A draft continuation, one batched target verification, left-to-right acceptance, and residual resampling at the first rejection.*
 
 The proof fits in a mass-balance identity. Define
 
@@ -74,7 +92,9 @@ The accepted branch emits token $t$ with mass $\min(p_t,q_t)$. The correction br
 
 $$\min(p_t,q_t)+(1-\alpha)r_t=p_t.$$
 
-This statement is exact under the assumptions of the algorithm. The target and proposer need a compatible token space, the verifier needs target probabilities, and the acceptance/correction rule must be implemented faithfully. Greedy tree verification, lossy acceptance, vocabulary projection, and grammar masking may be excellent engineering choices, but their distributional guarantees are separate questions.
+The proposer supplies shared mass; correction supplies the missing target mass. Applying this identity at each reached history preserves the autoregressive law of the full continuation. Distributional equality does not require the same output string under the same seed: the algorithms consume random numbers differently.
+
+This statement is exact under the assumptions of the algorithm. The target and proposer need a compatible token space, the verifier needs target probabilities, and the acceptance/correction rule must be implemented faithfully. A grammar mask fits this proof when it is included in the normalized laws $p_i$ and $q_i$ at the same history. Greedy tree verification, lossy acceptance, or vocabulary projection require a separate argument if they change the proposal or correction rule.
 
 The reference distribution is the target that actually produced $p$. If the deployed target is quantized, exact speculation matches the quantized model—not an unavailable high-precision counterfactual.
 
@@ -100,19 +120,20 @@ For two discrete distributions,
 
 $$\alpha=1-\operatorname{TV}(p,q).$$
 
-Acceptance is therefore not a mysterious model-specific score: at one position it is one minus total variation distance between the proposer and target distributions.
+Total variation is $\operatorname{TV}(p,q)=\frac12\sum_t|p_t-q_t|$. Thus at one position it is one minus total variation distance between the proposer and target distributions.
 
 The only positive entry of $p-q$ is 0.15 at token 0, so $r=(1,0,0,0,0)$. Adding accepted and corrected mass gives
 
 $$\min(p,q)+0.15r=p.$$
 
-![VIZ m10/03 — the exactness check in numbers](assets/modern-llms/en/module-10/m10_03_rejection_trace.svg)
+![VIZ m11/03 — the exactness check in numbers](assets/modern-llms/en/module-10/m11_03_rejection_trace.svg)
+*The overlap, residual mass, and exact reconstruction of the target distribution for the five-token example.*
 
 Two boundary cases deserve explicit tests. When $p=q$, rejection cannot occur and no residual distribution is needed. When $q_t=0$, the ratio $p_t/q_t$ should never be evaluated: the proposer cannot emit token $t$, and any missing target mass is recovered through the residual.
 
 ### NumPy → PyTorch · B18 — Exact speculative correction
 
-NumPy exposes overlap mass and the positive residual `(p-q)+`. PyTorch uses the same balance and `torch.multinomial` with an explicit generator.
+NumPy exposes overlap mass and the positive residual `(p-q)+`. PyTorch uses the same balance and `torch.multinomial`; tests pass a dedicated random generator.
 
 ```python
 import numpy as np
@@ -130,8 +151,8 @@ def numpy_rejection_kernel_explicit(
     support = q > 0
     acceptance[support] = np.minimum(1.0, p[support] / q[support])
     overlap = np.minimum(p, q)
-    residual_mass = 1.0 - overlap.sum()
     positive = np.maximum(p - q, 0.0)
+    residual_mass = positive.sum()
     residual = positive / residual_mass if residual_mass > 0 else np.zeros_like(p)
     reconstructed = overlap + residual_mass * residual
     return acceptance, residual, reconstructed
@@ -150,9 +171,9 @@ def torch_rejection_kernel_explicit(
     support = q > 0
     acceptance[support] = torch.minimum(torch.ones_like(p[support]), p[support] / q[support])
     overlap = torch.minimum(p, q)
-    residual_mass = 1.0 - overlap.sum()
     positive = torch.clamp(p - q, min=0)
-    residual = torch.where(residual_mass > 0, positive / residual_mass, torch.zeros_like(p))
+    residual_mass = positive.sum()
+    residual = positive / residual_mass if bool(residual_mass > 0) else torch.zeros_like(p)
     reconstructed = overlap + residual_mass * residual
     return acceptance, residual, reconstructed
 
@@ -163,14 +184,16 @@ def torch_sample_speculative_token_explicit(
     *,
     generator: torch.Generator | None = None,
 ) -> tuple[int, bool]:
+    if isinstance(proposal, bool) or not isinstance(proposal, int) or not 0 <= proposal < p.numel() or q[proposal] <= 0:
+        raise ValueError("proposal must be an integer in the positive support of q")
     acceptance, residual, _ = torch_rejection_kernel_explicit(p, q)
-    draw = torch.rand((), generator=generator, device=p.device)
-    if draw <= acceptance[proposal]:
+    draw = torch.rand((), generator=generator, device=p.device, dtype=p.dtype)
+    if draw < acceptance[proposal]:
         return int(proposal), True
     return int(torch.multinomial(residual, 1, generator=generator).item()), False
 ```
 
-The tensor path repeats the balance. Sampling uses an explicit `torch.Generator` so tests are reproducible and independent of global RNG state.
+The explicit kernel assumes matching one-dimensional p and q vectors with at least two entries: finite, nonnegative, and normalized. Torch inputs share one device and a common float32 or float64 dtype. It normalizes positive differences without discarding a small residual. Sampling is an inference operation; discrete choices do not carry an ordinary gradient. The optional `generator` defaults to the global RNG; tests pass a separate `torch.Generator` for reproducibility. The proposal must have been sampled from q, not supplied arbitrarily.
 
 | Aspect | NumPy | PyTorch |
 |---|---|---|
@@ -180,8 +203,7 @@ The tensor path repeats the balance. Sampling uses an explicit `torch.Generator`
 | Sampling | outside the mathematical kernel | `torch.rand` / `multinomial` with a generator |
 | Test | exact reconstruction of p | Monte Carlo plus algebraic parity |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 p_np = np.array([0.40,0.30,0.15,0.10,0.05]); q_np = np.array([0.25,0.35,0.20,0.10,0.10])
@@ -195,16 +217,32 @@ for _ in range(12000):
     token, _ = torch_sample_speculative_token_explicit(p, q, proposal, generator=gen)
     counts[token] += 1
 assert torch.max(torch.abs(counts / counts.sum() - p)) < 0.02
-print("B18 exact balance + Monte Carlo: PASS")
+
+# A real, tiny residual must remain a probability distribution.
+near_q = np.array([1.0, 0.0]); near_p = np.array([1.0-1e-14, 1e-14])
+for kernel, args in [
+    (numpy_rejection_kernel_explicit, (near_p, near_q)),
+    (torch_rejection_kernel_explicit, (torch.tensor(near_p), torch.tensor(near_q))),
+]:
+    _, residual, balance = kernel(*args)
+    np.testing.assert_allclose(np.asarray(residual), [0.0, 1.0], rtol=0, atol=1e-15)
+    np.testing.assert_allclose(np.asarray(balance), near_p, rtol=0, atol=1e-15)
+# Uniform RNG can return zero: a zero-acceptance proposal must still be rejected.
+from unittest.mock import patch
+with patch.object(torch, "rand", return_value=torch.tensor(0.0, dtype=torch.float64)):
+    token, accepted = torch_sample_speculative_token_explicit(
+        torch.tensor([0.,1.], dtype=torch.float64),
+        torch.tensor([1.,0.], dtype=torch.float64), 0, generator=gen)
+    assert token == 1 and not accepted
+
+print("B18 exact balance, tiny residual, zero draw, Monte Carlo: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m10_inference_bridges.py`](../assets/m10_inference_bridges.py)
+Complete executable file: `m11_inference_bridges.py`
 
 ## 6. Expected progress per cycle
 
-A compact analytical model assumes a position-independent acceptance probability $\alpha$. Real acceptance varies with prompt, position, entropy, and the proposed history, so this assumption is best read as a summary statistic.
+A compact model assumes conditional acceptance probability $\alpha$ for each next proposal, given that every earlier proposal survived. This is a modelling assumption about each reached position, not a consequence of knowing an overall acceptance average. Actual conditional rates can vary with prompt, position, and proposed history; Section 7 shows why their average is insufficient.
 
 Every cycle emits at least one token. It emits a second token if the first proposal is accepted, a third if the first two are accepted, and so on. Thus
 
@@ -216,17 +254,27 @@ $$E(\alpha,\gamma)=\frac{1-\alpha^{\gamma+1}}{1-\alpha};$$
 
 for $\alpha=1$, the finite sum is simply $\gamma+1$.
 
-At $\alpha=0.7$ and $\gamma=5$, the expectation is 2.94 tokens. At $\alpha=0.9$ and $\gamma=7$, it is 5.70. The distribution pair from the previous section, summarized by $\alpha=0.85$, yields 3.71 tokens for $\gamma=4$.
+At $\alpha=0.7$ and $\gamma=5$, the expectation is 2.94 tokens. At $\alpha=0.9$ and $\gamma=7$, it is 5.70. Assuming the previous example’s $\alpha=0.85$ applies conditionally at every reached position gives 3.71 tokens for $\gamma=4$.
 
 The diminishing return is visible in the limiting value $1/(1-\alpha)$. A longer proposal is useful only if the probability of reaching its later positions is high enough. This is why proposer quality and cost dominate naïve “more speculative tokens” tuning.
 
 ## 7. A cost model, an optimum, and an illustrative MTP point
 
+The general progress expression is a tail sum. Let $A_k$ mean that the first $k$ proposals were accepted. Then
+$$E=1+\sum_{k=1}^{\gamma}\Pr(A_k).$$
+With $a_i=\Pr(A_i\mid A_{i-1})$, we have $\Pr(A_k)=\prod_{i=1}^k a_i$. Two conditional rates, 0.9 and 0.5, give $1+0.9+0.45=2.35$ emitted tokens. Replacing them with their average, 0.7, gives 2.19. A mean acceptance rate alone therefore does not determine mean cycle length.
+
 Expected tokens are not elapsed time. Let $c$ denote the cost of one draft step relative to one target step. A transparent first-order scenario is
 
 $$S(\alpha,\gamma,c)=\frac{E(\alpha,\gamma)}{1+\gamma c}.$$
 
+The denominator assumes that block verification costs one ordinary target step. A measured model can use $\gamma c+v(\gamma)+h(\gamma)$ instead, where $v$ is verification time and $h$ other overhead, in the same units. Exactness makes no claim about these costs. Include ordinary decoding, $\gamma=0$ and normalized speed 1, when choosing a method: every positive proposal length may be slower.
+
 This expression is intentionally incomplete. Tree construction, KV movement, launch overhead, batching, and a non-linear verification cost are outside it. Its value is conceptual: it exposes the tradeoff between more accepted work and more proposal work.
+
+**Second pass: should the draft grow by one token?** Holding $\alpha$ and $c$ fixed gives $E_{\gamma+1}=E_\gamma+\alpha^{\gamma+1}$. Comparing adjacent speed ratios yields
+$$S_{\gamma+1}>S_\gamma\quad\Longleftrightarrow\quad\alpha^{\gamma+1}>cS_\gamma.$$
+The right-hand side converts the extra proposal time into tokens at the current rate. Comparing the output increment directly with $c$ would mix an expected token count with a time cost. The notebook exercise checks this condition against a full scan.
 
 With $\alpha=0.8$ and $c=0.1$, scanning $\gamma=1,\ldots,10$ gives the maximum at $\gamma=6$:
 
@@ -240,25 +288,27 @@ $$E=1.875,\qquad S=\frac{1.875}{1.05}=1.78571.$$
 
 The 1.79× result belongs to these chosen parameters. It is not a derivation of a vendor benchmark. It is a useful calibration: a cheap, high-acceptance, one-step proposer can plausibly produce a gain of that order, while $\gamma=1$ enforces the simple upper bound $E\le2$.
 
-![VIZ m10/04 — useful tokens versus proposal cost](assets/modern-llms/en/module-10/m10_04_speedup.png)
+![VIZ m11/04 — useful tokens versus proposal cost](assets/modern-llms/en/module-10/m11_04_speedup.png)
+*Expected cycle length saturates with proposal length; the scenario speed curve has a broad optimum. The MTP marker is an illustrative parameter point.*
 
 A fixed $\gamma$ is only a baseline. An online system can adapt proposal length to confidence, domain, current load, and measured verification efficiency.
 
 ## 8. A taxonomy of proposers
 
-![VIZ m10/05 — where draft tokens come from](assets/modern-llms/en/module-10/m10_05_drafter_zoo.svg)
+![VIZ m11/05 — where draft tokens come from](assets/modern-llms/en/module-10/m11_05_drafter_zoo.svg)
+*External draft models, auxiliary-head and EAGLE-style proposers, pattern lookup, and native MTP occupy different points in the cost–overlap–complexity space.*
 
 **A separate draft model** is the cleanest reference design. A smaller sibling proposes a linear continuation, and the large model verifies it. The operational costs are a second set of weights, additional KV state, and a possible distribution mismatch. Tokenizer compatibility is part of the design, not an afterthought.
 
-**Auxiliary heads and candidate trees** trade model size for structured proposals. Medusa predicts several offsets and verifies a tree. A wider tree can raise the chance that a useful path survives, but it changes mask construction, candidate selection, and verification cost.
+**Auxiliary heads and candidate trees** trade model size for structured proposals. Medusa predicts several offsets and verifies a tree. Its typical-acceptance scheme aims to preserve useful generation quality; that criterion does not automatically provide the exact stochastic guarantee from Section 4. A wider tree can raise the chance that a useful path survives, but it changes mask construction, candidate selection, and verification cost.
 
-**EAGLE-family proposers** learn from target-model features. EAGLE-3 replaces feature regression with direct token prediction and fuses representations from multiple layers. Its paper reports speedups up to 6.5× in the authors’ test settings. That is evidence that the design can be powerful, not a portable constant for every engine and workload.
+**EAGLE-family proposers** learn from target-model features. EAGLE-3 replaces feature regression with direct token prediction and fuses representations from multiple layers. Its paper reports speedups up to 6.5× in the authors’ test settings and, separately, a 1.38× SGLang throughput gain at batch size 64. That is evidence that the design can be powerful, not a portable constant for every engine and workload.
 
 **Lookup-based methods** propose text already present in the prompt, generated history, or a suffix structure. They can be remarkably effective for code, document extraction, and repeated templates because the proposal cost is low and literal continuation is common. Their usefulness falls when answers are novel rather than copied or patterned.
 
 **Native MTP** reuses prediction capacity built into the target architecture. It removes the need to select and serve a separate full draft model. It does not remove the need to measure acceptance, additional memory, and verifier efficiency.
 
-No universal batch-size cutoff separates winning and losing regimes. Current vLLM guidance positions speculative decoding primarily as an inter-token-latency optimization for memory-bound workloads at medium-to-low QPS. Once ordinary batching saturates compute, proposal work may compete with useful target work.
+No universal batch-size cutoff separates winning and losing regimes. Current vLLM guidance positions speculative decoding primarily as an inter-token-latency optimization for memory-bound workloads at medium-to-low query rates (QPS means queries per second). Once ordinary batching saturates compute, proposal work may compete with useful target work.
 
 ## 9. Native multi-token prediction at inference time
 
@@ -266,31 +316,36 @@ Multi-token prediction is first a training objective. The model is asked to pred
 
 The DeepSeek-V3 technical report states that its MTP objective can be used for speculative decoding. The report does not turn that sentence into a universal acceptance rate or speedup. A deployment still needs a retained proposer, a compatible runtime implementation, and workload-specific measurements.
 
-Current vLLM documentation describes MTP as a speculative mode for models with native multi-token capability. Unlike a generic draft-model configuration, it does not require the user to provide a separate proposer checkpoint.
+Current vLLM documentation describes MTP as a speculative mode for models with native multi-token capability. The usual native path needs no separate full draft model. Packaging is architecture-specific: the documented Gemma 4 MTP path takes a compatible assistant checkpoint, while other families retain the modules in the main artifact.
 
-![VIZ m10/06 — native MTP as a proposer](assets/modern-llms/en/module-10/m10_06_mtp.svg)
+![VIZ m11/06 — native MTP as a proposer](assets/modern-llms/en/module-10/m11_06_mtp.svg)
+*A native MTP module proposes future tokens from the target model’s own representation; the target trunk verifies them. The 1.79× value is explicitly a teaching scenario.*
 
 A one-token native proposer is operationally attractive but mathematically capped at two emitted tokens per cycle. Multi-step and recursive proposers relax that cap at the price of extra work and more complicated error propagation. The right comparison is therefore multidimensional: accepted length, proposal latency, verification latency, memory overhead, and behavior under concurrency.
 
-Speculation is also relevant inside RL post-training. Rollout generation can dominate the wall-clock budget, and exact target-preserving speculation can accelerate that stage without changing the policy distribution being sampled. Module 12 of **RL for LLM** develops the surrounding actor/learner, worker, and asynchronous infrastructure; this lecture supplies one possible inference primitive inside that system.
+Speculation is also relevant inside RL post-training. A **rollout** is a generated response or action trajectory that will be evaluated and used for learning. Generating this experience can dominate the wall-clock budget, and exact target-preserving speculation can accelerate that stage without changing the policy distribution being sampled. Module 12 of **RL for LLM** develops the surrounding actor/learner, worker, and asynchronous infrastructure; this lecture supplies one possible inference primitive inside that system.
 
 ## 10. Verification as a short, wider decode operation
 
 Ordinary decode evaluates one new position. Verification evaluates several proposed positions together. The matrix operations become wider, so the target performs more useful arithmetic per weight read. Calling this a “mini-prefill” is an intuition about arithmetic intensity, not an identity between the two phases.
 
-Using the same simple speed scenario, take $\alpha=0.8$, $\gamma=5$, and $c=0.06$. The multiplier is 2.8378. Applied to the 209.4 token/s weight-only bf16 ceiling,
+Using the same simple speed scenario, take $\alpha=0.8$, $\gamma=5$, and $c=0.06$. The multiplier is 2.83790769. Applied to the 209.4 token/s weight-only bf16 ceiling,
 
-$$Q_{\text{scenario}}=209.4\cdot2.8378\approx594.2\ \text{tokens/s}.$$
+$$Q_{\text{scenario}}=209.375\cdot2.83790769\approx594.2\ \text{tokens/s}.$$
 
 The number is an arithmetic what-if. It assumes that one target verification is close to one target decode read and that weight bandwidth remains the bottleneck. KV traffic, wider activation work, tree masks, scheduling, and kernel efficiency all reduce or reshape the gain.
 
-The system metric also matters. Speculation may improve inter-token latency for a single request while leaving saturated-server goodput unchanged—or even lower. A credible evaluation reports at least per-request throughput, ITL, and aggregate goodput over a concurrency sweep.
+The system metric also matters. Speculation may improve inter-token latency for a single request while leaving saturated-server goodput unchanged—or even lower. Here **inter-token latency (ITL)** is the interval between delivered tokens; **goodput** counts only work meeting the chosen quality and latency requirements. A credible evaluation reports per-request throughput, ITL, and aggregate goodput over a concurrency sweep.
 
 ## 11. What low-bit quantization actually changes
 
+Start with a numerical mechanism. For a symmetric integer group, choose $s>0$, store $z_j=\operatorname{clip}(\operatorname{round}(w_j/s),-7,7)$, and reconstruct $\hat w_j=sz_j$. Codes are dimensionless; the scale restores the original units and range. A large scale accommodates outliers but leaves coarse spacing near zero. A small scale resolves common values more finely while clipping extremes.
+
+For a layer $Y=XW$, weight error becomes output error through $\Delta Y=X(\hat W-W)$. An error on a frequently active input channel can matter more than the same error elsewhere. A **calibration set** is a small collection of representative inputs used to estimate that sensitivity before deployment.
+
 “Four-bit model” is a marketing shorthand, not a complete numerical specification. A deployment must say which tensors are quantized, how scales are stored, what precision is used for accumulation, and whether the hardware executes the representation natively.
 
-**Weight-only PTQ** reduces model weights while keeping activations and accumulation at higher precision. **W8A8** and **W4A4** also reduce activations. **QAT** exposes the model to quantization effects during training; **PTQ** transforms an existing checkpoint using calibration data and numerical reconstruction.
+**Post-training quantization (PTQ)** transforms a trained checkpoint. Its weight-only form reduces model weights while keeping activations and accumulation at higher precision. **W8A8** and **W4A4** also reduce activations. **Quantization-aware training (QAT)** exposes the model to quantization effects during training. Many PTQ methods use calibration data, although direct rounding can be data-free. W names weights and A activations; the numerals in W4A4 specify their representation widths. Accumulation precision remains a separate choice.
 
 GPTQ quantizes weights while accounting for how local weight error affects a layer’s output. AWQ uses activation statistics to protect channels that matter disproportionately. Neither method should be judged solely by weight MSE: the relevant outcome is the model’s logits, calibration, and downstream quality.
 
@@ -308,11 +363,14 @@ The module’s 8B accounting is:
 | MXFP4-like accounting | 4.25 | 4.25 | 788.24 |
 | idealized W4 | 4.00 | 4.00 | 837.50 |
 
-![VIZ m10/07 — low-bit payload accounting](assets/modern-llms/en/module-10/m10_07_bits_ladder.png)
+![VIZ m11/07 — low-bit payload accounting](assets/modern-llms/en/module-10/m11_07_bits_ladder.png)
+*An arithmetic payload ladder. The 4.50- and 4.25-bit entries include local scales. Additional metadata, alignment, unquantized tensors, and format-specific packing are excluded.*
 
 The table is useful precisely because it is narrow. It says what happens to a weight-read ceiling when payload changes. It says nothing yet about accuracy, dequantization, KV cost, or achieved bandwidth.
 
 ## 12. Microscaled FP4, W4A4, and the role of hardware
+
+**E2M1** allocates one sign bit, two exponent bits, and one fraction bit. Its spacing is nonuniform. Available magnitudes are $0,0.5,1,1.5,2,3,4,6$; positive and negative zero give 16 encodings but 15 distinct values. The teaching quantizer stores those 15 values. E4M3 is an eight-bit floating-point format with four exponent bits and three fraction bits. The E8M0 scale in MX encodes a power of two, with no fraction field.
 
 Four bits provide very few numerical levels. A single scale for an entire tensor would either waste resolution around zero or clip outliers. Microscaling assigns a local scale to a small group of low-bit values.
 
@@ -328,7 +386,8 @@ $$\frac{32\cdot4+8}{32}=4.25\ \text{bits/value}.$$
 
 The lower metadata rate does not imply universally better performance. Scale expressiveness, block granularity, calibration, and native kernel support determine the quality–speed tradeoff.
 
-![VIZ m10/08 — several meanings of four-bit execution](assets/modern-llms/en/module-10/m10_08_fp4_war.svg)
+![VIZ m11/08 — several meanings of four-bit execution](assets/modern-llms/en/module-10/m11_08_fp4_war.svg)
+*NVFP4 and MXFP4 use different local-scale schemes. W4A4 adds activation quantization; ternary models require a still more specialized training and execution path.*
 
 MR-GPTQ is a useful corrective to simplistic format rankings. The authors adapt PTQ to microscaled floating-point formats, report substantial quality and hardware-speed improvements in their setups, and explicitly conclude that FP4 is not an automatic upgrade over INT4.
 
@@ -343,6 +402,7 @@ BitNet-style ternary weights push the representation much further. Their potenti
 The first function below validates the exact mass balance for one speculative position. The second is a grouped E2M1-like teaching quantizer. It is not a bit-exact NVFP4 implementation and contains no packed storage or GPU kernel.
 
 ```python
+"""M11 minimal probability and grouped-value teaching kernels."""
 import numpy as np
 
 def probability_vector(values, *, name="p", atol=1e-12):
@@ -366,11 +426,11 @@ def rejection_kernel(p_values, q_values):
     acceptance[support] = np.minimum(1.0, p[support] / q[support])
 
     overlap = np.minimum(p, q)
-    residual_mass = 1.0 - overlap.sum()
     positive = np.maximum(p - q, 0.0)
+    residual_mass = positive.sum()
     residual = (
         positive / residual_mass
-        if residual_mass > 1e-15
+        if residual_mass > 0.0
         else np.zeros_like(p)
     )
     balance = overlap + residual_mass * residual
@@ -387,7 +447,7 @@ def quantize_grouped_e2m1(values, group_size=16):
     x = np.asarray(values, dtype=np.float64)
     if x.ndim != 1 or x.size == 0 or not np.isfinite(x).all():
         raise ValueError("expected a non-empty finite one-dimensional vector")
-    if group_size <= 0 or x.size % group_size:
+    if isinstance(group_size, bool) or not isinstance(group_size, (int, np.integer)) or group_size <= 0 or x.size % group_size:
         raise ValueError("length must be divisible by a positive group_size")
 
     groups = x.reshape(-1, group_size)
@@ -396,6 +456,7 @@ def quantize_grouped_e2m1(values, group_size=16):
     normalized = groups / scale
     codes = np.abs(normalized[..., None] - grid).argmin(axis=-1)
     return (grid[codes] * scale).reshape(x.shape)
+
 ```
 
 The validator deliberately refuses to normalize malformed probability vectors. Silent repair would hide an error in the sampling algorithm. The quantizer treats an all-zero group explicitly so that a zero scale cannot produce NaNs.
@@ -453,7 +514,7 @@ def torch_grouped_fake_quant_explicit(
     return (grid[codes] * scales).reshape(padded.shape)[..., : x.shape[-1]]
 ```
 
-PyTorch repeats the same reshape, `amax`, broadcasting, and `argmin`. This is fake quantization: the result remains an ordinary tensor and does not establish hardware-kernel speedup.
+The explicit kernel assumes finite real floating arrays with nonempty axes; use float32/float64 for parity. Group size is a positive integer. The grid is a finite one-dimensional array containing exact zero and a nonzero level, including after conversion to the input dtype. Intermediate scales and distances must be representable in that working dtype. PyTorch repeats reshape, `amax`, broadcasting, and `argmin`. This is fake quantization: the result remains an ordinary tensor, without packed bits. Ties select the first grid entry; this teaching rule does not implement every hardware rounding mode.
 
 | Aspect | NumPy | PyTorch |
 |---|---|---|
@@ -463,8 +524,7 @@ PyTorch repeats the same reshape, `amax`, broadcasting, and `argmin`. This is fa
 | Code | `argmin` over the grid | `argmin(dim=-1)` |
 | Result | dequantized array | dequantized tensor, not packed bits |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 rng = np.random.default_rng(19)
@@ -479,9 +539,7 @@ torch.testing.assert_close(zero_q, zeros)
 print("B19 explicit grouped fake quantization: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m10_inference_bridges.py`](../assets/m10_inference_bridges.py)
+Complete executable file: `m11_inference_bridges.py`
 
 ## 15. Combining the levers without multiplying away the bottlenecks
 
@@ -489,13 +547,16 @@ The concepts compose cleanly. Quantization lowers the target payload; speculatio
 
 An 8B model at 4.5 GB has a weight-only ceiling of 744.44 tokens/s at 3.35 TB/s. Applying the illustrative MTP multiplier from Section 7 gives
 
-$$744.44\cdot1.78571=1329.37\ \text{tokens/s}.$$
+$$\frac{3.35\cdot10^{12}}{4.5\cdot10^9}\cdot\frac{1.875}{1.05}\approx1329.37\ \text{tokens/s}.$$
 
 That is 6.35 times the bf16 weight-only baseline. It is not a predicted end-to-end result. The calculation omits KV traffic, quantization/dequantization overhead, extra proposer parameters, scheduling, and the possibility that the system becomes compute-bound.
 
-![VIZ m10/09 — a combined profile rather than a multiplier stack](assets/modern-llms/en/module-10/m10_09_stack.svg)
+![VIZ m11/09 — a combined profile rather than a multiplier stack](assets/modern-llms/en/module-10/m11_09_stack.svg)
+*Two scenarios differ in whether drafting becomes cheaper alongside the target. Recompute c relative to the new target step before combining estimates.*
 
-Quantization can also change target logits, so the acceptance statistics must be remeasured after quantization. Exact speculative sampling still matches the deployed target distribution, but that distribution may differ from the high-precision model.
+Quantization can also change target logits, so the acceptance statistics must be remeasured after quantization.
+
+Relative cost needs the same care. If the target becomes $k$ times faster but draft time stays fixed, normalized draft cost rises from $c$ to $kc$. For $k=16/4.5$, an original $c=0.05$ becomes 0.17778. Keeping acceptance at 0.875 then gives about 1185.14 tokens/s, rather than 1329.37, in the same simplified model. The higher figure assumes that drafting remains five percent of the new target step. Exact speculative sampling still matches the deployed target distribution, but that distribution may differ from the high-precision model.
 
 QLoRA belongs to the same broad economy of low-bit storage but solves a different problem. It freezes a four-bit base model and trains higher-precision low-rank adapters, reducing fine-tuning memory. It is neither a quantized inference kernel nor a speculative sampler.
 
@@ -503,7 +564,9 @@ For a deeper conceptual view, Module 9 of **Information Theory for ML** develops
 
 ## 16. A deployment workflow for current engines
 
-As of August 4, 2026, vLLM documents several speculative families: external draft models, EAGLE, native MTP, n-gram and suffix proposal, plus specialized variants. Its guidance frames speculation primarily as an inter-token-latency optimization for memory-bound, medium-to-low-QPS workloads.
+Define the outcome before benchmarking. **TTFT** is time to first token; **ITL** is the interval between subsequent delivered tokens. Throughput counts work per unit time. **Goodput** counts work meeting specified quality and latency requirements, often expressed as **service-level objectives (SLOs)**. A server can produce more tokens overall while delivering fewer acceptable responses before their deadlines.
+
+As of October 11, 2026, vLLM documents several speculative families: external draft models, EAGLE, native MTP, n-gram and suffix proposal, plus specialized variants. Its guidance frames speculation primarily as an inter-token-latency optimization for memory-bound, medium-to-low-QPS workloads.
 
 A reliable rollout starts from a controlled baseline. Pin the model revision, tokenizer, engine and kernel versions, GPU type, sampling configuration, prompt/output distributions, and concurrency. Measure quality, memory, TTFT, ITL, throughput, and goodput.
 
@@ -511,7 +574,7 @@ Next, introduce quantization alone. Confirm that the runtime is using the intend
 
 Then add speculation alone. Record proposer cost, mean accepted length, rejection rate, verification time, and memory overhead. Finally, combine the two and re-profile from scratch. This sequence reveals which technique moved the bottleneck and prevents crediting one component for another component’s gain.
 
-Native MTP removes the need to supply a separate draft checkpoint, but only for architectures the engine recognizes. EAGLE and generic draft-model modes require compatible artifacts. Lookup methods require favorable text structure rather than a neural checkpoint.
+For native MTP, check whether proposal modules are bundled in the target or distributed as a compatible auxiliary artifact; the runtime must recognize that architecture. EAGLE and generic draft-model modes require compatible artifacts. Lookup methods require favorable text structure rather than a neural checkpoint.
 
 The success criterion depends on the product. Interactive chat emphasizes TTFT, ITL, and tail latency. Offline generation values aggregate goodput. RL rollouts care about accepted samples per training-hour and the interaction with asynchronous worker scheduling.
 
@@ -533,13 +596,14 @@ A group size of 16 does not uniquely identify NVFP4. A filename suffix does not 
 
 ## 20. What to retain and sources
 
-![VIZ m10/10 — the module in one diagram](assets/modern-llms/en/module-10/m10_10_cheatsheet.svg)
+![VIZ m11/10 — the module in one diagram](assets/modern-llms/en/module-10/m11_10_cheatsheet.svg)
+*Exact sampling equations, cycle economics, proposer families, low-bit accounting, and the deployment checklist on one page.*
 
 Exact speculative sampling uses a cheap proposal without replacing the target distribution:
 
 $$a(t)=\min(1,p_t/q_t),\qquad r\propto(p-q)_+.$$
 
-Under a constant-acceptance approximation,
+Assuming the same conditional acceptance probability at each reached position,
 
 $$E=\sum_{k=0}^{\gamma}\alpha^k,$$
 
@@ -559,14 +623,15 @@ When quantization and speculation are combined, acceptance and bottlenecks must 
 - Lin et al. — [AWQ](https://arxiv.org/abs/2306.00978).
 - Dettmers et al. — [QLoRA](https://arxiv.org/abs/2305.14314).
 - Egiazarian et al. — [MR-GPTQ](https://arxiv.org/abs/2509.23202).
-- NVIDIA Transformer Engine — [NVFP4 format and scaling](https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/features/low_precision_training/nvfp4/nvfp4.html).
+- NVIDIA Transformer Engine — [NVFP4 format and scaling](https://docs.nvidia.com/deeplearning/transformer-engine/features/low_precision_training/nvfp4/nvfp4.html).
+- OCP — [Microscaling Formats (MX), version 1.0](https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf).
 - vLLM — [Speculative Decoding](https://docs.vllm.ai/en/latest/features/speculative_decoding/) and [MTP](https://docs.vllm.ai/en/latest/features/speculative_decoding/mtp/).
 - Cohere — [Command A+](https://cohere.com/blog/command-a-plus).
 
 **Optional deepening:** rate–distortion and model quantization appear in Modules 9 and 14 of **Information Theory for ML**. Rollout-generation cost and asynchronous RL infrastructure are developed in Module 12 of **RL for LLM**.
 
-The next module turns to supervised fine-tuning and post-training data. Faster inference does not make a model aligned or useful by itself, but it changes the cost of every subsequent experiment and deployment.
+Module 12 changes the generation protocol itself: a diffusion model refines several positions per pass. We will compare it with the autoregressive and speculative methods developed here before returning to SFT and post-training data in Module 13.
 
 ---
 
-*Landscape verified: August 4, 2026. Claims about engines, formats, and releases were verified against primary sources. The module’s weight-stream and speed calculations are explicit scenarios; external results are attributed to their sources and experimental settings.*
+*Landscape verified: October 11, 2026. Claims about engines, formats, and releases were verified against primary sources. The module’s weight-stream and speed calculations are explicit scenarios; external results are attributed to their sources and experimental settings.*

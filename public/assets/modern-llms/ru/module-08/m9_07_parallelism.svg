@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="853" viewBox="0 0 1100 853">
+<title>Что именно распределяется между устройствами</title>
+<desc>7B параметров; 64 процесса; только перечисленный объём состояния</desc>
+<rect width="1100" height="853" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Что именно распределяется между устройствами</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">7B параметров; 64 процесса; только перечисленный объём состояния</text>
+<rect x="40" y="132" width="1020" height="51" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">ZeRO</text>
+<text x="184" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">Распределено</text>
+<text x="634" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">GB / rank</text>
+<text x="854" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2E3440" text-anchor="start">GiB / rank</text>
+<rect x="40" y="187" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">0</text>
+<text x="184" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">ничего</text>
+<text x="634" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">112.000</text>
+<text x="854" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">104.308</text>
+<rect x="40" y="242" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">1</text>
+<text x="184" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">оптимизатор</text>
+<text x="634" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">29.312</text>
+<text x="854" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">27.299</text>
+<rect x="40" y="297" width="1020" height="51" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">2</text>
+<text x="184" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">оптимизатор + градиенты</text>
+<text x="634" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">15.531</text>
+<text x="854" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">14.465</text>
+<rect x="40" y="352" width="1020" height="51" rx="12" fill="#FFFFFF" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="54" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">3</text>
+<text x="184" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">всё состояние</text>
+<text x="634" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">1.750</text>
+<text x="854" y="382" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">1.630</text>
+<rect x="40.0" y="427" width="498.0" height="149" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="471" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">TP: внутри слоя</text>
+<text x="64.0" y="512" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Части матриц + коллективные обмены</text>
+<rect x="562.0" y="427" width="498.0" height="149" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="471" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">PP: между слоями</text>
+<text x="586.0" y="512" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">f = (p − 1) / (m + p − 1)</text>
+<text x="586.0" y="537" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">p=8: m=133 → 5%; m=134 → 4.965%</text>
+<rect x="40.0" y="600" width="498.0" height="149" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="644" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">EP: эксперты</text>
+<text x="64.0" y="685" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Размещение экспертов и обмен токенами</text>
+<rect x="562.0" y="600" width="498.0" height="149" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="644" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">CP: контекст</text>
+<text x="586.0" y="685" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Разделение последовательности и обмен для</text>
+<text x="586.0" y="710" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">внимания</text>
+<text x="40" y="790" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">FSDP собирает нужные параметры на время вычисления. Пиковая память включает такие окна, активации и</text>
+<text x="40" y="814" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">буферы.</text>
+</svg>

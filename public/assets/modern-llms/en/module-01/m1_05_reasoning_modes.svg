@@ -1,50 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-<rect width="1600" height="900" fill="#FFFFFF"/>
-<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">Who controls test-time compute?</text>
-<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">A reasoning mode is a budget plus a controller, not a separate biological species</text>
-<rect x="50" y="220" width="330" height="430" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
-<text x="78" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
-<tspan x="78" dy="0">Instant</tspan>
-</text>
-<text x="78" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
-<tspan x="78" dy="0">small fixed budget</tspan>
-<tspan x="78" dy="26"></tspan>
-<tspan x="78" dy="26">low, predictable latency</tspan>
-</text>
-<rect x="440" y="220" width="330" height="430" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
-<text x="468" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
-<tspan x="468" dy="0">Configurable effort</tspan>
-</text>
-<text x="468" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
-<tspan x="468" dy="0">caller selects budget</tspan>
-<tspan x="468" dy="26"></tspan>
-<tspan x="468" dy="26">explicit cost/quality</tspan>
-<tspan x="468" dy="26">trade-off</tspan>
-</text>
-<rect x="830" y="220" width="330" height="430" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
-<text x="858" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
-<tspan x="858" dy="0">Adaptive thinking</tspan>
-</text>
-<text x="858" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
-<tspan x="858" dy="0">model selects budget</tspan>
-<tspan x="858" dy="26"></tspan>
-<tspan x="858" dy="26">simpler UX, variable cost</tspan>
-</text>
-<rect x="1220" y="220" width="330" height="430" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
-<text x="1248" y="272" text-anchor="start" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#2E3440">
-<tspan x="1248" dy="0">Multi-agent</tspan>
-</text>
-<text x="1248" y="314" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
-<tspan x="1248" dy="0">harness allocates work</tspan>
-<tspan x="1248" dy="26"></tspan>
-<tspan x="1248" dy="26">parallel trajectories +</tspan>
-<tspan x="1248" dy="26">merge</tspan>
-</text>
-<rect x="220" y="700" width="1160" height="110" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
-<text x="244" y="746" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="244" dy="0">Passport rule</tspan>
-</text>
-<text x="244" y="785" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
-<tspan x="244" dy="0">Evaluate the exact tuple: model + effort + tools + agent count—not the family name alone.</tspan>
-</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="559" viewBox="0 0 1100 559">
+<title>Who allocates computation</title>
+<desc>Effort settings, adaptive allocation, and multiple agents can coexist.</desc>
+<rect width="1100" height="559" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Who allocates computation</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Effort settings, adaptive allocation, and multiple agents can coexist.</text>
+<rect x="40.0" y="132" width="498.0" height="149" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Requested mode</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">The caller selects an effort level or a separate</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">high-compute mode.</text>
+<rect x="562.0" y="132" width="498.0" height="149" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Allocation within a request</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">The model or controller decides how much work</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">to do within the available limits.</text>
+<rect x="40.0" y="305" width="498.0" height="174" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">External coordination</text>
+<text x="64.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">The system assigns work to agents, invokes tools,</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">and combines results.</text>
+<rect x="562.0" y="305" width="498.0" height="174" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">What to measure</text>
+<text x="586.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Accepted answers, elapsed time, and total cost.</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Effort does not specify an exact runtime or</text>
+<text x="586.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">operation count.</text>
+<text x="40" y="520" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Evaluate additional compute on the same tasks with the same acceptance rules.</text>
 </svg>

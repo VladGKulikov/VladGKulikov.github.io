@@ -1,5 +1,7 @@
 # Module 3. Bandits, exploration, and one-step decisions
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.9  
 > **Factual snapshot:** 2026-08-04  
 > **Language:** EN  
@@ -525,7 +527,7 @@ The right abstraction depends on the question. A bandit is useful for comparing 
 
 > **Boundary of the transfer.** “Single-turn alignment can be represented as a contextual bandit” is exact under a whole-response reward and terminal round. “All LLM training is a bandit” is not.
 
-**Cross-reference:** data preparation and supervised fine-tuning (SFT) are covered in *Modern LLMs*, Module 11 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`), while the architecture-level map of RLHF, DPO, and GRPO is in Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`). This module remains the canonical treatment of one-step feedback statistics.
+**Cross-reference:** data preparation and supervised fine-tuning (SFT) are covered in *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`), while the architecture-level map of RLHF, DPO, and GRPO is in Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`). This module remains the canonical treatment of one-step feedback statistics.
 
 ---
 
@@ -712,7 +714,7 @@ It is therefore useful to separate:
 - **stochastic generation:** a fixed policy produces different candidates;
 - **inference-time search:** the system spends additional compute selecting, checking, or improving candidates.
 
-The mechanisms may be combined, but they are not synonyms. Decoding, candidate selection, and inference-time computation are treated more broadly in *Modern LLMs*, Module 13 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`).
+The mechanisms may be combined, but they are not synonyms. Decoding, candidate selection, and inference-time computation are treated more broadly in *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`).
 
 ---
 

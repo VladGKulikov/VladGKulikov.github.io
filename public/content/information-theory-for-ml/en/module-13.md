@@ -1,5 +1,7 @@
 # Module 13. Reasoning in LLMs: computation, search, and information
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** This is the capstone of the course. The main route is §§13.1–13.10: what changes when a model receives more compute at inference time; why intermediate steps can help without introducing new data; how to allocate a budget between one long trajectory, multiple candidates, and verification; when context and tools genuinely add information; and how to evaluate the resulting system without conflating quality with cost. §13.11 is a mathematical deepening on stepwise information gain and sequential expressivity. It can be left for a second pass.
 
 ## 13.1. What changes when a model “thinks longer”
@@ -338,22 +340,24 @@ Let $Z$ be a latent task, labeling convention, or rule, and let demonstrations
 $$
 D=\{(x_i,y_i)\}_{i=1}^{m}
 $$
-be generated conditionally on $Z$. Then
+be conditionally independent given $Z$, each with law $p(x,y\mid z)$. Then
 
 $$
 p(z\mid D)
 \propto
-p(z)\prod_{i=1}^{m}p(x_i,y_i\mid z),
+p(z)\prod_{i=1}^{m}p(x_i,y_i\mid z).
 $$
-and the prediction for a new input is
+Let the new pair $(x_{m+1},y_{m+1})$ be conditionally independent of $D$ given $Z$, with the same law. The new input may also carry evidence about the task, so the prediction is
 
 $$
 p(y_{m+1}\mid x_{m+1},D)
 =
 \int
 p(y_{m+1}\mid x_{m+1},z)
-\,p(z\mid D)\,dz.
+\,p(z\mid x_{m+1},D)\,dz.
 $$
+Here $p(z\mid x_{m+1},D)\propto p(x_{m+1}\mid z)p(z\mid D)$. If the new input is uninformative about $Z$ given $D$, the posterior simplifies to $p(z\mid D)$. This condition must be stated rather than assumed for arbitrary $p(x,y\mid z)$.
+
 If the demonstrations depend on the latent task, then
 
 $$

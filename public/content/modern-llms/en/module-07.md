@@ -1,12 +1,22 @@
-# Module 7. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models
+# Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models
 
-*“Modern LLMs” course · Module 7 lecture · edition 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module is about.** Softmax attention keeps the past as an addressable KV cache. That makes exact lookup possible, but the cache grows with every token. A **State Space Model (SSM)** takes the opposite bargain: after each token, update a fixed-size state. We will start from a continuous linear system and exact Zero-Order Hold discretization, then move through Mamba selectivity, Mamba-2’s State Space Duality, delta-rule memories, and current hybrid architectures. The recurring question is not whether recurrence “beats” attention. It is **which parts of the past can be compressed into a fixed state, and which still require an addressable store**.
+*“Modern LLMs” course · Module 8 lecture · edition 2026.10.25*
+
+> **What this module is about.** Softmax attention keeps the past as an addressable KV cache. That preserves separately addressable positions, but the cache grows with every token. A **State Space Model (SSM)** takes the opposite bargain: after each token, update a fixed-size state. We will start from a continuous linear system and exact Zero-Order Hold discretization, then move through Mamba selectivity, Mamba-2’s State Space Duality, delta-rule memories, and current hybrid architectures. The recurring question is not whether recurrence “beats” attention. It is **which parts of the past can be compressed into a fixed state, and which still require an addressable store**.
 >
-> **Prerequisites.** Module 4 introduced KV-cache geometry; Module 5 covered the residual block; Module 6 is useful for the MoE hybrids later in the lecture. Everything needed for the argument is restated here.
+> **Prerequisites.** Module 5 introduced KV-cache geometry; Module 6 covered the residual block; Module 7 is useful for the MoE hybrids later in the lecture. Everything needed for the argument is restated here.
 
 ---
+
+### Reading routes
+
+**First pass:** §1 → §§3–4 → §§6–11 → §§17 and 19. In §4, first understand the discrete recurrence and its matrices; save the exact-coefficient derivation and E1 in §18 for the second pass. E2–E3 provide the first memory calculations. Follow the change from a list of past tokens to a fixed state, then study writing, forgetting, and hybrids. Return to the opening memory figures when you reach §10.
+
+**Second pass:** §§4–5, §7, and §§12–14 with the notebook. Derive the discrete update and test composition, chunk boundaries, and numerical limits.
+
+**Reference pass:** §2, §15, and §20 provide history, model specifications, and sources. They introduce names as pointers; the mechanisms are developed in §§3–11.
 
 ## 1. Two costs of a long context
 
@@ -28,7 +38,8 @@ For a Mamba-2-like teaching geometry with $d_{state}=128$, the complete cache is
 
 ## 2. From control theory to hybrid language models
 
-![VIZ m7/01 — the second architectural branch](assets/modern-llms/en/module-07/m7_01_ssm_timeline.svg)
+![VIZ m8/01 — the second architectural branch](assets/modern-llms/en/module-07/m8_01_ssm_timeline.svg)
+*Classical state-space systems → HiPPO/S4 → selective Mamba → Mamba-2/SSD and DeltaNet → Jamba, Falcon-H1, Qwen3.5, and Kimi hybrids → new recurrent and sparse branches in 2026.*
 
 State-space systems long predate neural language models. In control and filtering, a compact hidden state is designed to retain what is needed for future prediction. **S4 — Structured State Spaces for Sequence Modeling** brought that idea into deep sequence models and used structured dynamics to make very long convolutions tractable.
 
@@ -36,7 +47,7 @@ The weakness of early learned SSMs was not simply memory length. Their update la
 
 **Mamba-2** introduced **State Space Duality (SSD)**. For a structured class of transitions, the same sequence operator can be expressed as a recurrence or as a semiseparable masked matrix closely related to linear attention. This opened a path to dense matrix work inside chunks while carrying only compact state across chunk boundaries. The authors report a 2–8× core-layer speedup over Mamba-1 in their settings.
 
-In parallel, linear-attention research revisited how memory should be written. **DeltaNet**, published in June 2024, used the delta rule to correct an existing association rather than merely adding another outer product. **Gated DeltaNet**, published later in December 2024, combined that mechanism with adaptive forgetting.
+In parallel, linear-attention research revisited how memory should be written. The June 2024 **DeltaNet** paper developed efficient parallel training for a memory that uses the delta rule to correct an existing association rather than merely adding another outer product. **Gated DeltaNet**, published later in December 2024, combined that mechanism with adaptive forgetting.
 
 Large systems then converged on hybrids rather than one universal replacement. Jamba interleaved Transformer, Mamba, and MoE components. Falcon-H1 ran Mamba-2 and attention in parallel. Qwen3.5 used three Gated DeltaNet layers followed by one full-attention layer in each repeated unit. Kimi K3 combined 69 KDA layers with 24 Gated MLA layers. The recurring design lesson is more durable than any one ratio: **fixed state is attractive as a low-cost carrier, while addressable mechanisms are retained where compression is not enough**.
 
@@ -54,9 +65,11 @@ $$
 
 $A$ controls internal evolution, $B$ writes the input, $C$ reads the state, and $D$ provides a direct input-to-output path.
 
+The state $h\in\mathbb R^n$, input $x\in\mathbb R^p$, and output $y\in\mathbb R^r$ fix the matrix shapes: $A:n\times n$, $B:n\times p$, $C:r\times n$, and $D:r\times p$. The dot denotes a continuous-time derivative; tokens will instead index discrete updates.
+
 ### A bank of temporal filters
 
-Stable modes decay at different rates. Fast coordinates react to local changes; slow ones carry longer summaries. Seen this way, an SSM is a learned spectrum of time scales.
+If every eigenvalue of $A$ has a negative real part, the unforced state tends to zero over time: the system is asymptotically stable. This does not require each coordinate to decrease monotonically; a general matrix can produce transient growth. In the diagonal examples below, individual negative coefficients directly set different decay times. The system can then be read as a bank of fast and slow temporal filters.
 
 ### An associative memory
 
@@ -69,6 +82,8 @@ $$
 
 The key selects a write direction, the value provides the content, and the query reads from the resulting matrix. Unlike an explicit KV table, the matrix has fixed size, so independent associations eventually interfere.
 
+For the associative form, $k_t,q_t\in\mathbb R^{d_k}$, $v_t\in\mathbb R^{d_v}$, and $S_t\in\mathbb R^{d_v\times d_k}$. The outer product writes one association; multiplication by the query reads a value-sized vector. This is unnormalized linear attention, with no softmax.
+
 These views are complementary. Dynamics explains stability and forgetting; filters explain time scales; associative memory explains writing and retrieval. Mamba-2 makes the connection more than rhetorical for its structured class of operators.
 
 ## 4. Discretization with Zero-Order Hold
@@ -79,11 +94,16 @@ $$
 h_t=\bar A h_{t-1}+\bar Bx_t,
 $$
 
+The bars distinguish one-step discrete matrices from the continuous system: $\bar A$ propagates the previous state, while $\bar B$ adds the current input. This recurrence is the starting point for reading Mamba. The following equations derive its coefficients for a specified continuous-time system.
+
 $$
 \bar A=e^{\Delta A},
 \qquad
-\bar B=A^{-1}(e^{\Delta A}-I)B.
+\bar B=\int_0^\Delta e^{uA}B\,du.
+\quad (\text{any }A)
 $$
+
+For invertible $A$, the integral equals $A^{-1}(e^{\Delta A}-I)B$. The integral also covers singular matrices. The numerical examples set the direct path $D$ to zero.
 
 For diagonal $A$, the calculation is elementwise. When one diagonal entry is zero, the expression for $\bar B$ looks singular, but the limit is well defined:
 
@@ -136,11 +156,12 @@ $$
 
 The point is not that every selective SSM must implement full ZOH. It is that $\Delta B$ and the exact held-input coefficient are distinct claims; a lecture or codebase should say which one it uses.
 
-![VIZ m7/03 — discretization by hand](assets/modern-llms/en/module-07/m7_03_zoh_trace.svg)
+![VIZ m8/03 — discretization by hand](assets/modern-llms/en/module-07/m8_03_zoh_trace.svg)
+*An exact two-mode ZOH trace, the zero-eigenvalue limit, and the growth of the $\Delta B$ approximation error.*
 
 ## 6. What selectivity changes in Mamba
 
-A time-invariant linear system applies the same write and forgetting law to every symbol. Language needs content-dependent control. Mamba predicts several quantities from the current input:
+A time-invariant linear system applies the same write and forgetting law to every symbol. Language needs content-dependent control. Mamba predicts write and read maps and a positive step from the current input. Here $\operatorname{softplus}(u)=\log(1+e^u)$ ensures a positive step; the expression is schematic:
 
 $$
 B_t=B(x_t),
@@ -154,7 +175,8 @@ A short depthwise causal convolution appears before the selective recurrence. It
 
 That local path also owns persistent state at decode time. A serving implementation must keep both the SSM tensor and the convolution tail. Any memory estimate that counts only the first is incomplete.
 
-![VIZ m7/04 — a selective Mamba block](assets/modern-llms/en/module-07/m7_04_mamba_block.svg)
+![VIZ m8/04 — a selective Mamba block](assets/modern-llms/en/module-07/m8_04_mamba_block.svg)
+*Input projection splits a local path and a gate; convolution feeds the selective SSM, whose output is multiplied by the gate. The two persistent caches are shown separately.*
 
 ## 7. Mamba-2 and the scope of State Space Duality
 
@@ -164,7 +186,20 @@ Mamba-2 focuses on a structured class of state transitions whose sequence matrix
 2. an associative parallel scan;
 3. a chunked matrix computation resembling masked linear attention.
 
-![VIZ m7/02 — the scope of SSD](assets/modern-llms/en/module-07/m7_02_duality.svg)
+A *scan* computes every prefix state, not just the final state. Represent the affine step $h\mapsto ah+b$ by $(a,b)$. Composition gives
+$$
+(a_2,b_2)\circ(a_1,b_1)=(a_2a_1,\;a_2b_1+b_2).
+$$
+Associativity permits regrouping, not reordering: $(2,1)$ followed by $(3,4)$ yields $(6,7)$, whereas the reverse order yields $(6,9)$.
+
+For this representation, take scalar input $x_t$ and output $y_t$, state $h_t\in\mathbb R^n$, and vectors $B_t,C_t\in\mathbb R^n$. Readout is $y_t=C_t^\top h_t$; the vector $C_t$ represents the readout row used in §3. With transition $a_tI$ and zero initial state, the coefficient mapping input $j$ to output $i\ge j$ is
+$$
+M_{ij}=C_i^\top B_j\prod_{r=j+1}^{i}a_r.
+$$
+The transition product carries the write forward. Off-diagonal blocks factor through the compact state; this low-rank structure is the useful meaning of *semiseparable*. Matrix operations handle a chunk internally, and only the boundary state must cross to the next chunk.
+
+![VIZ m8/02 — the scope of SSD](assets/modern-llms/en/module-07/m8_02_duality.svg)
+*One structured operator, three execution forms. SSD is a duality for a defined class, not an identity between every SSM and every linear-attention method.*
 
 The distinction matters. The slogan “Transformers are SSMs” does not mean any arbitrary continuous dynamical system is interchangeable with standard softmax attention. The theorem relies on a specific structured matrix class.
 
@@ -188,7 +223,7 @@ S_t=S_{t-1}
 \beta_t\bigl(v_t-S_{t-1}k_t\bigr)k_t^\top.
 $$
 
-For a normalized key and $\beta_t=1$, the readout along that direction becomes exactly $v_t$. A smaller $\beta_t$ performs a partial update.
+For a normalized key and $\beta_t=1$, the readout along that direction becomes exactly $v_t$. A $\beta_t$ between zero and one performs a partial update. Earlier work had already used the delta rule for associative memory.
 
 Let
 
@@ -202,7 +237,14 @@ After writing $v_1$, a second additive write would return $(4,6)$ for the same k
 
 DeltaNet develops this form of targeted correction and a parallel training algorithm. Gated DeltaNet adds a separate forgetting gate. The mechanisms solve different problems: delta update repairs a selected association; gating can erase broader old content.
 
-![VIZ m7/05 — editable associative memory](assets/modern-llms/en/module-07/m7_05_delta_trace.svg)
+Let $\gamma_t\in[0,1]$ control global forgetting. Decay precedes the targeted correction:
+$$
+S_t=\gamma_t S_{t-1}+\beta_t(v_t-\gamma_t S_{t-1}k_t)k_t^\top.
+$$
+For a unit key the readout is $(1-\beta_t)\gamma_t S_{t-1}k_t+\beta_t v_t$, so $\beta_t=1$ replaces it exactly even when $\gamma_t<1$. Other non-orthogonal key directions can change too; a targeted update does not make all associations independent.
+
+![VIZ m8/05 — editable associative memory](assets/modern-llms/en/module-07/m8_05_delta_trace.svg)
+*Additive write, partial correction, exact replacement, and a gated update for one key direction.*
 
 ## 9. What a fixed state can and cannot preserve
 
@@ -215,19 +257,24 @@ $$
 
 Random normalized keys are not mutually orthogonal, so cross terms accumulate. In the frozen scenario with $d_k=d_v=32$, mean squared error rises from roughly 0.14 at four stored pairs to about 4.14 at 128.
 
-![VIZ m7/06 — the capacity of a fixed matrix memory](assets/modern-llms/en/module-07/m7_06_recall.png)
+![VIZ m8/06 — the capacity of a fixed matrix memory](assets/modern-llms/en/module-07/m8_06_recall.png)
+*Interference in a toy additive linear associative memory. This is not a Mamba benchmark and not a theorem about every SSM.*
 
-A high-temperature softmax control nearly recovers the explicit values in this synthetic setup because it retains the whole key/value table. That does not prove that every Transformer retrieves perfectly; it isolates the difference between an addressable table and fixed-size compression.
+A low-temperature softmax control (temperature 0.05, or a logit multiplier of 20) nearly recovers the explicit values in this synthetic setup because it retains the whole key/value table. That does not prove that every Transformer retrieves perfectly; it isolates the difference between an addressable table and fixed-size compression.
 
 The defensible conclusion is:
 
-> fixed state creates an information bottleneck; retrieval quality depends on state size, state structure, the update rule, training, and the task.
+> at fixed numerical precision, fixed state creates an information bottleneck; retrieval quality depends on state size, state structure, the update rule, training, and the task.
 
 Newer models such as Mamba-3 increase recurrent expressivity and improve state tracking in their experiments. They can shift the frontier without turning finite state into an unbounded exact database.
+
+The plotted methods share the same random keys and values at each load. For independent isotropic unit keys in $d_k$ dimensions and independent zero-mean, unit-variance value coordinates, expected additive-memory MSE per coordinate is $(m-1)/d_k$. The dashed line shows that expectation, not a claim that one seeded sample must equal it.
 
 ## 10. Memory accounting and core-only arithmetic
 
 ### Complete recurrent cache
+
+All sizes below cover one sequence and the stated layer stack, excluding model weights and workspaces. Let $L$ count layers, $H_{kv}$ count KV heads, $d_h$ be head width, and $b$ be bytes per value. Use $L=32$, $H_{kv}=8$, $d_h=128$, and $b=2$. The recurrent geometry uses $d_{inner}=8192$ channels, $d_{state}$ state coordinates per channel, and a stored convolution width $d_{conv}=4$. Here K=1024 and M=1024² tokens.
 
 For the reference Transformer:
 
@@ -238,8 +285,8 @@ $$
 For the Mamba-1-like stack:
 
 $$
-M_{SSM}=8\text{ MiB},
-\qquad M_{conv}=2\text{ MiB},
+M_{SSM}=L d_{inner}d_{state}b=8\text{ MiB},
+\qquad M_{conv}=L d_{inner}d_{conv}b=2\text{ MiB},
 $$
 
 $$
@@ -247,7 +294,7 @@ M_{recurrent}=10\text{ MiB},
 \qquad N^*=80.
 $$
 
-For the Mamba-2-like teaching geometry, the main state is 64 MiB. The open implementation may cache x plus B/C channels in the convolution path, giving another 2.0625 MiB:
+For the Mamba-2-like geometry, use $d_{state}=128$: $L d_{inner}d_{state}b=64$ MiB. The open implementation can cache x plus B/C channels. With one B/C group, this gives $8192+2\cdot128=8448$ convolution channels and $L\cdot8448\cdot d_{conv}\cdot b=2.0625$ MiB:
 
 $$
 M_{recurrent}=66.0625\text{ MiB}.
@@ -259,23 +306,28 @@ A 32-layer hybrid with four attention layers at 256K context retains 4 GiB of KV
 
 ### Central operator arithmetic
 
-The teaching comparison
+Count one layer at one decode step. Set $d_{model}=4096$, $d_{inner}=8192$, and $d_{state}=16$, returning to the Mamba-1-like state width for this separate arithmetic example. Let $N$ be the number of visible keys. Count a multiplication and an addition as two operations, even if hardware fuses them.
+
+Attention performs QK dot products and a weighted sum of V, each costing approximately $2Nd_{model}$ operations. For a diagonal SSM with its coefficients already available, $h^+=a\odot h+b\odot x$ costs two multiplications and one addition per state coordinate. The readout $y=C h^+$ contributes approximately two more operations per coordinate. Thus the leading estimates are
 
 $$
 4Nd_{model}
 \quad\text{versus}\quad
-3d_{inner}d_{state}
+5d_{inner}d_{state}
 $$
 
-produces ratios of about 42.7× at 1K, 1365× at 32K, and 43,691× at 1M. These are **core-operator arithmetic ratios**, not model speedups. Projections, convolution, gating, FFN, weight traffic, communication, and kernel efficiency are outside the denominator.
+giving ratios of 25.6× at 1K, 819.2× at 32K, and 26,214.4× at 1M. An exact scalar count uses one fewer readout addition per channel; the leading estimate drops that small correction. These are **restricted arithmetic comparisons**. They exclude SSM coefficient preparation, softmax, projections, convolution, gates, FFNs, weight movement, and execution efficiency, so they do not predict whole-model speed.
 
-![VIZ m7/07 — state memory and core arithmetic](assets/modern-llms/en/module-07/m7_07_crossover.png)
+![VIZ m8/07 — state memory and core arithmetic](assets/modern-llms/en/module-07/m8_07_crossover.png)
+*Top: complete recurrent cache versus a growing KV cache. Bottom: central token-mixing arithmetic only, not end-to-end latency.*
+
+The Mamba-2 example assumes one B/C group and all 8192 channels assigned to the SSM. More generally, convolution has $d_{ssm}+2g d_{state}$ channels for $g$ groups. SSM and convolution states may use different dtypes; using bf16 for both is a scenario assumption.
 
 ## 11. Three hybrid patterns
 
 ### Interleaved layers
 
-Jamba interleaves Transformer, Mamba, and MoE components. Qwen3.5 documents an exact repeating pattern:
+Jamba interleaves Transformer, Mamba, and MoE components. Qwen3.5-35B-A3B documents an exact repeating pattern:
 
 $$
 10\times
@@ -298,7 +350,8 @@ Kimi K3 has 93 layers: 69 Kimi Delta Attention layers and 24 Gated MLA layers. A
 
 MiniMax demonstrates why family names are not architecture passports. MiniMax-01 and M1 used Lightning Attention. MiniMax M2 moved to full attention after the company reported inadequate long-context quality from the hybrid alternative in its experiments. MiniMax M3 later introduced MiniMax Sparse Attention, a sparse-attention branch rather than a fixed recurrent state.
 
-![VIZ m7/08 — three ways to combine memory mechanisms](assets/modern-llms/en/module-07/m7_08_hybrid_layouts.svg)
+![VIZ m8/08 — three ways to combine memory mechanisms](assets/modern-llms/en/module-07/m8_08_hybrid_layouts.svg)
+*Interleaved stacks, parallel branches, and specialized hybrids. Layer ratios are checkpoint properties, not universal standards.*
 
 ## 12. Level-1 code: exact discretization, delta update, and scan composition
 
@@ -306,24 +359,26 @@ MiniMax demonstrates why family names are not architecture passports. MiniMax-01
 import numpy as np
 
 def zoh_diagonal(a, b, delta):
-    """Exact ZOH for a diagonal A, including the A -> 0 limit."""
+    """Diagonal A: [n], B: [n,p], positive scalar step; caller validates shapes."""
     a = np.asarray(a, dtype=np.float64)
     b = np.asarray(b, dtype=np.float64)
     transition = np.exp(delta * a)
-    factor = np.where(np.abs(a) > 1e-14, np.expm1(delta * a) / a, delta)
+    factor = np.full_like(a, float(delta))
+    np.divide(np.expm1(delta * a), a, out=factor, where=a != 0)
     return transition, factor[:, None] * b
 
 def delta_step(state, key, value, beta, decay=1.0):
-    """One gated delta update for a normalized key."""
-    state = decay * state
-    prediction = state @ key
-    return state + beta * np.outer(value - prediction, key)
+    """State [dv,dk], unit key [dk], value [dv]; decay before correction."""
+    base = decay * state
+    prediction = base @ key
+    return base + beta * np.outer(value - prediction, key)
 
-def compose_affine(later, earlier):
-    """Compose h -> a*h+b transforms."""
+def compose_affine_pair(later, earlier):
+    """Elementwise transforms; returns later(earlier(h)), not the reverse."""
     a2, b2 = later
     a1, b1 = earlier
     return a2 * a1, a2 * b1 + b2
+
 ```
 
 The functions represent three different claims. The first is exact discretization of a stated continuous system. The second is an editable matrix memory. The third supplies the associative operator required for a parallel scan.
@@ -337,14 +392,15 @@ A Mamba-1 inference cache commonly contains:
 - `conv_state` with a shape like `[batch, d_inner, d_conv]`;
 - `ssm_state` with shape `[batch, d_inner, d_state]`.
 
-In Mamba-2, convolution channels may include x plus B/C components. A memory estimate therefore needs the actual implementation’s cache shapes, not just the headline `d_state`.
+Mamba-2 stores SSM state as `[batch, nheads, headdim, d_state]`, where `nheads * headdim = d_ssm`. Convolution channels can include x plus B/C components, with width `d_ssm + 2 * ngroups * d_state`. These shapes and the number of groups determine the cache; the headline `d_state` alone is insufficient.
 
 The source code also separates mathematical inspiration from executed update. Mamba-2’s efficient input branch uses a $\Delta Bx$ term. A source audit should therefore ask both:
 
 1. which continuous-time picture motivates the model;
 2. which discrete parameterization and kernel the checkpoint actually executes.
 
-![VIZ m7/09 — reading recurrent-cache geometry](assets/modern-llms/en/module-07/m7_09_config_hybrid.svg)
+![VIZ m8/09 — reading recurrent-cache geometry](assets/modern-llms/en/module-07/m8_09_config_hybrid.svg)
+*A recurrent serving passport: layer types, SSM state, convolution state, channel counts, state width, and dtype.*
 
 ## 15. A current architecture passport
 
@@ -375,7 +431,8 @@ A multimodal serving passport should therefore state both the recurrent state si
 
 ## 19. Key takeaways
 
-![VIZ m7/10 — SSM and hybrid cheat sheet](assets/modern-llms/en/module-07/m7_10_cheatsheet.svg)
+![VIZ m8/10 — SSM and hybrid cheat sheet](assets/modern-llms/en/module-07/m8_10_cheatsheet.svg)
+*Exact discretization, selectivity, two cache states, SSD, delta rule, fixed-state bottlenecks, and hybrid layouts on one page.*
 
 - An SSM replaces an expanding list of past tokens with a fixed-size state.
 - Mamba makes writing, reading, and forgetting input-dependent.
@@ -383,12 +440,12 @@ A multimodal serving passport should therefore state both the recurrent state si
 - SSD provides multiple execution forms for a structured class of SSMs.
 - Delta rule edits an association; gating adds adaptive forgetting.
 - Fixed state saves memory but creates an information bottleneck.
-- Hybrids restore addressability while retaining length-dependent KV cache in some layers.
+- Hybrids with full-attention layers retain length-dependent KV caches; fixed local windows give a different memory bound.
 - Core-operator FLOPs are not end-to-end latency.
 - Product-family names do not guarantee architectural continuity.
 - A model should be read through layer types, cache shapes, state geometry, and source quality.
 
-## 20. Notebook and primary sources
+## 20. primary sources
 
 **Primary sources:**
 
@@ -408,9 +465,6 @@ A multimodal serving passport should therefore state both the recurrent state si
 - [Mamba-3](https://arxiv.org/abs/2603.15569)
 - [SISA](https://arxiv.org/abs/2606.02332)
 
-**Next:** Module 7b moves from architecture to hardware: rooflines, arithmetic intensity, bandwidth, and why identical asymptotics can still produce very different measured speed.
+**Next:** Module 9 turns the architecture into a trained model: data selection, compute allocation, and optimization. Module 10 will then connect serving performance to memory bandwidth and roofline reasoning.
 
-*Landscape verified: 6 August 2026; architecture claims were checked against papers, official cards, configurations, or open code, while developer-reported results retain their original protocols.*
----
-
-*Volatile architecture facts were checked on 6 August 2026. Developer-reported measurements retain their original protocols; the memory and arithmetic values in this module are reproducible teaching scenarios.*
+*Sources rechecked on 11 October 2026. Memory figures are teaching scenarios; author-reported measurements retain their original conditions.*

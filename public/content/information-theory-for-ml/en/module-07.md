@@ -1,5 +1,7 @@
 # Module 7. Channel and capacity
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** Sections 7.1–7.7 form the classical core: the channel model, capacity, three basic examples, and both halves of the coding theorem. In §7.6, it is worth following at least the central random-coding count, because that is where the threshold $R<I(X;Y)$ becomes visible. The normal approximation at the end of §7.7 is intended for a second pass. Sections 7.8–7.10 bring the channel language back to ML: noisy labels, ECOC, learned communication, and LLMs.
 
 ## 7.1. Reliable communication through noise

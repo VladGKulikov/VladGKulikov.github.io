@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="834" viewBox="0 0 1100 834">
+<title>An environment closes the training loop</title>
+<desc>Task outcomes measure quality; policy versions measure trajectory age.</desc>
+<rect width="1100" height="834" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">An environment closes the training loop</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Task outcomes measure quality; policy versions measure trajectory age.</text>
+<rect x="150" y="132" width="800" height="120" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="170" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Policy</text>
+<text x="170" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Answer or action; weight version and sampling rules.</text>
+<path d="M550,254 L550,280" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="150" y="289" width="800" height="120" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="170" y="327" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Environment / verifier</text>
+<text x="170" y="366" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Observation and reward; failures, timeouts and limits.</text>
+<path d="M550,411 L550,437" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="150" y="446" width="800" height="120" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="170" y="484" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Trajectory store</text>
+<text x="170" y="523" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Contexts, actions, scores and old probabilities.</text>
+<path d="M550,568 L550,594" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="150" y="603" width="800" height="120" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="170" y="641" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Optimizer</text>
+<text x="170" y="680" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Masks, weighting, KL and stale-data controls.</text>
+<text x="40" y="760" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">verl and NeMo RL manage training; NeMo Gym provides environments and verification.</text>
+</svg>

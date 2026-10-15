@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="559" viewBox="0 0 1100 559">
+<title>Где живут промежуточные матрицы</title>
+<desc>FlashAttention сохраняет плотные взаимодействия и меняет пересылку данных.</desc>
+<rect width="1100" height="559" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Где живут промежуточные матрицы</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">FlashAttention сохраняет плотные взаимодействия и меняет пересылку данных.</text>
+<rect x="40.0" y="132" width="498.0" height="174" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Прямое вычисление</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">QKᵀ → матрица в HBM</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">softmax → вероятности в HBM</text>
+<text x="64.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Взвешивание V</text>
+<rect x="562.0" y="132" width="498.0" height="174" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Блочное вычисление</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">K/V → блок в SRAM</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Обновление (m, ℓ, n)</text>
+<text x="586.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Выход n/ℓ → HBM</text>
+<rect x="40.0" y="330" width="498.0" height="149" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">8192 × 8192 × 4 B</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">256 MiB</text>
+<text x="64.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Одна матрица на голову</text>
+<rect x="562.0" y="330" width="498.0" height="149" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">128 × 128 × 4 B</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">64 KiB</text>
+<text x="586.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Один блок логитов</text>
+<text x="40" y="520" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Оба пути: O(N²d) арифметики. Полная внешняя маска тоже занимает O(N²) памяти.</text>
+</svg>

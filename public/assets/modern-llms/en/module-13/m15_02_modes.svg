@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="644" viewBox="0 0 1100 644">
+<title>Depth, breadth and control</title>
+<desc>Three ways to allocate work; each needs evidence about the result.</desc>
+<rect width="1100" height="644" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Depth, breadth and control</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Three ways to allocate work; each needs evidence about the result.</text>
+<rect x="65" y="132" width="970" height="135" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="85" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Sequential: step → check → next step</text>
+<text x="85" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">One trajectory; retain the best result already verified.</text>
+<rect x="65" y="287" width="970" height="135" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="85" y="325" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Parallel: candidates A / B / C → selection</text>
+<text x="85" y="364" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Multiple attempts; count every attempt, including rejected ones.</text>
+<rect x="65" y="442" width="970" height="135" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="85" y="480" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Adaptive: observation → continue or stop</text>
+<text x="85" y="519" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Set the threshold, cap and cost of stopping errors before evaluation.</text>
+</svg>

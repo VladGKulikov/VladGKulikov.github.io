@@ -1,5 +1,7 @@
 # Module 4. Policy gradients: from REINFORCE to PPO
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.9  
 > **Factual snapshot:** 2026-08-04  
 > **Language:** EN  
@@ -7,7 +9,7 @@
 > **Structure:** 5 lessons, 25 steps  
 > **Estimated time:** 9–13 hours, excluding the notebook’s full multi-seed profile
 
-[Module 2](../module-02/Module_2_EN.md) improved behavior through value functions, while [Module 3](../module-03/Module_3_EN.md) studied one-step decisions. We now take a different route: optimize the policy parameters directly. This route is central for LLMs because the final reward may come from a person, an executable verifier, or a non-differentiable scoring model. No gradient passes through that feedback directly.
+[Module 2](module-02.md) improved behavior through value functions, while [Module 3](module-03.md) studied one-step decisions. We now take a different route: optimize the policy parameters directly. This route is central for LLMs because the final reward may come from a person, an executable verifier, or a non-differentiable scoring model. No gradient passes through that feedback directly.
 
 No previous RL course is required. We begin with a gradient estimator for parameterized distributions, then build REINFORCE, baselines, actor–critic methods, generalized advantage estimation, and proximal policy optimization (PPO). Readers with a classical RL background can treat the first two lessons as a precise refresher and focus on finite-group bias, correct time-limit handling, and trajectory versus local probability ratios. Group-based estimators for several responses appear only after the common foundation is in place.
 
@@ -632,7 +634,7 @@ $$
 | Buffer boundary without `reset()` | yes | no, unless fragments are joined |
 | Ordinary transition | yes | yes |
 
-A common bug uses one `done` flag to disable both bootstrap and recursion. That conflates two independent questions and systematically undervalues states near time limits. In LLM rollouts, the analogous distinction is among a naturally sampled end-of-sequence token (EOS), a forced `max_tokens` cutoff, and an infrastructure boundary that merely closes the current rollout batch.
+A common bug uses one `done` flag to disable both bootstrap and recursion. That conflates two independent questions and biases targets near time limits. Removing a positive continuation value lowers the target; removing a negative one raises it, because the omitted term is $\gamma V(s_{t+1})$. For example, with zero reward, $\gamma=0.9$, and $V(s_{t+1})=-10$, the target incorrectly changes from $-9$ to $0$. In LLM rollouts, the analogous distinction is among a naturally sampled end-of-sequence token (EOS), a forced `max_tokens` cutoff, and an infrastructure boundary that merely closes the current rollout batch.
 
 ---
 
@@ -970,7 +972,7 @@ The accurate map is:
 - **GRPO:** a family of critic-free, PPO-like methods using group-relative estimates;
 - **Module 9 of this course:** “RLVR and GRPO: Verifiable Reward, Group-Relative Estimation, and Stability” (`rl_llm.module_09_rlvr_grpo`) — denominator choices, KL terms, token aggregation, and failure modes.
 
-A broader architecture-level map of RLHF, DPO, RLOO, and GRPO is also available in *Modern LLMs*, Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`). The present module remains self-contained and is the series’ canonical derivation of policy gradients and PPO.
+A broader architecture-level map of RLHF, DPO, RLOO, and GRPO is also available in *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`). The present module remains self-contained and is the series’ canonical derivation of policy gradients and PPO.
 
 ![From policy gradients to RLOO, PPO, and GRPO](assets/rl-for-llm/en/module-04/M4_llm_bridge_EN.png)
 
@@ -1040,7 +1042,7 @@ Later modules use this foundation for preference-based training, verifiable rewa
 
 **Optional mathematical deepening:** *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) — the variational derivation of KL-regularized policies, Gibbs form, and the normalizing constant.
 
-**Architecture context:** *Modern LLMs*, Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) — how these methods fit into an end-to-end LLM post-training pipeline. Neither reference is required to understand this module.
+**Architecture context:** *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) — how these methods fit into an end-to-end LLM post-training pipeline. Neither reference is required to understand this module.
 
 ---
 

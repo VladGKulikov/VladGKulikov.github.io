@@ -1,5 +1,7 @@
 # Module 6. Source coding: from entropy to real bits
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** The main route is §§6.1–6.8: from probabilistic models and the Kraft inequality to arithmetic coding, the AEP, entropy rate, and language-model metrics. §6.9 is a mathematical deepening on universal sequential prediction. §§6.10–6.11 return to LLM evaluation and to a reproducible compression experiment.
 
 ## 6.1. Engineering setup: the probabilistic model and the entropy coder
@@ -367,7 +369,7 @@ This is neither a failure of Huffman coding nor a violation of Shannon's theorem
 
 ### Arithmetic coding
 
-Arithmetic coding does not give every symbol a separate word. It represents the entire sequence by a subinterval of $[0,1)$.
+Arithmetic coding does not give every symbol a separate word. It represents the entire sequence by a subinterval of $0,1)$.
 
 Let
 
@@ -404,7 +406,7 @@ $$
 0.03=p(A)p(C)p(B)=p(ACB).
 $$
 
-![](assets/information-theory-for-ml/en/module-06/M6_arithmetic_coding_EN.png)
+![
 
 The ideal information length is
 
@@ -412,7 +414,7 @@ $$
 -\log_2 0.03\approx5.06\ \text{bits}.
 $$
 
-To terminate the code, however, we need more than a point inside $[0.45,0.48)$. We need a finite binary prefix **all of whose continuations stay in the target interval**. The five-bit number
+To terminate the code, however, we need more than a point inside $0.45,0.48)$. We need a finite binary prefix **all of whose continuations stay in the target interval**. The five-bit number
 
 $$
 0.01111_2=\frac{15}{32}=0.46875
@@ -553,7 +555,7 @@ For large $n$ it has three characteristic properties:
 2. each typical sequence has probability on the order of $2^{-nH_2(X)}$;
 3. the number of typical sequences is on the order of $2^{nH_2(X)}$.
 
-![](assets/information-theory-for-ml/en/module-06/M6_aep_EN.png)
+![
 
 Thus **there are exponentially many typical strings, each is exponentially unlikely, and together they carry almost all probability mass**.
 

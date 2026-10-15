@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="486" viewBox="0 0 1100 486">
+<title>Как читать новую архитектуру внимания</title>
+<desc>Четыре вопроса, которые превращают длину контекста в расчёт.</desc>
+<rect width="1100" height="486" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Как читать новую архитектуру внимания</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Четыре вопроса, которые превращают длину контекста в расчёт.</text>
+<rect x="40.0" y="132" width="498.0" height="149" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">1. Что хранится?</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">K/V по головам или общий латент</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Размерности и формат чисел</text>
+<rect x="562.0" y="132" width="498.0" height="149" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2. Сколько позиций?</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Полные и локальные слои</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Правила удаления старых записей</text>
+<rect x="40.0" y="305" width="498.0" height="149" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">3. Какие взаимодействия?</text>
+<text x="64.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Окно или отбор по содержанию</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Цена и ошибки самого отбора</text>
+<rect x="562.0" y="305" width="498.0" height="149" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">4. Как вычисляется?</text>
+<text x="586.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Ядро, маска, точность, размещение</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Измерения на конкретном устройстве</text>
+</svg>

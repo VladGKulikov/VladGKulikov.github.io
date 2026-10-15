@@ -1,14 +1,22 @@
-# Module 11. Supervised Fine-Tuning and Data Work
+# Module 13. Supervised Fine-Tuning and Data Work
 
-*Modern LLMs · Module 11 lecture · revision 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module is about.** Pretraining gives a model a remarkably broad next-token predictor. It does not, by itself, specify how a conversational system should represent roles, obey a system instruction, stop a turn, emit a tool call, or expose different parts of a structured response. **Supervised fine-tuning (SFT)** supplies demonstrations of the behavior we want. This module treats SFT as an end-to-end engineering discipline rather than a single optimizer call. We will connect serialization, label construction, sequence packing, data curation, synthetic generation, reasoning demonstrations, tool-use traces, distillation, and LoRA. Four reproducible scenarios anchor the discussion: 21 supervised positions in a 56-token conversation; 24 examples packed into five 2,048-token containers; an explicit SFT compute estimate; and 13.63 million LoRA parameters in place of updating an entire 8.03B model.
+*Modern LLMs · Module 13 lecture · revision October 11, 2026*
+
+> **What this module is about.** Pretraining gives a model a remarkably broad next-token predictor. It does not, by itself, specify how a conversational system should represent roles, obey a system instruction, stop a turn, emit a tool call, or expose different parts of a structured response. **Supervised fine-tuning (SFT)** supplies demonstrations of the behavior we want.
 >
-> **Prerequisites.** The tokenizer and special-token discussion from Module 1, the data and compute accounting from Module 8, and the quantization concepts from Module 10 are useful background. All definitions needed for the calculations are repeated here.
+> **The route.** We follow the chain from a demonstration to the behavior it teaches. We will connect serialization, label construction, sequence packing, data curation, synthetic generation, reasoning demonstrations, tool-use traces, distillation, and LoRA. Four reproducible scenarios anchor the discussion: 21 supervised positions in a 56-token conversation; 24 examples packed into five 2,048-token containers; an explicit SFT compute estimate; and 13.63 million LoRA parameters in place of updating an entire 8.03B model.
+>
+> **Prerequisites.** The tokenizer and special-token discussion from Module 2, the data and compute accounting from Module 9, and the quantization concepts from Module 11 are useful background. All definitions needed for the calculations are repeated here.
 
 ---
 
 ## 1. Why next-token prediction is not yet an assistant
+
+**Reading routes.** For a first pass, follow §§1–6, read the interpretation of the cost calculation in §7, then continue through §§8–12 and the explanations of distillation and LoRA in §§15–16. The NumPy → PyTorch checks can wait; the surrounding prose supplies the concepts. On a second pass, reproduce the numerical scenarios and work through §§13–14 with the notebook. Sections 2, 8, 16.1 and 17 also provide a reference route for papers and checkpoint files.
+
+We return here to an autoregressive Transformer after Module 12's diffusion models. SFT names a demonstration-based training stage, not an architecture. A diffusion model can learn from demonstrations using conditional denoising, but the next-token label shift developed below is specific to the autoregressive path.
 
 A pretrained language model has spent its training budget minimizing a deceptively simple objective:
 
@@ -22,7 +30,7 @@ This distinction matters because a continuation can be statistically reasonable 
 
 SFT changes the conditional behavior by training on deliberately constructed demonstrations. The learning rule is still next-token prediction, but the sequence now encodes roles, message boundaries, and an example of the desired response. In most assistant recipes, the loss is concentrated on assistant-generated positions, so the model is optimized to produce the response given the prompt rather than to reconstruct every token in the prompt.
 
-SFT is best understood as behavioral adaptation. It can inject narrow facts or domain patterns, but it is not the most reliable mechanism for loading a large body of knowledge. Continued pretraining, retrieval, tools, and external memory are better suited to that purpose. SFT teaches the model how to use capabilities under a particular interaction protocol.
+SFT is best understood as behavioral adaptation. It can inject narrow facts or domain patterns, but it is not the most reliable mechanism for loading a large body of knowledge. Continued training modifies parameters, while retrieval and tools make information available in the response context. Reading an external document does not by itself store its facts in the weights. The choice depends on update frequency, source traceability, and the capability being taught; these approaches can be combined with SFT.
 
 The practical work falls into four layers:
 
@@ -35,7 +43,8 @@ The last layer usually dominates final quality, but the first three determine wh
 
 ## 2. From instruction tuning to structured post-training
 
-![VIZ m11/01 — the evolution of SFT](assets/modern-llms/en/module-11/m11_01_timeline.svg)
+![VIZ m13/01 — the evolution of SFT](assets/modern-llms/en/module-11/m13_01_timeline.svg)
+*The trajectory from multitask instruction tuning to open alignment recipes, synthetic data, reasoning transfer, and structured tool-aware response formats.*
 
 Modern SFT grew out of several research programs rather than a single canonical recipe.
 
@@ -43,13 +52,14 @@ Modern SFT grew out of several research programs rather than a single canonical 
 
 Open recipes accelerated in 2023. **Self-Instruct** used a language model to expand a seed collection of instructions. **LIMA** took a different path: only 1,000 carefully curated examples were used to fine-tune a 65B LLaMA model, producing surprisingly strong instruction-following behavior. That result made data selection a first-class research question.
 
-The next wave focused on synthesis. **Magpie** observed that an aligned model can generate a user request when prompted only with the left side of its own chat template. The authors generated four million instructions and selected 300,000 high-quality instances. **Tülu 3** provided a particularly transparent open post-training stack in which an SFT mixture feeds later preference and RLVR stages.
+The next wave focused on synthesis. **Magpie** observed that an aligned model can generate a user request when prompted only with the left side of its own chat template. The authors generated four million instructions and selected 300,000 high-quality instances. **Tülu 3** provided a particularly transparent open post-training stack in which an SFT mixture feeds later preference learning and reinforcement learning with verifiable rewards (RLVR). A verifiable reward can come from executable tests; Module 14 explains how it drives learning.
 
 Reasoning distillation became prominent in 2025. DeepSeek fine-tuned several smaller open models on roughly 800,000 curated samples produced through the DeepSeek-R1 pipeline. The **s1** project explored the opposite end of the data scale, using only 1,000 selected reasoning examples for a 32B model.
 
 Response formats also became more explicit. Tool calls, hidden or internal channels, final user-visible text, and role hierarchy can no longer be treated as informal punctuation conventions. OpenAI's **Harmony** format for gpt-oss is one example: it represents `analysis`, `commentary`, and `final` as distinct channels in the serialized response.
 
-![VIZ m11/02 — the SFT pipeline](assets/modern-llms/en/module-11/m11_02_pipeline.svg)
+![VIZ m13/02 — the SFT pipeline](assets/modern-llms/en/module-11/m13_02_pipeline.svg)
+*A complete SFT route: base checkpoint, tokenizer contract, curated demonstrations, packing and isolation, supervised labels, parameter update strategy, and behavioral evaluation.*
 
 ## 3. Three older ideas hiding inside SFT
 
@@ -63,7 +73,7 @@ It is tempting to say that SFT changes only a superficial “behavior layer.” 
 
 ### Behavior cloning
 
-A demonstration dataset can be written as state-action pairs:
+A **policy** $\pi_\theta(a\mid s)$ assigns probabilities to actions $a$ given a state $s$. A demonstration dataset $\mathcal D_{\text{expert}}$ supplies state–action pairs, and behavior cloning maximizes the probability of those demonstrated actions:
 
 $$
 \min_\theta
@@ -101,11 +111,22 @@ Llama-family templates use role headers and an end-of-turn token such as `<|eot_
 
 Harmony makes channel structure explicit. A message has a role and content, while the response can be emitted through `analysis`, `commentary`, or `final`. Tool namespaces and structured constraints are represented by the format rather than reconstructed from ad hoc text parsing.
 
-![VIZ m11/03 — conversation formats](assets/modern-llms/en/module-11/m11_03_templates.svg)
+![VIZ m13/03 — conversation formats](assets/modern-llms/en/module-11/m13_03_templates.svg)
+*Several ways to serialize the same interaction: Llama role headers, ChatML-style delimiters, Harmony channels, and model-specific reasoning or tool tokens. The tokenizer contract is the source of truth.*
 
 A wrong template can produce a deceptively healthy training run. Loss decreases because the model learns the supplied sequence distribution, but deployment uses a different distribution. The safe workflow is simple: render examples with the official tokenizer, inspect token IDs around every boundary, and compare them with the model card and generation configuration.
 
 ## 5. Label masking: a 56-token example
+
+Two masks serve different purposes. An attention mask controls which context a position may use; a loss mask chooses which predictions are scored. Removing prompt tokens from the loss does not remove their representations from the computation. Gradients from the answer can still flow through the processing of those prompt tokens.
+
+Let $x_0,\ldots,x_{T-1}$ be the stored tokens and let $m_t$ indicate that $x_t$ is a supervised target. Token-averaged training minimizes
+
+$$L=-\frac{\sum_{t=1}^{T-1}m_t\log p_\theta(x_t\mid x_{<t})}{\sum_{t=1}^{T-1}m_t}.$$
+
+Our `labels[t]` stores the target at its own position. We compare it with `logits[t-1]`; either the model or the caller performs that shift, exactly once. A batch with no active shifted targets has no defined mean loss and needs an explicit filtering or skip rule. The example below has 21 supervised tokens among 56 stored tokens. There are 55 next-token pairs after excluding the unpredicted BOS, of which 21 are scored.
+
+The denominator also decides how examples are weighted. Pooling token losses gives longer answers more influence. Averaging each example's mean gives equal weight to examples. An answer with one loss of 2 and another with three losses of 1 produce a pooled mean of 1.25 but an example mean of 1.5. Both objectives are possible; gradient accumulation across microbatches must preserve whichever one was chosen.
 
 Causal language modeling normally predicts the next token at every position. SFT often modifies the labels so that only assistant-generated tokens contribute directly to the cross-entropy loss.
 
@@ -132,7 +153,8 @@ $$
 21/56=37.5\%.
 $$
 
-![VIZ m11/04 — labels and packing](assets/modern-llms/en/module-11/m11_04_mask_pack.png)
+![VIZ m13/04 — labels and packing](assets/modern-llms/en/module-11/m13_04_mask_pack.png)
+*The left panel decomposes the 56-token dialogue and its 21 supervised positions. The right panel shows the packing scenario used in the next section.*
 
 The end-of-turn token is not cosmetic. It teaches the model where the demonstrated response ends. The exact token is model-specific, so `<|eot_id|>` should be read as part of this scenario rather than a universal constant.
 
@@ -151,7 +173,11 @@ import torch
 
 ```python
 def numpy_assistant_labels(input_ids: np.ndarray, assistant_mask: np.ndarray, *, ignore_index: int = -100) -> np.ndarray:
-    ids, mask = np.asarray(input_ids), np.asarray(assistant_mask, dtype=bool)
+    ids, mask = np.asarray(input_ids), np.asarray(assistant_mask)
+    if ids.dtype != np.int64 or mask.dtype != np.bool_:
+        raise TypeError("use int64 token IDs and a boolean assistant mask")
+    if np.any(ids < 0):
+        raise ValueError("input token IDs must be nonnegative")
     if ids.shape != mask.shape:
         raise ValueError("input_ids and assistant_mask must have identical shapes")
     return np.where(mask, ids, ignore_index).astype(np.int64)
@@ -163,13 +189,19 @@ The boolean mask is not the label itself. NumPy keeps the real token ID on assis
 
 ```python
 def torch_assistant_labels(input_ids: torch.Tensor, assistant_mask: torch.Tensor, *, ignore_index: int = -100) -> torch.Tensor:
+    if input_ids.dtype != torch.long or assistant_mask.dtype != torch.bool:
+        raise TypeError("use torch.long token IDs and a boolean assistant mask")
+    if input_ids.device != assistant_mask.device:
+        raise ValueError("input IDs and mask must share a device")
+    if torch.any(input_ids < 0):
+        raise ValueError("input token IDs must be nonnegative")
     if input_ids.shape != assistant_mask.shape:
         raise ValueError("input_ids and assistant_mask must have identical shapes")
     labels = input_ids.clone()
     return labels.masked_fill(~assistant_mask.to(torch.bool), ignore_index)
 ```
 
-PyTorch clones `input_ids` and applies `masked_fill`; the result can be passed directly to cross-entropy with `ignore_index=-100`.
+Use nonnegative `np.int64` / `torch.long` IDs and a boolean mask of the same shape; Torch inputs share a device. The result stores labels at their own positions. Align `logits[..., :-1, :]` with `labels[..., 1:]` exactly once before cross-entropy. A model that shifts internally must receive unshifted arrays. The loss function checks that active targets exist and belong to its vocabulary.
 
 | Aspect | NumPy | PyTorch |
 |---|---|---|
@@ -178,19 +210,34 @@ PyTorch clones `input_ids` and applies `masked_fill`; the result can be passed d
 | Shape | must match the mask | validated before the operation |
 | Autograd | not applicable to integer labels | loss differentiates logits, not labels |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 ids_np = np.array([10,11,12,13,14,15]); mask_np = np.array([0,0,0,1,1,1], dtype=bool)
 np_labels = numpy_assistant_labels(ids_np, mask_np); t_labels = torch_assistant_labels(torch.tensor(ids_np), torch.tensor(mask_np))
 np.testing.assert_array_equal(np_labels, t_labels.numpy()); assert np_labels.tolist() == [-100,-100,-100,13,14,15]
+# Labels are stored at their own positions. Shift them once for explicit CE.
+scores = torch.zeros((len(ids_np), 20), dtype=torch.float64, requires_grad=True)
+loss = torch.nn.functional.cross_entropy(scores[:-1], t_labels[1:], ignore_index=-100)
+torch.testing.assert_close(loss, torch.log(torch.tensor(20.,dtype=torch.float64)))
+loss.backward()
+assert torch.count_nonzero(scores.grad[-1]) == 0
+assert torch.count_nonzero(scores.grad[:2]) == 0
+for ids_bad, mask_bad in [(ids_np.astype(float),mask_np),
+                           (ids_np,mask_np.astype(int)),
+                           (np.array([-1,1]),np.array([False,True]))]:
+    for run in (lambda: numpy_assistant_labels(ids_bad,mask_bad),
+                lambda: torch_assistant_labels(torch.tensor(ids_bad),torch.tensor(mask_bad))):
+        try:
+            run()
+        except (TypeError,ValueError):
+            pass
+        else:
+            raise AssertionError("invalid label input was accepted")
 print("B20 assistant labels: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m11_sft_bridges.py`](../assets/m11_sft_bridges.py)
+Complete executable file: `m13_sft_bridges.py`
 
 ## 6. Packing variable-length examples safely
 
@@ -220,6 +267,10 @@ A correct packed implementation uses either:
 - a variable-length attention kernel supplied with sequence boundaries such as `cu_seq_lens`.
 
 Resetting `position_ids` may be useful, but it is not an isolation mechanism by itself. The notebook includes an explicit negative test for cross-example leakage because visual inspection of the token buffer is not sufficient.
+
+Attention isolation is only half the boundary contract. A global label shift pairs the final logit of example A with the first token of example B. Blocking attention cannot repair that target pair. The first label of each independent segment must therefore be ignored. BOS already satisfies this rule in our teaching template; the packer enforces it even when given a different source example.
+
+A useful regression test compares separate and packed execution with dropout disabled: the same tokens and local positions should produce matching logits, summed loss and gradients. The training lab runs this test. Padding needs its own handling: a naive softmax over a fully forbidden row is undefined, so an implementation must omit such queries or rely on a kernel whose behavior for them has been checked.
 
 ### NumPy → PyTorch · B21 — Isolating packed dialogues
 
@@ -300,13 +351,12 @@ PyTorch builds the same `run_ids`, mask, and positions on the tensor device. Con
 | Aspect | NumPy | PyTorch |
 |---|---|---|
 | Boundary | change in adjacent `segment_id` | same boolean test |
-| Positions | loop over T | tensor loop, device preserved |
+| Positions | loop over T | loop over positions on the input device |
 | Isolation | `same_run & causal & valid` | same boolean mask |
 | Padding | segment `-1` is forbidden | same contract |
 | Regression | change A; B stays fixed | SDPA checks B logits/output |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 segments_np = np.array([0,0,0,1,1,1,-1]); np_pos = numpy_segment_position_ids(segments_np); np_mask = numpy_block_causal_mask(segments_np)
@@ -324,9 +374,7 @@ assert not repeat_mask[4,0] and repeat_mask[5,4]
 print("B21 packed isolation: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m11_sft_bridges.py`](../assets/m11_sft_bridges.py)
+Complete executable file: `m13_sft_bridges.py`
 
 ## 7. Compute accounting and hyperparameters
 
@@ -338,12 +386,14 @@ $$
 D_{\text{epoch}}=2.4\cdot10^8\ \text{tokens}.
 $$
 
-Using the training approximation from Module 8,
+Using the training approximation from Module 9,
 
 $$
 C_{\text{SFT}}\approx6ND_{\text{epoch}}\cdot3
 =3.46896\cdot10^{19}\ \text{FLOP}.
 $$
+
+Here $D$ counts every processed token, including the prompt. Assistant-only supervision does not make the forward processing of that prompt disappear, so multiplying compute by 21/56 would be incorrect. The $6ND$ rule approximates dense-model forward and backward work; it is not a rigorous lower bound and changes when parameters are frozen. Model FLOP utilization (MFU) compares useful model work with peak FLOP/s. The assumed 40% is an input to this scenario, not a measured efficiency.
 
 The comparison pretraining scenario uses 15 trillion tokens and therefore costs $7.227\cdot10^{23}$ FLOP for the same parameter count. The ratio is approximately 20,833. This is a ratio between two declared workloads, not a property of SFT in general.
 
@@ -353,7 +403,8 @@ $$
 24.33\ \text{hours}.
 $$
 
-![VIZ m11/05 — compute and memory](assets/modern-llms/en/module-11/m11_05_cost_memory.png)
+![VIZ m13/05 — compute and memory](assets/modern-llms/en/module-11/m13_05_cost_memory.png)
+*Orders of magnitude for the pretraining, SFT, and one-pass s1 scenarios, together with parameter-state memory for full fine-tuning and LoRA.*
 
 The estimate is useful because it changes experimental strategy. If the adaptation run is affordable, data ablations, template checks, and held-out behavioral evaluations deserve more attention than a single monolithic run.
 
@@ -374,7 +425,8 @@ Training loss is only one signal. A useful run also tracks skill-specific valida
 
 ## 8. Organizing SFT data by capability
 
-![VIZ m11/06 — the data map](assets/modern-llms/en/module-11/m11_06_data_map.svg)
+![VIZ m13/06 — the data map](assets/modern-llms/en/module-11/m13_06_data_map.svg)
+*Data organized by function: general instruction following, reasoning demonstrations, tool trajectories, and domain or style adaptation.*
 
 A dataset name is not a training strategy. A production mixture usually combines several functional categories.
 
@@ -382,7 +434,9 @@ A dataset name is not a training strategy. A production mixture usually combines
 
 This category includes conversational and multitask data such as OpenAssistant, UltraChat, WildChat-derived sets, FLAN-derived tasks, code, mathematics, multilingual examples, and safety or non-compliance demonstrations.
 
-The **Tülu 3 SFT Mixture** is a useful open reference because it documents a 939,344-example mixture, the contributing subsets, and licensing caveats. Its value is not that 939,344 is a magic number; it is that the composition is inspectable.
+The **Tülu 3 SFT Mixture** is a useful open reference because it documents a mixture reported as 939,344 examples in its card, the contributing subsets, and licensing caveats. Its value is not that 939,344 is a magic number; it is that the composition is inspectable.
+
+The mixture also illustrates why a card and a file are different evidence. At the check date, the Tülu 3 card reports 939,344 samples while the viewer counts 939,343 rows. A reproduction should pin a revision and count the loaded records. The collection license does not replace component licenses; the card explicitly flags non-commercial portions. We use it as a documented mixture example, not as the embedded data for this module's exercises.
 
 ### Reasoning demonstrations
 
@@ -399,6 +453,8 @@ Tool data includes function definitions, user requests, calls, tool results, and
 A small expert dataset can be more valuable than a much larger generic mixture when the target behavior is narrow: legal drafting conventions, a customer-support policy, a product ontology, or a specific response style. The key question is whether the demonstrations cover the decisions the model must make, not whether the row count resembles another project.
 
 ## 9. Reading LIMA correctly
+
+Split by source family before producing derived data. If a teacher paraphrases one problem five times, a random row split may put four versions in training and the fifth in validation. The strings differ, but the underlying task has already been exposed. Keep an original problem, its revisions and all synthetic answers in one split. The same reasoning applies to related documents, conversations from one user, or tests from one software project.
 
 LIMA fine-tuned a 65B LLaMA model on only 1,000 curated prompt-response pairs, without reinforcement learning or preference modeling. The model learned strong instruction-following behavior and was competitive with much more expensive contemporary systems in a controlled human study.
 
@@ -437,20 +493,37 @@ A robust pipeline records more than the final text:
 6. deduplication and contamination results;
 7. the reason a sample was retained.
 
-For verifiable tasks, best-of-$N$ makes the economics explicit. Suppose one candidate passes with probability $p=0.3$ and candidates are independent. The probability that at least one of $N$ candidates passes is
+For verifiable tasks, best-of-$N$ makes the economics explicit. Suppose one candidate passes with probability $p_{\mathrm{pass}}=0.3$ and candidates are independent. The probability that at least one of $N$ candidates passes is
 
 $$
-1-(1-p)^N.
+1-(1-p_{\mathrm{pass}})^N.
 $$
 
-| $N$ | At least one pass | Success per generation if at most one sample is kept |
+| $N$ | At least one pass | Expected yield per generation if at most one sample is kept |
 |---:|---:|---:|
 | 1 | 0.3000 | 0.3000 |
 | 4 | 0.7599 | 0.1900 |
 | 8 | 0.9424 | 0.1178 |
 | 16 | 0.9967 | 0.0623 |
 
-Coverage saturates while generation cost continues to grow. Real samples are also correlated, so the independence calculation is optimistic. Improving the task prompt, choosing a better teacher, or inserting an intermediate verifier can be more valuable than increasing $N$.
+Coverage saturates while generation cost continues to grow. Dependence can change coverage in either direction; pairwise correlations alone do not determine it. If candidates repeatedly share the same failure, additional attempts may add little coverage. Improving the task prompt, choosing a better teacher, or inserting an intermediate verifier can be more valuable than increasing $N$.
+
+Now consider a **separate verifier-quality scenario**. Let $p_{\mathrm{correct}}$ be the probability that a candidate is actually correct, $s$ the fraction of correct candidates accepted, and $f$ the fraction of incorrect candidates accepted. The pass rate and precision are
+
+$$
+p_{\mathrm{pass}}=p_{\mathrm{correct}}s+(1-p_{\mathrm{correct}})f,
+\qquad
+P(\mathrm{correct}\mid\mathrm{pass})=
+\frac{p_{\mathrm{correct}}s}{p_{\mathrm{pass}}}.
+$$
+
+With $p_{\mathrm{correct}}=0.3$, $s=0.9$, and $f=0.1$, the accepted mass is $0.27+0.07=0.34$. Its precision is $0.27/0.34\approx79.4\%$: roughly one in five accepted candidates is wrong. This scenario has $p_{\mathrm{pass}}=0.34$, whereas the coverage table assumed 0.3. More candidates cannot make an imperfect filter certify correctness.
+
+The table's final column measures retained examples per generation when at most one answer is kept. It divides coverage by the $N$ generations paid for; it does not estimate the correctness of the selected answer.
+
+**<strong>Second pass: pairwise correlation does not determine coverage</strong>**
+
+Take three candidates and assign their success count $K$ the probabilities $P(K=0,1,2,3)=(0.1,0.5,0.2,0.2)$. Conditional on $K$, choose successful positions uniformly. Every candidate then has success probability $E[K]/3=0.5$. Each pair succeeds jointly with probability $E[K(K-1)]/6=4/15>1/4$, so pairwise correlations are positive. Yet coverage is 0.9, **above** the independent value $1-0.5^3=0.875$. The complete joint law matters. At the other extreme, perfectly identical outcomes leave coverage unchanged as candidates are added. The notebook checks both cases.
 
 > **Connection to RL systems.** Candidate sampling, verifiable filtering, and selected/rejected outputs reappear in preference optimization and RLVR. The *RL for LLM* course develops those pipelines in detail.
 
@@ -471,7 +544,8 @@ $$
 
 At eight 990-TFLOP/s accelerators and an assumed MFU of 40%, that is 9.09 minutes.
 
-![VIZ m11/07 — reasoning transfer](assets/modern-llms/en/module-11/m11_07_reasoning_sft.svg)
+![VIZ m13/07 — reasoning transfer](assets/modern-llms/en/module-11/m13_07_reasoning_sft.svg)
+*Reasoning transfer from a teacher to a student, with author-reported DeepSeek-R1-Distill results and a separate one-pass arithmetic estimate for the module's s1-like scenario.*
 
 The 9.09-minute value is not a reproduction of s1. It represents one epoch under stated throughput assumptions. The original run used five epochs, 16 devices, FSDP, and its own implementation. Comparing the figures without matching epochs and realized utilization would be misleading.
 
@@ -494,7 +568,7 @@ A training trajectory therefore contains two distinct kinds of machine-readable 
 - an **assistant action**, such as a tool call, which is normally supervised;
 - a **tool observation**, generated by the external environment, which is normally included as context but masked from the language-model loss.
 
-If tool results were supervised as assistant text, the model would be rewarded for imitating values that should come from execution. Masking preserves the distinction between action and observation.
+In this recipe, tool observations supply evidence for the next assistant action. Masking them expresses that objective; other training schemes can model observations deliberately, provided that execution still supplies the real result at inference.
 
 A useful curriculum covers at least five decisions:
 
@@ -506,7 +580,8 @@ A useful curriculum covers at least five decisions:
 
 xLAM-function-calling-60k is a large single-turn seed resource. ToolACE uses a broad API pool and dual verification. Multi-turn datasets add stateful dependencies and error recovery. Evaluation should separate syntax, executability, relevance detection, parallel calls, and task completion instead of collapsing everything into one score.
 
-![VIZ m11/08 — tool-use SFT](assets/modern-llms/en/module-11/m11_08_tool_sft.svg)
+![VIZ m13/08 — tool-use SFT](assets/modern-llms/en/module-11/m13_08_tool_sft.svg)
+*A tool-use trajectory separates the supervised assistant action from the environment observation, then continues until the model can answer or needs clarification.*
 
 The Berkeley Function-Calling Leaderboard has evolved from single-call syntax tests toward multi-turn and agentic scenarios in BFCL V4. That evolution is a useful warning: a model can format one correct JSON call and still fail at tool use as a sequential decision problem.
 
@@ -551,6 +626,10 @@ def build_sft_example(messages, special_ids):
 
 def first_fit_decreasing(lengths, max_length=2048):
     """Keep original example indices in every First-Fit Decreasing bin."""
+    if not isinstance(max_length, int) or isinstance(max_length, bool) or max_length <= 0:
+        raise ValueError("max_length must be a positive integer")
+    if any(not isinstance(n, (int, np.integer)) or isinstance(n, (bool, np.bool_)) for n in lengths):
+        raise ValueError("lengths must be integers")
     bins = []
     for index in sorted(range(len(lengths)), key=lambda i: (-lengths[i], i)):
         length = lengths[index]
@@ -573,6 +652,7 @@ def lora_params(d=4096, d_kv=1024, layers=32, rank=16):
         (d + d) + (d + d_kv) + (d + d_kv) + (d + d)
     )
     return per_layer * layers
+
 ```
 
 The labels contain actual target token IDs. A boolean “train here” mask is not enough for a causal language-model loss. The packing function preserves original indices so the downstream pipeline can construct segment boundaries and identify the source of a failing sample.
@@ -597,7 +677,9 @@ L=(1-\lambda)L_{\text{CE}}
 \left(p_{\text{teacher}}^{(T)}\Vert p_{\text{student}}^{(T)}\right).
 $$
 
-The signal is richer, but teacher logits must be available. Tokenizer mismatch complicates the objective because the two models may not define probabilities over the same token events.
+Temperature $T>0$ divides the logits before softmax, and $\lambda\in[0,1]$ sets the distillation weight. The KL direction is teacher-to-student: it penalizes the student for assigning little probability to events supported by the teacher. Multiplying by $T^2$ compensates for a change in gradient scale caused by softening; it does not make all temperatures equivalent. A softer distribution exposes relative preferences among alternatives, while $T$ and $\lambda$ remain experimental choices.
+
+For discrete distributions, $\mathrm{KL}(p\Vert q)=\sum_i p_i\log(p_i/q_i)$ over shared events, here tokens. A zero $p_i$ contributes zero; positive $p_i$ with zero $q_i$ gives infinite divergence. Matching distributions gives zero, and reversing the arguments generally changes the value. The objective requires teacher probabilities, available either directly or through logits. Tokenizer mismatch complicates the objective because the two models may not define probabilities over the same token events.
 
 > **Further study.** Cross-entropy, KL divergence, temperature, and the information content of a full distribution are covered in depth in *Information Theory for ML*.
 
@@ -605,9 +687,11 @@ The signal is richer, but teacher logits must be available. Tokenizer mismatch c
 
 A pipeline can route domains to specialized teachers, sample several teachers and select with a verifier, or combine distributions when compatible logits are available. Multiple teachers expand coverage, but they also introduce inconsistent style, policy, licensing, and calibration.
 
-The engineering decision begins with the signal that is actually accessible. An API supports hard-target generation. An open, compatible teacher may support soft targets. A verifiable task often benefits more from a strong checker than from an additional teacher.
+The engineering decision begins with the signal that is actually accessible. An API that returns only text supports hard targets. Full teacher probabilities or logits can support soft targets over compatible events; a truncated top-logprobs list does not by itself supply the complete vocabulary distribution. A verifiable task often benefits more from a strong checker than from an additional teacher.
 
 ## 16. LoRA and a concrete parameter count
+
+Parameter-efficient fine-tuning (PEFT) updates a restricted parameter set. To make the memory calculation unambiguous, allocate 16 bytes per trainable parameter: 2 for its bf16 weight, 2 for its gradient, 4 for an fp32 master copy, and 4 for each of Adam's two moments. Implementations can store these objects differently. The adapter weight is already included in these 16 bytes.
 
 Full fine-tuning stores trainable weights, gradients, and optimizer state for every updated parameter. Under the module's 16-byte-per-parameter accounting, an 8.03B model requires
 
@@ -623,7 +707,9 @@ $$
 \Delta W=\frac{\alpha}{r}BA,
 $$
 
-with $A\in\mathbb R^{r\times d_{in}}$ and $B\in\mathbb R^{d_{out}\times r}$. The adapter uses $r(d_{in}+d_{out})$ parameters for one target matrix.
+with $A\in\mathbb R^{r\times d_{in}}$ and $B\in\mathbb R^{d_{out}\times r}$. The chosen scale $\alpha$ controls the update through the multiplier $\alpha/r$. The adapter uses $r(d_{in}+d_{out})$ parameters for one target matrix.
+
+Rank $r$ bounds the rank of the update $BA$, not of the complete matrix $W+BA$. Initializing one factor randomly and the other to zero preserves the starting model while allowing learning to begin. Initializing both to zero can leave both gradients zero. Frozen weights need no weight-gradient update, but backward propagation through them can still be needed to reach earlier adapters. Parameter savings therefore do not translate directly into the same FLOP savings.
 
 For a 32-layer GQA model with $d=4096$, $d_{kv}=1024$, rank 16, and adapters on q/k/v/o, the total is
 
@@ -638,13 +724,13 @@ The ratio is deliberately narrow: it compares parameter-related state under one 
 QLoRA stores the frozen base in 4-bit form while backpropagating into LoRA adapters. The simplified floor in this module is:
 
 - 3.739 GiB raw 4-bit base payload;
-- 26 MiB bf16 adapter weights;
-- 208 MiB adapter training state;
-- 3.968 GiB total parameter-state floor.
+- 208 MiB adapter training state, including 26 MiB of bf16 adapter weights;
+- 3.942 GiB total parameter-state floor.
 
 Quantization scales, activations, temporary dequantization buffers, allocator overhead, and distributed-training metadata raise the real requirement.
 
-![VIZ m11/09 — LoRA accounting](assets/modern-llms/en/module-11/m11_09_peft.svg)
+![VIZ m13/09 — LoRA accounting](assets/modern-llms/en/module-11/m13_09_peft.svg)
+*The low-rank update, the 13.63M-parameter calculation, and the boundary between parameter-state accounting and complete training memory.*
 
 LoRA is a strong baseline, not a theorem of equivalence to full fine-tuning. Rank, target modules, quantization, data scale, and the depth of the desired distribution shift determine the gap.
 
@@ -668,6 +754,8 @@ A checkpoint directory often reveals more than its headline model card.
 
 **Tokenizer files.** Inspect `chat_template`, added tokens, special-token maps, and stop IDs. Render actual conversations rather than inferring the format from one token name.
 
+Three library details deserve a literal token-level check. A complete training conversation normally does not need an empty next-assistant header. If a template is first rendered to text and then tokenized, special tokens must not be added a second time. Finally, the assistant mask must come from valid spans in that actual template: TRL's assistant-only mode needs supported generation regions, commonly marked by Jinja `generation` blocks. Check these conventions against the installed library and official tokenizer, then inspect several serialized examples.
+
 **Adapter configuration.** `adapter_config.json` may expose `r`, `lora_alpha`, target modules, dropout, DoRA flags, and the expected base model. These fields are enough to reproduce the parameter count for standard transformer projections.
 
 **Generation configuration.** Stop sequences and decoding defaults describe deployment behavior, but they do not prove how the model was trained.
@@ -685,9 +773,10 @@ A disciplined inspection sequence is:
 
 ## 20. Key takeaways and sources
 
-![VIZ m11/10 — SFT in sixty seconds](assets/modern-llms/en/module-11/m11_10_cheatsheet.svg)
+![VIZ m13/10 — SFT in sixty seconds](assets/modern-llms/en/module-11/m13_10_cheatsheet.svg)
+*A compact map of the module: template contract, supervised positions, safe packing, compute, curation, synthesis, reasoning and tool demonstrations, distillation, and LoRA.*
 
-SFT remains next-token training, but the serialized protocol, target mask, and demonstration distribution turn it into behavioral adaptation.
+For the autoregressive model studied here, SFT remains next-token training, but the serialized protocol, target mask, and demonstration distribution turn it into behavioral adaptation.
 
 - A chat template is part of the checkpoint contract.
 - Assistant-only loss is a design choice that should be verified token by token.
@@ -716,8 +805,12 @@ SFT remains next-token training, but the serialized protocol, target mask, and d
 - [Inkling model announcement](https://thinkingmachines.ai/news/introducing-inkling/)
 - [Tinker training API](https://tinker-docs.thinkingmachines.ai/tinker/)
 
-**Next:** Module 12 moves from demonstrations to preferences and rewards. SFT supplies the initial policy and response grammar; DPO, RLHF, and RLVR will optimize among plausible outputs and train on distributions generated by the model itself.
+- [Transformers: chat templates](https://huggingface.co/docs/transformers/chat_templating)
+- [TRL: SFT trainer](https://huggingface.co/docs/trl/sft_trainer)
+- [Tülu 3 SFT mixture card](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)
+
+**Next:** Module 14 moves from demonstrations to preferences and rewards. SFT supplies the initial policy and response grammar; DPO, RLHF, and RLVR will use comparative labels and rewards. DPO can work with a fixed pair dataset, while reinforcement learning usually refreshes model-generated samples.
 
 ---
 
-*Landscape verified: August 4, 2026. Format, dataset, and service claims were checked against primary sources. Numerical scenarios are reproduced by local code; benchmark results retain the attribution and protocol of their original authors.*
+*Editorial and source check: October 11, 2026. Format, dataset, and service claims were checked against primary sources. Numerical scenarios are reproduced by local code; benchmark results retain the attribution and protocol of their original authors.*

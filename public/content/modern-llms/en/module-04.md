@@ -1,102 +1,73 @@
-# Module 4. Modern Attention Mechanisms
+# Module 5. Modern Attention Mechanisms
 
-*“Modern LLMs” course · Module 4 lecture · edition 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module is about.** Attention is not only a formula for mixing tokens. It is also a storage format, a memory-access pattern, and—once context becomes long—a routing decision. This lecture follows two resource bills created by autoregressive attention. The first is the KV state retained from previous tokens. The second is the movement of scores and activations through the GPU memory hierarchy. MQA, GQA, and MLA reduce the state carried by each position. FlashAttention preserves dense attention while changing its IO schedule. Windowed and sparse designs reduce the positions that participate in a full interaction. The final goal is an attention passport: enough information to estimate serving behavior from architecture rather than from context length alone.
->
-> **Prerequisites.** Softmax, matrix multiplication, causal masking, and RoPE from Modules 3 and 18. GPU memory terminology is introduced when it becomes useful.
+*Modern LLMs · October 2026 revision · sources checked on October 10, 2026*
 
----
+Module 3 built a Transformer; Module 4 supplied its sense of position. We now ask **how attention can use a long context within a limited memory and compute budget**. Three decisions matter: what to retain from past tokens, how to compute interactions with it, and which positions a query may use.
 
-## 1. Motivation: two bills hidden behind one decode step
+**Prerequisites.** Matrix multiplication, softmax, and attention heads from M3; rotary positional embeddings (RoPE) from M4 for the MLA discussion. GPU memory terminology is introduced here.
 
-A decoder has already processed the prompt. It now receives one new token and must compare its query with every allowed key. Recomputing past key and value projections would waste work, so the model retains them in a **KV cache—Key–Value cache**.
+**Reading routes**
 
-For an ordinary attention layout, one token adds
+- **First pass:** §§1–2 → §4 up to the implementation panel → §§5–11 → §§15–19. In §7, establish what is cached before following the algebra. Use §17 and exercises 1–4 to check that you can explain which resource each method changes.
+- **Implementation pass:** return to the expandable B04/B05 panels in §§4/6, §§12–14, and the notebook. Compare direct and streaming execution and reproduce mask and head-order errors. Exercises 6–7 connect these experiments to the derivations.
+- **Reference pass:** §3 provides statistical connections; §§5, 9, 11, and 15 help you read unfamiliar architectures. Exercise 5 is an optional GPU project. Sources and the transition to M6 close the module.
 
-$$
-b_{KV}=2L H_{kv}d_hb
-$$
+## 1. What grows with the context?
 
-bytes, where $L$ is the number of cache-bearing layers, $H_{kv}$ the number of key/value heads, $d_h$ the head dimension, and $b$ the bytes per scalar. The factor of two accounts for both K and V.
+Suppose a model has processed a prompt and is generating its next token. A **query** $q$ is compared with the **keys** $k_j$ of visible positions; the resulting weights mix their **values** $v_j$. An attention head performs this operation in its own feature space. Write $H_q$ for the number of query heads and $H_{kv}$ for the number of K/V heads. Several query heads can share one set of keys and values.
 
-This formula is deliberately local: it says what one token would cost if all listed layers retained that position. A real model may mix full-context and local layers, so multiplying it by the advertised context length can be wrong.
+Previously computed K/V can be retained in a **KV cache**. For one sequence, $L$ identical layers, and equal key/value width $d_h$, one retained token costs
 
-The open gpt-oss-120b implementation is a useful example. With 36 layers, eight KV heads, head dimension 64, and bf16 state, the all-full equivalent is
+$$b_{KV}=2LH_{kv}d_hb,$$
 
-$$
-2\cdot36\cdot8\cdot64\cdot2
-=73{,}728\ \text{bytes}
-=72\ \text{KiB/token}.
-$$
+where $b$ is bytes per element; the factor 2 counts both keys and values. With $L=36$, $H_{kv}=8$, $d_h=64$, and BF16 ($b=2$), this is 73,728 bytes, or **72 KiB per token**. If every layer retains all 131,072 positions, the K/V payload is **9 GiB**. Here $1\text{ KiB}=2^{10}$ bytes and $1\text{ GiB}=2^{30}$ bytes. Windows and heterogeneous layers require the layer-by-layer sum in §5.
 
-At 131,072 tokens, that hypothetical layout is 9 GiB. The actual model alternates 18 full layers with 18 window-128 layers. Per layer, one retained position costs 2,048 bytes; therefore
+A second cost appears during **prefill**, processing the input sequence. A simple implementation materializes an $N\times N$ score matrix per head. At $N=8192$, one FP32 matrix occupies $8192^2\cdot4=256$ MiB. This temporary array serves a different purpose from the cache that survives into later steps. During single-token **decode**, the new query usually compares with $N$ retained keys: its score row has $N$ entries, not $N^2$.
 
-$$
-18\cdot131{,}072\cdot2{,}048=4.5\ \text{GiB},
-$$
+MQA, GQA, and MLA change the retained representation. FlashAttention reduces movement of intermediate data. Windows and sparse patterns reduce selected interactions. These approaches can be combined, so a method name alone does not determine resource use.
 
-while the local half contributes only
+![VIZ m5/01 — three directions in attention design](assets/modern-llms/en/module-04/m5_01_attention_timeline.svg)
+*State compression, execution scheduling, and position selection solve different parts of the problem.*
 
-$$
-18\cdot128\cdot2{,}048=4.5\ \text{MiB}.
-$$
+## 2. Three directions in attention design
 
-The hybrid total is approximately **4.504 GiB**. That factor-of-two difference comes from the layer schedule, not from a new data type.
+**Multi-Head Attention (MHA)** gives every query head its own K/V projections. At fixed query-head count, this is the largest of the following three cache layouts.
 
-The second bill appears during dense attention itself. A single fp32 score matrix of shape $8192\times8192$ occupies 256 MiB per head. If an implementation writes scores and probabilities to high-bandwidth memory and reads them back, data movement can dominate the arithmetic. That is the problem FlashAttention addresses.
+**Multi-Query Attention (MQA)** shares one K/V set across all query heads. With other dimensions fixed, it reduces cache size by $H_q$ relative to MHA, although aggressive sharing can reduce quality.
 
-The module therefore asks two separate questions: **what state must survive between steps, and how should the current attention operation travel through memory?**
+**Grouped-Query Attention (GQA)** divides query heads into groups, each with its own K/V set. Group size $g=H_q/H_{kv}$ must be an integer. $H_{kv}=H_q$ recovers MHA; $H_{kv}=1$ recovers MQA. The GQA authors obtained quality close to MHA and speed comparable to MQA in their uptraining experiments, which continued training existing models. This is evidence for their protocol, not a guarantee for arbitrary $g$. [GQA](https://arxiv.org/abs/2305.13245).
 
-## 2. The historical split: compress the cache or reorganize the kernel
+**Multi-head Latent Attention (MLA)** caches a compact intermediate representation, the joint KV latent, together with a small positional component (§7). DeepSeek-V2 reported a 93.3% KV-cache reduction against DeepSeek 67B and up to 5.76× higher maximum generation throughput in its system comparison. That baseline differs from our arithmetic example in §5. [DeepSeek-V2](https://arxiv.org/abs/2405.04434).
 
-![VIZ m4/01 — two attention lineages](assets/modern-llms/en/module-04/m4_01_attention_timeline.svg)
+The second direction changes execution. **FlashAttention** processes small array blocks, or **tiles**, in fast accelerator memory. **HBM (High Bandwidth Memory)** is GPU main memory; **SRAM (Static Random-Access Memory)** is smaller, fast on-chip storage. Tiled execution updates softmax incrementally instead of writing the entire probability matrix to HBM, while preserving the mathematical attention operation. [FlashAttention](https://arxiv.org/abs/2205.14135).
 
-The original Transformer used **MHA—Multi-Head Attention**: every query head had its own key and value projections. This maximizes head-specific state and also maximizes the cache.
+The third direction changes available interactions. Sliding windows retain nearby positions. StreamingLLM also keeps a few initial real tokens; §10 explains their role. MoBA, NSA, and DSA use query/key content to select blocks or tokens (§11). Selection can reduce the main attention calculation without making every unselected cache entry disposable: a later query may need it.
 
-**MQA—Multi-Query Attention** retained one key/value head shared by all query heads. It gave decoder inference a much smaller cache, but some experiments observed a quality cost from sharing too aggressively.
+## 3. Classical connections: smoothing, distributions, and state
 
-**GQA—Grouped-Query Attention** made the number of KV heads a continuum. Let $H_q$ be query heads, $H_{kv}$ KV heads, and
+This section can be read later. It connects attention to familiar mathematical ideas without introducing prerequisites for §4.
 
-$$
-g=H_q/H_{kv}
-$$
+### Kernel smoothing
 
-be the query heads served by one KV head. MHA sits at $g=1$; MQA sits at $H_{kv}=1$. The GQA paper showed that its uptrained models achieved quality close to MHA with speed comparable to MQA in the reported setup. That finding motivates the design; it does not establish a universal best group size. [Primary paper](https://arxiv.org/abs/2305.13245).
+The Nadaraya–Watson estimator averages values using a similarity function $\kappa$:
 
-**MLA—Multi-head Latent Attention** changed the cached object. DeepSeek-V2 stored a compact joint KV latent plus a small positional component rather than full per-head K/V. The authors reported a 93.3% KV-cache reduction relative to DeepSeek 67B and up to 5.76× maximum generation throughput in their system comparison. [Technical report](https://arxiv.org/abs/2405.04434).
+$$\hat f(q)=\frac{\sum_i\kappa(q,k_i)v_i}{\sum_i\kappa(q,k_i)}.$$
 
-A parallel history concerned execution. **FlashAttention** tiled dense attention into on-chip memory and maintained softmax statistics online. It did not select fewer keys; it stopped materializing the full score/probability matrices in high-bandwidth memory. [Primary paper](https://arxiv.org/abs/2205.14135).
+For visible keys in softmax attention, use $\kappa(q,k_i)=\exp(q^\top k_i/\sqrt{d_h})$. Index $i$ runs over keys, with corresponding values $v_i$. The analogy is useful, but Q/K/V are learned together and later layers transform the resulting mixture. Here a *kernel* is a similarity function; a GPU kernel in §8 is executable code.
 
-A third family eventually changed connectivity itself. Sliding-window attention chooses positions geometrically. StreamingLLM preserves initial real tokens because they act as sinks. MoBA, NSA, and DSA learn or compute content-dependent sparse selections. Those methods answer a different question from GQA or MLA: not how many coordinates to store per token, but which tokens deserve an expensive interaction.
+### The Gibbs distribution
 
-## 3. Three useful classical views—and where they stop
+With unscaled scores $s_i=q^\top k_i$ and temperature $T>0$,
 
-### Attention as kernel regression
+$$p_i=\frac{e^{s_i/T}}{\sum_j e^{s_j/T}}$$
 
-Nadaraya–Watson regression computes
+has the Gibbs form. The energy convention $e^{-E_i/T}$ gives $E_i=-s_i$. Choosing $T=\sqrt{d_h}$ recovers the SDPA scale, motivated by the variance calculation in §4. If scores have already been divided by $\sqrt{d_h}$, applying that factor again changes the function.
 
-$$
-\hat f(q)=\frac{\sum_i K(q,k_i)v_i}{\sum_i K(q,k_i)}.
-$$
+### State for continuing the computation
 
-Softmax attention has the same structural shape: positive similarities are normalized and used to average values. The analogy is valuable, but attention is not a fixed nonparametric estimator. Q, K, and V are jointly learned; heads share a residual stream; and later layers transform the result. We should therefore read this as a lens, not a definition.
-
-### Attention as a Gibbs distribution
-
-For scores $s_i$,
-
-$$
-p_i\propto e^{s_i/T}.
-$$
-
-If we speak in the language of energy, then $E_i=-s_i$, because the standard Gibbs form is $e^{-E_i/T}$. The entropy of the distribution measures how concentrated the head is, but its behavior also depends on the learned score geometry.
-
-### Attention as retained state
-
-During decode, the model needs enough information about the past to form future attention outputs. MHA stores every head's K/V. GQA stores fewer shared heads. MLA stores a lower-dimensional latent. Recurrent or state-space mechanisms may replace position-indexed cache entries with a fixed-dimensional state. The cache is thus an architectural statement about what the model treats as sufficient history.
-
-These views prepare the two engineering themes ahead: controlling the scale of logits, and controlling the size and placement of retained state.
+At fixed weights and position rules, the KV cache retains past features needed by the next attention step. MHA stores per-head K/V, GQA shares them within groups, and MLA keeps a shared latent plus positional state. Recurrent and state-space mechanisms may instead use a fixed-size state (Module 8). Complete decoding also needs the current token, positions, and generation rules.
 
 ## 4. SDPA, masks, and the square-root scale
 
@@ -112,7 +83,12 @@ $$
 
 Here $Q\in\mathbb R^{T_q\times d_h}$, $K\in\mathbb R^{T_k\times d_h}$, and $V\in\mathbb R^{T_k\times d_v}$. An additive mask $M$ uses zero for an allowed edge and $-\infty$ for a forbidden one.
 
-A causal mask permits $j\le i$. A sliding mask further limits the distance between the query and key. Cross-attention may have different query and key lengths.
+Softmax normalizes each query row across keys. Causality compares **token positions**, $p_k\le p_q$; only aligned Q/K origins reduce this to $j\le i$. A window of $W$ positions, including the current one, requires $0\le p_q-p_k<W$.
+
+A query at position 5 can see keys 0–5. But `tril(ones(1, 6))` keeps only key 0: row number has been mistaken for token position. After a prefix of length $P$, query row $i$ has position $P+i$. PyTorch SDPA uses an upper-left causal mask for rectangular inputs with `is_causal=True`; here we pass an explicit position-aware mask and `is_causal=False`. SDPA boolean masks use `True = allowed`, unlike `MultiheadAttention.key_padding_mask`. Set `dropout_p=0.0` when testing without random weight dropping. [PyTorch contract](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html).
+
+![VIZ m5/07 — keys visible to each query](assets/modern-llms/en/module-04/m5_07_masks.png)
+*Rows are queries; columns are keys. Initial real tokens add visible positions. The learned sink in §10 is not a token position.*
 
 The $1/\sqrt{d_h}$ factor comes from a variance calculation. Under the idealized assumption that query and key components are independent, zero-mean, and unit-variance,
 
@@ -122,11 +98,13 @@ $$
 
 Without scaling, the typical logit magnitude grows as $\sqrt{d_h}$ and softmax becomes increasingly saturated. The assumptions are not a permanent description of trained representations; they explain why the original parameterization starts from a dimension-independent logit scale.
 
-A fully masked row has no probability distribution. Stable softmax implementations usually subtract the row maximum; for all-$-\infty$ input, that already creates $-\infty-(-\infty)$ and can propagate NaNs. An API must choose a policy: reject the mask, return a defined zero output for known padding rows, or supply a finite sink score. The notebook tests all three cases explicitly.
+A fully masked row has no probability distribution. Stable softmax implementations usually subtract the row maximum; for all-$-\infty$ input, that already creates $-\infty-(-\infty)$ and can propagate NaNs. An API must choose a policy: reject the mask, return a defined zero output for known padding rows, or supply a finite extra score with a zero value (the learned sink in §10). The notebook tests all three cases explicitly.
+
+**<strong>Implementation pass: NumPy → PyTorch → API</strong>**
 
 ### NumPy → PyTorch · B04 — SDPA line by line
 
-The NumPy path exposes scores, masking, softmax, and the V reduction; the public PyTorch API may select an optimized kernel.
+Assume validated, finite floating Q/K/V with nonempty axes and compatible shapes `[..., T_q, D]`, `[..., T_k, D]`, and `[..., T_k, D_v]`. Leading axes can represent batches and heads. API comparisons use a shared dtype and device, with a Boolean mask on that device broadcastable to the scores. This minimal example deliberately returns zero for an empty row; §12 provides the separate `error`/`zero` choice. NumPy exposes scores, masking, softmax, and the V reduction before the PyTorch API delegates execution.
 
 ```python
 import math
@@ -145,6 +123,11 @@ def numpy_sdpa_explicit(
     *,
     allowed_mask: np.ndarray | None = None,
 ) -> np.ndarray:
+    output_dtype = np.result_type(q.dtype, k.dtype, v.dtype)
+    if output_dtype.kind not in "fc":
+        output_dtype = np.dtype(np.float64)
+    work_dtype = np.result_type(output_dtype, np.float32)
+    q, k, v = (x.astype(work_dtype, copy=False) for x in (q, k, v))
     scale = 1.0 / math.sqrt(q.shape[-1])
     scores = np.matmul(q, np.swapaxes(k, -1, -2)) * scale
 
@@ -160,7 +143,7 @@ def numpy_sdpa_explicit(
     exp = np.exp(shifted)
     weights = exp / exp.sum(axis=-1, keepdims=True)
     weights = np.where(row_has_key, weights, 0.0)
-    return np.matmul(weights, v)
+    return np.matmul(weights, v).astype(output_dtype, copy=False)
 ```
 
 Every stage is visible in NumPy: $QK^\top$, the $1/\sqrt{d_h}$ scale, mask broadcasting, softmax over keys, and the $V$ reduction. `row_has_key` defines the fully masked-row policy: zero output.
@@ -175,6 +158,9 @@ def torch_sdpa_explicit(
     *,
     allowed_mask: torch.Tensor | None = None,
 ) -> torch.Tensor:
+    output_dtype = q.dtype
+    work_dtype = torch.float32 if q.dtype in (torch.float16, torch.bfloat16) else q.dtype
+    q, k, v = (x.to(work_dtype) for x in (q, k, v))
     scale = 1.0 / math.sqrt(q.shape[-1])
     scores = q @ k.transpose(-2, -1) * scale
 
@@ -188,10 +174,10 @@ def torch_sdpa_explicit(
     safe_scores = torch.where(row_has_key, scores, torch.zeros_like(scores))
     weights = torch.softmax(safe_scores, dim=-1)
     weights = torch.where(row_has_key, weights, torch.zeros_like(weights))
-    return weights @ v
+    return (weights @ v).to(output_dtype)
 ```
 
-The mathematics is unchanged. `Tensor.transpose`, `dim=-1`, and `masked_fill` express the same chain while preserving device/dtype and supporting autograd.
+`Tensor.transpose`, `dim=-1`, and `masked_fill` express the same chain with autograd support. FP16/BF16 inputs are widened to FP32 before dot products, and the output returns to Q's dtype. All tensors remain on their shared device.
 
 #### 3. Optimized or library PyTorch API
 
@@ -224,8 +210,7 @@ The one-line API hands the same operator to PyTorch's dispatcher, which may sele
 | Dropout | none | evaluation must pass `dropout_p=0.0` |
 | Backend | a sequence of NumPy operations | eager or fused kernel |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 rng = np.random.default_rng(4)
@@ -248,17 +233,21 @@ torch.testing.assert_close(api_out, explicit_out, rtol=1e-10, atol=1e-10)
 mask_np[0] = False
 np_empty = numpy_sdpa_explicit(q_np, k_np, v_np, allowed_mask=mask_np)
 t_empty = torch_sdpa_explicit(q, k, v, allowed_mask=torch.tensor(mask_np))
+api_empty = torch_sdpa_optimized(q, k, v, allowed_mask=torch.tensor(mask_np), dropout_p=0.0)
 np.testing.assert_array_equal(np_empty[..., 0, :], 0.0)
 torch.testing.assert_close(t_empty[..., 0, :], torch.zeros_like(t_empty[..., 0, :]))
+torch.testing.assert_close(api_empty, t_empty, rtol=1e-10, atol=1e-10)
 
+grads_explicit = torch.autograd.grad(explicit_out.square().sum(), (q, k, v), retain_graph=True)
+grads_api = torch.autograd.grad(api_out.square().sum(), (q, k, v), retain_graph=True)
+for ge, ga in zip(grads_explicit, grads_api):
+    torch.testing.assert_close(ge, ga, rtol=1e-9, atol=1e-10)
 explicit_out.sum().backward()
 assert all(t.grad is not None and torch.isfinite(t.grad).all() for t in (q, k, v))
 print("B04 explicit NumPy / explicit PyTorch / optimized API: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m04_attention_bridges.py`](../assets/m04_attention_bridges.py)
+Complete executable file: `m05_attention_bridges.py`
 
 Official contract: [PyTorch `scaled_dot_product_attention`](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention).
 
@@ -274,9 +263,15 @@ Keep the depth and head dimension fixed at 36 and 64, respectively, and vary onl
 
 At 131,072 tokens these become 72 GiB, 9 GiB, and 1.125 GiB. The first and third rows are hypothetical versions of the same depth and head size; they are not claims about released gpt-oss checkpoints.
 
-The actual gpt-oss schedule cuts the GQA figure in roughly half because only 18 layers retain the full sequence. Its 18 local layers retain 128 positions. The total is 4.5043945 GiB.
+Now restore the actual gpt-oss layer schedule. Each GQA layer needs $2\cdot8\cdot64\cdot2=2048$ bytes per retained position. If the runtime caps each local cache at 128 positions, 18 full layers cost $18\cdot131072\cdot2048=4.5$ GiB and 18 local layers cost $18\cdot128\cdot2048=4.5$ MiB. The total is **4.50439453125 GiB**. A window mask alone does not prove that old entries are freed.
 
-MLA needs a separate formula. In the educational DeepSeek-like geometry, 61 layers retain a 512-dimensional latent and a 64-dimensional decoupled RoPE component:
+For ordinary K/V, $B$ equal-length sequences and heterogeneous layers, use
+
+$$M_{KV}=B\sum_{\ell=1}^L n_\ell H_{kv,\ell}(d_{k,\ell}+d_{v,\ell})b_\ell.$$
+
+Here $n_\ell=N$ for a full layer and $n_\ell=\min(N,W_\ell)$ for a bounded local cache. Sum over sequences when their lengths differ. This is array payload: it excludes alignment, paging, replication, and quantization metadata. MLA stores a different object and needs its own formula.
+
+In the educational DeepSeek-like MLA geometry, 61 layers retain a 512-dimensional latent and a 64-dimensional decoupled RoPE component:
 
 $$
 b_{\text{MLA}}=(512+64)\cdot61\cdot2=68.625\ \text{KiB/token}.
@@ -291,11 +286,18 @@ $$
 
 The raw storage ratio is 56.8889×. This number should not be confused with the DeepSeek-V2 paper's 93.3% system-level cache reduction against DeepSeek 67B; the baselines are different.
 
-![VIZ m4/02 — cache footprints](assets/modern-llms/en/module-04/m4_02_kv_per_token.png)
+![VIZ m5/02 — cache footprints](assets/modern-llms/en/module-04/m5_02_kv_per_token.png)
+*KV memory at 131,072 positions: all-full MHA/GQA/MQA, the gpt-oss layout with window-capped local caches, and a separate MLA geometry.*
 
 ## 6. GQA is a grouping invariant, not a quality guarantee
 
-For $H_q=64$ and $H_{kv}=8$, one KV head serves eight query heads. An implementation may expose this by reshaping Q to
+Let $g=H_q/H_{kv}$ be an integer group size. Query head $h$, counted from zero, uses KV head $j(h)=\lfloor h/g\rfloor$, so
+
+$$
+O_h=\operatorname{softmax}\left(Q_hK_{j(h)}^\top/\sqrt{d_h}+M\right)V_{j(h)}.
+$$
+
+For $H_q=64$ and $H_{kv}=8$, one KV head therefore serves eight consecutive query heads. An implementation may expose this by reshaping Q to
 
 ```text
 [tokens, H_kv, H_q/H_kv, head_dim]
@@ -317,11 +319,13 @@ Repeating the complete KV block instead produces a tensor of the right shape wit
 
 Functionally, correct GQA equals MHA with repeated K/V heads. Different fused kernels can still differ by floating-point rounding, so bitwise equality is not a portable promise.
 
-The architectural tradeoff is straightforward. Fewer KV heads reduce cache and memory bandwidth. More KV heads provide more distinct key/value subspaces. GQA offers a continuum between those endpoints; it does not make group size eight a theorem.
+The architectural tradeoff is straightforward. Fewer KV heads reduce cache and memory bandwidth. More KV heads provide more distinct key/value subspaces. GQA offers discrete choices between those endpoints; it does not make group size eight a theorem.
+
+**<strong>Implementation pass: NumPy → PyTorch → API</strong>**
 
 ### NumPy → PyTorch · B05 — GQA: repeating K/V and `enable_gqa`
 
-The NumPy reference repeats K/V heads explicitly. PyTorch can express the same contract through `enable_gqa=True` when the backend supports it.
+This block fixes four axes: Q `[B,H_q,T_q,D]`, K `[B,H_kv,T_k,D]`, and V `[B,H_kv,T_k,D_v]`. Heads occupy axis 1, and `H_q` is divisible by positive `H_kv`. The finite-value, shared dtype/device, and Boolean-mask assumptions from B04 still apply. NumPy repeats K/V heads explicitly; supported PyTorch backends express grouping with `enable_gqa=True`. Section 12's flattened `[T,H*D]` layout is a separate interface: reshape and transpose it before using these functions.
 
 ```python
 import numpy as np
@@ -402,8 +406,7 @@ def torch_gqa_optimized(
 | Optimized path | none | `enable_gqa=True` |
 | Test | matches MHA after repetition | explicit path ↔ API |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 rng = np.random.default_rng(5)
@@ -411,45 +414,49 @@ q_np = rng.standard_normal((1, 4, 3, 8))
 k_np = rng.standard_normal((1, 2, 3, 8))
 v_np = rng.standard_normal((1, 2, 3, 7))
 np_out = numpy_gqa_explicit(q_np, k_np, v_np)
-q, k, v = (torch.tensor(a, dtype=torch.float64) for a in (q_np, k_np, v_np))
+q, k, v = (torch.tensor(a, dtype=torch.float64, requires_grad=True) for a in (q_np, k_np, v_np))
 explicit = torch_gqa_explicit(q, k, v)
 api = torch_gqa_optimized(q, k, v, dropout_p=0.0)
 torch.testing.assert_close(explicit, torch.from_numpy(np_out), rtol=1e-10, atol=1e-10)
 torch.testing.assert_close(api, explicit, rtol=1e-10, atol=1e-10)
+for ge, ga in zip(torch.autograd.grad(explicit.square().sum(), (q,k,v)),
+                  torch.autograd.grad(api.square().sum(), (q,k,v))):
+    torch.testing.assert_close(ge, ga, rtol=1e-9, atol=1e-10)
 print("B05 explicit repetition / enable_gqa: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m04_attention_bridges.py`](../assets/m04_attention_bridges.py)
+Complete executable file: `m05_attention_bridges.py`
 
 Official contract: [PyTorch SDPA GQA](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention).
 
-## 7. MLA stores a joint latent and absorbs linear maps
+## 7. MLA: cache a shared latent and move the projections
 
-MLA begins with a down-projection
+**Multi-head Latent Attention (MLA)** retains a compact vector $c_t=W^{DKV}h_t$ shared across heads, together with a small positional component. Here a **latent** is an intermediate representation from which linear maps produce key and value features. Why can inference avoid reconstructing the full K/V cache?
 
-$$
-c_t^{KV}=W^{DKV}h_t.
-$$
+For one head, write $k_t=A c_t$ and $v_t=B c_t$, with $c_t\in\mathbb R^{d_c}$, $A\in\mathbb R^{d_k\times d_c}$, and $B\in\mathbb R^{d_v\times d_c}$. Then
 
-Head-specific key and value components can then be derived from this latent. At serving time, the model retains the compact $c_t^{KV}$ rather than a full K/V vector for every head.
+$$q^\top k_t=q^\top A c_t=(A^\top q)^\top c_t.$$
 
-The important implementation trick is **matrix absorption**. Linear up-projections can be composed with neighboring query and output projections, avoiding explicit materialization of reconstructed K/V tensors. This does not make the work free: latent projections and matrix multiplications remain. It changes which intermediate representation has to be stored.
+Moving $A$ to the query side produces one transformed query that can be compared with every cached latent. Once attention weights $p_t$ are available, value computation can be rearranged too:
 
-RoPE complicates the algebra. For a fixed position it is a linear orthogonal transform, but a position-dependent rotation $R_m$ generally fails to commute with an arbitrary up-projection:
+$$\sum_t p_t v_t=B\left(\sum_t p_t c_t\right).$$
 
-$$
-R_mW^{UK}\ne W^{UK}R_m.
-$$
+If an output projection $W^O$ follows, the product $W^OB$ can be combined in advance. For multiple heads, apply the argument to each head's $A_h$, $B_h$, and corresponding output-projection block. This **matrix absorption** changes the stored representation and dimensions of the computation; the remaining projections still have a cost.
 
-DeepSeek therefore separates a small RoPE key component and stores it alongside the latent. The obstacle is not nonlinearity; it is that one constant matrix cannot absorb every position-dependent rotation.
+**Where does position enter?** RoPE is linear at a fixed position. But rotating reconstructed keys gives, for query position $m$ and key position $n$,
 
-The paper's reported quality and throughput results are evidence for the complete trained design. The raw 56.9× element ratio is only a storage calculation and cannot predict quality on its own.
+$$(R_mq)^\top R_n A c_n=q^\top R_{n-m}A c_n.$$
 
-![VIZ m4/04 — latent KV state](assets/modern-llms/en/module-04/m4_04_mla_latent.svg)
+The effective query $A^\top R_{n-m}^\top q$ now depends on $n$. It cannot be computed once and reused for all keys as before. Comparing $RA$ with $AR$ would also be ill-formed in general: $A$ is rectangular.
+
+DeepSeek-V2 therefore uses a separate small RoPE branch. Content and positional terms are added to form the logit. Content projections can still be absorbed, while the positional key is cached alongside the latent. The notebook verifies both score terms and the projected output. This is an algebraic equivalence; model quality requires separate empirical evaluation. [DeepSeek-V2, §2.1](https://arxiv.org/html/2405.04434v5).
+
+![VIZ m5/04 — computing in latent space](assets/modern-llms/en/module-04/m5_04_mla_latent.svg)
+*Key expansion moves to the query side; value expansion moves after aggregation. The positional branch remains separate.*
 
 ## 8. FlashAttention: dense attention without the quadratic HBM object
+
+For complexity estimates here, take equal key/value width $d=d_h=d_v$. Write $P$ for the matrix of attention probabilities.
 
 A materializing implementation often writes the score matrix, reads it for softmax, writes probabilities, and reads them again for the value product. The arithmetic is not the only cost; the memory path is expensive.
 
@@ -461,7 +468,17 @@ FlashAttention tiles Q, K, and V so that the active blocks fit in on-chip **SRAM
 
 When a later tile raises the maximum, earlier state is multiplied by $e^{m_{old}-m_{new}}$. The final output is $n/\ell$.
 
-![VIZ m4/05 — online softmax](assets/modern-llms/en/module-04/m4_05_online_softmax.svg)
+For one query, let $x_j$ be scores of allowed keys in the new tile and $v_j$ their values. Update the running state as follows:
+
+$$m'=\max(m,\max_j x_j),\quad \alpha=e^{m-m'},\quad \widetilde p_j=e^{x_j-m'},$$
+$$\ell'=\alpha\ell+\sum_j\widetilde p_j,\qquad n'=\alpha n+\sum_j\widetilde p_jv_j,\qquad O=n'/\ell'.$$
+
+Initialize $m=-\infty$, $\ell=0$, $n=0$. Set $\alpha=0$ for the first nonempty tile and skip fully masked tiles. If every tile is empty, apply the explicit policy from §4. This avoids $-\infty-(-\infty)$. Section 18 and the notebook work through numerical updates.
+
+A linear-memory claim must include **all** arrays: prebuilding a dense $N\times N$ mask keeps a quadratic allocation. Our streaming code can generate a causal mask for each tile. It is a transparent CPU reference, not a performance implementation of FlashAttention.
+
+![VIZ m5/05 — online softmax](assets/modern-llms/en/module-04/m5_05_online_softmax.svg)
+*An online softmax row carries its maximum, normalization sum, and value accumulator across tiles.*
 
 It is important to state the complexity precisely.
 
@@ -476,24 +493,28 @@ The IO analysis is parameterized by fast-memory capacity $M$; it is not a univer
 
 FlashAttention-4 reports up to 1,613 TFLOP/s in BF16 on B200, approximately 71% of peak, with up to 1.3× speedup over cuDNN 9.13 and 2.7× over Triton in the authors' configurations. [Primary paper](https://arxiv.org/abs/2603.05451).
 
-![VIZ m4/06 — tiled IO](assets/modern-llms/en/module-04/m4_06_tiling_memory.svg)
+![VIZ m5/06 — tiled IO](assets/modern-llms/en/module-04/m5_06_tiling_memory.svg)
+*Tiling removes the quadratic HBM intermediate, not the quadratic dense-attention arithmetic.*
 
 ## 9. Windowed attention and layer schedules
 
-A sliding-window layer allows each query to see only the most recent $W$ keys. Its decode cache stops growing after $W$ positions. A stack of local layers can propagate information farther than one window, but the approximate reach $L(W-1)$ is only a path-length bound. It does not guarantee that a fact survives many transformations or match a direct global edge.
+A sliding-window layer allows each query to see only the most recent $W$ keys. Its decode cache can stop growing after $W$ positions if old storage is discarded or reused. A stack of local layers can propagate information farther than one window; the reach discussed below is a dependency bound. It does not guarantee that a fact survives many transformations or match a direct global edge.
 
-Pure windowed decoder stacks do exist. Mistral 7B is a documented example. Hybrid models add global layers to shorten long-range paths.
+Pure windowed decoder stacks do exist. Mistral-7B-v0.1 with window 4096 is a documented example. Hybrid models add global layers to shorten long-range paths.
 
 | Model family | Published layout |
 |---|---|
-| Mistral 7B | sliding-window attention throughout the decoder |
-| gpt-oss | 18 window-128 and 18 full layers, alternating |
-| Gemma 2 | local 4096 and global 8192 layers interleaved 1:1 |
+| Mistral-7B-v0.1 | sliding-window attention throughout the decoder |
+| gpt-oss-120b | 18 window-128 and 18 full layers, alternating |
+| Gemma 2 | window-4096 and full-attention layers interleaved 1:1 within an 8192-token context |
 | Gemma 4 | hybrid local/global attention; final layer global |
 
 This is why a cache estimate must be layer-aware. A global `sliding_window` field or a single context length does not reveal how many layers retain which positions.
 
-![VIZ m4/03 — hybrid schedules](assets/modern-llms/en/module-04/m4_03_layer_alternation.svg)
+![VIZ m5/03 — hybrid schedules](assets/modern-llms/en/module-04/m5_03_layer_alternation.svg)
+*Local and global layers create different dependency paths and different cache-growth laws.*
+
+The window includes the current position. With $L$ consecutive local layers, equal window $W$, and no dilation, the furthest dependency is $L(W-1)$ positions back. Bounded cache storage additionally requires eviction or reuse; a mask by itself does not bound allocation. Check the checkpoint version: later Mistral releases need not share v0.1’s window policy.
 
 ## 10. “Attention sink” refers to two different objects
 
@@ -501,7 +522,7 @@ StreamingLLM observed that trained models often place large attention mass on in
 
 gpt-oss implements a different mechanism. Each query head owns a learned scalar $s_h$. The scalar is appended as an extra score column before softmax. After normalization, that column is removed before multiplying by V, so it receives probability mass but contributes no value vector.
 
-For 128 equal token scores,
+For 128 token scores all equal to zero,
 
 $$
 p_{sink}=\frac{e^{s_h}}{128+e^{s_h}}.
@@ -511,66 +532,103 @@ At $s_h=0,2,5$, the sink receives roughly 0.78%, 5.46%, and 53.69% of the mass.
 
 A learned constant score is not equivalent to an ordinary fixed key. A key would produce $q^\top k_{sink}$ and vary with the query. The exact abstraction is an extra score slot with zero value. It could be represented through dot-product attention only by extending the space with a constant coordinate or by adding kernel support.
 
-![VIZ m4/08 — two sinks](assets/modern-llms/en/module-04/m4_08_sinks.svg)
+![VIZ m5/08 — two sinks](assets/modern-llms/en/module-04/m5_08_sinks.svg)
+*StreamingLLM preserves initial real K/V entries; gpt-oss adds a learned score slot without a value contribution.*
 
-## 11. Sparse attention selects positions rather than shrinking each position
+A useful check: shifting only token logits while leaving the sink fixed changes the output. Softmax shift invariance requires shifting every logit, including the sink.
 
-GQA and MLA reduce state per token. Windowing chooses a fixed geometric subset. Content-based sparse attention spends additional work to select tokens or blocks for each query.
+## 11. Sparse attention: selecting a subset of positions
 
-| Method | Selection unit | Selection mechanism | Special training? | Evidence boundary |
-|---|---|---|---|---|
-| block-sparse patterns | blocks | predetermined layout | sometimes no | mature systems technique |
-| MoBA—Mixture of Block Attention | blocks | learned block routing | yes | paper and open code |
-| NSA—Native Sparse Attention | compressed/block/token branches | learned hierarchical selection | yes | author experiments |
-| DSA—DeepSeek Sparse Attention | tokens | lightning indexer + top-$k$ core attention | continued training | official report, weights, kernels |
-| SubQ | claimed sparse architecture | limited public detail | not fully disclosed | developer claim |
+A window selects keys by distance. **Content-based selection** estimates relevance from query and key features. Given a selected set $I(q)$, the main attention operation is
 
-MoBA applies a mixture-of-experts style choice to attention blocks. NSA combines compressed global summaries, selective token access, and local context in a hardware-aware trainable design. Their speed and quality numbers belong to the reported experimental protocols. [MoBA](https://arxiv.org/abs/2502.13189), [NSA](https://arxiv.org/abs/2502.11089).
+$$O(q)=\operatorname{softmax}\left(qK_{I(q)}^\top/\sqrt{d_h}\right)V_{I(q)}.$$
 
-DeepSeek introduced DSA in DeepSeek-V3.2-Exp on 29 September 2025, after continued training from V3.1-Terminus. The release includes an indexer, sparse core attention, weights, a technical report, and key kernels. [Official release](https://api-docs.deepseek.com/news/news250929).
+This is exact attention on the selected subset, but generally differs from attention on every visible position. A cheaper selector can miss information the main operation needs.
 
-For partially disclosed systems, context length and company-provided asymptotic claims are not a substitute for an implementable architecture. The passport should mark such fields as developer-reported or undisclosed.
+| Mechanism | Selection unit | Rule and conditions |
+|---|---|---|
+| Fixed sparse mask | blocks or positions | Predetermined pattern; quality depends on the model and task |
+| MoBA — Mixture of Block Attention | K/V blocks | Query dot mean block key, followed by top-block selection |
+| NSA — Native Sparse Attention | compressed summaries, selected blocks, local window | Jointly trained branches designed for hardware execution |
+| DSA — DeepSeek Sparse Attention | tokens | A trained lightweight indexer followed by *top-k*: keep the $k$ highest-scoring positions |
 
-## 12. Level-one code: transparent SDPA, masks, and GQA
+**MoBA adds no separate trainable router parameters.** Its block score uses existing Q/K representations, whose projections learn with the model. The current block is always included with a causal mask; future blocks are excluded. Parameter-free gating does not guarantee that swapping attention in an arbitrary checkpoint preserves quality: the paper studies training and hybrid schedules. [MoBA, §2.2](https://arxiv.org/html/2502.13189v1).
 
-The NumPy implementation below is designed to be inspected and tested. It exposes shape contracts, grouping order, fully masked rows, initial real-token anchors, and a separate learned score sink. It is not a GPU kernel.
+**NSA** combines compression, block selection, and a local window. The compressed branch provides a coarse view, selected blocks supply detail, and the window covers nearby context. The branches learn together; reported gains belong to the authors' models and kernels. [NSA](https://arxiv.org/abs/2502.11089).
+
+**DSA** debuted in DeepSeek-V3.2-Exp on September 29, 2025 and continued in DeepSeek-V3.2. The indexer is a smaller relevance-scoring mechanism that proposes positions for the more expensive main attention. Its computation, memory, and training must be counted too. An indexer that scans every key may still perform quadratic prefill work, even when each comparison is cheap. [V3.2 technical report](https://arxiv.org/abs/2512.02556).
+
+For one query, $N$ keys, main comparison width $d$, and indexer width $r$, a simple two-stage dot-product count is $Nr+kd$. Relative to $Nd$, this is $r/d+k/N$, **not just $k/N$**. It still excludes indexer projections, top-k selection, softmax, value aggregation, and data movement. The project demo separates shortlist recall, final retrieval, and attention-output error.
+
+As of October 10, 2026, this direction also includes compressing several positions into one cache entry. DeepSeek-V4 combines **Compressed Sparse Attention (CSA)** and **Heavily Compressed Attention (HCA)**. The DeepSeek-V4.1-Flash report adds CSA2, cross-layer KV reuse, and FP4 caching. These combine storage, selection, and memory placement in new ways; our MLA byte counts do not transfer to them. A claim of subquadratic execution needs to cover the whole pipeline. [V4 developer model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash), [V4.1-Flash report](https://arxiv.org/abs/2609.19969).
+
+## 12. A transparent NumPy reference
+
+The reference uses an additive mask: 0 allows a pair and `-inf` forbids it. It makes shapes and empty-row behavior explicit on small inputs. Section 13 and the notebook add streaming execution and MLA experiments.
+
+**<strong>Open the SDPA and GQA implementation</strong>**
 
 ```python
+import math
 from typing import Literal
-
 import numpy as np
 
 EmptyRowPolicy = Literal["error", "zero"]
 
 def make_mask(n: int, window: int | None = None, n_sink: int = 0) -> np.ndarray:
-    """Additive causal mask [n, n]: 0 allows a pair and -inf forbids it."""
-    if n <= 0 or (window is not None and window <= 0):
-        raise ValueError("n and window must be positive")
-    if not 0 <= n_sink <= n or (n_sink and window is None):
-        raise ValueError("sink anchors require a finite window")
+    """Return an additive causal mask of shape [n, n].
 
-    i, j = np.arange(n)[:, None], np.arange(n)[None, :]
-    allowed = j <= i
+    Allowed entries are 0 and forbidden entries are -inf. `window` keeps only the
+    latest `window` causal keys; `n_sink` preserves initial real positions as StreamingLLM-style anchors.
+    """
+    if isinstance(n, bool) or not isinstance(n, int) or n <= 0:
+        raise ValueError("n must be positive")
+    if window is not None and (isinstance(window, bool) or not isinstance(window, int) or window <= 0):
+        raise ValueError("window must be positive")
+    if isinstance(n_sink, bool) or not isinstance(n_sink, int) or not 0 <= n_sink <= n:
+        raise ValueError("n_sink must satisfy 0 <= n_sink <= n")
+    if n_sink and window is None:
+        raise ValueError("n_sink is meaningful only together with a finite window")
+
+    query_pos = np.arange(n)[:, None]
+    key_pos = np.arange(n)[None, :]
+    allowed = key_pos <= query_pos
     if window is not None:
-        allowed &= (i - j) < window
-        allowed |= (j < n_sink) & (j <= i)
+        allowed &= (query_pos - key_pos) < window
+        allowed |= (key_pos < n_sink) & (key_pos <= query_pos)
     return np.where(allowed, 0.0, -np.inf)
 
-def sdpa(Q, K, V, mask=None, *, sink=None, empty_row: EmptyRowPolicy = "error"):
-    """Q [..., Tq, dk], K [..., Tk, dk], V [..., Tk, dv] -> [..., Tq, dv].
+def sdpa(
+    Q: np.ndarray,
+    K: np.ndarray,
+    V: np.ndarray,
+    mask: np.ndarray | None = None,
+    *,
+    sink: float | np.ndarray | None = None,
+    empty_row: EmptyRowPolicy = "error",
+    return_weights: bool = False,
+) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
+    """Compute transparent scaled dot-product attention.
 
-    A row with no legal key does not define a softmax. ``error`` exposes a broken mask;
-    ``zero`` explicitly returns a zero output for a padding row. A finite sink logit
-    provides legal support of its own while carrying a zero value vector.
+    Shapes:
+        Q [..., T_q, d_k], K [..., T_k, d_k], V [..., T_k, d_v].
+        `mask` must broadcast to [..., T_q, T_k]. A finite entry is an additive
+        bias; -inf forbids the key. A per-head sink should be reshaped so it
+        broadcasts to [..., T_q, 1].
+
+    `empty_row="error"` rejects a row with no key and no sink. `"zero"` returns
+    zero weights/output for that row, which is useful for explicit padding rows.
     """
     if empty_row not in {"error", "zero"}:
         raise ValueError("empty_row must be 'error' or 'zero'")
 
     Q, K, V = (np.asarray(x) for x in (Q, K, V))
-    if min(Q.ndim, K.ndim, V.ndim) < 2:
+    if min(Q.ndim, K.ndim, V.ndim) < 2 or any(0 in x.shape for x in (Q, K, V)):
         raise ValueError("Q, K, and V must each have at least two dimensions")
-    if Q.shape[-1] != K.shape[-1] or K.shape[-2] != V.shape[-2]:
-        raise ValueError("incompatible Q/K/V shapes")
+    if Q.shape[-1] != K.shape[-1]:
+        raise ValueError("Q and K must have the same d_k")
+    if K.shape[-2] != V.shape[-2]:
+        raise ValueError("K and V must have the same T_k")
     try:
         np.broadcast_shapes(Q.shape[:-2], K.shape[:-2], V.shape[:-2])
     except ValueError as exc:
@@ -578,11 +636,11 @@ def sdpa(Q, K, V, mask=None, *, sink=None, empty_row: EmptyRowPolicy = "error"):
     if not all(np.isfinite(x).all() for x in (Q, K, V)):
         raise ValueError("Q, K, and V must contain only finite values")
 
-    # Promote float16 inputs before matmul; widening only the destination would be too late
-    # if the dot product had already overflowed in float16.
+    # Keep float32/float64 inputs in their precision; integer examples become float64.
     dtype = np.result_type(Q.dtype, K.dtype, V.dtype, np.float32)
     Q, K, V = (x.astype(dtype, copy=False) for x in (Q, K, V))
-    scale = np.asarray(1.0 / np.sqrt(Q.shape[-1]), dtype=dtype)
+    d_k = Q.shape[-1]
+    scale = np.asarray(1.0 / math.sqrt(d_k), dtype=dtype)
     with np.errstate(over="ignore", invalid="ignore"):
         scores = (Q @ np.swapaxes(K, -1, -2)) * scale
     if not np.isfinite(scores).all():
@@ -591,143 +649,166 @@ def sdpa(Q, K, V, mask=None, *, sink=None, empty_row: EmptyRowPolicy = "error"):
     if mask is not None:
         mask = np.asarray(mask, dtype=dtype)
         if np.isnan(mask).any() or np.isposinf(mask).any():
-            raise ValueError("mask may contain finite bias and -inf, but not NaN/+inf")
+            raise ValueError("mask may contain finite biases and -inf, but not NaN/+inf")
         try:
             mask = np.broadcast_to(mask, scores.shape)
         except ValueError as exc:
-            raise ValueError("mask shape is not broadcast-compatible with scores") from exc
+            raise ValueError(f"mask shape {mask.shape} does not broadcast to {scores.shape}") from exc
+        finite_bias = np.isfinite(mask)
         with np.errstate(over="ignore", invalid="ignore"):
             scores = scores + mask
-        if np.isnan(scores).any() or np.isposinf(scores).any():
-            raise FloatingPointError("the finite mask bias overflowed; reduce its magnitude")
+        if np.any(finite_bias & ~np.isfinite(scores)):
+            raise FloatingPointError(
+                "adding the finite mask bias overflowed; reduce the bias magnitude"
+            )
 
     has_token = np.isfinite(scores).any(axis=-1, keepdims=True)
-    token_max = scores.max(axis=-1, keepdims=True)
-    if sink is None:
-        if empty_row == "error" and not has_token.all():
-            raise ValueError("fully masked attention row")
-        row_max = np.where(has_token, token_max, np.zeros_like(token_max))
-        sink_logits = None
-    else:
+    token_max = np.max(scores, axis=-1, keepdims=True)
+
+    sink_logits = None
+    if sink is not None:
         sink_logits = np.asarray(sink, dtype=dtype)
         if not np.isfinite(sink_logits).all():
             raise ValueError("sink logits must be finite")
         try:
             sink_logits = np.broadcast_to(sink_logits, token_max.shape)
         except ValueError as exc:
-            raise ValueError("sink shape is not broadcast-compatible with query rows") from exc
+            raise ValueError(
+                f"sink shape {sink_logits.shape} does not broadcast to {token_max.shape}"
+            ) from exc
         row_max = np.maximum(token_max, sink_logits)
+    else:
+        if empty_row == "error" and not has_token.all():
+            bad = np.argwhere(~has_token.squeeze(-1))
+            raise ValueError('Attention contains fully masked rows' + f": {bad[:8].tolist()}")
+        # A zero-policy row gets a harmless max of 0; all its exponentials stay 0.
+        row_max = np.where(has_token, token_max, np.zeros_like(token_max))
 
     token_exp = np.where(
         np.isfinite(scores), np.exp(scores - row_max), np.zeros_like(scores)
     )
     denominator = token_exp.sum(axis=-1, keepdims=True)
     if sink_logits is not None:
-        denominator += np.exp(sink_logits - row_max)  # normalized, never added to V
+        denominator += np.exp(sink_logits - row_max)
 
     weights = np.divide(
-        token_exp, denominator, out=np.zeros_like(token_exp), where=denominator > 0
+        token_exp,
+        denominator,
+        out=np.zeros_like(token_exp),
+        where=denominator > 0,
     )
-    return weights @ V
+    output = weights @ V
+    return (output, weights) if return_weights else output
 
-def gqa(Q, K, V, n_heads: int, n_kv_heads: int, mask=None):
-    """Educational GQA for 2D projections; returns [T, H*dv]."""
+def gqa(
+    Q: np.ndarray,
+    K: np.ndarray,
+    V: np.ndarray,
+    n_heads: int,
+    n_kv_heads: int,
+    mask: np.ndarray | None = None,
+) -> np.ndarray:
+    """Educational grouped-query attention for 2D projected sequences.
+
+    Q [T, H*d_k], K [T, H_kv*d_k], V [T, H_kv*d_v].
+    The output has shape [T, H*d_v].
+    """
     Q, K, V = (np.asarray(x) for x in (Q, K, V))
-    if any(x.ndim != 2 for x in (Q, K, V)):
+    if any(x.ndim != 2 or 0 in x.shape for x in (Q, K, V)):
         raise ValueError("GQA expects 2D projected sequences")
     if not (Q.shape[0] == K.shape[0] == V.shape[0]):
-        raise ValueError("Q, K, and V must have the same sequence length T")
-    if n_heads <= 0 or n_kv_heads <= 0 or n_heads % n_kv_heads:
+        raise ValueError("Q, K, and V must have the same sequence length")
+    if any(isinstance(h, bool) or not isinstance(h, int) or h <= 0 for h in (n_heads, n_kv_heads)) or n_heads % n_kv_heads:
         raise ValueError("n_heads must be a positive multiple of n_kv_heads")
-    if Q.shape[1] % n_heads or K.shape[1] % n_kv_heads or V.shape[1] % n_kv_heads:
-        raise ValueError("Q/K/V widths must divide their corresponding head counts")
+    if Q.shape[1] % n_heads:
+        raise ValueError("Q width must be divisible by n_heads")
+    if K.shape[1] % n_kv_heads or V.shape[1] % n_kv_heads:
+        raise ValueError("K/V widths must be divisible by n_kv_heads")
 
     T = Q.shape[0]
     d_k = Q.shape[1] // n_heads
     if K.shape[1] // n_kv_heads != d_k:
-        raise ValueError("query and key head dimensions must match")
+        raise ValueError("Q and K head dimensions must match")
     d_v = V.shape[1] // n_kv_heads
+
     q = Q.reshape(T, n_heads, d_k).transpose(1, 0, 2)
     k = K.reshape(T, n_kv_heads, d_k).transpose(1, 0, 2)
     v = V.reshape(T, n_kv_heads, d_v).transpose(1, 0, 2)
-    repeats = n_heads // n_kv_heads
-    # repeat gives [kv0, kv0, ..., kv1, kv1, ...], preserving each group.
-    k = np.repeat(k, repeats, axis=0)
-    v = np.repeat(v, repeats, axis=0)
+    group_size = n_heads // n_kv_heads
+    # repeat preserves groups [kv0, kv0, ..., kv1, kv1, ...].
+    k = np.repeat(k, group_size, axis=0)
+    v = np.repeat(v, group_size, axis=0)
     z = sdpa(q, k, v, mask)
     return z.transpose(1, 0, 2).reshape(T, n_heads * d_v)
 ```
 
-In this code, `n_sink` preserves initial **real** positions in a windowed mask. The `sink` argument to `sdpa` is a different object: a learned score without a value contribution.
+`n_sink` in `make_mask` retains initial real positions. `sink` in `sdpa` adds a logit with a zero value. The tests treat them separately.
 
-## 14. Reading the gpt-oss attention implementation
+## 14. Reading gpt-oss configuration and code
 
-The open reference code turns abstract fields into tensor operations.
+Use a reproducible external example: **gpt-oss-120b** configuration revision `b5c939de…` and the `openai/gpt-oss` reference code at `7b583341…`. The data notes provide full revisions and SHA-256 hashes. M5 owns its configuration snapshot, so edits to neighbouring modules cannot alter the experiment.
 
-**GQA.** Queries are reshaped to `[tokens, H_kv, H_q/H_kv, head_dim]`; K and V use `[tokens, H_kv, head_dim]`. The group ratio is therefore explicit in the layout.
+**Head grouping.** Queries have shape `[tokens, H_kv, H_q/H_kv, head_dim]`; keys and values have shape `[tokens, H_kv, head_dim]`. Here 64 query heads share eight K/V sets, eight queries per group.
 
-**Layer schedule.** Even-indexed layers apply a window of 128, while alternating layers use full attention. That schedule produces 18 local and 18 global layers.
+**Layer masks.** `AttentionBlock` gives even indices, starting at zero, a window of 128. Odd indices use full causal attention: 18 local and 18 full layers in the 36-layer model.
 
-**Learned sinks.** A scalar per query head is concatenated to the score matrix. Softmax includes it, but the final column is removed before the V product.
+**Learned sink.** Each query head has one scalar in `sinks`. The `sdpa` function appends it to the scores, normalizes the whole row, and removes the final column before multiplying by V. This implements §10. RoPE acts on Q/K before comparison.
 
-**RoPE.** Query and key are rotated before attention, using the positional geometry studied in Module 3.
+**What this code establishes.** The reference PyTorch function materializes a full score matrix and does not implement a bounded rolling KV cache. The mask tells us which keys a layer needs; the serving system must discard or reuse old storage. Thus **4.504 GiB is a K/V payload calculation assuming window-capped local storage**, not the measured peak allocation of this function. The notebook checks the configuration and arithmetic; a separate validator compares the sink/GQA formula with the pinned upstream function.
 
-![VIZ m4/09 — reading code and config](assets/modern-llms/en/module-04/m4_09_config_attention.svg)
+![VIZ m5/09 — from configuration to cache accounting](assets/modern-llms/en/module-04/m5_09_config_attention.svg)
+*Configuration supplies dimensions, code supplies grouping and masks, and the storage policy determines actual allocation.*
 
-## 15. A contemporary attention landscape with evidence labels
+## 15. The landscape on October 10, 2026
 
-The useful comparison is not a leaderboard of mechanisms. It is a record of what is stored, what is visible, and how we know.
+This table is a map of mechanisms. Examples identify a version or flag variation within a family. Sharing an attention label does not imply equal memory use or speed.
 
-| Family or work | Per-position state | Visible positions | Source type |
-|---|---|---|---|
-| Llama 3.x | GQA | full attention | open configuration/implementation |
-| Mistral 7B | GQA | sliding window | paper and open configuration |
-| DeepSeek-V2/V3 | MLA | full attention before later sparse variants | technical reports |
-| gpt-oss | GQA | alternating full/window-128 + learned sink | open code and configuration |
-| Gemma 2 | GQA | 1:1 local/global interleaving | official documentation |
-| Gemma 4 | hybrid state | local/global, final global | official model card/configuration |
-| MoBA | compatible KV geometry | selected blocks plus local context | paper and open code |
-| NSA | architecture-specific | compressed/selective/window branches | paper, author results |
-| DeepSeek-V3.2-Exp | MLA latent cache | DSA-selected tokens | official report, weights, kernels |
-| closed API model | undisclosed unless documented | undisclosed unless documented | context length is insufficient evidence |
+| Example | Retained representation | Visible positions and conditions |
+|---|---|---|
+| Llama 3.x | GQA | Full causal attention; head counts vary with model size |
+| Mistral-7B-v0.1 | GQA | Window 4096 throughout the stack; specific to this version |
+| gpt-oss-120b | GQA, eight KV heads | Alternating window-128 and full attention; learned sink |
+| Gemma 2 / Gemma 4 | Variant-dependent dimensions | Local and global layers; Gemma 4 ends with a global layer |
+| DeepSeek-V2/V3 | MLA | Shared latent and separate positional component |
+| DeepSeek-V3.2 | MLA plus DSA indexer | Main attention over selected tokens; include indexer costs |
+| DeepSeek-V4 / V4.1-Flash | Compressed entries; V4.1 also reuses KV across layers | Compression, selection, and local mechanisms combine; derive storage for the specific format |
+| FlashAttention-4 | Does not define a model's KV representation | Execution strategy; mask and precision support are kernel-dependent |
 
-Four axes remain independent:
+These rows draw on public configurations and reports: [Llama 3](https://arxiv.org/abs/2407.21783), [Mistral v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1/blob/main/config.json), [Gemma 2](https://arxiv.org/abs/2408.00118), [Gemma 4](https://ai.google.dev/gemma/docs/core/model_card_4). For gpt-oss see §14; for MLA, DSA, V4, and FlashAttention see §§7–11.
 
-1. the number and shape of cached coordinates;
-2. the layer schedule;
-3. the rule that selects positions;
-4. the kernel that executes the rule.
+When reading a new architecture, record **what is stored, how many positions each layer needs, how positions are selected, and how the computation runs**. Add numerical formats, sequence batch size, and cache placement. Context length then becomes part of a testable resource estimate.
 
-An advertised million-token context does not determine any of these by itself.
+## 16. Multimodal attention: where image information is stored
 
-## 16. Multimodal attention: where the visual state is paid for
+With **early fusion**, visual representations join the language decoder's sequence. Those positions inherit the decoder's attention mechanism and KV format.
 
-Early-fusion systems insert visual embeddings into the language sequence. Those positions then inherit the decoder's cache geometry. In a hypothetical all-full GQA decoder costing 72 KiB per token, 4,096 visual tokens would add
+Consider a hypothetical decoder with full attention in every layer and a K/V payload of 72 KiB per position. For one sequence, 4,096 additional visual positions require
 
-$$
-4096\cdot72\ \text{KiB}=288\ \text{MiB}
-$$
+$$4096\cdot72\text{ KiB}=288\text{ MiB}.$$
 
-of KV state. This is a neutral teaching scenario. Released gpt-oss models are text-only; there is no official `gpt-oss-multimodal` checkpoint behind the calculation.
+This counts only the added K/V, excluding weights, vision-encoder activations, and temporary arrays. Windowed layers require a separate count of visual positions still retained in each window.
 
-Cross-attention systems encode vision separately and let language layers query the resulting features. The visual encoder need not run again for every language layer. Still, each cross-attention layer may have its own K/V projections or cache, so the actual memory contract is architecture-dependent.
+With **cross-attention**, a vision encoder produces a separate feature sequence that language queries attend to. The encoder need not run again at every language layer. However, different cross-attention layers may project and cache their own visual K/V, so those costs must be counted separately.
 
-The connector therefore decides more than dimensional compatibility: it decides where visual tokens enter the attention state. Module 14 develops this design space in detail.
+The connection between modalities determines both projection shapes and where state is stored. Module 16 develops these architectures further.
 
 ## 19. Key takeaways
 
-![VIZ m4/10 — attention on one page](assets/modern-llms/en/module-04/m4_10_cheatsheet.svg)
+![VIZ m5/10 — attention on one page](assets/modern-llms/en/module-04/m5_10_cheatsheet.svg)
+*Four independent axes form an attention passport: cache geometry, layer schedule, position selection, and execution kernel.*
 
-- **Cache arithmetic is layer-specific.** $2LH_{kv}d_hb$ is an all-full formula; hybrid layouts must be summed by layer type.
+- **Cache arithmetic is layer-specific.** $2LH_{kv}d_hb$ counts bytes per retained position across identical layers; sum heterogeneous layers using their retained lengths.
 - **MQA and GQA reduce KV heads.** A common group ratio is not a universal quality optimum.
 - **MLA changes the cached object.** A raw element ratio and a paper's end-to-end cache reduction are different comparisons.
 - **FlashAttention does not linearize dense attention.** It eliminates the quadratic HBM intermediate and reduces IO.
-- **Windowed layers cap local state.** Depth creates possible long paths, not guaranteed global recall.
+- **Windowed layers permit bounded local state if storage is reused or evicted.** Depth creates possible long paths, not guaranteed global recall.
 - **Attention sink has two meanings.** Initial real-token sinks and learned score slots must be distinguished.
 - **Sparse attention selects positions.** Selection cost, training requirements, and evidence status matter as much as asymptotics.
 - **Context length is not an attention passport.** State, connectivity, dtype, workload, and implementation determine cost.
 
-## 20. Notebook and primary sources
+**Next: M6.** Attention mixes information across positions. We next examine how normalization, nonlinearities, and residual connections control its scale and transformation within a block.
+
+## 20. primary sources
 
 **Primary sources:**
 
@@ -742,10 +823,13 @@ The connector therefore decides more than dimensional compatibility: it decides 
 - MoBA — [arXiv:2502.13189](https://arxiv.org/abs/2502.13189)
 - NSA — [arXiv:2502.11089](https://arxiv.org/abs/2502.11089)
 - DSA / DeepSeek-V3.2-Exp — [official release](https://api-docs.deepseek.com/news/news250929)
+- DeepSeek-V3.2 — [technical report](https://arxiv.org/abs/2512.02556)
+- DeepSeek-V4 — [model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash)
+- DeepSeek-V4.1-Flash — [technical report](https://arxiv.org/abs/2609.19969)
 - gpt-oss — [official repository](https://github.com/openai/gpt-oss)
 
-**Further course connections.** KV paging, offloading, and prefill/decode disaggregation are developed in Module 9. Multimodal attention placement is developed in Module 14.
+**Further course connections.** KV paging, offloading, and prefill/decode disaggregation are developed in Module 10. Multimodal attention placement is developed in Module 16.
 
 ---
 
-*Landscape verified: 5 August 2026. Memory figures are reproducible calculations for stated layouts; external performance numbers retain their authors' hardware and protocol.*
+*Landscape verified: 10 October 2026. Memory figures are reproducible calculations for stated layouts; external performance numbers retain their authors' hardware and protocol.*

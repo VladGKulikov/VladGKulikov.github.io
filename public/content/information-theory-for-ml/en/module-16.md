@@ -1,5 +1,7 @@
 # Module 16. Course Reference Sheet
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 ## 16.1. Course Reference Sheet: Key Ideas and Formulas
 
 This is not another theory module. It is a working reference for three situations: recalling a definition, choosing the right information-theoretic object, and catching an overclaim before it turns into a modeling or experimental error.
@@ -143,13 +145,13 @@ Perplexity is a monotone re-expression of average NLL, not a separate measure of
 
 #### Softmax cross-entropy gradient
 
-If $q=\operatorname{softmax}(z)$ and $r$ is the target distribution, then
+If $q=\operatorname{softmax}(z)$, $r$ is the target distribution, and cross-entropy is measured in nats, then
 
 $$
 \boxed{\nabla_z\ell=q-r}.
 $$
 
-The model increases logits where target mass exceeds model mass and decreases them where it has allocated too much probability.
+For base $b$, the gradient is $(q-r)/\ln b$. The model increases logits where target mass exceeds model mass and decreases them where it has allocated too much probability.
 
 #### Do not conflate
 
@@ -227,6 +229,8 @@ This is an early instance of a recurring principle: processing can reorganize in
 
 ### 3. Mutual information: the value of an observation — M5
 
+The entropy-difference identities below are written for discrete variables with finite $H(Y)$. In general, MI is defined through KL, avoiding subtraction of infinities.
+
 $$
 \boxed{
 I(X;Y)
@@ -271,7 +275,7 @@ An encoder may make existing target information easier for a restricted classifi
 
 #### InfoNCE
 
-With one positive candidate and $N-1$ independent negatives,
+With a positive pair drawn from $P_{XY}$ and $N-1$ negatives drawn independently from $P_Y$, independently of the positive pair, the population bound is
 
 $$
 I(X;Y)
@@ -385,11 +389,13 @@ $$
 
 Reliable communication is asymptotically possible at $R<C$ and impossible with vanishing error at $R>C$.
 
-For joint source and channel coding with $\kappa$ channel uses per source symbol, separation requires
+For the standard asymptotic memoryless source-channel problem with $\kappa$ channel uses per source symbol, separation guarantees achievability in the interior region
 
 $$
 R(D)<\kappa C.
 $$
+
+The equality boundary requires separate analysis: the strict inequality is sufficient, not universally necessary.
 
 A context window, attention matrix, or hidden state is not automatically a channel capacity. Messages, admissible inputs, noise, cost, a unit of channel use, and an error criterion must first be defined.
 
@@ -408,7 +414,7 @@ q^*
 D_{\mathrm{KL}}(q\|m).
 $$
 
-The solution has the form
+For an interior solution under the conditions in §8.2, the exponential form follows; a boundary solution may require a parameter limit:
 
 $$
 \boxed{
@@ -611,7 +617,7 @@ Y_\gamma=\sqrt\gamma X+N,
 N\sim\mathcal N(0,1),
 $$
 
-mutual information in nats satisfies
+with $N\perp X$ and $\mathbb E[X^2]<\infty$, mutual information in nats satisfies
 
 $$
 \boxed{
@@ -667,7 +673,7 @@ A model pays both for its own description and for the data residual it fails to 
 
 ### 8. Comparing implicit distributions — M11
 
-The general $f$-divergence is
+For convex $f$ with $f(1)=0$ and $P\ll Q$, the $f$-divergence is
 
 $$
 D_f(P\|Q)
@@ -678,7 +684,7 @@ f\left(\frac{p(X)}{q(X)}\right)
 \right].
 $$
 
-With different convex generators it includes KL, total variation, $\chi^2$, squared Hellinger, and Jensen–Shannon.
+With different convex generators it includes KL, total variation, $\chi^2$, squared Hellinger, and Jensen–Shannon. Without absolute continuity, use the extension that includes the singular part (§11.2); the displayed expectation under $Q$ alone omits that contribution.
 
 #### Classifier-based density-ratio estimation
 
@@ -729,7 +735,7 @@ When supports are separated, KL and JS may provide poor optimization geometry. I
 
 #### PAC-Bayes-kl
 
-For bounded loss and a valid prior $P$ independent of the certification sample, with probability at least $1-\delta$,
+For loss $\ell\in[0,1]$, an i.i.d. certification sample of size $n\ge2$, and a prior $P$ independent of that sample, with probability at least $1-\delta$, simultaneously for all posteriors $Q$,
 
 $$
 \boxed{
@@ -869,7 +875,7 @@ $$
 X_t=\alpha_tX_0+\sigma_t\varepsilon,
 $$
 
-the MSE-optimal denoiser is the posterior mean:
+with $\varepsilon\sim\mathcal N(0,I)$, $\varepsilon\perp X_0$, $\sigma_t>0$, and $\mathbb E\|X_0\|^2<\infty$, the MSE-optimal denoiser is the posterior mean:
 
 $$
 f^*(x_t)=\mathbb E[X_0\mid X_t=x_t].
@@ -928,15 +934,15 @@ Fisher measures local statistical distinguishability; it does not turn globally 
 
 #### Natural gradient
 
-The locally steepest decrease under a small KL budget points along
+The natural gradient associated with a local KL budget is
 
 $$
 \widetilde\nabla_\theta L
 =
-G(\theta)^\dagger\nabla_\theta L.
+G(\theta)^{-1}\nabla_\theta L.
 $$
 
-This vector field is coordinate invariant to first order. A finite step, damping, and an approximate Fisher reintroduce implementation dependence.
+Descent uses its negative. Here $G$ is positive definite. In regular coordinates the vector field transforms invariantly, while a finite Euler step agrees only to first order. A singular $G$ requires working on the identifiable space: $G^\dagger\nabla L$ selects a coordinate-dependent representative, although compatible gradients may induce the same distributional motion. Damping and an approximate Fisher also depend on implementation.
 
 #### Two geometries
 

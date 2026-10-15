@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="584" viewBox="0 0 1100 584">
+<title>Position: reconstruct it from memory</title>
+<desc>Algebra, numerical execution, and model quality require separate checks.</desc>
+<rect width="1100" height="584" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Position: reconstruct it from memory</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Algebra, numerical execution, and model quality require separate checks.</text>
+<rect x="40.0" y="132" width="498.0" height="174" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Pure rotation</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">R<tspan font-size="13" baseline-shift="sub">m</tspan>ᵀ R<tspan font-size="13" baseline-shift="sub">n</tspan> = R<tspan font-size="13" baseline-shift="sub">n−m</tspan></text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Norms are preserved; fixed q/k.</text>
+<rect x="562.0" y="132" width="498.0" height="174" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Spectrum</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">θ<tspan font-size="13" baseline-shift="sub">i</tspan> = base<tspan font-size="13" baseline-shift="super">−2i/D</tspan></text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">λ<tspan font-size="13" baseline-shift="sub">i</tspan> = 2π / θ<tspan font-size="13" baseline-shift="sub">i</tspan></text>
+<text x="586.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">One wavelength does not bound context.</text>
+<rect x="40.0" y="330" width="498.0" height="174" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Extension</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">PI · NTK-aware · YaRN</text>
+<text x="64.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Geometry and quality are separate.</text>
+<text x="64.0" y="465" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Scaling all of Q/K by a gives a² in scores.</text>
+<rect x="562.0" y="330" width="498.0" height="174" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Implementation</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Pair layout and cache IDs agree.</text>
+<text x="586.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Phases use at least FP32.</text>
+<text x="586.0" y="465" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">ALiBi does not replace a causal mask.</text>
+<text x="40" y="545" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Checks: common shift; full versus cached attention; text M-RoPE = 1D.</text>
+</svg>

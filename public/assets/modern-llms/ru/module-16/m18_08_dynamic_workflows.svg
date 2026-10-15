@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="694" viewBox="0 0 1100 694">
+<title>Делегирование не устраняет последовательную работу</title>
+<desc>Учебное расписание: 20 исполнителей, 400 минут делимой работы.</desc>
+<rect width="1100" height="694" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Делегирование не устраняет последовательную работу</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Учебное расписание: 20 исполнителей, 400 минут делимой работы.</text>
+<rect x="40" y="202" width="260" height="150" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="240" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">План: 5 мин</text>
+<text x="60" y="279" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Разделить входы и</text>
+<text x="60" y="304" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">критерии</text>
+<rect x="410" y="132" width="280" height="130" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="430" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Ветка 1</text>
+<text x="430" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">20 минут работы</text>
+<rect x="410" y="312" width="280" height="130" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="430" y="350" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Ветки 2…20</text>
+<text x="430" y="389" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Независимые</text>
+<text x="430" y="414" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">результаты</text>
+<rect x="800" y="202" width="260" height="150" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="820" y="240" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Слияние: 20 мин</text>
+<text x="820" y="279" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Проверка общего</text>
+<text x="820" y="304" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">результата</text>
+<path d="M305,277 L400,197" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M695,197 L790,277" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M305,277 L400,377" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M695,377 L790,277" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="150" y="497" width="800" height="130" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="170" y="535" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Критический путь: 45 мин</text>
+<text x="170" y="574" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">400/45 = 8,89; 425/45 = 9,44. Контексты: 73,24 GiB без общих блоков KV.</text>
+</svg>

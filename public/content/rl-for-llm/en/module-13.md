@@ -1,5 +1,7 @@
 # Module 13. Evaluating RL systems for LLMs: statistics, reward hacking, and safety
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.25  
 > **Factual snapshot:** 2026-08-06  
 > **Language:** EN  
@@ -40,7 +42,7 @@ After completing the module, you will be able to:
 19. choose among `lm-evaluation-harness`, Inspect, HELM, and custom code by contract;
 20. write an honest final report and move into one of the course capstones.
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable evaluation practice follow this lecture. The explanation here remains self-contained. Verified claims and their inference boundaries are documented in the [English claim and source registry](Module_13_Sources_EN.md).
+> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable evaluation practice follow this lecture. The explanation here remains self-contained. Verified claims and their inference boundaries are documented in the [English claim and source registry](module-13.md).
 
 ---
 
@@ -86,7 +88,7 @@ where $M$ is the model and tokenizer; $P$ is the system message and chat templat
 
 This does not prevent checkpoint comparisons. It means the remaining components must be held fixed when the question is about checkpoints. If the question is whether a system can close a ticket end to end, the scaffold is part of the evaluated object and should vary with the system.
 
-> **Further context:** *Modern LLMs*, Module 17 “Evaluating Modern LLMs” (`modern_llms.module_17_evaluation`) provides the broader benchmark landscape and a detailed treatment of scaffold-sensitive evaluation. This module focuses on what happens under statistical and optimization pressure.
+> **Further context:** *Modern LLMs*, Module 19 “Evaluating Modern LLM Systems: From Benchmarks to Decisions” (`modern_llms.module_17_evaluation`) provides the broader benchmark landscape and a detailed treatment of scaffold-sensitive evaluation. This module focuses on what happens under statistical and optimization pressure.
 
 ---
 
@@ -317,7 +319,7 @@ $$
 
 It declines, but the rate depends on task difficulty. Hard tasks with small $p$ may benefit from additional attempts for longer.
 
-Real completions are often correlated. Similar prompts and nearby seeds produce similar errors, so the independent-attempt formula can overstate the gain from diversity. Measure pass@k on actual candidates and, when important, report error correlation or diversity.
+Independence is conditional on a fixed prompt and sampling protocol. Similar outputs or numerically nearby seeds do not by themselves demonstrate dependence: independent draws from a concentrated distribution often repeat. Reused random prefixes, shared search branches, or correlated sampling can violate the assumption; pooling tasks with different success probabilities also invalidates substitution of one mean p into the formula. Estimate pass@k from the actual candidate groups and preserve the prompt as the analysis unit; report diversity as a separate diagnostic.
 
 pass@k is also not calibration. A system can have high coverage while being unable to recognize its successful answer. This matters whenever the user receives only one response.
 
@@ -351,7 +353,7 @@ As of the snapshot date, useful evaluation families include:
 
 SWE-bench Verified is a human-validated 500-task subset, but a score still depends on the agent and execution environment. BFCL V4 currently covers agentic components in addition to function-call syntax. These are dated properties of particular releases, not timeless definitions.
 
-The broader benchmark catalog belongs to *Modern LLMs*, Module 17 “Evaluating Modern LLMs” (`modern_llms.module_17_evaluation`). The local rule is enough: select a benchmark by target behavior and measurement risk, not by name recognition.
+The broader benchmark catalog belongs to *Modern LLMs*, Module 19 “Evaluating Modern LLM Systems: From Benchmarks to Decisions” (`modern_llms.module_17_evaluation`). The local rule is enough: select a benchmark by target behavior and measurement risk, not by name recognition.
 
 ---
 
@@ -815,7 +817,7 @@ Recommended structure:
 9. incidents where the metric disagreed with audit;
 10. explicit non-claims.
 
-Do not rank systems by a third decimal place when intervals and paired differences cannot distinguish them. The honest conclusion may be “equivalent at the resolution of this test” or “insufficient evidence.”
+Do not rank systems by a third decimal place when intervals and paired differences cannot distinguish them. The honest conclusion is “insufficient evidence to detect a difference.” Equivalence requires a predeclared acceptable difference margin and a separate test against that margin.
 
 A public table should have a machine-readable `results.json` and a human-readable `report.md`. A table without configuration quickly becomes indistinguishable from marketing.
 
@@ -854,7 +856,7 @@ The module already provides the main anchors:
 - optimization pressure in Step 13.3.4;
 - the passport in Step 13.4.1.
 
-The project should include an experiment with a known expected direction, such as a weaker and stronger checkpoint from one family on a task that actually discriminates between them. If the harness cannot detect the expected gap, investigate sample power, judge quality, and protocol before launching a large red-team.
+Include a positive control whose expected direction has been established independently: for example, verified correct answers and deliberately degraded variants, as specified in B5. If the harness cannot distinguish these controls, investigate sample power, judge quality, and protocol before launching a large red-team. Comparing real checkpoints remains an empirical question: model size or membership in one family does not guarantee a quality ordering on the chosen task.
 
 GO/NO-GO before scale-up:
 
@@ -909,4 +911,4 @@ Practice is optional for formal reading, but it is what turns formulas into the 
 - [Inspect AI](https://inspect.aisi.org.uk/) — the official `dataset + solver + scorer` task model and evaluation logs for complex scenarios.
 - [HELM](https://crfm.stanford.edu/helm/) — transparent scenarios and multidimensional evaluation; a framework does not replace a product threat model.
 
-The [English claim and source registry](Module_13_Sources_EN.md) contains the complete claim map, inference boundaries, and status of the course’s own experiments.
+The [English claim and source registry](module-13.md) contains the complete claim map, inference boundaries, and status of the course’s own experiments.

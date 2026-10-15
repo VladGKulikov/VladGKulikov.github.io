@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="778" viewBox="0 0 1100 778">
+<title>Several axes, one rotation mechanism</title>
+<desc>Sectioned M-RoPE example: four frequency pairs, sections (2,1,1).</desc>
+<rect width="1100" height="778" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Several axes, one rotation mechanism</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Sectioned M-RoPE example: four frequency pairs, sections (2,1,1).</text>
+<rect x="40" y="132" width="240" height="142" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64" y="172" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Pair 0 → t</text>
+<text x="64" y="211" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Angle:</text>
+<text x="64" y="236" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">axis ID × θ<tspan font-size="13" baseline-shift="sub">i</tspan></text>
+<rect x="300" y="132" width="240" height="142" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="324" y="172" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Pair 1 → t</text>
+<text x="324" y="211" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Angle:</text>
+<text x="324" y="236" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">axis ID × θ<tspan font-size="13" baseline-shift="sub">i</tspan></text>
+<rect x="560" y="132" width="240" height="142" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="584" y="172" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Pair 2 → h</text>
+<text x="584" y="211" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Angle:</text>
+<text x="584" y="236" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">axis ID × θ<tspan font-size="13" baseline-shift="sub">i</tspan></text>
+<rect x="820" y="132" width="240" height="142" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="844" y="172" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Pair 3 → w</text>
+<text x="844" y="211" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Angle:</text>
+<text x="844" y="236" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">axis ID × θ<tspan font-size="13" baseline-shift="sub">i</tspan></text>
+<rect x="40" y="307" width="498" height="145" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64" y="347" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Text: (m,m,m)</text>
+<text x="64" y="386" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Every pair receives the same position.</text>
+<text x="64" y="411" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">The result matches 1D RoPE.</text>
+<rect x="562" y="307" width="498" height="145" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586" y="347" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Image: (t₀,h,w)</text>
+<text x="586" y="386" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">t₀ stays fixed; h and w vary.</text>
+<rect x="260" y="488" width="280" height="76" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="284" y="528" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">(0,0,0)</text>
+<rect x="560" y="488" width="280" height="76" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="584" y="528" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">(0,0,1)</text>
+<rect x="260" y="583" width="280" height="76" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="284" y="623" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">(0,1,0)</text>
+<rect x="560" y="583" width="280" height="76" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="584" y="623" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">(0,1,1)</text>
+<text x="40" y="715" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Qwen3-VL interleaves axis assignments across frequencies. This is separate from adjacent or split-half coordinate</text>
+<text x="40" y="739" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">pairing.</text>
+</svg>

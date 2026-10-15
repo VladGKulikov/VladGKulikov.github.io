@@ -1,5 +1,7 @@
 # Module 14. Computer Vision Through Information Theory
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** This is a bonus module for readers working with images, multimodal models, and deployed computer-vision systems. The main route is Sections 14.1–14.8. It begins with the most literal connection to information theory—compressing an image into an actual bitstream—and then moves to perceptual quality, diffusion models, CLIP, self-supervised visual representation learning, and compression of the model itself. Section 14.9 is optional mathematical deepening on exact rate accounting in a hyperprior codec and Gaussian denoising identities.
 
 ## 14.1. Why computer vision is a useful testbed for information theory

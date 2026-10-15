@@ -1,5 +1,7 @@
 # Module 10. Search, verification, and test-time compute
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.22  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
@@ -43,8 +45,6 @@ After completing the module, you will be able to:
 12. compare fixed training cost with higher per-query inference cost;
 13. run deterministic CPU experiments and prepare an optional small open-model demonstration.
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable practice follow this lecture. The explanation here remains self-contained. Verified claims and their inference boundaries are documented in the [English claim and source registry](Module_10_Sources_EN.md).
-
 ---
 
 ## Lesson 10.1. What scales at generation time
@@ -52,7 +52,7 @@ After completing the module, you will be able to:
 > **Lesson 10.1. What scales at generation time**
 >
 > 1. Frozen weights, a different answer algorithm
-> 2. Four different notions of budget
+> 2. Units and definitions of compute budget
 > 3. Parallel and sequential scaling are different interventions
 > 4. Search adds states and a backup rule
 > 5. Write the evaluation contract first
@@ -76,7 +76,7 @@ More compute is not an objective by itself. A valid experiment must first define
 
 ---
 
-### Step 10.1.2 — Four different notions of budget
+### Step 10.1.2 — Units and definitions of compute budget
 
 “Four times more compute” is not a reproducible specification. A budget can mean:
 
@@ -167,7 +167,7 @@ Before the first run, fix:
 
 Otherwise different tasks can be compared under one budget label. pass@32 measures whether a success exists. self-consistency@32 measures a voting rule. Best-of-32 measures a particular ranker. The shared number 32 does not make the metrics interchangeable.
 
-> **Extension:** *Modern LLMs*, Module 13 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`), provides the broader history of reasoning models and product interfaces. This module owns the exact selection and cost mechanics.
+> **Extension:** *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`), provides the broader history of reasoning models and product interfaces. This module owns the exact selection and cost mechanics.
 
 ---
 
@@ -440,7 +440,7 @@ $$
 \hat i=\arg\max_i s_i.
 $$
 
-Even when $\varepsilon_i$ has zero mean for a random candidate, the winning error is biased upward: maximization selects both high utility and lucky positive error. This is proxy overoptimization or a winner's-curse effect.
+Zero unconditional mean of $\varepsilon_i$ alone does not imply positive mean error for the selected candidate: the joint distribution of utility and error matters. With independent, nondegenerate additive evaluator noise independent of candidate utilities, maximization favors favorable noise as well as utility. This winner's-curse mechanism can cause proxy overoptimization; without those assumptions, the sign is not guaranteed.
 
 In the module's synthetic experiment, the proxy score rises for every larger $N$, while the independent goal peaks at $N=32$ and then falls.
 
@@ -808,7 +808,7 @@ This module stayed within one prompt and a controlled reasoning tree. Module 11 
 
 ## Sources and reading route
 
-The following primary sources support the module’s main external claims. Course-derived formulas, exact calculations, and synthetic results are documented in the [English claim and source registry](Module_10_Sources_EN.md).
+The following primary sources support the module’s main external claims. Course-derived formulas, exact calculations, and synthetic results are documented in the [English claim and source registry](module-10.md).
 
 - [Wang et al., *Self-Consistency Improves Chain of Thought Reasoning in Language Models*](https://arxiv.org/abs/2203.11171) — the original multiple-trajectory and answer-aggregation protocol. It reports gains on selected tasks, not a guarantee under a dominant systematic error.
 - [Chen et al., *Evaluating Large Language Models Trained on Code*](https://arxiv.org/abs/2107.03374) — HumanEval and the finite-sample `pass@k` estimator. The expression belongs to a defined sampling and verification protocol.
@@ -832,8 +832,8 @@ The following primary sources support the module’s main external claims. Cours
 - Module 9 “RLVR and GRPO: verifiable rewards, group-relative estimates, and stability” (`rl_llm.module_09_rlvr_grpo`): verifier contracts, process feedback, and rollout cost.
 - *Information Theory for ML*, Module 2 “Entropy” (`it_ml.module_02_entropy`): candidate-distribution entropy and limits of diversity metrics.
 - *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`): logarithmic scores, KL, and distribution comparison.
-- *Modern LLMs*, Module 9 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`): engineering decoding modes, latency, and serving.
-- *Modern LLMs*, Module 13 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`): the broader landscape of reasoning models and current interfaces.
+- *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`): engineering decoding modes, latency, and serving.
+- *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`): the broader landscape of reasoning models and current interfaces.
 
 ## Key takeaways
 

@@ -1,40 +1,42 @@
-# Module 5. Normalization, activations, and the anatomy of a Transformer block
+# Module 6. Normalization, activations, and the anatomy of a Transformer block
 
-*Modern LLMs · Module 5 lecture · edition 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module does.** Attention moves information across positions, but a Transformer block is held together by a different set of mechanisms: the residual stream, normalization placement, and the feed-forward network. We will treat them as one system. The route starts with the optimization geometry of Post-LN and Pre-LN, moves through RMSNorm and query/key stabilization, derives the parameter cost of gated FFNs, and reconstructs every parameter of Llama-3.1-8B. The last part separates two research directions that are often conflated: element-wise replacements for normalization, such as DyT, and architectural changes to residual mixing, such as mHC.
->
-> **Prerequisites.** Modules 1–4, especially projection shapes and Grouped-Query Attention. All normalization and activation definitions used below are introduced locally.
+*Modern LLMs · revised October 11, 2026*
 
----
+Attention lets tokens exchange information. To turn it into a useful block, we also need a state that persists between layers, a way to control numerical scale, and a network that transforms each token's features. This module puts those pieces together and accounts for their parameters.
 
-## 1. Why the quiet fields in a configuration matter
+**Before you start.** You need projections and residual connections from M3, and attention heads and GQA from M5. Equations use column vectors; NumPy stores tokens as rows, so projection matrices multiply on the right.
 
-A model configuration contains fields that rarely appear in benchmark tables: `rms_norm_eps`, `intermediate_size`, or `swiglu_limit`. They are easy to ignore because none of them sounds like a headline architectural idea. Yet each field changes a different part of the block contract.
+**Reading routes**
 
-Normalization controls the scale at which sublayers read the residual stream. The intermediate width determines most of the parameter mass of a dense block. An activation clamp changes the function the checkpoint was trained to compute. These choices usually fail quietly: rather than producing an immediate exception, a wrong implementation changes activation statistics, gradients, or the model's exact logits.
+- **First pass:** §1 → §§4–10, skipping expandable implementations → §§14–15 → §20. Check Q1–Q6 in §18 and E1–E3 in §19; Q7 and E7 depend on the mHC discussion in §12 and belong to a return visit. Follow the shapes in §10 to the model total. This route prepares you for M7.
+- **Second pass:** bridges B07/B08 in §§5/9, code in §13, and the notebook. Test reduction axes, near-zero inputs, low precision, and gradients; solve exercises 1–3 and 6–7.
+- **Reference pass:** §§2–3 give history and classical connections; §§11–12 introduce element-wise alternatives and multiple streams; §§16–17 help you inspect real architectures. Projects 4–5 extend the experiments.
 
-Three numerical examples will keep the discussion grounded. A shared-weight linear stack shows how norm placement changes forward-scale dynamics. A parameter ledger separates the $13d^2$ matrix estimate from the complete $13d^2+2d$ Llama block. Finally, the public gpt-oss activation gives us a real example of a trained, clamped SwiGLU variant.
+## 1. The three jobs surrounding attention
 
-## 2. The historical problem was not “which norm wins?”
+At each token position, the block receives a state $h\in\mathbb R^d$. The model width $d$ is the number of features in that state. A **residual stream** carries it through successive layers. Each residual connection adds a learned update of the same shape: $h+F(h)$.
 
-![VIZ m5/01 — evolution of the block](assets/modern-llms/en/module-05/m5_01_block_bus.svg)
+Attention reads across positions. The **feed-forward network (FFN)** transforms each position separately, sharing its weights across tokens. Normalization controls the scale at which these operations read or write features. Neither an FFN nor a normalizer moves a token to a different position.
 
-Layer Normalization was introduced for sequence models in 2016 and became part of the original Transformer as Post-LN:
+We measure scale using the root mean square:
 
-$$x_{l+1}=\operatorname{LN}(x_l+F_l(x_l)).$$
+$$\operatorname{RMS}(h)=\sqrt{\frac1d\sum_{i=1}^d h_i^2}.$$
 
-Pre-LN later moved normalization inside the residual branch:
+The vector $(1,-1)$ has mean zero but RMS one. Squaring prevents opposite signs from hiding the size of the coordinates.
 
-$$x_{l+1}=x_l+F_l(\operatorname{LN}(x_l)).$$
+Three questions guide the module: what transformation does a norm perform, where does it sit relative to residual addition, and what does a gated FFN cost? A four-coordinate example, a 36-step linear stack, and the Llama-3.1-8B parameter ledger will make the answers concrete.
 
-The difference is not cosmetic. Xiong et al. showed that, at initialization, Post-LN can produce large expected gradients near the output layers; warmup mitigates the instability caused by applying a large learning rate there. Their Pre-LN analysis gives better-behaved initial gradients and supported training without warmup in the reported experiments. It does not imply that every Post-LN run without warmup must diverge.
+## 2. How the block evolved
 
-RMSNorm simplified the normalizer by removing recentering. Its original experiments reported comparable quality and 7–64% runtime reductions across the tested systems. Modern fused implementations reduce the end-to-end advantage, but RMSNorm remains attractive because its contract is simple and robust.
+This historical section is optional on a first reading. The equations for the named designs follow in §§5–12.
 
-A separate line changed the FFN. GLU variants turned the intermediate transformation into a product of two learned branches; SwiGLU became a common choice in large decoders.
+LayerNorm (2016) normalized an example's features without collecting batch statistics. The original Transformer placed it after the residual addition: **Post-LN**. Moving it to the sublayer input gives **Pre-LN**. Xiong et al. connected the resulting initial gradient behavior to learning-rate warmup in their setting. Their findings do not prohibit every Post-LN training run without warmup. [Paper](https://arxiv.org/abs/2002.04745).
 
-The later normalization literature branches again. DeepNorm modifies residual scaling and initialization for very deep Post-LN models. Peri-LN normalizes both the sublayer input and its output contribution. OLMo2 uses post-sublayer normalization inside the residual branch, without a matching pre-normalizer. DyT removes the feature reduction entirely, while mHC changes the topology of residual mixing. These methods solve related but non-identical problems.
+RMSNorm (2019) removed mean subtraction. Its authors reported comparable quality and runtime reductions of 7–64% across their tested systems. That range is not an estimate for a current decoder: the saving depends on the workload and implementation. [RMSNorm](https://arxiv.org/abs/1910.07467).
+
+GLU variants introduced two FFN projections whose outputs multiply. DeepNorm changed residual scaling and initialization for deep networks. Peri-LN places norms on both sides of a sublayer; OLMo2 normalizes its output before addition. DyT and DyISRU investigate element-wise alternatives to feature normalization, while mHC changes connections between residual streams. These choices affect different parts of the graph and can coexist.
 
 ## 3. Three useful classical analogies
 
@@ -46,55 +48,62 @@ $$h_{l+1}=h_l+F_l(h_l).$$
 
 This viewpoint is useful for asking how large an update is and how errors accumulate with depth. It is not an exact continuous-time model because the functions change from layer to layer and the step size need not be small.
 
-Gated FFNs illustrate a third idea: multiplicative interaction. Two separately learned projections are multiplied element-wise, so the input controls both what is represented and how strongly it passes. This is more expressive than applying a fixed pointwise nonlinearity to a single projection, although it costs an extra matrix.
+Gated FFNs illustrate a third idea: multiplicative interaction. Two separately learned projections are multiplied element-wise, so the input controls both what is represented and how strongly it passes. Without a nonlinearity, the product of two linear projections would be quadratic in the input. A SiLU gate makes this a nonlinear, input-dependent interaction; its cost includes a third projection. This explains the mechanism without assuming a universal advantage at every width or parameter budget.
 
-## 4. The residual stream and what the identity path actually guarantees
+## 4. A block makes two successive residual updates
 
-A Pre-LN decoder block can be written as
+In Pre-LN, attention reads a normalized state. The FFN then reads the state **after** the attention update:
 
-$$\tilde h=h+\operatorname{Attn}(N_1(h)),$$
+$$\tilde h_l=h_l+\operatorname{Attn}(N_{l,1}(h_l)),$$
+$$h_{l+1}=\tilde h_l+\operatorname{FFN}(N_{l,2}(\tilde h_l)).$$
 
-$$h^+=\tilde h+\operatorname{FFN}(N_2(\tilde h)).$$
+Here $l$ identifies the layer, and $N_{l,1},N_{l,2}$ are its two normalizers. Attention and FFN are sequential branches, not two independent functions of the original $h_l$.
 
-The residual stream is the shared state vector of width $d_{\text{model}}$. Attention and the FFN read normalized versions of that state and contribute updates through their output projections.
+![VIZ m6/01 — Attention updates the state first; the FFN reads that updated state.](assets/modern-llms/en/module-05/m6_01_block_bus.svg)
+*Attention updates the state first; the FFN reads that updated state.*
 
-For one residual step,
+For a vector-valued function, the **Jacobian** collects all partial derivatives: its entry $J_{ij}$ tells us how output coordinate $i$ changes when input coordinate $j$ changes. With $h,F(h)\in\mathbb R^d$, this is a $d\times d$ matrix. Differentiating a residual step $h^+=h+F(h)$ gives $J=I+J_F(h)$, where $I$ is the identity matrix and $J_F$ is the branch Jacobian. This direct path is useful, but the sum need not be well conditioned. Taking $F(h)=-h$ gives $J=0$. Nor does a bypass make a trained branch disposable. Removing it changes a learned function and requires a quality check.
 
-$$\frac{\partial h^+}{\partial h}=I+\frac{\partial F}{\partial h}.$$
+## 5. What LayerNorm and RMSNorm compute
 
-The identity term is valuable: it provides a direct path for activations and gradients. It does not prove that an arbitrary trained layer is expendable. A block may learn an essential transformation, so pruning or early exit still requires measurement or special training.
+For a token vector $x\in\mathbb R^d$, define its feature mean and variance:
 
-This distinction matters because architecture and learned function are different claims. The graph contains a bypass; the trained model decides how much it relies on the branch.
+$$\mu=\frac1d\sum_i x_i,\qquad \sigma^2=\frac1d\sum_i(x_i-\mu)^2.$$
 
-## 5. LayerNorm and RMSNorm side by side
-
-LayerNorm computes
+Computing one statistic from several coordinates is a **reduction**. The divisor is $d$, not the $d-1$ sample-variance correction. The two norms are
 
 $$\operatorname{LN}(x)_i=\gamma_i\frac{x_i-\mu}{\sqrt{\sigma^2+\epsilon}}+\beta_i,$$
-
-whereas RMSNorm uses
-
 $$\operatorname{RMSNorm}(x)_i=\gamma_i\frac{x_i}{\sqrt{d^{-1}\sum_jx_j^2+\epsilon}}.$$
 
-For $x=(2,-1,3,0)$ with unit scales, LayerNorm produces approximately
+The learned vectors $\gamma,\beta$ rescale and shift features; $\epsilon>0$ keeps the denominator away from zero. Our RMSNorm definition has a scale and no bias. Both reductions operate on features of one token, not across tokens or the batch.
 
-$$(0.632,-1.265,1.265,-0.632),$$
+For $x=(2,-1,3,0)$, $\gamma=1$, $\beta=0$, and $\epsilon=10^{-6}$, we have $\mu=1$, $\sigma^2=2.5$, and $\operatorname{RMS}(x)=\sqrt{3.5}$. The outputs are approximately
 
-and RMSNorm produces
+$$\operatorname{LN}(x)=(0.632,-1.265,1.265,-0.632),$$
+$$\operatorname{RMSNorm}(x)=(1.069,-0.535,1.604,0).$$
 
-$$(1.069,-0.535,1.604,0).$$
+Before its learned scale, RMSNorm preserves signs and coordinate ratios but does not enforce zero mean. A constant nonzero vector distinguishes the norms: centered LayerNorm returns zero before its affine step, whereas RMSNorm does not.
 
-The latter preserves signs and coordinate ratios before the learned scale, but it does not enforce zero mean. RMSNorm's success is an empirical statement about the tested architectures, not a proof that recentering is always redundant.
+### Epsilon matters near zero
 
-### Epsilon as a gain limit
+Before multiplication by $\gamma$, the normalization gain is at most $1/\sqrt\epsilon$. At input RMS $10^{-3}$ it is 707.1 with $\epsilon=10^{-6}$ and 301.5 with $10^{-5}$. This bounds the multiplier, not all learned output coordinates.
 
-If the RMS of the input approaches zero, the largest possible normalization multiplier is $1/\sqrt\epsilon$. At input RMS $10^{-3}$, the multipliers are about 707 for $\epsilon=10^{-6}$ and 302 for $10^{-5}$.
+Exact invariance to positive scaling requires $\epsilon=0$ and a nonzero vector. With fixed positive epsilon,
 
-Choosing epsilon is not a one-line consequence of machine epsilon. It depends on reduction precision, activation scale, the kernel, and how much amplification is acceptable on near-degenerate states. Many reference implementations accumulate RMS statistics in fp32, including the public gpt-oss PyTorch code, but fused kernels may use other accumulation strategies.
+$$
+\frac{cx}{\sqrt{c^2\operatorname{RMS}(x)^2+\epsilon}}
+=\frac{x}{\sqrt{\operatorname{RMS}(x)^2+\epsilon/c^2}},\qquad c>0.
+$$
+
+Approximate invariance requires both $\operatorname{mean}(x^2)\gg\epsilon$ and $c^2\operatorname{mean}(x^2)\gg\epsilon$. A very small positive $c$ can violate the second condition even when the original input is large. The notebook includes a near-zero counterexample.
+
+FP16 squaring can overflow or underflow **before** reduction. Promoting only the mean cannot restore lost information; promote the input before squaring. Our bridge works in at least FP32 and preserves FP64 inputs. A model implementation may choose a different contract: gpt-oss explicitly uses FP32.
+
+**<strong>Second pass: RMSNorm from NumPy to PyTorch, including gradients</strong>**
 
 ### NumPy → PyTorch · B07 — RMSNorm: reduction, dtype, and autograd
 
-NumPy exposes the mean-square reduction. PyTorch adds autograd, device/dtype semantics, and the possibility of a fused kernel.
+Compare finite floating inputs `[..., D]`, `D>0`, and an optional weight `[D]`, with finite `eps>0`. API comparisons use a common floating dtype and device for input and weight. Squares, their sum, and the output must fit the working format; merely being finite in FP64 does not ensure this. NumPy exposes the reduction, while PyTorch adds autograd.
 
 ```python
 import numpy as np
@@ -107,14 +116,14 @@ import torch.nn.functional as F
 ```python
 def numpy_rms_norm(x: np.ndarray, weight: np.ndarray | None = None, *, eps: float = 1e-6) -> np.ndarray:
     x = np.asarray(x)
-    if x.ndim == 0 or not np.isfinite(x).all() or not np.isfinite(eps) or eps <= 0:
+    if x.ndim == 0 or x.shape[-1] == 0 or not np.isfinite(x).all() or not np.isfinite(eps) or eps <= 0:
         raise ValueError("x must be finite and eps positive")
     work = x.astype(np.float64, copy=False)
     y = work / np.sqrt(np.mean(work * work, axis=-1, keepdims=True) + eps)
     if weight is not None:
         w = np.asarray(weight, dtype=np.float64)
-        if w.shape != (x.shape[-1],):
-            raise ValueError("weight must have shape [D]")
+        if w.shape != (x.shape[-1],) or not np.isfinite(w).all():
+            raise ValueError("weight must be finite with shape [D]")
         y = y * w
     return y.astype(x.dtype, copy=False) if np.issubdtype(x.dtype, np.floating) else y
 ```
@@ -130,12 +139,21 @@ def torch_rms_norm_explicit(
     *,
     eps: float = 1e-6,
 ) -> torch.Tensor:
-    rms_inv = torch.rsqrt(x.square().mean(dim=-1, keepdim=True) + eps)
-    y = x * rms_inv
-    return y if weight is None else y * weight
+    if not x.is_floating_point() or x.ndim == 0 or x.shape[-1] == 0:
+        raise ValueError("x must be floating with a nonempty last axis")
+    if not np.isfinite(eps) or eps <= 0:
+        raise ValueError("eps must be finite and positive")
+    work = x.to(torch.float32) if x.dtype in (torch.float16, torch.bfloat16) else x
+    rms_inv = torch.rsqrt(work.square().mean(dim=-1, keepdim=True) + eps)
+    y = work * rms_inv
+    if weight is not None:
+        if weight.shape != (x.shape[-1],):
+            raise ValueError("weight must have shape [D]")
+        y = y * weight.to(work.dtype)
+    return y.to(x.dtype)
 ```
 
-The explicit tensor version follows the equation almost line by line. A mixed-precision model must also decide the reduction dtype.
+The explicit path widens FP16/BF16 to FP32 **before squaring** and restores the input dtype after the gain. FP64 stays FP64 for derivative checks.
 
 #### 3. Optimized or library PyTorch API
 
@@ -151,11 +169,10 @@ def torch_rms_norm(x: torch.Tensor, weight: torch.Tensor | None = None, *, eps: 
 | Reduction | `np.mean(..., axis=-1)` | `mean(dim=-1)` |
 | Reciprocal root | `1 / np.sqrt` | `torch.rsqrt` |
 | Weight | broadcast array `[D]` | learned parameter `[D]` |
-| Accumulation | float64 reference | depends on explicit/fused path |
+| Accumulation | float64 reference | explicit path: at least FP32; check API separately |
 | Gradient | none | checked with `gradcheck` |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 rng = np.random.default_rng(7)
@@ -168,102 +185,140 @@ api = torch_rms_norm(x, w, eps=1e-6)
 np.testing.assert_allclose(np_out, explicit.detach().numpy(), rtol=1e-10, atol=1e-10)
 torch.testing.assert_close(api, explicit, rtol=1e-10, atol=1e-10)
 assert torch.autograd.gradcheck(lambda a, b: torch_rms_norm_explicit(a, b, eps=1e-6), (x, w))
+for a, b in zip(torch.autograd.grad(explicit.square().sum(), (x, w)),
+                torch.autograd.grad(api.square().sum(), (x, w))):
+    torch.testing.assert_close(a, b, rtol=1e-9, atol=1e-10)
+for dtype in (torch.float16, torch.bfloat16):
+    large = torch.full((2, 8), 1000.0, dtype=dtype)
+    torch.testing.assert_close(torch_rms_norm_explicit(large), torch.ones_like(large))
 print("B07 explicit NumPy / PyTorch / F.rms_norm: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m05_block_bridges.py`](../assets/m05_block_bridges.py)
+Complete executable file: `m06_block_bridges.py`
 
 Official API: [PyTorch `rms_norm`](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.rms_norm.html).
 
-## 6. Four norm placements, four computation graphs
+## 6. Placement changes the computation graph
 
-![VIZ m5/02 — normalization placement](assets/modern-llms/en/module-05/m5_02_norm_placements.svg)
+Let $F$ be an attention or FFN sublayer and $N$ a normalizer.
 
-Post-LN normalizes after residual addition:
+| Placement | Residual step | What is normalized? |
+|---|---|---|
+| Post-LN | $h^+=N(h+F(h))$ | The updated state |
+| Pre-LN | $h^+=h+F(N(h))$ | The branch input |
+| Peri-LN | $h^+=h+N_{out}(F(N_{in}(h)))$ | Both ends of the branch |
+| OLMo2-style | $h^+=h+N_{out}(F(h))$ | The branch output only |
 
-$$x^+=N(x+F(x)).$$
+![VIZ m6/02 — Locate each norm relative to F and the residual addition.](assets/modern-llms/en/module-05/m6_02_norm_placements.svg)
+*Locate each norm relative to F and the residual addition.*
 
-Pre-LN keeps the residual highway untouched:
+Post-LN has Jacobian $J_N(I+J_F)$, so even the residual path passes through normalization. For Pre-LN, apply the chain rule: $J_{F\circ N}(h)=J_F(N(h))J_N(h)$. Its complete Jacobian is therefore $I+J_F(N(h))J_N(h)$: the direct identity term remains outside the product. Neither expression guarantees good optimization under every initialization and optimizer.
 
-$$x^+=x+F(N(x)).$$
+Peri-LN controls the contribution being added, although learned output scales can change its size. The paper reports experiments up to 3.2B parameters. OLMo2 lacks the paired input norm, so its output-only arrangement should not be labeled Peri-LN. [Peri-LN](https://arxiv.org/abs/2502.02732); [OLMo2 code](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py).
 
-Peri-LN adds a second normalizer around the sublayer:
+### A controlled forward-scale experiment
 
-$$x^+=x+N_{out}(F(N_{in}(x))).$$
+Using seed 5, draw the 256 coordinates of $h_0$ independently from a standard normal distribution and generate 36 independent matrices $W_l$ with entries from $\mathcal N(0,1/256)$. Reuse the same input and matrices in three recurrences:
 
-OLMo2 follows a different pattern:
+$$
+\begin{aligned}
+\text{none: }&h_{l+1}=h_l+W_lh_l,\\
+\text{pre: }&h_{l+1}=h_l+W_lU(h_l),\\
+\text{post: }&h_{l+1}=U(h_l+W_lh_l).
+\end{aligned}
+$$
 
-$$x^+=x+N(F(x)).$$
+Here $U(x)=x/\max(\operatorname{RMS}(x),10^{-12})$. It has no learned scale and uses a denominator floor, rather than additive epsilon. At step 36, RMS is approximately **412,442**, **6.423**, and **1**, respectively.
 
-Its documentation explicitly states that normalization is applied after attention and feed-forward sublayers, and that queries and keys receive their own normalization. Calling this Peri-LN would erase a real architectural distinction.
+![VIZ m6/03 — One input and weight stack isolate placement; the vertical axis is logarithmic.](assets/modern-llms/en/module-05/m6_03_depth_variance.png)
+*One input and weight stack isolate placement; the vertical axis is logarithmic.*
 
-The module's depth experiment uses a deliberately small linear system with shared input and weights across modes. After 36 steps, the no-norm trajectory reaches RMS 412,442, the pre-like trajectory reaches 6.42, and the post-like trajectory is exactly 1 because it is explicitly renormalized after every step.
+This measures forward scale in a linear residual system. There is no loss or training update. Post has unit RMS by construction; pre still accumulates updates. The notebook also compares Pre-LN and Peri-LN on one frozen attention–FFN stack.
 
-![VIZ m5/03 — depth and scale](assets/modern-llms/en/module-05/m5_03_depth_variance.png)
+## 7. Q/K normalization: check the equation and the axis
 
-The experiment isolates placement. It says nothing by itself about backpropagation, optimizer state, or the learned scale parameters of a real Transformer.
+An attention score is $s_{ij}=q_i^\top k_j/\sqrt{d_h}$, with head width $d_h$. Scaling both vectors by $c$ scales the score by $c^2$ and can concentrate softmax on very few keys.
 
-## 7. Query/key stabilization is a family, not one universal recipe
+Original **QKNorm** uses L2-normalized vectors and a learned scale $\tau$:
 
-Scaled Dot-Product Attention uses
+$$
+s_{ij}=\tau\left(\frac{q_i}{\|q_i\|_2}\right)^\top
+\left(\frac{k_j}{\|k_j\|_2}\right).
+$$
 
-$$s_{ij}=\frac{q_i^\top k_j}{\sqrt{d_h}}.$$
+The scale replaces the usual $1/\sqrt{d_h}$ factor. Practical implementations guard a zero length with a stabilizer. The authors reported an average gain of 0.928 BLEU across five low-resource translation pairs under their protocol. BLEU is a translation metric based on overlap with reference translations; this reported gain concerns that evaluation setting. [QKNorm](https://arxiv.org/abs/2010.04245).
 
-The denominator controls the expected variance under a simple initialization model, but the learned norms of $q$ and $k$ can drift.
+Per-head RMSNorm is different. Ignoring epsilon and learned scales, normalized vectors have length $\sqrt{d_h}$. With the usual attention denominator the score becomes $\sqrt{d_h}\cos\theta_{ij}$, rather than a unit-vector dot product.
 
-The original Query-Key Normalization method L2-normalizes each query and key vector and replaces the fixed scale with a learned parameter. Its authors reported an average gain of 0.928 BLEU on five low-resource translation pairs in their evaluation.
+The axis also matters. Qwen3 normalizes within each head. OLMo2 normalizes the entire Q projection, and separately the entire K projection, before splitting heads. Changing one head can therefore change other heads' denominators in OLMo2. The notebook demonstrates this with two heads of width two. [Qwen3](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3/modeling_qwen3.py); [OLMo2](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py).
 
-Later systems use several related mechanisms: L2 Q/K normalization, RMSNorm on Q and K, per-head or per-dimension scales, logit soft-capping, and optimizer-level clipping. These are not interchangeable. Llama 4 can enable L2 Q/K normalization on RoPE layers, with the setting depending on the checkpoint. OLMo2, Qwen3, and Gemma 3 normalize Q and K with RMSNorm. Gemma 2 instead exposes attention-logit soft-capping. Architecture tables should name the actual mechanism rather than label every stabilizer “QK-norm.”
+Logit **soft-capping** instead transforms computed scores as $s\mapsto c\tanh(s/c)$ for $c>0$. It bounds scores without normalizing Q or K. Gradient clipping belongs to optimization and does not replace any of these forward operations.
 
-## 8. From a two-matrix FFN to gated multiplication
+## 8. Why a gate adds a matrix
 
-The original FFN has one expanded projection and one contraction:
+A conventional FFN widens a token vector, applies a nonlinearity, and projects back:
 
-$$\operatorname{FFN}(x)=W_2\phi(W_1x).$$
+$$
+\operatorname{FFN}(x)=W_2\phi(W_1x),\qquad
+W_1\in\mathbb R^{d_{ff}\times d},\quad W_2\in\mathbb R^{d\times d_{ff}}.
+$$
 
-GLU variants split the expanded representation into an up branch and a gate branch:
+The intermediate width is $d_{ff}$; biases are omitted here. Removing the nonlinearity would collapse the two matrices into one linear map. Common nonlinearities are
 
-$$\operatorname{GLU}(x)=(W_{up}x)\odot\phi(W_{gate}x),$$
+$$
+\operatorname{ReLU}(z)=\max(0,z),\quad
+\operatorname{GELU}(z)=z\Phi(z),\quad
+\operatorname{SiLU}(z)=z\sigma(z),
+$$
 
-followed by $W_{down}$. Shazeer's experiments found several gated variants to outperform their non-gated counterparts under matched budgets.
+where $\Phi$ is the standard-normal cumulative distribution function and $\sigma(z)=1/(1+e^{-z})$. GELU and SiLU suppress negative inputs smoothly instead of zeroing the entire negative half-line.
 
-The relevant structural change is multiplicative conditioning. The gate is not merely “another activation”; it lets one learned feature modulate another learned feature for each input.
+The approximation $z\sigma(1.702z)$ has maximum absolute error **0.020335** against exact GELU on 4,001 evenly spaced points in $[-6,6]$. This is a measured approximation on a specified grid, not equality of functions.
 
-GELU and a scaled sigmoid form are numerically close:
+![VIZ m6/04 — Shared axes compare activations; a separate panel shows the GELU approximation error.](assets/modern-llms/en/module-05/m6_04_activations.png)
+*Shared axes compare activations; a separate panel shows the GELU approximation error.*
 
-$$\operatorname{GELU}(z)\approx z\sigma(1.702z).$$
+A gated FFN learns two projections, $g=W_gx$ and $u=W_ux$, then multiplies their transformed outputs coordinate by coordinate. SwiGLU is
 
-Our deterministic grid on $[-6,6]$ gives a maximum absolute error of about 0.0203.
+$$\operatorname{SwiGLU}(x)=W_d\bigl(\operatorname{SiLU}(W_gx)\odot W_ux\bigr).$$
 
-![VIZ m5/04 — activation functions](assets/modern-llms/en/module-05/m5_04_activations.png)
+Here $\odot$ means element-wise multiplication. Although the gate depends on the input, $\operatorname{SiLU}(g)$ is not a probability or a value restricted to $[0,1]$. The third matrix $W_d$ restores width $d$ for residual addition. ReGLU and GEGLU use ReLU and GELU gates instead; Shazeer compared these variants under matched budgets. [GLU Variants](https://arxiv.org/abs/2002.05202).
 
-## 9. SwiGLU budgets and the gpt-oss variant
+## 9. Budgeting SwiGLU and reading its variants
 
-A standard SwiGLU block is
+Two bias-free FFN matrices cost $2dd_{ff}$ parameters; SwiGLU costs $3dd_{ff}$. Matching a conventional FFN of width $4d$ gives
 
-$$W_{down}\left[\operatorname{SiLU}(W_{gate}x)\odot W_{up}x\right].$$
+$$3dd_{ff}=2d(4d)\quad\Rightarrow\quad d_{ff}=\frac83d.$$
 
-Its matrix count is $3d\,d_{ff}$. Matching the parameters of a classic $4d$ FFN gives
+Real models may choose another width or round it for implementation reasons. $8d/3$ is a budget match, not part of SwiGLU's definition.
 
-$$d_{ff}=\frac83d.$$
+![VIZ m6/05 — The gate projection passes through SiLU, multiplies the up branch, then feeds the down projection.](assets/modern-llms/en/module-05/m6_05_swiglu_gate.svg)
+*The gate projection passes through SiLU, multiplies the up branch, then feeds the down projection.*
 
-That ratio is a budget-equivalence point, not a design law. Models often select a different width for capacity or hardware reasons.
+The gpt-oss reference uses a specific variant:
 
-The public gpt-oss implementation changes the activation:
+$$\bar g=\min(g,7),\qquad\bar u=\operatorname{clip}(u,-7,7),$$
+$$a=\bar g\,\sigma(1.702\bar g)\odot(\bar u+1).$$
 
-$$g\leftarrow\min(g,7),\qquad u\leftarrow\operatorname{clip}(u,-7,7),$$
+Only the upper gate tail is clamped; the up branch is clamped at both ends. This defines the checkpoint's activation. Its training motivation cannot be established from a function body alone. [Pinned implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py).
 
-$$y=g\sigma(1.702g)(u+1).$$
+For the diagnostic slice $g=u=z$, the product before the down projection is:
 
-At $g=u=z$, the outputs for $z=7$ and $z=9$ are both 55.99963. The plateau is part of the learned graph.
+| $z$ | $a$ |
+|---:|---:|
+| -9 | 0.000012019 |
+| -2 | 0.064341377 |
+| 0 | 0 |
+| 2 | 5.806975869 |
+| 7 | 55.999625026 |
+| 9 | 55.999625026 |
 
-![VIZ m5/05 — SwiGLU in gpt-oss](assets/modern-llms/en/module-05/m5_05_swiglu_gate.svg)
+![VIZ m6/06 — On this slice the gate factor saturates near 7; the complete product approaches 56.](assets/modern-llms/en/module-05/m6_06_clamp_curve.png)
+*On this slice the gate factor saturates near 7; the complete product approaches 56.*
 
-![VIZ m5/06 — activation clamp](assets/modern-llms/en/module-05/m5_06_clamp_curve.png)
+A gate-factor curve alone cannot reproduce the product table. At $z=-9$, a small negative gate factor multiplies $-6$, giving a small positive product. At 7 and 9 the two clamped inputs coincide exactly.
 
-Clamping is compatible with low-precision execution because it controls outliers, but the code alone does not prove that MXFP4 was the sole motivation. Likewise, the $+1$ shift keeps the value factor near one when $u$ is near zero; that is a mathematical effect, not a documented design history unless the authors state it.
+**<strong>Second pass: stable activation code and gradient checks</strong>**
 
 ### NumPy → PyTorch · B08 — SwiGLU and a bounded variant
 
@@ -289,14 +344,20 @@ def numpy_swiglu(
     gate, up = np.asarray(gate), np.asarray(up)
     if gate.shape != up.shape or not np.isfinite(gate).all() or not np.isfinite(up).all():
         raise ValueError("gate and up must be finite arrays of the same shape")
+    if not np.isfinite(alpha) or not np.isfinite(shift_up):
+        raise ValueError("alpha and shift_up must be finite")
+    if any(v is not None and (not np.isfinite(v) or v <= 0) for v in (gate_limit, up_limit)):
+        raise ValueError("limits must be finite and positive")
     g = gate.astype(np.float64, copy=False)
     u = up.astype(np.float64, copy=False)
     if gate_limit is not None:
         g = np.minimum(g, gate_limit)
     if up_limit is not None:
         u = np.clip(u, -up_limit, up_limit)
-    y = g / (1.0 + np.exp(-alpha * g)) * (u + shift_up)
-    return y.astype(np.result_type(gate.dtype, up.dtype), copy=False)
+    sigmoid = np.exp(-np.logaddexp(0.0, -alpha * g))
+    y = g * sigmoid * (u + shift_up)
+    dtype = np.result_type(gate.dtype, up.dtype)
+    return y.astype(dtype, copy=False) if np.issubdtype(dtype, np.floating) else y
 ```
 
 Both branches remain visible: the gate passes through a SiLU-like nonlinearity and multiplies the up branch. `alpha`, clipping, and the shift are explicit parameters.
@@ -315,15 +376,22 @@ def torch_swiglu(
 ) -> torch.Tensor:
     if gate.shape != up.shape:
         raise ValueError("gate and up must have the same shape")
-    g, u = gate, up
+    if gate.dtype != up.dtype or not gate.is_floating_point() or gate.device != up.device:
+        raise ValueError("gate and up must share a floating dtype and device")
+    if not np.isfinite(alpha) or not np.isfinite(shift_up):
+        raise ValueError("alpha and shift_up must be finite")
+    if any(v is not None and (not np.isfinite(v) or v <= 0) for v in (gate_limit, up_limit)):
+        raise ValueError("limits must be finite and positive")
+    dtype = torch.float32 if gate.dtype in (torch.float16, torch.bfloat16) else gate.dtype
+    g, u = gate.to(dtype), up.to(dtype)
     if gate_limit is not None:
         g = g.clamp(max=gate_limit)
     if up_limit is not None:
         u = u.clamp(min=-up_limit, max=up_limit)
-    return g * torch.sigmoid(alpha * g) * (u + shift_up)
+    return (g * torch.sigmoid(alpha * g) * (u + shift_up)).to(gate.dtype)
 ```
 
-PyTorch replaces `np.exp` with `torch.sigmoid` and preserves the derivative graph. `clamp` introduces kinks, so gradient parity is tested away from the boundaries.
+NumPy uses `logaddexp` for a stable sigmoid; PyTorch uses `torch.sigmoid`, retains autograd, and widens half-precision intermediates. Clamp has no ordinary derivative at its kinks, so finite-difference checks use points on either side.
 
 | Aspect | NumPy | PyTorch |
 |---|---|---|
@@ -333,8 +401,7 @@ PyTorch replaces `np.exp` with `torch.sigmoid` and preserves the derivative grap
 | Standard SwiGLU | no limits, `shift_up=0` | same contract |
 | Gradients | none | autograd; clamp kinks are tested separately |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 rng = np.random.default_rng(8)
@@ -345,18 +412,28 @@ g = torch.tensor(g_np, dtype=torch.float64, requires_grad=True); u = torch.tenso
 t_out = torch_swiglu(g, u, **kwargs)
 np.testing.assert_allclose(np_out, t_out.detach().numpy(), rtol=1e-10, atol=1e-10)
 assert torch.autograd.gradcheck(lambda a, b: torch_swiglu(a, b, **kwargs), (g, u))
+extreme = np.array([-1000., -9., 0., 9., 1000.])
+with np.errstate(over='raise', invalid='raise'):
+    stable = numpy_swiglu(extreme, np.ones_like(extreme), **kwargs)
+np.testing.assert_allclose(stable, torch_swiglu(torch.tensor(extreme), torch.ones(5, dtype=torch.float64), **kwargs))
+outside = torch.tensor([-9., 9.], dtype=torch.float64, requires_grad=True)
+assert torch.autograd.gradcheck(lambda a: torch_swiglu(a, a, **kwargs), (outside,))
 print("B08 forward + gradient: PASS")
 ```
 
-</details>
+Complete executable file: `m06_block_bridges.py`
 
-Complete executable file: [`m05_block_bridges.py`](../assets/m05_block_bridges.py)
-
-## 10. Reconstructing Llama-3.1-8B exactly
+## 10. From tensor shapes to 8,030,261,248 parameters
 
 Take $V=128256$, $d=4096$, 32 layers, $d_{ff}=14336$, 32 query heads, 8 KV heads, and head dimension 128. The model is bias-free and uses separate input and output embeddings.
 
-The attention matrices cost
+Q and O each have $dH_qd_h$ entries; K and V each have $dH_{kv}d_h$. In general,
+
+$$P_{attn}=2dH_qd_h+2dH_{kv}d_h.$$
+
+The Llama 3 report lists the principal dimensions and rounds the vocabulary to 128K. The exact $V=128256$ above is part of our frozen counting contract. [Report, Table 3](https://arxiv.org/html/2407.21783v3).
+
+With this geometry the attention matrices cost
 
 $$P_{attn}=2.5d^2=41{,}943{,}040.$$
 
@@ -376,96 +453,166 @@ With two embedding tables and one final norm:
 
 $$2Vd+32P_{block}+d=8{,}030{,}261{,}248.$$
 
-![VIZ m5/07 — exact parameter ledger](assets/modern-llms/en/module-05/m5_07_param_budget.svg)
+![VIZ m6/07 — exact parameter ledger](assets/modern-llms/en/module-05/m6_07_param_budget.svg)
+*The $13d^2$ matrix estimate and the exact $13d^2+2d$ block are shown separately.*
 
-The FFN accounts for about 80.8% of the full block. Norm parameters are tiny, but the module promised an exact count, so omitting them would still be wrong.
+The FFN accounts for about 80.8% of the full block. The final $d$ term is the last RMSNorm scale. Small norm vectors still belong in an exact parameter count.
 
-## 11. DyT and DyISRU: removing the feature reduction
+Activations, masks, caches, and rotary buffers are not learned parameters in this ledger. Tying the input and output weights would replace $2Vd$ by $Vd$. The notebook checks the formula against a small block's actual arrays. The repository validator also sums the 8B geometry as PyTorch meta tensors without allocating its weights.
 
-Dynamic Tanh replaces normalization with an element-wise transform:
+## 11. Element-wise alternatives: DyT and DyISRU
 
-$$\operatorname{DyT}(x)=\gamma\odot\tanh(\alpha x)+\beta.$$
+On the reference route, we can ask whether the feature reduction itself is necessary. **Dynamic Tanh (DyT)** computes
 
-The original work reports competitive or better results across several vision and language settings. The key structural difference from RMSNorm is independence across coordinates: DyT does not compute a shared denominator.
+$$\operatorname{DyT}(x)=\gamma\odot\tanh(\alpha x)+\beta,$$
 
-A later mathematical analysis derives Dynamic Inverse Square Root Unit as an exact element-wise counterpart of RMSNorm after a particular decoupling:
+with a learned scalar $\alpha$ and feature vectors $\gamma,\beta$. It has no shared denominator: a coordinate's output is independent of neighboring coordinates. The paper reports competitive results in several vision and language settings. [DyT](https://arxiv.org/abs/2503.10622).
 
-$$\operatorname{DyISRU}(x)=\gamma\odot\frac{x}{\sqrt{1+(\alpha x)^2}}+\beta.$$
+For the construction behind **DyISRU**, set aside epsilon and affine parameters and write RMS normalization as
 
-This does not make DyISRU identical to ordinary vector RMSNorm. The exactness belongs to the decoupled construction.
+$$\frac{\sqrt d\,x_i}{\sqrt{\sum_{j\ne i}x_j^2+x_i^2}}.$$
 
-The notebook's $\alpha\approx1.43$ is a module-owned scalar fit on a synthetic $N(0,1)$ sample. It is not a constant reported by the DyT paper.
+Replace the sum over other coordinates by a positive learned parameter $b$ and absorb $\sqrt d$ into the scale:
 
-![VIZ m5/08 — DyT and DyISRU](assets/modern-llms/en/module-05/m5_08_dyt_family.png)
+$$\operatorname{DyISRU}(x)=\gamma\odot\frac{x}{\sqrt{b+x^2}}+\beta,\qquad b>0.$$
 
-A 2026 study found a strong adverse interaction between Dynamic Erf and Muon, while DyT served as a bounded control and did not show the same penalty. That evidence argues for testing normalization and optimizer choices jointly; it does not explain away DyT itself.
+This is the paper's decoupled construction, not equality to vector RMSNorm on arbitrary inputs. One way to learn a positive $b$ is to optimize an unconstrained scalar $r$ and set $b=\operatorname{softplus}(r)=\log(1+e^r)$. This function is positive for every finite real $r$ in exact arithmetic. The notebook uses a stable library implementation and adds a small floor for finite precision. [DyISRU analysis, version 4](https://arxiv.org/html/2503.21708v4).
 
-## 12. mHC constrains residual mixing, not hidden-state trajectories
+With unit gain and zero bias, the slopes at zero are $\alpha$ for DyT and $1/\sqrt b$ for DyISRU. Choosing $\alpha=0.5$ and $b=4$ matches those slopes. It does not transfer a fitted coefficient from one function to another.
 
-Hyper-Connections carry several residual streams and learn matrices that mix them around each sublayer. Unconstrained mixing can weaken the identity-mapping property that makes residual networks easy to optimize.
+![VIZ m6/08 — Matched slopes compare shapes; the separate scalar fit has its own objective.](assets/modern-llms/en/module-05/m6_08_dyt_family.png)
+*Matched slopes compare shapes; the separate scalar fit has its own objective.*
 
-Manifold-Constrained Hyper-Connections project the residual mixing matrices onto a constrained set. In the published design, Sinkhorn–Knopp iterations produce a doubly stochastic mixing matrix on the Birkhoff polytope. DeepSeek-V4 keeps multiple residual streams through the block and collapses them before the final head.
+Separately, draw 200,000 standard-normal values with seed 5 and fit $\tanh(\alpha x)$ to $x/\operatorname{RMS}(x)$. The grid has 171 coefficients from 0.3 to 2.0; gain stays one and bias zero. Its best point is $\alpha\approx1.43$, with MSE **0.161704**. This is a teaching approximation, not a paper-reported constant or a trained Transformer result.
 
-The manifold therefore describes the allowed residual connection matrices. It is not a claim that hidden states themselves move on a low-dimensional representation manifold.
+A later study of 1B models over 1,000 steps found a strong adverse interaction between Dynamic Erf and Muon; DyT did not show the same penalty. This limited experiment motivates checking optimizer and activation together rather than establishing a universal ranking. [Study](https://arxiv.org/abs/2604.01563).
 
-Peri-LN and mHC act at different levels. Peri-LN preserves the ordinary residual addition and normalizes the branch contribution. mHC changes how several residual streams are combined.
+## 12. Several residual streams: what mHC constrains
 
-Subsequent papers have proposed alternative constraints and faster Birkhoff projections. They broaden the research line, although they are not equivalent to an independent full-scale replication of DeepSeek-V4.
+Hyper-Connections carry $n$ streams. Put their states in the rows of $X\in\mathbb R^{n\times d}$; a residual matrix $A\in\mathbb R^{n\times n}$ mixes them as $AX$. Separate maps combine streams before a sublayer and distribute its output afterward.
 
-## 13. Level-1 code: the pieces we can inspect directly
+Manifold-Constrained Hyper-Connections (**mHC**) constrain the residual matrix to be **doubly stochastic**:
 
-The following NumPy code implements a stable sigmoid, RMSNorm with higher-precision statistics, standard SwiGLU, the public gpt-oss activation, and a small Pre-LN wrapper. Attention itself remains an injected function because Module 4 already covered it.
+$$A_{ij}\ge0,\qquad\sum_jA_{ij}=1,\qquad\sum_iA_{ij}=1.$$
+
+This set is the Birkhoff polytope. Each output row is a convex combination of input rows. For a fixed exact matrix, each feature stays between the smallest and largest input-stream values. That does not preserve every stream:
+
+$$
+A=\begin{pmatrix}0.75&0.25\\0.25&0.75\end{pmatrix},\quad
+X=\begin{pmatrix}2\\6\end{pmatrix},\quad AX=\begin{pmatrix}3\\5\end{pmatrix}.
+$$
+
+Sinkhorn iterations alternate row and column normalization of a positive matrix. Their limit is doubly stochastic under suitable conditions; a finite result is approximate. The paper uses 20 iterations. Our log-domain exercise compares 1, 20, and 100 and measures **both** sum residuals. It illustrates constrained mixing, not a complete mHC layer. [mHC](https://arxiv.org/html/2512.24880v2).
+
+The constraint applies to connections, not to a low-dimensional manifold of hidden states. If $A$ depends on $X$, the full derivative includes the derivative of $A(X)$; a fixed-matrix bound alone does not bound that Jacobian. The pre/post mixing maps have their own parameterizations and are not all doubly stochastic.
+
+DeepSeek-V4 is a public model example. Peri-LN controls branch contributions in an ordinary residual graph; mHC changes how several streams connect around the branch. [Model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash).
+
+## 13. A small implementation to inspect
+
+On a second pass, follow an input matrix `x[T, d]` through this listing. The gate and up matrices have shape `[d, d_ff]`, and the down matrix has shape `[d_ff, d]`. Because tokens are stored as rows, these arrays are transposes of the column-vector matrices in §9.
+
+RMSNorm promotes low-precision values before squaring, and the sigmoid is evaluated in a stable form. The two FFN functions differ only in the activation between the projections: ordinary SwiGLU or the clamped gpt-oss variant. `PreNormStep` receives an attention function that must return the input shape; the notebook supplies the full GQA implementation.
+
+**<strong>Second pass: RMSNorm, two FFNs, and sequential residual updates</strong>**
 
 ```python
+import math
 import numpy as np
 
-def sigmoid(x):
-    """Stable sigmoid without exp overflow for large negative inputs."""
-    x = np.asarray(x, dtype=np.float64)
-    return np.exp(-np.logaddexp(0.0, -x))
+def _floating_array(x: np.ndarray) -> np.ndarray:
+    """Validate and return a floating NumPy array without changing its shape."""
 
-def rms_norm(x, gamma, eps=1e-6):
-    """Normalize [..., d_model] on the last axis; accumulate statistics in at least float32."""
-    x = np.asarray(x)
-    work_dtype = np.float32 if x.dtype.itemsize < 4 else x.dtype
-    x_hi = x.astype(work_dtype, copy=False)
-    ms = np.mean(x_hi * x_hi, axis=-1, keepdims=True)
-    y = x_hi / np.sqrt(ms + eps)
-    return (y * np.asarray(gamma, dtype=work_dtype)).astype(x.dtype, copy=False)
+    array = np.asarray(x)
+    if not np.issubdtype(array.dtype, np.floating):
+        raise TypeError("normalization expects a floating-point array")
+    if array.ndim == 0 or array.shape[-1] == 0:
+        raise ValueError("the normalized last axis must be non-empty")
+    if not np.isfinite(array).all():
+        raise ValueError("inputs must be finite")
+    return array
 
-def swiglu(x, W_gate, W_up, W_down):
-    """Standard SwiGLU: SiLU(gate) ⊙ up, followed by the down projection."""
-    gate, up = x @ W_gate, x @ W_up
-    return (gate * sigmoid(gate) * up) @ W_down
+def _statistics_dtype(dtype: np.dtype) -> np.dtype:
+    """Use at least float32 for reductions while preserving float64 inputs."""
 
-def swiglu_oss(x, W_gate, W_up, W_down, alpha=1.702, limit=7.0):
-    """Public gpt-oss variant: clipping, alpha=1.702, and the (up + 1) shift."""
-    gate = np.minimum(x @ W_gate, limit)
-    up = np.clip(x @ W_up, -limit, limit)
-    return (gate * sigmoid(alpha * gate) * (up + 1.0)) @ W_down
+    return np.dtype(np.float32) if np.dtype(dtype).itemsize < 4 else np.dtype(dtype)
 
-class PreNormBlock:
-    """Two residual branches; the attention function is injected explicitly."""
+def rms_norm(
+    x: np.ndarray,
+    gamma: np.ndarray | float = 1.0,
+    eps: float = 1e-6,
+) -> np.ndarray:
+    """RMS-normalize `[..., d_model]` over the last axis and preserve dtype."""
+
+    if eps <= 0 or not math.isfinite(eps):
+        raise ValueError("eps must be finite and positive")
+    array = _floating_array(x)
+    work_dtype = _statistics_dtype(array.dtype)
+    work = array.astype(work_dtype, copy=False)
+    mean_square = np.mean(work * work, axis=-1, keepdims=True)
+    result = work / np.sqrt(mean_square + eps)
+    if np.shape(gamma) not in ((), (array.shape[-1],)) or not np.isfinite(gamma).all():
+        raise ValueError("gamma must be a finite scalar or [D] vector")
+    result = result * np.asarray(gamma, dtype=work_dtype)
+    return result.astype(array.dtype, copy=False)
+
+def stable_sigmoid(x: np.ndarray | float) -> np.ndarray:
+    """Compute sigmoid without `exp` overflow on large negative inputs."""
+
+    z = np.asarray(x, dtype=np.float64)
+    return np.exp(-np.logaddexp(0.0, -z))
+
+def silu(x: np.ndarray | float) -> np.ndarray:
+    """Return SiLU/Swish: x * sigmoid(x)."""
+
+    z = np.asarray(x, dtype=np.float64)
+    return z * stable_sigmoid(z)
+
+def gpt_oss_swiglu(
+    gate: np.ndarray | float,
+    up: np.ndarray | float,
+    *,
+    alpha: float = 1.702,
+    limit: float = 7.0,
+) -> np.ndarray:
+    """Apply the public gpt-oss gate clamp, up clamp, and `(up + 1)` shift."""
+
+    if limit <= 0 or not math.isfinite(limit):
+        raise ValueError("limit must be finite and positive")
+    if not math.isfinite(alpha):
+        raise ValueError("alpha must be finite")
+    g = np.minimum(np.asarray(gate, dtype=np.float64), limit)
+    u = np.clip(np.asarray(up, dtype=np.float64), -limit, limit)
+    return g * stable_sigmoid(alpha * g) * (u + 1.0)
+
+def swiglu_mlp(x, w_gate, w_up, w_down):
+    """Row-vector SwiGLU: two projections, product, then output projection."""
+    return (silu(x @ w_gate) * (x @ w_up)) @ w_down
+
+def swiglu_oss_mlp(x, w_gate, w_up, w_down, alpha=1.702, limit=7.0):
+    """Apply the gpt-oss activation before the down projection."""
+    return gpt_oss_swiglu(x @ w_gate, x @ w_up, alpha=alpha, limit=limit) @ w_down
+
+class PreNormStep:
+    """Inspect two sequential residual updates; attention accepts a mask."""
     def __init__(self, norm1, norm2, attention, ffn):
         self.norm1, self.norm2 = norm1, norm2
         self.attention, self.ffn = attention, ffn
 
     def __call__(self, x, mask):
-        attn_update = self.attention(self.norm1(x), mask)
-        h = x + attn_update
-        ffn_update = self.ffn(self.norm2(h))
-        return h + ffn_update
+        h = x + self.attention(self.norm1(x), mask)
+        return h + self.ffn(self.norm2(h))
 ```
 
-The code deliberately does not hide placement behind a vague “norm mode.” Peri-LN, OLMo2-style post-sublayer normalization, and mHC have different graphs and should be represented explicitly when implemented.
+`PreNormStep` accepts attention as a function with an explicit mask. The notebook supplies GQA and tests causality. This small block isolates normalization and FFN mechanics; positional encoding and a KV cache are outside the experiment.
 
 ## 15. Reading gpt-oss from code rather than from a guessed config field
 
-The public implementation makes three design choices visible.
+The pinned reference makes three design choices visible.
 
-First, RMSNorm accumulates in fp32 and uses $\epsilon=10^{-5}$. Second, `swiglu` implements the 1.702 coefficient, asymmetric gate/up clamps, and the $+1$ value shift. Third, both attention and MLP use Pre-LN residual updates.
+First, RMSNorm converts inputs to FP32 before squaring, uses $\epsilon=10^{-5}$, and returns the original dtype. Second, `swiglu` implements the 1.702 coefficient, asymmetric gate/up clamps, and the $+1$ value shift. Third, both attention and MLP use Pre-LN residual updates.
 
-The model configuration exposes sizes, experts, top-k, and the clamp limit. It does not contain a `hidden_act` field. The activation is specified in model code.
+The model configuration exposes sizes, experts, top-k, and the clamp limit. This original schema has no `hidden_act` field; a converted library schema may have one. The executed function remains the activation contract.
 
 ```json
 {
@@ -477,50 +624,53 @@ The model configuration exposes sizes, experts, top-k, and the clamp limit. It d
 }
 ```
 
-![VIZ m5/09 — gpt-oss block passport](assets/modern-llms/en/module-05/m5_09_config_block.svg)
+![VIZ m6/09 — gpt-oss block passport](assets/modern-llms/en/module-05/m6_09_config_block.svg)
+*Configuration fields on one side, code-defined behavior on the other.*
 
-The intermediate width describes one expert. Total and active parameter accounting therefore depends on routing and belongs in Module 6.
+The intermediate width describes one expert. Total and active parameter accounting therefore depends on routing and belongs in Module 7.
 
-## 16. A current block table with an evidence column
+The packed expert projection is interleaved: `x[..., ::2]` supplies the gate and `x[..., 1::2]` supplies the up values. Splitting into contiguous halves preserves shapes but changes the function. The repository validator compares our RMSNorm and packed activation against these two functions in the [pinned source](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py).
 
-| Family | Normalization / placement | FFN | Q/K stabilization | Evidence |
-|---|---|---|---|---|
-| Llama 3.x | RMSNorm, Pre-LN | SwiGLU | no separate QK-norm field in the open config | official config/code |
-| Llama 4 | RMSNorm, Pre-LN-style residual | gated MLP/MoE | L2 Q/K normalization on RoPE layers when `use_qk_norm=True`; checkpoint-dependent | official config/code |
-| Gemma 2 | RMSNorm, sandwich-style sublayer norms | GELU-tanh gated MLP | attention-logit soft-capping | official config/code |
-| Gemma 3 | RMSNorm before and after each sublayer | GELU-tanh gated MLP | RMSNorm on Q and K; standard config disables soft-capping | official config/code |
-| OLMo2 | post-sublayer RMSNorm inside residual branches | SiLU-gated MLP | RMSNorm on Q and K | official docs/code |
-| gpt-oss | RMSNorm, Pre-LN | clamped SwiGLU + $(u+1)$ | learned sinks rather than QK norm | OpenAI reference code |
-| DeepSeek-V4 | normalization inside sublayers plus mHC residual mixing | clamped SwiGLU experts | attention-type dependent | technical report/open implementation |
-| Qwen3 | RMSNorm, Pre-LN | SiLU-gated MLP | RMSNorm on Q and K over the head dimension | official config/code |
+The source manifest records revisions and hashes; M6 stores the original configuration. Dimensions and operations must be read together.
 
-The evidence column prevents several common mistakes: transferring checkpoint-specific Llama 4 properties to Llama 3, calling OLMo2 Peri-LN, assuming all Gemma generations share the same soft-cap, or placing an optimizer safeguard in the normalization column.
+## 16. A block reference table, as of October 10, 2026
 
-For a closed model, an undisclosed field should remain undisclosed. Family resemblance is not a source.
+This is a guide to reading open implementations, not an exhaustive model catalog. Expert branches are separate FFNs selected for a token; M7 explains the routing mechanism. A family name never replaces checkpoint flags. The inspected revision and hashes are in the source manifest.
 
-## 17. The same accounting applies to vision blocks
+| Family | Block normalization | FFN | Q/K or score treatment |
+|---|---|---|---|
+| Llama 3.x | Pre-LN RMSNorm | SwiGLU | No separate Q/K norm in inspected code |
+| Llama 4 | Pre-LN RMSNorm | Gated dense/expert branches | L2 Q/K on RoPE layers when `use_qk_norm` is enabled |
+| Gemma 2 | RMSNorm at sublayer inputs and outputs | Gated GELU-tanh | Configured attention-logit soft-cap |
+| Gemma 3 | RMSNorm at sublayer inputs and outputs | Gated GELU-tanh | Per-head Q/K RMSNorm; soft-cap follows config |
+| Gemma 4 text | Input/output RMSNorm plus norms in optional branches | Gated dense/expert branches | Per-head Q/K norms on corresponding projection paths |
+| OLMo2 | Post-sublayer RMSNorm before addition | SiLU-gated MLP | Whole Q/K projection RMSNorm before head splitting |
+| gpt-oss | Pre-LN RMSNorm | Clamped SwiGLU with $(u+1)$ | Learned sinks; no Q/K norm in reference |
+| DeepSeek-V4 | Sublayer norms and mHC residual mixing | Clamped expert FFN | Depends on attention path |
+| Qwen3 | Pre-LN RMSNorm | SiLU-gated MLP | RMSNorm within each Q/K head |
 
-A ViT encoder still consists of normalization, attention, an MLP, and residual connections. Once its hidden size, head count, MLP width, and bias policy are known, the same parameter ledger applies.
+Inspect placement, reduction axis, FFN function, and optional flags in that order. Then verify dimensions and parameter sharing. Unpublished architecture details of a closed model should remain unspecified.
 
-The history of Q/K normalization is worth stating carefully. QKNorm was published in 2020 for low-resource machine translation. ViT-22B later provided a prominent large-scale vision example. It is therefore inaccurate to say that the mechanism originated in vision and then migrated to language models.
+## 17. Applying the method to vision blocks
 
-Multimodal model configurations often contain separate text and vision sub-configs. They should be audited independently; the two towers may use different activations, epsilon values, widths, and norm placement.
+A vision Transformer also has norms, attention, an MLP, and residual additions. Its ledger follows from matrix shapes, intermediate width, and bias policy. An encoder may use a noncausal mask, so the language decoder's mask should not be copied automatically.
 
-## 20. Key takeaways
+QKNorm was introduced for low-resource translation in 2020. ViT-22B later used Q/K normalization at large vision scale. These are related applications, not evidence of one universal formula. [QKNorm](https://arxiv.org/abs/2010.04245); [ViT-22B](https://arxiv.org/abs/2302.05442).
 
-![VIZ m5/10 — block anatomy](assets/modern-llms/en/module-05/m5_10_cheatsheet.svg)
+Multimodal configurations frequently separate text and vision towers. Read each independently: activations, epsilon, widths, and placement may differ even within one checkpoint.
 
-- A residual bypass helps optimization but does not make every learned branch disposable.
-- RMSNorm controls scale without recentering; epsilon defines near-zero behavior.
-- Post-LN, Pre-LN, Peri-LN, and OLMo2-style normalization are different graphs.
-- Query/key stabilization is a family of mechanisms, not one universal QKNorm recipe.
-- Gated FFNs use three matrices and input-dependent multiplicative interaction.
-- The Llama-3.1-8B matrix block is $13d^2$; the complete block is $13d^2+2d$.
-- gpt-oss activation behavior lives in model code, not in a `hidden_act` config field.
-- DyT and DyISRU are element-wise alternatives; the notebook's $\alpha\approx1.43$ is a teaching fit.
-- mHC constrains residual mixing matrices across multiple streams.
+## 20. A practical order for reading an unfamiliar block
 
-## 21. Notebook and primary sources
+![VIZ m6/10 — Trace the residual graph, locate the norms, inspect the FFN, then count parameters.](assets/modern-llms/en/module-05/m6_10_cheatsheet.svg)
+*Trace the residual graph, locate the norms, inspect the FFN, then count parameters.*
+
+Start with the residual additions: identify the tensors and check their shapes. Locate every norm and record its axis, affine parameters, and working dtype. Follow both gate branches through their product to the output projection. Finally, sum entries in each distinct learned tensor.
+
+These steps explain where information flows, how its scale changes, what transformation is learned, and how many parameters it costs. For the Llama-3.1-8B geometry, each block has $13d^2$ matrix entries and another $2d$ in norms. M7 extends this accounting to routed experts.
+
+On a reference pass, add two distinctions. DyT/DyISRU replace a shared feature statistic with element-wise functions. mHC changes connections between several residual streams. Assess their claims and experiments at those respective levels.
+
+## 21. primary sources
 
 **Primary sources:**
 
@@ -534,12 +684,12 @@ Multimodal model configurations often contain separate text and vision sub-confi
 - Zhu et al., [Transformers without Normalization](https://arxiv.org/abs/2503.10622)
 - Stollenwerk, [Layer Normalization and Dynamic Activation Functions](https://arxiv.org/abs/2503.21708)
 - Xie et al., [Manifold-Constrained Hyper-Connections](https://arxiv.org/abs/2512.24880)
-- [OpenAI gpt-oss reference implementation](https://github.com/openai/gpt-oss/blob/main/gpt_oss/torch/model.py)
+- [OpenAI gpt-oss reference implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py)
 - Hugging Face documentation for [OLMo2](https://huggingface.co/docs/transformers/model_doc/olmo2), [Llama 4](https://huggingface.co/docs/transformers/model_doc/llama4), [Gemma 2](https://huggingface.co/docs/transformers/model_doc/gemma2), [Gemma 3](https://huggingface.co/docs/transformers/model_doc/gemma3), [Qwen3](https://huggingface.co/docs/transformers/model_doc/qwen3), and [DeepSeek-V4](https://huggingface.co/docs/transformers/model_doc/deepseek_v4)
-- Official Transformers implementations for [OLMo2](https://github.com/huggingface/transformers/blob/main/src/transformers/models/olmo2/modular_olmo2.py), [Llama 4](https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama4/modeling_llama4.py), [Gemma 3](https://github.com/huggingface/transformers/blob/main/src/transformers/models/gemma3/modular_gemma3.py), and [Qwen3](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen3/modeling_qwen3.py)
+- Official Transformers implementations for [OLMo2](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py), [Llama 4](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/llama4/modeling_llama4.py), [Gemma 3](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gemma3/modeling_gemma3.py), and [Qwen3](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3/modeling_qwen3.py)
 
-**Next:** Module 6 turns the narrow gpt-oss expert into a full Mixture-of-Experts calculation: total versus active parameters, routing, and load balancing.
+**Next:** Module 7 turns the narrow gpt-oss expert into a full Mixture-of-Experts calculation: total versus active parameters, routing, and load balancing.
 
 ---
 
-*Landscape verified: 6 August 2026. Numerical examples are reproduced by the local contract; empirical results retain source conditions; architecture properties are tied to official configurations, code, or technical reports.*
+*Sources checked October 10, 2026. Numerical examples use the module-owned fixture; empirical findings retain their source conditions.*

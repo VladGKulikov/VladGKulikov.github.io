@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="828" viewBox="0 0 1100 828">
+<title>Два потока в исходном Transformer</title>
+<desc>Обзор: N=6 слоёв в каждом стеке; у слоёв отдельные параметры.</desc>
+<rect width="1100" height="828" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Два потока в исходном Transformer</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Обзор: N=6 слоёв в каждом стеке; у слоёв отдельные параметры.</text>
+<rect x="40" y="132" width="450" height="110" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64" y="172" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Исходный текст</text>
+<text x="64" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Токенные векторы + позиции</text>
+<rect x="610" y="132" width="450" height="110" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="634" y="172" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Префикс перевода</text>
+<text x="634" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Сдвинутые токены + позиции</text>
+<path d="M265,242 L265,277" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M835,242 L835,277" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="40" y="277" width="450" height="190" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64" y="317" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Encoder × 6</text>
+<text x="64" y="354" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Self-attention → Add &amp; Norm</text>
+<text x="64" y="379" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">FFN → Add &amp; Norm</text>
+<rect x="610" y="277" width="450" height="190" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="634" y="317" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Decoder × 6</text>
+<text x="634" y="354" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Causal attention → Add &amp; Norm</text>
+<text x="634" y="379" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Cross-attention → Add &amp; Norm</text>
+<text x="634" y="404" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">FFN → Add &amp; Norm</text>
+<path d="M265,467 L265,502" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="40" y="502" width="450" height="110" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64" y="542" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Память encoder</text>
+<text x="64" y="579" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">H<tspan font-size="13" baseline-shift="sub">enc</tspan>: B × T<tspan font-size="13" baseline-shift="sub">src</tspan> × D</text>
+<path d="M490,557 L550,557" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M550,557 L550,374" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M550,374 L610,374" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="550.0" y="347" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="middle">K, V</text>
+<path d="M835,467 L835,632" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="610" y="632" width="450" height="110" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="634" y="672" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Проекция → softmax</text>
+<text x="634" y="709" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Вероятности следующего токена</text>
+<text x="40" y="789" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">D — ширина модели. Add &amp; Norm: сложение со входом подслоя, затем LayerNorm.</text>
+</svg>

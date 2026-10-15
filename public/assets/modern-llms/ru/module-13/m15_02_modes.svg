@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="644" viewBox="0 0 1100 644">
+<title>Глубина, ширина и правило управления</title>
+<desc>Три способа распределить работу; проверка нужна каждому из них.</desc>
+<rect width="1100" height="644" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Глубина, ширина и правило управления</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Три способа распределить работу; проверка нужна каждому из них.</text>
+<rect x="65" y="132" width="970" height="135" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="85" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Последовательно: шаг → проверка → следующий шаг</text>
+<text x="85" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Одна траектория; хранить лучший уже проверенный результат.</text>
+<rect x="65" y="287" width="970" height="135" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="85" y="325" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Параллельно: кандидат A / B / C → отбор</text>
+<text x="85" y="364" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Несколько попыток; учитывать работу всех, включая отброшенные.</text>
+<rect x="65" y="442" width="970" height="135" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="85" y="480" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Адаптивно: наблюдение → решение продолжать</text>
+<text x="85" y="519" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Порог, лимит и цена ошибки остановки заданы до проверки качества.</text>
+</svg>

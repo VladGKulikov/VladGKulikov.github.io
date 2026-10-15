@@ -1,5 +1,7 @@
 # Module 9. RLVR and GRPO: verifiable rewards, group-relative estimates, and stability
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.21  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
@@ -215,7 +217,7 @@ $$
 
 This motivates dynamic resampling and a moving difficulty curriculum. It also changes the training distribution: easy and nearly impossible prompts stop contributing gradients. Keep the original stream, rejection reason, and evaluation on the complete held-out distribution.
 
-Conditional independence is an idealization. Shared early tokens, low temperature, or a rigid system template can strongly correlate responses, making the formula overestimate effective diversity.
+The formula assumes independent draws conditional on one fixed prompt and generation protocol. Low temperature, a fixed template, and independently repeated prefixes can reduce entropy while preserving independence. Reusing a sampled prefix or a search branch across candidates can couple draws. Across prompts, different success probabilities also matter: average the per-prompt formula rather than substituting a pooled success rate. Duplicate answers alone do not identify dependence.
 
 ---
 
@@ -900,8 +902,8 @@ Continuation within this course:
 
 Extensions in the companion courses:
 
-- *Modern LLMs*, Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) provides the broader post-training context;
-- *Modern LLMs*, Module 13 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`) connects RLVR to reasoning-model architectures and inference budgets;
+- *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) provides the broader post-training context;
+- *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`) connects RLVR to reasoning-model architectures and inference budgets;
 - *Information Theory for ML*, Module 2 “Entropy” (`it_ml.module_02_entropy`) develops entropy formally;
 - *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`) treats KL as a divergence between distributions;
 - *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) gives the variational view of KL-regularized policy updates.

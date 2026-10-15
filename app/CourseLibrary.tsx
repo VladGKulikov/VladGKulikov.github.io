@@ -85,7 +85,7 @@ const copy = {
     bookTitle: "PDF / EPUB",
     bookText: "Скачать бесплатно или поддержать автора на Leanpub",
     modules: "модулей",
-    pages: "страниц",
+    pages: "страниц в PDF 2026.1",
     illustrations: "иллюстраций",
     library: "Библиотека",
     search: "Найти модуль",
@@ -142,7 +142,7 @@ const copy = {
     bookTitle: "PDF / EPUB",
     bookText: "Download free or support the author on Leanpub",
     modules: "modules",
-    pages: "pages",
+    pages: "pages in PDF 2026.1",
     illustrations: "illustrations",
     library: "Library",
     search: "Find a module",
@@ -280,8 +280,8 @@ function courseFor(courseKey: CourseKey, language: Language) {
   );
 }
 
-function formatModuleNumber(moduleKey: string) {
-  return moduleKey.replace("module-", "").toUpperCase();
+function formatModuleNumber(module: Module) {
+  return String(module.position).padStart(2, "0");
 }
 
 function slugify(value: string) {
@@ -377,7 +377,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     const controller = new AbortController();
     setLoading(true);
     setLoadError(false);
-    fetch(`${getBaseUrl()}content/${activeModule.content_file}`, { signal: controller.signal })
+    fetch(`${getBaseUrl()}content/${activeModule.content_file}?v=${publication.content_updated}`, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.text();
@@ -440,7 +440,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
               <Menu size={19} />
             </button>
           )}
-          <a href="https://github.com/VladGKulikov/open-courses" target="_blank" rel="noreferrer">
+          <a href="https://github.com/VladGKulikov/VladGKulikov.github.io" target="_blank" rel="noreferrer">
             <Code2 size={17} />
             <span className="desktop-label">GitHub</span>
           </a>
@@ -627,7 +627,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                     className={module.id === activeModule.id ? "active" : ""}
                     onClick={() => selectModule(activeCourse.course_key, module.module_key)}
                   >
-                    <span>{formatModuleNumber(module.module_key)}</span>
+                    <span>{formatModuleNumber(module)}</span>
                     <strong>{module.title.replace(/^(Module|Модуль)\s+\d+b?[.:]?\s*/i, "")}</strong>
                   </button>
                 ))
@@ -658,12 +658,16 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                   remarkPlugins={[remarkGfm, remarkMath]}
                   rehypePlugins={[rehypeKatex]}
                   components={{
-                    h2: ({ children }) => {
-                      const label = String(children);
+                    h2: ({ children, node }) => {
+                      const label = node?.position
+                        ? displayMarkdown.split("\n")[node.position.start.line - 1].replace(/^##\s+/, "")
+                        : String(children);
                       return <h2 id={slugify(label)}>{children}</h2>;
                     },
-                    h3: ({ children }) => {
-                      const label = String(children);
+                    h3: ({ children, node }) => {
+                      const label = node?.position
+                        ? displayMarkdown.split("\n")[node.position.start.line - 1].replace(/^###\s+/, "")
+                        : String(children);
                       return <h3 id={slugify(label)}>{children}</h3>;
                     },
                     a: ({ href, children, ...props }) => {
@@ -718,7 +722,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                   <ChevronLeft size={18} />
                   <span>
                     <small>{t.previous}</small>
-                    {formatModuleNumber(previousModule.module_key)}
+                    {formatModuleNumber(previousModule)}
                   </span>
                 </button>
               ) : (
@@ -728,7 +732,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                 <button onClick={() => selectModule(activeCourse.course_key, nextModule.module_key)}>
                   <span>
                     <small>{t.next}</small>
-                    {formatModuleNumber(nextModule.module_key)}
+                    {formatModuleNumber(nextModule)}
                   </span>
                   <ChevronRight size={18} />
                 </button>
@@ -750,10 +754,12 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
       )}
 
       <footer className="site-footer">
-        <span>© 2026 {t.author} · {t.edition} {publication.edition}</span>
+        <span>
+          © 2026 {t.author} · {language === "ru" ? "Тексты обновлены" : "Text updated"} {publication.content_updated}
+        </span>
         <nav aria-label="Publication information">
           <a
-            href="https://github.com/VladGKulikov/open-courses/blob/main/LICENSE.md"
+            href="https://github.com/VladGKulikov/VladGKulikov.github.io/blob/main/LICENSE.md"
             target="_blank"
             rel="noreferrer"
           >
@@ -761,7 +767,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
             <ExternalLink size={13} />
           </a>
           <a
-            href="https://github.com/VladGKulikov/open-courses/blob/main/CITATION.cff"
+            href="https://github.com/VladGKulikov/VladGKulikov.github.io/blob/main/CITATION.cff"
             target="_blank"
             rel="noreferrer"
           >
@@ -776,7 +782,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
             DOI
             <ExternalLink size={13} />
           </a>
-          <a href="https://github.com/VladGKulikov/open-courses" target="_blank" rel="noreferrer">
+          <a href="https://github.com/VladGKulikov/VladGKulikov.github.io" target="_blank" rel="noreferrer">
             {t.openSource}
             <ExternalLink size={13} />
           </a>

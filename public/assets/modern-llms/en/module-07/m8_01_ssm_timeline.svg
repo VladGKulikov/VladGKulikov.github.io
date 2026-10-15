@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="880" viewBox="0 0 1100 880">
+<title>From linear dynamics to hybrid memory</title>
+<desc>Designs add mechanisms; no layer ratio is universal</desc>
+<rect width="1100" height="880" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">From linear dynamics to hybrid memory</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Designs add mechanisms; no layer ratio is universal</text>
+<text x="40" y="171" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2020–2022</text>
+<rect x="225" y="132" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">HiPPO / S4</text>
+<text x="245" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Structured dynamics and long filters.</text>
+<path d="M195,202 L195,274" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="319" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2023</text>
+<rect x="225" y="280" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="318" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Mamba</text>
+<text x="245" y="357" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Input-dependent writes, reads, and step sizes.</text>
+<path d="M195,350 L195,422" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="467" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2024</text>
+<rect x="225" y="428" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="466" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Mamba-2 / DeltaNet</text>
+<text x="245" y="505" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Chunked evaluation and targeted memory correction.</text>
+<path d="M195,498 L195,570" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="615" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2024–2026</text>
+<rect x="225" y="576" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="614" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Hybrids</text>
+<text x="245" y="653" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Jamba · Falcon-H1 · Qwen3.5 · Kimi K3</text>
+<path d="M195,646 L195,718" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="763" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2026</text>
+<rect x="225" y="724" width="835" height="124" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="245" y="762" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Mamba-3 / SISA</text>
+<text x="245" y="801" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Richer state / an importance term in attention scores.</text>
+</svg>

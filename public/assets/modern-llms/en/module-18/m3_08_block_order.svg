@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="743" viewBox="0 0 1100 743">
+<title>Where normalization acts</title>
+<desc>One sublayer F: attention or an FFN. Each has its own residual connection.</desc>
+<rect width="1100" height="743" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Where normalization acts</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">One sublayer F: attention or an FFN. Each has its own residual connection.</text>
+<text x="280.0" y="154" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="middle">Post-norm</text>
+<text x="280.0" y="204" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="400" fill="#2E3440" text-anchor="middle">x</text>
+<path d="M280,217 L280,252" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="140" y="252" width="280" height="80" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="164" y="292" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">F</text>
+<path d="M280,332 L280,367" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="140" y="367" width="280" height="80" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="164" y="407" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">+ x</text>
+<path d="M280,447 L280,482" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="140" y="482" width="280" height="80" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="164" y="522" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">LayerNorm</text>
+<path d="M270,205 L95,205" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M95,205 L95,407" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M95,407 L140,407" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="280.0" y="644" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="400" fill="#2E3440" text-anchor="middle">LN(x + F(x))</text>
+<text x="820.0" y="154" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="middle">Pre-norm</text>
+<text x="820.0" y="204" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="400" fill="#2E3440" text-anchor="middle">x</text>
+<path d="M820,217 L820,252" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="680" y="252" width="280" height="80" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="704" y="292" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">LayerNorm</text>
+<path d="M820,332 L820,367" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="680" y="367" width="280" height="80" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="704" y="407" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">F</text>
+<path d="M820,447 L820,482" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="680" y="482" width="280" height="80" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="704" y="522" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">+ x</text>
+<path d="M810,205 L635,205" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M635,205 L635,522" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M635,522 L680,522" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="820.0" y="644" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="400" fill="#2E3440" text-anchor="middle">x + F(LN(x))</text>
+<text x="40" y="704" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Repeat the wrapper for each sublayer. Moving LayerNorm changes the computation.</text>
+</svg>

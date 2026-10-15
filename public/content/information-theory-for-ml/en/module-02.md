@@ -1,5 +1,7 @@
 # Module 2. Entropy
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** The main route is §§2.1–2.4. Short proofs of the basic properties belong to the core: they expose the mechanism and will be used later. Two passages are marked as mathematical deep dives—the derivation of entropy rate and the derivative of entropy with respect to temperature. They can wait for a second pass. The engineering aside on speculative decoding is optional as well.
 
 ## 2.1. Entropy: the average bill for uncertainty
@@ -343,6 +345,8 @@ H_P(X_{1:n})
 $$
 
 After division by $n$, the model coding rate may approach entropy rate from above. The gap is the price of model mismatch; in the next module it will acquire the name KL divergence.
+
+The inequality concerns an expectation over the source. For example, with $P=Q=\operatorname{Bernoulli}(0.9)$, entropy is about $0.469$ bits, while a corpus consisting of one outcome $1$ has NLL only $-\log_2 0.9\approx0.152$ bits. That corpus occurs with probability $0.9$: one measurement can lie below entropy without violating the theorem.
 
 ## 2.4. How to read entropy in a language model
 

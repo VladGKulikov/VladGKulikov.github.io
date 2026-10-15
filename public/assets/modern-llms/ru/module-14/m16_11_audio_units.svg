@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="957" viewBox="0 0 1100 957">
+<title>Шесть секунд звука: разные единицы представления</title>
+<desc>Два отдельных учебных сценария; кодек не является продолжением верхнего пути.</desc>
+<rect width="1100" height="957" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Шесть секунд звука: разные единицы представления</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Два отдельных учебных сценария; кодек не является продолжением верхнего пути.</text>
+<rect x="45" y="132" width="1010" height="105" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="65" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Непрерывные признаки для входа модели</text>
+<text x="65" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">16 kHz: 96 000 отсчётов. Окно 400, шаг 160; дополнение справа.</text>
+<rect x="45" y="277" width="470" height="170" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="65" y="315" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">600 окон → спектры 600 × 201</text>
+<text x="65" y="354" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Перекрытие окон не удлиняет исходную</text>
+<text x="65" y="379" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">запись.</text>
+<path d="M523,362 L574,362" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="585" y="277" width="470" height="170" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="605" y="315" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Усреднить 4 кадра → 150</text>
+<text x="605" y="346" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">позиций</text>
+<text x="605" y="385" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">После проекции: 18.75 MiB KV при 128</text>
+<text x="605" y="410" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">KiB/позицию.</text>
+<rect x="45" y="487" width="1010" height="105" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="65" y="525" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Отдельный сценарий дискретного кодека</text>
+<text x="65" y="564" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">75 кадров/с; 8 книг по 1024 записи. Каждый индекс занимает 10 бит.</text>
+<rect x="45" y="632" width="470" height="170" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="65" y="670" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">450 временных кадров</text>
+<text x="65" y="709" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">В каждом кадре — восемь индексов, по</text>
+<text x="65" y="734" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">одному на книгу.</text>
+<path d="M523,717 L574,717" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="585" y="632" width="470" height="170" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="605" y="670" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">3600 индексов → 36 000 бит</text>
+<text x="605" y="709" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">6000 бит/с полезной нагрузки; без упаковки</text>
+<text x="605" y="734" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">файла и служебных данных.</text>
+<text x="40" y="854" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Длина последовательности декодера зависит от того, как объединяются или предсказываются коды.</text>
+<text x="40" y="878" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">3600 индексов сами по себе не означают 3600 обычных KV-позиций.</text>
+</svg>

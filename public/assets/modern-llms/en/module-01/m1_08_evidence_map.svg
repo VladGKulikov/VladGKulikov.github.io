@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="736" viewBox="0 0 1100 736">
+<title>What evidence supports a choice</title>
+<desc>Different sources answer different questions; row order is not a reliability score.</desc>
+<rect width="1100" height="736" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">What evidence supports a choice</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Different sources answer different questions; row order is not a reliability score.</text>
+<rect x="40" y="132" width="1020" height="100" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Provider report</text>
+<text x="350" y="165" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">What does the release claim?</text>
+<text x="700" y="164" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Who chose the tasks and budget?</text>
+<rect x="40" y="250" width="1020" height="100" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="288" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Reproduction</text>
+<text x="350" y="283" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Can the result be repeated?</text>
+<text x="700" y="282" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Do version and protocol match?</text>
+<rect x="40" y="368" width="1020" height="100" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="406" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Paired comparison</text>
+<text x="350" y="401" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Which fares better on the same</text>
+<text x="350" y="426" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">tasks?</text>
+<text x="700" y="400" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">How are judges and samples chosen?</text>
+<rect x="40" y="486" width="1020" height="100" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="524" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Own evaluation set</text>
+<text x="350" y="519" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Does it work on our data?</text>
+<text x="700" y="518" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Is there leakage or selection bias?</text>
+<rect x="40" y="604" width="1020" height="100" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="642" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Operational telemetry</text>
+<text x="350" y="637" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">What happens after deployment?</text>
+<text x="700" y="636" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Are quality labels reliable?</text>
+</svg>

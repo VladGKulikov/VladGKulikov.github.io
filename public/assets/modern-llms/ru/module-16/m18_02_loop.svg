@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="584" viewBox="0 0 1100 584">
+<title>Ответ ещё нужно проверить</title>
+<desc>Показан путь действия; предложение ответа сразу передаётся проверке цели.</desc>
+<rect width="1100" height="584" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Ответ ещё нужно проверить</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Показан путь действия; предложение ответа сразу передаётся проверке цели.</text>
+<rect x="40" y="132" width="300" height="155" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Контекст</text>
+<text x="60" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Цель, история,</text>
+<text x="60" y="234" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">инструменты</text>
+<rect x="400" y="132" width="300" height="155" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="420" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Предложение</text>
+<text x="420" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Действие или ответ</text>
+<rect x="760" y="132" width="300" height="155" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="780" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Проверка</text>
+<text x="780" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Схема и полномочия</text>
+<path d="M345,207 L390,207" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M705,207 L750,207" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="760" y="357" width="300" height="150" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="780" y="395" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Исполнение</text>
+<text x="780" y="434" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Изоляция и лимиты</text>
+<rect x="400" y="357" width="300" height="150" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="420" y="395" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Наблюдение</text>
+<text x="420" y="434" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Результат или ошибка</text>
+<rect x="40" y="357" width="300" height="150" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="395" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Критерий задачи</text>
+<text x="60" y="434" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Проверен → завершить;</text>
+<text x="60" y="459" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">иначе продолжить</text>
+<path d="M910,292 L910,347" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M750,432 L710,432" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M390,432 L350,432" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M190,347 L190,297" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

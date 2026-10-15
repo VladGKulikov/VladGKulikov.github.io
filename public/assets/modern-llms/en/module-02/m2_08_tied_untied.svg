@@ -1,39 +1,35 @@
-<svg viewBox="0 0 1100 600" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
-<title>Tied and untied embeddings</title>
-<desc>Documented open configurations</desc>
-<rect width="1100" height="600" fill="#FFFFFF"/>
-<text x="45" y="50" text-anchor="start" font-size="28" font-weight="700" fill="#2E3440">
-<tspan x="45" dy="0">One vocabulary—one matrix or two</tspan>
-</text>
-<text x="45" y="82" text-anchor="start" font-size="16.1" font-weight="400" fill="#4C566A">
-<tspan x="45" dy="0">Read tie_word_embeddings from the actual configuration; do not infer it from model size.</tspan>
-</text>
-<rect x="55" y="120" width="470" height="345" rx="14" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.5"/>
-<text x="79" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="79" dy="0">Tied: one matrix E</tspan>
-</text>
-<text x="79" y="203" text-anchor="start" font-size="18" font-weight="400" fill="#4C566A">
-<tspan x="79" dy="0">Input lookup uses E; output logits use Eᵀ.</tspan>
-<tspan x="79" dy="25">Parameters: V·d.</tspan>
-<tspan x="79" dy="25">Savings versus untied: V·d.</tspan>
-<tspan x="79" dy="25">Documented example: Gemma</tspan>
-<tspan x="79" dy="25">(tie_word_embeddings=true).</tspan>
-</text>
-<rect x="575" y="120" width="470" height="345" rx="14" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.5"/>
-<text x="599" y="166" text-anchor="start" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="599" dy="0">Untied: independent E and U</tspan>
-</text>
-<text x="599" y="203" text-anchor="start" font-size="18" font-weight="400" fill="#4C566A">
-<tspan x="599" dy="0">E maps input token IDs; U projects hidden</tspan>
-<tspan x="599" dy="25">states to logits.</tspan>
-<tspan x="599" dy="25">Parameters: 2V·d.</tspan>
-<tspan x="599" dy="25">The two roles may diverge.</tspan>
-<tspan x="599" dy="25">Documented examples: Llama 2/3/4, DeepSeek</tspan>
-<tspan x="599" dy="25">V4, Kimi K3.</tspan>
-</text>
-<rect x="135" y="492" width="830" height="84" rx="12" fill="#FAF5E3" stroke="#EBCB8B" stroke-width="1.5"/>
-<text x="550" y="532" text-anchor="middle" font-size="19" font-weight="700" fill="#2E3440">
-<tspan x="550" dy="0">V=16,384, d=512 → one matrix = 8,388,608 parameters;</tspan>
-<tspan x="550" dy="25">untied doubles the vocabulary-facing matrices.</tspan>
-</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="618" viewBox="0 0 1100 618">
+<title>One weight table or two</title>
+<desc>Input selects a row. Output computes scores for all next-token IDs.</desc>
+<rect width="1100" height="618" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">One weight table or two</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Input selects a row. Output computes scores for all next-token IDs.</text>
+<rect x="40" y="132" width="498" height="338" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64" y="174" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Tied weights</text>
+<text x="64" y="212" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="start">E: V × d; U = Eᵀ</text>
+<text x="64" y="263" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">ID i</text>
+<path d="M145,260 L213,260" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="228" y="228" width="280" height="60" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="367.0" y="261" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="middle">E[i]</text>
+<text x="64" y="350" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">h: 1 × d</text>
+<path d="M175,346 L213,346" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="228" y="314" width="280" height="68" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="367.0" y="350" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">hEᵀ → z: 1 × V</text>
+<text x="64" y="430" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Vd unique parameters</text>
+<rect x="562" y="132" width="498" height="338" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586" y="174" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Untied weights</text>
+<text x="586" y="212" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="start">E: V × d; U: d × V</text>
+<text x="586" y="263" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">ID i</text>
+<path d="M667,260 L735,260" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="750" y="228" width="280" height="60" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="889.0" y="261" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="middle">E[i]</text>
+<text x="586" y="350" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">h: 1 × d</text>
+<path d="M697,346 L735,346" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="750" y="314" width="280" height="68" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="889.0" y="350" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">hU → z: 1 × V</text>
+<text x="586" y="430" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">2Vd unique parameters</text>
+<text x="40" y="517" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Example: V = 16,384, d = 512. One table: 8,388,608 parameters, 16 MiB in BF16. Two independent tables: 32 MiB.</text>
+<text x="40" y="541" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Weight payload only, without output bias.</text>
+<text x="40" y="579" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Check tie_word_embeddings in the configuration. Sharing weights does not make projection invert lookup.</text>
 </svg>

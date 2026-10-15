@@ -34,8 +34,30 @@ The canonical authoring repositories are maintained separately. This public repo
 
 ## Publication edition
 
-The current public Reader Edition is **2026.1**, released on 2026-08-10. Its
-machine-readable metadata is recorded in [`PUBLICATION.json`](PUBLICATION.json).
+The live lecture texts were updated on **2026-10-15** from the audited bilingual
+sources: 20 Modern LLMs modules, 13 RL for LLM modules, and 16 Information Theory
+modules per language. Existing module URLs retain their subjects, while the
+Modern LLMs reading order follows the revised course.
+
+The archived book edition remains **2026.1**, released on 2026-08-10. Its DOI
+identifies that archive; the live website has a separate content update date in
+[`PUBLICATION.json`](PUBLICATION.json). Source commits, per-lecture hashes, and
+the lecture-only publication checks are recorded in [`CONTENT_BUILD.json`](CONTENT_BUILD.json).
+
+To rebuild from local canonical repositories without changing them:
+
+```powershell
+python scripts/refresh-course-content.py
+npm ci
+npm run check:math
+npm run check:publication
+npm run build:pages
+```
+
+Use `--source-root "modern-llms=C:/path/to/source"` (and the corresponding
+`rl-for-llm` / `information-theory-for-ml` options) to override source locations.
+The section exclusions in the builder are reviewed for the October 2026 texts;
+review them again when changing lecture structure.
 
 ## Licensing
 
@@ -58,7 +80,7 @@ covered by these licenses.
 ## Citation
 
 GitHub-compatible citation metadata is provided in
-[`CITATION.cff`](CITATION.cff). The DOI for the current public Reader Edition
+[`CITATION.cff`](CITATION.cff). The DOI for the archived public Reader Edition
 `2026.1` is <https://doi.org/10.5281/zenodo.21877457>. Use
 <https://doi.org/10.5281/zenodo.21877456> when linking to the collection across
 all current and future editions.

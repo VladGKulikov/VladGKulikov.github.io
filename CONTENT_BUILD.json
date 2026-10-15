@@ -1,0 +1,2394 @@
+{
+  "schema": "course-publication.local-content-build.v2",
+  "content_updated": "2026-10-15",
+  "source_repositories": {
+    "modern-llms": {
+      "commit": "ddbc44877ef6b1ee08ea87447c553848b5ec385e"
+    },
+    "rl-for-llm": {
+      "commit": "02e9235baf5dbb55e04d78e7df1e702d8cd427dc"
+    },
+    "information-theory-for-ml": {
+      "commit": "6eebd71a0a0043b23250655c559a8a2d6d9357a2"
+    }
+  },
+  "source_files": {
+    "information-theory-for-ml:en:module-01": {
+      "path": "Module_01/Module_1__Introduction.md",
+      "sha256": "36b5a7e03d9316eec60b248101ef60528c1a556365710462d3145222789502c7"
+    },
+    "information-theory-for-ml:en:module-02": {
+      "path": "Module_02/Module_2__Entropy.md",
+      "sha256": "77dab6388bafd8a1055b4ca8f0dc46a51c0607358fa9cbbe9dd6bc3ca6b947b3"
+    },
+    "information-theory-for-ml:en:module-03": {
+      "path": "Module_03/Module_3__Cross_entropy_and_KL.md",
+      "sha256": "7fbfc6e4bd7484652a17aa181d3f8a9c906e8bfa2c858373a77df273940f8516"
+    },
+    "information-theory-for-ml:en:module-04": {
+      "path": "Module_04/Module_4__Jensen_inequality.md",
+      "sha256": "69fded3466c94ea63832b0c7be6ada0c102098ee4e795460c4bb6981b21c72e1"
+    },
+    "information-theory-for-ml:en:module-05": {
+      "path": "Module_05/Module_5__Mutual_information.md",
+      "sha256": "6d363d859f497a19f66b6c9c29e4f22320e51f1098fb3da187daa3b774754417"
+    },
+    "information-theory-for-ml:en:module-06": {
+      "path": "Module_06/Module_6__Source_coding.md",
+      "sha256": "34ff280cebdcd60dc067b16b09bd098cbccfbec8837374ba6e1193a260a52046"
+    },
+    "information-theory-for-ml:en:module-07": {
+      "path": "Module_07/Module_7__Channel_and_capacity.md",
+      "sha256": "c54b3d63c0d8405ed1a0f7b1fd9c427bf8f29fb2a56342f78785231d825b4989"
+    },
+    "information-theory-for-ml:en:module-08": {
+      "path": "Module_08/Module_8__Maximum_entropy.md",
+      "sha256": "6a43b1853383166fc4605ccfa64a58baca68ae7ab188e86dc65fcf156abfd4af"
+    },
+    "information-theory-for-ml:en:module-09": {
+      "path": "Module_09/Module_9__Information_Bottleneck.md",
+      "sha256": "0cfef839067a411ce2229a6a867f1405d93b35cabd09ba085ae52575ab0e65bb"
+    },
+    "information-theory-for-ml:en:module-10": {
+      "path": "Module_10/Module_10__Algorithmic_information_theory.md",
+      "sha256": "0142f7d7795e49e064cb89f4663447f07f979320c71aade72dd471cb1e265f8d"
+    },
+    "information-theory-for-ml:en:module-11": {
+      "path": "Module_11/Module_11__f_divergences.md",
+      "sha256": "af9bf8216c243fe86e02387f0f98d882fad9fc8990d17c4edd8edb9903824d96"
+    },
+    "information-theory-for-ml:en:module-12": {
+      "path": "Module_12/Module_12__PAC_Bayes_and_MI_bounds.md",
+      "sha256": "215e330f8ea14c32c35f323d0c1440091df0abda06df2041bedfe95cddabbf2f"
+    },
+    "information-theory-for-ml:en:module-13": {
+      "path": "Module_13/Module_13__Reasoning_in_LLMs.md",
+      "sha256": "7f8a16343763905d64ee5b35779ea4f4462cf55758df15f33b61bb9532e3b8d2"
+    },
+    "information-theory-for-ml:en:module-14": {
+      "path": "Module_14/Module_14__Computer_vision_through_information_theory.md",
+      "sha256": "e2aab97ad17c1d9a5e99fb7d74b5186e5ebb3c8633429d94c932c4f1562ffa0c"
+    },
+    "information-theory-for-ml:en:module-15": {
+      "path": "Module_15/Module_15__Information_geometry.md",
+      "sha256": "c44f3106df83fa565c933f5c6705ee49d163226aca02abcaca0993ebca1f0c98"
+    },
+    "information-theory-for-ml:en:module-16": {
+      "path": "Module_16/Module_16__Course_reference.md",
+      "sha256": "2434e17737344b536e95835eaeb7919889f742a65ba8327465154d0077b8573c"
+    },
+    "information-theory-for-ml:ru:module-01": {
+      "path": "Module_01/Module_1__Introduction_RU.md",
+      "sha256": "5e1e76b9608e3b08052bb8b25a93266d56492ea5ce17b5263fffa023a84bf81e"
+    },
+    "information-theory-for-ml:ru:module-02": {
+      "path": "Module_02/Module_2__Entropy_RU.md",
+      "sha256": "7ef34e715344a0cadcdadbf20a4951a487b23e10f2f7204a73ae4d0792ec8a1e"
+    },
+    "information-theory-for-ml:ru:module-03": {
+      "path": "Module_03/Module_3__Cross_entropy_and_KL_RU.md",
+      "sha256": "2775cea935223b6a154f9889d05e70ac3b72f1c579b64e005ada2ace77f32127"
+    },
+    "information-theory-for-ml:ru:module-04": {
+      "path": "Module_04/Module_4__Jensen_inequality_RU.md",
+      "sha256": "2d84942069893e1ffdb8180485cadc600d8bd5d6d8c5b9cad5500cf3fcadedec"
+    },
+    "information-theory-for-ml:ru:module-05": {
+      "path": "Module_05/Module_5__Mutual_information_RU.md",
+      "sha256": "d623b2137deeb096a47e08e2ee52d1d43d61d1d86ebb1393398f6d486e0bbc82"
+    },
+    "information-theory-for-ml:ru:module-06": {
+      "path": "Module_06/Module_6__Source_coding_RU.md",
+      "sha256": "4c386b887dd3cd996525ed38e918a0d8dbddb60422eff9d198dccd44d2814525"
+    },
+    "information-theory-for-ml:ru:module-07": {
+      "path": "Module_07/Module_7__Channel_and_capacity_RU.md",
+      "sha256": "04e33f952972a9585eeabe97ec44fae847e09610db1ae4ab1db90f9e06252456"
+    },
+    "information-theory-for-ml:ru:module-08": {
+      "path": "Module_08/Module_8__Maximum_entropy_RU.md",
+      "sha256": "e2f69a28d12749de8b3757a06f9ba4c708f4e94ea18e07f7f7c795ac22e6ea40"
+    },
+    "information-theory-for-ml:ru:module-09": {
+      "path": "Module_09/Module_9__Information_Bottleneck_RU.md",
+      "sha256": "cc21cde2b26a5f51a53f9d215289bf3f4a6f98193b2609841f0b867b5d726631"
+    },
+    "information-theory-for-ml:ru:module-10": {
+      "path": "Module_10/Module_10__Algorithmic_information_theory_RU.md",
+      "sha256": "491810628618af3441d1d7a601f8bce3ba6a92444229dda0fa17fbb62bcf32a9"
+    },
+    "information-theory-for-ml:ru:module-11": {
+      "path": "Module_11/Module_11__f_divergences_RU.md",
+      "sha256": "1f14e13079363ab0310093f42b431b740bd1b38f331b3b0e0f0e399a99996e0f"
+    },
+    "information-theory-for-ml:ru:module-12": {
+      "path": "Module_12/Module_12__PAC_Bayes_and_MI_bounds_RU.md",
+      "sha256": "a0d099a9981d7325ea2947a1a78456875d85dc29b2f2f594254bfa77bcc8c4e3"
+    },
+    "information-theory-for-ml:ru:module-13": {
+      "path": "Module_13/Module_13__Reasoning_in_LLMs_RU.md",
+      "sha256": "eeadc7559147f9bd50e46b64f53032ddffb4d7719b9ed78a20d5cb3c8d582f99"
+    },
+    "information-theory-for-ml:ru:module-14": {
+      "path": "Module_14/Module_14__Computer_vision_through_information_theory_RU.md",
+      "sha256": "0b3ef01f1116603c093e32d828c09dd018cf3b1f0f05cbf9fec0e2e599cf3294"
+    },
+    "information-theory-for-ml:ru:module-15": {
+      "path": "Module_15/Module_15__Information_geometry_RU.md",
+      "sha256": "a5fa380a12ed00d54b83f753c9c9cfbb963cb888ec21e346dc41fddb59d88d3f"
+    },
+    "information-theory-for-ml:ru:module-16": {
+      "path": "Module_16/Module_16__Course_reference_RU.md",
+      "sha256": "1b9d5cb92f1f6d23c90cdf1fe3c0b8bbe485c07958dbe0b1849d4302036001ed"
+    },
+    "modern-llms:en:module-01": {
+      "path": "modules/module-01/en/module_01_lecture_EN.md",
+      "sha256": "054925b7db5ded06944c496a959edf1a812b639491db66d37eef0c03359fd906"
+    },
+    "modern-llms:en:module-02": {
+      "path": "modules/module-02/en/module_02_lecture_EN.md",
+      "sha256": "32741c71b9627fbfbd4a4d4c7d0b6cb720653a989ef5aca93585cb76214056fe"
+    },
+    "modern-llms:en:module-18": {
+      "path": "modules/module-03/en/module_03_lecture_EN.md",
+      "sha256": "944878e4c841505cb4aedfa5233f8e072a5ba2918291f6a1c4112aa7ef0d1c75"
+    },
+    "modern-llms:en:module-03": {
+      "path": "modules/module-04/en/module_04_lecture_EN.md",
+      "sha256": "7b5226b4469d8fcdb18cf50f5c5372e8a2d4ef8c216383d2dcb74f5e21362802"
+    },
+    "modern-llms:en:module-04": {
+      "path": "modules/module-05/en/module_05_lecture_EN.md",
+      "sha256": "be0a1eee9002b437d7e1e38086b85178bf8fe5fb6e3ecd5bbe238333b077a3ac"
+    },
+    "modern-llms:en:module-05": {
+      "path": "modules/module-06/en/module_06_lecture_EN.md",
+      "sha256": "19918d5ddeeb78aec0e506c38fa397a76c310b97925d95b1f73d93931f0268ba"
+    },
+    "modern-llms:en:module-06": {
+      "path": "modules/module-07/en/module_07_lecture_EN.md",
+      "sha256": "97cd2cbc94c2ea9f1d3a3fafd65d378627bbe912d35f1bdf4a7b5046e25cb3de"
+    },
+    "modern-llms:en:module-07": {
+      "path": "modules/module-08/en/module_08_lecture_EN.md",
+      "sha256": "88eb938e64f374a6d093ce11d26ce5fb88b744e9314538509e27907b54469e33"
+    },
+    "modern-llms:en:module-08": {
+      "path": "modules/module-09/en/module_09_lecture_EN.md",
+      "sha256": "6be0d82a5d9f939dffe2b6840259eb555532647ad7996948d80e619bf50cd8a7"
+    },
+    "modern-llms:en:module-09": {
+      "path": "modules/module-10/en/module_10_lecture_EN.md",
+      "sha256": "ea32e5c31fd079e9274e37951fcc46273ed7e7fd32fb4db41b3328743daa98b2"
+    },
+    "modern-llms:en:module-10": {
+      "path": "modules/module-11/en/module_11_lecture_EN.md",
+      "sha256": "2318ea4825cfc3352d0680f28f6446df01de53a311ade338a624450dfc6ade7f"
+    },
+    "modern-llms:en:module-07b": {
+      "path": "modules/module-12/en/module_12_lecture_EN.md",
+      "sha256": "c5562fb090934bebb01140b973efc562368911dbb35e1015db3a85bfaabd22c0"
+    },
+    "modern-llms:en:module-11": {
+      "path": "modules/module-13/en/module_13_lecture_EN.md",
+      "sha256": "375045da9c03d811ef904550989f4bdd4ad06b4e10cc9468148f1039890ee81e"
+    },
+    "modern-llms:en:module-12": {
+      "path": "modules/module-14/en/module_14_lecture_EN.md",
+      "sha256": "f5f9cb04e6fb2b48b2d0018a5a5b6b67c363d3b252baaa37138ea26059a2892e"
+    },
+    "modern-llms:en:module-13": {
+      "path": "modules/module-15/en/module_15_lecture_EN.md",
+      "sha256": "ed0f564f451a4a2f6a817695eccfc16381e71b1d3c1bfc604b532a38d38cf96f"
+    },
+    "modern-llms:en:module-14": {
+      "path": "modules/module-16/en/module_16_lecture_EN.md",
+      "sha256": "5609a74b46497a92c03dc6556f699dee502841c5f62ff05ba851338ca7b10a08"
+    },
+    "modern-llms:en:module-15": {
+      "path": "modules/module-17/en/module_17_lecture_EN.md",
+      "sha256": "a0c6a27fff5898fd15152e2d442c56ed7a03a1c49484e01eba26f8727d081d0f"
+    },
+    "modern-llms:en:module-16": {
+      "path": "modules/module-18/en/module_18_lecture_EN.md",
+      "sha256": "5b2c28a90ac87e65ded386e982566cd9c9d7eaa936d82fb59a2a82c4a011dc66"
+    },
+    "modern-llms:en:module-17": {
+      "path": "modules/module-19/en/module_19_lecture_EN.md",
+      "sha256": "81bdd7243286042672300c3b0d11fa98c25ccf9d644921c4c027638f7f7d676f"
+    },
+    "modern-llms:en:module-20": {
+      "path": "modules/module-20/en/module_20_lecture_EN.md",
+      "sha256": "5dc3c7c1e2caaf2dfdd08aba5920ad6c7842bfb177b100e46d5abd876e846812"
+    },
+    "modern-llms:ru:module-01": {
+      "path": "modules/module-01/ru/module_01_lecture_RU.md",
+      "sha256": "06da6e2054ca2db31004fd7b8101b81226bba985bc84ede221e31d4f7c830c94"
+    },
+    "modern-llms:ru:module-02": {
+      "path": "modules/module-02/ru/module_02_lecture_RU.md",
+      "sha256": "b16374cbccf23c87f463dab74380396320c7e7d023486509c8cac27c527de22f"
+    },
+    "modern-llms:ru:module-18": {
+      "path": "modules/module-03/ru/module_03_lecture_RU.md",
+      "sha256": "5b6c1f9e80c10c17176d6048b8066ec552c0ebb5e7f5f3b0bae3b77d52434f67"
+    },
+    "modern-llms:ru:module-03": {
+      "path": "modules/module-04/ru/module_04_lecture_RU.md",
+      "sha256": "abbbb2cd2acb677c8e681d7b66b71ef44e518a5e78b2e68005c6336b0829ba29"
+    },
+    "modern-llms:ru:module-04": {
+      "path": "modules/module-05/ru/module_05_lecture_RU.md",
+      "sha256": "6215563453f33c6ded180b5766878441ec0f50d63505497e86ac4b77c3265069"
+    },
+    "modern-llms:ru:module-05": {
+      "path": "modules/module-06/ru/module_06_lecture_RU.md",
+      "sha256": "71110cae4852fed9cf9c308aedd061321e42b3c38b87aed81893edb738d90e00"
+    },
+    "modern-llms:ru:module-06": {
+      "path": "modules/module-07/ru/module_07_lecture_RU.md",
+      "sha256": "9ae689abd4736713974231c63052681d88d27873f3ba187cd19be1ba5c5dbd82"
+    },
+    "modern-llms:ru:module-07": {
+      "path": "modules/module-08/ru/module_08_lecture_RU.md",
+      "sha256": "cfe16e110c1f8d5f3f3a14404a84472908a57c462a27224d4db792ecacc4672c"
+    },
+    "modern-llms:ru:module-08": {
+      "path": "modules/module-09/ru/module_09_lecture_RU.md",
+      "sha256": "00a2580e787d69b2d56e61fada9634dd784c75c6c551f8c1bc1d9b6ad7f1803f"
+    },
+    "modern-llms:ru:module-09": {
+      "path": "modules/module-10/ru/module_10_lecture_RU.md",
+      "sha256": "d6873531547bc8841abde6dc86d89fdcace71f8f7a765a1e7e65128695f7b69b"
+    },
+    "modern-llms:ru:module-10": {
+      "path": "modules/module-11/ru/module_11_lecture_RU.md",
+      "sha256": "11bcc884c0e1c6d317aa1873685f7991b029a8ca99a7d7c546f5c20b9939a168"
+    },
+    "modern-llms:ru:module-07b": {
+      "path": "modules/module-12/ru/module_12_lecture_RU.md",
+      "sha256": "69a068737db6e48a61092df4f5e7b513ba143c4e0b4f6ea8acfdf98009b10ed6"
+    },
+    "modern-llms:ru:module-11": {
+      "path": "modules/module-13/ru/module_13_lecture_RU.md",
+      "sha256": "c53b476e7a4bb7f9013830f2352d899ea8936287bbe2005f57805e6a0c9de2cd"
+    },
+    "modern-llms:ru:module-12": {
+      "path": "modules/module-14/ru/module_14_lecture_RU.md",
+      "sha256": "d600c5424c057e89b54f9d4ec70b0809c6089bd230724d973eeb540f4bfbe856"
+    },
+    "modern-llms:ru:module-13": {
+      "path": "modules/module-15/ru/module_15_lecture_RU.md",
+      "sha256": "19c180984eabe27604bef1d1bea397521d5e6ea45ef0217db9e5b38fbc9bd602"
+    },
+    "modern-llms:ru:module-14": {
+      "path": "modules/module-16/ru/module_16_lecture_RU.md",
+      "sha256": "7ef216e21a29bab5476d26b7034496efba5e9c20863363b29fb1a73f20e2610d"
+    },
+    "modern-llms:ru:module-15": {
+      "path": "modules/module-17/ru/module_17_lecture_RU.md",
+      "sha256": "7fb55dfcbe1e869dab3b50c4f9db308a76d4395c000186dea934d57b708fcc3c"
+    },
+    "modern-llms:ru:module-16": {
+      "path": "modules/module-18/ru/module_18_lecture_RU.md",
+      "sha256": "9b92889805b66a389ff8c2108f95ffccea4c595db5dbfc780bfc0840e50447fb"
+    },
+    "modern-llms:ru:module-17": {
+      "path": "modules/module-19/ru/module_19_lecture_RU.md",
+      "sha256": "b67aec9abe39364dce967a574b205266c48a19e1760191358809b5df7c46d155"
+    },
+    "modern-llms:ru:module-20": {
+      "path": "modules/module-20/ru/module_20_lecture_RU.md",
+      "sha256": "c8f336ff0744888cb281474954d2e44d6125f6dd09681e265468ad73ddc4c8b0"
+    },
+    "rl-for-llm:en:module-01": {
+      "path": "modules/module-01/Module_1_EN.md",
+      "sha256": "28a0793726e5466acc76a649cb18c7b66cadc91590621a0fb9d540db357616ec"
+    },
+    "rl-for-llm:en:module-02": {
+      "path": "modules/module-02/Module_2_EN.md",
+      "sha256": "ad62593c874c9cde469d485435537fde25addbc60a84ad282e8ed2674167ca9b"
+    },
+    "rl-for-llm:en:module-03": {
+      "path": "modules/module-03/Module_3_EN.md",
+      "sha256": "6d4575880aee33b38e4795df4b95fdb8424d456747b04a4d5c8c382d81283037"
+    },
+    "rl-for-llm:en:module-04": {
+      "path": "modules/module-04/Module_4_EN.md",
+      "sha256": "20c0453f8af0551a3500fc0c36e5b85fa1fcbb6ef5b7a70503cc041a164e41e7"
+    },
+    "rl-for-llm:en:module-05": {
+      "path": "modules/module-05/Module_5_EN.md",
+      "sha256": "65fe47b401dc2676a6c15c54250abec97eb6e9cfea7261929573350ac68a3749"
+    },
+    "rl-for-llm:en:module-06": {
+      "path": "modules/module-06/Module_6_EN.md",
+      "sha256": "55cbfd15d63dec71b16baa941bc585d4ad660dd3da45aec7498afe75e9794891"
+    },
+    "rl-for-llm:en:module-07": {
+      "path": "modules/module-07/Module_7_EN.md",
+      "sha256": "15e3ab5f4593587e25858fda44477859d670d6e5bdf00f6faa23da5989962a52"
+    },
+    "rl-for-llm:en:module-08": {
+      "path": "modules/module-08/Module_8_EN.md",
+      "sha256": "502db865886257e6e2df199117caa69f6500482faa2e7568a5552f25838c2d7d"
+    },
+    "rl-for-llm:en:module-09": {
+      "path": "modules/module-09/Module_9_EN.md",
+      "sha256": "6e4d7ae62de1fa3f0d520806cb043d78f64624a95b2e1a2dae8461c53b3fd966"
+    },
+    "rl-for-llm:en:module-10": {
+      "path": "modules/module-10/Module_10_EN.md",
+      "sha256": "575c115c92800ba58633ad743e7903d81510d3eb4b0148a3899beda458d2caa9"
+    },
+    "rl-for-llm:en:module-11": {
+      "path": "modules/module-11/Module_11_EN.md",
+      "sha256": "d91a687f3adab66ea48adf6d06b878956e8c50f0017f14f383afdb1b34802b22"
+    },
+    "rl-for-llm:en:module-12": {
+      "path": "modules/module-12/Module_12_EN.md",
+      "sha256": "809b83fea63a7e0bf94f247e60294a60a856b5cb19a22091dd9ffd751bc7f0f9"
+    },
+    "rl-for-llm:en:module-13": {
+      "path": "modules/module-13/Module_13_EN.md",
+      "sha256": "0ea44b675d6090d08a7778df8a4ff3155e80250a11d73d84e01605e99001b6fe"
+    },
+    "rl-for-llm:ru:module-01": {
+      "path": "modules/module-01/Module_1_RU.md",
+      "sha256": "fd65a70c2c6e62ea6d5b181155f7b8a3b8b39312e5d0094703070e5ef69a3a47"
+    },
+    "rl-for-llm:ru:module-02": {
+      "path": "modules/module-02/Module_2_RU.md",
+      "sha256": "818d42a66b89916d3d239768d8a9928c2d7fdf04ece5a1f2fb716fa5600eeba2"
+    },
+    "rl-for-llm:ru:module-03": {
+      "path": "modules/module-03/Module_3_RU.md",
+      "sha256": "963566f39843ce451838564ca79880546554a0206dfc59bcfdb1ac2b053b9aa6"
+    },
+    "rl-for-llm:ru:module-04": {
+      "path": "modules/module-04/Module_4_RU.md",
+      "sha256": "b2b026cb1dcd22e6769e0b8815db7f33d5ade1da6ef129f654abaf8fb4c5ffa4"
+    },
+    "rl-for-llm:ru:module-05": {
+      "path": "modules/module-05/Module_5_RU.md",
+      "sha256": "badc2f85a7cb9dff7136869c3abdce29bd55df0c97b52fa380017e795be44339"
+    },
+    "rl-for-llm:ru:module-06": {
+      "path": "modules/module-06/Module_6_RU.md",
+      "sha256": "535e87707b92b83aff2f4fcec45d9ca6feb60fd8633b081a877bee9f094cbd99"
+    },
+    "rl-for-llm:ru:module-07": {
+      "path": "modules/module-07/Module_7_RU.md",
+      "sha256": "6a99a19635b374d4a39e19f1728a0e4df6ab02dd90a60177458f008dae8ca52b"
+    },
+    "rl-for-llm:ru:module-08": {
+      "path": "modules/module-08/Module_8_RU.md",
+      "sha256": "c374c45d57688cd6cd69938f55167f84c3772c17c04a33bd41480b85b99d40d8"
+    },
+    "rl-for-llm:ru:module-09": {
+      "path": "modules/module-09/Module_9_RU.md",
+      "sha256": "522c20a95a09d413d7169550376f5b493e3ee95a4b209c7e5219783d3f69145a"
+    },
+    "rl-for-llm:ru:module-10": {
+      "path": "modules/module-10/Module_10_RU.md",
+      "sha256": "64eddd26323c0d67e90e78a24c9c9068d4f627a3f33a4f1a8e2093f54300fe68"
+    },
+    "rl-for-llm:ru:module-11": {
+      "path": "modules/module-11/Module_11_RU.md",
+      "sha256": "9c8208d3c2f9809660b6a3a4217dbe7ac3a3bc46e1b4722934a164f5298ae274"
+    },
+    "rl-for-llm:ru:module-12": {
+      "path": "modules/module-12/Module_12_RU.md",
+      "sha256": "6de17a9714b979b1ceaa8a4af96179e8595638abbeabffac1e607c9782c96ecf"
+    },
+    "rl-for-llm:ru:module-13": {
+      "path": "modules/module-13/Module_13_RU.md",
+      "sha256": "5e50842673d59e76fa05c40c2b7228c5db937ad20a054ece0ed4387b589bbd6e"
+    }
+  },
+  "validation": {
+    "status": "PASS",
+    "documents": 98,
+    "assets": 861,
+    "notebook_route_leaks": [],
+    "private_headings": [],
+    "missing_assets": [],
+    "math_delimiter_issues": [],
+    "removed_notebook_blocks": 78,
+    "omitted_private_sections": 146
+  },
+  "courses": [
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "title": "Современные LLM",
+      "description": "Архитектура, обучение, инференс, агенты и оценивание современных языковых моделей.",
+      "stepik_url": "https://stepik.org/297275",
+      "module_count": 20,
+      "characters": 1066285,
+      "modules": [
+        {
+          "id": "modern-llms:ru:module-01",
+          "module_key": "module-01",
+          "position": 1.0,
+          "title": "Модуль 1. Современный ландшафт LLM",
+          "content_file": "modern-llms/ru/module-01.md",
+          "characters": 79918,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:ru:module-02",
+          "module_key": "module-02",
+          "position": 2.0,
+          "title": "Модуль 2. Токенизация и эмбеддинги",
+          "content_file": "modern-llms/ru/module-02.md",
+          "characters": 49219,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-18",
+          "module_key": "module-18",
+          "position": 3.0,
+          "title": "Модуль 3. Базовый Transformer",
+          "content_file": "modern-llms/ru/module-18.md",
+          "characters": 56505,
+          "image_count": 12
+        },
+        {
+          "id": "modern-llms:ru:module-03",
+          "module_key": "module-03",
+          "position": 4.0,
+          "title": "Модуль 4. Позиционные представления: от синусоид к нескольким осям",
+          "content_file": "modern-llms/ru/module-03.md",
+          "characters": 44406,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:ru:module-04",
+          "module_key": "module-04",
+          "position": 5.0,
+          "title": "Модуль 5. Современные механизмы внимания",
+          "content_file": "modern-llms/ru/module-04.md",
+          "characters": 53274,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-05",
+          "module_key": "module-05",
+          "position": 6.0,
+          "title": "Модуль 6. Нормализация, активации и анатомия блока",
+          "content_file": "modern-llms/ru/module-05.md",
+          "characters": 47556,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-06",
+          "module_key": "module-06",
+          "position": 7.0,
+          "title": "Модуль 7. Mixture of Experts",
+          "content_file": "modern-llms/ru/module-06.md",
+          "characters": 48971,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-07",
+          "module_key": "module-07",
+          "position": 8.0,
+          "title": "Модуль 8. Альтернативы Transformer: SSM, Mamba и гибриды",
+          "content_file": "modern-llms/ru/module-07.md",
+          "characters": 31516,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-08",
+          "module_key": "module-08",
+          "position": 9.0,
+          "title": "Модуль 9. Претрейн: данные, законы масштабирования, оптимизаторы",
+          "content_file": "modern-llms/ru/module-08.md",
+          "characters": 75742,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-09",
+          "module_key": "module-09",
+          "position": 10.0,
+          "title": "Модуль 10. KV-кэши и эффективный инференс",
+          "content_file": "modern-llms/ru/module-09.md",
+          "characters": 58625,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-10",
+          "module_key": "module-10",
+          "position": 11.0,
+          "title": "Модуль 11. Спекулятивное декодирование и квантизация",
+          "content_file": "modern-llms/ru/module-10.md",
+          "characters": 53035,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-07b",
+          "module_key": "module-07b",
+          "position": 12.0,
+          "title": "Модуль 12. Диффузионные LLM",
+          "content_file": "modern-llms/ru/module-07b.md",
+          "characters": 43257,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-11",
+          "module_key": "module-11",
+          "position": 13.0,
+          "title": "Модуль 13. SFT и работа с данными",
+          "content_file": "modern-llms/ru/module-11.md",
+          "characters": 62890,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-12",
+          "module_key": "module-12",
+          "position": 14.0,
+          "title": "Модуль 14. Обучение по обратной связи: RLHF, DPO, RLOO и GRPO",
+          "content_file": "modern-llms/ru/module-12.md",
+          "characters": 47177,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-13",
+          "module_key": "module-13",
+          "position": 15.0,
+          "title": "Модуль 15. Модели рассуждения и вычисления во время инференса (test-time compute)",
+          "content_file": "modern-llms/ru/module-13.md",
+          "characters": 46943,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-14",
+          "module_key": "module-14",
+          "position": 16.0,
+          "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
+          "content_file": "modern-llms/ru/module-14.md",
+          "characters": 61468,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:ru:module-15",
+          "module_key": "module-15",
+          "position": 17.0,
+          "title": "Модуль 17. Эмбеддинги, поиск и RAG",
+          "content_file": "modern-llms/ru/module-15.md",
+          "characters": 52133,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-16",
+          "module_key": "module-16",
+          "position": 18.0,
+          "title": "Модуль 18. Агенты и работа с инструментами",
+          "content_file": "modern-llms/ru/module-16.md",
+          "characters": 54964,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:ru:module-17",
+          "module_key": "module-17",
+          "position": 19.0,
+          "title": "Модуль 19. Оценка современных LLM: от бенчмарка к инженерному решению",
+          "content_file": "modern-llms/ru/module-17.md",
+          "characters": 60131,
+          "image_count": 9
+        },
+        {
+          "id": "modern-llms:ru:module-20",
+          "module_key": "module-20",
+          "position": 20.0,
+          "title": "Модуль 20. LLM целиком: от токенов до обучения и генерации",
+          "content_file": "modern-llms/ru/module-20.md",
+          "characters": 38555,
+          "image_count": 6
+        }
+      ]
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "title": "Modern LLMs",
+      "description": "Architecture, training, inference, agents, and evaluation of modern language-model systems.",
+      "stepik_url": "https://stepik.org/297276",
+      "module_count": 20,
+      "characters": 982989,
+      "modules": [
+        {
+          "id": "modern-llms:en:module-01",
+          "module_key": "module-01",
+          "position": 1.0,
+          "title": "Module 1. The Modern LLM Landscape",
+          "content_file": "modern-llms/en/module-01.md",
+          "characters": 75044,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:en:module-02",
+          "module_key": "module-02",
+          "position": 2.0,
+          "title": "Module 2. Tokenization and Embeddings",
+          "content_file": "modern-llms/en/module-02.md",
+          "characters": 46627,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-18",
+          "module_key": "module-18",
+          "position": 3.0,
+          "title": "Module 3. The Basic Transformer",
+          "content_file": "modern-llms/en/module-18.md",
+          "characters": 55514,
+          "image_count": 12
+        },
+        {
+          "id": "modern-llms:en:module-03",
+          "module_key": "module-03",
+          "position": 4.0,
+          "title": "Module 4. Positional representations: from sinusoids to multiple axes",
+          "content_file": "modern-llms/en/module-03.md",
+          "characters": 41808,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:en:module-04",
+          "module_key": "module-04",
+          "position": 5.0,
+          "title": "Module 5. Modern Attention Mechanisms",
+          "content_file": "modern-llms/en/module-04.md",
+          "characters": 50446,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-05",
+          "module_key": "module-05",
+          "position": 6.0,
+          "title": "Module 6. Normalization, activations, and the anatomy of a Transformer block",
+          "content_file": "modern-llms/en/module-05.md",
+          "characters": 43506,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-06",
+          "module_key": "module-06",
+          "position": 7.0,
+          "title": "Module 7. Mixture of Experts",
+          "content_file": "modern-llms/en/module-06.md",
+          "characters": 44928,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-07",
+          "module_key": "module-07",
+          "position": 8.0,
+          "title": "Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models",
+          "content_file": "modern-llms/en/module-07.md",
+          "characters": 29707,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-08",
+          "module_key": "module-08",
+          "position": 9.0,
+          "title": "Module 9. Pretraining: Data, Scaling Laws, and Optimizers",
+          "content_file": "modern-llms/en/module-08.md",
+          "characters": 62376,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-09",
+          "module_key": "module-09",
+          "position": 10.0,
+          "title": "Module 10. KV Caches and Efficient Inference",
+          "content_file": "modern-llms/en/module-09.md",
+          "characters": 56521,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-10",
+          "module_key": "module-10",
+          "position": 11.0,
+          "title": "Module 11. Speculative Decoding and Quantization",
+          "content_file": "modern-llms/en/module-10.md",
+          "characters": 49019,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-07b",
+          "module_key": "module-07b",
+          "position": 12.0,
+          "title": "Module 12. Diffusion Language Models",
+          "content_file": "modern-llms/en/module-07b.md",
+          "characters": 39296,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-11",
+          "module_key": "module-11",
+          "position": 13.0,
+          "title": "Module 13. Supervised Fine-Tuning and Data Work",
+          "content_file": "modern-llms/en/module-11.md",
+          "characters": 55252,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-12",
+          "module_key": "module-12",
+          "position": 14.0,
+          "title": "Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO",
+          "content_file": "modern-llms/en/module-12.md",
+          "characters": 44276,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-13",
+          "module_key": "module-13",
+          "position": 15.0,
+          "title": "Module 15. Reasoning Models and Test-Time Compute",
+          "content_file": "modern-llms/en/module-13.md",
+          "characters": 42248,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-14",
+          "module_key": "module-14",
+          "position": 16.0,
+          "title": "Module 16. Multimodal LLMs: Vision, Audio, and Video",
+          "content_file": "modern-llms/en/module-14.md",
+          "characters": 53315,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:en:module-15",
+          "module_key": "module-15",
+          "position": 17.0,
+          "title": "Module 17. Embeddings, Retrieval, and RAG",
+          "content_file": "modern-llms/en/module-15.md",
+          "characters": 50260,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-16",
+          "module_key": "module-16",
+          "position": 18.0,
+          "title": "Module 18. Agents and Tool Use",
+          "content_file": "modern-llms/en/module-16.md",
+          "characters": 49204,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:en:module-17",
+          "module_key": "module-17",
+          "position": 19.0,
+          "title": "Module 19. Evaluating Modern LLM Systems: From Benchmarks to Decisions",
+          "content_file": "modern-llms/en/module-17.md",
+          "characters": 54105,
+          "image_count": 9
+        },
+        {
+          "id": "modern-llms:en:module-20",
+          "module_key": "module-20",
+          "position": 20.0,
+          "title": "Module 20. The complete LLM: from tokens to training and generation",
+          "content_file": "modern-llms/en/module-20.md",
+          "characters": 39537,
+          "image_count": 6
+        }
+      ]
+    },
+    {
+      "course_key": "rl-for-llm",
+      "language": "ru",
+      "title": "RL для LLM",
+      "description": "Обучение с подкреплением, оптимизация предпочтений, проверяемые награды, агенты и безопасность.",
+      "stepik_url": "https://stepik.org/296688",
+      "module_count": 13,
+      "characters": 606267,
+      "modules": [
+        {
+          "id": "rl-for-llm:ru:module-01",
+          "module_key": "module-01",
+          "position": 1.0,
+          "title": "Модуль 1. Введение: Reinforcement Learning для LLM",
+          "content_file": "rl-for-llm/ru/module-01.md",
+          "characters": 51157,
+          "image_count": 7
+        },
+        {
+          "id": "rl-for-llm:ru:module-02",
+          "module_key": "module-02",
+          "position": 2.0,
+          "title": "Модуль 2. Состояние, ценность и уравнения Беллмана",
+          "content_file": "rl-for-llm/ru/module-02.md",
+          "characters": 44442,
+          "image_count": 8
+        },
+        {
+          "id": "rl-for-llm:ru:module-03",
+          "module_key": "module-03",
+          "position": 3.0,
+          "title": "Модуль 3. Бандиты, исследование и одношаговые решения",
+          "content_file": "rl-for-llm/ru/module-03.md",
+          "characters": 43713,
+          "image_count": 6
+        },
+        {
+          "id": "rl-for-llm:ru:module-04",
+          "module_key": "module-04",
+          "position": 4.0,
+          "title": "Модуль 4. Градиенты политики: от REINFORCE к PPO",
+          "content_file": "rl-for-llm/ru/module-04.md",
+          "characters": 51294,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:ru:module-05",
+          "module_key": "module-05",
+          "position": 5.0,
+          "title": "Модуль 5. Обучение по фиксированным данным: имитация, глубокие Q-методы и офлайн-RL",
+          "content_file": "rl-for-llm/ru/module-05.md",
+          "characters": 48372,
+          "image_count": 10
+        },
+        {
+          "id": "rl-for-llm:ru:module-06",
+          "module_key": "module-06",
+          "position": 6.0,
+          "title": "Модуль 6. LLM как политика: токены, логарифмы вероятностей и KL",
+          "content_file": "rl-for-llm/ru/module-06.md",
+          "characters": 43804,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:ru:module-07",
+          "module_key": "module-07",
+          "position": 7.0,
+          "title": "Модуль 7. Модели награды и данные о предпочтениях",
+          "content_file": "rl-for-llm/ru/module-07.md",
+          "characters": 44941,
+          "image_count": 7
+        },
+        {
+          "id": "rl-for-llm:ru:module-08",
+          "module_key": "module-08",
+          "position": 8.0,
+          "title": "Модуль 8. RLHF и прямые методы оптимизации предпочтений",
+          "content_file": "rl-for-llm/ru/module-08.md",
+          "characters": 37808,
+          "image_count": 8
+        },
+        {
+          "id": "rl-for-llm:ru:module-09",
+          "module_key": "module-09",
+          "position": 9.0,
+          "title": "Модуль 9. RLVR и GRPO: проверяемые награды, групповые оценки и устойчивость",
+          "content_file": "rl-for-llm/ru/module-09.md",
+          "characters": 45537,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:ru:module-10",
+          "module_key": "module-10",
+          "position": 10.0,
+          "title": "Модуль 10. Поиск, проверка и вычислительный бюджет на этапе генерации",
+          "content_file": "rl-for-llm/ru/module-10.md",
+          "characters": 38824,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:ru:module-11",
+          "module_key": "module-11",
+          "position": 11.0,
+          "title": "Модуль 11. RL для LLM-агентов: инструменты, среда и длинные траектории",
+          "content_file": "rl-for-llm/ru/module-11.md",
+          "characters": 46728,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:ru:module-12",
+          "module_key": "module-12",
+          "position": 12.0,
+          "title": "Модуль 12. Инфраструктура RL для LLM: память, роллауты и асинхронность",
+          "content_file": "rl-for-llm/ru/module-12.md",
+          "characters": 54865,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:ru:module-13",
+          "module_key": "module-13",
+          "position": 13.0,
+          "title": "Модуль 13. Оценивание RL-систем для LLM: статистика, взлом награды и безопасность",
+          "content_file": "rl-for-llm/ru/module-13.md",
+          "characters": 54782,
+          "image_count": 9
+        }
+      ]
+    },
+    {
+      "course_key": "rl-for-llm",
+      "language": "en",
+      "title": "RL for LLM",
+      "description": "Reinforcement learning, preference optimization, verifiable rewards, agents, and safety.",
+      "stepik_url": "https://stepik.org/296686",
+      "module_count": 13,
+      "characters": 555330,
+      "modules": [
+        {
+          "id": "rl-for-llm:en:module-01",
+          "module_key": "module-01",
+          "position": 1.0,
+          "title": "Module 1. Introduction: Reinforcement Learning for LLMs",
+          "content_file": "rl-for-llm/en/module-01.md",
+          "characters": 46989,
+          "image_count": 7
+        },
+        {
+          "id": "rl-for-llm:en:module-02",
+          "module_key": "module-02",
+          "position": 2.0,
+          "title": "Module 2. State, Value, and Bellman Equations",
+          "content_file": "rl-for-llm/en/module-02.md",
+          "characters": 41097,
+          "image_count": 8
+        },
+        {
+          "id": "rl-for-llm:en:module-03",
+          "module_key": "module-03",
+          "position": 3.0,
+          "title": "Module 3. Bandits, exploration, and one-step decisions",
+          "content_file": "rl-for-llm/en/module-03.md",
+          "characters": 40970,
+          "image_count": 6
+        },
+        {
+          "id": "rl-for-llm:en:module-04",
+          "module_key": "module-04",
+          "position": 4.0,
+          "title": "Module 4. Policy gradients: from REINFORCE to PPO",
+          "content_file": "rl-for-llm/en/module-04.md",
+          "characters": 48624,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:en:module-05",
+          "module_key": "module-05",
+          "position": 5.0,
+          "title": "Module 5. Learning from fixed data: imitation, deep Q-methods, and offline RL",
+          "content_file": "rl-for-llm/en/module-05.md",
+          "characters": 44742,
+          "image_count": 10
+        },
+        {
+          "id": "rl-for-llm:en:module-06",
+          "module_key": "module-06",
+          "position": 6.0,
+          "title": "Module 6. The LLM as a policy: tokens, log-probabilities, and KL",
+          "content_file": "rl-for-llm/en/module-06.md",
+          "characters": 41242,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:en:module-07",
+          "module_key": "module-07",
+          "position": 7.0,
+          "title": "Module 7. Reward models and preference data",
+          "content_file": "rl-for-llm/en/module-07.md",
+          "characters": 40625,
+          "image_count": 7
+        },
+        {
+          "id": "rl-for-llm:en:module-08",
+          "module_key": "module-08",
+          "position": 8.0,
+          "title": "Module 8. RLHF and direct preference optimization",
+          "content_file": "rl-for-llm/en/module-08.md",
+          "characters": 34091,
+          "image_count": 8
+        },
+        {
+          "id": "rl-for-llm:en:module-09",
+          "module_key": "module-09",
+          "position": 9.0,
+          "title": "Module 9. RLVR and GRPO: verifiable rewards, group-relative estimates, and stability",
+          "content_file": "rl-for-llm/en/module-09.md",
+          "characters": 41763,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:en:module-10",
+          "module_key": "module-10",
+          "position": 10.0,
+          "title": "Module 10. Search, verification, and test-time compute",
+          "content_file": "rl-for-llm/en/module-10.md",
+          "characters": 35200,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:en:module-11",
+          "module_key": "module-11",
+          "position": 11.0,
+          "title": "Module 11. RL for LLM agents: tools, environments, and long trajectories",
+          "content_file": "rl-for-llm/en/module-11.md",
+          "characters": 43752,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:en:module-12",
+          "module_key": "module-12",
+          "position": 12.0,
+          "title": "Module 12. RL infrastructure for LLMs: memory, rollouts, and asynchrony",
+          "content_file": "rl-for-llm/en/module-12.md",
+          "characters": 48533,
+          "image_count": 9
+        },
+        {
+          "id": "rl-for-llm:en:module-13",
+          "module_key": "module-13",
+          "position": 13.0,
+          "title": "Module 13. Evaluating RL systems for LLMs: statistics, reward hacking, and safety",
+          "content_file": "rl-for-llm/en/module-13.md",
+          "characters": 47702,
+          "image_count": 9
+        }
+      ]
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "title": "Теория информации для машинного обучения",
+      "description": "Теория информации: от энтропии и кодирования до NLP, LLM, компьютерного зрения и обучения с подкреплением.",
+      "stepik_url": "https://stepik.org/295411",
+      "module_count": 16,
+      "characters": 588700,
+      "modules": [
+        {
+          "id": "information-theory-for-ml:ru:module-01",
+          "module_key": "module-01",
+          "position": 1.0,
+          "title": "Модуль 1. Введение",
+          "content_file": "information-theory-for-ml/ru/module-01.md",
+          "characters": 54035,
+          "image_count": 4
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-02",
+          "module_key": "module-02",
+          "position": 2.0,
+          "title": "Модуль 2. Энтропия",
+          "content_file": "information-theory-for-ml/ru/module-02.md",
+          "characters": 26823,
+          "image_count": 5
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-03",
+          "module_key": "module-03",
+          "position": 3.0,
+          "title": "Модуль 3. Кросс-энтропия и KL-дивергенция",
+          "content_file": "information-theory-for-ml/ru/module-03.md",
+          "characters": 30533,
+          "image_count": 4
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-04",
+          "module_key": "module-04",
+          "position": 4.0,
+          "title": "Модуль 4. Неравенство Йенсена: когда среднее встречает нелинейность",
+          "content_file": "information-theory-for-ml/ru/module-04.md",
+          "characters": 22622,
+          "image_count": 4
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-05",
+          "module_key": "module-05",
+          "position": 5.0,
+          "title": "Модуль 5. Взаимная информация: сколько один объект говорит о другом",
+          "content_file": "information-theory-for-ml/ru/module-05.md",
+          "characters": 29158,
+          "image_count": 7
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-06",
+          "module_key": "module-06",
+          "position": 6.0,
+          "title": "Модуль 6. Кодирование источника: от энтропии к реальным битам",
+          "content_file": "information-theory-for-ml/ru/module-06.md",
+          "characters": 32471,
+          "image_count": 5
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-07",
+          "module_key": "module-07",
+          "position": 7.0,
+          "title": "Модуль 7. Канал и пропускная способность",
+          "content_file": "information-theory-for-ml/ru/module-07.md",
+          "characters": 35734,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-08",
+          "module_key": "module-08",
+          "position": 8.0,
+          "title": "Модуль 8. Максимальная энтропия, экспоненциальные модели и KL-регуляризация",
+          "content_file": "information-theory-for-ml/ru/module-08.md",
+          "characters": 72468,
+          "image_count": 13
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-09",
+          "module_key": "module-09",
+          "position": 9.0,
+          "title": "Модуль 9. Скорость–искажение и Information Bottleneck: как управлять потерей информации",
+          "content_file": "information-theory-for-ml/ru/module-09.md",
+          "characters": 37401,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-10",
+          "module_key": "module-10",
+          "position": 10.0,
+          "title": "Модуль 10. Алгоритмическая теория информации: кратчайшие описания, MDL и универсальное предсказание",
+          "content_file": "information-theory-for-ml/ru/module-10.md",
+          "characters": 33909,
+          "image_count": 10
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-11",
+          "module_key": "module-11",
+          "position": 11.0,
+          "title": "Модуль 11. Сравнение распределений: f-дивергенции, вариационные критики и расстояние Вассерштейна",
+          "content_file": "information-theory-for-ml/ru/module-11.md",
+          "characters": 35557,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-12",
+          "module_key": "module-12",
+          "position": 12.0,
+          "title": "Модуль 12. Информационные границы обобщения: PAC-Bayes и взаимная информация",
+          "content_file": "information-theory-for-ml/ru/module-12.md",
+          "characters": 35958,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-13",
+          "module_key": "module-13",
+          "position": 13.0,
+          "title": "Модуль 13. Рассуждение в LLM: вычисление, поиск и информация",
+          "content_file": "information-theory-for-ml/ru/module-13.md",
+          "characters": 35324,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-14",
+          "module_key": "module-14",
+          "position": 14.0,
+          "title": "Модуль 14. Компьютерное зрение через теорию информации",
+          "content_file": "information-theory-for-ml/ru/module-14.md",
+          "characters": 39777,
+          "image_count": 10
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-15",
+          "module_key": "module-15",
+          "position": 15.0,
+          "title": "Модуль 15. Информационная геометрия: Fisher, естественный градиент и потоки распределений",
+          "content_file": "information-theory-for-ml/ru/module-15.md",
+          "characters": 38550,
+          "image_count": 12
+        },
+        {
+          "id": "information-theory-for-ml:ru:module-16",
+          "module_key": "module-16",
+          "position": 16.0,
+          "title": "Модуль 16. Памятка по курсу",
+          "content_file": "information-theory-for-ml/ru/module-16.md",
+          "characters": 28380,
+          "image_count": 0
+        }
+      ]
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "title": "Information Theory for ML",
+      "description": "Information theory from entropy and coding to NLP, LLMs, computer vision, and reinforcement learning.",
+      "stepik_url": "https://stepik.org/295409",
+      "module_count": 16,
+      "characters": 570311,
+      "modules": [
+        {
+          "id": "information-theory-for-ml:en:module-01",
+          "module_key": "module-01",
+          "position": 1.0,
+          "title": "Module 1. Introduction",
+          "content_file": "information-theory-for-ml/en/module-01.md",
+          "characters": 51418,
+          "image_count": 3
+        },
+        {
+          "id": "information-theory-for-ml:en:module-02",
+          "module_key": "module-02",
+          "position": 2.0,
+          "title": "Module 2. Entropy",
+          "content_file": "information-theory-for-ml/en/module-02.md",
+          "characters": 26470,
+          "image_count": 5
+        },
+        {
+          "id": "information-theory-for-ml:en:module-03",
+          "module_key": "module-03",
+          "position": 3.0,
+          "title": "Module 3. Cross-Entropy and KL Divergence",
+          "content_file": "information-theory-for-ml/en/module-03.md",
+          "characters": 29520,
+          "image_count": 4
+        },
+        {
+          "id": "information-theory-for-ml:en:module-04",
+          "module_key": "module-04",
+          "position": 4.0,
+          "title": "Module 4. Jensen's inequality: when averaging meets nonlinearity",
+          "content_file": "information-theory-for-ml/en/module-04.md",
+          "characters": 22484,
+          "image_count": 4
+        },
+        {
+          "id": "information-theory-for-ml:en:module-05",
+          "module_key": "module-05",
+          "position": 5.0,
+          "title": "Module 5. Mutual information: how much one object tells us about another",
+          "content_file": "information-theory-for-ml/en/module-05.md",
+          "characters": 28223,
+          "image_count": 7
+        },
+        {
+          "id": "information-theory-for-ml:en:module-06",
+          "module_key": "module-06",
+          "position": 6.0,
+          "title": "Module 6. Source coding: from entropy to real bits",
+          "content_file": "information-theory-for-ml/en/module-06.md",
+          "characters": 30605,
+          "image_count": 5
+        },
+        {
+          "id": "information-theory-for-ml:en:module-07",
+          "module_key": "module-07",
+          "position": 7.0,
+          "title": "Module 7. Channel and capacity",
+          "content_file": "information-theory-for-ml/en/module-07.md",
+          "characters": 34489,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:en:module-08",
+          "module_key": "module-08",
+          "position": 8.0,
+          "title": "Module 8. Maximum entropy, exponential models, and KL regularization",
+          "content_file": "information-theory-for-ml/en/module-08.md",
+          "characters": 69911,
+          "image_count": 13
+        },
+        {
+          "id": "information-theory-for-ml:en:module-09",
+          "module_key": "module-09",
+          "position": 9.0,
+          "title": "Module 9. Rate–distortion and the Information Bottleneck: managing information loss",
+          "content_file": "information-theory-for-ml/en/module-09.md",
+          "characters": 36755,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:en:module-10",
+          "module_key": "module-10",
+          "position": 10.0,
+          "title": "Module 10. Algorithmic Information Theory: Shortest Descriptions, MDL, and Universal Prediction",
+          "content_file": "information-theory-for-ml/en/module-10.md",
+          "characters": 33042,
+          "image_count": 10
+        },
+        {
+          "id": "information-theory-for-ml:en:module-11",
+          "module_key": "module-11",
+          "position": 11.0,
+          "title": "Module 11. Comparing distributions: f-divergences, variational critics, and Wasserstein distance",
+          "content_file": "information-theory-for-ml/en/module-11.md",
+          "characters": 34677,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:en:module-12",
+          "module_key": "module-12",
+          "position": 12.0,
+          "title": "Module 12. Information-theoretic generalization bounds: PAC-Bayes and mutual information",
+          "content_file": "information-theory-for-ml/en/module-12.md",
+          "characters": 35375,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:en:module-13",
+          "module_key": "module-13",
+          "position": 13.0,
+          "title": "Module 13. Reasoning in LLMs: computation, search, and information",
+          "content_file": "information-theory-for-ml/en/module-13.md",
+          "characters": 34542,
+          "image_count": 9
+        },
+        {
+          "id": "information-theory-for-ml:en:module-14",
+          "module_key": "module-14",
+          "position": 14.0,
+          "title": "Module 14. Computer Vision Through Information Theory",
+          "content_file": "information-theory-for-ml/en/module-14.md",
+          "characters": 38929,
+          "image_count": 10
+        },
+        {
+          "id": "information-theory-for-ml:en:module-15",
+          "module_key": "module-15",
+          "position": 15.0,
+          "title": "Module 15. Information Geometry: Fisher, Natural Gradient, and Distribution Flows",
+          "content_file": "information-theory-for-ml/en/module-15.md",
+          "characters": 37887,
+          "image_count": 12
+        },
+        {
+          "id": "information-theory-for-ml:en:module-16",
+          "module_key": "module-16",
+          "position": 16.0,
+          "title": "Module 16. Course Reference Sheet",
+          "content_file": "information-theory-for-ml/en/module-16.md",
+          "characters": 25984,
+          "image_count": 0
+        }
+      ]
+    }
+  ],
+  "omitted_sections": [
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-01",
+      "title": "18. Уровень 2: что в ноутбуке модуля",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-01",
+      "title": "20. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-01",
+      "title": "21. Упражнения с решениями",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-02",
+      "title": "7. Что добавляет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-02",
+      "title": "14. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-02",
+      "title": "15. Упражнения с решениями",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-18",
+      "title": "18. Самопроверка",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-18",
+      "title": "19. Упражнения с решениями",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-18",
+      "title": "20. Ноутбук модуля",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-03",
+      "title": "12. Второй уровень: что проверяет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-03",
+      "title": "15. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-03",
+      "title": "16. Упражнения с решениями",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-04",
+      "title": "13. Что проверить в ноутбуке",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-04",
+      "title": "17. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-04",
+      "title": "18. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-05",
+      "title": "14. Практический маршрут в ноутбуке",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-05",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-05",
+      "title": "19. Упражнения с решениями",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-06",
+      "title": "13. Второй уровень: что проверяет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-06",
+      "title": "17. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-06",
+      "title": "18. Упражнения с решениями",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-07",
+      "title": "13. Что проверяет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-07",
+      "title": "17. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-07",
+      "title": "18. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-08",
+      "title": "13. Уровень 2: как читать ноутбук модуля",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-08",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-08",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-09",
+      "title": "13. Уровень 2: что проверяет ноутбук модуля",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-09",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-09",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-10",
+      "title": "14. Что проверяет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-10",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-10",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-07b",
+      "title": "13. Что проверяет notebook",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-07b",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-07b",
+      "title": "19. Упражнения с решениями",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-11",
+      "title": "14. Второй уровень: что проверяет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-11",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-11",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-12",
+      "title": "14. Второй уровень: что делает ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-12",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-12",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-13",
+      "title": "14. Уровень 2: что находится в Jupyter-ноутбуке модуля",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-13",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-13",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-14",
+      "title": "14. Второй уровень: что проверяет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-14",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-14",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-15",
+      "title": "14. Второй уровень: что проверяет ноутбук",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-15",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-15",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-16",
+      "title": "14. Практика: от наблюдения к исправлению, затем к восстановлению",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-16",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-16",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-17",
+      "title": "14. Что делает ноутбук второго уровня",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-17",
+      "title": "18. Вопросы для самопроверки",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-17",
+      "title": "19. Упражнения",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-20",
+      "title": "17. Практика: повторяем вычисление и меняем одно условие",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "ru",
+      "module_key": "module-20",
+      "title": "18. Упражнения и разбор решений",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-02",
+      "title": "2.5. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-03",
+      "title": "3.10. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-04",
+      "title": "4.8. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-05",
+      "title": "5.13. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-06",
+      "title": "6.12. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-07",
+      "title": "7.12. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-08",
+      "title": "8.11. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-09",
+      "title": "9.10. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-10",
+      "title": "10.11. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-11",
+      "title": "11.11. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-12",
+      "title": "12.11. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-13",
+      "title": "13.12. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-14",
+      "title": "14.10. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "ru",
+      "module_key": "module-15",
+      "title": "15.10. Упражнения",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-01",
+      "title": "18. Level 2: what the notebook adds",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-01",
+      "title": "20. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-01",
+      "title": "21. Exercises with solutions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-02",
+      "title": "7. What the notebook adds",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-02",
+      "title": "14. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-02",
+      "title": "15. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-18",
+      "title": "18. Self-check",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-18",
+      "title": "19. Exercises with solutions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-18",
+      "title": "20. The module notebook",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-03",
+      "title": "12. What the notebook validates",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-03",
+      "title": "15. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-03",
+      "title": "16. Exercises with solutions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-04",
+      "title": "13. What to verify in the notebook",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-04",
+      "title": "17. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-04",
+      "title": "18. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-05",
+      "title": "14. What to run in the notebook",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-05",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-05",
+      "title": "19. Exercises with solutions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-06",
+      "title": "13. What the notebook verifies",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-06",
+      "title": "17. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-06",
+      "title": "18. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-07",
+      "title": "13. What the notebook verifies",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-07",
+      "title": "17. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-07",
+      "title": "18. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-08",
+      "title": "13. Level 2: how to use the module notebook",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-08",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-08",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-09",
+      "title": "13. Level 2: what the notebook makes reproducible",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-09",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-09",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-10",
+      "title": "14. The notebook as an executable contract",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-10",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-10",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-07b",
+      "title": "13. What the notebook verifies",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-07b",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-07b",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-11",
+      "title": "14. What the notebook adds",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-11",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-11",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-12",
+      "title": "14. Level two: the executable notebook",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-12",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-12",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-13",
+      "title": "14. Level 2: the module notebook",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-13",
+      "title": "18. Self-check",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-13",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-14",
+      "title": "14. Level 2: what the notebook makes reproducible",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-14",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-14",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-15",
+      "title": "14. Level 2: what the notebook makes reproducible",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-15",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-15",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-16",
+      "title": "14. Practice: repair from an observation, then recover after failure",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-16",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-16",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-17",
+      "title": "14. What the level-2 notebook makes observable",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-17",
+      "title": "18. Self-check questions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-17",
+      "title": "19. Exercises",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-20",
+      "title": "17. Practice: reproduce the path, then change an assumption",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "modern-llms",
+      "language": "en",
+      "module_key": "module-20",
+      "title": "18. Exercises with worked solutions",
+      "reason": "reviewed_private_assessment_or_notebook_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-02",
+      "title": "2.5. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-03",
+      "title": "3.10. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-04",
+      "title": "4.8. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-05",
+      "title": "5.13. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-06",
+      "title": "6.12. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-07",
+      "title": "7.12. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-08",
+      "title": "8.11. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-09",
+      "title": "9.10. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-10",
+      "title": "10.11. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-11",
+      "title": "11.11. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-12",
+      "title": "12.11. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-13",
+      "title": "13.12. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-14",
+      "title": "14.10. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    },
+    {
+      "course_key": "information-theory-for-ml",
+      "language": "en",
+      "module_key": "module-15",
+      "title": "15.10. Exercises",
+      "reason": "reviewed_private_exercise_section"
+    }
+  ]
+}

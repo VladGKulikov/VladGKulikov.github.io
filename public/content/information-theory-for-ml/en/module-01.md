@@ -1,5 +1,7 @@
 # Module 1. Introduction
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** The required first pass is §§1.1–1.4. Section 1.3 uses formulas as a short bridge from probability to entropy and cross-entropy; §1.4 explains the route through the course. The overview and reference sections that follow are not meant to be read linearly. Sections 1.9–1.10 preserve the complete rigorous derivation of Shannon entropy for a second pass, preferably after Module 2 or Module 4.
 
 > **Three courses, one program.** “Information Theory for ML: From NLP and LLMs to CV and RL” provides the mathematical foundation of the series. Two independent companion courses develop the applied threads: “Modern LLMs” covers the architecture, training, inference, and evaluation of modern language models, while “Reinforcement Learning for LLM” develops feedback-based training, RLVR, and agentic systems. Each course can be taken independently: cross-references provide optional depth rather than replacing explanations needed to continue.
@@ -146,7 +148,7 @@ The course is arranged as four concentric rings—from the core language of clas
 
 **Bonus modules (optional).** Two additional modules extend the course sideways from the main path:
 
-- **Module 14—Information theory in computer vision.** Neural image codecs as a continuation of Module 6 for continuous sources; links between diffusion models, estimation, score identities, and I–MMSE; contrastive, self-distillation, and masked-reconstruction methods in CV; perceptual losses and distributional metrics. Not all of these methods maximize mutual information, and LPIPS, SSIM, and FID are not information-theoretic divergences—the module must keep direct theorems separate from useful interpretations.
+- **Module 14—Information theory in computer vision.** Neural image codecs as a continuation of Module 6 for continuous sources; links between diffusion models, estimation, score identities, and I–MMSE; contrastive, self-distillation, and masked-reconstruction methods in CV; perceptual losses and distributional metrics. Not all of these methods maximize mutual information, and LPIPS, SSIM, and FID are not information-theoretic divergences—the module separates direct theorems from useful interpretations.
 - **Module 15—Information geometry.** Fisher information as a Riemannian metric on a statistical manifold, natural gradients, and the local quadratic approximation of KL by the Fisher matrix. KL itself is not a Riemannian distance. This module deepens Modules 3, 4, and 11. *Target audience:* ML engineers working in RL, normalizing flows, or delicate optimization regimes where ordinary gradient descent suffers from poorly conditioned parameterizations.
 
 **Three levels of depth.** The course is deliberately designed so that **you can stop after any of three levels** and still have a coherent, self-contained picture:
@@ -230,6 +232,8 @@ Two additional modules extend the course away from its main path. They are writt
 **Module 15. Information geometry (bonus).** Distributions as points on a statistical manifold, the Fisher information matrix $G(\theta)$ as a Riemannian metric, and the natural gradient
 
 $$\widetilde\nabla_\theta L=G(\theta)^{-1}\nabla_\theta L.$$
+
+This expression uses nonsingular $G$ in a regular parameterization; the singular case requires working on the identifiable space (§15.3).
 
 KL is neither a metric nor a Riemannian distance, but for nearby parameters and under regularity conditions,
 

@@ -1,5 +1,7 @@
 # Module 12. RL infrastructure for LLMs: memory, rollouts, and asynchrony
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.24  
 > **Factual snapshot:** 2026-08-06  
 > **Language:** EN  
@@ -38,8 +40,6 @@ By the end of the module, you will be able to:
 17. trace a prompt through rollout, weight version, reward, batch, and optimizer step;
 18. compare TRL, verl, OpenRLHF, NeMo RL, PRIME-RL, SkyRL, and AReaL along architectural axes rather than one ranking;
 19. profile a synthetic RL pipeline on CPU and optionally a small open model on a Colab T4.
-
-The English lab is the executable practice, and the claim and primary-source registry is `Module_12_Sources.md`.
 
 ---
 
@@ -315,7 +315,7 @@ The approximation sign is essential. During forward and backward passes, modules
 
 Therefore $B_{\mathrm{state}}/D$ is an order-of-magnitude check, not a substitute for a memory trace.
 
-> **Extension:** general DDP, FSDP/ZeRO, tensor parallelism, and pipeline parallelism are developed in *Modern LLMs*, Module 8 “Pretraining: Data, Scaling Laws, and Optimizers” (`modern_llms.module_08_pretraining`). The additional concern here is the rollout engine and movement of one policy between training and generation layouts.
+> **Extension:** general DDP, FSDP/ZeRO, tensor parallelism, and pipeline parallelism are developed in *Modern LLMs*, Module 9 “Pretraining: Data, Scaling Laws, and Optimizers” (`modern_llms.module_08_pretraining`). The additional concern here is the rollout engine and movement of one policy between training and generation layouts.
 
 ---
 
@@ -368,7 +368,7 @@ This explains why GRPO group size and reasoning length are infrastructure parame
 
 PagedAttention reduces fragmentation in vLLM; RadixAttention in SGLang can reuse common prefixes. Neither removes the linear payload of retained keys and values.
 
-> **Extension:** multi-query, grouped-query, and multi-head latent attention, PagedAttention, prefix caching, and distributed serving are developed in *Modern LLMs*, Module 9 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`).
+> **Extension:** multi-query, grouped-query, and multi-head latent attention, PagedAttention, prefix caching, and distributed serving are developed in *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`).
 
 ---
 
@@ -541,7 +541,7 @@ Prefix reuse has exact boundaries.
 
 Weight publication may therefore invalidate warm cache state. Frequent synchronization can cost more than bytes transferred because it also destroys reusable decode state.
 
-> **Scope boundary:** PagedAttention, RadixAttention, chunked prefill, and distributed serving belong to *Modern LLMs*, Module 9 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`). Here we keep only their effect on batch boundaries and policy-version changes.
+> **Scope boundary:** PagedAttention, RadixAttention, chunked prefill, and distributed serving belong to *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`). Here we keep only their effect on batch boundaries and policy-version changes.
 
 ---
 
@@ -730,7 +730,7 @@ $$
 \mu_v(y_t\mid h_t)=\pi_v(y_t\mid h_t).
 $$
 
-Floating-point addition is non-associative. Batch shape, tensor parallelism, fused kernels, quantization, and softmax implementation can change logits slightly. Low-probability tokens can turn a small logit perturbation into a substantial relative probability change.
+Floating-point addition is non-associative. Batch shape, tensor parallelism, fused kernels, quantization, and softmax implementation can change logits slightly. For untruncated softmax, a uniform bound $\max_i|\Delta z_i|\le\epsilon$ gives $|\Delta\log p_i|\le2\epsilon$ for every token; rarity alone does not amplify the relative change. Small differences can nevertheless accumulate across a long sequence, and crossing a top-k/top-p boundary changes the retained support.
 
 Decoding is an even more direct source. If the engine applies top-p and renormalizes the retained set, the behavior log-probability is the probability **after** truncation. The untruncated softmax probability is not the behavior probability.
 
@@ -1001,7 +1001,7 @@ The next and final theory module is *RL for LLM*, Module 13 “Evaluating RL Sys
 
 ## Sources and further reading
 
-The following primary papers and official documents support the module’s most consequential claims. The full claim-by-claim registry, including evidence class, access date, and limits of each inference, is in [`Module_12_Sources.md`](Module_12_Sources.md).
+The following primary papers and official documents support the module’s most consequential claims. The full claim-by-claim registry, including evidence class, access date, and limits of each inference, is in [`Module_12_Sources.md`](module-12.md).
 
 - [ZeRO: Memory Optimizations Toward Training Trillion Parameter Models](https://arxiv.org/abs/1910.02054) — the primary account of staged model-state partitioning; it does not replace an activation and temporary-buffer trace for a concrete run.
 - [Efficient Memory Management for Large Language Model Serving with PagedAttention](https://arxiv.org/abs/2309.06180) — the primary PagedAttention and vLLM paper; reported speedups belong to the paper’s configurations.

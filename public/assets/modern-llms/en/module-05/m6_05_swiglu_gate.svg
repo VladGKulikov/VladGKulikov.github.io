@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="583" viewBox="0 0 1100 583">
+<title>SwiGLU: three matrices and a product</title>
+<desc>Per-token width: d → d_ff → d. The nonlinear gate is not a probability.</desc>
+<rect width="1100" height="583" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">SwiGLU: three matrices and a product</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Per-token width: d → d<tspan font-size="11.9" baseline-shift="sub">ff</tspan> → d. The nonlinear gate is not a probability.</text>
+<rect x="40" y="287" width="130" height="64" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="105.0" y="324" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="600" fill="#2E3440" text-anchor="middle">x : d</text>
+<rect x="240" y="182" width="190" height="64" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="335.0" y="219" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="600" fill="#2E3440" text-anchor="middle">g = xW<tspan font-size="14" baseline-shift="sub">g</tspan></text>
+<rect x="475" y="182" width="200" height="64" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="575.0" y="219" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="600" fill="#2E3440" text-anchor="middle">SiLU(g)</text>
+<rect x="240" y="392" width="190" height="64" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="335.0" y="429" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="600" fill="#2E3440" text-anchor="middle">u = xW<tspan font-size="14" baseline-shift="sub">u</tspan></text>
+<rect x="725" y="287" width="110" height="64" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="780.0" y="324" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="600" fill="#2E3440" text-anchor="middle">⊙</text>
+<rect x="900" y="287" width="160" height="64" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="980.0" y="324" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="600" fill="#2E3440" text-anchor="middle">× W<tspan font-size="14" baseline-shift="sub">d</tspan></text>
+<path d="M170,319 L205,319" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M205,319 L205,214" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M205,214 L240,214" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M205,319 L205,424" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M205,424 L240,424" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M430,214 L475,214" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M675,214 L780,214" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M780,214 L780,287" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M430,424 L780,424" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M780,424 L780,351" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M835,319 L900,319" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="499" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">W<tspan font-size="11.9" baseline-shift="sub">g</tspan>, W<tspan font-size="11.9" baseline-shift="sub">u</tspan>: d × d<tspan font-size="11.9" baseline-shift="sub">ff</tspan>; W<tspan font-size="11.9" baseline-shift="sub">d</tspan>: d<tspan font-size="11.9" baseline-shift="sub">ff</tspan> × d. P = 3d·d<tspan font-size="11.9" baseline-shift="sub">ff</tspan>.</text>
+<text x="40" y="544" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">gpt-oss: min(g,7) · σ(1.702 min(g,7)) · (clip(u,−7,7)+1), then W<tspan font-size="11.9" baseline-shift="sub">d</tspan>.</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="597" viewBox="0 0 1100 597">
+<title>Transformer: reconstruct it unaided</title>
+<desc>D is residual width; dropout omitted; visibility enforced before softmax.</desc>
+<rect width="1100" height="597" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Transformer: reconstruct it unaided</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">D is residual width; dropout omitted; visibility enforced before softmax.</text>
+<rect x="40.0" y="132" width="498.0" height="174" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Shapes</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">X: B × T × D</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">A: B × h × T<tspan font-size="13" baseline-shift="sub">q</tspan> × T<tspan font-size="13" baseline-shift="sub">k</tspan></text>
+<text x="64.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Z: B × h × T<tspan font-size="13" baseline-shift="sub">q</tspan> × dᵥ</text>
+<rect x="562.0" y="132" width="498.0" height="174" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">One head</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">S = QKᵀ / √dₖ</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">A = softmax(masked S)</text>
+<text x="586.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Z = AV</text>
+<rect x="40.0" y="330" width="498.0" height="199" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">The block</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Attention mixes positions.</text>
+<text x="64.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">FFN transforms features.</text>
+<text x="64.0" y="465" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">A residual connection adds the input.</text>
+<rect x="562.0" y="330" width="498.0" height="199" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Checks</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Weights over allowed keys sum to 1.</text>
+<text x="586.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Forbidden links have weight 0.</text>
+<text x="586.0" y="465" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">With a causal mask, future tokens cannot alter</text>
+<text x="586.0" y="490" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">earlier outputs.</text>
+<text x="40" y="558" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">A row with no keys requires an error or an explicit zero-output contract (§5.6).</text>
+</svg>

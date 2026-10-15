@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="694" viewBox="0 0 1100 694">
+<title>Три смысла единой мультимодальной модели</title>
+<desc>Общий контекст совместим со специализированным кодеком или выходной сетью.</desc>
+<rect width="1100" height="694" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Три смысла единой мультимодальной модели</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Общий контекст совместим со специализированным кодеком или выходной сетью.</text>
+<rect x="60" y="132" width="980" height="145" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="80" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Chameleon</text>
+<text x="80" y="209" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Общие дискретные токены → AR Transformer → текст / изображение в статье.</text>
+<text x="80" y="234" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Опубликованные контрольные точки: текстовый выход.</text>
+<rect x="60" y="302" width="980" height="145" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="80" y="340" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Janus</text>
+<text x="80" y="379" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Семантическое зрение / визуальный кодек → общий Transformer → разные выходы.</text>
+<rect x="60" y="472" width="980" height="145" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="80" y="510" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">InternVL-U</text>
+<text x="80" y="549" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Мультимодальная LLM → условие → MMDiT → изображение.</text>
+<text x="80" y="574" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Генерация работает с непрерывными визуальными латентами.</text>
+</svg>

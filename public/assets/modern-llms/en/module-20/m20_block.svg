@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="892" viewBox="0 0 1100 892">
+<title>One block, two residual additions</title>
+<desc>Normalization feeds a transformation branch; the skip connection carries its input.</desc>
+<rect width="1100" height="892" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">One block, two residual additions</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Normalization feeds a transformation branch; the skip connection carries its input.</text>
+<rect x="400" y="132" width="300" height="70" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="550.0" y="173.0" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">H</text>
+<path d="M550,202 L550,231" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="400" y="236" width="300" height="70" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="550.0" y="277.0" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">RMSNorm (attention)</text>
+<path d="M550,306 L550,335" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="400" y="340" width="300" height="70" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="550.0" y="381.0" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">Attention</text>
+<path d="M550,410 L550,439" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="400" y="444" width="300" height="70" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="550.0" y="485.0" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">+ → Z</text>
+<path d="M550,514 L550,543" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="400" y="548" width="300" height="70" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="550.0" y="589.0" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">RMSNorm (FFN)</text>
+<path d="M550,618 L550,647" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="400" y="652" width="300" height="70" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="550.0" y="693.0" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">SwiGLU</text>
+<path d="M550,722 L550,751" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="400" y="756" width="300" height="70" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="550.0" y="797.0" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="middle">+ → H (output)</text>
+<path d="M700,167 L870,167 L870,479 L705,479" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M400,479 L230,479 L230,791 L395,791" fill="none" stroke="#4C566A" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="890" y="292" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="start">Input H</text>
+<text x="50" y="598" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#2E3440" text-anchor="start">Input Z</text>
+</svg>

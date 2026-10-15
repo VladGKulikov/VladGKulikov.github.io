@@ -1,5 +1,7 @@
 # Module 11. RL for LLM agents: tools, environments, and long trajectories
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.23  
 > **Factual snapshot:** 2026-08-06  
 > **Language:** EN  
@@ -97,7 +99,7 @@ Four levels should remain distinct.
 3. **History $h_t$.** The sequence of messages and actions presented to the policy on the current turn.
 4. **External memory $m_t$.** A maintained summary, fact table, vector store, or log that the agent can read and update.
 
-A history is not automatically a Bayesian **belief state**. It is merely the information on which the policy conditions. A belief state must represent a distribution over hidden states and be updated consistently with an observation model. An ordinary text context provides no such guarantee.
+A history is not automatically a Bayesian **belief state**. It is merely the information on which the policy conditions. A belief state must represent a distribution over hidden states and be updated consistently with an observation model. An ordinary text context provides no such guarantee. For a fixed environment model and initial distribution, the complete action–observation–reward history can itself be a growing Markov information state. A belief summarizes that history for prediction without necessarily identifying the actual world state. A message window or summary that has lost relevant history has no such guarantee.
 
 ![Hidden state, observations, and agent history](assets/rl-for-llm/en/module-11/M11_state_history_EN.png)
 
@@ -106,7 +108,7 @@ Two engineering consequences follow.
 - Truncating or summarizing context changes the policy's information state and may remove a fact needed later.
 - Adding external memory changes the agent's state space. Writing to memory becomes part of the policy or a separate controller, and retrieval errors become part of system dynamics.
 
-> **Extension:** ReAct, Plan-and-Execute, CodeAct, function calling, MCP, and production agent architecture are developed in *Modern LLMs*, Module 16 “Agents and Tool Use” (`modern_llms.module_16_agents`). Here they appear only as interfaces inside an RL formulation.
+> **Extension:** ReAct, Plan-and-Execute, CodeAct, function calling, MCP, and production agent architecture are developed in *Modern LLMs*, Module 18 “Agents and Tool Use” (`modern_llms.module_16_agents`). Here they appear only as interfaces inside an RL formulation.
 
 ---
 
@@ -782,7 +784,7 @@ Contemporary methods are easier to distinguish by three questions than by brandi
 | RAGEN / StarPO | fresh environment trajectories | trajectory and state | stabilization of the long interactive loop | sensitivity to environment and filtering design |
 | Agentic Reinforced Policy Optimization | fresh branching trajectories | post-tool turn and outcome | uncertainty-aware branching and step-oriented attribution | environment state must be restored correctly at the branch point |
 | AT$^2$PO | a tree of multi-turn continuations | turn | tree expansion and turn-wise credit assignment | search changes the collected data distribution |
-| TRACE / Turn-Aware Relative Advantage | fresh long trajectories | turn or tool boundary | denser attribution to individual actions | signal quality depends on the chosen state estimator |
+| TRACE / Turn-level Reward Assignment via Credit Estimation | fresh long trajectories | turn or tool boundary | denser attribution to individual actions | signal quality depends on the chosen state estimator |
 | Agentic Replay Policy Optimization / DSPO | replayed or dynamically selected trajectories | trajectory or sequence | replay or dynamic filtering | off-policy bias and changed task distribution |
 | Agent Lightning | traces from an arbitrary agent | hierarchical transitions | decoupled execution and a credit-assignment layer | trace and decomposition correctness |
 | Agentic-DPO | expert states and one-step negative actions | state-conditioned action preference | offline optimization without new full rollouts during gradient steps | expert coverage and negative-action quality |

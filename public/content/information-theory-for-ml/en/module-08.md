@@ -1,5 +1,7 @@
 # Module 8. Maximum entropy, exponential models, and KL regularization
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** The main route is §§8.1–8.9. Sections 8.1–8.5 build the MaxEnt principle from the modeling problem to conditional log-linear models; §§8.6–8.9 show the same variational mechanism in softmax, energy-based models, and LLM post-training. Section 8.10 is a self-contained mathematical deepening on exponential families, their main distributions, and sufficient statistics and can be saved for a second pass.
 
 ## 8.1. From partial knowledge to a distribution

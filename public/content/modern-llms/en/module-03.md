@@ -1,16 +1,22 @@
-# Module 3. Positional Representations: From Sinusoids to Multidimensional Time
+# Module 4. Positional representations: from sinusoids to multiple axes
 
-*Modern LLMs · Module 3 lecture · 2026.8 edition*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module does.** Attention can compare token content, but content alone does not say which token came first, how far apart two tokens are, or whether a visual token belongs above, below, before, or after another one. We will follow the positional signal as it moves through the Transformer: first as an additive sinusoidal vector, then as a rotation of queries and keys, then as a frequency spectrum that can be modified for longer context, and finally as several coordinate axes for images, video, and audio. Along the way we will separate mathematical identities from engineering heuristics and configuration fields from claims about training history.
->
-> **Prerequisites.** You only need the basic attention picture: queries and keys produce attention logits, values carry the retrieved content. Every positional formula used below is derived in the module.
+*Modern LLMs · Module 4 lecture · 2026.10.6 edition · 10 October 2026*
 
----
+Module 3 explained how a query retrieves a weighted mixture of values. Here we hold the query and key content fixed and change their positions. What should happen when the tokens move together? What if the gap between them grows? Working through those questions gives us sinusoidal encoding, RoPE, context extension, and spatial or temporal coordinates for multimodal inputs.
+
+You need dot products and the attention mechanism from M3. We will introduce rotation using a pair of coordinates; complex numbers provide an optional shorthand for the same operation.
+
+**Reading routes**
+
+- **First pass: follow the geometry.** Read §§1–10, using §2 as a map. The historical detail and the implementation in §4 are expandable. In §7, focus on which frequencies each method changes; return to the boundary derivation later. Finish with §§13 and 17, then try §15 without looking back.
+- **Implementation pass: reproduce the result.** Work through the numbers in §5, the ramp in §7, and the code in §§4 and 11. Run the notebook described in §12, including its cache and precision checks, and tackle §16.
+- **Reference pass.** Shapes and coordinate pairing: §4. Frequencies: §6. Scaling methods: §7. Configuration fields: §10. Multiple axes: §13. Verified implementation examples: §14. Module 5 then develops attention architecture and execution.
 
 ## 1. Motivation: content attention is not an ordering mechanism
 
-Consider bidirectional self-attention applied to a sequence matrix $X$. If the rows are permuted by a permutation matrix $P$, the result obeys
+Consider bidirectional self-attention applied to a sequence matrix $X$, without positional information or a restrictive mask and with dropout disabled. If the rows are permuted by a permutation matrix $P$, the result obeys
 
 $$
 \operatorname{Attn}(PX)=P\operatorname{Attn}(X).
@@ -29,11 +35,28 @@ A useful positional mechanism therefore has to support several distinct jobs:
 
 The history of positional encoding is largely a history of deciding where this information should enter the model: added to embeddings, inserted as a bias, or built into the geometry of the query-key product.
 
-![VIZ m3/01 — from permutation symmetry to positional structure](assets/modern-llms/en/module-03/m3_01_permutation.svg)
+![VIZ m4/01 — from permutation symmetry to positional structure](assets/modern-llms/en/module-03/m4_01_permutation.svg)
+*Bidirectional self-attention is permutation-equivariant without a positional signal. A causal mask breaks full symmetry, but it does not by itself provide a rich distance geometry.*
 
-## 2. The historical arc: one problem, several architectural answers
+## 2. A map of where position enters
 
-![VIZ m3/02 — major branches of positional representation](assets/modern-llms/en/module-03/m3_02_pe_timeline.svg)
+**Positional encoding (PE)** introduces token coordinates into the computation. **RoPE (Rotary Position Embedding)** does so by rotating pairs of coordinates.
+
+Position can change the input embedding, the projected query and key, or the score just before softmax. The last quantity is an attention logit: one number controlling a query–key connection. Each approach modifies a different step of the computation from M3.
+
+| Entry point | Operation | Example and section |
+|---|---|---|
+| Input representation | add a vector indexed by position | sinusoidal PE, §§3–4 |
+| Projected query and key | rotate coordinate pairs by position-dependent angles | RoPE, §§4–7 |
+| Attention logit | add a distance-dependent bias | ALiBi, §8 |
+| No separate positional term | learn order-sensitive behavior from the causal mask and layers | NoPE, §9 |
+
+PI, NTK-aware scaling, and YaRN modify the RoPE frequency spectrum (§7). M-RoPE assigns coordinate pairs to several axes (§13). Treat these names as destinations on the map; you do not need their formulas yet.
+
+![VIZ m4/02 — branches of positional representation](assets/modern-llms/en/module-03/m4_02_pe_timeline.svg)
+*The branches differ in where and how they introduce position. A later method does not replace every earlier one.*
+
+**Historical connections — optional reading**
 
 The original Transformer used deterministic sinusoidal positional encoding. Each position was mapped to a geometric ladder of sine and cosine frequencies. The representation contained no learned positional parameters and could be evaluated beyond the training table.
 
@@ -48,6 +71,8 @@ Long-context work created another branch. Position Interpolation compresses new 
 Multimodal models then changed the question itself. An image needs height and width. Video adds time. A streaming audio-video model needs time IDs that mean the same thing across modalities. M-RoPE and TMRoPE turn a one-dimensional token index into a small coordinate system.
 
 ## 3. Fourier intuition, complex rotations, and what is exact
+
+Let $m$ be an integer position counted from zero. Pair $i$ has angular frequency $\theta_i$, measured in radians per position step. Its **phase** is the angle $m\theta_i$. Frequency tells us how much that angle changes when we advance by one position.
 
 A sinusoidal encoding maps a position $m$ to periodic coordinates such as
 
@@ -64,9 +89,11 @@ $$
 \cos((m-n)\theta).
 $$
 
-That identity is sometimes obscured by a broader claim that RoPE “discovers” relative position while sinusoidal encoding is purely absolute. The real distinction is where the signal enters. In additive positional encoding, content and position are summed before learned projections. Cross-terms appear, so the final attention score need not be a pure function of $m-n$.
+This identity concerns the positional vectors themselves. To understand its effect on attention, we also need to know where they enter the computation. In additive positional encoding, content and position are summed before learned projections. Cross-terms appear, so the final attention score need not be a pure function of $m-n$.
 
-RoPE instead applies the phase after the hidden states have been projected into queries and keys. In complex notation, a coordinate pair $z=x_1+ix_2$ is multiplied by
+RoPE rotates the projected queries and keys. Picture each coordinate pair as an arrow in a plane: turning both arrows by the same angle leaves their dot product unchanged.
+
+**Optional complex notation.** Write the pair as $z=x_1+ix_2$, with $i$ now denoting the imaginary unit. Rotation is multiplication by
 
 $$
 e^{im\theta}.
@@ -78,7 +105,9 @@ The Fourier-features analogy remains valuable, but it should not be read too lit
 
 ## 4. Formalism: the frequency ladder and the rotary identity
 
-For an even head dimension $D$, define $D/2$ inverse frequencies
+Here $D$ is an even number of rotated coordinates, not the residual width $d_{model}$. Full-head RoPE has $D=d_k$; additive PE uses the same frequency construction at the input-vector width. Code often calls these values `inv_freq`, because they are reciprocals of the phase denominators. A base greater than one controls how quickly frequency falls across pairs.
+
+For an even rotated width $D$, define $D/2$ inverse frequencies
 
 $$
 \theta_i=\mathrm{base}^{-2i/D},
@@ -98,6 +127,9 @@ PE(m,2i)=\sin(m\theta_i),
 \qquad
 PE(m,2i+1)=\cos(m\theta_i).
 $$
+
+![VIZ m4/03 — sinusoidal PE](assets/modern-llms/en/module-03/m4_03_sinusoidal_heatmap.png)
+*Rows are positional coordinates. Adjacent rows form sine–cosine pairs; higher-index pairs vary more slowly.*
 
 RoPE turns the same phase into a rotation matrix:
 
@@ -130,9 +162,16 @@ There are two common coordinate layouts. Pedagogical derivations often rotate ad
 
 The rotation preserves pairwise norms and leaves the tensor shape unchanged. It does not commute with an arbitrary learned matrix. The actual model order is simple: project the residual stream into $Q$ and $K$, then rotate those projected vectors.
 
+![VIZ m4/04 — RoPE inside attention](assets/modern-llms/en/module-03/m4_04_rope_mechanics.svg)
+*Project to Q/K/V, rotate Q and K, form scaled scores, then mix V. The version shown leaves V unrotated.*
+
+**Partial RoPE.** Some models rotate only D coordinates of a wider head, leaving the remaining channels unchanged. Frequencies use the rotated width D; attention normalization uses the full key width $d_k$. Scaling just the rotary channels does not multiply the entire dot product by one common factor.
+
+**NumPy and PyTorch implementation — second pass**
+
 ### NumPy → PyTorch · B02 — RoPE: rotating coordinate pairs
 
-NumPy keeps the pairwise rotation visible; the PyTorch form applies the same operator while preserving device, dtype, and autograd.
+Implementation route. Assume a validated, nonempty floating tensor `x[..., T, D]`, even D, nonnegative integer IDs `[T]`, and a finite base greater than one. Adjacent coordinates form pairs. The notebook adds input validation (§12).
 
 ```python
 import numpy as np
@@ -172,15 +211,17 @@ def torch_rope_explicit(
     base: float = 10_000.0,
 ) -> torch.Tensor:
     dim = x.shape[-1]
-    inv_freq = base ** (-torch.arange(0, dim, 2, device=x.device, dtype=x.dtype) / dim)
-    angles = position_ids.to(device=x.device, dtype=x.dtype)[:, None] * inv_freq[None, :]
+    work_dtype = torch.float64 if x.dtype == torch.float64 else torch.float32
+    inv_freq = base ** (-torch.arange(0, dim, 2, device=x.device, dtype=work_dtype) / dim)
+    angles = position_ids.to(device=x.device, dtype=work_dtype)[:, None] * inv_freq[None, :]
     shape = (1,) * (x.ndim - 2) + tuple(angles.shape)
     cos, sin = angles.cos().reshape(shape), angles.sin().reshape(shape)
-    even, odd = x[..., 0::2], x[..., 1::2]
-    return torch.stack((even * cos - odd * sin, even * sin + odd * cos), dim=-1).flatten(-2)
+    even, odd = x[..., 0::2].to(work_dtype), x[..., 1::2].to(work_dtype)
+    out = torch.stack((even * cos - odd * sin, even * sin + odd * cos), dim=-1).flatten(-2)
+    return out.to(x.dtype)
 ```
 
-The PyTorch formula is identical, but frequencies and positions live on the same device, the operations participate in autograd, and tensor dtype becomes part of the contract.
+Phase construction and rotation use at least float32 before conversion back to the input dtype. This avoids early FP16/BF16 position rounding. Float64 remains the reference for large indices: keeping IDs as integers does not remove error after conversion to a working float type. Gradients flow through the input vectors.
 
 | Aspect | NumPy | PyTorch |
 |---|---|---|
@@ -188,10 +229,10 @@ The PyTorch formula is identical, but frequencies and positions live on the same
 | Trigonometry | `np.cos`, `np.sin` | `Tensor.cos`, `Tensor.sin` |
 | Device | CPU | CPU/CUDA/MPS |
 | Gradients | none | autograd through the input |
-| Absolute position | explicit `position_ids` | must match the KV-cache offset |
+| Precision | float64 calculation and output | float32/64 phases; output keeps input dtype |
+| Absolute position | explicit `position_ids` | must agree with cached-key positions |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 rng = np.random.default_rng(2)
@@ -202,13 +243,20 @@ x = torch.tensor(x_np, dtype=torch.float64, requires_grad=True)
 t_out = torch_rope_explicit(x, torch.tensor(pos_np))
 np.testing.assert_allclose(np_out, t_out.detach().numpy(), rtol=1e-12, atol=1e-12)
 t_out.square().sum().backward()
-assert x.grad is not None and torch.isfinite(x.grad).all()
-print("B02 explicit NumPy / PyTorch + gradient: PASS")
+# A rotation is orthogonal: d ||R x||^2 / dx = 2 x.
+torch.testing.assert_close(x.grad, 2 * x.detach(), rtol=1e-12, atol=1e-12)
+# Half-precision IDs would merge 2048 and 2049 before the rotation.
+long_ids = torch.tensor([2048, 2049], dtype=torch.int64)
+half_x = torch.ones((2, 8), dtype=torch.float16)
+half_out = torch_rope_explicit(half_x, long_ids)
+expected = numpy_rope_explicit(half_x.numpy(), long_ids.numpy())
+np.testing.assert_allclose(half_out.numpy(), expected, rtol=1e-3, atol=1e-3)
+assert not torch.equal(half_out[0], half_out[1])
+assert long_ids.to(torch.float16)[0] == long_ids.to(torch.float16)[1]
+print("B02 outputs, analytic gradient, and float16 positions: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m03_rope_bridges.py`](../assets/m03_rope_bridges.py)
+Complete executable file: `m04_rope_bridges.py`
 
 ## 5. Worked example: three placements, one relative displacement
 
@@ -228,7 +276,7 @@ $$
 \theta_1=0.01.
 $$
 
-Place the query at position 3 and the key at position 1. Rotating the two pairs and taking their dot product gives
+Place the query at position 3 and the key at position 1. Using **adjacent coordinate pairs**, their rotated dot product before attention scaling is
 
 $$
 \langle R_3q,R_1k\rangle\approx1.144248.
@@ -236,17 +284,20 @@ $$
 
 Now shift both tokens by four positions. The pair $(7,5)$ has the same displacement as $(3,1)$, so the result is unchanged. The pair $(2,0)$ gives the same value as well.
 
-| query position | key position | $m-n$ | rotary logit |
+| query position | key position | $m-n$ | unscaled dot product |
 |---:|---:|---:|---:|
 | 3 | 1 | 2 | 1.144248 |
 | 7 | 5 | 2 | 1.144248 |
 | 2 | 0 | 2 | 1.144248 |
 
-![VIZ m3/05 — a four-dimensional RoPE trace](assets/modern-llms/en/module-03/m3_05_worked_example.svg)
+![VIZ m4/05 — a four-dimensional RoPE trace](assets/modern-llms/en/module-03/m4_05_worked_example.svg)
+*Absolute angles change across placements, but a shared relative displacement preserves the same unscaled dot product.*
+
+To obtain the standard attention logit from M3, divide by $\sqrt{d_k}=\sqrt4=2$, giving approximately **0.572124**. Masking and softmax follow. This constant scaling preserves the common-shift identity.
 
 The identity is exact for fixed $q$ and $k$. In a network, those vectors still depend on content and layer state, so attention does not reduce to a distance-only kernel.
 
-## 6. Reading the RoPE spectrum without inventing a hard horizon
+## 6. Reading the RoPE frequency spectrum
 
 The base parameter controls a geometric spectrum. The fastest pair is always
 
@@ -258,6 +309,8 @@ $$
 
 regardless of base. Increasing `rope_theta` therefore does not remove the fastest local phase. It mainly slows the higher-index pairs, allocating more of the spectrum to long wavelengths.
 
+The diagnostic is $L\theta_i/(2\pi)$: turns across a **span of L position steps**, following the YaRN convention. A sequence indexed from 0 to L−1 has endpoint separation L−1. These are different quantities. Wavelengths below are measured in position steps.
+
 For $D=64$:
 
 | base | minimum wavelength | maximum wavelength | pairs with ≥1 turn by 4096 |
@@ -266,7 +319,8 @@ For $D=64$:
 | 150,000 | 6.28 | 649,409 | 18 of 32 |
 | 500,000 | 6.28 | 2,084,765 | 16 of 32 |
 
-![VIZ m3/06 — the wavelength spectrum](assets/modern-llms/en/module-03/m3_06_wavelength_spectrum.png)
+![VIZ m4/06 — the wavelength spectrum](assets/modern-llms/en/module-03/m4_06_wavelength_spectrum.png)
+*Wavelengths show how a base redistributes phases. Context-length guide lines are diagnostics, not a global period for the full positional vector.*
 
 Each coordinate pair is periodic. The complete representation combines many different periods. One pair returning to a similar angle does not make two full positional vectors identical. Consequently, the largest wavelength of one pair is not a hard context limit, and a small base does not imply that every position beyond that wavelength becomes indistinguishable.
 
@@ -274,7 +328,7 @@ Turn counts still convey useful information. Fast pairs sweep through many phase
 
 ## 7. Context extension changes a spectrum, not just one number
 
-Suppose a model has a reference length $L_0$ and we want to serve $sL_0$ tokens.
+Let $L_0$ be the reference length used to set the frequencies, and let $s\ge1$ be an extension factor. We want to process $sL_0$ tokens. In a research experiment, $L_0$ is often the training length; a configuration field alone does not establish the full training history (§10).
 
 ### Position Interpolation
 
@@ -298,9 +352,27 @@ $$
 
 This leaves the fastest end of the spectrum less changed and slows the low-frequency end more aggressively. “NTK-aware” describes the motivation, not a general theorem guaranteeing safe zero-shot extension.
 
+Assume $s\ge1$ and $D>2$. Substituting the new base gives $\theta_i^\prime/\theta_i=s^{-2i/(D-2)}$: pair zero is unchanged, while the final pair slows by exactly s. The expression is undefined at D=2. NTK stands for Neural Tangent Kernel, a theoretical description of wide networks; this calculation uses only the stated base-change rule.
+
 ### YaRN
 
 YaRN builds an original spectrum and a fully interpolated spectrum, then blends them through a frequency-dependent ramp. A diagnostic number of rotations within the reference context determines the ramp boundaries.
+
+Define $r_i=L_0\theta_i/(2\pi)$, the number of turns over the reference span. Two thresholds, $\beta_{fast}>\beta_{slow}>0$, select the transition: fast pairs keep their original frequencies, while slow pairs use interpolation. Solving $r_i=\beta$ gives a fractional pair index:
+
+$$
+b(\beta)=\frac{D\ln[L_0/(2\pi\beta)]}{2\ln(\mathrm{base})},\qquad
+\mathrm{low}=b(\beta_{fast}),\quad \mathrm{high}=b(\beta_{slow}).
+$$
+
+A **ramp** is a linear transition clipped to the interval [0,1]:
+
+$$
+w_i=\operatorname{clip}\!\left(\frac{i-\mathrm{low}}{\mathrm{high}-\mathrm{low}},0,1\right),\qquad
+\theta_i^\prime=(1-w_i)\theta_i+w_i\frac{\theta_i}{s}.
+$$
+
+Zero selects the original frequency; one selects full interpolation. Intermediate weights blend the two. Our example has distinct boundaries inside the spectrum; the teaching implementation rejects a collapsed range.
 
 For the module scenario
 
@@ -331,9 +403,10 @@ The generic Hugging Face YaRN utility also offers `truncate=True`, which rounds 
 
 In this particular configuration, the fully interpolated set coincides with pairs that complete less than one turn in the reference context. That is a property of the chosen boundary formula and hyperparameters, not a universal rule that one full turn makes extrapolation “safe.”
 
-![VIZ m3/07 — diagnostic YaRN zones](assets/modern-llms/en/module-03/m3_07_rotations_zones.png)
+![VIZ m4/07 — diagnostic YaRN zones](assets/modern-llms/en/module-03/m4_07_rotations_zones.png)
+*Turn counts help define the teaching YaRN ramp. The zones mean original, transition, and interpolated—not mathematically allowed and forbidden.*
 
-The original gpt-oss implementation and its Hugging Face adaptation also use an `attention_factor`. For $s>1$, both checked paths use
+YaRN also adjusts attention concentration. **Temperature** divides logits before softmax; lowering it makes a fixed set of scores more uneven. An `attention_factor` can implement this by scaling the rotated vectors. The original gpt-oss implementation and its Hugging Face adaptation use this approach. For $s>1$, both checked paths use
 
 $$
 a=1+0.1\ln s.
@@ -345,22 +418,27 @@ $$
 a^2=1.813260.
 $$
 
+The whole-score factor assumes that **every** query and key coordinate receives a. With partial RoPE, only the rotary contribution is scaled unless the remaining channels are adjusted separately. The fitted rule for a is empirical, not a consequence of rotation algebra.
+
 Another runtime may move the equivalent scaling into queries, keys, or the attention score. A configuration field only becomes unambiguous when read with the implementation that consumes it.
 
 ### Beyond one scaling recipe
 
 LongRoPE searches per-dimension factors and can use different regimes for different lengths. LongRoPE2 incorporates training-aware criteria. Llama3-style scaling divides the spectrum into wavelength bands. Other models use partial RoPE, interleaved RoPE/NoPE, local attention, or length-dependent attention temperature.
 
-![VIZ m3/08 — three spectrum transformations](assets/modern-llms/en/module-03/m3_08_scaling_methods.png)
+![VIZ m4/08 — three spectrum transformations](assets/modern-llms/en/module-03/m4_08_scaling_methods.png)
+*PI, static NTK-aware scaling, and YaRN reshape the same starting spectrum differently. The figure compares geometry, not guaranteed downstream quality.*
 
 ## 8. ALiBi: a distance prior in the logits
 
 ALiBi—Attention with Linear Biases—leaves queries and keys untouched. Head $h$ receives a slope $m_h$, and causal attention uses
 
 $$
-S_{ij}^{(h)}=q_i^Tk_j-m_h(i-j),
+S_{ij}^{(h)}=\frac{q_i^Tk_j}{\sqrt{d_k}}-m_h(i-j),
 \qquad j\le i.
 $$
+
+The slope $m_h>0$ is fixed per head and measured in logit units per position step. A separate causal mask excludes future keys; a finite ALiBi penalty cannot replace it.
 
 Heads with steeper slopes favor nearby context more strongly. If the content score were fixed, softmax would turn the linear penalty into an exponential distance prior:
 
@@ -370,7 +448,9 @@ $$
 
 The complete attention pattern is not a stationary kernel by itself; it still depends on content and normalization across available keys.
 
-ALiBi's strength is structural simplicity and a bias that continues to any distance. Its limitation is equally clear: the form of the distance prior is fixed in advance. Good perplexity extrapolation does not automatically imply accurate retrieval from the middle of a very long document or robust multi-step reasoning over distant evidence.
+ALiBi's strength is structural simplicity and a bias that continues to any distance. Its limitation is equally clear: the form of the distance prior is fixed in advance.
+
+One common measure of next-token prediction is **perplexity**, $\mathrm{PPL}=\exp(\overline{\mathrm{NLL}})$, using M3's mean negative log-likelihood in nats per evaluated token. On the same data, with the same tokenizer and evaluation mask, lower perplexity means that the model assigns higher probability, on average, to the observed continuations. Maintaining this score at longer lengths does not establish reliable retrieval from the middle of a document or reasoning across distant evidence. Those require separate evaluations.
 
 ## 9. NoPE and hybrid position mechanisms
 
@@ -383,11 +463,13 @@ Two cases should be separated:
 - **pure NoPE**, where no layer receives an explicit positional encoding;
 - **hybrid designs**, where some layers use RoPE and others NoPE, or where positional mechanisms are combined with different attention patterns.
 
-Llama 4 is a concrete hybrid. Its open configuration supports a NoPE layer at a regular interval, chunked attention, and length-dependent temperature tuning. It should not be summarized as “RoPE plus YaRN.”
+Llama 4 is a concrete hybrid. Its open configuration supports a NoPE layer at a regular interval, chunked attention, and length-dependent temperature tuning. In the [Llama 4 implementation](https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama4/modeling_llama4.py), enabling `attn_temperature_tuning` scales queries in NoPE layers. This is separate from the YaRN frequency ramp.
 
-## 10. Reading gpt-oss positional fields as evidence—not biography
+## 10. Reading the gpt-oss positional configuration
 
-The original gpt-oss-120b configuration exposes
+This example uses the [original gpt-oss-120b configuration](https://huggingface.co/openai/gpt-oss-120b/blob/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/config.json) at revision `b5c939de…`. The module includes its bytes and checksum, so later edits to `main` cannot change the exercise. We checked it against OpenAI revision `7b583341…` and Transformers revision `536ecc007…` on 10 October 2026.
+
+The relevant fields are
 
 ```json
 {
@@ -414,11 +496,14 @@ What the file does not provide is a complete training chronology. `initial_conte
 
 Converted Hugging Face configurations may express the same information through a more general RoPE parameter dictionary. Field names and scaling placement can change across representations, so the config should be read together with the model code and library revision.
 
-![VIZ m3/09 — interpreting a RoPE configuration](assets/modern-llms/en/module-03/m3_09_config_rope.svg)
+![VIZ m4/09 — interpreting a RoPE configuration](assets/modern-llms/en/module-03/m4_09_config_rope.svg)
+*The gpt-oss fields support a reconstruction of the positional spectrum. They do not constitute a complete training schedule.*
 
 ## 11. Level-one code: explicit shapes and explicit scaling placement
 
 The following NumPy code is designed for inspection rather than fused execution. It validates head width, positions, frequency shape, and the YaRN ramp. The pairing convention is the split-half `rotate_half` layout used by Llama-like implementations.
+
+The compact `apply_rope` below requires equal Q/K shapes and one shared position vector. It represents a full sequence block; the notebook rotates queries and cached keys separately when their lengths differ. This core calculates in float64 and returns the YaRN amplitude for the caller to apply. It covers the declared scenario, not every library variant.
 
 ```python
 import math
@@ -437,31 +522,40 @@ def rope_inv_freq(head_dim: int, base: float = 150_000.0) -> np.ndarray:
 
 def rotate_half(x: np.ndarray) -> np.ndarray:
     """Quarter-turn the split-half coordinate pairs."""
-    if x.ndim < 2 or x.shape[-1] % 2:
+    if x.ndim < 2 or x.size == 0 or x.shape[-1] % 2:
         raise ValueError("x must have shape [..., T, D] with even D")
     half = x.shape[-1] // 2
     return np.concatenate((-x[..., half:], x[..., :half]), axis=-1)
 
 def apply_rope(q, k, positions, inv_freq):
     """Apply split-half RoPE to q/k of shape [..., T, D]."""
+    if any(np.iscomplexobj(x) for x in (q, k, inv_freq)):
+        raise TypeError("q, k and inv_freq must be real")
     q = np.asarray(q, dtype=np.float64)
     k = np.asarray(k, dtype=np.float64)
     positions = np.asarray(positions)
     inv = np.asarray(inv_freq, dtype=np.float64)
-    if q.shape != k.shape or q.ndim < 2 or q.shape[-1] % 2:
+    if q.shape != k.shape or q.ndim < 2 or q.size == 0 or q.shape[-1] % 2:
         raise ValueError("q and k must share shape [..., T, D], with even D")
+    if not np.isfinite(q).all() or not np.isfinite(k).all():
+        raise ValueError("q and k must be finite")
     if positions.ndim != 1 or positions.dtype.kind not in "iu":
         raise ValueError("positions must be an integer vector [T]")
     if positions.size != q.shape[-2] or np.any(positions < 0):
         raise ValueError("positions do not match the sequence axis")
-    if inv.shape != (q.shape[-1] // 2,) or np.any(inv <= 0):
+    if inv.shape != (q.shape[-1] // 2,) or not np.isfinite(inv).all() or np.any(inv <= 0):
         raise ValueError("inv_freq must be positive and have shape [D/2]")
 
     angles = positions.astype(np.float64)[:, None] * inv[None, :]
     angles = angles.reshape((1,) * (q.ndim - 2) + angles.shape)
+    if not np.isfinite(angles).all():
+        raise FloatingPointError("phase overflow")
     full = np.concatenate((angles, angles), axis=-1)
     cos, sin = np.cos(full), np.sin(full)
-    return q * cos + rotate_half(q) * sin, k * cos + rotate_half(k) * sin
+    qr, kr = q * cos + rotate_half(q) * sin, k * cos + rotate_half(k) * sin
+    if not np.isfinite(qr).all() or not np.isfinite(kr).all():
+        raise FloatingPointError("rotation overflow")
+    return qr, kr
 
 def yarn_inv_freq(head_dim, base, factor, original_context,
                   beta_fast=32.0, beta_slow=1.0, *, truncate=False):
@@ -469,6 +563,10 @@ def yarn_inv_freq(head_dim, base, factor, original_context,
     inv = rope_inv_freq(head_dim, base)
     if not math.isfinite(factor) or factor < 1.0:
         raise ValueError("factor must be at least 1")
+    if isinstance(original_context, bool) or not isinstance(original_context, int):
+        raise TypeError("original_context must be an integer")
+    if not math.isfinite(beta_fast) or not math.isfinite(beta_slow):
+        raise ValueError("beta parameters must be finite")
     if original_context <= 0 or beta_fast <= beta_slow or beta_slow <= 0:
         raise ValueError("invalid context or beta parameters")
     if not isinstance(truncate, bool):
@@ -532,11 +630,18 @@ Video changes all three axes. Qwen2.5-VL can space temporal IDs according to rea
 
 TMRoPE—Time-aligned Multimodal Rotary Position Embedding—was documented in the Qwen2.5-Omni technical report in March 2025. It aligns audio and video timestamps. In that model, one temporal ID corresponds to 40 ms. This is a model-specific time grid, not a universal definition of TMRoPE.
 
-![VIZ m3/10 — M-RoPE and TMRoPE](assets/modern-llms/en/module-03/m3_10_mrope.svg)
+![VIZ m4/10 — M-RoPE and TMRoPE](assets/modern-llms/en/module-03/m4_10_mrope.svg)
+*Text repeats one position ID across all axes; images vary height and width at fixed time; video and synchronized audio use a temporal coordinate.*
+
+### Interleaved axes in Qwen3-VL
+
+Sectioned M-RoPE gives time, height, and width separate frequency groups. [Qwen3-VL, §2.1](https://arxiv.org/html/2511.21631v1#S2.SS1) instead interleaves axis assignments across frequency pairs, giving each axis access to faster and slower bands. This is **Interleaved-MRoPE**. Axis allocation is separate from the adjacent-versus-split-half layout of the two coordinates inside each pair.
+
+The report also describes explicit textual video timestamps (§2.3). The 40 ms grid from Qwen2.5-Omni is therefore not a family-wide rule. Our 2×2 example implements sectioned M-RoPE, not a complete Qwen3-VL position system. Mixed text and visual sequences also need a convention for coordinate offsets and the text that follows; the toy grid starts at zero for clarity.
 
 ## 14. The 2026 landscape is a branching architecture map
 
-As of 5 August 2026, position handling in leading open systems is not one YaRN monoculture. Published evidence supports several different contracts.
+This selective implementation map was checked on 10 October 2026. Use it as a reference after learning the mechanisms: each row points to evidence for a particular positional design, not a ranking or an exhaustive catalogue.
 
 | Family or method | Positional mechanism | Purpose or context | Evidence |
 |---|---|---|---|
@@ -550,14 +655,16 @@ As of 5 August 2026, position handling in leading open systems is not one YaRN m
 | Llama 4 | interleaved RoPE/NoPE, chunked attention, temperature tuning | hybrid long-context stack | open configuration and implementation |
 | Qwen2-VL / Qwen2.5-VL | M-RoPE | text, image, and video coordinates | paper and code |
 | Qwen2.5-Omni | TMRoPE | aligned audio-video time | technical report |
+| Qwen3-VL | Interleaved-MRoPE and textual timestamps | frequency allocation across axes and video event timing | [report, §2](https://arxiv.org/html/2511.21631v1#S2) and open implementation |
 | Inkling | relative positional embeddings with sliding/global layers | 1M context | official architecture announcement |
 | Closed API models | may be undisclosed | advertised window does not reveal the formula | provider documentation only where available |
 
-A context-window number does not identify the positional mechanism, and it does not establish reliable use of every position inside the window. Operational context quality is an evaluation problem, addressed later in Module 17.
+A context-window number does not identify the positional mechanism, and it does not establish reliable use of every position inside the window. Operational context quality is an evaluation problem, addressed later in Module 19.
 
 ## 17. Key takeaways
 
-![VIZ m3/11 — positional mechanisms at a glance](assets/modern-llms/en/module-03/m3_11_cheatsheet.svg)
+![VIZ m4/11 — positional mechanisms at a glance](assets/modern-llms/en/module-03/m4_11_cheatsheet.svg)
+*Permutation symmetry, rotary relativity, spectral diagnostics, context-scaling families, ALiBi/NoPE, and multimodal axes on one page.*
 
 - Bidirectional self-attention without position is permutation-equivariant. A causal mask supplies access order, not a complete distance geometry.
 - Pure sinusoidal pairs already have an exact relative dot product. RoPE inserts relative phase directly into the projected query-key score.
@@ -569,7 +676,9 @@ A context-window number does not identify the positional mechanism, and it does 
 - M-RoPE repeats IDs for text and uses multiple axes for visual tokens. TMRoPE aligns multimodal time.
 - A configuration describes architectural geometry; it is not a substitute for a training report.
 
-## 18. Notebook and primary sources
+**Next:** [Module 5, attention mechanisms](module-04.md). With position accounted for, we can examine how heads are organized and how attention is computed without unnecessary memory use.
+
+## 18. primary sources
 
 **Primary sources:**
 
@@ -585,15 +694,16 @@ A context-window number does not identify the positional mechanism, and it does 
 - Shang et al., *LongRoPE2* — [arxiv.org/abs/2502.20082](https://arxiv.org/abs/2502.20082)
 - Bai et al., *Qwen2-VL* — [arxiv.org/abs/2409.12191](https://arxiv.org/abs/2409.12191)
 - Xu et al., *Qwen2.5-Omni* — [arxiv.org/abs/2503.20215](https://arxiv.org/abs/2503.20215)
-- [Hugging Face RoPE utilities](https://github.com/huggingface/transformers/blob/main/src/transformers/modeling_rope_utils.py)
-- [gpt-oss original configuration](https://huggingface.co/openai/gpt-oss-120b/blob/main/original/config.json)
-- [gpt-oss reference RoPE implementation](https://github.com/openai/gpt-oss/blob/main/gpt_oss/torch/model.py)
-- [Hugging Face GptOssConfig](https://github.com/huggingface/transformers/blob/main/src/transformers/models/gpt_oss/configuration_gpt_oss.py)
+- [Hugging Face RoPE utilities](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/modeling_rope_utils.py)
+- [gpt-oss original configuration](https://huggingface.co/openai/gpt-oss-120b/blob/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/config.json)
+- [gpt-oss reference RoPE implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py)
+- [Hugging Face GptOssConfig](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gpt_oss/configuration_gpt_oss.py)
 - [Llama 4 model documentation](https://huggingface.co/docs/transformers/model_doc/llama4)
+- Qwen3-VL — [report, §2](https://arxiv.org/html/2511.21631v1#S2); [implementation](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3_vl/modeling_qwen3_vl.py)
 - [Inkling architecture announcement](https://thinkingmachines.ai/news/introducing-inkling/)
 
 **Further study.** Fourier features, kernels, and information geometry are developed in *Information Theory for ML*. Recurrent and state-space alternatives to explicit positional encoding appear in later *Modern LLMs* modules.
 
 ---
 
-*Landscape verified: 5 August 2026. Spectrum and YaRN numbers belong to an explicitly stated teaching scenario. For closed models, an undisclosed positional mechanism is not inferred from the advertised context window.*
+*Selected implementations checked: 10 October 2026. Spectrum and YaRN numbers belong to an explicitly stated teaching scenario. For closed models, an undisclosed positional mechanism is not inferred from the advertised context window.*

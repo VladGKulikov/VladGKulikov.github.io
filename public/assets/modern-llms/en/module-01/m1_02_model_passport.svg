@@ -1,38 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-<rect width="1600" height="900" fill="#FFFFFF"/>
-<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">Two passports for one product</text>
-<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">The checkpoint describes the model; tools and environment define the acting system</text>
-<rect x="120" y="180" width="600" height="570" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
-<text x="156" y="243" text-anchor="start" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#2E3440">
-<tspan x="156" dy="0">Model passport</tspan>
-</text>
-<text x="156" y="289" text-anchor="start" font-family="Arial,sans-serif" font-size="21" font-weight="400" fill="#5B6472">
-<tspan x="156" dy="0">I  total / active / precision</tspan>
-<tspan x="156" dy="29">II  nominal + working context</tspan>
-<tspan x="156" dy="29">III input and output modalities</tspan>
-<tspan x="156" dy="29">IV reasoning / effort</tspan>
-<tspan x="156" dy="29">V  weights, licence, artefacts</tspan>
-<tspan x="156" dy="29">VI latency, throughput, cost</tspan>
-</text>
-<rect x="880" y="180" width="600" height="570" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
-<text x="916" y="243" text-anchor="start" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#2E3440">
-<tspan x="916" dy="0">System passport</tspan>
-</text>
-<text x="916" y="289" text-anchor="start" font-family="Arial,sans-serif" font-size="21" font-weight="400" fill="#5B6472">
-<tspan x="916" dy="0">exact version and safeguards</tspan>
-<tspan x="916" dy="29">tools + agent harness</tspan>
-<tspan x="916" dy="29">permissions + secrets</tspan>
-<tspan x="916" dy="29">network + sandbox</tspan>
-<tspan x="916" dy="29">shared memory + channels</tspan>
-<tspan x="916" dy="29">evaluation protocol</tspan>
-<tspan x="916" dy="29">monitoring + stop conditions</tspan>
-</text>
-<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
-<line x1="730" y1="460" x2="860" y2="460" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
-<text x="795" y="415" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#4C78A8">
-<tspan x="795" dy="0">weights</tspan>
-</text>
-<text x="795" y="515" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#4C78A8">
-<tspan x="795" dy="0">actions</tspan>
-</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="436" viewBox="0 0 1100 436">
+<title>Two passports for one assistant</title>
+<desc>Keep unknown fields explicit. Inspect the model and its operating conditions separately.</desc>
+<rect width="1100" height="436" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Two passports for one assistant</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Keep unknown fields explicit. Inspect the model and its operating conditions separately.</text>
+<rect x="40.0" y="132" width="498.0" height="224" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Model: what is available</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Parameters and weight format</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Context: limits and quality profile</text>
+<text x="64.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Input and output data types</text>
+<text x="64.0" y="292" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Reasoning and compute budget</text>
+<text x="64.0" y="317" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Artefacts, licence, and cost</text>
+<rect x="562.0" y="132" width="498.0" height="224" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">System: how it is used</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Exact version and mode</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Retrieval and other tools</text>
+<text x="586.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Permissions, network, and isolation</text>
+<text x="586.0" y="292" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Memory across requests</text>
+<text x="586.0" y="317" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Answer checks and stopping</text>
+<text x="40" y="397" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">For a document assistant, retrieval access and citation checking are separate fields.</text>
 </svg>

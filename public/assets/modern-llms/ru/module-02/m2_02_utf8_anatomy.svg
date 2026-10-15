@@ -1,41 +1,26 @@
-<svg viewBox="0 0 860 310" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
-  <title>Анатомия UTF-8</title>
-  <desc>Строка Пр🚀t посимвольно: кириллица — 2 байта, эмодзи — 4, латиница — 1; стартовая последовательность byte-level BPE.</desc>
-  <text x="30" y="30" font-size="21" font-weight="700" fill="#2E3440">UTF-8: сколько байтов в символе</text>
-  <text x="30" y="50" font-size="12.6" fill="#4C566A">строка <tspan font-family="ui-monospace, Menlo, monospace" fill="#2E3440">"Пр🚀t"</tspan> — 4 символа → 9 байтов → 9 стартовых токенов byte-level BPE</text>
-
-  <!-- символы -->
-  <g text-anchor="middle" font-family="ui-monospace, Menlo, monospace">
-    <rect x="80"  y="80" width="120" height="46" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/><text x="140" y="110" font-size="20" fill="#2E3440" font-weight="600">П</text>
-    <rect x="220" y="80" width="120" height="46" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/><text x="280" y="110" font-size="20" fill="#2E3440" font-weight="600">р</text>
-    <rect x="360" y="80" width="240" height="46" rx="8" fill="#F3EEF3" stroke="#B48EAD" stroke-width="1.2"/><text x="480" y="110" font-size="20" fill="#2E3440" font-weight="600">🚀</text>
-    <rect x="620" y="80" width="70" height="46" rx="6" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/><text x="655" y="110" font-size="20" fill="#2E3440" font-weight="600">t</text>
-  </g>
-  <!-- скобки-связи -->
-  <g stroke="#D8DEE9" stroke-width="1">
-    <line x1="140" y1="126" x2="140" y2="150"/><line x1="280" y1="126" x2="280" y2="150"/>
-    <line x1="480" y1="126" x2="480" y2="150"/><line x1="655" y1="126" x2="655" y2="150"/>
-  </g>
-  <!-- байты -->
-  <g text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12">
-    <rect x="82"  y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="109" y="174" fill="#2E3440" font-size="12.6" font-weight="600">D0</text>
-    <rect x="144" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="171" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9F</text>
-    <rect x="222" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="249" y="174" fill="#2E3440" font-size="12.6" font-weight="600">D1</text>
-    <rect x="284" y="152" width="54" height="34" rx="4" fill="#EAF3F5" stroke="#88C0D0"/><text x="311" y="174" fill="#2E3440" font-size="12.6" font-weight="600">80</text>
-    <rect x="362" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="389" y="174" fill="#2E3440" font-size="12.6" font-weight="600">F0</text>
-    <rect x="424" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="451" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9F</text>
-    <rect x="486" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="513" y="174" fill="#2E3440" font-size="12.6" font-weight="600">9A</text>
-    <rect x="548" y="152" width="54" height="34" rx="4" fill="#F3EEF3" stroke="#B48EAD"/><text x="575" y="174" fill="#2E3440" font-size="12.6" font-weight="600">80</text>
-    <rect x="628" y="152" width="54" height="34" rx="4" fill="#EFF4EA" stroke="#A3BE8C"/><text x="655" y="174" fill="#2E3440" font-size="12.6" font-weight="600">74</text>
-  </g>
-  <g font-size="9.5" fill="#4C566A" text-anchor="middle">
-    <text x="210" y="204" font-size="10.9">кириллица: 2 байта / символ</text>
-    <text x="480" y="204">эмодзи: 4 байта</text>
-    <text x="655" y="204">ASCII: 1 байт</text>
-  </g>
-  <g font-size="10" fill="#4C566A">
-    <text x="30" y="240" font-size="10.5">Следствия: <tspan fill="#2E3440">«Привет» = 12 стартовых токенов</tspan>, «Hello» = 5 — языки стартуют с неравных позиций ещё до словаря.</text>
-    <text x="30" y="260" font-size="10.5">Каждый одиночный байт D0/D1 сам по себе — невалидный UTF-8: словарь сначала «собирает буквы» (см. трейс m2/03).</text>
-    <text x="30" y="280" font-size="10.5">Ведущий байт кодирует длину: 0xxxxxxx — 1 байт · 110xxxxx — 2 · 1110xxxx — 3 · 11110xxx — 4; продолжения — 10xxxxxx.</text>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="559" viewBox="0 0 1100 559">
+<title>Кодовая точка, графема и байт</title>
+<desc>Длина строки зависит от того, какие единицы мы считаем.</desc>
+<rect width="1100" height="559" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Кодовая точка, графема и байт</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Длина строки зависит от того, какие единицы мы считаем.</text>
+<rect x="40.0" y="132" width="498.0" height="149" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">ASCII: A</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">U+0041 → 41</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">1 кодовая точка · 1 байт</text>
+<rect x="562.0" y="132" width="498.0" height="149" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Кириллица: П</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">U+041F → D0 9F</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">1 кодовая точка · 2 байта</text>
+<rect x="40.0" y="305" width="498.0" height="174" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Emoji: 🚀</text>
+<text x="64.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">U+1F680 → F0 9F 9A 80</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">1 кодовая точка · 4 байта</text>
+<rect x="562.0" y="305" width="498.0" height="174" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Одна графема: é или e + ◌́</text>
+<text x="586.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">é: 1 точка, 2 байта.</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">e + акцент: 2 точки, 3 байта.</text>
+<text x="586.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">BBPE без нормализации сохраняет разницу.</text>
+<text x="40" y="520" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Базовый BBPE-алфавит содержит все 256 значений байта, а не набор букв.</text>
 </svg>

@@ -1,5 +1,7 @@
 # Module 2. State, Value, and Bellman Equations
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.7  
 > **Content snapshot:** 2026-08-04  
 > **Language:** EN  
@@ -82,11 +84,13 @@ $$
 
 If the transition only appends the chosen token, model parameters and decoding rules are fixed, and stopping depends on the visible prefix, the complete prefix is sufficient. Random token sampling is not a violation: it belongs to the policy $\pi(a\mid s)$, while the transition to the next prefix is deterministic once the token action has been fixed.
 
-A browser, file session, user, or external tool can carry hidden state. Then two identical transcripts may lead to different responses because permissions, time, files, or session state differ. The transcript can be every message available to the model and still fail to define an MDP.
+A browser, file session, user, or external tool can carry hidden state. For a fixed environment model and initial distribution, the complete history $H_t$ can serve as a growing information state: it determines the conditional distribution of future observations and rewards without revealing the actual world state. The belief $b_t(s)=P(s_t=s\mid H_t)$ summarizes that history for prediction in a POMDP. Different hidden states compatible with one history can produce different outcomes while belonging to the same conditional probability law.
 
-> **Practical sufficiency test.** Could two identical records $S_t$, followed by the same action, induce different next-observation distributions because relevant information is absent from $S_t$? If yes, the representation is incomplete. Differences caused only by randomness already described by one common distribution do not break the Markov property.
+A text-message window may contain only part of $H_t$. For example, the message identifying the open file may have been dropped, while the file session still uses that file. Two complete histories then produce the same window even though their earlier observations change the prediction of the next tool response. The loss of relevant information in the representation, rather than hidden state alone, makes that window insufficient.
 
-**Architecture context:** the agents and tools module in *Modern LLMs* (`modern_llms.module_16_agents`) develops the systems view. Here we only need the distinction among environment state, observation, and the agent's internal representation.
+> **Practical sufficiency test.** Can two complete histories mapped to the same record $S_t$ give different conditional distributions of the next observation and reward under the same action? If so, the representation has lost relevant information. Different random outcomes drawn from one conditional distribution do not violate the Markov property.
+
+**Architecture context:** *Modern LLMs*, Module 18 “Agents and Tool Use” (`modern_llms.module_16_agents`) develops the systems view. Here we only need the distinction among environment state, observation, and the agent's internal representation.
 
 ---
 
@@ -117,7 +121,7 @@ $$
 \mathbb{E}[R_{t+1}\mid S_t=s,A_t=a,S_{t+1}=s'].
 $$
 
-Some tasks genuinely permit a shorter notation such as $\bar r(s,a)$ or $\bar r(s)$. These are not automatically interchangeable formulas: each asserts an additional conditional-independence structure. This module uses $\bar r(s,a,s')$ as its default form.
+The expected reward $\bar r(s,a)=\mathbb{E}[R_{t+1}\mid s,a]$ always exists when the reward is integrable and satisfies $\bar r(s,a)=\sum_{s'}P(s'\mid s,a)\bar r(s,a,s')$. This marginalization requires no conditional-independence assumption. Equating $\bar r(s,a,s')$ with the same $\bar r(s,a)$ for every reachable next state is an additional assumption about the conditional mean. Likewise, $\bar r(s)$ can average over actions under a specified policy, whereas an action-independent reward model is a stronger condition. This module uses the transition-conditioned form by default.
 
 The policy $\pi(a\mid s)$ is **not part of the environment dynamics**. The same MDP can be paired with different policies. Under a fixed policy, a one-step joint distribution factors as
 
@@ -275,7 +279,7 @@ A common overreach concerns **group relative policy optimization** (GRPO). In th
 
 > **The bridge worth keeping.** A value function asks what an unseen continuation is worth in expectation. A PPO critic, a GRPO group baseline, and a partial-reasoning evaluator approximate that broad question in different ways; they are not the same mathematical object.
 
-Module 4 (`rl_llm.module_04_policy_gradients`) will connect advantage to policy gradients and GAE. Module 9 (`rl_llm.module_09_rlvr_grpo`) develops GRPO variants. The reasoning module in *Modern LLMs* (`modern_llms.module_13_reasoning`) supplies the architectural context for scoring intermediate steps.
+Module 4 (`rl_llm.module_04_policy_gradients`) will connect advantage to policy gradients and GAE. Module 9 (`rl_llm.module_09_rlvr_grpo`) develops GRPO variants. Module 15 “Reasoning Models and Test-Time Compute” in *Modern LLMs* (`modern_llms.module_13_reasoning`) supplies the architectural context for scoring intermediate steps.
 
 ---
 
@@ -916,6 +920,6 @@ Links were checked on August 4, 2026. Each item supports a specific part of the 
 6. **Shao et al., *DeepSeekMath*.** — <https://arxiv.org/abs/2402.03300>. An author report describing the original GRPO group construction without a learned critic. It is not an independent replication of every empirical claim and does not cover all later variants.
 7. **Official Gymnasium FrozenLake and CliffWalking pages.** — <https://gymnasium.farama.org/environments/toy_text/frozen_lake/> and <https://gymnasium.farama.org/environments/toy_text/cliff_walking/>. These document the canonical teaching environments. The numerical values in this course come from its own tested NumPy implementations under a stated protocol.
 
-The expanded claim registry, verification status, and scope boundaries are in [`Module_2_Sources.md`](Module_2_Sources.md).
+The expanded claim registry, verification status, and scope boundaries are in [`Module_2_Sources.md`](module-02.md).
 
 **Next: Module 3, bandits and exploration.** We temporarily remove multi-step dynamics and study the cost of exploration, upper-confidence methods, Thompson sampling, and the connection between choosing among several LLM responses and contextual bandits.

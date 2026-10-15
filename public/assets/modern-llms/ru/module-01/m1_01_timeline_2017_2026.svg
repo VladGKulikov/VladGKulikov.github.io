@@ -1,65 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-<rect width="1600" height="900" fill="#FFFFFF"/>
-<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">От Transformer к системам моделей</text>
-<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">История меняет дефицитный ресурс — и добавляет новое поле в паспорт</text>
-<rect x="70" y="190" width="430" height="220" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
-<text x="96" y="238" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="96" dy="0">2017–2019</tspan>
-<tspan x="96" dy="29">Параллельное обучение</tspan>
-</text>
-<text x="96" y="306" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="96" dy="0">Transformer · BERT · GPT-2</tspan>
-</text>
-<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
-<line x1="510" y1="300" x2="552" y2="300" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
-<rect x="570" y="190" width="430" height="220" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
-<text x="596" y="238" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="596" dy="0">2020–2021</tspan>
-<tspan x="596" dy="29">Масштаб и in-context learning</tspan>
-</text>
-<text x="596" y="306" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="596" dy="0">GPT-3 · scaling laws · sparse experts</tspan>
-</text>
-<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
-<line x1="1010" y1="300" x2="1052" y2="300" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
-<rect x="1070" y="190" width="430" height="220" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
-<text x="1096" y="238" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="1096" dy="0">2022</tspan>
-<tspan x="1096" dy="29">Управляемое поведение</tspan>
-</text>
-<text x="1096" y="306" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="1096" dy="0">Chinchilla · instruction tuning · RLHF</tspan>
-</text>
-<rect x="70" y="475" width="430" height="220" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
-<text x="96" y="523" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="96" dy="0">2023</tspan>
-<tspan x="96" dy="29">Цена инференса</tspan>
-</text>
-<text x="96" y="591" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="96" dy="0">Llama · GQA · FlashAttention · PEFT</tspan>
-</text>
-<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
-<line x1="510" y1="585" x2="552" y2="585" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
-<rect x="570" y="475" width="430" height="220" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
-<text x="596" y="523" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="596" dy="0">2024</tspan>
-<tspan x="596" dy="29">Условные и гибридные вычисления</tspan>
-</text>
-<text x="596" y="591" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="596" dy="0">MoE · MLA · Mamba · multimodality</tspan>
-</text>
-<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#4C78A8"/></marker></defs>
-<line x1="1010" y1="585" x2="1052" y2="585" stroke="#4C78A8" stroke-width="3" marker-end="url(#arr)"/>
-<rect x="1070" y="475" width="430" height="220" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
-<text x="1096" y="523" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="1096" dy="0">2025–2026</tspan>
-<tspan x="1096" dy="29">Модель становится системой</tspan>
-</text>
-<text x="1096" y="591" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="1096" dy="0">reasoning effort · инструменты ·</tspan>
-<tspan x="1096" dy="25">агенты · управляемое обучение</tspan>
-</text>
-<text x="800" y="795" text-anchor="middle" font-family="Arial,sans-serif" font-size="21" font-weight="700" fill="#4C78A8">
-<tspan x="800" dy="0">Новый релиз читаем не по имени поколения, а по изменившемуся архитектурному и системному контракту.</tspan>
-</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="735" viewBox="0 0 1100 735">
+<title>Как менялись инженерные вопросы</title>
+<desc>Периоды перекрываются: новые ограничения добавляются к прежним.</desc>
+<rect width="1100" height="735" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Как менялись инженерные вопросы</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Периоды перекрываются: новые ограничения добавляются к прежним.</text>
+<text x="40" y="158" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">2017–2019</text>
+<circle cx="238" cy="156" r="6" fill="#5E81AC"/>
+<line x1="238" y1="163" x2="238" y2="251" stroke="#D8DEE9" stroke-width="2"/>
+<text x="270" y="154" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Архитектура</text>
+<text x="270" y="186" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Как обучать сеть на больших корпусах?</text>
+<text x="40" y="260" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">2020–2021</text>
+<circle cx="238" cy="258" r="6" fill="#5E81AC"/>
+<line x1="238" y1="265" x2="238" y2="353" stroke="#D8DEE9" stroke-width="2"/>
+<text x="270" y="256" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Масштаб</text>
+<text x="270" y="288" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Как согласовать размер модели и вычисления?</text>
+<text x="40" y="362" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">2022</text>
+<circle cx="238" cy="360" r="6" fill="#5E81AC"/>
+<line x1="238" y1="367" x2="238" y2="455" stroke="#D8DEE9" stroke-width="2"/>
+<text x="270" y="358" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Данные и обучение ассистента</text>
+<text x="270" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Какой обучающий сигнал нужен для полезного ответа?</text>
+<text x="40" y="464" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">2023–2024</text>
+<circle cx="238" cy="462" r="6" fill="#5E81AC"/>
+<line x1="238" y1="469" x2="238" y2="557" stroke="#D8DEE9" stroke-width="2"/>
+<text x="270" y="460" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Память и инференс</text>
+<text x="270" y="492" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Как хранить веса и обрабатывать длинный вход?</text>
+<text x="40" y="566" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">2024–2025</text>
+<circle cx="238" cy="564" r="6" fill="#5E81AC"/>
+<line x1="238" y1="571" x2="238" y2="659" stroke="#D8DEE9" stroke-width="2"/>
+<text x="270" y="562" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Вычисления при ответе</text>
+<text x="270" y="594" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Как распределять усилия между запросами?</text>
+<text x="40" y="668" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">2025–2026</text>
+<circle cx="238" cy="666" r="6" fill="#5E81AC"/>
+<text x="270" y="664" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Модель внутри системы</text>
+<text x="270" y="696" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Как связать инструменты, разрешения и проверку?</text>
 </svg>

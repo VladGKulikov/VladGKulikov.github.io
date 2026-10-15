@@ -1,5 +1,7 @@
 # Module 10. Algorithmic Information Theory: Shortest Descriptions, MDL, and Universal Prediction
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
+
 > **How to read this module.** Sections 10.1–10.8 form the main route. We first move from the average number of bits required by a source to the description length of one particular object, then connect that idea to Shannon entropy, universal prediction, MDL, and compression-based similarity. Sections 10.9–10.10 are optional second-pass discussions of AIXI and Landauer's principle.
 
 ## 10.1. From a distribution to one particular object

@@ -1,5 +1,7 @@
 # Module 6. The LLM as a policy: tokens, log-probabilities, and KL
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.11  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
@@ -322,13 +324,13 @@ There are also two computation modes.
 1. **Sampling.** A token is drawn from the actual behavior policy and its log-probability is recorded during rollout.
 2. **Rescoring a known sequence.** The whole sequence is passed through the model under teacher forcing, and selected-token probabilities are gathered in parallel.
 
-In an ideal synchronous system, the rescored $\log\pi_{\mathrm{old}}$ equals the stored value. Distributed systems may disagree because of a a different version of the weights, processor order, numeric precision, or generation-engine behavior. A small discrepancy is not automatically a bug, but it must be measured and explained.
+In an ideal synchronous system, the rescored $\log\pi_{\mathrm{old}}$ equals the stored value. Distributed systems may disagree because of a different version of the weights, processor order, numeric precision, or generation-engine behavior. A small discrepancy is not automatically a bug, but it must be measured and explained.
 
 ---
 
 ### Step 6.2.5 — Numeric precision and a reproducible protocol
 
-Log-probabilities react to small logit changes, especially for rare tokens and long accumulated sums. A reproducible protocol records:
+Log-probability differences can accumulate over long sequences. Rarity alone does not amplify a uniformly bounded logit perturbation: if $\max_i|\Delta z_i|\le\epsilon$, then $|\Delta\log p_i|\le2\epsilon$ for every token under untruncated softmax. A reproducible protocol records:
 
 - the resolved model commit or revision;
 - the tokenizer revision;
@@ -344,7 +346,7 @@ Inference APIs expose different slices of the distribution. Current vLLM documen
 
 Hugging Face Transformers can recover the selected generation scores with `compute_transition_scores`. The course notebook requests `normalize_logits=True` and independently teacher-forces the same sequence. Agreement between those two paths is a stronger invariant than a single plausible-looking score table.
 
-> **Engineering extension:** KV caching, batching, and efficient autoregressive inference are covered in *Modern LLMs*, Module 9 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`).
+> **Engineering extension:** KV caching, batching, and efficient autoregressive inference are covered in *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`).
 
 ## Lesson 6.3. KL to a reference policy
 
@@ -555,7 +557,7 @@ There are two distinct reasons.
 
 Tang and Munos analyze implementations in which a scalar estimate has the desired expectation while direct differentiation produces a different gradient or drops the sequential dependency. Later analyses of KL regularization likewise separate three properties: unbiased value estimation, finite variance, and a correct optimization gradient. In this module k1–k3 are **stop-gradient diagnostics and numerical estimators**. A training loss should be derived from the desired regularized policy gradient, not from the cosmetic appeal of a non-negative scalar.
 
-> **Snapshot 2026-08-05.** Current TRL PPO Trainer documentation describes `k1` as the default logging estimator and offers `k3` as a non-negative alternative that the documentation characterizes as lower-variance. That is an implementation description, not a universal theorem: heavy probability-ratio tails can make $k_3$ far noisier. The full placement of old, current, and reference policies in PPO, DPO, RLOO, and GRPO is covered in *Modern LLMs*, Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`).
+> **Snapshot 2026-08-05.** Current TRL PPO Trainer documentation describes `k1` as the default logging estimator and offers `k3` as a non-negative alternative that the documentation characterizes as lower-variance. That is an implementation description, not a universal theorem: heavy probability-ratio tails can make $k_3$ far noisier. The full placement of old, current, and reference policies in PPO, DPO, RLOO, and GRPO is covered in *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`).
 
 ## Lesson 6.4. The actual behavior policy during generation
 
@@ -899,5 +901,5 @@ For deeper links within the course series:
 - *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`) — entropy, cross-entropy, KL, and perplexity;
 - *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) — the variational logic of a KL anchor;
 - *Modern LLMs*, Module 2 “Tokenization and Embeddings” (`modern_llms.module_02_tokenization`) — tokenizers, special tokens, and templates;
-- *Modern LLMs*, Module 9 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`) — efficient generation mechanics;
-- *Modern LLMs*, Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) — the roles of old, current, and reference policies in the full training loop.
+- *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`) — efficient generation mechanics;
+- *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) — the roles of old, current, and reference policies in the full training loop.

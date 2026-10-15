@@ -1,52 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-<rect width="1600" height="900" fill="#FFFFFF"/>
-<text x="70" y="70" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#2E3440">Openness is a multidimensional contract</text>
-<text x="70" y="108" font-family="Arial,sans-serif" font-size="19" fill="#5B6472">Weight artefact, licence, code, and training reproducibility are separate axes</text>
-<rect x="35" y="245" width="280" height="330" rx="18" fill="#FCEBEC" stroke="#CBD3DF" stroke-width="2"/>
-<text x="60" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="60" dy="0">API only</tspan>
-</text>
-<text x="60" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="60" dy="0">behaviour without</tspan>
-<tspan x="60" dy="25">weights</tspan>
-</text>
-<rect x="345" y="245" width="280" height="330" rx="18" fill="#FFF5DD" stroke="#CBD3DF" stroke-width="2"/>
-<text x="370" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="370" dy="0">Open weights</tspan>
-</text>
-<text x="370" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="370" dy="0">checkpoint available</tspan>
-</text>
-<rect x="655" y="245" width="280" height="330" rx="18" fill="#EAF1FB" stroke="#CBD3DF" stroke-width="2"/>
-<text x="680" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="680" dy="0">Open inference</tspan>
-</text>
-<text x="680" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="680" dy="0">code and kernels</tspan>
-<tspan x="680" dy="25">available</tspan>
-</text>
-<rect x="965" y="245" width="280" height="330" rx="18" fill="#EDF7ED" stroke="#CBD3DF" stroke-width="2"/>
-<text x="990" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="990" dy="0">Open training</tspan>
-</text>
-<text x="990" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="990" dy="0">data, recipe,</tspan>
-<tspan x="990" dy="25">checkpoints, logs</tspan>
-</text>
-<rect x="1275" y="245" width="280" height="330" rx="18" fill="#F3EDFA" stroke="#CBD3DF" stroke-width="2"/>
-<text x="1300" y="292" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="1300" dy="0">Managed adaptation</tspan>
-</text>
-<text x="1300" y="331" text-anchor="start" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#5B6472">
-<tspan x="1300" dy="0">training exposed as a</tspan>
-<tspan x="1300" dy="25">service</tspan>
-</text>
-<rect x="150" y="650" width="1300" height="130" rx="18" fill="#E8F7F5" stroke="#CBD3DF" stroke-width="2"/>
-<text x="176" y="698" text-anchor="start" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#2E3440">
-<tspan x="176" dy="0">Engineering consequence</tspan>
-</text>
-<text x="176" y="737" text-anchor="start" font-family="Arial,sans-serif" font-size="19" font-weight="400" fill="#5B6472">
-<tspan x="176" dy="0">No column follows from another: open weights do not guarantee a permissive licence, a full recipe, or cheap</tspan>
-<tspan x="176" dy="26">self-hosting.</tspan>
-</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="584" viewBox="0 0 1100 584">
+<title>Access: independent questions</title>
+<desc>An answer in one field does not determine the others.</desc>
+<rect width="1100" height="584" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Access: independent questions</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">An answer in one field does not determine the others.</text>
+<rect x="40.0" y="132" width="498.0" height="174" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Obtain and run</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Are weights available?</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Is inference code available?</text>
+<text x="64.0" y="267" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">What hardware is required?</text>
+<rect x="562.0" y="132" width="498.0" height="174" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Use and distribute</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">What does this artefact's licence permit?</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Can a derived model be distributed?</text>
+<rect x="40.0" y="330" width="498.0" height="174" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Reproduce training</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Are data, code, intermediate states, and the</text>
+<text x="64.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">training procedure available?</text>
+<rect x="562.0" y="330" width="498.0" height="174" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="374" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Adapt through a service</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Can the result be exported?</text>
+<text x="586.0" y="440" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Which runtime components remain</text>
+<text x="586.0" y="465" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">provider-managed?</text>
+<text x="40" y="545" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Check the exact release and licence. Downloadable weights do not establish the full memory budget.</text>
 </svg>

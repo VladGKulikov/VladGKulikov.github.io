@@ -1,16 +1,22 @@
-# Module 6. Mixture of Experts
+# Module 7. Mixture of Experts
 
-*“Modern LLMs” course · Module 6 lecture · edition 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
 
-> **What this module is about.** The previous module showed that most parameters in a conventional Transformer block live in the feed-forward network. A **Mixture of Experts (MoE)** exploits that concentration: it stores many feed-forward experts but routes each token through only a few of them. Capacity can therefore grow much faster than per-token expert compute. That advantage is only the beginning of the story. The full expert bank still has to be stored, token assignments must be balanced, and hidden states may have to cross a cluster before a selected expert can process them. We will follow a token from router scores to top-k selection, weighted expert output, load control, all-to-all dispatch, and the newer LatentMoE design. Along the way, we will rebuild gpt-oss and DeepSeek-V3 parameter counts from explicit architectural conventions rather than relying on model names.
+*“Modern LLMs” course · Module 7 lecture · edition 2026.10.25*
+
+> **What this module is about.** In M6, the feed-forward network accounted for most of the parameters in our example Transformer block. A **Mixture of Experts (MoE)** replaces that single network with a bank of separate FFNs, called experts. Each token uses only a few of them, allowing stored capacity to grow without evaluating the entire bank on every token.
 >
-> **Prerequisites.** Modules 1, 4, and 5 provide the useful background: total versus active parameters, attention geometry, and the parameter cost of a SwiGLU feed-forward network. All notation needed for the calculations is introduced again here.
+> A small learned network, the **router**, decides which experts to use. We will follow its scores through selection and the weighted output, then ask how to keep the workload balanced. Explicit counts for gpt-oss and DeepSeek-V3 connect the mechanism to parameter storage and communication. More elaborate routing designs build on this foundation on the reference route.
+>
+> **Prerequisites.** Modules 1, 5, and 6 provide the useful background: total versus active parameters, attention geometry, and the parameter cost of a SwiGLU feed-forward network. All notation needed for the calculations is introduced again here.
+
+> **Reading routes.** To understand the mechanism, read §1, then §§4–10 while skipping the B09/B10 implementation details, and finish with §19 apart from the LatentMoE point. Use Q1–Q5 and Q7 in §17, then E1 and E3–E4 in §18. Q6 and E5 follow §11; E2 and E6 extend the reference and project routes. Follow one token and keep track of selection, mixture weights, and system cost. For the implementation pass, revisit §§6–7, work through §§12–14, and run the notebook. Use §§2–3, 11, and 15–16 as a reference for history, alternative routers, and model-specific contracts. M5 attention and M6 feed-forward blocks are the required background.
 
 ---
 
 ## 1. The bargain: capacity without activating the whole bank
 
-A dense feed-forward network applies every one of its matrices to every token. If we enlarge that network, stored capacity and token-level arithmetic rise together. MoE changes the unit of conditional execution. A layer holds $E$ complete feed-forward experts, while a small router chooses only $k\ll E$ of them for the current hidden state.
+A dense feed-forward network applies every one of its matrices to every token. If we enlarge that network, stored capacity and token-level arithmetic rise together. MoE changes the unit of conditional execution. A layer stores $E$ complete feed-forward experts. A small router scores them using the token's hidden vector, then selects the $k$ largest scores: **top-k routing**. The input to this decision is the vector representation, not the vocabulary ID.
 
 This creates two related but non-interchangeable quantities:
 
@@ -21,11 +27,12 @@ Neither quantity is a direct measurement of intelligence or latency. Total size 
 
 The range is already wide among documented open models. gpt-oss-120b publishes 117B total and 5.1B active parameters with 128 experts and top-4 routing. DeepSeek-V3 reports 671B/37B. Kimi K3 reaches 2.8T/104B while selecting 16 of 896 routed experts. Those headlines come from different architectures and sometimes different counting rules. A responsible comparison therefore asks what is common, what is routed, and which vocabulary matrices or auxiliary modules are included.
 
-The compute bargain also creates a systems bill. The expert bank must be stored somewhere, route decisions must become efficient batches, and devices must exchange token representations. For MoE, the model architecture and the distributed runtime are inseparable parts of the design.
+The compute bargain also creates a systems bill. The expert bank must be stored somewhere, route decisions must become efficient batches, and devices must exchange token representations. At large distributed scale, architecture and runtime must be designed together. Our task here is to understand their interaction and calculate the associated costs; implementing a distributed runtime is outside the course.
 
 ## 2. From local specialists to trillion-parameter sparse models
 
-![VIZ m6/01 — the history of Mixture of Experts](assets/modern-llms/en/module-06/m6_01_moe_timeline.svg)
+![VIZ m7/01 — the history of Mixture of Experts](assets/modern-llms/en/module-06/m7_01_moe_timeline.svg)
+*The evolution of MoE as a sequence of bottlenecks: learned gating, sparse top-k, expert parallelism and capacity, fine-grained/shared experts, auxiliary-loss-free balancing, and latent routed representations.*
 
 The statistical ancestor is the adaptive mixture of local experts introduced by Jacobs and Jordan. A gating network assigned examples to local predictors, allowing them to specialize. Modern MoE keeps that division of labor but changes both the scale and the computational shape.
 
@@ -35,7 +42,7 @@ GShard and Switch Transformer turned sparse experts into a distributed Transform
 
 Mixtral made top-2 MoE broadly inspectable in an open model. DeepSeekMoE then proposed finer expert segmentation and always-on shared experts. DeepSeek-V3 combined a large fine-grained bank with sigmoid scores, group preselection, and balancing biases updated outside the language-model objective.
 
-Recent work branches rather than converging on one final router. LatentMoE compresses the routed representation and expert width. ReMoE and later differentiable methods modify top-k itself. Routing-free proposals remove a separate central router. The enduring idea is conditional expert compute; the exact routing and runtime contracts remain open design choices.
+Research through 11 October 2026 follows several different directions. LatentMoE compresses the routed representation and expert width. ReMoE and later differentiable methods modify top-k itself. Routing-free proposals remove a separate central router. The enduring idea is conditional expert compute; the exact routing and runtime contracts remain open design choices.
 
 ## 3. Three older ideas hiding inside modern MoE
 
@@ -61,13 +68,13 @@ These views explain why the module needs both equations and systems arithmetic. 
 
 ## 4. A typed contract for routing and parameter accounting
 
-Let $x\in\mathbb{R}^h$ be a token representation. One sigmoid router uses
+Separate two kinds of expert first. A **routed expert** runs only when selected; a **shared expert** runs for every token. Let the token vector be $x\in\mathbb{R}^h$. The router's vector $w_i$ produces a logit $z_i=w_i^\top x$. Applying the sigmoid $\sigma(z)=1/(1+e^{-z})$ gives an independent score:
 
 $$
 s_i=\sigma(w_i^\top x).
 $$
 
-With an expert-wise selection bias $b_i$,
+A balancing controller can add an expert-wise **selection bias** $b_i$. This is separate from a bias inside the linear projection. The selected index set is
 
 $$
 \mathcal T(x)=\operatorname{TopK}(s_i+b_i,k).
@@ -80,7 +87,7 @@ g_i=\rho\,\frac{s_i}{\sum_{j\in\mathcal T(x)}s_j},
 \qquad i\in\mathcal T(x).
 $$
 
-The layer output is
+The scale $\rho>0$ is an architecture setting: selected gates sum to $\rho$. With $S$ shared experts, the expert branch returns
 
 $$
 \operatorname{MoE}(x)
@@ -90,7 +97,10 @@ $$
 \sum_{j=1}^{S}\operatorname{FFN}^{\text{shared}}_j(x).
 $$
 
-![VIZ m6/02 — anatomy of an MoE layer](assets/modern-llms/en/module-06/m6_02_moe_block.svg)
+Both sums return vectors of width $h$, ready to be added to the residual stream as in M6. A gate controls an output contribution; it need not be a calibrated probability of expertise. This sigmoid example is distinct from the selected-logit softmax used by gpt-oss in §14.
+
+![VIZ m7/02 — anatomy of an MoE layer](assets/modern-llms/en/module-06/m7_02_moe_block.svg)
+*Residual state, router, top-k routed experts, always-on shared experts, and the distinction between the stored bank and one token's active path.*
 
 A SwiGLU expert with hidden width $h$ and expert intermediate width $i_{\text{exp}}$ contains
 
@@ -174,7 +184,8 @@ $$
 
 Top-4 selects a much larger fraction of a 32-expert bank than of a 128-expert bank. The two models therefore have different sparsity factors despite sharing the same $k$.
 
-![VIZ m6/03 — total and active parameters](assets/modern-llms/en/module-06/m6_03_total_active.png)
+![VIZ m7/03 — total and active parameters](assets/modern-llms/en/module-06/m7_03_total_active.png)
+*Total and active counts for the two gpt-oss models and the course reconstruction of DeepSeek-V3. A logarithmic plot does not erase differences in counting convention.*
 
 The rough estimate $2P_{\text{active}}$ covers part of the weight-matmul arithmetic. It does not turn the 22.76 ratio into a latency multiplier: weight placement, expert batching, attention, and communication remain.
 
@@ -217,11 +228,16 @@ The gate for expert 3 is still based on its clean score 0.5987, not on 0.9487. T
 [0.1837, 0.2835, 0.2733, 0.2594].
 ```
 
-![VIZ m6/04 — router trace](assets/modern-llms/en/module-06/m6_04_router_trace.svg)
+![VIZ m7/04 — router trace](assets/modern-llms/en/module-06/m7_04_router_trace.svg)
+*Clean scores, biased selection scores, selected experts, and gates. The balancing bias changes membership without entering the expert mixture weights.*
 
 DeepSeek-V3 adds a group stage. Its 256 routed experts are divided into eight groups; a token first retains four groups and then chooses eight experts from those groups. With balancing bias enabled, the group score is built from the two strongest adjusted scores in each group. Gates are then formed from clean scores and multiplied by the model's routed scaling factor.
 
 This separation is broadly useful: a system can have one quantity for *who is eligible* and another for *how much the selected output contributes*.
+
+Top-k indices are discrete. While membership stays fixed, selected mixture weights can carry gradients. With renormalized top-1, the single gate is identically one and this path cannot train the router. Gate normalization and other learning signals must therefore be inspected together; not every top-1 architecture renormalizes its selected gate to one.
+
+**<strong>Implementation and checks: B09</strong>**
 
 ### NumPy → PyTorch · B09 — Top-k MoE: expert selection and mixture weights
 
@@ -241,15 +257,25 @@ def numpy_topk_router_explicit(
     *,
     selection_bias: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    clean = 1.0 / (1.0 + np.exp(-logits))
-    selection = clean if selection_bias is None else clean + selection_bias
+    logits = np.asarray(logits, dtype=np.float64)
+    if logits.ndim != 2 or not logits.size or not np.isfinite(logits).all():
+        raise ValueError("expected non-empty finite logits[T,E]")
+    if isinstance(top_k, (bool, np.bool_)) or not isinstance(top_k, (int, np.integer)) or not 1 <= top_k <= logits.shape[1]:
+        raise ValueError("top_k must be an integer in [1,E]")
+    log_scores = -np.logaddexp(0.0, -logits)
+    clean = np.exp(log_scores)
+    # Without bias, monotonic sigmoid permits ranking logits before saturation.
+    selection = logits if selection_bias is None else clean + selection_bias
+    if selection.shape != logits.shape or not np.isfinite(selection).all():
+        raise ValueError("selection_bias must broadcast to [T,E] and be finite")
     indices = np.argsort(-selection, axis=-1, kind="stable")[:, :top_k]
-    weights = np.take_along_axis(clean, indices, axis=-1)
+    selected_log = np.take_along_axis(log_scores, indices, axis=-1)
+    weights = np.exp(selected_log - selected_log.max(axis=-1, keepdims=True))
     weights = weights / weights.sum(axis=-1, keepdims=True)
     return indices, weights
 ```
 
-The minimal NumPy code separates clean scores, selection scores after bias, and mixture weights gathered from the clean scores of selected experts.
+Clean scores, selection priorities, and gates remain separate. Log-space normalization avoids 0/0 at very negative logits. Without bias, ranking logits avoids artificial ties caused by sigmoid saturation.
 
 #### 2. The same mathematics as explicit PyTorch operations
 
@@ -260,26 +286,32 @@ def torch_topk_router_explicit(
     *,
     selection_bias: torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    clean = logits.sigmoid()
-    selection = clean if selection_bias is None else clean + selection_bias
+    if logits.ndim != 2 or not logits.numel() or not logits.is_floating_point() or not torch.isfinite(logits).all():
+        raise ValueError("expected non-empty finite floating logits[T,E]")
+    if isinstance(top_k, bool) or not isinstance(top_k, int) or not 1 <= top_k <= logits.shape[1]:
+        raise ValueError("top_k must be an integer in [1,E]")
+    z = logits.float() if logits.dtype in (torch.float16, torch.bfloat16) else logits
+    log_scores = -torch.logaddexp(torch.zeros_like(z), -z)
+    selection = z if selection_bias is None else log_scores.exp() + selection_bias
+    if selection.shape != logits.shape or not torch.isfinite(selection).all():
+        raise ValueError("selection_bias must broadcast to [T,E] and be finite")
     _, indices = torch.topk(selection, top_k, dim=-1)
-    weights = clean.gather(-1, indices)
-    weights = weights / weights.sum(dim=-1, keepdim=True)
+    selected_log = log_scores.gather(-1, indices)
+    weights = selected_log.softmax(dim=-1)
     return indices, weights
 ```
 
-PyTorch expresses the same route with `sigmoid`, `topk`, and `gather`. Tie ordering from `topk` is not a portable guarantee.
+PyTorch uses log-sigmoid, topk, and gather, promoting FP16/BF16 to FP32. Gradients pass through selected gates, not discrete indices; topk tie order is unspecified. A renormalized top-1 gate is identically one and supplies no router gradient through this path.
 
 | Aspect | NumPy | PyTorch |
 |---|---|---|
-| Clean scores | NumPy sigmoid | `Tensor.sigmoid` |
+| Clean scores | log-sigmoid → exp | log-sigmoid → exp |
 | Selection | stable `argsort` | `torch.topk` |
 | Selected weight | `take_along_axis` | `gather` |
 | Bias | selection only | same contract |
 | Ties | stable reference sort | ordering is not guaranteed |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 logits_np = np.array([[2.1, -0.4, 0.8, 1.3], [0.2, 1.9, -1.1, 0.7]])
@@ -288,12 +320,21 @@ i_np, w_np = numpy_topk_router_explicit(logits_np, 2, selection_bias=bias_np)
 i_t, w_t = torch_topk_router_explicit(torch.tensor(logits_np), 2, selection_bias=torch.tensor(bias_np))
 np.testing.assert_array_equal(i_np, i_t.numpy())
 np.testing.assert_allclose(w_np, w_t.numpy())
-print("B09 explicit top-k parity away from ties: PASS")
+extreme = np.array([[-1002., -1000., -1001., -1003.]])
+with np.errstate(over="raise", invalid="raise", divide="raise"):
+    ei, ew = numpy_topk_router_explicit(extreme, 2)
+ti, tw = torch_topk_router_explicit(torch.tensor(extreme), 2)
+np.testing.assert_array_equal(ei, [[1, 2]])
+np.testing.assert_array_equal(ei, ti.numpy())
+np.testing.assert_allclose(ew, tw.numpy(), rtol=1e-12, atol=1e-12)
+z = torch.tensor(logits_np, requires_grad=True)
+assert torch.autograd.gradcheck(lambda x: torch_topk_router_explicit(x, 2)[1], (z,))
+one = torch_topk_router_explicit(z, 1)[1]
+np.testing.assert_allclose(torch.autograd.grad(one.sum(), z)[0].numpy(), 0., atol=1e-12)
+print("B09 routing, extreme logits, and selected-gate gradients: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m06_moe_bridges.py`](../assets/m06_moe_bridges.py)
+Complete executable file: `m07_moe_bridges.py`
 
 Tie-breaking contract: [PyTorch `topk`](https://docs.pytorch.org/docs/stable/generated/torch.topk.html).
 
@@ -303,23 +344,25 @@ A router can collapse through positive feedback. An early favorite receives more
 
 ### Auxiliary load-balancing loss
 
-A Switch-style term is
+Take a batch of $T$ tokens and $E$ experts. The router assigns a softmax probability $p_{t,i}$ to expert $i$ for token $t$. For top-1 routing, let $f_i$ be the fraction of tokens actually sent to that expert, and let $P_i=T^{-1}\sum_t p_{t,i}$ be its mean probability before selection. These measure different objects: hard assignments and the router's continuous scores.
 
-$$
-L_{\text{aux}}=E\sum_i f_iP_i,
-$$
+The Switch auxiliary term, before its external coefficient, is
 
-where $f_i$ is assignment frequency and $P_i$ is mean router probability. It contributes a direct gradient that trades some task objective for a more even distribution.
+$$L_{\text{aux}}=E\sum_i f_iP_i.$$
+
+If both distributions are uniform, each product is $1/E^2$; summing $E$ terms and multiplying by $E$ gives 1. During differentiation, the discrete assignments in $f_i$ are treated as fixed. Gradients pass through $P_i$, providing a learning signal that reflects the observed load.
+
+Training adds $\lambda L_{\text{aux}}$ to the language-model objective. The coefficient $\lambda$ sets the strength of this competing preference. In the notebook's top-k generalization, an expert receives $c_i$ assignments out of $Tk$, so we define $f_i=c_i/(Tk)$. The assignment fractions still sum to one; this normalization must be stated when comparing implementations.
 
 ### Router z-loss
 
 ST-MoE uses
 
 $$
-L_z=\mathbb{E}\!\left[\log\sum_i e^{z_i}\right]^2
+L_z=\frac1T\sum_{t=1}^{T}\left(\log\sum_{i=1}^{E}e^{z_{t,i}}\right)^2
 $$
 
-to restrain router logit magnitude. It is a numerical stabilization term, not a complete load-balancing strategy.
+where $z_{t,i}$ is the router logit for token $t$ and expert $i$. Squaring happens before averaging across tokens. This penalizes each token's log-partition value, rather than bounding every logit individually. A separate coefficient sets its weight in the training loss; controlling numerical scale does not by itself balance expert assignments.
 
 ### Auxiliary-loss-free balancing
 
@@ -329,32 +372,37 @@ $$
 b_i\leftarrow b_i+u\,\operatorname{sign}(\bar c-c_i).
 $$
 
-This avoids a **direct interference gradient** from an auxiliary objective. It does not leave training unchanged: altered routes determine which experts receive language-model gradients.
+Here $c_i$ counts assignments, $\bar c$ is the expert average, and $u>0$ is the step size. An overloaded expert loses priority; an underused one gains it. This controller contributes no auxiliary gradient of its own, although changing assignments changes which experts learn from each token.
 
-![VIZ m6/05 — load-balancing traces](assets/modern-llms/en/module-06/m6_05_balance.png)
+DeepSeek-V3 combines this batch-level controller with a small **sequence-wise auxiliary loss** to prevent extreme imbalance within an individual sequence. Auxiliary-loss-free balancing is the name of one mechanism, not a claim that the entire model has no auxiliary losses ([report, §2.1.2](https://arxiv.org/html/2412.19437v2#S2.SS1.SSS2)).
 
-The frozen example starts at load CV 0.6506. After 400 updates:
+![VIZ m7/05 — load-balancing traces](assets/modern-llms/en/module-06/m7_05_balance.png)
+*The paper-style sign update and a proportional teaching controller applied to the same deterministic score population.*
+
+We measure imbalance by the coefficient of variation, $\mathrm{CV}=\mathrm{std}(c_i)/\mathrm{mean}(c_i)$; equal loads give zero. This experiment freezes router scores and updates only the biases, without training experts. It starts at CV 0.6506. After 400 updates:
 
 - the sign rule with step 0.001 reaches 0.0393;
 - the proportional teaching controller with rate 0.15 reaches 0.0193.
 
 The smoother curve is not presented as the exact DeepSeek algorithm. It is an interpretable control-law experiment; the paper also analyzes a proportional variant in a separate setting.
 
-Capacity control is distinct again. The course uses
+An expert buffer has a separate limit. For $T$ tokens, $k$ assignments per token, and $E$ experts, the average is $Tk/E$. A capacity factor $c>0$ allocates
 
 $$
 C_e=\left\lceil c\frac{Tk}{E}\right\rceil
 $$
 
-and an explicit FIFO overflow policy. Surviving gates are renormalized by course convention. Production implementations may reroute, allocate larger buffers, drop without renormalization, or use dropless grouped GEMM.
+slots per expert. The notebook accepts assignments in token order (FIFO), so earlier tokens can receive preferential treatment. Surviving gates are renormalized by course convention. Production implementations may reroute, allocate larger buffers, drop without renormalization, or use dropless grouped GEMM.
 
-A token that loses every routed assignment does not vanish. Its routed branch is zero in that layer, while the residual path and other sublayers continue.
+A token that loses every routed assignment does not vanish. Its routed branch is zero in that layer; any shared experts and the residual path continue.
 
 ## 8. Fine-grained experts and always-on shared capacity
 
 Suppose an architecture replaces a small number of wide experts with a larger number of narrower ones while increasing $k$ proportionally. The active expert arithmetic can remain of similar order, while the router gains more ways to combine sub-blocks.
 
-The combinatorial contrast is striking:
+For a controlled example, replace 8 experts of width $i$ with 32 of width $i/4$, and change top-2 to top-8. Expert matrix storage and active matrix arithmetic stay constant because $8i=32(i/4)$ and $2i=8(i/4)$. The number of possible subsets rises from 28 to $\binom{32}{8}=10,518,300$, while routing and communication costs may rise.
+
+Another illustrative pair of bank sizes is
 
 $$
 \binom{8}{2}=28,
@@ -362,11 +410,12 @@ $$
 \binom{128}{4}=10,668,000.
 $$
 
-These are counts of possible unordered subsets, not counts of learned skills. Continuous gate weights, correlated routing, and group constraints matter. For DeepSeek-V3, $\binom{256}{8}$ is only an unconstrained upper bound because group preselection rules out many subsets.
+The latter 8/top-2 versus 128/top-4 comparison has no matched-budget claim. These numbers count unordered subsets, not learned skills. Continuous gate weights, correlated routing, and group constraints matter. For DeepSeek-V3, $\binom{256}{8}$ is only an unconstrained upper bound because group preselection rules out many subsets.
 
 A shared expert follows a different path: it runs for every token. DeepSeekMoE motivates shared capacity as a place for common information and a way to reduce redundancy across routed experts. That motivation does not identify the content of one trained shared expert. Claims such as “this expert stores grammar” need intervention evidence, not just architecture diagrams.
 
-![VIZ m6/06 — fine-grained and shared experts](assets/modern-llms/en/module-06/m6_06_fine_grained.svg)
+![VIZ m7/06 — fine-grained and shared experts](assets/modern-llms/en/module-06/m7_06_fine_grained.svg)
+*Coarse and fine-grained expert banks. More possible routing patterns increase flexibility, but the combinatorial count is not a semantic inventory.*
 
 ### DeepSeek-V3 reconstruction
 
@@ -382,7 +431,8 @@ $$
 
 These are consistent with the published 671B/37B headline. The Hugging Face package is about 685B when the 14B MTP module is included. A model passport should keep the main model, auxiliary modules, and active convention separate.
 
-![VIZ m6/07 — DeepSeek-V3 budget](assets/modern-llms/en/module-06/m6_07_v3_budget.svg)
+![VIZ m7/07 — DeepSeek-V3 budget](assets/modern-llms/en/module-06/m7_07_v3_budget.svg)
+*DeepSeek-V3: three dense layers, 58 MoE layers, 256 routed plus one shared expert, top-8, MLA, and a separately reported MTP module.*
 
 ## 9. What expert specialization evidence can actually support
 
@@ -404,7 +454,7 @@ A useful interpretation ladder is:
 
 Experts often align with narrower operations or linguistic patterns rather than clean topics such as “mathematics” or “Chinese.” Several experts may be partly substitutable. The role of a shared expert can change across depth.
 
-The same caution applies to adaptation. Failure to find a pre-existing language-specific expert does not prove that fine-tuning will smear the language across the bank or damage old languages. Those are testable outcomes, not architectural necessities.
+Supervised fine-tuning (SFT) updates model weights using training examples; M13 develops that process. To study its effect on experts, compare routing preferences and intervention results before and after the update. Evaluate language quality on held-out data as a separate measurement: a shift in expert frequency alone does not determine whether a language improved or degraded.
 
 Serving systems care about a different pattern: hot experts under the actual product workload. Training-time balance does not guarantee balanced traffic after deployment. Per-expert utilization therefore belongs in production telemetry.
 
@@ -414,35 +464,38 @@ The full bank must be available to the system, but it need not reside on one GPU
 
 ### Expert parallelism
 
-With EP, devices own subsets of experts. Tokens are dispatched to their owners, processed by grouped GEMMs, and returned. Ignoring metadata and padding, a round trip moves
+**Expert parallelism (EP)** assigns experts to devices. **Dispatch** packs and sends their token vectors; **combine** returns and sums their outputs. An **all-to-all** exchange allows each device to send to every other, while grouped GEMM executes multiple expert matrix multiplications together.
+
+Suppose every assignment moves a full vector of width $h$ and returns one of the same size, with $b$ bytes per coordinate. For one layer and the entire $T$-token batch, the logical round-trip payload is
 
 $$
 M_{\text{comm}}=2Thkb
 $$
 
-bytes. For $T=2048$, $h=7168$, $k=8$, and bf16, the idealized payload is 448 MiB.
+bytes. With $T=2048$, $h=7168$, $k=8$, and bf16 ($b=2$), this is 448 MiB across the batch, not per device. Actual network traffic can be lower because of local routes or destination-level aggregation, or higher because of padding and protocol overhead. This is assignment payload, not a universal network lower bound.
 
 ### How many experts does a batch touch?
 
-Under independent uniform routing,
+Under independent uniform routing, the expected fraction of experts touched by $N$ tokens is
 
 $$
 f_{\text{touched}}
 =1-\left(1-\frac{k}{E}\right)^N.
 $$
 
-For 128/top-4 and 256/top-8, $k/E$ is the same, so the theoretical curve is the same: at 64 tokens, about 86.9% of experts are touched.
+For 128/top-4 and 256/top-8, $k/E$ is the same, so the theoretical curve is the same: at 64 tokens, the expected touched fraction is about 86.9%.
 
 For Kimi K3's 896/top-16 routed bank:
 
 - 16 tokens touch about 25.0% in expectation;
 - 64 tokens touch about 68.4%.
 
-![VIZ m6/08 — the systems side of MoE](assets/modern-llms/en/module-06/m6_08_expert_parallel.svg)
+![VIZ m7/08 — the systems side of MoE](assets/modern-llms/en/module-06/m7_08_expert_parallel.svg)
+*Dispatch, all-to-all, grouped expert computation, and return. The batch-union formula is shown with its independence and uniformity assumptions.*
 
-Actual routes are correlated and skewed, shared experts are always active, and grouping changes the choice set. The formula is a baseline against which telemetry can be compared.
+Actual routes can be correlated and skewed, and shared experts are always active. Group restrictions alone do not invalidate the law if each expert still has marginal selection probability $k/E$ and token choices remain independent. The formula is a baseline against which telemetry can be compared.
 
-Expert offloading is not automatically useless at realistic batch sizes. Its value depends on popularity skew, temporal locality, prefetching, and transport latency. What fails is the simplistic assumption that only the $k$ experts for one isolated token ever need to be resident.
+To assess expert offloading, measure popularity skew, temporal reuse, prefetching, and transport latency for the workload. A batch may need many more than the $k$ experts selected by one isolated token; useful prefetching must deliver their weights before the corresponding computation needs them.
 
 ## 11. LatentMoE and alternatives to fixed discrete top-k
 
@@ -459,7 +512,7 @@ $$
 y=P_{\text{up}}\operatorname{MoE}_{\ell}(z).
 $$
 
-The router can still consume the original hidden representation and choose top-k experts. LatentMoE is therefore not a continuous virtual expert assembled from basis matrices.
+The router can still consume the original hidden representation and choose top-k experts. The two shared projections add $2d\ell$ matrix parameters. NVIDIA's shared experts, when present, stay in the original hidden width; the equation describes only the routed branch. Halving routed width therefore does not halve the whole model.
 
 Kimi K3 uses hidden width 7168 and latent expert width 3584, giving a twofold idealized reduction in routed activation width. It retains 896 routed experts, top-16, and two shared experts. NVIDIA uses LatentMoE in Nemotron 3 Super and Ultra.
 
@@ -483,44 +536,40 @@ The educational implementation is intentionally small enough to inspect. It make
 - capacity overflow is not silent;
 - parameter counting is driven by a typed architecture specification.
 
+This kernel exposes the order of operations in z-loss. B09 already gives the router; the notebook adds capacity, SwiGLU experts, and the shared branch.
+
 ```python
+from typing import Any
 import numpy as np
 
-def route_logits(logits, top_k, selection_bias=None):
-    logits = np.asarray(logits, dtype=np.float64)
-    if logits.ndim == 1:
-        logits = logits[None, :]
-    if logits.ndim != 2 or not np.isfinite(logits).all():
-        raise ValueError("logits must be finite [T,E]")
-    _, experts = logits.shape
-    if not 1 <= top_k <= experts:
-        raise ValueError("top_k must satisfy 1 <= k <= E")
+def _finite_array(name: str, value: Any, *, ndim: int | None = None) -> np.ndarray:
+    """Return ``value`` as a finite float64 array with an optional rank contract."""
 
-    scores = 1.0 / (1.0 + np.exp(-logits))
-    bias = np.zeros(experts) if selection_bias is None else np.asarray(selection_bias)
-    selection = scores + bias[None, :]
+    array = np.asarray(value, dtype=np.float64)
+    if ndim is not None and array.ndim != ndim:
+        raise ValueError(f"{name} must have rank {ndim}; got shape {array.shape}")
+    if array.size == 0:
+        raise ValueError(f"{name} must be non-empty")
+    if not np.all(np.isfinite(array)):
+        raise ValueError(f"{name} must contain only finite values")
+    return array
 
-    expert_ids = np.arange(experts)
-    chosen = np.empty((len(logits), top_k), dtype=np.int64)
-    for token in range(len(logits)):
-        chosen[token] = np.lexsort((expert_ids, -selection[token]))[:top_k]
+def router_z_loss(logits: Any) -> float:
+    """Compute the ST-MoE router z-loss ``mean(logsumexp(logits)^2)``."""
 
-    selected_scores = np.take_along_axis(scores, chosen, axis=1)
-    gates = selected_scores / selected_scores.sum(axis=1, keepdims=True)
-    return chosen, gates
-
-def loss_free_bias_step(bias, counts, rate):
-    """Sign update used by the main auxiliary-loss-free rule."""
-    counts = np.asarray(counts, dtype=np.float64)
-    fractions = counts / counts.sum()
-    return np.asarray(bias) + rate * np.sign(fractions.mean() - fractions)
+    raw = _finite_array("logits", logits)
+    if raw.ndim != 2:
+        raise ValueError("logits must have shape [T,E]")
+    maximum = np.max(raw, axis=1, keepdims=True)
+    log_partition = maximum[:, 0] + np.log(np.exp(raw - maximum).sum(axis=1))
+    return float(np.mean(log_partition**2))
 ```
 
-The full code adds stable extreme-logit handling, capacity dispatch, shared experts, auxiliary losses, the accounting classes, and explicit negative tests. It is not a grouped-GEMM or distributed runtime.
+**<strong>Implementation and checks: B10</strong>**
 
 ### NumPy → PyTorch · B10 — MoE dispatch and combine
 
-NumPy executes a transparent assignment loop. PyTorch batches tokens by expert and combines weighted outputs with `index_add_`.
+Use hidden `[T,D]`, indices and gates `[T,K]`, and expert weights `[E,D,F]` and `[E,F,D]`. Indices are integers from 0 through E−1; repeated assignments are allowed and their contributions add. Floating arrays are finite with compatible dtypes; PyTorch tensors share a device. The minimal bridge validates indices before exposing dispatch and combination, without a capacity limit.
 
 ```python
 import numpy as np
@@ -537,6 +586,12 @@ def numpy_expert_dispatch_explicit(
     w_in: np.ndarray,
     w_out: np.ndarray,
 ) -> np.ndarray:
+    if expert_indices.ndim != 2 or expert_indices.shape != gates.shape or expert_indices.shape[0] != hidden.shape[0]:
+        raise ValueError("indices and gates must have matching shape [T,K]")
+    if not np.issubdtype(expert_indices.dtype, np.integer):
+        raise ValueError("expert indices must be integers")
+    if np.any(expert_indices < 0) or np.any(expert_indices >= w_in.shape[0]):
+        raise ValueError("expert index out of range")
     output = np.zeros_like(hidden)
     for token in range(hidden.shape[0]):
         for slot in range(expert_indices.shape[1]):
@@ -546,7 +601,7 @@ def numpy_expert_dispatch_explicit(
     return output
 ```
 
-NumPy loops over tokens and routing slots, selects expert weights, evaluates the expert FFN, and adds the gate-weighted result to the token output.
+Two-matrix tanh experts keep this bridge focused on dispatch/combine. The token/slot loop adds each weighted expert output. The main notebook layer separately implements SwiGLU.
 
 #### 2. The same mathematics as explicit PyTorch operations
 
@@ -558,6 +613,12 @@ def torch_expert_dispatch_explicit(
     w_in: torch.Tensor,
     w_out: torch.Tensor,
 ) -> torch.Tensor:
+    if expert_indices.ndim != 2 or expert_indices.shape != gates.shape or expert_indices.shape[0] != hidden.shape[0]:
+        raise ValueError("indices and gates must have matching shape [T,K]")
+    if expert_indices.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8):
+        raise ValueError("expert indices must be integers")
+    if torch.any(expert_indices < 0) or torch.any(expert_indices >= w_in.shape[0]):
+        raise ValueError("expert index out of range")
     output = torch.zeros_like(hidden)
     for expert in range(w_in.shape[0]):
         token_ids, slots = torch.where(expert_indices == expert)
@@ -579,8 +640,7 @@ PyTorch changes the execution order: assignments are batched per expert, then re
 | Autograd | none | through expert matmul and combine |
 | CUDA determinism | CPU reference | `index_add_` may depend on atomic-add ordering |
 
-<details>
-<summary><strong>Executable parity and edge-case check</strong></summary>
+**<strong>Executable parity and edge-case check</strong>**
 
 ```python
 rng = np.random.default_rng(10)
@@ -591,12 +651,32 @@ w1_np = rng.standard_normal((3,4,5)); w2_np = rng.standard_normal((3,5,4))
 np_out = numpy_expert_dispatch_explicit(x_np, idx_np, gates_np, w1_np, w2_np)
 t_out = torch_expert_dispatch_explicit(torch.tensor(x_np), torch.tensor(idx_np), torch.tensor(gates_np), torch.tensor(w1_np), torch.tensor(w2_np))
 np.testing.assert_allclose(np_out, t_out.numpy(), rtol=1e-10, atol=1e-10)
-print("B10 token/slot loop vs expert batches: PASS")
+args = [torch.tensor(x_np, requires_grad=True), torch.tensor(idx_np),
+        torch.tensor(gates_np, requires_grad=True), torch.tensor(w1_np, requires_grad=True),
+        torch.tensor(w2_np, requires_grad=True)]
+assert torch.autograd.gradcheck(
+    lambda x, g, a, b: torch_expert_dispatch_explicit(x, args[1], g, a, b),
+    (args[0], args[2], args[3], args[4]))
+for invalid in (-1, w1_np.shape[0], .5, np.nan, True):
+    bad = np.full(idx_np.shape, invalid)
+    for dispatch, values in (
+        (numpy_expert_dispatch_explicit, (x_np,bad,gates_np,w1_np,w2_np)),
+        (torch_expert_dispatch_explicit, tuple(torch.tensor(a) for a in (x_np,bad,gates_np,w1_np,w2_np))),
+    ):
+        try: dispatch(*values)
+        except ValueError: pass
+        else: raise AssertionError("invalid expert index accepted")
+duplicate = np.zeros_like(idx_np)
+expected = idx_np.shape[1] * (np.tanh(x_np @ w1_np[0]) @ w2_np[0])
+actual = numpy_expert_dispatch_explicit(x_np,duplicate,np.ones_like(gates_np),w1_np,w2_np)
+np.testing.assert_allclose(actual,expected)
+actual_t = torch_expert_dispatch_explicit(torch.tensor(x_np),torch.tensor(duplicate),
+    torch.ones_like(torch.tensor(gates_np)),torch.tensor(w1_np),torch.tensor(w2_np))
+np.testing.assert_allclose(actual_t.numpy(),expected)
+print("B10 values, gradients, repeated assignments, and invalid indices: PASS")
 ```
 
-</details>
-
-Complete executable file: [`m06_moe_bridges.py`](../assets/m06_moe_bridges.py)
+Complete executable file: `m07_moe_bridges.py`
 
 Accumulation contract: [PyTorch `index_add_`](https://docs.pytorch.org/docs/stable/generated/torch.Tensor.index_add_.html).
 
@@ -604,19 +684,20 @@ Accumulation contract: [PyTorch `index_add_`](https://docs.pytorch.org/docs/stab
 
 The open reference code makes its routing contract unusually clear.
 
-`GptOssTopKRouter` has a weight matrix and a bias, takes top-k router logits, and applies softmax over the selected logits. That is not the sigmoid-plus-selection-bias contract used by DeepSeek-V3.
+`MLPBlock.gate` has a weight matrix and a bias, takes top-k router logits, and applies softmax over the selected logits. That is not the sigmoid-plus-selection-bias contract used by DeepSeek-V3.
 
-The expert implementation stores packed gate/up weights, corresponding biases, down weights, and down biases. Ignoring those tensors was the reason an earlier matrix-only count understated the 120b model by 40,105,728 parameters.
+The expert implementation stores packed gate/up weights, corresponding biases, down weights, and down biases. The linear-layer biases contribute 40,105,728 parameters to the 120b model. In the original implementation, the packed gate and up columns alternate; a split into two contiguous halves would change the activation.
 
-The readable reference path loops over experts touched by the batch and accumulates outputs with indexed addition. A high-performance serving implementation replaces that loop with fused dispatch and grouped GEMMs, frequently across an expert-parallel group.
+The original reference path gathers the selected expert tensors and uses `einsum` for both expert projections and the weighted sum. Bridge B10 uses a different, deliberately transparent execution order: a loop over experts and indexed addition. Serving implementations can instead use fused dispatch and grouped matrix multiplications across devices; the routing mathematics must still agree.
 
-![VIZ m6/09 — gpt-oss from source](assets/modern-llms/en/module-06/m6_09_config_moe.svg)
+![VIZ m7/09 — gpt-oss from source](assets/modern-llms/en/module-06/m7_09_config_moe.svg)
+*The gpt-oss-120b contract recovered from code: biased router, 128 routed experts, top-4, packed expert tensors, and an explicit active-count convention.*
 
 The general reading lesson is portable: inspect the score function, selection bias, gate normalization, shared capacity, expert tensor shapes, overflow policy, and distributed execution path. “MoE” alone specifies none of them.
 
 ## 15. A source-aware snapshot of current MoE architectures
 
-The table is dated 6 August 2026 and records evidence rather than ranking models.
+The table is dated 11 October 2026 and records evidence rather than ranking models.
 
 | Model | Total / active | Expert contract | Routing or related design | Evidence |
 |---|---:|---|---|---|
@@ -630,7 +711,7 @@ The table is dated 6 August 2026 and records evidence rather than ranking models
 
 The active ratios are not directly comparable performance predictors. Models differ in dense prefixes, attention, MTP, modality towers, output heads, and counting conventions.
 
-Qwen3.5-35B-A3B is a useful configuration-reading example. Its language model has hidden width 2048, 40 layers, 256 routed experts, top-8 plus one shared expert, expert intermediate width 512, and an MTP layer. Its block pattern interleaves Gated DeltaNet and full attention. These published fields are a better basis for an exercise than a deliberately wrong 48-layer configuration.
+Qwen3.5-35B-A3B is a useful configuration-reading example. Its language model has hidden width 2048, 40 layers, 256 routed experts, top-8 plus one shared expert, expert intermediate width 512, and an MTP layer. Its block pattern interleaves Gated DeltaNet and full attention. A separate sigmoid gate scales the shared expert output. The presence of MTP in the configuration does not mean that ordinary autoregressive decoding runs it on every step: active accounting must specify the execution path.
 
 ## 16. Multimodal MoE is not one architecture
 
@@ -644,7 +725,8 @@ If every token still chooses $k$ experts, expert compute per token does not rise
 
 ## 19. Key takeaways
 
-![VIZ m6/10 — Mixture of Experts cheat sheet](assets/modern-llms/en/module-06/m6_10_cheatsheet.svg)
+![VIZ m7/10 — Mixture of Experts cheat sheet](assets/modern-llms/en/module-06/m7_10_cheatsheet.svg)
+*One-page map: declared total/active accounting, router and selection bias, load control, shared/fine-grained experts, expert parallelism, batch union, and LatentMoE.*
 
 - MoE grows stored capacity faster than per-token expert compute, but storage and communication remain.
 - Total and active counts are meaningful only with a declared convention.
@@ -656,7 +738,7 @@ If every token still chooses $k$ experts, expert compute per token does not rise
 - LatentMoE keeps discrete top-k while compressing the routed path.
 - Current model tables should cite configs, reports, or code rather than inherit properties across families.
 
-## 20. Notebook and primary sources
+## 20. primary sources
 
 **Primary sources:**
 
@@ -678,8 +760,11 @@ If every token still chooses $k$ experts, expert compute per token does not rise
 - ReMoE — [arXiv:2412.14711](https://arxiv.org/abs/2412.14711)
 - SoftMoE 2026 — [arXiv:2606.17952](https://arxiv.org/abs/2606.17952)
 
-**Next:** Module 7 changes the other large component of the block. Instead of routing among feed-forward experts, it asks whether sequence information must always move through attention, or whether recurrent state and state-space models can carry part of the load.
+- Routing-Free MoE — [arXiv:2604.00801](https://arxiv.org/abs/2604.00801)
+- DeepSeek-V4 — [model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro)
+
+**Next:** Module 8 changes the other large component of the block. Instead of routing among feed-forward experts, it asks whether sequence information must always move through attention, or whether recurrent state and state-space models can carry part of the load.
 
 ---
 
-*Landscape verified: 6 August 2026. Course reconstructions are separated from rounded developer headlines, and reported research results retain their original experimental scope.*
+*Landscape verified: 11 October 2026. Course reconstructions are separated from rounded developer headlines, and reported research results retain their original experimental scope.*

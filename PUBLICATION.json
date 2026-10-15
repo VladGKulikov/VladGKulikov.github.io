@@ -5,7 +5,12 @@
   "version_doi": "10.5281/zenodo.21877457",
   "status": "public",
   "courses": 3,
-  "languages": ["en", "ru"],
+  "languages": [
+    "en",
+    "ru"
+  ],
   "content_license": "CC-BY-NC-SA-4.0",
-  "code_license": "Apache-2.0"
+  "code_license": "Apache-2.0",
+  "content_updated": "2026-10-15",
+  "archived_edition_note": "The edition, release date, and version DOI identify the archived 2026.1 books. Live lecture content is refreshed separately."
 }

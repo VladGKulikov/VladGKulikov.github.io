@@ -1,14 +1,22 @@
-# Module 17. Evaluating Modern LLM Systems: From Benchmarks to Decisions
+# Module 19. Evaluating Modern LLM Systems: From Benchmarks to Decisions
 
-*“Modern LLMs” course · Module 17 lecture · edition 2026.8*
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
+
+*“Modern LLMs” course · Module 19 lecture · edition 2026.10.25*
 
 > **What this module is about.** The earlier modules built the objects we now have to choose between: pretrained models, quantized serving stacks, retrieval systems, post-trained policies, multimodal models, and agents. Evaluation is the discipline that turns those artifacts into a release decision. It is not merely a leaderboard lookup. A defensible result joins a decision, a task distribution, an execution scaffold, a scoring rule, and a statement of uncertainty. We will follow a single practical question throughout the lecture: which of two candidate systems should a team deploy for a real product?
 >
-> Public benchmarks will provide orientation, but the decision will eventually depend on paired outcomes, a private golden set, judge calibration, long-context diagnostics, operational cost, and continuous regression testing. Five frozen numerical scenarios make those ideas concrete: 95.5% versus 95.0% on 500 items, finite-sample `pass@k`, a position-biased judge, a synthetic working-context curve, and a costed private evaluation run.
+> Public benchmarks will provide orientation, but the decision will eventually depend on paired outcomes, a private golden set, judge calibration, long-context diagnostics, operational cost, and continuous regression testing. Six numerical scenarios make those ideas concrete: assumed probabilities 95.5% and 95.0% at N=500, finite-sample `pass@k`, a position-biased judge, confidence and selective answering, a synthetic working-context curve, and a costed private evaluation run.
 >
-> **Prerequisites.** Module 16 introduced agent scaffolds and trajectory logging; Modules 9 and 15 covered long context and retrieval; Module 13 introduced verifiers and test-time sampling. Every formula needed here is derived again, so the module can also be read on its own.
+> **Prerequisites.** Module 18 introduced agent scaffolds and trajectory logging; Modules 10 and 17 covered long context and retrieval; Module 15 introduced verifiers and test-time sampling. Every formula needed here is derived again, so the module can also be read on its own.
 
 ---
+
+### Reading routes
+
+On a first pass, read Sections 1–6, 13, and 15. They connect a release decision to an inspectable report. In Section 6, work through the integer-outcome table before returning to the formulas; the small harness in Section 13 runs on its own.
+
+On a second pass, examine how measurements fail: multiple attempts in Section 8, judges in Section 10, and context position in Section 12. Use Section 14 as a map of these experiments. Run both notebooks, change one assumption, and explain the resulting change in interpretation. Sections 7, 9, 11, 16, and 17 provide a reference for benchmark families and experiment passports. In Section 19, E1 completes the first route; E2–E3 use Sections 8, 10, and 12 and complete the second.
 
 ## 1. Evaluation is an instrument for a decision
 
@@ -40,7 +48,7 @@ By the end of the module, the public leaderboard will have become only the first
 
 ## 2. The historical arc: every evaluation regime repaired a failure
 
-![VIZ m17/01 — the evolution of LLM evaluation](assets/modern-llms/en/module-17/m17_01_timeline.svg)
+![VIZ m19/01 — the evolution of LLM evaluation](assets/modern-llms/en/module-17/m19_01_timeline.svg)
 
 Modern LLM evaluation did not replace one canonical benchmark with another. It accumulated layers as older instruments stopped answering new questions.
 
@@ -95,7 +103,7 @@ Throughout this module, raw records and trajectories come first. Aggregates are 
 
 ## 4. How a benchmark loses measurement power
 
-![VIZ m17/02 — the benchmark life cycle](assets/modern-llms/en/module-17/m17_02_paradigm.svg)
+![VIZ m19/02 — the benchmark life cycle](assets/modern-llms/en/module-17/m19_02_paradigm.svg)
 
 A new benchmark usually begins with ample headroom. Current systems fail in diverse ways, and score differences are large enough to be informative. Success changes the benchmark.
 
@@ -120,7 +128,7 @@ The benchmark passport should therefore document provenance, update policy, held
 
 ## 5. Build an evaluation map before choosing benchmark names
 
-![VIZ m17/03 — an evaluation evidence map](assets/modern-llms/en/module-17/m17_03_map.svg)
+![VIZ m19/03 — an evaluation evidence map](assets/modern-llms/en/module-17/m19_03_map.svg)
 
 Return to the support-assistant decision. A useful plan separates four layers.
 
@@ -160,57 +168,88 @@ A pragmatic model-selection package contains four kinds of evidence:
 
 The output is a decision dossier rather than one universal score.
 
-## 6. Worked example A: are 95.5% and 95.0% distinguishable?
+### Confidence, calibration, and the option to abstain
 
-Consider two anonymous systems evaluated on 500 binary items. They score 95.5% and 95.0%. This is an illustrative near-ceiling scenario, not a claim about a particular leaderboard.
+A document assistant needs more than an average accuracy figure. It may be useful to send a difficult question to a person rather than return an incorrect instruction. To design that choice, first specify what confidence refers to. The token probability from Module 3 describes the next piece of text given its context. A familiar sequence can be highly probable and factually wrong. Likewise, “I am certain” is a generated statement until its reliability has been tested.
 
-If only aggregate rates are available, a rough independent-rate standard error is
+Let $q_i\in[0,1]$ estimate the probability that the **complete response** to item $i$ will pass a declared correctness check. The check supplies an outcome $y_i\in\{0,1\}$. A verifier, agreement among attempts, or a trained predictor might supply $q_i$; none is automatically a trustworthy probability estimator. Assess the estimates on data kept out of their construction and tuning.
 
-$$
-SE_\Delta=
-\sqrt{\frac{p_1(1-p_1)}{N}+\frac{p_2(1-p_2)}{N}}.
-$$
+**Calibration** asks whether stated probabilities agree with success frequencies. Among responses assigned confidence near 0.8, roughly 80% should be correct. The population condition is $\Pr(Y=1\mid Q=q)=q$. A finite evaluation estimates this relationship by grouping nearby scores under a declared binning rule. Report group sizes: three successes in three trials cannot establish certainty. This interpretation follows the calibration framework discussed by [Guo et al. (2017)](https://proceedings.mlr.press/v70/guo17a.html).
 
-With $p_1=0.955$, $p_2=0.950$, and $N=500$,
+Consider ten authored response records, each carrying confidence 0.8, of which six are correct. The observed success rate is 0.6. The group suggests overconfidence, subject to sampling uncertainty. The **Brier score** evaluates probability estimates through squared error:
 
 $$
-SE_\Delta=0.013452.
+\operatorname{BS}=\frac1N\sum_{i=1}^N(q_i-y_i)^2.
 $$
 
-The observed difference is 0.005, giving
+Here the score is $(6\cdot0.2^2+4\cdot0.8^2)/10=0.28$. Assigning 0.6 to every record would give 0.24 on these same outcomes. That retrospective calculation illustrates the loss; it does not validate a calibrator fitted to the test set. If the true success probability is $p$, the identity $\mathbb E[(q-Y)^2]=(q-p)^2+p(1-p)$ shows why the expected score is minimized at $q=p$. Brier score measures overall probability-prediction quality, not calibration alone. A constant base-rate prediction can be calibrated yet fail to distinguish easy items from hard ones.
+
+We can now define a decision rule: accept a response when $q_i\ge t$, and otherwise abstain or request review. This is **selective prediction**. For the accepted set $A_t$, define **coverage** and **selective risk**, the error rate among accepted responses, as
 
 $$
-z=\frac{0.005}{0.013452}=0.372.
+\operatorname{coverage}(t)=\frac{|A_t|}{N},\qquad
+\operatorname{risk}(t)=\frac{\sum_{i\in A_t}(1-y_i)}{|A_t|}.
 $$
 
-A rough 95% interval for the difference is approximately
+Coverage here is the fraction of tasks answered; it is distinct from the probability of finding at least one correct candidate in Module 15. An empty accepted set has undefined risk, not zero risk. Raising the threshold cannot increase coverage, but it need not lower risk if confidence ranks errors poorly. [Geifman and El-Yaniv (2017)](https://arxiv.org/abs/1705.08500) study prediction with this option to reject part of the input population.
+
+The notebook uses 20 authored records: four successes out of four at confidence 0.95, six out of ten at 0.8, and three out of six at 0.6. Overall accuracy is 13/20 and Brier score is 0.2185. Threshold 0.8 accepts 14 responses, including four errors: coverage is 70% and risk is $4/14\approx28.6\%$. Threshold 0.9 accepts four correct responses. Its observed risk is zero, but four cases establish little about future failures, and 80% of requests now need another route. Choose a threshold on separate development data, accounting for both errors and handoffs; evaluate it on held-out data and critical slices. Calibration and abstention also leave the authorization checks from Module 18 fully necessary.
+
+![Confidence and selective answering on an authored dataset](assets/modern-llms/en/module-17/m19_09_calibration.png)
+
+## 6. Worked example A: what does half a percentage point mean?
+
+Start with a planning assumption, not an observed leaderboard result. Suppose success probabilities are $p_1=0.955$ and $p_2=0.950$, and we plan $N=500$ binary tasks per system. These are valid probabilities, but 95.5% cannot be the accuracy of a single 500-item binary run: the resolution is $1/500=0.002$, or 0.2 percentage points. It would require 477.5 successes. Actual counts of 478 and 475 would give 95.6% and 95.0%, a 0.6-point difference.
+
+The tasks selected for an evaluation introduce sampling variation. A **standard error (SE)** describes the typical spread of an estimate across repeated samples. For independent binary outcomes, the standard error of a proportion is $\sqrt{p(1-p)/N}$. Planning uses an assumed probability $p$; analysis often substitutes the observed proportion $\hat p$.
+
+For two independent samples, variances add:
 
 $$
-0.5\pm2.64\ \text{percentage points},
+SE_\Delta=\sqrt{\frac{p_1(1-p_1)}{N}+\frac{p_2(1-p_2)}{N}}
+=0.013452.
 $$
 
-which clearly includes zero.
+That is 1.345 percentage points. The assumed difference $\Delta=0.005$ is only
 
-![VIZ m17/04 — sample size and discriminating power](assets/modern-llms/en/module-17/m17_04_saturation.png)
+$$z=\frac{\Delta}{SE_\Delta}=0.3717$$
 
-The calculation is deliberately incomplete because both systems saw the same tasks. Correct inference should be paired. Suppose a 200-item comparison yields:
+standard errors. A normal 95% confidence interval uses an estimate plus or minus $1.96SE$. Under this planning scenario, its approximate half-width is 2.64 points, much larger than the assumed 0.5-point effect. An actual interval must use observed data. The 95% coverage refers to repeated applications of the procedure to fresh samples; it is not a probability assigned to the fixed parameter after this particular interval has been computed.
 
-- both correct: 150;
-- only A correct: 20;
-- only B correct: 10;
-- both wrong: 20.
+![VIZ m19/04 — precision and sample size](assets/modern-llms/en/module-17/m19_04_saturation.png)
 
-The accuracies are 85% and 80%, but the exact two-sided McNemar $p$-value is about 0.099. A five-point aggregate gap is not automatically strong evidence on a small paired set.
+### Keep the task pairs
 
-For planning intuition, an independent two-rate approximation near success rate $p$ is
+Usually both systems answer the same tasks, so their outcomes are related. The independent formula cannot recover that relationship. Store the counts for both correct, A only, B only, and both wrong.
+
+| Paired scenario, N=200 | Both correct | A only | B only | Both wrong | Accuracy A / B |
+|---|---:|---:|---:|---:|---:|
+| I | 150 | 20 | 10 | 20 | 85% / 80% |
+| II | 160 | 10 | 0 | 30 | 85% / 80% |
+
+The **null hypothesis** of exact McNemar inference gives equal probability to the two directions of disagreement. Scenario I has 30 disagreements, 20 favoring A. Its two-sided value is
+
+$$p_{\mathrm{test}}=2P[\operatorname{Bin}(30,0.5)\le10]\approx0.098737.$$
+
+Here $\operatorname{Bin}(n,p)$ counts successes in $n$ independent trials with probability $p$. A p-value describes how likely an equally or more extreme deviation is under the null; it is not the probability that the null is true. In scenario II all ten disagreements favor A, giving $p_{\mathrm{test}}=2/2^{10}=0.001953$. The aggregate accuracies are identical, yet the evidence differs. At this fixed difference, fewer discordant outcomes provide stronger evidence. Failing to reject the first null does not establish equivalence.
+
+A **paired bootstrap** can estimate an interval for the difference: repeatedly sample whole rows, each containing both outcomes, with replacement; recompute the difference; take, for example, the 2.5th and 97.5th percentiles. The project notebook does this from saved responses. When multiple rows share a document or session, resample independent groups rather than pretending every row is independent.
+
+### Plan the precision you need
+
+For two independent proportions near $p$, targeting an interval half-width $\delta$ gives
+
+$$N\approx2p(1-p)\left(\frac{1.96}{\delta}\right)^2.$$
+
+At $p=0.95$, rounding up gives 146, 913, 3650, and 14,599 tasks **per system** for half-widths of 5, 2, 1, and 0.5 points. This does not guarantee 80% or 90% power to detect an effect of that size. **Power** is the probability of rejecting the null under a specified true alternative; planning it is a separate calculation that must also account for pairing. The useful lesson here is the precision cost: $N$ grows as $1/\delta^2$.
+
+For a single observed proportion on a small dataset, we use a Wilson interval. With $s$ successes out of $N$, $\hat p=s/N$, and $z=1.96$, its endpoints are
 
 $$
-N\approx2p(1-p)\left(\frac{1.96}{\delta}\right)^2.
+\frac{\hat p+z^2/(2N)\ \pm\ z\sqrt{\hat p(1-\hat p)/N+z^2/(4N^2)}}{1+z^2/N}.
 $$
 
-At $p=0.95$, it gives 146 items for a five-point difference, 913 for two points, 3,650 for one point, and 14,599 for half a point. Pairing and the pattern of disagreements can alter the requirement substantially, but the $1/\delta^2$ growth remains a useful warning.
-
-The engineering lesson is straightforward: inspect $N$, retain item-level outcomes, and report uncertainty before debating leaderboard rank.
+Seven successes out of eight give 87.5% accuracy but an interval of approximately [52.9%, 97.8%]. That breadth is part of the result. Even zero observed errors does not prove perfect reliability. No interval can repair an unrepresentative sample or an incorrect independence assumption; statistical analysis comes after experimental design.
 
 ## 7. Difficulty has several sources: HLE, FrontierMath, and ARC-AGI
 
@@ -245,6 +284,10 @@ $$
 =1-\frac{\binom{n-c}{k}}{\binom{n}{k}}.
 $$
 
+The formula has two connected interpretations. Conditional on a fixed pool of $n$ candidates, the ratio is the chance of selecting $k$ failures without replacement. If that pool was itself generated by independent draws from a fixed sampling policy, the estimator has expectation $1-(1-p)^k$, where $p$ is the unknown single-attempt success probability. That is the sense in which it is unbiased. Copying one generation, selecting favorable candidates before counting, or changing temperature within the pool breaks this justification.
+
+Compute the estimate separately for each task, then average with declared weights. Pooling successes and samples from heterogeneous tasks into a single $(n,c)$ pair changes the estimand. The implementation checks $n\ge k$ and $0\le c\le n$, including no successes and fewer than $k$ failures.
+
 For $n=20$ and $c=4$:
 
 | $k$ | unbiased `pass@k` | plug-in $1-(1-c/n)^k$ |
@@ -263,13 +306,15 @@ A complete `pass@k` report includes the number of generated samples, decoding pa
 
 ## 9. Human arenas and composite indices answer someone else’s question
 
-Open-ended assistant quality is naturally comparative. LMArena presents two anonymous outputs and asks a user which one they prefer. A Bradley–Terry model converts many pairwise votes into a ranking.
+Open-ended assistant quality is naturally comparative. Arena (formerly LMArena and Chatbot Arena) presents two anonymous outputs and asks a user which one they prefer. A Bradley–Terry model converts many pairwise votes into a ranking.
 
 The platform supplies valuable evidence because prompts come from real users and no exact reference answer is required. Yet the resulting ranking describes the arena population and protocol. It is not automatically the utility function of your organization.
 
-Rankings depend on topic and language mix, model exposure, user heterogeneity, response length, presentation, model revisions under stable names, and statistical robustness of the aggregation. Recent work also shows that top Bradley–Terry rankings can be sensitive to removing a small adversarially chosen subset of votes.
+Rankings depend on topic and language mix, model exposure, user heterogeneity, response length, presentation, model revisions under stable names, and statistical robustness of the aggregation.
 
 This does not make arenas useless. It makes their scope explicit: they are broad human-preference instruments.
+
+Bradley–Terry assigns each system a strength parameter $\beta_i$ and models $P(A\succ B)=\sigma(\beta_A-\beta_B)$, with $\sigma(z)=1/(1+e^{-z})$. Only differences matter: adding the same constant to all strengths changes no probability. Ties and heterogeneous preferences require protocol rules or extensions. Rating parameters are therefore not task-success percentages.
 
 Composite indices introduce another layer. If
 
@@ -296,15 +341,17 @@ Consider an intentionally simple scenario. Candidate systems are equally good, b
 
 If A is always shown first, the report says A wins 65% to 35%—a false 30-point advantage. When the order is reversed, A wins only 35%. Averaging both orderings restores 50%.
 
-![VIZ m17/05 — an auditable judge protocol](assets/modern-llms/en/module-17/m17_05_judge.png)
+![VIZ m19/05 — an auditable judge protocol](assets/modern-llms/en/module-17/m19_05_judge.png)
 
 A robust swap protocol maps positional labels back to candidate identity.
 
 - If the same candidate wins in both orders, the preference is consistent.
-- If the judge always chooses the first position, the identity-level verdict conflicts and the pair becomes a tie or abstention.
+- If the judge always chooses the first position, the identity-level verdict conflicts and the pair becomes an abstention.
 - If one ordering produces a tie, the protocol preserves both outcomes and applies a predeclared rule.
 
-Swapping addresses position bias only. A stronger protocol also includes:
+Two ties produce `tie`; conflicting verdicts or a tie in only one order produce `abstain`. Report these separately. The aggregate counts 650 and 350 cannot reconstruct agreement for individual pairs. Returning to 50% is an expectation under this pure position-bias model, not a general cure.
+
+Swapping diagnoses dependence on position. A stronger protocol also includes:
 
 - an explicit rubric and anchor examples;
 - hidden model identities;
@@ -328,13 +375,17 @@ A vision-language system should be evaluated separately for perception, knowledg
 
 HarmBench provides a standardized framework for automated red teaming and robust refusal. Safety is not equivalent to refusal rate. A useful system must reject genuinely harmful requests while continuing to answer benign ones. Agent safety also includes actions: a harmless-looking final message does not excuse a dangerous intermediate tool call.
 
-### Truthfulness and honesty
+### Truthfulness, honesty, and calibration
 
 TruthfulQA tests whether models reproduce common human misconceptions. That behavior depends on knowledge and response policy. **MASK** makes a different distinction: whether a model’s belief is correct and whether it reports what it believes are separate questions.
+
+MASK elicits a model’s answers in one setting and compares them with responses under pressure. This is an operational measure based on observable behavior across prompts, not direct access to internal beliefs or distributions.
 
 A product evaluation may therefore need independent measures for factual correctness, calibration, willingness to admit missing evidence, robustness to false premises, tool-result faithfulness, and action safety.
 
 The lesson is not to maximize the number of benchmarks. It is to prevent an average from erasing the failure mode that matters most.
+
+Calibration in Section 5 asks whether numerical confidence matches observed correctness frequencies. It is distinct from both the truth of an individual claim and an honest expression of uncertainty. A decision to abstain requires recorded confidence estimates, checked outcomes, and separate validation of the threshold.
 
 ## 12. Long context: accepted length versus usable evidence
 
@@ -356,15 +407,15 @@ $$
 \bar a=0.775.
 $$
 
-Define working context as the share of positions satisfying $a(x)\ge0.9$. Then
+Define the above-threshold position share as the share of positions satisfying $a(x)\ge0.9$. Then
 
 $$
 \text{working share}=0.246752.
 $$
 
-For a nominal one-million-token window, the corresponding length is approximately 246,752 positions.
+The inequality selects two intervals, $x\le0.123376$ and $x\ge0.876624$. Under a uniform position distribution, their combined measure corresponds to approximately 246,752 positions in a hypothetical million-token window. These are two disjoint edge regions, not a contiguous usable window of that length.
 
-![VIZ m17/06 — nominal and working context](assets/modern-llms/en/module-17/m17_06_lost_middle.png)
+![VIZ m19/06 — nominal and working context](assets/modern-llms/en/module-17/m19_06_lost_middle.png)
 
 There is no task-independent “real context size.” The answer depends on retrieval versus aggregation, number and position of evidence pieces, document format, answer length, retrieval assistance, prompt design, reasoning budget, and the chosen quality threshold.
 
@@ -374,11 +425,14 @@ A good long-context report plots performance across lengths, positions, and task
 
 An **evaluation harness** connects a model, examples, and metrics. Its most important elementary contract is:
 
-> **Each example invokes the model exactly once.**
+> **For a fixed system revision, each example and trial ID identifies one saved response.**
 
-The output is stored and every metric is computed from that same observation. Calling a stochastic model separately for exact match, a judge, and a length metric would evaluate different generations while pretending they were one answer.
+The small example uses one trial. A `pass@k` evaluation needs multiple explicit trials, all counted in its budget. The output is stored and every metric is computed from that same observation. Calling a stochastic model separately for exact match, a judge, and a length metric would evaluate different generations while pretending they were one answer.
+
+Here `exact_match` ignores case and leading or trailing whitespace; it is not byte-for-byte equality. Internal whitespace and punctuation still matter. The notebook also defines `normalized_exact_match`, which applies Unicode NFKC, collapses internal whitespace, and strips specified terminal punctuation. Choose the scoring policy before comparing systems.
 
 ```python
+import math
 from dataclasses import dataclass
 from typing import Callable, Mapping, Sequence
 
@@ -389,6 +443,11 @@ class Example:
     expected: str
     slice_name: str
 
+    def __post_init__(self):
+        if any(not isinstance(v, str) or not v.strip()
+               for v in (self.example_id, self.prompt, self.expected, self.slice_name)):
+            raise ValueError("example fields must be non-empty strings")
+
 def exact_match(prediction: str, expected: str) -> float:
     return float(prediction.strip().casefold() == expected.strip().casefold())
 
@@ -397,21 +456,31 @@ def evaluate(
     dataset: Sequence[Example],
     metrics: Mapping[str, Callable[[str, str], float]],
 ) -> dict:
+    dataset = tuple(dataset)
+    if not callable(model_fn) or not metrics or any(not isinstance(k, str) or not k or not callable(v) for k, v in metrics.items()):
+        raise ValueError("supply a callable model and named callable metrics")
     if not dataset:
         raise ValueError("dataset must be non-empty")
+    if any(not isinstance(ex, Example) for ex in dataset):
+        raise TypeError("expected Example records")
     if len({ex.example_id for ex in dataset}) != len(dataset):
         raise ValueError("example_id values must be unique")
 
     records = []
     for ex in dataset:
         prediction = model_fn(ex.prompt)  # the only model call for this item
+        if not isinstance(prediction, str):
+            raise TypeError("model response must be text")
         scores = {
             name: metric(prediction, ex.expected)
             for name, metric in metrics.items()
         }
+        if any(isinstance(v, bool) or not isinstance(v, (float, int)) or not math.isfinite(v) or not 0 <= v <= 1 for v in scores.values()):
+            raise ValueError("metric scores must be finite numbers in [0, 1]")
         records.append({
             "id": ex.example_id,
             "slice": ex.slice_name,
+            "expected": ex.expected,
             "prediction": prediction,
             "scores": scores,
         })
@@ -427,7 +496,9 @@ def evaluate(
     }
 ```
 
-This is not yet a production platform, but it already preserves unique item IDs, raw predictions, slices, multiple metrics over one output, and the call count. A mature harness adds model and prompt versions, sampling parameters, latency, cost, failures, traces, and budgets.
+This is not yet a production platform, but it already preserves unique item IDs, raw predictions, slices, multiple metrics over one output, and the call count. This minimal kernel stops on a model or metric error. The full notebook distinguishes a declared model-failure score of zero from a metric implementation error, which invalidates the aggregate (`None`). An evaluator bug must not silently become a model-quality result.
+
+A mature harness adds model and prompt versions, sampling parameters, latency, cost, failures, traces, and budgets.
 
 ### Planning the golden-set size
 
@@ -441,7 +512,7 @@ It gives 683 examples for a three-point half-width and 246 for five points. Thes
 
 ### What a canary can tell us
 
-A uniformly random 32-character hexadecimal canary has chance-match probability
+A **canary** is a marker placed in protected data and searched for where it should not appear. For one exact independent guess, a uniformly random 32-character hexadecimal canary has chance-match probability
 
 $$
 16^{-32}=2^{-128}\approx2.94\cdot10^{-39}.
@@ -449,7 +520,9 @@ $$
 
 Exact reproduction is strong evidence that the system encountered the string through some channel: training, logs, a cache, prompt leakage, or another data path. It does not by itself identify the channel or prove pretraining contamination. Canaries complement provenance and access controls.
 
-### Interpreting an arithmetic cost floor
+For $M$ possible matches, the union bound is $\min(1,M/2^{128})$. A string derived from a public seed or known text has no such secrecy. The notebook uses a public deterministic marker with negative and planted positive controls; it tests the detector, not data privacy.
+
+### Interpreting conditional compute accounting
 
 For 700 examples averaging 400 input and 150 output tokens, total token volume is 385,000. A dense $2P$-per-token estimate for an 8.03B model is
 
@@ -457,11 +530,11 @@ $$
 C=6.1831\cdot10^{15}\ \text{FLOP}.
 $$
 
-At an assumed effective 495 TFLOP/s, the arithmetic floor is 12.49 seconds. Real wall-clock time includes autoregressive decode, batching, network calls, tools, scheduling, and judges. The estimate shows that frequent evaluation may be affordable; only measurement on the target stack determines the actual duration.
+At an assumed effective 495 TFLOP/s, the conditional arithmetic equivalent is 12.49 seconds. Real wall-clock time includes autoregressive decode, batching, network calls, tools, scheduling, and judges. This is neither a strict latency bound nor evidence that frequent runs are affordable. It assumes one effective throughput for prompt processing and decode, although their execution differs. Measure duration and monetary cost on the target stack.
 
 ## 15. A private golden set in seven deliberate steps
 
-![VIZ m17/07 — building a product golden set](assets/modern-llms/en/module-17/m17_07_golden_pipeline.svg)
+![VIZ m19/07 — building a product golden set](assets/modern-llms/en/module-17/m19_07_golden_pipeline.svg)
 
 Public benchmarks position a system in the general landscape. A private **golden set** determines whether it serves your product.
 
@@ -485,6 +558,8 @@ Record the model revision, system prompt, tools, temperature, retry policy, reas
 
 Keep the decisive split out of training corpora, public examples, and logs reused for training. Canaries detect some leakage paths, but provenance, access control, and data-retention policy remain primary.
 
+Repeatedly inspected regression cases gradually become development data even if they never enter weight training. Prompt selection based on their errors is still adaptation. Separate development cases, regression tests, and a rarely opened final audit split. Repeated testing also raises the chance of a spurious win; predeclare primary metrics and release criteria.
+
 ### Step 6: retain trajectories and failure causes
 
 For agents, final success is too coarse. Save tool calls, intermediate state, retries, errors, and recovery. A system may reach the goal through an unsafe action, or fail because the environment—not the model—was defective.
@@ -495,7 +570,7 @@ For agents, final success is too coarse. Save tool calls, intermediate state, re
 
 The platform is secondary to the contracts. `lm-evaluation-harness` is widely used for academic tasks; Inspect AI supports configurable and safety-oriented evaluations; OpenAI Evals provides programmable eval patterns; LangSmith, Langfuse, and Phoenix support trajectory observability. Whatever the stack, preserve versions, raw records, and reproducible reports.
 
-## 16. Eight directions shaping evaluation as of August 2026
+## 16. Eight directions shaping evaluation as of 10 October 2026
 
 Rather than memorizing a current list of “best benchmarks,” track the directions changing measurement practice.
 
@@ -505,7 +580,7 @@ LiveBench, LiveCodeBench, and domain-specific variants reduce the contamination 
 
 ### 2. Private and centrally executed evaluation
 
-ARC-AGI, NoCha, and professional suites retain evaluation material or run submissions centrally. This reduces direct tuning pressure while increasing the need to trust and document the organizer’s infrastructure.
+Private ARC-AGI splits and some professional suites retain evaluation material or run submissions centrally. This reduces direct tuning pressure while increasing the need to trust and document the organizer’s infrastructure.
 
 ### 3. Controlled mutation and counterfactual items
 
@@ -514,6 +589,8 @@ Benchmark mutation changes surface form while preserving a verifiable target ski
 ### 4. Trajectories replace terminal answers
 
 SWE-bench, OSWorld, and $\tau$-bench evaluate changes to an environment. Newer variants such as SWE-bench Pro and OSWorld 2.0 extend horizon and professional complexity. Longer trajectories raise the importance of repeatability, environment state, and complete logs.
+
+OSWorld 2 provides a concrete example: the checked `osworld-v2.1` release of 16 September 2026 pins coordinated task, asset, website, and environment-image revisions. Mixing releases changes the experiment even if the agent name stays fixed. [Source: OSWorld-V2 release history](https://github.com/xlang-ai/OSWorld-V2).
 
 ### 5. Cost and efficiency enter the metric
 
@@ -560,11 +637,11 @@ Before using a score, fill in two linked records.
 9. cost, latency, and evaluation date;
 10. harness code and dependency versions.
 
-This mirrors Module 16. There, the scaffold transformed a model into an agent. Here, the harness transforms tasks into evidence about a system. In both cases, the model name alone is insufficient.
+This mirrors Module 18. There, the scaffold transformed a model into an agent. Here, the harness transforms tasks into evidence about a system. In both cases, the model name alone is insufficient.
 
 ## 20. Key takeaways, course finale, and sources
 
-![VIZ m17/08 — evaluation in one page](assets/modern-llms/en/module-17/m17_08_cheatsheet.svg)
+![VIZ m19/08 — evaluation in one page](assets/modern-llms/en/module-17/m19_08_cheatsheet.svg)
 
 Modern LLM evaluation is a chain of evidence, not a hunt for one authoritative number.
 
@@ -572,7 +649,7 @@ Modern LLM evaluation is a chain of evidence, not a hunt for one authoritative n
 - **Separate model, system, and product.** A public score normally describes one configuration, not every deployment.
 - **Read the benchmark life cycle.** Protocol adaptation, contamination, saturation, and item defects reduce discriminating power.
 - **Keep item-level outcomes.** Paired evidence is more informative than two independent means.
-- **Report uncertainty.** In the teaching scenario, 95.5% versus 95.0% on 500 items gives $z=0.372$, not a decisive victory.
+- **Report uncertainty.** In the teaching scenario, assumed probabilities 95.5% and 95.0% at N=500 give $z=0.372$, not a decisive victory.
 - **Use finite-sample `pass@k`.** It measures the chance of finding a solution, not repeatable agent reliability.
 - **Audit LLM judges.** Swapping, rubrics, human calibration, and disagreement reporting belong to the result.
 - **Distinguish nominal and working context.** Performance depends on length, position, task, and threshold.
@@ -612,12 +689,15 @@ Modern LLM evaluation is a chain of evidence, not a hunt for one authoritative n
 - Inspect AI — [github.com/UKGovernmentBEIS/inspect_ai](https://github.com/UKGovernmentBEIS/inspect_ai)
 - OpenAI Evals — [github.com/openai/evals](https://github.com/openai/evals)
 
-### End of the main route
+- Arena naming — [official announcement](https://arena.ai/blog/lmarena-is-now-arena)
+- Exact McNemar inference — [statsmodels documentation](https://www.statsmodels.org/stable/generated/statsmodels.stats.contingency_tables.mcnemar.html)
 
-Seventeen modules have covered the entire stack: tokenization, attention, MoE, data, pretraining, serving, post-training, multimodality, retrieval, agents, and finally evidence about system behavior. The course’s recurring idea is causal integration: architecture, data, optimization, runtime, and evaluation must be understood together. A change is an improvement only when its consequences are measured elsewhere in the stack.
+### From evaluation to the full mathematical model
 
-[Module 18](../../module-18/en/module_18_lecture_EN.md) is a reference lesson on the basic Transformer. A newcomer may read it before Module 1; after completing the course, it serves as a compact map of equations, tensor shapes, and implementation invariants.
+Nineteen modules have covered the entire stack: tokenization, attention, MoE, data, pretraining, serving, post-training, multimodality, retrieval, agents, and finally evidence about system behavior. The course’s recurring idea is causal integration: architecture, data, optimization, runtime, and evaluation must be understood together. A change is an improvement only when its consequences are measured elsewhere in the stack.
+
+The additional [Module 20](module-20.md) now assembles the model computation: tokens, a forward distribution, a loss, a weight update, and generation. Its numerical example checks the pieces together, while comparisons with SSMs and diffusion establish the scope of the final expression. [Module 3](module-18.md) remains the place to revisit Transformer foundations.
 
 ---
 
-*Landscape verified: 5 August 2026. The lecture intentionally omits a current frontier leaderboard: those values change faster than a stable course and depend on scaffold version, inference budget, and evaluation date. All numerical examples in Sections 6, 8, 10, 12, and 13 belong to the frozen educational contract and are not measurements of named external models.*
+*Landscape verified: 10 October 2026. The lecture intentionally omits a current frontier leaderboard: those values change faster than a stable course and depend on scaffold version, inference budget, and evaluation date. All numerical examples in Sections 6, 8, 10, 12, and 13 belong to the frozen educational contract and are not measurements of named external models.*

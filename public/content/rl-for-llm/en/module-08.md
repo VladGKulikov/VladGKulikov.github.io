@@ -1,5 +1,7 @@
 # Module 8. RLHF and direct preference optimization
 
+> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
+
 > **Material version:** 2026.20  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
@@ -486,13 +488,13 @@ Cached reference log-probabilities become stale after changing tokenization, tem
 
 Tokenizer revision, chat template, truncation rule, reference checkpoint, and completion mask are part of the pair's mathematical contract.
 
-> **Engineering extension:** *Modern LLMs*, Module 11 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`) covers dialogue-data and chat-template engineering in more depth.
+> **Engineering extension:** *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`) covers dialogue-data and chat-template engineering in more depth.
 
 ---
 
 ### Step 8.3.4 — Noisy pairs and conservative DPO (cDPO)
 
-Conservative DPO (cDPO) smooths the binary target. With a possible label-flip rate, for $\varepsilon\in[0,1/2)$,
+Conservative DPO (cDPO) smooths the binary target. With a possible label-flip rate, for $\varepsilon\in0,1/2)$,
 
 $$
 \mathcal L_{\mathrm{cDPO}}
@@ -614,7 +616,7 @@ ORPO is not literally DPO with one model removed; the loss, scale, and anchoring
 
 ### Step 8.4.5 — Method map: data first, name second
 
-![Map of direct preference methods](assets/rl-for-llm/en/module-08/M8_method_map_EN.png)
+![Map of direct preference methods
 
 | Method | Primary data | Reference in loss | Characteristic mechanism |
 |---|---|---|---|
@@ -627,7 +629,7 @@ ORPO is not literally DPO with one model removed; the loss, scale, and anchoring
 
 No method is uniformly best. Ask whether the data are paired, whether an explicit reference anchor is needed, how lengths differ, how much label noise is expected, whether data will be refreshed, and whether independent generation evaluation is available.
 
-> **Survey extension:** *Modern LLMs*, Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) provides a broader post-training map. This module focuses on the RL interpretation, derivations, and diagnostics.
+> **Survey extension:** *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) provides a broader post-training map. This module focuses on the RL interpretation, derivations, and diagnostics.
 
 ---
 
@@ -759,4 +761,4 @@ The final map is deliberately less dramatic than “DPO replaced RLHF”:
 - [Razin et al. (2024), *Unintentional Unalignment: Likelihood Displacement in DPO*](https://arxiv.org/abs/2410.08847) — motivation for tracking chosen and rejected absolute likelihoods separately.
 - [Current TRL DPOTrainer documentation](https://huggingface.co/docs/trl/dpo_trainer) — a dated implementation interface, not a mathematical guarantee.
 
-The line-by-line registry of claims, limitations, and reproduced values is in `Module_8_Sources.md`. For the variational derivation, use *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`); for SFT data engineering, use *Modern LLMs*, Module 11 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`); for the broader post-training map, use *Modern LLMs*, Module 12 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`).
+The line-by-line registry of claims, limitations, and reproduced values is in `Module_8_Sources.md`. For the variational derivation, use *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`); for SFT data engineering, use *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`); for the broader post-training map, use *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`).

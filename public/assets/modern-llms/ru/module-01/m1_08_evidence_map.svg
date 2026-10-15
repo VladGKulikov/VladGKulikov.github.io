@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="736" viewBox="0 0 1100 736">
+<title>Какие свидетельства нужны для выбора</title>
+<desc>Эти источники отвечают на разные вопросы; положение строки не означает надёжность.</desc>
+<rect width="1100" height="736" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">Какие свидетельства нужны для выбора</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Эти источники отвечают на разные вопросы; положение строки не означает надёжность.</text>
+<rect x="40" y="132" width="1020" height="100" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="170" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Заявление</text>
+<text x="60" y="198" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">разработчика</text>
+<text x="350" y="165" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Что обещает выпуск?</text>
+<text x="700" y="164" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Кто выбрал задачи и бюджет?</text>
+<rect x="40" y="250" width="1020" height="100" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="288" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Воспроизведение</text>
+<text x="350" y="283" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Повторяется ли результат?</text>
+<text x="700" y="282" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Совпадают ли версия и протокол?</text>
+<rect x="40" y="368" width="1020" height="100" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="406" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Парное сравнение</text>
+<text x="350" y="401" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Что лучше на одинаковых</text>
+<text x="350" y="426" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">задачах?</text>
+<text x="700" y="400" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Как устроены судья и выборка?</text>
+<rect x="40" y="486" width="1020" height="100" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="524" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Свой эталонный</text>
+<text x="60" y="552" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">набор</text>
+<text x="350" y="519" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Подходит ли модель нашим</text>
+<text x="350" y="544" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">данным?</text>
+<text x="700" y="518" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Нет ли утечки и смещения отбора?</text>
+<rect x="40" y="604" width="1020" height="100" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="60" y="642" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#2E3440" text-anchor="start">Рабочая телеметрия</text>
+<text x="350" y="637" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">Что происходит в</text>
+<text x="350" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#2E3440" text-anchor="start">эксплуатации?</text>
+<text x="700" y="636" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Есть ли надёжные метки качества?</text>
+</svg>

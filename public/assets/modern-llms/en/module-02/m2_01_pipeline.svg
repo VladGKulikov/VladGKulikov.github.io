@@ -1,52 +1,33 @@
-<svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
-  <title>The tokenization pipeline</title>
-  <desc>A string's path to vectors: pre-tokenization, UTF-8 bytes, rank-ordered BPE merges, identifiers, embedding lookup; the decode way back.</desc>
-  <defs><marker id="a21" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
-  <text x="30" y="30" font-size="23" font-weight="700" fill="#2E3440">The pipeline: from a string to vectors</text>
-
-  <g font-size="11" fill="#2E3440" text-anchor="middle">
-    <rect x="30" y="70" width="120" height="56" rx="8" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
-    <text x="90" y="94" font-family="ui-monospace, Menlo, monospace" font-size="13.8" font-weight="600">"string"</text>
-    <text x="90" y="112" font-size="12" fill="#4C566A">any Unicode</text>
-
-    <rect x="186" y="70" width="130" height="56" rx="8" fill="#EAF3F5" stroke="#88C0D0" stroke-width="1.2"/>
-    <text x="251" y="90" font-weight="600" font-size="13.2">pre-tokenization</text>
-    <text x="251" y="106" font-size="13.8" fill="#4C566A" font-weight="600">regex → chunks;</text>
-    <text x="251" y="118" font-size="9.1" fill="#4C566A">boundaries are inviolable</text>
-
-    <rect x="352" y="70" width="120" height="56" rx="8" fill="#E8EEF5" stroke="#5E81AC" stroke-width="1.2"/>
-    <text x="412" y="90" font-weight="600" font-size="13.8">UTF-8</text>
-    <text x="412" y="106" font-size="10.1" fill="#4C566A">bytes, alphabet 256;</text>
-    <text x="412" y="118" font-size="12" fill="#4C566A">OOV impossible</text>
-
-    <rect x="508" y="70" width="150" height="56" rx="8" fill="#FAF0E8" stroke="#D08770" stroke-width="1.2"/>
-    <text x="583" y="90" font-weight="600" font-size="13.8">BPE merges</text>
-    <text x="583" y="106" font-size="12" fill="#4C566A">in ascending rank;</text>
-    <text x="583" y="118" font-size="13.8" fill="#4C566A" font-weight="600">tie-break is fixed</text>
-
-    <rect x="694" y="70" width="100" height="56" rx="8" fill="#ECEFF4" stroke="#4C566A" stroke-width="1"/>
-    <text x="744" y="94" font-family="ui-monospace, Menlo, monospace" font-size="11.8" font-weight="600">id ∈ [0, V)</text>
-    <text x="744" y="112" font-size="10.3" fill="#4C566A" font-weight="600">+ special tokens</text>
-
-    <rect x="820" y="70" width="100" height="56" rx="8" fill="#EFF4EA" stroke="#A3BE8C" stroke-width="1.2"/>
-    <text x="870" y="90" font-weight="600" font-size="13.8">E-lookup</text>
-    <text x="870" y="106" font-size="12" fill="#4C566A">a matrix row</text>
-    <text x="870" y="118" font-size="11.8" fill="#4C566A" font-weight="600">V × d → vector</text>
-  </g>
-  <g stroke="#4C566A" stroke-width="1.2">
-    <line x1="150" y1="98" x2="182" y2="98" marker-end="url(#a21)"/>
-    <line x1="316" y1="98" x2="348" y2="98" marker-end="url(#a21)"/>
-    <line x1="472" y1="98" x2="504" y2="98" marker-end="url(#a21)"/>
-    <line x1="658" y1="98" x2="690" y2="98" marker-end="url(#a21)"/>
-    <line x1="794" y1="98" x2="816" y2="98" marker-end="url(#a21)"/>
-  </g>
-
-  <path d="M744 132 L744 176 L90 176 L90 132" fill="none" stroke="#4C566A" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#a21)"/>
-  <text x="417" y="170" text-anchor="middle" font-size="10" fill="#4C566A" font-style="italic">decode: id → bytes → UTF-8 (invalid tails repaired) — a lossless round-trip</text>
-
-  <g font-size="9.5" fill="#4C566A">
-    <text x="30" y="222" font-size="11.5">Example (course-verified values): <tspan font-family="ui-monospace, Menlo, monospace" fill="#2E3440">"Привет"</tspan> → chunk → 12 bytes → ~2–3 tokens under a trained vocabulary → 2–3 vectors of dimension d.</text>
-    <text x="30" y="244" font-size="11.5">All the model ever "sees" is the id column: the tokenizer's glue and cuts are irreversible to it.</text>
-    <text x="30" y="266" font-size="11.5">A registered special-token spelling raises by default; the application explicitly chooses a control ID or ordinary-text encoding.</text>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="707" viewBox="0 0 1100 707">
+<title>From a string to vectors—and separately back to text</title>
+<desc>PUD 2.15 · BBPE, 4,096 merges. Read across each row, then down.</desc>
+<rect width="1100" height="707" fill="#FFFFFF"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#4C566A"/></marker></defs>
+<text x="40" y="52" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#2E3440" text-anchor="start">From a string to vectors—and separately back to text</text>
+<text x="40" y="97" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">PUD 2.15 · BBPE, 4,096 merges. Read across each row, then down.</text>
+<rect x="40.0" y="132" width="498.0" height="149" rx="12" fill="#E8EEF5" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">1. Text and a chunk</text>
+<text x="64.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Привет: 6 Unicode code points.</text>
+<text x="64.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Pre-tokenization produces one chunk.</text>
+<rect x="562.0" y="132" width="498.0" height="149" rx="12" fill="#ECEFF4" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="176" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">2. UTF-8: 12 bytes</text>
+<text x="586.0" y="217" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">D0 9F D1 80 D0 B8</text>
+<text x="586.0" y="242" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">D0 B2 D0 B5 D1 82</text>
+<rect x="40.0" y="305" width="498.0" height="149" rx="12" fill="#EFF4EA" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">3. Ranked merges → 3 IDs</text>
+<text x="64.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">[943, 370, 301]</text>
+<text x="64.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Indices in this particular vocabulary.</text>
+<rect x="562.0" y="305" width="498.0" height="149" rx="12" fill="#FAF0E8" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="349" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">4. IDs → rows of E</text>
+<text x="586.0" y="390" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">E[943], E[370], E[301]</text>
+<text x="586.0" y="415" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Result: 3 continuous vectors.</text>
+<rect x="40.0" y="478" width="498.0" height="149" rx="12" fill="#F3EEF3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="64.0" y="522" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Decode: ID → UTF-8</text>
+<text x="64.0" y="563" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Join bytes, then read text. Buffer an unfinished</text>
+<text x="64.0" y="588" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">byte suffix when streaming.</text>
+<rect x="562.0" y="478" width="498.0" height="149" rx="12" fill="#FAF5E3" stroke="#D8DEE9" stroke-width="1.3"/>
+<text x="586.0" y="522" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#2E3440" text-anchor="start">Generation: h → logits → ID</text>
+<text x="586.0" y="563" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">Projection hU gives logits. Selecting an ID is a</text>
+<text x="586.0" y="588" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#4C566A" text-anchor="start">separate step, not inverse lookup.</text>
+<text x="40" y="668" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#4C566A" text-anchor="start">Replacing invalid bytes by � loses information; exact round trips require valid UTF-8.</text>
 </svg>
