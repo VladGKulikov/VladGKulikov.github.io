@@ -560,12 +560,12 @@ a {
 
 .reader-layout.left-menu-hidden {
   --reader-left: 0px;
-  --reader-text: 1000px;
+  --reader-text: 1fr;
 }
 
 .reader-layout.right-menu-hidden {
   --reader-right: 0px;
-  --reader-text: 1000px;
+  --reader-text: 1fr;
 }
 
 @media (min-width: 901px) {
@@ -581,6 +581,8 @@ a {
 }
 
 .course-sidebar {
+  display: flex;
+  flex-direction: column;
   grid-column: 1;
   position: sticky;
   top: 72px;
@@ -592,6 +594,7 @@ a {
 }
 
 .sidebar-head {
+  flex: 0 0 auto;
   padding: 24px 24px 20px;
 }
 
@@ -656,6 +659,7 @@ a {
 
 .module-search {
   display: flex;
+  flex: 0 0 auto;
   height: 42px;
   align-items: center;
   gap: 9px;
@@ -682,8 +686,10 @@ a {
 }
 
 .module-list {
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
-  height: calc(100vh - 310px);
+  overscroll-behavior: contain;
   padding: 0 8px 32px;
   scrollbar-color: #55554f transparent;
   scrollbar-width: thin;
@@ -757,6 +763,11 @@ a {
   font-weight: 500;
   letter-spacing: -0.045em;
   line-height: 1.03;
+}
+
+.reader-layout.left-menu-hidden .reading-title,
+.reader-layout.right-menu-hidden .reading-title {
+  max-width: none;
 }
 
 .reading-rule {
