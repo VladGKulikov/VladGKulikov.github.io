@@ -55,6 +55,7 @@ fs.writeFileSync(`${output}/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?
 fs.writeFileSync(`${output}/robots.txt`, `User-agent: *\nAllow: /\n\nSitemap: ${config.origin}/sitemap.xml\n`);
 fs.writeFileSync(`${output}/.nojekyll`, "");
 fs.writeFileSync(`${output}/route-manifest.json`, JSON.stringify(manifest, null, 2));
+for (const name of ["CITATION.cff", "PUBLICATION.json"]) fs.copyFileSync(name, `${output}/${name}`);
 
 const repo = "https://github.com/VladGKulikov/VladGKulikov.github.io";
 const license = `${repo}/blob/main/LICENSE-CONTENT.md`;
@@ -85,9 +86,9 @@ for (const course of courses) {
 guides.push("", "## Attribution and editions",
   `- [Content license](${license}): CC BY-NC-SA 4.0; preserve attribution, noncommercial and share-alike terms.`,
   `- [License map](${repo}/blob/main/LICENSE.md): Site code is Apache-2.0; third-party components retain their licenses.`,
-  `- [Archived books, edition ${publication.edition}](https://doi.org/${publication.version_doi}): Released ${publication.release_date}; this DOI identifies the archive, not each live revision.`,
+  `- [Archived complete collection, edition ${publication.edition}](https://doi.org/${publication.version_doi}): Released ${publication.release_date}; this DOI identifies the archive, not each live revision.`,
   `- [All archived editions](https://doi.org/${publication.concept_doi}): Collection DOI.`,
-  "When citing a live lecture, use its canonical page URL, language and access date. Distinguish it from the archived book edition.", "");
+  "When citing a live lecture, use its canonical page URL, language and access date. Distinguish it from the archived complete collection.", "");
 fs.writeFileSync(`${output}/llms.txt`, guides.join("\n"));
 fs.writeFileSync(`${output}/agents.txt`, [
   "# Agent guide: Vlad Kulikov Open Courses", "",
@@ -100,7 +101,7 @@ fs.writeFileSync(`${output}/agents.txt`, [
   "This guide does not authorize uses beyond the applicable licenses. External Stepik and Leanpub services have their own terms.",
   "Use canonical vladkulikov.com lecture URLs for references. Use hreflang links to find the corresponding translation; retain module keys even when the reading order changes.",
   "Prefer public HTML or Markdown sources. Formula source is LaTeX in Markdown, with KaTeX-rendered HTML/MathML in lecture pages.",
-  `The live texts were updated on ${publication.content_updated}. Archived book edition ${publication.edition} (${publication.release_date}) has DOI https://doi.org/${publication.version_doi}; it is distinct from the evolving website.`,
+  `The live texts were updated on ${publication.content_updated}. Archived complete collection ${publication.edition} (${publication.release_date}) has DOI https://doi.org/${publication.version_doi}; it is distinct from the evolving website.`,
   "Module quizzes are published as static HTML and structured JSON under /quizzes/. Choice and numeric answers are checked in the browser. Open questions and code tasks require self-review against the supplied author answer; there is no code execution or server-side grading. Quiz progress is stored only in the reader's browser. Exercise solutions and notebook previews are native expandable HTML; their open state is shared across RU/EN. Structured practice sources are under /practice/ and original files and course archives under /downloads/. Information Theory Python examples are code answers to their exercises, not separate notebooks. Do not invent missing exercises, answer keys, files, or learning outcomes.",
   "Attribute the author, link the source and identify its language and edition or access date when citing. Use the source text to distinguish claims from your own interpretation.", "",
 ].join("\n"));

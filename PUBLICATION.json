@@ -1,8 +1,8 @@
 {
-  "edition": "2026.1",
-  "release_date": "2026-08-10",
+  "edition": "2026.2",
+  "release_date": "2026-10-16",
   "concept_doi": "10.5281/zenodo.21877456",
-  "version_doi": "10.5281/zenodo.21877457",
+  "version_doi": "10.5281/zenodo.23420794",
   "status": "public",
   "courses": 3,
   "languages": [
@@ -12,5 +12,25 @@
   "content_license": "CC-BY-NC-SA-4.0",
   "code_license": "Apache-2.0",
   "content_updated": "2026-10-15",
-  "archived_edition_note": "The edition, release date, and version DOI identify the archived 2026.1 books. Live lecture content is refreshed separately."
+  "archived_edition_note": "The version DOI identifies the complete bilingual 2026.2 release. Live website updates may continue independently.",
+  "archive_scope": [
+    "lectures",
+    "illustrations",
+    "quizzes and answer checking",
+    "exercises and worked solutions",
+    "notebooks",
+    "original downloads",
+    "six PDF books",
+    "six EPUB books",
+    "static website",
+    "website source"
+  ],
+  "previous_editions": [
+    {
+      "edition": "2026.1",
+      "release_date": "2026-08-10",
+      "version_doi": "10.5281/zenodo.21877457",
+      "scope": "Archived lecture texts and illustrations"
+    }
+  ]
 }

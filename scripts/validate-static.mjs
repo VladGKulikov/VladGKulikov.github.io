@@ -85,6 +85,11 @@ for (const page of manifest) {
       check(attr(node, "download") !== undefined, label, `File link missing download attribute ${href}`);
       continue;
     }
+    if (["/CITATION.cff", "/PUBLICATION.json"].includes(url.pathname)) {
+      const name = url.pathname.slice(1);
+      check(fs.existsSync(path.join("dist-pages", name)) && fs.readFileSync(path.join("dist-pages", name), "utf8") === fs.readFileSync(name, "utf8"), label, `Missing or stale publication metadata ${href}`);
+      continue;
+    }
     if (url.pathname.endsWith(".md")) continue;
     check(pages.has(url.pathname), label, `Missing internal page ${href}`);
     if (url.hash && url.pathname === label) check(ids.includes(decodeURIComponent(url.hash.slice(1))), label, `Missing anchor ${href}`);

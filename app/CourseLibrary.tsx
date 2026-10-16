@@ -73,7 +73,7 @@ const copy = {
     bookTitle: "PDF / EPUB",
     bookText: "Скачать бесплатно или поддержать автора на Leanpub",
     modules: "модулей",
-    pages: "страниц в PDF 2026.1",
+    pages: "страниц в PDF 2026.2",
     illustrations: "иллюстраций",
     library: "Библиотека",
     search: "Найти модуль",
@@ -136,7 +136,7 @@ const copy = {
     bookTitle: "PDF / EPUB",
     bookText: "Download free or support the author on Leanpub",
     modules: "modules",
-    pages: "pages in PDF 2026.1",
+    pages: "pages in PDF 2026.2",
     illustrations: "illustrations",
     library: "Library",
     search: "Find a module",
@@ -988,7 +988,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
             <ExternalLink size={13} />
           </a>
           <a
-            href="https://github.com/VladGKulikov/VladGKulikov.github.io/blob/main/CITATION.cff"
+            href="/CITATION.cff"
             target="_blank"
             rel="noreferrer"
           >
@@ -996,11 +996,11 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
             <ExternalLink size={13} />
           </a>
           <a
-            href={`https://doi.org/${publication.concept_doi}`}
+            href={`https://doi.org/${publication.version_doi}`}
             target="_blank"
             rel="noreferrer"
           >
-            DOI
+            DOI {publication.edition}
             <ExternalLink size={13} />
           </a>
           <a href="https://github.com/VladGKulikov/VladGKulikov.github.io" target="_blank" rel="noreferrer">

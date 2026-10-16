@@ -1,20 +1,23 @@
 cff-version: 1.2.0
-message: "If you use these open course materials, please cite them using this metadata."
-title: "Vlad Kulikov Open Courses: Public Reader Editions"
+message: "If you use these course materials, please cite the archived edition."
+title: "Vlad Kulikov Open Courses: Complete Bilingual Collection"
 type: dataset
 authors:
   - family-names: Kulikov
     given-names: Vlad
 abstract: >-
-  Bilingual public Reader Editions of Modern LLMs, RL for LLM, and
-  Information Theory for Machine Learning. The collection contains lecture
-  text and illustrations and excludes assessments, exercises, solutions,
-  notebooks, projects, and grading materials.
-version: "2026.1"
-date-released: 2026-08-10
-doi: "10.5281/zenodo.21877457"
-url: "https://vladgkulikov.github.io/"
-repository-code: "https://github.com/VladGKulikov/open-courses"
+  Complete English and Russian editions of Modern LLMs, Reinforcement Learning
+  for LLM, and Information Theory for Machine Learning. Includes lectures,
+  illustrations, quizzes with browser answer checking, exercises and worked
+  solutions, existing notebooks and original files, six PDF and six EPUB books,
+  a static website and its source. Code execution is not required or provided
+  by the website. Course content is CC BY-NC-SA 4.0; standalone code and
+  publication tooling are Apache-2.0 unless a more specific notice applies.
+version: "2026.2"
+date-released: 2026-10-16
+doi: "10.5281/zenodo.23420794"
+url: "https://vladkulikov.com/"
+repository-code: "https://github.com/VladGKulikov/VladGKulikov.github.io"
 license: CC-BY-NC-SA-4.0
 keywords:
   - artificial intelligence

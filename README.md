@@ -167,10 +167,16 @@ sources: 20 Modern LLMs modules, 13 RL for LLM modules, and 16 Information Theor
 modules per language. Existing module URLs retain their subjects, while the
 Modern LLMs reading order follows the revised course.
 
-The archived book edition remains **2026.1**, released on 2026-08-10. Its DOI
-identifies that archive; the live website has a separate content update date in
-[`PUBLICATION.json`](PUBLICATION.json). Source commits, per-lecture hashes, and
-the lecture-only publication checks are recorded in [`CONTENT_BUILD.json`](CONTENT_BUILD.json).
+The archived complete collection is **2026.2**, released on 2026-10-16:
+<https://doi.org/10.5281/zenodo.23420794>. It includes the bilingual lectures, illustrations,
+quizzes and answer checker, exercises and worked solutions, existing notebooks
+and original files, six PDF and six EPUB books, the static website and source.
+The previous 2026.1 lecture archive remains available at
+<https://doi.org/10.5281/zenodo.21877457>. The collection DOI
+<https://doi.org/10.5281/zenodo.21877456> resolves to the latest archived edition.
+Live website updates can continue independently of a fixed archival release.
+Publication metadata is in [`PUBLICATION.json`](PUBLICATION.json); source commits
+and lecture hashes are in [`CONTENT_BUILD.json`](CONTENT_BUILD.json).
 
 To rebuild from local canonical repositories without changing them:
 
@@ -210,10 +216,11 @@ covered by these licenses.
 ## Citation
 
 GitHub-compatible citation metadata is provided in
-[`CITATION.cff`](CITATION.cff). The DOI for the archived public Reader Edition
-`2026.1` is <https://doi.org/10.5281/zenodo.21877457>. Use
-<https://doi.org/10.5281/zenodo.21877456> when linking to the collection across
-all current and future editions.
+[`CITATION.cff`](CITATION.cff). Cite the complete bilingual **2026.2** collection
+using <https://doi.org/10.5281/zenodo.23420794>. This DOI identifies the collection, including
+all six books; it is not a separate DOI for each individual book. Use
+<https://doi.org/10.5281/zenodo.21877456> when referring to the evolving collection
+without specifying an edition.
 
 ## Author
 
