@@ -1,7 +1,5 @@
 # Module 16. Course Reference Sheet
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 ## 16.1. Course Reference Sheet: Key Ideas and Formulas
 
 This is not another theory module. It is a working reference for three situations: recalling a definition, choosing the right information-theoretic object, and catching an overclaim before it turns into a modeling or experimental error.

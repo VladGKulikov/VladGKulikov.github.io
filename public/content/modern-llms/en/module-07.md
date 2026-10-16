@@ -1,7 +1,5 @@
 # Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 8 lecture · edition 2026.10.25*
 
 > **What this module is about.** Softmax attention keeps the past as an addressable KV cache. That preserves separately addressable positions, but the cache grows with every token. A **State Space Model (SSM)** takes the opposite bargain: after each token, update a fixed-size state. We will start from a continuous linear system and exact Zero-Order Hold discretization, then move through Mamba selectivity, Mamba-2’s State Space Duality, delta-rule memories, and current hybrid architectures. The recurring question is not whether recurrence “beats” attention. It is **which parts of the past can be compressed into a fixed state, and which still require an addressable store**.

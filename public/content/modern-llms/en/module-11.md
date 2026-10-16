@@ -1,7 +1,5 @@
 # Module 13. Supervised Fine-Tuning and Data Work
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · Module 13 lecture · revision October 11, 2026*
 
 > **What this module is about.** Pretraining gives a model a remarkably broad next-token predictor. It does not, by itself, specify how a conversational system should represent roles, obey a system instruction, stop a turn, emit a tool call, or expose different parts of a structured response. **Supervised fine-tuning (SFT)** supplies demonstrations of the behavior we want.

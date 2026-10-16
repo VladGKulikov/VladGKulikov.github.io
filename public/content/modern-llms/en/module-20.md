@@ -1,7 +1,5 @@
 # Module 20. The complete LLM: from tokens to training and generation
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · additional synthesis module · revision 2026.10.31*
 
 By this point, we have studied language models through several different lenses. Attention explained communication between positions; optimization explained how weights change; inference introduced state and token selection; evaluation asked whether the resulting behavior was useful. It is time to put those views together. What, exactly, lies between a token ID and the probability of its continuation? Which parts of that computation learn, and which parts merely organize its execution?
@@ -355,4 +353,4 @@ The expression now has a precise scope. MoE replaces $\mathcal F$ and adds routi
 
 Modules 3–9 and 12–14 contain the detailed treatments of individual mechanisms. Primary descriptions include [Attention Is All You Need](https://arxiv.org/abs/1706.03762), [RMSNorm](https://arxiv.org/abs/1910.07467), [RoFormer](https://arxiv.org/abs/2104.09864), [GQA](https://arxiv.org/abs/2305.13245), [AdamW](https://arxiv.org/abs/1711.05101), and [DPO](https://arxiv.org/abs/2305.18290). This module specifies a particular educational MiniLLM configuration; its numerical matrices were created for the running example.
 
-Finish with the [self-check questions](https://stepik.org/297276). The first route includes the 13 unlabelled questions; return to **20.11.1** after the detailed backward pass in Section 11 and to **20.15.1** after the router in Section 15. Then revisit the MiniLLM capstone and map its `config.json` to the equation. A change in head count, embedding tying, or FFN type should now correspond to an explicit change in dimensions, operations, and parameters that you can verify computationally.
+Finish with the [self-check questions](/courses/modern-llms/module-20/tests/). The first route includes the 13 unlabelled questions; return to **20.11.1** after the detailed backward pass in Section 11 and to **20.15.1** after the router in Section 15. Then revisit the MiniLLM capstone and map its `config.json` to the equation. A change in head count, embedding tying, or FFN type should now correspond to an explicit change in dimensions, operations, and parameters that you can verify computationally.

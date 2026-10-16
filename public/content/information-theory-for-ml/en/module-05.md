@@ -1,7 +1,5 @@
 # Module 5. Mutual information: how much one object tells us about another
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** The main route is §§5.1–5.12. We begin with a familiar ML question about probabilistic prediction, then move to conditional mutual information, representations, noisy labels, InfoNCE, and MI estimation from finite samples. The strong data-processing inequality in §5.5 and Fano's inequality in the exercises are second-pass mathematical deepening.
 
 ## 5.1. A feature is useful only relative to a target

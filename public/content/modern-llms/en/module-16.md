@@ -1,7 +1,5 @@
 # Module 18. Agents and Tool Use
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 18 lecture · edition 2026.10.25*
 
 > **What this module is about.** A language model can propose an answer. An agent system must maintain a stateful job: choose an action, execute it under policy, inspect the result, recover from failure, and know when the task is complete. That makes an agent less a new neural architecture than a composition of a model, an execution loop, tools, memory, permissions, budgets, and verification.

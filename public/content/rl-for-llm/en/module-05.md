@@ -1,7 +1,5 @@
 # Module 5. Learning from fixed data: imitation, deep Q-methods, and offline RL
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
-
 > **Material version:** 2026.10  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
@@ -712,7 +710,7 @@ The central conclusion is:
 
 ## Practice route
 
-The graded practice contains 20 core tasks and 12 additional platform tasks. Every prompt is followed by a worked solution; on Stepik, that solution should appear only after an attempt or as the next step. The core route covers:
+Practice contains [20 core tasks](/courses/rl-for-llm/module-05/exercises/) and [12 additional quiz questions](/courses/rl-for-llm/module-05/tests/). Worked exercise solutions expand on request. The core route covers:
 
 - masked BC/SFT loss and an exact compounding-error calculation;
 - DQN and Double-DQN targets with the correct terminal mask;

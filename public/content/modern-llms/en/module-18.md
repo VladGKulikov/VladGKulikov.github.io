@@ -1,7 +1,5 @@
 # Module 3. The Basic Transformer
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · Module 3 lecture · revision 2026.10.25 · 11 October 2026*
 
 An embedding lookup gives a token the same starting vector wherever it occurs. A Transformer turns that vector into a **contextual representation**: one that depends on the surrounding tokens. This chapter follows the computation all the way to a distribution over the next token.

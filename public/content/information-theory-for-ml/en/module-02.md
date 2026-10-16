@@ -1,7 +1,5 @@
 # Module 2. Entropy
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** The main route is §§2.1–2.4. Short proofs of the basic properties belong to the core: they expose the mechanism and will be used later. Two passages are marked as mathematical deep dives—the derivation of entropy rate and the derivative of entropy with respect to temperature. They can wait for a second pass. The engineering aside on speculative decoding is optional as well.
 
 ## 2.1. Entropy: the average bill for uncertainty

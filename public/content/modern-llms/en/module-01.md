@@ -1,7 +1,5 @@
 # Module 1. The Modern LLM Landscape
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · revision 2026.10.23 · release survey dated 11 October 2026*
 
 A release announcement gives you specifications, claims, and unanswered questions. This module turns them into a decision you can check. We will build a **model passport**, recording the model's properties and available evidence, and a **system passport**, recording how it is used and evaluated. Resource estimates will help us test those descriptions. The running example is an assistant that answers questions about internal documents and cites its sources.

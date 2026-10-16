@@ -1,7 +1,5 @@
 # Module 10. KV Caches and Efficient Inference
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 10 lecture · edition 2026.10.25*
 
 > **What this module is about.** Module 9 ended when the training run produced a model. That is only the beginning of the system problem. A deployed model must now answer many requests at once, preserve latency targets, reuse work when possible, and fit both its weights and a growing amount of per-request state into a finite memory hierarchy.

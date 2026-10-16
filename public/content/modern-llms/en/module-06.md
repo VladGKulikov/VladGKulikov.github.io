@@ -1,7 +1,5 @@
 # Module 7. Mixture of Experts
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 7 lecture · edition 2026.10.25*
 
 > **What this module is about.** In M6, the feed-forward network accounted for most of the parameters in our example Transformer block. A **Mixture of Experts (MoE)** replaces that single network with a bank of separate FFNs, called experts. Each token uses only a few of them, allowing stored capacity to grow without evaluating the entire bank on every token.

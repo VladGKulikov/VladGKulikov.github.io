@@ -1,7 +1,5 @@
 # Module 11. Speculative Decoding and Quantization
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · Module 11 lecture · revision October 11, 2026*
 
 > **What this module is about.** Module 10 ended with an uncomfortable systems fact: during autoregressive decode, a GPU may spend more time moving model state than performing arithmetic. This module studies two ways to change that cost structure. Quantization makes each target-model step move fewer bytes. Speculative decoding tries to make one expensive target step validate several tokens. Both techniques are mature enough to appear in production engines, yet neither comes with a workload-independent speedup. We will keep the mathematics exact where it can be exact, and label every performance number according to what it actually is: a derived scenario, a paper result, or a measured deployment property.

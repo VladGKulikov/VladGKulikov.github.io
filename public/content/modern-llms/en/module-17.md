@@ -1,7 +1,5 @@
 # Module 19. Evaluating Modern LLM Systems: From Benchmarks to Decisions
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 19 lecture · edition 2026.10.25*
 
 > **What this module is about.** The earlier modules built the objects we now have to choose between: pretrained models, quantized serving stacks, retrieval systems, post-trained policies, multimodal models, and agents. Evaluation is the discipline that turns those artifacts into a release decision. It is not merely a leaderboard lookup. A defensible result joins a decision, a task distribution, an execution scaffold, a scoring rule, and a statement of uncertainty. We will follow a single practical question throughout the lecture: which of two candidate systems should a team deploy for a real product?

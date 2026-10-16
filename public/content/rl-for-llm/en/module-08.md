@@ -1,7 +1,5 @@
 # Module 8. RLHF and direct preference optimization
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
-
 > **Material version:** 2026.20  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  

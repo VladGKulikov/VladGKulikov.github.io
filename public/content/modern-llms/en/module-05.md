@@ -1,7 +1,5 @@
 # Module 6. Normalization, activations, and the anatomy of a Transformer block
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · revised October 11, 2026*
 
 Attention lets tokens exchange information. To turn it into a useful block, we also need a state that persists between layers, a way to control numerical scale, and a network that transforms each token's features. This module puts those pieces together and accounts for their parameters.

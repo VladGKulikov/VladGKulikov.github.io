@@ -1,7 +1,5 @@
 # Module 1. Introduction
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** The required first pass is §§1.1–1.4. Section 1.3 uses formulas as a short bridge from probability to entropy and cross-entropy; §1.4 explains the route through the course. The overview and reference sections that follow are not meant to be read linearly. Sections 1.9–1.10 preserve the complete rigorous derivation of Shannon entropy for a second pass, preferably after Module 2 or Module 4.
 
 > **Three courses, one program.** “Information Theory for ML: From NLP and LLMs to CV and RL” provides the mathematical foundation of the series. Two independent companion courses develop the applied threads: “Modern LLMs” covers the architecture, training, inference, and evaluation of modern language models, while “Reinforcement Learning for LLM” develops feedback-based training, RLVR, and agentic systems. Each course can be taken independently: cross-references provide optional depth rather than replacing explanations needed to continue.

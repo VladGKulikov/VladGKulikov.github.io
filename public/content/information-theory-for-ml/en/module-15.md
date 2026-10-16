@@ -1,7 +1,5 @@
 # Module 15. Information Geometry: Fisher, Natural Gradient, and Distribution Flows
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** This is the final bonus module of the course. The main route is §§15.1–15.8: why ordinary gradient descent depends on coordinates, how Fisher information defines the local geometry of distributions, where the natural gradient comes from, which curvature approximations are actually used in deep networks, how this geometry appears in TRPO, PPO, and RLHF, and why moving probability mass requires a different geometry—Wasserstein geometry. §15.9 is a mathematical deepening on α-geometry, exact geodesics, and Chentsov’s theorem. It can be saved for a second pass.
 
 ## 15.1. What Does a “Small Step” Mean for a Probabilistic Model?

@@ -426,7 +426,7 @@
       "description": "Архитектура, обучение, инференс, агенты и оценивание современных языковых моделей.",
       "stepik_url": "https://stepik.org/297275",
       "module_count": 20,
-      "characters": 1065811,
+      "characters": 1062415,
       "modules": [
         {
           "id": "modern-llms:ru:module-01",
@@ -434,8 +434,8 @@
           "position": 1.0,
           "title": "Модуль 1. Современный ландшафт LLM",
           "content_file": "modern-llms/ru/module-01.md",
-          "content_hash": "51a81f5128eb51ef0abe96c877362d8c4c51bd284a14c384f4d473b862a17dad",
-          "characters": 79831,
+          "content_hash": "35356108c51acb3fe6a0b0d39e74926f305c880a10b67d630c67642bc3a182cb",
+          "characters": 79659,
           "image_count": 11
         },
         {
@@ -444,8 +444,8 @@
           "position": 2.0,
           "title": "Модуль 2. Токенизация и эмбеддинги",
           "content_file": "modern-llms/ru/module-02.md",
-          "content_hash": "9ea97eb21b0da9ffeebb973a5708cbb5a63511f3376ad70b834c2f601834451b",
-          "characters": 49210,
+          "content_hash": "801f8aa7ae19e8d308d6f1ee4787ae44ec5102ff73fcec9e0c35022a5a8d8887",
+          "characters": 49038,
           "image_count": 10
         },
         {
@@ -454,8 +454,8 @@
           "position": 3.0,
           "title": "Модуль 3. Базовый Transformer",
           "content_file": "modern-llms/ru/module-18.md",
-          "content_hash": "3b6fd9b49db4595b96f6243f1ae1300ca88a0d6b17378764f6d3e4351eaeb366",
-          "characters": 56505,
+          "content_hash": "ddfdb659f7a4cfbe56b4b46b73d56950011a73d5a8166d9b6f45e5268973fa66",
+          "characters": 56333,
           "image_count": 12
         },
         {
@@ -464,8 +464,8 @@
           "position": 4.0,
           "title": "Модуль 4. Позиционные представления: от синусоид к нескольким осям",
           "content_file": "modern-llms/ru/module-03.md",
-          "content_hash": "e99e18f3ecd43cef8cdbd09a152dc632632e81658aaed72bc2b32d2f43fdffe1",
-          "characters": 44389,
+          "content_hash": "c04f8d700c29b6289377d7ba7c9e72e668e258c961e1eb61c712b78f44b09541",
+          "characters": 44217,
           "image_count": 11
         },
         {
@@ -474,8 +474,8 @@
           "position": 5.0,
           "title": "Модуль 5. Современные механизмы внимания",
           "content_file": "modern-llms/ru/module-04.md",
-          "content_hash": "b049564aa9ffec17d1f7de8bd2017bceb922ff3ff54c6e89ade6b258037c65ff",
-          "characters": 53187,
+          "content_hash": "3f5883926bdd97955d97fae5f4875dd3ade05c67ea2ddbed7604ea289d337c08",
+          "characters": 53015,
           "image_count": 10
         },
         {
@@ -484,8 +484,8 @@
           "position": 6.0,
           "title": "Модуль 6. Нормализация, активации и анатомия блока",
           "content_file": "modern-llms/ru/module-05.md",
-          "content_hash": "c505b45605b21ea21d4cc8402cae2a3989e79fd6cba5dd01e855923886b2756e",
-          "characters": 47471,
+          "content_hash": "ee0d96306781a85100a847b2c3369e1fa3a5726a7ff889a79d021e053fe1bfcf",
+          "characters": 47299,
           "image_count": 10
         },
         {
@@ -494,8 +494,8 @@
           "position": 7.0,
           "title": "Модуль 7. Mixture of Experts",
           "content_file": "modern-llms/ru/module-06.md",
-          "content_hash": "65bec562103a601e1dfd21ad4557e47fd686edf51a371f2a91e6e30a73db2d97",
-          "characters": 48901,
+          "content_hash": "489c4549aa2eb083f8e3ad05eb496bd1edd12d3fffe2a31a21835dacf19ac94c",
+          "characters": 48729,
           "image_count": 10
         },
         {
@@ -504,8 +504,8 @@
           "position": 8.0,
           "title": "Модуль 8. Альтернативы Transformer: SSM, Mamba и гибриды",
           "content_file": "modern-llms/ru/module-07.md",
-          "content_hash": "306fcd5197f57fb371bdcab0f8b0d019325551371da9419a88805c03fb73c2ba",
-          "characters": 31516,
+          "content_hash": "7db2be621f1b22b9c00d1d593e77bde144193dc99b4af3e21b433e43ad983f55",
+          "characters": 31344,
           "image_count": 10
         },
         {
@@ -514,8 +514,8 @@
           "position": 9.0,
           "title": "Модуль 9. Претрейн: данные, законы масштабирования, оптимизаторы",
           "content_file": "modern-llms/ru/module-08.md",
-          "content_hash": "ba2254b0bcec52df4bb70278abe2d3fe6682899be5a8766fca3fdb8feb709d80",
-          "characters": 75725,
+          "content_hash": "c1cd93dec263d67171a3139af3ef5adbd041aba48e811e85154eaf182edb7808",
+          "characters": 75553,
           "image_count": 10
         },
         {
@@ -524,8 +524,8 @@
           "position": 10.0,
           "title": "Модуль 10. KV-кэши и эффективный инференс",
           "content_file": "modern-llms/ru/module-09.md",
-          "content_hash": "306cf2cf23c53abe8993f36b8519f87ed756403efd869939f18c5e195381a6e2",
-          "characters": 58608,
+          "content_hash": "fd5893a2c6e401b31c673a122e2ea5b5e061e43a049a027d760d6335386b2ca1",
+          "characters": 58436,
           "image_count": 10
         },
         {
@@ -534,8 +534,8 @@
           "position": 11.0,
           "title": "Модуль 11. Спекулятивное декодирование и квантизация",
           "content_file": "modern-llms/ru/module-10.md",
-          "content_hash": "9cae88185f6aa9e98560fa9b11d74f99dd663d43f3197158bc0024e1894eb63b",
-          "characters": 53001,
+          "content_hash": "e757d52b7ad49d2768ad4fc86b68702ef9e577f2f12bd59aa93b4d21b571bf79",
+          "characters": 52829,
           "image_count": 10
         },
         {
@@ -544,8 +544,8 @@
           "position": 12.0,
           "title": "Модуль 12. Диффузионные LLM",
           "content_file": "modern-llms/ru/module-07b.md",
-          "content_hash": "467f7463323881bf2ea71a4dfb08cbc5bf0ebc16c4887fc79d0df32bd16c3834",
-          "characters": 43257,
+          "content_hash": "0968a9201652896316d55fc43460eb480ec31e0f5e17221b1ff0e88a19865720",
+          "characters": 43114,
           "image_count": 10
         },
         {
@@ -554,8 +554,8 @@
           "position": 13.0,
           "title": "Модуль 13. SFT и работа с данными",
           "content_file": "modern-llms/ru/module-11.md",
-          "content_hash": "ab0510f952075fdc279b9a301b07cf90a976864a516b0b5a005cf0a142831680",
-          "characters": 62839,
+          "content_hash": "241ba13ff6fbad34ed196ca9d897e09b10c313c27d4a3f92291fb3e52c6582b1",
+          "characters": 62667,
           "image_count": 10
         },
         {
@@ -564,8 +564,8 @@
           "position": 14.0,
           "title": "Модуль 14. Обучение по обратной связи: RLHF, DPO, RLOO и GRPO",
           "content_file": "modern-llms/ru/module-12.md",
-          "content_hash": "6c3f224fac821dc434375e812f41f5f410a597b8b2683a31dcaee5ea642e05d5",
-          "characters": 47177,
+          "content_hash": "b37fcb888f799894558870c7ea319aff21d54b1ffd0559445c6c01c96b32bc18",
+          "characters": 47005,
           "image_count": 10
         },
         {
@@ -574,8 +574,8 @@
           "position": 15.0,
           "title": "Модуль 15. Модели рассуждения и вычисления во время инференса (test-time compute)",
           "content_file": "modern-llms/ru/module-13.md",
-          "content_hash": "f7ec1d2a88cf3eac3cb1c58403d41670a73f972e4ef8b024f4e611ea8df00478",
-          "characters": 46943,
+          "content_hash": "4eb8614d8261137f3e82ff0ee94b74406793ad760c17b9a8e23187c4da55c727",
+          "characters": 46771,
           "image_count": 10
         },
         {
@@ -584,8 +584,8 @@
           "position": 16.0,
           "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
           "content_file": "modern-llms/ru/module-14.md",
-          "content_hash": "e4e5f365592f1173155ebae33719dc01277c41d704b8c0b091d6c52680dc9232",
-          "characters": 61468,
+          "content_hash": "0ec80d1e3078d3c8ec032dbe6d301c1195a4c312f461f85ef4ddaa463d88690d",
+          "characters": 61296,
           "image_count": 11
         },
         {
@@ -594,8 +594,8 @@
           "position": 17.0,
           "title": "Модуль 17. Эмбеддинги, поиск и RAG",
           "content_file": "modern-llms/ru/module-15.md",
-          "content_hash": "8d749950b28bb23349d684d992bedee578d94f765b2a41420a18db7afbdced35",
-          "characters": 52133,
+          "content_hash": "8c2e54f3ceae044602ebeab143891499f6c057c99629a6c05fbfe9613c6f064c",
+          "characters": 51961,
           "image_count": 10
         },
         {
@@ -604,8 +604,8 @@
           "position": 18.0,
           "title": "Модуль 18. Агенты и работа с инструментами",
           "content_file": "modern-llms/ru/module-16.md",
-          "content_hash": "a7f0fa758394f5fac78a79fdbb8365085b242e532292024b622187c91f0c0a88",
-          "characters": 54964,
+          "content_hash": "5267059f7075abe6aca3c2a7c6450dac1d81fa14655a47a5c67949815f2042dc",
+          "characters": 54792,
           "image_count": 11
         },
         {
@@ -614,8 +614,8 @@
           "position": 19.0,
           "title": "Модуль 19. Оценка современных LLM: от бенчмарка к инженерному решению",
           "content_file": "modern-llms/ru/module-17.md",
-          "content_hash": "19ac770c897b827256c62d0a6794b26df75b05a893746abda7fe811e74aa1ebf",
-          "characters": 60131,
+          "content_hash": "f534b94b55e3a7448514d4ae7d1d98d4c33d915f51399ab7ff92df8d46bef201",
+          "characters": 59959,
           "image_count": 9
         },
         {
@@ -624,8 +624,8 @@
           "position": 20.0,
           "title": "Модуль 20. LLM целиком: от токенов до обучения и генерации",
           "content_file": "modern-llms/ru/module-20.md",
-          "content_hash": "c0d2533f697e3c96cf2cc47102f37b48931824a0ee5111ad1e9059c4e3982579",
-          "characters": 38555,
+          "content_hash": "144af1260cd67c0e90bd120325238ed611b510a7176b7a57927629bacaae46af",
+          "characters": 38398,
           "image_count": 6
         }
       ]
@@ -637,7 +637,7 @@
       "description": "Architecture, training, inference, agents, and evaluation of modern language-model systems.",
       "stepik_url": "https://stepik.org/297276",
       "module_count": 20,
-      "characters": 982516,
+      "characters": 978968,
       "modules": [
         {
           "id": "modern-llms:en:module-01",
@@ -645,8 +645,8 @@
           "position": 1.0,
           "title": "Module 1. The Modern LLM Landscape",
           "content_file": "modern-llms/en/module-01.md",
-          "content_hash": "28833815598546717b633cc53c99a79e95dbc96a363bbafd5b38fd430c383d51",
-          "characters": 74955,
+          "content_hash": "f9b769ea587e67bcce5ce37e332f831777f18a8346990e13ba193873ca6bd3c2",
+          "characters": 74776,
           "image_count": 11
         },
         {
@@ -655,8 +655,8 @@
           "position": 2.0,
           "title": "Module 2. Tokenization and Embeddings",
           "content_file": "modern-llms/en/module-02.md",
-          "content_hash": "6ec9442b24b61bb67d4f49c10960977916b11c7e83a58d3e5cf5c099179a5327",
-          "characters": 46616,
+          "content_hash": "f9d154a7775407c6b0faf029290a9a837afe50800cb8cc88471bd5d079d1c4fa",
+          "characters": 46437,
           "image_count": 10
         },
         {
@@ -665,8 +665,8 @@
           "position": 3.0,
           "title": "Module 3. The Basic Transformer",
           "content_file": "modern-llms/en/module-18.md",
-          "content_hash": "a87328b8c4a6537ef3cc326f91036613d7067eb7db396bfbd75f2983326a7aad",
-          "characters": 55515,
+          "content_hash": "fc30b09238513a7b126023c189a46355fe2451b9552dbca364d36bdb95c60805",
+          "characters": 55336,
           "image_count": 12
         },
         {
@@ -675,8 +675,8 @@
           "position": 4.0,
           "title": "Module 4. Positional representations: from sinusoids to multiple axes",
           "content_file": "modern-llms/en/module-03.md",
-          "content_hash": "811964c302a0d671910fb345c8d9cab4749b35e248e13d71d35d4932493554b9",
-          "characters": 41791,
+          "content_hash": "538e5bd445da8731e0a97826ce67ab2e3f99e347c0ec9bde60413a03fd779f28",
+          "characters": 41612,
           "image_count": 11
         },
         {
@@ -685,8 +685,8 @@
           "position": 5.0,
           "title": "Module 5. Modern Attention Mechanisms",
           "content_file": "modern-llms/en/module-04.md",
-          "content_hash": "ca209ecdca0977208754a1fc2896b6cdcf23f3d0896feb0601121ade730303e2",
-          "characters": 50361,
+          "content_hash": "7480eafb42994d1e4d9da16129cb480bbe2a95871dae5c46afc8762b619f68ff",
+          "characters": 50182,
           "image_count": 10
         },
         {
@@ -695,8 +695,8 @@
           "position": 6.0,
           "title": "Module 6. Normalization, activations, and the anatomy of a Transformer block",
           "content_file": "modern-llms/en/module-05.md",
-          "content_hash": "aac1fe0f663ddcbb9bf6950e1d314cf9ab806679d3ad73786c09b576cb816cd3",
-          "characters": 43421,
+          "content_hash": "1a77eff321cf1e1e1a0da17998739586b3d9a626dab5d974c66b1bcfe0a27f16",
+          "characters": 43242,
           "image_count": 10
         },
         {
@@ -705,8 +705,8 @@
           "position": 7.0,
           "title": "Module 7. Mixture of Experts",
           "content_file": "modern-llms/en/module-06.md",
-          "content_hash": "7f57baf64b72e6f3c23aa2b51746cb22ee9ec7cde773102fea9938cb45935263",
-          "characters": 44860,
+          "content_hash": "b35caf9ca7ff9dfb3f12209d768c64f26bd0f339a0e05fd8de56867b221ac165",
+          "characters": 44681,
           "image_count": 10
         },
         {
@@ -715,8 +715,8 @@
           "position": 8.0,
           "title": "Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models",
           "content_file": "modern-llms/en/module-07.md",
-          "content_hash": "c8665010bd86beb7e8678d1db992b9df8ffe5e0f3e61492c4bf7184c5c2e97f9",
-          "characters": 29707,
+          "content_hash": "61e0e7f2542fbc0df7a3bb4a7c822bf6f4f54f60c4c91a5b9a05c333b0c13764",
+          "characters": 29528,
           "image_count": 10
         },
         {
@@ -725,8 +725,8 @@
           "position": 9.0,
           "title": "Module 9. Pretraining: Data, Scaling Laws, and Optimizers",
           "content_file": "modern-llms/en/module-08.md",
-          "content_hash": "f8e05480c501eec317f2b7ef21a07b3e3fecdd5da17a1248cdf230f27c436400",
-          "characters": 62359,
+          "content_hash": "71b2332a679648605c4d999178b1028ce06aa6883dbe43b28890fe8711b4f17a",
+          "characters": 62180,
           "image_count": 10
         },
         {
@@ -735,8 +735,8 @@
           "position": 10.0,
           "title": "Module 10. KV Caches and Efficient Inference",
           "content_file": "modern-llms/en/module-09.md",
-          "content_hash": "48b3e93950394ab3fb5ec6672eb05e15abc731dee97d77ae87d40ae9adbc24ff",
-          "characters": 56504,
+          "content_hash": "947e149194b6a2b0b63d038672e30053c29a4dc939c5f54067ef48d65a04a351",
+          "characters": 56325,
           "image_count": 10
         },
         {
@@ -745,8 +745,8 @@
           "position": 11.0,
           "title": "Module 11. Speculative Decoding and Quantization",
           "content_file": "modern-llms/en/module-10.md",
-          "content_hash": "f4bff0677b9b2b7ffa6c49bb97f647ac33991ee4b5a531863e5a4e2261b27fcd",
-          "characters": 48985,
+          "content_hash": "2c320c469563b2be87ec7021a6620e0306669863ed9fa102d6e2423c5b596376",
+          "characters": 48806,
           "image_count": 10
         },
         {
@@ -755,8 +755,8 @@
           "position": 12.0,
           "title": "Module 12. Diffusion Language Models",
           "content_file": "modern-llms/en/module-07b.md",
-          "content_hash": "b973eb5e82290da4a0abff91628144068de4dcb9c7986af5abe07a641b46d69f",
-          "characters": 39296,
+          "content_hash": "de6033975ce6e25e6c0008420cd0d7f3fc48d23292e42fb112144fe826c7597c",
+          "characters": 39137,
           "image_count": 10
         },
         {
@@ -765,8 +765,8 @@
           "position": 13.0,
           "title": "Module 13. Supervised Fine-Tuning and Data Work",
           "content_file": "modern-llms/en/module-11.md",
-          "content_hash": "0f8a92b0250d2e47b61094004ca4330c596ba8b8f36dff215ead7c94ad68b88a",
-          "characters": 55201,
+          "content_hash": "32b7b7a117f4b543e0147395ea9b22236be3aa7c9dc27824ed318c47db6229d6",
+          "characters": 55022,
           "image_count": 10
         },
         {
@@ -775,8 +775,8 @@
           "position": 14.0,
           "title": "Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO",
           "content_file": "modern-llms/en/module-12.md",
-          "content_hash": "e83bc84a4b0a6ed89645817e92b65b45c9169405c00dafc639f9ce4815894573",
-          "characters": 44276,
+          "content_hash": "2928e37081e7278aa0129bffb97091f4b79c8d35fbc60cd73a20872f250001d4",
+          "characters": 44097,
           "image_count": 10
         },
         {
@@ -785,8 +785,8 @@
           "position": 15.0,
           "title": "Module 15. Reasoning Models and Test-Time Compute",
           "content_file": "modern-llms/en/module-13.md",
-          "content_hash": "e27a3d5bf0048fc481c1e1b222dadd87b9a59766600c61ed8da21ceeaa1806f3",
-          "characters": 42248,
+          "content_hash": "6948b57826926ed7b7349c4a3048caec0bd6138eeb6ad5dee0eee3b3cc3db15f",
+          "characters": 42069,
           "image_count": 10
         },
         {
@@ -795,8 +795,8 @@
           "position": 16.0,
           "title": "Module 16. Multimodal LLMs: Vision, Audio, and Video",
           "content_file": "modern-llms/en/module-14.md",
-          "content_hash": "8716c2998943fa55e4aabc4f55df24d247b0fa94a9444299a4e33ef572c92446",
-          "characters": 53315,
+          "content_hash": "59b3c68148e5dc3a52745c001a7e3cd50a82fdf5f6fe650fe2941d0f75d59ca9",
+          "characters": 53136,
           "image_count": 11
         },
         {
@@ -805,8 +805,8 @@
           "position": 17.0,
           "title": "Module 17. Embeddings, Retrieval, and RAG",
           "content_file": "modern-llms/en/module-15.md",
-          "content_hash": "e3298f9ac003d7a3007b280a732cf51850acf6f110e8407f7c9a4c52563f062b",
-          "characters": 50260,
+          "content_hash": "ad65840ee03540053aed88a5427b223a35dc68aea4d9b3574cfce2235384a575",
+          "characters": 50081,
           "image_count": 10
         },
         {
@@ -815,8 +815,8 @@
           "position": 18.0,
           "title": "Module 18. Agents and Tool Use",
           "content_file": "modern-llms/en/module-16.md",
-          "content_hash": "45debb89d96a7877301e2321627e46c412cbe9803348dac9b0f844c18f774b8d",
-          "characters": 49204,
+          "content_hash": "65459be01d5772937bbafd01d4b7b70b0cba22bec56dd05021075968898188ca",
+          "characters": 49025,
           "image_count": 11
         },
         {
@@ -825,8 +825,8 @@
           "position": 19.0,
           "title": "Module 19. Evaluating Modern LLM Systems: From Benchmarks to Decisions",
           "content_file": "modern-llms/en/module-17.md",
-          "content_hash": "1df276fe68ed5732df46b6449c950b54c01d8c5ac72c18d28f236ed48afec6f1",
-          "characters": 54105,
+          "content_hash": "61648d2d65ded7e180c84eaff26558205dc83a8cde90b9a3f44a79fb90f10e3e",
+          "characters": 53926,
           "image_count": 9
         },
         {
@@ -835,8 +835,8 @@
           "position": 20.0,
           "title": "Module 20. The complete LLM: from tokens to training and generation",
           "content_file": "modern-llms/en/module-20.md",
-          "content_hash": "41a5587125e373bf6ef5e13613ff57319ac0fca763585f60da2f98a40b11b457",
-          "characters": 39537,
+          "content_hash": "84da267377115771d68d2a184a8e82d345dbd1a24953dc1852ae5a4942ecac22",
+          "characters": 39370,
           "image_count": 6
         }
       ]
@@ -848,7 +848,7 @@
       "description": "Обучение с подкреплением, оптимизация предпочтений, проверяемые награды, агенты и безопасность.",
       "stepik_url": "https://stepik.org/296688",
       "module_count": 13,
-      "characters": 606267,
+      "characters": 604050,
       "modules": [
         {
           "id": "rl-for-llm:ru:module-01",
@@ -856,8 +856,8 @@
           "position": 1.0,
           "title": "Модуль 1. Введение: Reinforcement Learning для LLM",
           "content_file": "rl-for-llm/ru/module-01.md",
-          "content_hash": "5a7e8d04bf11c5f8dc07ffa5b017f44d422beda50c5fc63bbad7e740a9d03a0d",
-          "characters": 51157,
+          "content_hash": "1fceea23b80779bf956a1ff1806804dc05bbd73c7b504be3469babf74d0e5172",
+          "characters": 51021,
           "image_count": 7
         },
         {
@@ -866,8 +866,8 @@
           "position": 2.0,
           "title": "Модуль 2. Состояние, ценность и уравнения Беллмана",
           "content_file": "rl-for-llm/ru/module-02.md",
-          "content_hash": "db187d52c358b587d1c91a86f19563ea795a37436136e31549900c3eec519953",
-          "characters": 44442,
+          "content_hash": "6a47d6edfe48eebc19e257b94abf86afc2af181670d95a319da1753e3ffd47e3",
+          "characters": 44270,
           "image_count": 8
         },
         {
@@ -876,8 +876,8 @@
           "position": 3.0,
           "title": "Модуль 3. Бандиты, исследование и одношаговые решения",
           "content_file": "rl-for-llm/ru/module-03.md",
-          "content_hash": "063a5db9969be2dccb757c50dcf2ad6cc695ee3dffa03c0c41eef2f82b0c6008",
-          "characters": 43713,
+          "content_hash": "fb8bb1a4a73b38c13933c5646f0c8cf1b2b05e52a072545dd20cf8467efe90cf",
+          "characters": 43541,
           "image_count": 6
         },
         {
@@ -886,8 +886,8 @@
           "position": 4.0,
           "title": "Модуль 4. Градиенты политики: от REINFORCE к PPO",
           "content_file": "rl-for-llm/ru/module-04.md",
-          "content_hash": "faa62aaeb1644f8484db03861915b2fa2860d91fb1ee094ca596ef5d6ad1017d",
-          "characters": 51294,
+          "content_hash": "3d47cc6b2bfa189e0d04a125bb2cf434cb587b64203eb504b5e914f654a9f483",
+          "characters": 51122,
           "image_count": 9
         },
         {
@@ -896,8 +896,8 @@
           "position": 5.0,
           "title": "Модуль 5. Обучение по фиксированным данным: имитация, глубокие Q-методы и офлайн-RL",
           "content_file": "rl-for-llm/ru/module-05.md",
-          "content_hash": "826e9c109e5f49d806b8cd2cc45b4a57dce6d8f3b576de7f2b14c29a6dc4028f",
-          "characters": 48372,
+          "content_hash": "470b959c2caadc062421e14df79fd3ab747ab39ea2174c9aed88dd3bb2ded4fb",
+          "characters": 48176,
           "image_count": 10
         },
         {
@@ -906,8 +906,8 @@
           "position": 6.0,
           "title": "Модуль 6. LLM как политика: токены, логарифмы вероятностей и KL",
           "content_file": "rl-for-llm/ru/module-06.md",
-          "content_hash": "b93d375eb59e3d882b91775ed57c1355a544beade5bd5d28b27d650cb4f7bdaf",
-          "characters": 43804,
+          "content_hash": "0af2c7736fae12e6c140ec6a4e6baca8740a8a4121c245c7eb592d6b3d4e9400",
+          "characters": 43639,
           "image_count": 9
         },
         {
@@ -916,8 +916,8 @@
           "position": 7.0,
           "title": "Модуль 7. Модели награды и данные о предпочтениях",
           "content_file": "rl-for-llm/ru/module-07.md",
-          "content_hash": "bb3dc6f819ff315cf8ad167ba1f196542c7c0d674727edd3875e0bc63cc18f24",
-          "characters": 44941,
+          "content_hash": "2293b37e958ff50c054f48265a5a5d220c2766fbf80ee9d0445fe60b347e5d6f",
+          "characters": 44769,
           "image_count": 7
         },
         {
@@ -926,8 +926,8 @@
           "position": 8.0,
           "title": "Модуль 8. RLHF и прямые методы оптимизации предпочтений",
           "content_file": "rl-for-llm/ru/module-08.md",
-          "content_hash": "7a5a17886852e64c9327c66018143bc0ed378516a15f58796df93ef8483d5236",
-          "characters": 37808,
+          "content_hash": "16d91b5c87543df3f42c25ae5be08ada850d456670369dec7c736822934e6396",
+          "characters": 37636,
           "image_count": 8
         },
         {
@@ -936,8 +936,8 @@
           "position": 9.0,
           "title": "Модуль 9. RLVR и GRPO: проверяемые награды, групповые оценки и устойчивость",
           "content_file": "rl-for-llm/ru/module-09.md",
-          "content_hash": "5396ff415d8bc8e4c7641fdd7902e2f08c18f1863d65d2bbfdb41a14fe51b71f",
-          "characters": 45537,
+          "content_hash": "057583338ee22dea642cd4510e029c7ae044a5a81f4bdd56b978ad97120a495b",
+          "characters": 45365,
           "image_count": 9
         },
         {
@@ -946,8 +946,8 @@
           "position": 10.0,
           "title": "Модуль 10. Поиск, проверка и вычислительный бюджет на этапе генерации",
           "content_file": "rl-for-llm/ru/module-10.md",
-          "content_hash": "fa1cb04cbe6ae90894a73f4e7aea9589bd83a4e0e15138e6aa7c2567c058f93e",
-          "characters": 38824,
+          "content_hash": "ec2d5edc6f391c32f4a16743c9547516da4e11e3b608af5a47d9074f7bc4a4e2",
+          "characters": 38652,
           "image_count": 9
         },
         {
@@ -956,8 +956,8 @@
           "position": 11.0,
           "title": "Модуль 11. RL для LLM-агентов: инструменты, среда и длинные траектории",
           "content_file": "rl-for-llm/ru/module-11.md",
-          "content_hash": "d410d1ebe5d9245b0e11b6793907ef0569680ccd25477c5ffa8703ad41903645",
-          "characters": 46728,
+          "content_hash": "9a7126a9b1dcecbb28186a39f34bd6409910a68765ba1253bf3c133d446cedb7",
+          "characters": 46556,
           "image_count": 9
         },
         {
@@ -966,8 +966,8 @@
           "position": 12.0,
           "title": "Модуль 12. Инфраструктура RL для LLM: память, роллауты и асинхронность",
           "content_file": "rl-for-llm/ru/module-12.md",
-          "content_hash": "978ddc048531fec6b42ab06dfdfabca94150cfa654c05249c92414047755824f",
-          "characters": 54865,
+          "content_hash": "53a6a10bed396f20957cffd5573225025f5766fa8be1541e5f9157f94883da79",
+          "characters": 54693,
           "image_count": 9
         },
         {
@@ -976,8 +976,8 @@
           "position": 13.0,
           "title": "Модуль 13. Оценивание RL-систем для LLM: статистика, взлом награды и безопасность",
           "content_file": "rl-for-llm/ru/module-13.md",
-          "content_hash": "161d6d2766dcd9c9d237c1400d6de4a47b6fcb95be7325fa56af211d1b9db27c",
-          "characters": 54782,
+          "content_hash": "e9542c531abf0f609187597f357941dfcbc433d1cc83fc31481a2928aaad32da",
+          "characters": 54610,
           "image_count": 9
         }
       ]
@@ -989,7 +989,7 @@
       "description": "Reinforcement learning, preference optimization, verifiable rewards, agents, and safety.",
       "stepik_url": "https://stepik.org/296686",
       "module_count": 13,
-      "characters": 555330,
+      "characters": 553077,
       "modules": [
         {
           "id": "rl-for-llm:en:module-01",
@@ -997,8 +997,8 @@
           "position": 1.0,
           "title": "Module 1. Introduction: Reinforcement Learning for LLMs",
           "content_file": "rl-for-llm/en/module-01.md",
-          "content_hash": "f49ccc3441415f537849bd958a0e35ff00049034466f94c7b463e4d9af29e67d",
-          "characters": 46989,
+          "content_hash": "24281669ba272ddbb4484069546a8a0d28b933037be275d954ac692423fe29ff",
+          "characters": 46849,
           "image_count": 7
         },
         {
@@ -1007,8 +1007,8 @@
           "position": 2.0,
           "title": "Module 2. State, Value, and Bellman Equations",
           "content_file": "rl-for-llm/en/module-02.md",
-          "content_hash": "84c0a8533990f45a9b3e9175425c70eea389675a1306aa0456e9c1b8f515d623",
-          "characters": 41097,
+          "content_hash": "aba65ae02116bbaa494f030bcf64c28be9a81a3e89280dfe706303afe1bfc17d",
+          "characters": 40918,
           "image_count": 8
         },
         {
@@ -1017,8 +1017,8 @@
           "position": 3.0,
           "title": "Module 3. Bandits, exploration, and one-step decisions",
           "content_file": "rl-for-llm/en/module-03.md",
-          "content_hash": "2f0e9a5ff09f8107fd3b915fe5cc36900007487741b4af4bf70e7fcca04b143e",
-          "characters": 40970,
+          "content_hash": "6ab9202235f92aeb55e9b09102be4c09e96fdd042bab1eadeb1521df4496e91c",
+          "characters": 40791,
           "image_count": 6
         },
         {
@@ -1027,8 +1027,8 @@
           "position": 4.0,
           "title": "Module 4. Policy gradients: from REINFORCE to PPO",
           "content_file": "rl-for-llm/en/module-04.md",
-          "content_hash": "7c13dc5463b201f4c4c86d6db92d1326870ee71ee38d6df91b1243b424765074",
-          "characters": 48624,
+          "content_hash": "32284561a0ade7f10693db6b762d16b69902f0d899569994c660bf73253685ec",
+          "characters": 48445,
           "image_count": 9
         },
         {
@@ -1037,8 +1037,8 @@
           "position": 5.0,
           "title": "Module 5. Learning from fixed data: imitation, deep Q-methods, and offline RL",
           "content_file": "rl-for-llm/en/module-05.md",
-          "content_hash": "39f41d6a6953962b683119149c95d5253df4df1bce5efa85f55a0932e611d7f3",
-          "characters": 44742,
+          "content_hash": "77e1f4f91dda50936d03628b760161399c35294cb961412a297b57d3c1a4859f",
+          "characters": 44552,
           "image_count": 10
         },
         {
@@ -1047,8 +1047,8 @@
           "position": 6.0,
           "title": "Module 6. The LLM as a policy: tokens, log-probabilities, and KL",
           "content_file": "rl-for-llm/en/module-06.md",
-          "content_hash": "aa0ed5683da02c9619c214cb20dd468edb7f178c0d202b06ce7fd900d64ecc0f",
-          "characters": 41242,
+          "content_hash": "c7c8a8e9a81a90528059e7806c16dbff98bae20d85f1bc12d3ea5f944ae62e0e",
+          "characters": 41109,
           "image_count": 9
         },
         {
@@ -1057,8 +1057,8 @@
           "position": 7.0,
           "title": "Module 7. Reward models and preference data",
           "content_file": "rl-for-llm/en/module-07.md",
-          "content_hash": "3d6c687e24e41f4a24dec4f7dab0add251f5f68ba2e7015807242b9a6c77b35f",
-          "characters": 40625,
+          "content_hash": "0c2d1f4704217e732d0fc5e70c04f1d7531795332d68bdae12db59511f4c6b4e",
+          "characters": 40446,
           "image_count": 7
         },
         {
@@ -1067,8 +1067,8 @@
           "position": 8.0,
           "title": "Module 8. RLHF and direct preference optimization",
           "content_file": "rl-for-llm/en/module-08.md",
-          "content_hash": "62416957da906a4d3c8b5808e6c190e4fe518c2722b90bcbc00eafcce6bf6488",
-          "characters": 34091,
+          "content_hash": "340b36d1185a1d0a9babc1aabad61396b2aa395454465f5da779ab31d39b69cf",
+          "characters": 33912,
           "image_count": 8
         },
         {
@@ -1077,8 +1077,8 @@
           "position": 9.0,
           "title": "Module 9. RLVR and GRPO: verifiable rewards, group-relative estimates, and stability",
           "content_file": "rl-for-llm/en/module-09.md",
-          "content_hash": "bb2bef48eead39a0fd3e0f1e8ec369b159fae8f3888527f522184e084111aa98",
-          "characters": 41763,
+          "content_hash": "767f9c94041c5a2c5cf73896a41364ae4f03083bb7252337eb1a3c9c48d340c2",
+          "characters": 41584,
           "image_count": 9
         },
         {
@@ -1087,8 +1087,8 @@
           "position": 10.0,
           "title": "Module 10. Search, verification, and test-time compute",
           "content_file": "rl-for-llm/en/module-10.md",
-          "content_hash": "f2eefbf40bfcf0481e9601f1956df3a90b72e1c61546c8fa9494aba40b274bd8",
-          "characters": 35200,
+          "content_hash": "74c7f68e687f0e6008207b7c46f57df68a505126fdf2e30e9d3c7b4ca869cbb7",
+          "characters": 35021,
           "image_count": 9
         },
         {
@@ -1097,8 +1097,8 @@
           "position": 11.0,
           "title": "Module 11. RL for LLM agents: tools, environments, and long trajectories",
           "content_file": "rl-for-llm/en/module-11.md",
-          "content_hash": "5b5ef312ff51be6489c38cbffc2400a4fe307ab2bfa9e94bb95b4a0fa56428e8",
-          "characters": 43752,
+          "content_hash": "ef523d10a3754afe600ac387e9a09ba4b8d1936aeb964a56393721c47de81ef8",
+          "characters": 43573,
           "image_count": 9
         },
         {
@@ -1107,8 +1107,8 @@
           "position": 12.0,
           "title": "Module 12. RL infrastructure for LLMs: memory, rollouts, and asynchrony",
           "content_file": "rl-for-llm/en/module-12.md",
-          "content_hash": "89c93bc1c65a520dd61d830748c736a174a2adcb3db112f9173e636fe300bdf3",
-          "characters": 48533,
+          "content_hash": "b73ec094da73b1c82985286984a8d449adbb7ef236d3ff2b5a66743be0ea259f",
+          "characters": 48354,
           "image_count": 9
         },
         {
@@ -1117,8 +1117,8 @@
           "position": 13.0,
           "title": "Module 13. Evaluating RL systems for LLMs: statistics, reward hacking, and safety",
           "content_file": "rl-for-llm/en/module-13.md",
-          "content_hash": "d63e8de0cd1ed4133b826988e9920c9eb44f90f3d46c5be3ab01741ab7100df4",
-          "characters": 47702,
+          "content_hash": "28231d9ee6753b980cd6b038f183ebf14671f5eee10847a8fb1111fb4c3fdc79",
+          "characters": 47523,
           "image_count": 9
         }
       ]
@@ -1130,7 +1130,7 @@
       "description": "Теория информации: от энтропии и кодирования до NLP, LLM, компьютерного зрения и обучения с подкреплением.",
       "stepik_url": "https://stepik.org/295411",
       "module_count": 16,
-      "characters": 588720,
+      "characters": 585968,
       "modules": [
         {
           "id": "information-theory-for-ml:ru:module-01",
@@ -1138,8 +1138,8 @@
           "position": 1.0,
           "title": "Модуль 1. Введение",
           "content_file": "information-theory-for-ml/ru/module-01.md",
-          "content_hash": "d60f1be129df9538de1b3b77752b3de5ce765e6a3756e9662af32f6f0c798e0b",
-          "characters": 54035,
+          "content_hash": "55dbcc7c18244e800c4b87aa9538ce31abf3bdd710c122f20d6a2278b93c2c5b",
+          "characters": 53863,
           "image_count": 4
         },
         {
@@ -1148,8 +1148,8 @@
           "position": 2.0,
           "title": "Модуль 2. Энтропия",
           "content_file": "information-theory-for-ml/ru/module-02.md",
-          "content_hash": "ef2c4c77e143ce0e54f64ca6d9ba5e4455e5b18d04e3090684275f460d4a73fa",
-          "characters": 26823,
+          "content_hash": "5b290d93274298232e1851a355466807160dba5901d95667a9bc31f37ba0d8ec",
+          "characters": 26651,
           "image_count": 5
         },
         {
@@ -1158,8 +1158,8 @@
           "position": 3.0,
           "title": "Модуль 3. Кросс-энтропия и KL-дивергенция",
           "content_file": "information-theory-for-ml/ru/module-03.md",
-          "content_hash": "c09ed2aadfd49fc411e5a59438ad05d85d1713f41d65b0344d035806f1f1aca1",
-          "characters": 30533,
+          "content_hash": "b21523605a30d23082d7103351ef2c3da4bc4b567010f04ea7d4e9f812a67da1",
+          "characters": 30361,
           "image_count": 4
         },
         {
@@ -1168,8 +1168,8 @@
           "position": 4.0,
           "title": "Модуль 4. Неравенство Йенсена: когда среднее встречает нелинейность",
           "content_file": "information-theory-for-ml/ru/module-04.md",
-          "content_hash": "c14c5e72ad95fb666d3f7813f92e0372734a6f05e33045fe7a7820cc6266f148",
-          "characters": 22622,
+          "content_hash": "8f15269c79b019b881c3300c132d2d2358910680e9e8c271a432a7c795c6c396",
+          "characters": 22450,
           "image_count": 4
         },
         {
@@ -1178,8 +1178,8 @@
           "position": 5.0,
           "title": "Модуль 5. Взаимная информация: сколько один объект говорит о другом",
           "content_file": "information-theory-for-ml/ru/module-05.md",
-          "content_hash": "8a8178f9fb143b9101af08c09162ab250daae4457df25ef9f7be6b6496bfeff3",
-          "characters": 29158,
+          "content_hash": "c871e63d3493babb3567ca5cf064ac7a6fca6cf3a0044ed419ca53572dd05baf",
+          "characters": 28986,
           "image_count": 7
         },
         {
@@ -1188,8 +1188,8 @@
           "position": 6.0,
           "title": "Модуль 6. Кодирование источника: от энтропии к реальным битам",
           "content_file": "information-theory-for-ml/ru/module-06.md",
-          "content_hash": "59791a2e2001947f4140202c173d0f1751e0e40be9560762407baa8c9dbd516b",
-          "characters": 32471,
+          "content_hash": "2abdc2c4ca3ae13050e6a7b89aa1f76be95f81c2a56b42f4c81394da0899a43a",
+          "characters": 32299,
           "image_count": 5
         },
         {
@@ -1198,8 +1198,8 @@
           "position": 7.0,
           "title": "Модуль 7. Канал и пропускная способность",
           "content_file": "information-theory-for-ml/ru/module-07.md",
-          "content_hash": "4b3c39ddce674a9d741b093e3465e85a4f6a92a418f236aeec1f19acb44138f1",
-          "characters": 35734,
+          "content_hash": "8f2326c753b98a336dc0403400e285f97db5e9a45bf645d7d331efd660c4cf5d",
+          "characters": 35562,
           "image_count": 9
         },
         {
@@ -1208,8 +1208,8 @@
           "position": 8.0,
           "title": "Модуль 8. Максимальная энтропия, экспоненциальные модели и KL-регуляризация",
           "content_file": "information-theory-for-ml/ru/module-08.md",
-          "content_hash": "a475a611bd97e5ad6ed0911fe26cf121e808c843043c5efbb3cb070a3fdbbbc5",
-          "characters": 72468,
+          "content_hash": "ddb80b1ee6a968f3d3bc06fdf5694ee07da6bc4237babbb53f970edcb429eca4",
+          "characters": 72296,
           "image_count": 13
         },
         {
@@ -1218,8 +1218,8 @@
           "position": 9.0,
           "title": "Модуль 9. Скорость–искажение и Information Bottleneck: как управлять потерей информации",
           "content_file": "information-theory-for-ml/ru/module-09.md",
-          "content_hash": "541b25a9e61e3cd180a682ca199ea04ffa039eae934fa19910818d5eeb324b54",
-          "characters": 37401,
+          "content_hash": "d71446bfa72db6e5ef0ef28160f8083003455ea8d3251097263afa271b96f88b",
+          "characters": 37229,
           "image_count": 9
         },
         {
@@ -1228,8 +1228,8 @@
           "position": 10.0,
           "title": "Модуль 10. Алгоритмическая теория информации: кратчайшие описания, MDL и универсальное предсказание",
           "content_file": "information-theory-for-ml/ru/module-10.md",
-          "content_hash": "7cea1b8722cb436cc9beecb0c59afb157d4bddf0611668c1e121c5a22f975583",
-          "characters": 33909,
+          "content_hash": "b788788b17fe5fd796ef2890bafab4142a3fcb3fc81f8c6153fa557fed716c4b",
+          "characters": 33737,
           "image_count": 10
         },
         {
@@ -1238,8 +1238,8 @@
           "position": 11.0,
           "title": "Модуль 11. Сравнение распределений: f-дивергенции, вариационные критики и расстояние Вассерштейна",
           "content_file": "information-theory-for-ml/ru/module-11.md",
-          "content_hash": "012b1aabc24446dbc4bfdc0c92a7162d1ccd79b4b16671690e24ea6788cc2c31",
-          "characters": 35577,
+          "content_hash": "66dea76f0cec1380861663c8467c3d0ee205078e58aa6f69401a22172dd28806",
+          "characters": 35405,
           "image_count": 9
         },
         {
@@ -1248,8 +1248,8 @@
           "position": 12.0,
           "title": "Модуль 12. Информационные границы обобщения: PAC-Bayes и взаимная информация",
           "content_file": "information-theory-for-ml/ru/module-12.md",
-          "content_hash": "f7c837564e95ac64e6376cd9b3e3261a73a98d0fb3e09d8a04b0e409edbea71e",
-          "characters": 35958,
+          "content_hash": "4ca8e2679c3ca9b1e2a926352ef3a3c6d92c5907a85b9727d5ba5cf98706eed2",
+          "characters": 35786,
           "image_count": 9
         },
         {
@@ -1258,8 +1258,8 @@
           "position": 13.0,
           "title": "Модуль 13. Рассуждение в LLM: вычисление, поиск и информация",
           "content_file": "information-theory-for-ml/ru/module-13.md",
-          "content_hash": "5604cf2c66dfe6b84c7f44b0aeff601136e785be56cfb30a6ef1b956f1151b81",
-          "characters": 35324,
+          "content_hash": "fee7bba284ba149126bed9141e4dde793640eedde652f4d4789dd7c2ed389cdd",
+          "characters": 35152,
           "image_count": 9
         },
         {
@@ -1268,8 +1268,8 @@
           "position": 14.0,
           "title": "Модуль 14. Компьютерное зрение через теорию информации",
           "content_file": "information-theory-for-ml/ru/module-14.md",
-          "content_hash": "5cc249706c56699a121e9663ae2ce68ef67f4fdff74b5557d1ef14144add6d7e",
-          "characters": 39777,
+          "content_hash": "f847ced879a4bbed35ceb06a777c3e140d528a571a90babb30cfb36350d3666b",
+          "characters": 39605,
           "image_count": 10
         },
         {
@@ -1278,8 +1278,8 @@
           "position": 15.0,
           "title": "Модуль 15. Информационная геометрия: Fisher, естественный градиент и потоки распределений",
           "content_file": "information-theory-for-ml/ru/module-15.md",
-          "content_hash": "c4ad2c132b56f6b245dc7ba2f696d8a17a8941d6f75615a1a7670394c81b2f9a",
-          "characters": 38550,
+          "content_hash": "84e6f961fc0c81e71762d209033bb7207bd3e2cad670852b2ab1b00635f439bf",
+          "characters": 38378,
           "image_count": 12
         },
         {
@@ -1288,8 +1288,8 @@
           "position": 16.0,
           "title": "Модуль 16. Памятка по курсу",
           "content_file": "information-theory-for-ml/ru/module-16.md",
-          "content_hash": "94a97fd14cfb2ce6db466d82037a99b56bb3a7941344dc92901fcd71237994ab",
-          "characters": 28380,
+          "content_hash": "10cedccb3f11fd8c597d5f7ec6909d9ff17a2dbf26e5b973cd6c28f4f4d6cbe4",
+          "characters": 28208,
           "image_count": 0
         }
       ]
@@ -1301,7 +1301,7 @@
       "description": "Information theory from entropy and coding to NLP, LLMs, computer vision, and reinforcement learning.",
       "stepik_url": "https://stepik.org/295409",
       "module_count": 16,
-      "characters": 570331,
+      "characters": 567467,
       "modules": [
         {
           "id": "information-theory-for-ml:en:module-01",
@@ -1309,8 +1309,8 @@
           "position": 1.0,
           "title": "Module 1. Introduction",
           "content_file": "information-theory-for-ml/en/module-01.md",
-          "content_hash": "ccd73d2256ec685e28b473e3f1261f6b8722f04d110f2bb78b036680be214a6b",
-          "characters": 51418,
+          "content_hash": "de19bc21270998363a7aad71688bbbda5e020ca97fb9b26a129c64615991f4dc",
+          "characters": 51239,
           "image_count": 3
         },
         {
@@ -1319,8 +1319,8 @@
           "position": 2.0,
           "title": "Module 2. Entropy",
           "content_file": "information-theory-for-ml/en/module-02.md",
-          "content_hash": "d28dbc453811822f9928df23f1477ea1244ca62ce1180ec7034d5224f516a8a0",
-          "characters": 26470,
+          "content_hash": "83fa764ac4a2fd20905ea853a59f3973b9ea8c4e17ef4892f368672086e65ea0",
+          "characters": 26291,
           "image_count": 5
         },
         {
@@ -1329,8 +1329,8 @@
           "position": 3.0,
           "title": "Module 3. Cross-Entropy and KL Divergence",
           "content_file": "information-theory-for-ml/en/module-03.md",
-          "content_hash": "7a9fc53cf0b1f6b50869990d6606c89682f73791ecb22523aa3d80e021e3f52d",
-          "characters": 29520,
+          "content_hash": "43618b3338d2963db943961dd7c1dac4ef0c946fe5b4c8748aa13312b95ab75c",
+          "characters": 29341,
           "image_count": 4
         },
         {
@@ -1339,8 +1339,8 @@
           "position": 4.0,
           "title": "Module 4. Jensen's inequality: when averaging meets nonlinearity",
           "content_file": "information-theory-for-ml/en/module-04.md",
-          "content_hash": "3450201827f0a0ae5598d149f72e13ddf00a6e5b5f24a7b097dcdec644db1f94",
-          "characters": 22484,
+          "content_hash": "6f9d4420d10a888ac4826fd80ee5853b16b926843a8c68c760ffc0dc2d01f476",
+          "characters": 22305,
           "image_count": 4
         },
         {
@@ -1349,8 +1349,8 @@
           "position": 5.0,
           "title": "Module 5. Mutual information: how much one object tells us about another",
           "content_file": "information-theory-for-ml/en/module-05.md",
-          "content_hash": "29fced825ef99ac571b359d3dae1f82c1a0e7d73020998d7ede69c9ad2bd1de6",
-          "characters": 28223,
+          "content_hash": "e32e7449e3679070befa95a89580371fb8c6876e16e98d0112bdb8bff8fe2b0a",
+          "characters": 28044,
           "image_count": 7
         },
         {
@@ -1359,8 +1359,8 @@
           "position": 6.0,
           "title": "Module 6. Source coding: from entropy to real bits",
           "content_file": "information-theory-for-ml/en/module-06.md",
-          "content_hash": "232dcf2b91c2f806d0245a585c51e043fe969a0f7c976bca46b4b6a1d3a5ab52",
-          "characters": 30605,
+          "content_hash": "687334420cb9af1671141fed49b2b396086334ccea376322c88afb4ef10976fa",
+          "characters": 30426,
           "image_count": 5
         },
         {
@@ -1369,8 +1369,8 @@
           "position": 7.0,
           "title": "Module 7. Channel and capacity",
           "content_file": "information-theory-for-ml/en/module-07.md",
-          "content_hash": "12a7ce27dc928dcfa9d782219220f770f8b12bb26575622c72c14b95197f7190",
-          "characters": 34489,
+          "content_hash": "da86e0781bee69f9e85214f7743fc53bbdda6f463cc4c4899534bb6fe8b4cc25",
+          "characters": 34310,
           "image_count": 9
         },
         {
@@ -1379,8 +1379,8 @@
           "position": 8.0,
           "title": "Module 8. Maximum entropy, exponential models, and KL regularization",
           "content_file": "information-theory-for-ml/en/module-08.md",
-          "content_hash": "5ef3ffe2a4aab254f455082822a7c74870faba6c7d368bebdac29aefba435b0f",
-          "characters": 69911,
+          "content_hash": "65abf22288a7835c02ed26dba794dfca7f73d4642724c9bb481836ceaafa6647",
+          "characters": 69732,
           "image_count": 13
         },
         {
@@ -1389,8 +1389,8 @@
           "position": 9.0,
           "title": "Module 9. Rate–distortion and the Information Bottleneck: managing information loss",
           "content_file": "information-theory-for-ml/en/module-09.md",
-          "content_hash": "c92f90532a2911923bfe8cbb02329e15f9a2db331e8c049ee1cd06d0c810ec63",
-          "characters": 36755,
+          "content_hash": "30b11fff40e6544938c7afede6a6c8f8a93a35dd09074b9298cf105b830f6ac7",
+          "characters": 36576,
           "image_count": 9
         },
         {
@@ -1399,8 +1399,8 @@
           "position": 10.0,
           "title": "Module 10. Algorithmic Information Theory: Shortest Descriptions, MDL, and Universal Prediction",
           "content_file": "information-theory-for-ml/en/module-10.md",
-          "content_hash": "35937d15f73ee045a5bc3e6d524620e49f0721b596a7e5216cbabc345085859d",
-          "characters": 33042,
+          "content_hash": "477570c136d976a027556f46ba4636a40de389ea6d2fae3a4f7131ee835b9a26",
+          "characters": 32863,
           "image_count": 10
         },
         {
@@ -1409,8 +1409,8 @@
           "position": 11.0,
           "title": "Module 11. Comparing distributions: f-divergences, variational critics, and Wasserstein distance",
           "content_file": "information-theory-for-ml/en/module-11.md",
-          "content_hash": "9e0b57eb1eb5335377ae258f428fa10ddb589ff12ff6da02014180191425442a",
-          "characters": 34697,
+          "content_hash": "7f12b5dbc64b58a551d2bb4f2432218b8d5f573c1704249e6c57ce74e799668b",
+          "characters": 34518,
           "image_count": 9
         },
         {
@@ -1419,8 +1419,8 @@
           "position": 12.0,
           "title": "Module 12. Information-theoretic generalization bounds: PAC-Bayes and mutual information",
           "content_file": "information-theory-for-ml/en/module-12.md",
-          "content_hash": "de34d06ce17b81452ddb58148d89c74c8d56cf70476b6723a06080a88c66ff20",
-          "characters": 35375,
+          "content_hash": "9aa7a1465aa759b4493842a1c68871bcf11e9ad79ef31dd07cc8803b3448058f",
+          "characters": 35196,
           "image_count": 9
         },
         {
@@ -1429,8 +1429,8 @@
           "position": 13.0,
           "title": "Module 13. Reasoning in LLMs: computation, search, and information",
           "content_file": "information-theory-for-ml/en/module-13.md",
-          "content_hash": "6cdfd4325542a69f0430d31a4750093693d4475bb21410402afeb1c9ae2ac622",
-          "characters": 34542,
+          "content_hash": "f97d1abdc419f67c07cdae46708aa04c79c6a6d0edd741a96506cc8354eb816e",
+          "characters": 34363,
           "image_count": 9
         },
         {
@@ -1439,8 +1439,8 @@
           "position": 14.0,
           "title": "Module 14. Computer Vision Through Information Theory",
           "content_file": "information-theory-for-ml/en/module-14.md",
-          "content_hash": "48881d77cdf8928d360f04bae66a47680a0cdc77c538bb788ec7607401a783cc",
-          "characters": 38929,
+          "content_hash": "a6508af7f276ca31c4b9b71673bfa0936552d38fb126e79c4a4e8d38c1a41c3c",
+          "characters": 38750,
           "image_count": 10
         },
         {
@@ -1449,8 +1449,8 @@
           "position": 15.0,
           "title": "Module 15. Information Geometry: Fisher, Natural Gradient, and Distribution Flows",
           "content_file": "information-theory-for-ml/en/module-15.md",
-          "content_hash": "45b68c8eec4c156ea49f4e58985e03dfc912ea1f983e8bb230a8a01cffb996c4",
-          "characters": 37887,
+          "content_hash": "dda50df19f4d876b5b57b8c3f8bee7f3dc95a4aed07d0792e66abbec6722196a",
+          "characters": 37708,
           "image_count": 12
         },
         {
@@ -1459,8 +1459,8 @@
           "position": 16.0,
           "title": "Module 16. Course Reference Sheet",
           "content_file": "information-theory-for-ml/en/module-16.md",
-          "content_hash": "b415be6d59f90790476aad51e7987bba19ccaedbb87629cdb57cefe546e0927a",
-          "characters": 25984,
+          "content_hash": "e4ca975bcb7f0c781e1dd9782784603dbd1cbded1960e1184d03ba00f3bb1e47",
+          "characters": 25805,
           "image_count": 0
         }
       ]

@@ -1,7 +1,5 @@
 # Module 4. Jensen's inequality: when averaging meets nonlinearity
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** Sections 4.1–4.5 form the main route. A single theorem will run through three familiar ML constructions: ensembles, the ELBO, and the contraction of KL under coarse-graining. The mathematical deepening on the Jensen gap and Bregman divergence can wait for a second pass. To move on to Module 5, it is enough to understand the direction of the inequality, its equality conditions, and two working consequences: ensemble guarantees and the log-sum inequality.
 
 ## 4.1. Average first, or evaluate the loss first?

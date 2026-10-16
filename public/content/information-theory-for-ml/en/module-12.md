@@ -1,7 +1,5 @@
 # Module 12. Information-theoretic generalization bounds: PAC-Bayes and mutual information
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** Sections 12.1–12.9 form the main route. We first examine why selecting the best model on a sample makes its score optimistic. We then develop two ways to pay for that adaptivity: a PAC-Bayes certificate through $D_{\mathrm{KL}}(Q\|P)$ and an expected generalization bound through $I(W;S)$. In Section 12.7 the two accounts meet in an exact identity. Section 12.10 is a mathematical deepening on data-dependent priors, individual-sample MI, and conditional MI; it can be saved for a second pass.
 
 ## 12.1. Why the best training error is almost inevitably too good

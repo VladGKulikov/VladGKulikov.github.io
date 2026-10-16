@@ -1,7 +1,5 @@
 # Module 9. Pretraining: Data, Scaling Laws, and Optimizers
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 9 lecture · edition 2026.10.25*
 
 > **What this module is about.** The previous modules assembled the machine: tokenization, positional mechanisms, attention, Transformer blocks, mixture-of-experts routing, and alternative architectural branches. A model with those components is still only an untrained dynamical system. Pretraining is the stage at which architecture, data, optimization, numerical precision, and cluster topology must work together for months without a cheap reset button.

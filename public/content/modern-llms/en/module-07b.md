@@ -1,7 +1,5 @@
 # Module 12. Diffusion Language Models
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · Module 12 lecture · 11 October 2026 edition*
 
 > **What this module changes.** We have built and trained an autoregressive model, studied its serving costs, and seen how speculative decoding can accelerate generation while preserving its target distribution. Here the architecture can remain recognizably Transformer-like while the **generation protocol** changes. An autoregressive (**AR**) model commits one token at a time. A diffusion large language model (**dLLM**) starts from a corrupted draft and repeatedly predicts many positions. The working sequence is called a **canvas**; recovering its tokens is **denoising**. We will derive the absorbing-mask objective, execute a transparent denoising trace, examine reveal and remasking policies, and build a deliberately generic 8B roofline scenario. Only after that will we read the actual DiffusionGemma passport, keeping a teaching bound separate from a released system measurement.
@@ -26,13 +24,13 @@
 10. [A generic roofline calculation](#10-a-generic-roofline-calculation)
 11. [Steps, batching, and weight precision](#11-steps-batching-and-weight-precision)
 12. [Level-1 code](#12-level-1-code)
-13. [What the notebook verifies (Stepik)](https://stepik.org/297276)
+13. [What the notebook verifies](/courses/modern-llms/module-07b/notebooks/)
 14. [Block diffusion, length, and caching](#14-block-diffusion-length-and-caching)
 15. [Reading the DiffusionGemma passport](#15-reading-the-diffusiongemma-passport)
 16. [The dLLM landscape on 11 October 2026](#16-the-dllm-landscape-on-11-october-2026)
 17. [Multimodal diffusion systems](#17-multimodal-diffusion-systems)
-18. [Self-check questions (Stepik)](https://stepik.org/297276)
-19. [Exercises (Stepik)](https://stepik.org/297276)
+18. [Self-check questions](/courses/modern-llms/module-07b/tests/)
+19. [Exercises](/courses/modern-llms/module-07b/exercises/)
 20. [Takeaways and sources](#20-takeaways-and-sources)
 
 ---

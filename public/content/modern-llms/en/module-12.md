@@ -1,7 +1,5 @@
 # Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · Module 14 lecture · revision 2026.10.28*
 
 > **What this module is about.** Module 13 taught a model to imitate demonstrations. That is enough when the target behaviour can be expressed as a strong reference answer. Many alignment goals are different: two responses may both be valid yet differ in usefulness, calibration, tone, or safety. Other tasks admit a direct signal from unit tests, a theorem checker, a simulator, or an interactive environment.

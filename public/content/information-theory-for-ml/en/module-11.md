@@ -1,7 +1,5 @@
 # Module 11. Comparing distributions: f-divergences, variational critics, and Wasserstein distance
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** The main route is Sections 11.1–11.9. We first build the family of f-divergences, then show how classifiers and variational critics recover density ratios from samples. The same mechanism leads to GANs, f-GAN, MINE, and InfoNCE. Section 11.8 changes the lens and adds geometry through IPMs, Wasserstein distance, and MMD. Section 11.10 is an optional mathematical deepening on singular measure components, joint convexity, and the exact conditions behind the dual representation.
 
 ## 11.1. From two sample sets to a distribution-comparison problem

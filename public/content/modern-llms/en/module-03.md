@@ -1,7 +1,5 @@
 # Module 4. Positional representations: from sinusoids to multiple axes
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · Module 4 lecture · 2026.10.6 edition · 10 October 2026*
 
 Module 3 explained how a query retrieves a weighted mixture of values. Here we hold the query and key content fixed and change their positions. What should happen when the tokens move together? What if the gap between them grows? Working through those questions gives us sinusoidal encoding, RoPE, context extension, and spatial or temporal coordinates for multimodal inputs.

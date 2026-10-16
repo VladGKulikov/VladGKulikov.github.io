@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build a publication-only copy from the three immutable course repositories.
 
-Refresh the public lecture layer after the October 2026 audits. The reviewed
-section exclusions below preserve the lecture-only publication boundary. Modern
+Refresh the public lecture layer after the October 2026 audits. Practice sections
+are published on their own pages and linked from the lecture layer. Modern
 module IDs follow previous_id so existing reader URLs retain their meaning.
 The source repositories are read only; only this site is regenerated.
 """
@@ -496,15 +496,60 @@ def sanitize_markdown(
         return label
     markdown = link_re.sub(resolve_link, markdown)
     markdown = re.sub(r"\n{3,}", "\n\n", markdown).strip()
-    note = (
-        f"> Открытая лекционная версия. Самопроверка, упражнения, решения и ноутбуки, "
-        f"упомянутые в маршрутах чтения, доступны в [полном курсе на Stepik]({COURSE_META[course_key]['stepik'][language]})."
-        if language == "ru" else
-        f"> Open lecture edition. Self-checks, exercises, solutions, and notebooks "
-        f"mentioned in reading routes are available in the [complete course on Stepik]({COURSE_META[course_key]['stepik'][language]})."
+    return localize_learning_navigation(markdown, course_key, language, module_key)
+
+
+def localize_learning_navigation(markdown: str, course_key: str, language: str, module_key: str) -> str:
+    """Point learning routes to the published practice pages on either host."""
+    # Also remove the pre-practice banner when updating an existing public copy.
+    markdown = re.sub(
+        r"(?m)^> (?:Открытая лекционная версия\.|Open lecture edition\.).*\n\n",
+        "", markdown,
     )
-    first_line, separator, rest = markdown.partition("\n")
-    return first_line + "\n\n" + note + "\n" + rest + "\n"
+    base = f"/{'ru/' if language == 'ru' else ''}courses/{course_key}/{module_key}/"
+
+    def learning_link(match: re.Match[str]) -> str:
+        label, href = match.groups()
+        if href != COURSE_META[course_key]['stepik'][language]:
+            return match.group(0)
+        label = re.sub(r"\s*\(Stepik\)$", "", label)
+        if re.search(r"notebook|ноутбук", label, re.I):
+            section = "notebooks"
+        elif re.search(r"exercise|solution|упражнен|решени", label, re.I):
+            section = "exercises"
+        elif re.search(r"self[- ]?check|question|test|самопровер|вопрос|тест", label, re.I):
+            section = "tests"
+        else:
+            return match.group(0)
+        return f"[{label}]({base}{section}/)"
+
+    markdown = re.sub(r"(?<!!)\[([^\]]+)\]\((https://stepik\.org/\d+)\)", learning_link, markdown)
+    if course_key == "rl-for-llm" and module_key == "module-01":
+        markdown = markdown.replace(
+            "| **A** | Stepik / CPU |",
+            "| **A** | Тесты на сайте или Stepik; код — локально на CPU |"
+            if language == "ru" else
+            "| **A** | Quizzes on this site or Stepik; code locally on CPU |",
+        )
+    if course_key == "rl-for-llm" and module_key == "module-05":
+        old, new = (
+            ("Оцениваемая практика содержит 20 заданий основного маршрута и 12 дополнительных платформенных заданий. Условие и подробное решение каждого задания расположены рядом; при переносе на Stepik блок решения следует показывать после попытки или выносить в следующий шаг. Основной набор охватывает:",
+             f"Практика содержит [20 заданий основного маршрута]({base}exercises/) и [12 дополнительных вопросов для проверки знаний]({base}tests/). Подробные решения упражнений раскрываются по кнопке. Основной набор охватывает:")
+            if language == "ru" else
+            ("The graded practice contains 20 core tasks and 12 additional platform tasks. Every prompt is followed by a worked solution; on Stepik, that solution should appear only after an attempt or as the next step. The core route covers:",
+             f"Practice contains [20 core tasks]({base}exercises/) and [12 additional quiz questions]({base}tests/). Worked exercise solutions expand on request. The core route covers:")
+        )
+        markdown = markdown.replace(old, new)
+    if course_key == "rl-for-llm" and module_key == "module-06":
+        old, new = (
+            ("Основной оцениваемый набор содержит 20 заданий: 8 концептуальных, 6 аналитических и 6 программных микрозадач. Ещё 12 дополнительных заданий предназначены для Stepik или другой платформы и разбирают пограничные случаи: семантику остановки, EOS в вероятности последовательности, порядок обработчиков логитов, носители оценивателей и маскирование результатов инструментов. Каждое условие сопровождается подробным решением, которое открывается после попытки.",
+             f"Основной набор содержит [20 упражнений]({base}exercises/): 8 концептуальных, 6 аналитических и 6 программных микрозадач. Ещё [12 вопросов для проверки знаний]({base}tests/) разбирают пограничные случаи: семантику остановки, EOS в вероятности последовательности, порядок обработчиков логитов, носители оценивателей и маскирование результатов инструментов. Подробные решения упражнений раскрываются по кнопке.")
+            if language == "ru" else
+            ("The graded core set contains 20 tasks: 8 conceptual questions, 6 analytical problems, and 6 programming microtasks. Twelve additional platform tasks cover stopping semantics, EOS accounting, processor order, estimator support, and masking of tool observations. Every prompt is paired with a worked solution revealed after an attempt.",
+             f"The core set contains [20 exercises]({base}exercises/): 8 conceptual questions, 6 analytical problems, and 6 programming microtasks. Another [12 quiz questions]({base}tests/) cover stopping semantics, EOS accounting, processor order, estimator support, and masking of tool observations. Worked exercise solutions expand on request.")
+        )
+        markdown = markdown.replace(old, new)
+    return markdown.rstrip() + "\n"
 
 
 def module_document(

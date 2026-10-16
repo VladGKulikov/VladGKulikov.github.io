@@ -88,7 +88,7 @@ const copy = {
     edition: "Редакция",
     boundaryLabel: "Где учиться",
     boundary:
-      "Наш сайт — основная площадка курсов. Те же материалы бесплатно доступны на Stepik: выбирайте, где вам удобнее учиться. Ноутбуки и Python-файлы на сайте можно читать и скачивать.",
+      "Этот сайт — основная площадка курсов. Те же материалы бесплатно доступны на Stepik: выбирайте, где вам удобнее учиться. Ноутбуки и Python-файлы на сайте можно читать и скачивать.",
     allMaterials: "Все материалы",
     noResults: "Ничего не найдено",
     modulesMenu: "Список модулей",
@@ -233,7 +233,7 @@ function StepikNotice({ language }: { language: Language }) {
   const previouslyDismissed = useSyncExternalStore(subscribeNotice, readNoticePreference, () => false);
   if (!config.stepikNotice || dismissed || previouslyDismissed) return null;
   return <aside className="stepik-notice">
-    <span>{language === "ru" ? "Если Stepik недоступен, лекции и тесты доступны на этом сайте." : "If Stepik is unavailable, lectures and quizzes are available on this site."}</span>
+    <span>{language === "ru" ? "Все материалы курса доступны на этом сайте: лекции, тесты, упражнения с решениями и файлы для практики. Если вам удобнее Stepik, курс доступен и там." : "All course materials are available on this site: lectures, quizzes, worked exercises and practice files. The course is also available on Stepik if you prefer."}</span>
     <button className="js-only" aria-label={language === "ru" ? "Скрыть уведомление" : "Dismiss notice"} onClick={() => {
       setDismissed(true);
       try { sessionStorage.setItem("stepik-notice-dismissed", "1"); } catch { /* Storage is optional. */ }
@@ -892,7 +892,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                       return <Tag className="markdown-h4" id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</Tag>;
                     },
                     a: ({ href, children, ...props }) => {
-                      const internalModule = findInternalModule(href);
+                      const internalModule = href?.startsWith("/") ? null : findInternalModule(href);
                       if (internalModule && activeCourse.modules.some((module) => module.module_key === internalModule)) {
                         return (
                           <a

@@ -1,7 +1,5 @@
 # Module 5. Modern Attention Mechanisms
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · October 2026 revision · sources checked on October 10, 2026*
 
 Module 3 built a Transformer; Module 4 supplied its sense of position. We now ask **how attention can use a long context within a limited memory and compute budget**. Three decisions matter: what to retain from past tokens, how to compute interactions with it, and which positions a query may use.

@@ -1,7 +1,5 @@
 # Module 10. Search, verification, and test-time compute
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
-
 > **Material version:** 2026.22  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  

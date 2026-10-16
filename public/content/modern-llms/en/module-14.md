@@ -1,7 +1,5 @@
 # Module 16. Multimodal LLMs: Vision, Audio, and Video
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 16 lecture · edition 2026.10.25*
 
 > **What this module is about.** Imagine a user who attaches a screenshot, explains it with a voice note, and asks the system to locate the same event in a video. The user sees one task. The model sees three physical signals with different geometry, time scales, and output requirements. Each signal creates four design obligations: build a representation, compress it into an affordable budget, preserve the structure that matters, and decide which component will produce the answer.

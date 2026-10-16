@@ -1,7 +1,5 @@
 # Module 2. Tokenization and Embeddings
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *Modern LLMs · Module 2 lecture · revision 2026.10.24 · 11 October 2026*
 
 Module 1 used a document assistant to make model selection concrete. Now consider one detail of that choice: how much of a document will fit into the model's context? A published context limit counts tokens, and different models can turn the same document into different numbers of tokens. Understanding that difference requires following the interface between text and a neural network.

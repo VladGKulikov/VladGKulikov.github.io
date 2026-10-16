@@ -32,8 +32,8 @@ Counts are per language; the library is available in both RU and EN.
 | RL for LLM | 151 platform-bank questions | 263 core tasks | 13 |
 | Information Theory for ML | 377 | 90 | No `.ipynb`; 9 Python solutions attached to their exercises |
 
-Stepik editions provide the corresponding platform learning experience; access
-conditions are listed separately for each course.
+This site is the main home for all three courses. The same materials are also
+available free on Stepik for readers who prefer that platform.
 
 The canonical authoring repositories are maintained separately. This public repository is a generated, publication-safe copy.
 

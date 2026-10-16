@@ -1,7 +1,5 @@
 # Module 9. Rate–distortion and the Information Bottleneck: managing information loss
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** Sections 9.1–9.8 form the main route. We begin with classical rate–distortion theory, then move to the Information Bottleneck, its variational form, VAEs, and practical compression and quantization. Section 9.9 is a mathematical extension on I–MMSE and Gaussian noising; it can be saved for a second pass. Section 9.10 contains the exercises.
 
 ## 9.1. Why a model may need to forget

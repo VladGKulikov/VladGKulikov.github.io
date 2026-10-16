@@ -1,7 +1,5 @@
 # Module 6. Source coding: from entropy to real bits
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/295409).
-
 > **How to read this module.** The main route is §§6.1–6.8: from probabilistic models and the Kraft inequality to arithmetic coding, the AEP, entropy rate, and language-model metrics. §6.9 is a mathematical deepening on universal sequential prediction. §§6.10–6.11 return to LLM evaluation and to a reproducible compression experiment.
 
 ## 6.1. Engineering setup: the probabilistic model and the entropy coder

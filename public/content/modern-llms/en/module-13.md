@@ -1,7 +1,5 @@
 # Module 15. Reasoning Models and Test-Time Compute
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 > **What this module is about.** The previous modules improved a model before deployment: pretraining built the base policy, supervised fine-tuning shaped its interface, and feedback-based learning changed which outputs it prefers. This module studies a different lever. Once the weights are fixed, a system can still spend more computation on a particular request—by extending one solution path, sampling several alternatives, checking them, or routing difficult prompts to a more expensive procedure.
 >
 > These mechanisms are often grouped under *test-time compute*, but they buy different things. A longer trajectory deepens a single search. Parallel candidates widen the search distribution. A verifier turns candidate generation into selection. An adaptive controller decides which kind of work is worth paying for on each prompt.

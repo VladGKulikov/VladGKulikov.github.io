@@ -1,7 +1,5 @@
 # Module 6. The LLM as a policy: tokens, log-probabilities, and KL
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
-
 > **Material version:** 2026.11  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
@@ -879,7 +877,7 @@ Module 7 fills in the next system block: where reward comes from, how preference
 
 ## Practice route
 
-The graded core set contains 20 tasks: 8 conceptual questions, 6 analytical problems, and 6 programming microtasks. Twelve additional platform tasks cover stopping semantics, EOS accounting, processor order, estimator support, and masking of tool observations. Every prompt is paired with a worked solution revealed after an attempt.
+The core set contains [20 exercises](/courses/rl-for-llm/module-06/exercises/): 8 conceptual questions, 6 analytical problems, and 6 programming microtasks. Another [12 quiz questions](/courses/rl-for-llm/module-06/tests/) cover stopping semantics, EOS accounting, processor order, estimator support, and masking of tool observations. Worked exercise solutions expand on request.
 
 ---
 

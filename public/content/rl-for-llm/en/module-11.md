@@ -1,7 +1,5 @@
 # Module 11. RL for LLM agents: tools, environments, and long trajectories
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
-
 > **Material version:** 2026.23  
 > **Factual snapshot:** 2026-08-06  
 > **Language:** EN  

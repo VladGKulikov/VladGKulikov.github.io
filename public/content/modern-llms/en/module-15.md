@@ -1,7 +1,5 @@
 # Module 17. Embeddings, Retrieval, and RAG
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/297276).
-
 *“Modern LLMs” course · Module 17 lecture · edition 2026.10.25*
 
 > **What this module is about.** A language model cannot keep every private document, recent policy update, source citation, and access rule inside its parameters. Retrieval-Augmented Generation, or **RAG**, gives the model an external evidence path. Yet RAG is not one search call followed by one prompt. A query moves through a sequence of compressions: documents become chunks, chunks become representations, an index keeps only a candidate set, a reranker keeps an even smaller set, and a context builder decides which evidence reaches the generator. Each compression saves time or memory, and each can discard the answer. We will use one query as the thread through the module and ask four questions at every stage: what information is retained, what is lost, how the stage is measured, and what the next stage can still repair.

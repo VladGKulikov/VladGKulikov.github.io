@@ -1,7 +1,5 @@
 # Module 1. Introduction: Reinforcement Learning for LLMs
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
-
 > **Content version:** 2026.18  
 > **Fact snapshot:** 2026-07-16  
 > **Language:** EN  
@@ -601,7 +599,7 @@ We will first expand the computing abbreviations.
 
 | Tier | Environment | Purpose | What counts as a result |
 |---|---|---|---|
-| **A** | Stepik / CPU | functions, mini-MDPs, estimators, unit tests | tests pass and numbers reproduce |
+| **A** | Quizzes on this site or Stepik; code locally on CPU | functions, mini-MDPs, estimators, unit tests | tests pass and numbers reproduce |
 | **B** | free Colab T4 | smoke or educational run on an open model | notebook runs top to bottom; metrics and configuration are saved |
 | **B+** | paid API from a major provider | an alternative agent or evaluation route without a large local model | provider, model identifier, date, decoding parameters, raw outputs, and cost are recorded |
 | **C** | paid GPU or multiple GPUs | optional full run or capstone | declared data, steps, checkpoints, and evaluation protocol are completed |

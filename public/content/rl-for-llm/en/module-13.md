@@ -1,7 +1,5 @@
 # Module 13. Evaluating RL systems for LLMs: statistics, reward hacking, and safety
 
-> Open lecture edition. Self-checks, exercises, solutions, and notebooks mentioned in reading routes are available in the [complete course on Stepik](https://stepik.org/296686).
-
 > **Material version:** 2026.25  
 > **Factual snapshot:** 2026-08-06  
 > **Language:** EN  
