@@ -1,0 +1,732 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-14",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Where is the connection between computer vision and information theory most operationally exact?",
+      "explanation": "**Correct answer: C.** A learned codec explicitly defines a source, quantized latent, probability model, code, and physical bitstream.",
+      "topic": "14.1. Why computer vision is a useful testbed for information theory",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "In the claim that every vision encoder maximizes MI"
+        },
+        {
+          "value": "B",
+          "text": "In treating an attention map as a number of transmitted bits"
+        },
+        {
+          "value": "C",
+          "text": "In a learned image codec whose probability model controls an entropy coder and produces a bitstream"
+        },
+        {
+          "value": "D",
+          "text": "In identifying FID with image entropy"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "14.1.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "What does\n\n\n$$\n\\mathbb E[-\\log_2p_\\psi(\\widehat Y)]\n$$\nmean when the entropy model and coder agree?",
+      "explanation": "**Correct answer: A.** Cross-entropy on actual symbols determines achievable average code length up to finite overhead.",
+      "topic": "14.2. Learned image compression: entropy models and actual bitstreams",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An estimate of expected code length for the quantized latent"
+        },
+        {
+          "value": "B",
+          "text": "Number of decoder parameters"
+        },
+        {
+          "value": "C",
+          "text": "Entropy of raw RGB pixels"
+        },
+        {
+          "value": "D",
+          "text": "A regularizer with no operational meaning"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "14.2.1"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Why is rounding often replaced by uniform noise during codec training?",
+      "explanation": "**Correct answer: A.** Additive uniform noise enables gradient-based optimization but does not replace bitstream measurement.",
+      "topic": "14.2. Learned image compression: entropy models and actual bitstreams",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To obtain a differentiable relaxation of quantization"
+        },
+        {
+          "value": "B",
+          "text": "To guarantee a smaller physical file"
+        },
+        {
+          "value": "C",
+          "text": "To make deployment-time encoding stochastic"
+        },
+        {
+          "value": "D",
+          "text": "To remove the need for an entropy model"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "14.2.2"
+    },
+    {
+      "id": "item-004",
+      "prompt": "Which statement about a hyperprior is correct?",
+      "explanation": "**Correct answer: B.** The gain is relative to a limited factorization, not to the ideal joint code.",
+      "topic": "14.2. Learned image compression: entropy models and actual bitstreams",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H(Z)+H(Y\\mid Z)<H(Y)$ always holds"
+        },
+        {
+          "value": "B",
+          "text": "A hyperprior can reduce model mismatch of a restricted entropy model, while the cost of $Z$ remains part of the rate"
+        },
+        {
+          "value": "C",
+          "text": "A hyperprior reduces true source entropy for free"
+        },
+        {
+          "value": "D",
+          "text": "Sending $Z$ violates the chain rule but is useful in practice"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "14.2.3"
+    },
+    {
+      "id": "item-005",
+      "prompt": "What is the main tradeoff of an autoregressive entropy model in learned compression?",
+      "explanation": "**Correct answer: D.** Previously decoded symbols improve prediction but introduce sequential dependence.",
+      "topic": "14.2. Learned image compression: entropy models and actual bitstreams",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Fewer parameters versus larger MSE"
+        },
+        {
+          "value": "B",
+          "text": "Larger batch versus smaller dataset"
+        },
+        {
+          "value": "C",
+          "text": "Lower accuracy versus higher calibration"
+        },
+        {
+          "value": "D",
+          "text": "Better conditional prediction versus sequential decoding latency"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "14.2.4"
+    },
+    {
+      "id": "item-006",
+      "prompt": "What does LPIPS measure?",
+      "explanation": "**Correct answer: D.** LPIPS compares features of a particular image pair; it is not a distributional discrepancy.",
+      "topic": "14.3. Distortion and perceptual quality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An f-divergence between image distributions"
+        },
+        {
+          "value": "B",
+          "text": "Exact human utility"
+        },
+        {
+          "value": "C",
+          "text": "The number of latent-code bits"
+        },
+        {
+          "value": "D",
+          "text": "A per-image distance in a learned feature space"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "14.3.1"
+    },
+    {
+      "id": "item-007",
+      "prompt": "Which description of FID is most accurate?",
+      "explanation": "**Correct answer: A.** FID is a distribution-level feature-space metric, not a per-image fidelity measure.",
+      "topic": "14.3. Distortion and perceptual quality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Squared $W_2$ distance between Gaussian approximations to distributions of Inception features"
+        },
+        {
+          "value": "B",
+          "text": "MSE between each generated image and its nearest real image"
+        },
+        {
+          "value": "C",
+          "text": "Mutual information between generator and dataset"
+        },
+        {
+          "value": "D",
+          "text": "An f-divergence between raw pixel distributions"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "14.3.2"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What does the rate–distortion–perception framework state?",
+      "explanation": "**Correct answer: B.** The exact frontier depends on the source, distortion, perception measure, and operational assumptions.",
+      "topic": "14.3. Distortion and perceptual quality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Perception always improves together with MSE"
+        },
+        {
+          "value": "B",
+          "text": "A realism constraint generally shrinks the achievable rate–distortion region"
+        },
+        {
+          "value": "C",
+          "text": "A universal formula $D(R,P)=D(R)+P$ holds"
+        },
+        {
+          "value": "D",
+          "text": "GAN loss guarantees an optimal codec"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "14.3.3"
+    },
+    {
+      "id": "item-009",
+      "prompt": "What is the population optimum of an MSE predictor of clean $X_0$ from $X_t$?",
+      "explanation": "**Correct answer: A.** The conditional mean minimizes expected squared error.",
+      "topic": "14.4. Diffusion models: Gaussian noising, denoising, and I–MMSE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The conditional mean $\\mathbb E[X_0\\mid X_t]$"
+        },
+        {
+          "value": "B",
+          "text": "The MAP estimate for every distribution"
+        },
+        {
+          "value": "C",
+          "text": "The score without any transformation"
+        },
+        {
+          "value": "D",
+          "text": "An independent prior sample"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "14.4.1"
+    },
+    {
+      "id": "item-010",
+      "prompt": "For\n\n\n$$\nX_t=\\alpha_tX_0+\\sigma_t\\varepsilon,\n$$\nwhich identity is correct?",
+      "explanation": "**Correct answer: C.** The Gaussian score identity connects the noise predictor, clean posterior mean, and score.",
+      "topic": "14.4. Diffusion models: Gaussian noising, denoising, and I–MMSE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The score always equals $X_t/\\sigma_t$"
+        },
+        {
+          "value": "B",
+          "text": "The score is unrelated to denoising"
+        },
+        {
+          "value": "C",
+          "text": "$\\nabla\\log p_t(x_t)=-\\mathbb E[\\varepsilon\\mid x_t]/\\sigma_t$"
+        },
+        {
+          "value": "D",
+          "text": "$\\mathbb E[\\varepsilon\\mid x_t]=0$ for every data distribution"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "14.4.2"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What coefficient appears in I–MMSE for information in nats?",
+      "explanation": "**Correct answer: D.** In bits, an additional factor 1/ln 2 appears.",
+      "topic": "14.4. Diffusion models: Gaussian noising, denoising, and I–MMSE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The coefficient depends only on dimension"
+        },
+        {
+          "value": "B",
+          "text": "$\\frac{dI}{d\\gamma}=2\\operatorname{mmse}(\\gamma)$"
+        },
+        {
+          "value": "C",
+          "text": "$I=\\operatorname{mmse}$"
+        },
+        {
+          "value": "D",
+          "text": "$\\frac{dI}{d\\gamma}=\\frac12\\operatorname{mmse}(\\gamma)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "14.4.3"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What does I–MMSE not determine by itself?",
+      "explanation": "**Correct answer: D.** Those engineering choices require additional objectives and analysis.",
+      "topic": "14.4. Diffusion models: Gaussian noising, denoising, and I–MMSE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The relation between MI and optimal estimation error"
+        },
+        {
+          "value": "B",
+          "text": "MMSE for a Gaussian input"
+        },
+        {
+          "value": "C",
+          "text": "The derivative of MI with respect to SNR"
+        },
+        {
+          "value": "D",
+          "text": "The optimal diffusion noise schedule and sampling solver"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "14.4.4"
+    },
+    {
+      "id": "item-013",
+      "prompt": "What is CLIP's core training task?",
+      "explanation": "**Correct answer: B.** CLIP learns to distinguish matched images and captions from candidates.",
+      "topic": "14.5. CLIP and contrastive image–text alignment",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Pixel reconstruction"
+        },
+        {
+          "value": "B",
+          "text": "Contrastive classification of matching image–text pairs within a batch"
+        },
+        {
+          "value": "C",
+          "text": "Direct minimization of $I(X;Z)$"
+        },
+        {
+          "value": "D",
+          "text": "Segmentation-mask prediction"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "14.5.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "What does $\\log K$ bound in InfoNCE?",
+      "explanation": "**Correct answer: B.** True MI can exceed log K; the ceiling applies to the bound.",
+      "topic": "14.5. CLIP and contrastive image–text alignment",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "True mutual information of representations"
+        },
+        {
+          "value": "B",
+          "text": "The ceiling of the specific lower bound $\\log K-\\mathcal L$"
+        },
+        {
+          "value": "C",
+          "text": "Maximum downstream accuracy"
+        },
+        {
+          "value": "D",
+          "text": "Embedding dimension"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "14.5.2"
+    },
+    {
+      "id": "item-015",
+      "prompt": "Why is CLIP not automatically a strict Information Bottleneck objective?",
+      "explanation": "**Correct answer: C.** Contrastive alignment is not the full IB tradeoff.",
+      "topic": "14.5. CLIP and contrastive image–text alignment",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "IB applies only to discrete data"
+        },
+        {
+          "value": "B",
+          "text": "CLIP does not use images"
+        },
+        {
+          "value": "C",
+          "text": "Its objective has no explicit penalty on $I(X_I;Z_I)$"
+        },
+        {
+          "value": "D",
+          "text": "Softmax is incompatible with MI"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "14.5.3"
+    },
+    {
+      "id": "item-016",
+      "prompt": "What principally distinguishes SigLIP loss from CLIP softmax loss?",
+      "explanation": "**Correct answer: B.** The loss is decoupled from a single global batch-wise normalization.",
+      "topic": "14.5. CLIP and contrastive image–text alignment",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "SigLIP uses no negatives at all"
+        },
+        {
+          "value": "B",
+          "text": "SigLIP uses pairwise sigmoid objectives without one global softmax normalization"
+        },
+        {
+          "value": "C",
+          "text": "SigLIP is a reconstruction loss"
+        },
+        {
+          "value": "D",
+          "text": "SigLIP always requires a million-example batch"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "14.5.4"
+    },
+    {
+      "id": "item-017",
+      "prompt": "What role do augmentations play in visual SSL?",
+      "explanation": "**Correct answer: D.** If an augmentation removes task-relevant information, DPI prevents the encoder from recovering it.",
+      "topic": "14.6. Self-supervised visual representations: invariances and collapse prevention",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They only enlarge the dataset"
+        },
+        {
+          "value": "B",
+          "text": "They always increase MI with the task label"
+        },
+        {
+          "value": "C",
+          "text": "They guarantee preservation of every downstream label"
+        },
+        {
+          "value": "D",
+          "text": "They define assumed representation invariances"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "14.6.1"
+    },
+    {
+      "id": "item-018",
+      "prompt": "How should BYOL and DINO be classified?",
+      "explanation": "**Correct answer: B.** They can be analyzed informationally, but their objectives are not standard InfoNCE estimates.",
+      "topic": "14.6. Self-supervised visual representations: invariances and collapse prevention",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Exact MI estimators"
+        },
+        {
+          "value": "B",
+          "text": "Self-distillation or cross-view prediction methods without the standard InfoNCE bound"
+        },
+        {
+          "value": "C",
+          "text": "Masked-pixel models"
+        },
+        {
+          "value": "D",
+          "text": "Shannon source codes"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "14.6.2"
+    },
+    {
+      "id": "item-019",
+      "prompt": "What does the VICReg variance term actually guarantee?",
+      "explanation": "**Correct answer: A.** Positive variance is not task sufficiency, and decorrelation is not general independence.",
+      "topic": "14.6. Self-supervised visual representations: invariances and collapse prevention",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It prevents a constant representation along the corresponding batch dimensions"
+        },
+        {
+          "value": "B",
+          "text": "It makes coordinates independent"
+        },
+        {
+          "value": "C",
+          "text": "It maximizes semantic MI"
+        },
+        {
+          "value": "D",
+          "text": "It guarantees linear separability of every target"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "14.6.3"
+    },
+    {
+      "id": "item-020",
+      "prompt": "What is the MAE pretext task?",
+      "explanation": "**Correct answer: C.** MAE is masked modeling rather than a standard contrastive objective.",
+      "topic": "14.6. Self-supervised visual representations: invariances and collapse prevention",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Image–text matching"
+        },
+        {
+          "value": "B",
+          "text": "Pairwise sigmoid classification"
+        },
+        {
+          "value": "C",
+          "text": "Reconstructing masked image patches from visible context"
+        },
+        {
+          "value": "D",
+          "text": "Adversarial generation"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "14.6.4"
+    },
+    {
+      "id": "item-021",
+      "prompt": "Why does nominal INT4 not necessarily mean exactly four bits per original weight in a file?",
+      "explanation": "**Correct answer: C.** Actual rate is determined by the complete serialized representation.",
+      "topic": "14.7. Compressing a CV model: quantization, pruning, and distillation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every weight becomes float32 after packing"
+        },
+        {
+          "value": "B",
+          "text": "INT4 is prohibited for vision models"
+        },
+        {
+          "value": "C",
+          "text": "Scales, zero points, grouping, and alignment must also be stored"
+        },
+        {
+          "value": "D",
+          "text": "Entropy is always eight bits"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "14.7.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "Why is weight MSE an incomplete distortion measure for model quantization?",
+      "explanation": "**Correct answer: A.** Task-aware distortion must account for network sensitivity.",
+      "topic": "14.7. Compressing a CV model: quantization, pruning, and distillation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Equal weight errors can affect logits and downstream quality differently"
+        },
+        {
+          "value": "B",
+          "text": "It is always infinite"
+        },
+        {
+          "value": "C",
+          "text": "MSE cannot be computed"
+        },
+        {
+          "value": "D",
+          "text": "MSE applies only to images"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "14.7.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "Why can 50% unstructured sparsity fail to compress a model?",
+      "explanation": "**Correct answer: A.** Physical size and latency depend on format and kernels, not only the zero fraction.",
+      "topic": "14.7. Compressing a CV model: quantization, pruning, and distillation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Index and irregular-storage costs can exceed the savings in values"
+        },
+        {
+          "value": "B",
+          "text": "Every zero requires 32 extra bits"
+        },
+        {
+          "value": "C",
+          "text": "Pruning doubles parameter count"
+        },
+        {
+          "value": "D",
+          "text": "Sparse models cannot be serialized"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "14.7.3"
+    },
+    {
+      "id": "item-024",
+      "prompt": "Which statement about a retrieval pipeline is false?",
+      "explanation": "**Correct answer: C.** Cosine and Euclidean vector distances are not f-divergences between probability distributions.",
+      "topic": "14.8. One CV pipeline, four different information budgets",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Product quantization can be evaluated by bytes per item and recall@K"
+        },
+        {
+          "value": "B",
+          "text": "Model quantization should be evaluated end to end"
+        },
+        {
+          "value": "C",
+          "text": "Cosine distance between embeddings is an f-divergence between distributions"
+        },
+        {
+          "value": "D",
+          "text": "A learned codec has an operational bitstream"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "14.8.1"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Why does introducing a side variable $Z$ not by itself reduce the fundamental entropy of the coded $Y$?",
+      "explanation": "**Correct answer: D.** Side information simplifies modeling, but its own cost must be paid.",
+      "topic": "14.9. Mathematical deepening: exact hyperprior accounting",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Arithmetic coding ignores conditional probabilities"
+        },
+        {
+          "value": "B",
+          "text": "The decoder never receives the hyperprior"
+        },
+        {
+          "value": "C",
+          "text": "Joint distributions are always uniform"
+        },
+        {
+          "value": "D",
+          "text": "$H(Y,Z)=H(Y)+H(Z\\mid Y)\\ge H(Y)$; the hyperprior helps a restricted model class rather than reducing fundamental entropy"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "14.9.1"
+    }
+  ]
+}

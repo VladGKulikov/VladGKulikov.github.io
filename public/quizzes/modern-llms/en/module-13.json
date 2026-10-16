@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-13",
+  "language": "en",
+  "questions": [
+    {
+      "id": "15.1.1",
+      "prompt": "How does sequential depth differ from parallel breadth in test-time compute?",
+      "explanation": "**Correct answer: B.** Sequential compute continues one search path. Parallel compute widens the set of independent or partly independent solutions and therefore needs a selection rule.",
+      "topic": "15.1. A second scaling axis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Depth increases model size while breadth extends the context window"
+        },
+        {
+          "value": "B",
+          "text": "Depth develops one trajectory; breadth creates several candidates"
+        },
+        {
+          "value": "C",
+          "text": "Depth applies only to mathematics and breadth only to code"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "15.5.1",
+      "prompt": "What did DeepSeek-R1-Zero primarily demonstrate?",
+      "explanation": "**Correct answer: C.** R1-Zero isolated the RL mechanism. Longer paths and self-checking emerged without a cold SFT start, while readability and format stability remained weaker. The starting checkpoint was the pretrained DeepSeek-V3-Base.",
+      "topic": "15.5. What DeepSeek-R1 teaches us about training reasoning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Long-form reasoning emerges only after SFT on human-written reasoning chains"
+        },
+        {
+          "value": "B",
+          "text": "Distillation always produces a stronger model than reinforcement learning"
+        },
+        {
+          "value": "C",
+          "text": "RL on verifiable rewards can produce reasoning strategies without prior chain-format SFT"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "15.6.1",
+      "prompt": "For independent attempts with p = 0.4 and six equiprobable distractors, what is voting accuracy at N = 3 when a tie counts as failure?",
+      "explanation": "**Correct answer: A.** A top-mode tie occurs with probability 0.48. Tie handling is therefore part of the algorithm; random top-mode selection would raise success to 0.472.",
+      "topic": "15.6. Parallel scaling, worked example A: voting can get worse first",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.352 — lower than one attempt"
+        },
+        {
+          "value": "B",
+          "text": "0.400 — exactly equal to one attempt"
+        },
+        {
+          "value": "C",
+          "text": "0.596 — higher than with five attempts"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.6.2",
+      "prompt": "What must a self-consistency protocol specify?",
+      "explanation": "**Correct answer: B.** Textually different answers can be mathematically equivalent, and tie policy materially changes accuracy. Without both rules the result is not reproducible.",
+      "topic": "15.6. Parallel scaling, worked example A: voting can get worse first",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only the temperature and sampling settings used for generation"
+        },
+        {
+          "value": "B",
+          "text": "Answer normalization and the tie-breaking rule"
+        },
+        {
+          "value": "C",
+          "text": "Only the order in which candidates run on one accelerator"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "15.7.1",
+      "prompt": "What does 1 − (1 − p)^N represent?",
+      "explanation": "**Correct answer: C.** For independent, identically distributed attempts this is oracle coverage, an upper bound on selection rather than a guarantee of identifying a correct candidate.",
+      "topic": "15.7. Worked example B: coverage is not selection accuracy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The probability of a correct result after majority voting"
+        },
+        {
+          "value": "B",
+          "text": "The probability that the verifier scores all N candidates without error"
+        },
+        {
+          "value": "C",
+          "text": "The probability that at least one correct answer appears among N candidates"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "15.7.2",
+      "prompt": "Why can a weak verifier plateau or even degrade as the candidate count grows?",
+      "explanation": "**Correct answer: A.** Search optimizes the verifier signal. A wider pool expands both the space of correct solutions and the space of false positives or exploitable loopholes. Uniform accepted-candidate selection with constant TPR > FPR grows toward a limit; degradation needs another mechanism, such as extreme noisy-score selection.",
+      "topic": "15.7. Worked example B: coverage is not selection accuracy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "With larger N, a persuasive wrong answer has more chances to receive a high verifier score"
+        },
+        {
+          "value": "B",
+          "text": "As N grows, the probability of generating a correct candidate must decrease"
+        },
+        {
+          "value": "C",
+          "text": "After N = 8, the verifier stops considering the earliest candidates"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.7.3",
+      "prompt": "With p=0.4, TPR=0.9 and FPR=0.05, what is the large-N limit for uniform selection among accepted candidates?",
+      "explanation": "**Correct answer: A.** The limit is p·TPR / [p·TPR + (1−p)·FPR], correctness conditional on acceptance.",
+      "topic": "15.7. Worked example B: coverage is not selection accuracy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "12/13 ≈ 0.923"
+        },
+        {
+          "value": "B",
+          "text": "0.9, always equal to TPR"
+        },
+        {
+          "value": "C",
+          "text": "1, regardless of the verifier"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.8.1",
+      "prompt": "What does budget forcing do in the s1 work?",
+      "explanation": "**Correct answer: B.** The procedure intervenes in decoding by appending `Wait` or forcing the final-answer transition. No additional weight update occurs at request time.",
+      "topic": "15.8. Sequential scaling and budget forcing",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It updates model weights while processing the user request"
+        },
+        {
+          "value": "B",
+          "text": "It controls when generation ends and therefore the length of one trajectory"
+        },
+        {
+          "value": "C",
+          "text": "It launches several independent models and averages their answers"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "15.9.1",
+      "prompt": "What does overthinking mean for reasoning models?",
+      "explanation": "**Correct answer: C.** Quality can be non-monotonic in trace length: the model may revise away from a correct result, repeat itself, or amplify an early error.",
+      "topic": "15.9. Failure modes of longer reasoning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The KV cache completely fills all available accelerator memory"
+        },
+        {
+          "value": "B",
+          "text": "The model always exhausts its token limit before it can produce an answer"
+        },
+        {
+          "value": "C",
+          "text": "Continued reasoning damages an answer that is already or potentially correct"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "15.10.1",
+      "prompt": "How should the module’s 1K, 4K, 16K, and 64K token ladder be interpreted?",
+      "explanation": "**Correct answer: A.** The ladder fixes course assumptions: an 8.03B model at 209.4 tokens/s. Provider labels and budgets are not standardized.",
+      "topic": "15.10. Worked example C: an illustrative budget ladder",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "As a transparent cost scenario, not official tiers of a particular API"
+        },
+        {
+          "value": "B",
+          "text": "As an exact mapping to low, medium, high, and max across providers"
+        },
+        {
+          "value": "C",
+          "text": "As a speed measurement of one published production system"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.11.1",
+      "prompt": "For 512 tokens, the teaching model gives a 0.0625 GiB KV footprint. What does (80 − 14.96) / 0.0625 ≈ 1040 represent?",
+      "explanation": "**Correct answer: B.** About 14.96 GiB is first reserved for the bf16 weights of the 8.03B model; the remainder of an 80 GiB device is divided by one 512-token KV footprint. This is only an upper bound because workspaces, fragmentation, and scheduling reduce achievable concurrency. This scenario assumes a zero input prefix and no runtime reserve.",
+      "topic": "15.11. Worked example D: the KV cost of a thought",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Throughput of about 80 generated tokens per second"
+        },
+        {
+          "value": "B",
+          "text": "A KV-only upper bound of about 1040 concurrent sequences"
+        },
+        {
+          "value": "C",
+          "text": "A minimum context length of about 512 thousand tokens"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "15.11.2",
+      "prompt": "KV uses 128 KiB per token. How much is needed for a 4096-token prompt and 4000-token continuation with full caching?",
+      "explanation": "**Correct answer: A.** 128·1024·(4096+4000) / 2³⁰ = 0.98828125. The second option counts only the continuation.",
+      "topic": "15.11. Worked example D: the KV cost of a thought",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.98828125 GiB"
+        },
+        {
+          "value": "B",
+          "text": "0.48828125 GiB"
+        },
+        {
+          "value": "C",
+          "text": "128 GiB"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.12.1",
+      "prompt": "In the teaching mixture, 70% of requests receive a 500-token budget, 20% receive 4K, and 10% receive 32K. What is the average budget?",
+      "explanation": "**Correct answer: C.** The weighted mean is 0.70·500 + 0.20·4K + 0.10·32K = 4.35K tokens. Relative to a fixed 32K budget, this teaching scenario reduces the average generated-token budget by about 7.36×. Interpreting this as consumption rather than assigned caps additionally assumes full use of every budget.",
+      "topic": "15.12. Worked example E: why adaptive allocation matters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "8.00K tokens per request"
+        },
+        {
+          "value": "B",
+          "text": "32.00K tokens per request"
+        },
+        {
+          "value": "C",
+          "text": "4.35K tokens per request"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "15.12.2",
+      "prompt": "Why is a fixed maximum budget not a universally safe choice?",
+      "explanation": "**Correct answer: A.** Actual consumption matters, not just the cap. Continuing generation costs time and KV memory and may lead to overthinking. A model with a high cap can still stop early; compare quality with measured costs.",
+      "topic": "15.12. Worked example E: why adaptive allocation matters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When the extra budget is used, it costs time and memory and may harm answers"
+        },
+        {
+          "value": "B",
+          "text": "It automatically disables verifiers, tools, and repeated sampling"
+        },
+        {
+          "value": "C",
+          "text": "It inevitably lowers the probability that at least one correct candidate appears"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.12.3",
+      "prompt": "A simulation precomputes all sixteen candidates, then models stopping at the fourth. What actually decreased?",
+      "explanation": "**Correct answer: A.** Avoiding generation requires stopping before the next call. The program-search lab implements that control flow.",
+      "topic": "15.12. Worked example E: why adaptive allocation matters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Candidates inspected by the modeled policy"
+        },
+        {
+          "value": "B",
+          "text": "Generator calls already executed"
+        },
+        {
+          "value": "C",
+          "text": "Memory of the existing array automatically"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.15.1",
+      "prompt": "How does a process reward model differ from an outcome reward model?",
+      "explanation": "**Correct answer: A.** Step-level feedback can localize errors and prune paths. Human annotation can be expensive, but process labels can also be constructed automatically. Either source requires checks of label quality and transfer across tasks.",
+      "topic": "15.15. Verifier families",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It scores intermediate steps rather than only the final outcome"
+        },
+        {
+          "value": "B",
+          "text": "It must use a formal proof checker"
+        },
+        {
+          "value": "C",
+          "text": "It is used only during training and never for selection"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "15.16.1",
+      "prompt": "What does reasoning-trace distillation primarily transfer?",
+      "explanation": "**Correct answer: B.** Training on traces can teach new procedures and knowledge because student weights change. It does not guarantee the teacher’s full capability; generalization needs separate evaluation.",
+      "topic": "15.16. Distilling reasoning traces",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The teacher’s hidden weights, internal states, and full computational capacity"
+        },
+        {
+          "value": "B",
+          "text": "Observable formats, operations, and procedures represented in training traces"
+        },
+        {
+          "value": "C",
+          "text": "The teacher API’s official budget controls and private parameters"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "15.17.1",
+      "prompt": "What should a reasoning-model passport distinguish?",
+      "explanation": "**Correct answer: C.** One effort label does not describe the compute contract. We need to know what scales, what the user sees and pays for, and how state survives across calls.",
+      "topic": "15.17. Reading a model's reasoning passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An average score on one public benchmark under one fixed configuration"
+        },
+        {
+          "value": "B",
+          "text": "The maximum answer length, context size, and model name"
+        },
+        {
+          "value": "C",
+          "text": "Trajectory depth, search breadth, visibility, billing, and tool-continuity protocol"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "15.14.1",
+      "prompt": "Why does score 1 establish correctness in the polynomial lab?",
+      "explanation": "**Correct answer: A.** One value is fixed for the generator and two more are checked. The guarantee is specific to this grammar.",
+      "topic": "15.14. Level 2: the module notebook",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Three matching values identify a polynomial of degree at most two"
+        },
+        {
+          "value": "B",
+          "text": "Two tests suffice for arbitrary code"
+        },
+        {
+          "value": "C",
+          "text": "The generator saw hidden-test answers"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    }
+  ]
+}

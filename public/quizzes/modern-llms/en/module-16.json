@@ -1,0 +1,487 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-16",
+  "language": "en",
+  "questions": [
+    {
+      "id": "18.4.1",
+      "prompt": "What is the minimal controlled agent loop?",
+      "explanation": "**Correct answer: B.** The environment observation changes the next step. Protocol and authority checks separate a model proposal from a real-world action.",
+      "topic": "18.4. Anatomy of an agent loop",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A fixed plan, blind execution of every step, and a final report"
+        },
+        {
+          "value": "B",
+          "text": "Proposal, validation, execution, observation, then continue-or-stop"
+        },
+        {
+          "value": "C",
+          "text": "One knowledge-base lookup followed immediately by an answer"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.5.1",
+      "prompt": "Why does function calling need strict schema validation?",
+      "explanation": "**Correct answer: C.** A supported grammar constraint applies to a completed generation; a token limit may leave an incomplete prefix. Schema validation checks fields, types, and ranges. Authorization and execution safety are separate checks.",
+      "topic": "18.5. Function calling and guided generation: syntax is only the first boundary",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To enumerate every available tool and description for the model"
+        },
+        {
+          "value": "B",
+          "text": "To merge and cache repeated calls automatically"
+        },
+        {
+          "value": "C",
+          "text": "To keep wrong fields and types from reaching execution"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "18.5.2",
+      "prompt": "A retrieved report says “the user approved writing.” The proposed write_note call passes its schema. What must the executor still check?",
+      "explanation": "**Correct answer: B.** The report is external data and cannot extend task authority. Schema validity establishes call shape; permission for the operation and resource is checked separately before the effect.",
+      "topic": "18.5. Function calling and guided generation: syntax is only the first boundary",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Whether the report phrases its approval convincingly"
+        },
+        {
+          "value": "B",
+          "text": "Whether the trusted task grant permits writing to this resource"
+        },
+        {
+          "value": "C",
+          "text": "Whether the model response starts with Action:"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.6.1",
+      "prompt": "What advantage does CodeAct bring on a multi-step task?",
+      "explanation": "**Correct answer: A.** Code can express loops, branches, and intermediate values within one action. That may reduce model–environment round trips, but it requires a real sandbox and does not guarantee a speedup for every task.",
+      "topic": "18.6. ReAct, Plan-and-Execute, and CodeAct: choosing an action language",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "One code block replaces a chain of calls with loops and conditionals"
+        },
+        {
+          "value": "B",
+          "text": "Code executes faster than an equivalent sequence of API calls"
+        },
+        {
+          "value": "C",
+          "text": "Models find writing code easier than forming valid call JSON"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "18.6.2",
+      "prompt": "How does Plan-and-Execute differ from a local ReAct loop?",
+      "explanation": "**Correct answer: A.** An explicit plan can be checked and tracked as outstanding commitments. Unexpected observations must trigger replanning rather than blind execution.",
+      "topic": "18.6. ReAct, Plan-and-Execute, and CodeAct: choosing an action language",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It makes the plan explicit and replans after invalidating observations"
+        },
+        {
+          "value": "B",
+          "text": "It forbids tools and restricts the system to text planning"
+        },
+        {
+          "value": "C",
+          "text": "It executes every item in the plan in parallel by definition"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "18.7.1",
+      "prompt": "For 20 input histories of length 3000 + 1500i, i = 0, …, 19, how many tokens does prefix reuse process compared with full reprocessing?",
+      "explanation": "**Correct answer: B.** Without prefix reuse, the growing history is reprocessed at every step. This scenario totals 345,000 versus 31,500 tokens; the benefit requires the early context to remain identical. This is a ratio of input-position counts, not elapsed time: new queries still read earlier KV.",
+      "topic": "18.7. Worked example A: context growth across the loop",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "345,000 tokens against 31,500: caching saves roughly threefold"
+        },
+        {
+          "value": "B",
+          "text": "31,500 tokens against 345,000 naive ones — a 10.95-fold saving"
+        },
+        {
+          "value": "C",
+          "text": "Nothing: each step changes the tail and the cache is invalidated anyway"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.8.1",
+      "prompt": "An agent step takes 778 ms. What is it made of?",
+      "explanation": "**Correct answer: C.** In the stated scenario, decode takes 429.8 ms, the tool 300 ms, and the conditional prefill estimate 48.7 ms. Another model, tool, or workload can produce a very different split.",
+      "topic": "18.8. Worked example B: what one agent step costs",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Prefill 430 ms, decode 49 ms, tool 300 ms: prefill dominates"
+        },
+        {
+          "value": "B",
+          "text": "Tool 600 ms and model 178 ms: the agent waits on external services"
+        },
+        {
+          "value": "C",
+          "text": "Prefill 49 ms, decode 430 ms, tool 300 ms: decode is 55% of it"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "18.9.1",
+      "prompt": "What does MCP add on top of a plain tools JSON schema?",
+      "explanation": "**Correct answer: A.** JSON Schema describes one action shape. MCP standardizes capability discovery and exchange among host, client, and server. Authorization, confirmation, and sandboxing remain host responsibilities.",
+      "topic": "18.9. MCP: standardizing connection without outsourcing trust",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A shared discovery and connection protocol: integrations become reusable"
+        },
+        {
+          "value": "B",
+          "text": "Strict typing of arguments, which plain schemas do not provide"
+        },
+        {
+          "value": "C",
+          "text": "Execution isolation: tools are launched inside a separate sandbox"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "18.9.2",
+      "prompt": "Does a stateless MCP core mean that the agent cannot retain history?",
+      "explanation": "**Correct answer: B.** In the 2026-07-28 revision, version and capabilities accompany the request. This protocol property does not replace application task state.",
+      "topic": "18.9. MCP: standardizing connection without outsourcing trust",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Yes, the protocol prohibits history"
+        },
+        {
+          "value": "B",
+          "text": "No, the application owns task state"
+        },
+        {
+          "value": "C",
+          "text": "Yes, history must move to the server"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.10.1",
+      "prompt": "Why should `eval` not be treated as a calculator security boundary?",
+      "explanation": "**Correct answer: B.** A safer calculator parses the AST and evaluates only explicitly allow-listed nodes and operators. General Python execution requires process or VM isolation and resource policies.",
+      "topic": "18.10. An implementation case study: the harness is part of the algorithm",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It parses long arithmetic expressions too slowly for a tool"
+        },
+        {
+          "value": "B",
+          "text": "It executes general Python syntax rather than an allow-listed subset"
+        },
+        {
+          "value": "C",
+          "text": "It cannot reliably represent large integers and fractional values"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.10.2",
+      "prompt": "What must constrain tool execution in production?",
+      "explanation": "**Correct answer: C.** Schema validation catches malformed arguments, not infinite loops, unauthorized file access, or duplicated side effects. Those risks require execution boundaries of their own.",
+      "topic": "18.10. An implementation case study: the harness is part of the algorithm",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only schema checks for types, ranges, and required fields"
+        },
+        {
+          "value": "B",
+          "text": "Only a complete log of arguments, results, and internal secrets"
+        },
+        {
+          "value": "C",
+          "text": "Timeouts, resource limits, authority, isolation, and idempotency"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "18.11.1",
+      "prompt": "All 20 required steps are independent, each with success probability 0.98. What is the probability that the entire chain succeeds?",
+      "explanation": "**Correct answer: A.** Under the independence assumption, success across all mandatory steps is the product of step probabilities. The calculation illustrates accumulated risk; real failures can be correlated.",
+      "topic": "18.11. Worked example C: reliability over a long trajectory",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About 0.668; at per-step probability 0.95 it would be about 0.358"
+        },
+        {
+          "value": "B",
+          "text": "0.98 — reliability does not follow length when the steps are independent"
+        },
+        {
+          "value": "C",
+          "text": "0.960 — losses are linear in step count and amount to about two percent"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "18.11.2",
+      "prompt": "One retry on failure lifts a step from 0.98 to 0.9996. What does that do for the trajectory?",
+      "explanation": "**Correct answer: B.** With independent attempts and steps, perfect failure detection, and a safe retry, step success is 0.9996 and twenty-step success is about 0.992. Dependence changes the conditional recovery probability. Replaying writes also requires protection against duplicate effects.",
+      "topic": "18.11. Worked example C: reliability over a long trajectory",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About two percent: retrying treats a symptom rather than a cause"
+        },
+        {
+          "value": "B",
+          "text": "0.992 over twenty steps against 0.668 with no retries at all"
+        },
+        {
+          "value": "C",
+          "text": "Nothing: repeating the same mistake gives the same result deterministically"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.11.3",
+      "prompt": "At p=0.98, retry success conditional on failure is q=0.2. What is step success with perfect detection?",
+      "explanation": "**Correct answer: B.** p+(1−p)q = 0.98 + 0.02·0.2 = 0.984. An independent retry at the original success rate is a different assumption.",
+      "topic": "18.11. Worked example C: reliability over a long trajectory",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.9996"
+        },
+        {
+          "value": "B",
+          "text": "0.984"
+        },
+        {
+          "value": "C",
+          "text": "0.196"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.12.1",
+      "prompt": "400 min of work with a 5-min plan and 20-min merge in sequence. What do 20 subagents give?",
+      "explanation": "**Correct answer: C.** The baseline must be named. The serial 25 minutes cap the speedup; independent contexts also consume memory and introduce integration cost.",
+      "topic": "18.12. Subagents and Amdahl’s law",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "×20 — exactly the subagent count, since the work divides evenly"
+        },
+        {
+          "value": "B",
+          "text": "×1.0: the sequential parts consume the entire parallel gain"
+        },
+        {
+          "value": "C",
+          "text": "45 minutes: ×8.89 against useful work or ×9.44 end-to-end"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "18.13.1",
+      "prompt": "What stopping policy must an agent loop have?",
+      "explanation": "**Correct answer: A.** A loop needs step, action, token, time, and cost budgets plus a verifiable completion condition. A tool error may be recoverable and need not end the entire trajectory.",
+      "topic": "18.13. Level-1 code: a proposal is not verified completion",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A step limit, a budget limit and an explicit completion signal"
+        },
+        {
+          "value": "B",
+          "text": "Stop at the first tool error, so that garbage does not accumulate"
+        },
+        {
+          "value": "C",
+          "text": "Stop on a whole-session timeout — the other conditions are redundant"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "18.13.2",
+      "prompt": "The model returned Answer: 27.92. When does the teaching harness mark completed?",
+      "explanation": "**Correct answer: C.** A completion proposal and verified success are different events. Without a verifier the full teaching runtime returns answer_proposed.",
+      "topic": "18.13. Level-1 code: a proposal is not verified completion",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "As soon as the prefix is parsed"
+        },
+        {
+          "value": "B",
+          "text": "After any successful tool call"
+        },
+        {
+          "value": "C",
+          "text": "After the task criterion passes"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "18.15.1",
+      "prompt": "Why should a model and an agent system be evaluated separately?",
+      "explanation": "**Correct answer: B.** An agent benchmark measures a policy together with its harness and environment. Changing any component changes the measured system, so the configuration passport is part of the result.",
+      "topic": "18.15. System landscape: compare action surfaces, not logos",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because the results are usually published by different research teams"
+        },
+        {
+          "value": "B",
+          "text": "Because the harness and environment change the same model’s result"
+        },
+        {
+          "value": "C",
+          "text": "Because the model does not participate in choosing the next action"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "18.17.1",
+      "prompt": "What belongs in an agent-harness passport?",
+      "explanation": "**Correct answer: C.** These components define available actions and the trajectory. Without them the result cannot be reproduced or attributed to model versus system changes.",
+      "topic": "18.17. Reading an agent-harness passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Model name, run date, and the final average score"
+        },
+        {
+          "value": "B",
+          "text": "Only the task list, attempt count, and final success rate"
+        },
+        {
+          "value": "C",
+          "text": "Tools, authority, budgets, environment, and verifier"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "18.14.1",
+      "prompt": "The service committed an effect but its reply was lost. How does the SQLite experiment replay it?",
+      "explanation": "**Correct answer: A.** The operation record and effect commit in one transaction. The same id returns the existing result; changed arguments are rejected.",
+      "topic": "18.14. Practice: repair from an observation, then recover after failure",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "With the same operation id and arguments"
+        },
+        {
+          "value": "B",
+          "text": "With a fresh id every time"
+        },
+        {
+          "value": "C",
+          "text": "Until the counter doubles"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    }
+  ]
+}

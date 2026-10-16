@@ -1,0 +1,107 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-06",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "A stop-reason matrix",
+      "prompt": "For each row, assign `terminated`, `truncated`, and a justification: (a) the model selects EOS and the task treats it as response completion; (b) a length limit is reached; (c) an external timeout fires at the same instant as a genuine task success; (d) the engine returns an unknown `server_cancelled` reason. May the final row be silently classified as terminal?",
+      "explanation": "Under a typical contract: (a) `True/False`; (b) `False/True`; (c) `True/True` can be valid if both events occurred; (d) do not infer flags silently—the reason remains unclassified until a rule is supplied. Treating an unknown reason as terminal can hide an engine-contract change or data error.",
+      "type": "self-check"
+    },
+    {
+      "id": "P02",
+      "title": "EOS in the action and in displayed text",
+      "prompt": "A model samples `[17, 42, EOS]`, while the UI shows only the first two tokens. Which tokens belong to the policy action, and which belong to the displayed text? Why does removing EOS before computing `old_logprob` change the mathematical object?",
+      "explanation": "All three sampled tokens, including EOS, belong to the realized policy action. The UI may hide EOS. Removing it before scoring computes the probability of a different, shorter sequence and discards the probability of the stopping event.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "Diagnosing causal alignment",
+      "prompt": "For tokens `[BOS, A, B]`, a log stores logits at positions `[0,1,2]` against targets `[BOS,A,B]`. Identify two errors and write the correct alignment.",
+      "explanation": "Position-0 logits predict `A`, not `BOS`; the final logit has no next-token target inside this fragment. Align `logits[:, :-1]` with `input_ids[:, 1:]`: positions 0 and 1 score `A` and `B`. Shift the response mask in the same way.",
+      "type": "self-check"
+    },
+    {
+      "id": "P04",
+      "title": "Why perplexity changed with the mask",
+      "prompt": "One implementation computes PPL over four response tokens. Another also includes two highly predictable prompt tokens and reports a lower PPL. Does this establish a better response policy?",
+      "explanation": "No. The normalization set changed. Highly predictable prompt tokens lower average NLL even if the conditional distribution over response tokens is unchanged. PPL comparisons require the same tokenizer, template, data, and mask contract.",
+      "type": "self-check"
+    },
+    {
+      "id": "P05",
+      "title": "Three log-probability roles",
+      "prompt": "Match `old_logprobs`, `current_logprobs`, and `ref_logprobs` to their PPO/KL roles. Which must remain fixed across several update epochs on one rollout batch?",
+      "explanation": "`old_logprobs` are the fixed behavior-policy denominator in the PPO ratio; `current_logprobs` are recomputed by the trainable model; `ref_logprobs` come from the reference policy used for KL and are normally fixed. Old and reference scores stay fixed within repeated epochs; current scores change.",
+      "type": "self-check"
+    },
+    {
+      "id": "P06",
+      "title": "Exact KL versus one signed sample",
+      "prompt": "For one token, `log π=-3.0` and `log π_ref=-2.5`, so `log π-log π_ref` is negative. What follows, and what does not?",
+      "explanation": "The sample contribution is `-0.5`, which is valid. It does not imply a negative exact KL. KL is the expectation of this log-ratio under actions sampled from the first policy and is non-negative under the usual conditions.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Sampled contribution",
+          "expected": -0.5,
+          "tolerance": 1e-06
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P07",
+      "title": "A counterexample to unconditional k3",
+      "prompt": "Let $q=(1,0)$ and $p=(0.8,0.2)$. Compute $\\mathbb E_q[p/q]$ on the observable support and explain why the control variate no longer has zero mean.",
+      "explanation": "Only the first point is sampled, so the expectation is $0.8/1=0.8$, not 1. Hence $\\mathbb E_q[r-1]=-0.2$. Samples from $q$ cannot reveal the mass of $p$ outside the behavior support.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Expectation E_q[p/q]",
+          "expected": 0.8,
+          "tolerance": 1e-06
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P08",
+      "title": "Light and heavy ratio tails",
+      "prompt": "Two problems have a small exact KL, but the second contains a rare action with a large $p/q$. Why can k3 have much larger variance even though every k3 sample is non-negative?",
+      "explanation": "Non-negativity does not bound the upper tail. k3 contains $r-1$; a rare large ratio yields a huge contribution and can dominate the second moment. The local variance benefit near $r=1$ is not a universal low-variance guarantee.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "Temperature and stored old log-probability",
+      "prompt": "Generation divides logits by $T=2$, but `old_logprob` is stored from the $T=1$ softmax. What happens to the PPO ratio even if model weights never change?",
+      "explanation": "The numerator and denominator describe different policies, so the ratio can differ from one despite identical weights. Temperature is part of the behavior policy and must be reflected in the stored old log-probability.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "The order of top-k and top-p",
+      "prompt": "Why is storing only `top_k=2` and `top_p=0.7` insufficient? Give an example in which processor order changes the support.",
+      "explanation": "Top-p depends on the probabilities and support produced by earlier processors. With logits `[1.720, 3.523, 1.987]`, temperature 1.7, `top_k=2`, and `top_p=0.7`, temperature→top-k→top-p leaves one token, whereas temperature→top-p→top-k leaves two. Processor order is part of the behavior specification.",
+      "type": "self-check"
+    },
+    {
+      "id": "P11",
+      "title": "Find the rollout-contract defect",
+      "prompt": "A batch stores rendered text, reward, and current log-probabilities, but omits token IDs, response mask, policy version, and stop reason. Name at least four operations that become impossible or unreliable.",
+      "explanation": "You cannot reconstruct exact actions after tokenizer/template changes; isolate response actions from prompt tokens; construct the correct PPO denominator; identify the policy snapshot that generated data; handle terminal versus truncated boundaries; or reproduce behavior scores without leakage from the updated model.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Tool tokens and the response mask",
+      "prompt": "A model emits a tool call, the environment inserts search results, and the model continues. Which tokens are policy actions and which are environment observations? How should the policy-loss mask behave?",
+      "explanation": "Model-generated tool-call tokens and subsequent response tokens are policy actions. Inserted tool output is an environment observation even when serialized by the same tokenizer. The policy-loss mask includes only model-action tokens and excludes system text, the user prompt, and tool output.",
+      "type": "self-check"
+    }
+  ]
+}

@@ -1,0 +1,391 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-02",
+  "language": "en",
+  "questions": [
+    {
+      "id": "2.3.1",
+      "prompt": "What does bytes/token measure for a fixed tokenizer?",
+      "explanation": "**Correct answer: A.** Bytes/token is a sequence-length measure: the average number of input UTF-8 bytes represented by one token ID. Full bit-level compression would also count ID width, the vocabulary, and metadata.",
+      "topic": "2.3. Compressing a sequence",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "How many input UTF-8 bytes one token ID represents on average in this text"
+        },
+        {
+          "value": "B",
+          "text": "The full compressed-file size including vocabulary, metadata, and ID packing"
+        },
+        {
+          "value": "C",
+          "text": "The mean probability of the selected token IDs under a language model"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "2.4.1",
+      "prompt": "Why does byte-level BPE need no OOV token?",
+      "explanation": "**Correct answer: B.** The base alphabet contains all 256 byte values. Merges only add longer units, so any byte string remains representable without an Out-of-Vocabulary token.",
+      "topic": "2.4. The tokenizer as a sequence of operations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It removes characters absent from the training corpus"
+        },
+        {
+          "value": "B",
+          "text": "Every UTF-8 string decomposes into base bytes already in the vocabulary"
+        },
+        {
+          "value": "C",
+          "text": "It reserves one token for every Unicode character in advance"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "2.4.2",
+      "prompt": "When can decode(encode(s)) fail to preserve the original spelling?",
+      "explanation": "**Correct answer: C.** With full coverage, the recoverable text is N(s). The teaching BBPE preserves valid UTF-8 without normalization; UNK replacement can lose further information.",
+      "topic": "2.4. The tokenizer as a sequence of operations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Whenever BPE has at least one merge, even without normalization"
+        },
+        {
+          "value": "B",
+          "text": "Whenever a token contains several complete UTF-8 characters"
+        },
+        {
+          "value": "C",
+          "text": "When normalization changes characters or spaces before tokenization"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "2.5.1",
+      "prompt": "Why does BPE encoding follow learned merge ranks rather than current pair frequency?",
+      "explanation": "**Correct answer: A.** After training, the tokenizer must reproduce the same segmentation expected by the model weights. Frequencies in a new string do not rewrite the merge list.",
+      "topic": "2.5. Worked example: from UTF-8 to a compression curve",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Frequency is used during training; rank then freezes deterministic segmentation"
+        },
+        {
+          "value": "B",
+          "text": "Rank encodes frequency in the new text and is recomputed for every request"
+        },
+        {
+          "value": "C",
+          "text": "Rank selects a new ID only and does not affect token boundaries"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "2.5.2",
+      "prompt": "Comparing only RU train (6.535 bytes/token) and EN held-out (1.317), what is supported?",
+      "explanation": "**Correct answer: B.** These two values confound language with training exposure. The lecture also reports RU held-out (5.542), which exposes a within-language train/eval difference. Parallel RU/EN texts still differ in UTF-8 length; bytes/token measures neither the cost of equal meaning nor KL.",
+      "topic": "2.5. Worked example: from UTF-8 to a compression curve",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "This isolates generalization to unseen data in the same language"
+        },
+        {
+          "value": "B",
+          "text": "Compression differs on these corpora; language and training exposure change together"
+        },
+        {
+          "value": "C",
+          "text": "Russian is 4.96 times cheaper than English under every tokenizer"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "2.5.3",
+      "prompt": "What does tokenizer fertility measure?",
+      "explanation": "**Correct answer: C.** Fertility belongs to a tokenizer, a particular text sample, and a word-counting rule. It should be reported with the corpus, bytes/token, and protocol.",
+      "topic": "2.5. Worked example: from UTF-8 to a compression curve",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The number of merges learned per million bytes at a given vocab_size"
+        },
+        {
+          "value": "B",
+          "text": "The fraction of special and reserved IDs in the tokenizer vocabulary"
+        },
+        {
+          "value": "C",
+          "text": "The average tokens per word or other chosen unit under an explicit protocol"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "2.8.1",
+      "prompt": "How does the o200k_harmony vocabulary size reconcile exactly?",
+      "explanation": "**Correct answer: A.** There are 1,091 special-token names but 1,090 unique IDs because <|endofprompt|> and <|reserved_200018|> alias ID 200018. Ten names are protocol-bearing and 1,081 have reserved form.",
+      "topic": "2.8. Reading `o200k_harmony` correctly",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "199,998 mergeable IDs + 1,090 unique special IDs = 201,088"
+        },
+        {
+          "value": "B",
+          "text": "200,019 text IDs + 16 control + 1,075 reserved = 201,110"
+        },
+        {
+          "value": "C",
+          "text": "201,088 ordinary tokens with no special identifiers"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "2.8.2",
+      "prompt": "What does tiktoken.encode do by default when input literally contains a registered special-token spelling?",
+      "explanation": "**Correct answer: B.** Special spellings are a protocol boundary. allowed_special admits them as controls; encode_ordinary or disallowed_special=() treats the spelling as ordinary text.",
+      "topic": "2.8. Reading `o200k_harmony` correctly",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always emits the control ID when the spelling matches exactly"
+        },
+        {
+          "value": "B",
+          "text": "Raises by default; the application selects special or ordinary-text handling"
+        },
+        {
+          "value": "C",
+          "text": "Always splits the spelling into characters and ignores the special-token table"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "2.8.3",
+      "prompt": "Why is a plain token-to-ID table insufficient to reproduce a deployed tokenizer?",
+      "explanation": "**Correct answer: C.** A tokenizer is a deterministic program, not merely a string table. Changing any component can alter IDs and make input incompatible with model weights.",
+      "topic": "2.8. Reading `o200k_harmony` correctly",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Token identifiers change randomly whenever the program is restarted"
+        },
+        {
+          "value": "B",
+          "text": "The embedding matrix must be stored inside the same tokenizer.json file"
+        },
+        {
+          "value": "C",
+          "text": "Normalization, pre-tokenization, ranks, decoder, and special-token policy are also required"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "2.9.1",
+      "prompt": "o200k_base defines 200,000 IDs and its maximum ID is 200018. What is n_vocab?",
+      "explanation": "**Correct answer: C.** tiktoken n_vocab is the ID range size. There are 19 holes; this field does not establish a closed model’s embedding-table row count.",
+      "topic": "2.9. Three vocabulary sizes that answer different questions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "200000: always exactly the number of defined IDs"
+        },
+        {
+          "value": "B",
+          "text": "199998: the ordinary-token count only"
+        },
+        {
+          "value": "C",
+          "text": "200019: maximum ID plus one, including holes"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "2.9.2",
+      "prompt": "Why does a larger vocab_size not guarantee better tokenization for every language?",
+      "explanation": "**Correct answer: A.** Allocated rows can differ from the defined ID count. Even a larger ordinary-token inventory does not guarantee better segmentation: training data and algorithm rules matter.",
+      "topic": "2.9. Three vocabulary sizes that answer different questions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Additional merges follow the training data rather than being shared equally by languages"
+        },
+        {
+          "value": "B",
+          "text": "A large vocabulary removes base bytes and therefore loses rare Unicode characters"
+        },
+        {
+          "value": "C",
+          "text": "Above 100K, vocabulary size no longer affects text segmentation"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "2.10.1",
+      "prompt": "What is a sound claim about grouping digits into runs of one to three characters?",
+      "explanation": "**Correct answer: B.** Regular segmentation changes the inductive bias and can help some numerical tasks. Arithmetic ability still depends on data, architecture, and training.",
+      "topic": "2.10. Fertility, language, and domain",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The rule by itself guarantees exact addition for arbitrary multi-digit numbers"
+        },
+        {
+          "value": "B",
+          "text": "It regularizes segmentation but neither guarantees nor is required for arithmetic"
+        },
+        {
+          "value": "C",
+          "text": "Its only purpose is to cap the full vocabulary at exactly one thousand IDs"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "2.11.1",
+      "prompt": "E=[[1,0],[2,0],[0,1]], h=E[0], U=E.T. Which ID has the largest logit?",
+      "explanation": "**Correct answer: C.** Output projection computes dot products rather than inverting lookup. Decoding selected IDs is a separate operation.",
+      "topic": "2.11. Embeddings: reading an ID and predicting the next one",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "ID 0: tied weights always invert the lookup"
+        },
+        {
+          "value": "B",
+          "text": "ID 2: the last ID always has the largest logit"
+        },
+        {
+          "value": "C",
+          "text": "ID 1: the logits are [1,2,0]"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "2.11.2",
+      "prompt": "A model has vocab_size=16,384 and hidden size=512. How many parameters are in one embedding matrix?",
+      "explanation": "**Correct answer: A.** One matrix has V·d = 16,384·512 = 8,388,608 parameters. An untied output head adds another matrix of the same size.",
+      "topic": "2.11. Embeddings: reading an ID and predicting the next one",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "8,388,608"
+        },
+        {
+          "value": "B",
+          "text": "16,384"
+        },
+        {
+          "value": "C",
+          "text": "16,777,216 regardless of weight tying"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "2.11.3",
+      "prompt": "Let E=[[1,0],[2,0],[0,1]], IDs=[0,2,0], and all targets be zero. For L=½·sum(E[ids]²), what is the gradient of row E[0]?",
+      "explanation": "**Correct answer: B.** Each occurrence of ID 0 contributes E[0]=[1,0]. Summing gives [2,0]. np.add.at accumulates repeated indices correctly; grad[ids] += ... does not.",
+      "topic": "2.11. Embeddings: reading an ID and predicting the next one",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "[1,0]: each row counts once regardless of how often it is selected"
+        },
+        {
+          "value": "B",
+          "text": "[2,0]: the two lookups contribute equal derivatives"
+        },
+        {
+          "value": "C",
+          "text": "[0,0]: selecting rows cannot train the input table"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "2.12.1",
+      "prompt": "Why is a vision projector only a partial analogue of text tokenization?",
+      "explanation": "**Correct answer: B.** Both systems create a sequence for a Transformer, but a text tokenizer emits discrete IDs while a typical vision encoder/projector emits continuous representations. Discrete audio codecs are a closer literal analogy.",
+      "topic": "2.12. Where the token analogy extends to other modalities",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A projector must use the same BPE vocabulary as the text decoder"
+        },
+        {
+          "value": "B",
+          "text": "Patches usually become continuous vectors rather than discrete text token IDs"
+        },
+        {
+          "value": "C",
+          "text": "A projector runs only after the language model’s final Transformer layer"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    }
+  ]
+}

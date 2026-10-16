@@ -1,0 +1,792 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-07",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "What is the main difference between source coding and channel coding?",
+      "explanation": "**Correct answer: B.** Source coding shortens descriptions, while channel coding deliberately spends extra symbols so messages remain distinguishable after corruption.",
+      "topic": "7.1. Reliable communication through noise",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The former is continuous and the latter only discrete"
+        },
+        {
+          "value": "B",
+          "text": "Source coding removes statistical redundancy; channel coding adds structured redundancy for noise protection"
+        },
+        {
+          "value": "C",
+          "text": "Only source coding uses probability"
+        },
+        {
+          "value": "D",
+          "text": "There is no fundamental distinction"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "7.1.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "What does memorylessness of a DMC mean?",
+      "explanation": "**Correct answer: C.** Conditional independence belongs to the channel given its inputs. Code symbols themselves can be highly dependent.",
+      "topic": "7.2. A discrete memoryless channel and a block code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Input symbols must be independent"
+        },
+        {
+          "value": "B",
+          "text": "The encoder cannot remember earlier messages"
+        },
+        {
+          "value": "C",
+          "text": "Conditional on the input sequence, $W^n(y^n\\mid x^n)=\\prod_iW(y_i\\mid x_i)$"
+        },
+        {
+          "value": "D",
+          "text": "The output is independent of the input"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "7.2.1"
+    },
+    {
+      "id": "item-003",
+      "prompt": "What does $R=(1/n)\\log_2M$ measure?",
+      "explanation": "**Correct answer: A.** Choosing among M messages carries log₂M bits over n channel uses.",
+      "topic": "7.2. A discrete memoryless channel and a block code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Information bits per channel use"
+        },
+        {
+          "value": "B",
+          "text": "Errors per block"
+        },
+        {
+          "value": "C",
+          "text": "Capacity in bits per second"
+        },
+        {
+          "value": "D",
+          "text": "Transition-matrix size"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "7.2.2"
+    },
+    {
+      "id": "item-004",
+      "prompt": "How do average and maximal error compare?",
+      "explanation": "**Correct answer: D.** Average error can hide a few very poor codewords; maximal error controls the worst message.",
+      "topic": "7.2. A discrete memoryless channel and a block code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Average error is always larger"
+        },
+        {
+          "value": "B",
+          "text": "They are equal for every code"
+        },
+        {
+          "value": "C",
+          "text": "Maximal error depends only on noise"
+        },
+        {
+          "value": "D",
+          "text": "Maximal error is at least the average and imposes a stronger per-message requirement"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "7.2.3"
+    },
+    {
+      "id": "item-005",
+      "prompt": "The capacity of a finite DMC without a cost constraint is",
+      "explanation": "**Correct answer: B.** Capacity optimizes mutual information over how the channel is used; a fixed input distribution is one operating point.",
+      "topic": "7.3. Capacity of a discrete channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H(X)$ under a uniform input"
+        },
+        {
+          "value": "B",
+          "text": "$\\max_{P_X}I(X;Y)$"
+        },
+        {
+          "value": "C",
+          "text": "$\\log_2|\\mathcal Y|$ for every channel"
+        },
+        {
+          "value": "D",
+          "text": "$I(X;Y)$ under the actual input distribution"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "7.3.1"
+    },
+    {
+      "id": "item-006",
+      "prompt": "When is the capacity of a finite DMC zero?",
+      "explanation": "**Correct answer: A.** Identical rows make the output unable to distinguish inputs. Nonzero noise alone does not imply zero capacity.",
+      "topic": "7.3. Capacity of a discrete channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When all transition-matrix rows are identical"
+        },
+        {
+          "value": "B",
+          "text": "When the matrix contains any zero"
+        },
+        {
+          "value": "C",
+          "text": "When the input alphabet is binary"
+        },
+        {
+          "value": "D",
+          "text": "Whenever noise is nonzero"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "7.3.2"
+    },
+    {
+      "id": "item-007",
+      "prompt": "Why need $I(Y;\\widetilde Y)$ under the actual class distribution not equal the capacity of the label-noise matrix?",
+      "explanation": "**Correct answer: C.** One quantity describes a given dataset; the other describes the best possible use of the same channel matrix.",
+      "topic": "7.3. Capacity of a discrete channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Mutual information requires uniform classes"
+        },
+        {
+          "value": "B",
+          "text": "Capacity ignores the channel matrix"
+        },
+        {
+          "value": "C",
+          "text": "Capacity maximizes over the clean-label distribution, while the dataset fixes that distribution"
+        },
+        {
+          "value": "D",
+          "text": "They are identical by definition"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "7.3.3"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What is true for a BSC with crossover probability $\\varepsilon>1/2$?",
+      "explanation": "**Correct answer: D.** At ε=1, the channel still carries one bit: it deterministically flips every symbol.",
+      "topic": "7.4. BSC, BEC, and the Z-channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Capacity is necessarily zero"
+        },
+        {
+          "value": "B",
+          "text": "The channel cannot be decoded"
+        },
+        {
+          "value": "C",
+          "text": "$1-h_2(\\varepsilon)$ becomes negative"
+        },
+        {
+          "value": "D",
+          "text": "Inverting every output gives an equivalent BSC with crossover $1-\\varepsilon<1/2$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "7.4.1"
+    },
+    {
+      "id": "item-009",
+      "prompt": "The capacity of BEC$(\\varepsilon)$ is",
+      "explanation": "**Correct answer: A.** An erasure leaves all input uncertainty, while a non-erased output reveals the input exactly.",
+      "topic": "7.4. BSC, BEC, and the Z-channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$1-\\varepsilon$"
+        },
+        {
+          "value": "B",
+          "text": "$1-h_2(\\varepsilon)$"
+        },
+        {
+          "value": "C",
+          "text": "$h_2(\\varepsilon)$"
+        },
+        {
+          "value": "D",
+          "text": "$\\varepsilon$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "7.4.2"
+    },
+    {
+      "id": "item-010",
+      "prompt": "What does the Z-channel example demonstrate?",
+      "explanation": "**Correct answer: C.** At α=0.25, the vulnerable symbol 1 is optimally used with probability about 0.4278, not 0.5.",
+      "topic": "7.4. BSC, BEC, and the Z-channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every binary channel has zero capacity"
+        },
+        {
+          "value": "B",
+          "text": "Blahut–Arimoto works only for symmetric channels"
+        },
+        {
+          "value": "C",
+          "text": "A uniform input need not be optimal for an asymmetric channel"
+        },
+        {
+          "value": "D",
+          "text": "Mutual information is linear in $P_X$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "7.4.3"
+    },
+    {
+      "id": "item-011",
+      "prompt": "For the real discrete AWGN channel $Y=X+Z$, $\\mathbb E[X^2]\\le P$, and $Z\\sim\\mathcal N(0,N)$, capacity is",
+      "explanation": "**Correct answer: B.** The factor 1/2 belongs to one real discrete use. Shannon–Hartley in bits/s additionally uses bandwidth B.",
+      "topic": "7.5. The Gaussian channel and a power constraint",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\log_2(P/N)$ bits/s"
+        },
+        {
+          "value": "B",
+          "text": "$\\frac12\\log_2(1+P/N)$ bits per real use"
+        },
+        {
+          "value": "C",
+          "text": "$B\\log_2(1+P/N)$ bits per use"
+        },
+        {
+          "value": "D",
+          "text": "$P/N$ bits per use"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "7.5.1"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What is the exact capacity increment when the SNR $\\rho$ of a real AWGN channel is doubled?",
+      "explanation": "**Correct answer: D.** “Half a bit per doubling” is a high-SNR approximation, not a universal identity.",
+      "topic": "7.5. The Gaussian channel and a power constraint",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Exactly one bit at every SNR"
+        },
+        {
+          "value": "B",
+          "text": "Exactly half a bit at every SNR"
+        },
+        {
+          "value": "C",
+          "text": "Capacity doubles"
+        },
+        {
+          "value": "D",
+          "text": "$\\frac12\\log_2\\frac{1+2\\rho}{1+\\rho}$, approaching $0.5$ only at high SNR"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "7.5.2"
+    },
+    {
+      "id": "item-013",
+      "prompt": "What is the role of random coding in achievability?",
+      "explanation": "**Correct answer: B.** This is the probabilistic method: an existence proof is not an efficient engineering construction.",
+      "topic": "7.6. Why random coding achieves $R<I(X;Y)$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It immediately gives a practical linear-time decoder"
+        },
+        {
+          "value": "B",
+          "text": "Small ensemble-average error proves that at least one good deterministic codebook exists"
+        },
+        {
+          "value": "C",
+          "text": "It proves every code is good"
+        },
+        {
+          "value": "D",
+          "text": "It removes the need for growing blocklength"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "7.6.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Why is the proof's random codebook usually impractical?",
+      "explanation": "**Correct answer: A.** Practical LDPC, turbo, and polar codes add structure and efficient decoding.",
+      "topic": "7.6. Why random coding achieves $R<I(X;Y)$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It has about $2^{nR}$ words and exhaustive decoding is exponential"
+        },
+        {
+          "value": "B",
+          "text": "It works only above capacity"
+        },
+        {
+          "value": "C",
+          "text": "It requires zero noise"
+        },
+        {
+          "value": "D",
+          "text": "Its codewords are identical"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "7.6.2"
+    },
+    {
+      "id": "item-015",
+      "prompt": "What does the Fano-based bound show when $R>C$?",
+      "explanation": "**Correct answer: C.** The strong converse additionally yields P_e^(n)→1, which is strictly stronger.",
+      "topic": "7.7. Converse and finite blocklength",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$P_e^{(n)}$ equals $1-C/R$ for every $n$"
+        },
+        {
+          "value": "B",
+          "text": "Error decays as $1/n$"
+        },
+        {
+          "value": "C",
+          "text": "Error cannot tend to zero; the result is a weak converse"
+        },
+        {
+          "value": "D",
+          "text": "Every code has error exactly one"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "7.7.1"
+    },
+    {
+      "id": "item-016",
+      "prompt": "What does the strong converse say for a DMC at fixed $R>C$?",
+      "explanation": "**Correct answer: D.** Above capacity, communication becomes asymptotically almost completely unreliable under the standard formulation.",
+      "topic": "7.7. Converse and finite blocklength",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Error may converge to any constant below one"
+        },
+        {
+          "value": "B",
+          "text": "A zero-error code exists"
+        },
+        {
+          "value": "C",
+          "text": "The rate automatically drops to $C$"
+        },
+        {
+          "value": "D",
+          "text": "Block error tends to one"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "7.7.2"
+    },
+    {
+      "id": "item-017",
+      "prompt": "Why is capacity insufficient to describe a short code?",
+      "explanation": "**Correct answer: A.** Capacity is first order. Finite-blocklength analysis treats the triple (n,R,ε) and a second-order channel-dispersion term.",
+      "topic": "7.7. Converse and finite blocklength",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "At finite $n$, target error and channel dispersion matter; $R<C$ does not guarantee low error for that block"
+        },
+        {
+          "value": "B",
+          "text": "Capacity exists only for a BSC"
+        },
+        {
+          "value": "C",
+          "text": "Mutual information is always zero at short blocklength"
+        },
+        {
+          "value": "D",
+          "text": "Blocklength has no effect"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "7.7.3"
+    },
+    {
+      "id": "item-018",
+      "prompt": "Under class-conditional noise with $X\\to Y\\to\\widetilde Y$,",
+      "explanation": "**Correct answer: B.** The annotation channel cannot make the noisy label more informative about the input than the clean label.",
+      "topic": "7.8. Noisy labels as a channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$I(X;\\widetilde Y)\\ge I(X;Y)$"
+        },
+        {
+          "value": "B",
+          "text": "$I(X;\\widetilde Y)\\le I(X;Y)$"
+        },
+        {
+          "value": "C",
+          "text": "$I(X;\\widetilde Y)=H(X)$"
+        },
+        {
+          "value": "D",
+          "text": "DPI does not apply to labels"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "7.8.1"
+    },
+    {
+      "id": "item-019",
+      "prompt": "A symmetric $K$-class label channel has zero capacity at",
+      "explanation": "**Correct answer: C.** At η=1, the output still identifies one class the example is not; information vanishes at the uniform-row point.",
+      "topic": "7.8. Noisy labels as a channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\eta=0$"
+        },
+        {
+          "value": "B",
+          "text": "$\\eta=1/2$ for every $K$"
+        },
+        {
+          "value": "C",
+          "text": "$\\eta=(K-1)/K$, where every row becomes uniform"
+        },
+        {
+          "value": "D",
+          "text": "$\\eta=1$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "7.8.2"
+    },
+    {
+      "id": "item-020",
+      "prompt": "What does $d_{\\min}$ guarantee in idealized ECOC?",
+      "explanation": "**Correct answer: D.** Real component errors can be dependent and unequal, so this is a geometric rather than complete statistical guarantee.",
+      "topic": "7.9. Channel coding inside ML: ECOC and DeepJSCC",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Perfect probability calibration"
+        },
+        {
+          "value": "B",
+          "text": "Independent binary-classifier errors"
+        },
+        {
+          "value": "C",
+          "text": "Optimal component partitions"
+        },
+        {
+          "value": "D",
+          "text": "Correction of up to $\\lfloor(d_{\\min}-1)/2\\rfloor$ bit errors by nearest-codeword decoding"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "7.9.1"
+    },
+    {
+      "id": "item-021",
+      "prompt": "How should DeepJSCC results be interpreted?",
+      "explanation": "**Correct answer: A.** DeepJSCC optimizes a distortion task and can benefit from finite resources and mismatch; the asymptotic separation theorem retains its domain.",
+      "topic": "7.9. Channel coding inside ML: ECOC and DeepJSCC",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "As empirical advantages of jointly learned coding in some finite-blocklength, SNR, and bandwidth regimes—not as a refutation of separation"
+        },
+        {
+          "value": "B",
+          "text": "As proof that source coding is obsolete"
+        },
+        {
+          "value": "C",
+          "text": "As universal dominance over every code"
+        },
+        {
+          "value": "D",
+          "text": "As lossless image coding with zero distortion"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "7.9.2"
+    },
+    {
+      "id": "item-022",
+      "prompt": "When can $q_\\theta(y\\mid x)$ be treated rigorously as a channel from prompt to response?",
+      "explanation": "**Correct answer: B.** Capacity would still require admissible inputs, a cost constraint, a channel-use definition, and an error criterion.",
+      "topic": "7.10. An LLM as a channel: a precise model and the limits of the analogy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only for a linear model"
+        },
+        {
+          "value": "B",
+          "text": "After fixing weights, decoding algorithm, and generation randomness"
+        },
+        {
+          "value": "C",
+          "text": "Only at context length one"
+        },
+        {
+          "value": "D",
+          "text": "Never"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "7.10.1"
+    },
+    {
+      "id": "item-023",
+      "prompt": "Why is context-window length not Shannon capacity by itself?",
+      "explanation": "**Correct answer: D.** Context length is a genuine resource, but converting it to capacity requires an operational probabilistic model.",
+      "topic": "7.10. An LLM as a channel: a precise model and the limits of the analogy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Tokens are always independent"
+        },
+        {
+          "value": "B",
+          "text": "Capacity is measured only in bytes"
+        },
+        {
+          "value": "C",
+          "text": "A context contains no information"
+        },
+        {
+          "value": "D",
+          "text": "The transition law, resource constraint, coding task, and channel-use unit are unspecified; tensor dimension is not reliable transmitted bits"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "7.10.2"
+    },
+    {
+      "id": "item-024",
+      "prompt": "What is the accurate conclusion about lost in the middle?",
+      "explanation": "**Correct answer: C.** The mechanism can depend on architecture, positional encoding, data, and the evaluation protocol.",
+      "topic": "7.10. An LLM as a channel: a precise model and the limits of the analogy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It follows mathematically from strong DPI"
+        },
+        {
+          "value": "B",
+          "text": "It proves the middle of a context has zero capacity"
+        },
+        {
+          "value": "C",
+          "text": "It is an empirical positional sensitivity, not automatically a channel-theorem consequence"
+        },
+        {
+          "value": "D",
+          "text": "It is fully explained by `head_dim`"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "7.10.3"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Why are attention weights not automatically channel transition probabilities?",
+      "explanation": "**Correct answer: B.** Attention entropy describes routing-weight concentration, not transmitted bits or causal influence.",
+      "topic": "7.10. An LLM as a channel: a precise model and the limits of the analogy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They can only be negative"
+        },
+        {
+          "value": "B",
+          "text": "Outputs also depend on value vectors, the residual stream, multiple heads, and later nonlinearities; row normalization is insufficient"
+        },
+        {
+          "value": "C",
+          "text": "Their rows never sum to one"
+        },
+        {
+          "value": "D",
+          "text": "Attention does not use softmax"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "7.10.4"
+    },
+    {
+      "id": "item-026",
+      "prompt": "A binary symmetric channel has crossover probability $\\varepsilon=0.2$. Compute its capacity in bits per channel use. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.278** (tolerance 0.002). Capacity is 1 − h₂(0.2) = 1 − 0.722 = 0.278 bits, attained by a uniform input. At ε = 0.5 it would be 0, and at ε = 1 it returns to a full bit, so capacity is not monotone in the crossover probability.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.278,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "7.C.1"
+    },
+    {
+      "id": "item-027",
+      "prompt": "A binary erasure channel erases each symbol with probability $0.3$. Compute its capacity in bits per channel use. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.7** (tolerance 0.002). Capacity is 1 − 0.3 = 0.7 bits. Compare this with the BSC above: an erasure that announces itself costs far less than a flip of the same probability, because the receiver knows which positions are unreliable.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.7,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "7.C.2"
+    },
+    {
+      "id": "item-028",
+      "prompt": "Signal power and noise power satisfy $P/N=7$ in an AWGN channel. Compute the capacity in bits per real channel use. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 1.5** (tolerance 0.002). Capacity is ½ log₂(1 + 7) = ½ · 3 = 1.5 bits. The factor of one half belongs to one real discrete use of the channel; the bandwidth form in bits per second uses a different normalization.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.5,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "7.C.3"
+    },
+    {
+      "id": "item-029",
+      "prompt": "A Z-channel flips input 1 to output 0 with probability $\\alpha=0.25$ and leaves input 0 untouched. The optimal input uses symbol 1 with probability about $0.4278$. Compute the capacity in bits per channel use. (tolerance 0.003)",
+      "explanation": "**Numeric answer: 0.558** (tolerance 0.003). The capacity is about 0.558 bits. Note that the optimal input is not uniform: the vulnerable symbol is used less than half the time, because the channel treats the two inputs asymmetrically.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.558,
+          "tolerance": 0.003
+        }
+      ],
+      "sourceId": "7.C.4"
+    }
+  ]
+}

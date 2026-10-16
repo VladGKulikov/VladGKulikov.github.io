@@ -29,6 +29,8 @@ import { captureReadingPosition, readingPositionAtAnchor, restoreReadingPosition
 import config from "../SITE_CONFIG.json";
 import { buildLocation, courses, parseUrl, updatePageMetadata, type Language, type CourseKey, type CourseModule as Module, type PageRoute } from "./site";
 import { trackPage } from "./analytics";
+import { quizFor, type Quiz } from './quizzes';
+import { QuizReader, QuizMarkdown, questionAnchor, questionLabel } from './QuizReader';
 
 const copy = {
   ru: {
@@ -58,7 +60,7 @@ const copy = {
     stepik: "Полный курс на Stepik",
     leanpub: "PDF / EPUB бесплатно · Поддержать автора",
     openCourseTitle: "Открытая лекционная версия",
-    openCourseText: "Лекции и иллюстрации",
+    openCourseText: "Лекции, иллюстрации и тесты с проверкой ответов",
     completeCourseTitle: "Полный курс на Stepik",
     completeFreeCourseTitle: "Полный курс на Stepik · Бесплатно",
     paidPracticeText:
@@ -83,7 +85,7 @@ const copy = {
     edition: "Редакция",
     boundaryLabel: "Лекционная версия / полный курс",
     boundary:
-      "Открытая лекционная версия содержит тексты лекций и иллюстрации. Полные курсы на Stepik добавляют тесты, упражнения, решения, проекты и ноутбуки; условия доступа указаны отдельно для каждого курса.",
+      "На сайте доступны лекции, иллюстрации и тесты с проверкой ответов. Упражнения, решения, проекты и ноутбуки также доступны в полных курсах на Stepik; условия доступа указаны отдельно для каждого курса.",
     allMaterials: "Все материалы",
     noResults: "Ничего не найдено",
     modulesMenu: "Список модулей",
@@ -120,7 +122,7 @@ const copy = {
     stepik: "Complete course on Stepik",
     leanpub: "Free PDF / EPUB · Support the author",
     openCourseTitle: "Open Reader Edition",
-    openCourseText: "Lecture texts and illustrations",
+    openCourseText: "Lectures, illustrations, and quizzes with answer checking",
     completeCourseTitle: "Complete course on Stepik",
     completeFreeCourseTitle: "Complete course on Stepik · Free",
     paidPracticeText:
@@ -145,7 +147,7 @@ const copy = {
     edition: "Edition",
     boundaryLabel: "Reader Edition / complete course",
     boundary:
-      "The open Reader Edition contains lecture texts and illustrations. The complete Stepik courses add assessments, exercises, solutions, projects, and notebooks; access terms are shown separately for each course.",
+      "This site includes lectures, illustrations, and quizzes with answer checking. Exercises, solutions, projects, and notebooks are also available in the complete Stepik courses; access terms are shown separately for each course.",
     allMaterials: "All materials",
     noResults: "No modules found",
     modulesMenu: "Course modules",
@@ -272,7 +274,7 @@ function StepikNotice({ language }: { language: Language }) {
   const previouslyDismissed = useSyncExternalStore(subscribeNotice, readNoticePreference, () => false);
   if (!config.stepikNotice || dismissed || previouslyDismissed) return null;
   return <aside className="stepik-notice">
-    <span>{language === "ru" ? "Если Stepik недоступен, лекции можно читать на этом сайте." : "If Stepik is unavailable, you can read the lectures on this site."}</span>
+    <span>{language === "ru" ? "Если Stepik недоступен, лекции и тесты доступны на этом сайте." : "If Stepik is unavailable, lectures and quizzes are available on this site."}</span>
     <button className="js-only" aria-label={language === "ru" ? "Скрыть уведомление" : "Dismiss notice"} onClick={() => {
       setDismissed(true);
       try { sessionStorage.setItem("stepik-notice-dismissed", "1"); } catch { /* Storage is optional. */ }
@@ -287,9 +289,10 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
   const [language, setLanguage] = useState<Language>(initial.language);
   const [courseKey, setCourseKey] = useState<CourseKey | null>(initial.courseKey);
   const [moduleKey, setModuleKey] = useState<string | null>(initial.moduleKey);
+  const [section, setSection] = useState<'tests' | undefined>(initial.section);
   const [notFound, setNotFound] = useState(Boolean(initial.notFound));
   const [markdown, setMarkdown] = useState(initialMarkdown);
-  const markdownCache = useRef(new Map<string, string>(initial.moduleKey ? [[`${initial.courseKey}:${initial.language}:${initial.moduleKey}`, initialMarkdown]] : []));
+  const markdownCache = useRef(new Map<string, string>(initial.moduleKey ? [[`${initial.courseKey}:${initial.language}:${initial.moduleKey}:${initial.section ?? 'lecture'}`, initialMarkdown]] : []));
   const [loading, setLoading] = useState(Boolean(initial.moduleKey && !initialMarkdown));
   const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState("");
@@ -313,6 +316,8 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
     () => activeCourse?.modules.find((module) => module.module_key === moduleKey),
     [activeCourse, moduleKey],
   );
+  const activeQuiz = quizFor(courseKey, moduleKey, language);
+  const quiz = useMemo(() => section === 'tests' && markdown ? JSON.parse(markdown) as Quiz : null, [section, markdown]);
 
   useEffect(() => {
     const previous = window.history.scrollRestoration;
@@ -337,9 +342,9 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
   }, []);
 
   useEffect(() => {
-    updatePageMetadata({ language, courseKey, moduleKey, notFound });
-    trackPage({ language, courseKey, moduleKey, notFound });
-  }, [language, courseKey, moduleKey, notFound]);
+    updatePageMetadata({ language, courseKey, moduleKey, section, notFound });
+    trackPage({ language, courseKey, moduleKey, section, notFound });
+  }, [language, courseKey, moduleKey, section, notFound]);
 
   useEffect(() => {
     if (!drawerOpen && !tocDrawerOpen) return;
@@ -385,9 +390,9 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
   }, [drawerOpen, tocDrawerOpen]);
 
   const updateLocation = useCallback(
-    (nextLanguage: Language, nextCourse: CourseKey | null, nextModule: string | null, push = true) => {
+    (nextLanguage: Language, nextCourse: CourseKey | null, nextModule: string | null, push = true, nextSection?: 'tests') => {
       if (typeof window === "undefined") return;
-      const url = buildLocation(nextLanguage, nextCourse, nextModule);
+      const url = buildLocation(nextLanguage, nextCourse, nextModule, nextSection);
       const readerKey = window.crypto.randomUUID();
       window.history[push ? "pushState" : "replaceState"]({ readerKey }, "", url);
       currentHistoryKey.current = readerKey;
@@ -397,7 +402,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
   );
 
   const preparePage = useCallback((next: PageRoute) => {
-    const cached = markdownCache.current.get(`${next.courseKey}:${next.language}:${next.moduleKey}`);
+    const cached = markdownCache.current.get(`${next.courseKey}:${next.language}:${next.moduleKey}:${next.section ?? 'lecture'}`);
     setLoadError(false);
     if (!next.moduleKey) {
       setMarkdown("");
@@ -411,27 +416,28 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
   }, []);
 
   const navigate = useCallback((next: PageRoute, push = true, hash = "") => {
-    const translated = next.language !== language && next.courseKey === courseKey && next.moduleKey === moduleKey;
+    const translated = next.language !== language && next.courseKey === courseKey && next.moduleKey === moduleKey && next.section === section;
     const bookmark = captureReadingPosition();
     historyPositions.current.set(currentHistoryKey.current, { readingPosition: bookmark, scrollY: window.scrollY });
     if (push) window.history.replaceState({ ...window.history.state, readingPosition: bookmark, scrollY: window.scrollY }, "");
     pendingReadingPosition.current = translated ? bookmark : null;
     pendingScroll.current = translated ? null : 0;
     if (!translated) {
-      if (next.courseKey !== courseKey || next.moduleKey !== moduleKey) setMarkdown("");
+      if (next.courseKey !== courseKey || next.moduleKey !== moduleKey || next.section !== section) setMarkdown("");
       setDrawerOpen(false);
       setTocDrawerOpen(false);
     }
     setLanguage(next.language);
     setCourseKey(next.courseKey);
     setModuleKey(next.moduleKey);
+    setSection(next.section);
     setNotFound(Boolean(next.notFound));
     preparePage(next);
-    updateLocation(next.language, next.courseKey, next.moduleKey, push);
-    if (hash) window.history.replaceState(window.history.state, "", `${buildLocation(next.language, next.courseKey, next.moduleKey)}${hash}`);
+    updateLocation(next.language, next.courseKey, next.moduleKey, push, next.section);
+    if (hash) window.history.replaceState(window.history.state, "", `${buildLocation(next.language, next.courseKey, next.moduleKey, next.section)}${hash}`);
     currentHistoryUrl.current = window.location.href;
     if (!translated) window.scrollTo({ top: 0, behavior: "instant" });
-  }, [language, courseKey, moduleKey, updateLocation, preparePage]);
+  }, [language, courseKey, moduleKey, section, updateLocation, preparePage]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -446,16 +452,17 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
       window.history.replaceState({ ...window.history.state, readerKey }, "");
       pendingReadingPosition.current = saved?.readingPosition ?? null;
       pendingScroll.current = pendingReadingPosition.current || window.location.hash ? null : saved?.scrollY ?? 0;
-      if (next.courseKey !== courseKey || next.moduleKey !== moduleKey) setMarkdown("");
+      if (next.courseKey !== courseKey || next.moduleKey !== moduleKey || next.section !== section) setMarkdown("");
       setLanguage(next.language);
       setCourseKey(next.courseKey);
       setModuleKey(next.moduleKey);
+      setSection(next.section);
       setNotFound(Boolean(next.notFound));
       preparePage(next);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [initialLanguage, language, courseKey, moduleKey, preparePage]);
+  }, [initialLanguage, language, courseKey, moduleKey, section, preparePage]);
 
   useLayoutEffect(() => {
     if (pendingScroll.current === null || pendingReadingPosition.current || loading || activeModule && !markdown) return;
@@ -465,11 +472,12 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
 
   useEffect(() => {
     if (!activeModule) return;
-    const cacheKey = `${courseKey}:${language}:${moduleKey}`;
+    const cacheKey = `${courseKey}:${language}:${moduleKey}:${section ?? 'lecture'}`;
     const cached = markdownCache.current.get(cacheKey);
     if (cached) return;
     const controller = new AbortController();
-    fetch(`${getBaseUrl()}content/${activeModule.content_file}?v=${activeModule.content_hash}`, { signal: controller.signal })
+    const file = section === 'tests' && activeQuiz ? `quizzes/${activeQuiz.file}?v=${activeQuiz.hash}` : `content/${activeModule.content_file}?v=${activeModule.content_hash}`;
+    fetch(`${getBaseUrl()}${file}`, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.text();
@@ -487,7 +495,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [activeModule, courseKey, language, moduleKey]);
+  }, [activeModule, activeQuiz, courseKey, language, moduleKey, section]);
 
   useLayoutEffect(() => {
     const prose = document.querySelector(".lecture-prose");
@@ -555,10 +563,10 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
     activeCourse && moduleIndex >= 0 && moduleIndex < activeCourse.modules.length - 1
       ? activeCourse.modules[moduleIndex + 1]
       : undefined;
-  const displayMarkdown = markdown.replace(/^#\s+.+?\r?\n+/, "");
+  const displayMarkdown = section === 'tests' ? '' : markdown.replace(/^#\s+.+?\r?\n+/, "");
   const headingIndex = useMemo(
-    () => markdownHeadings(displayMarkdown),
-    [displayMarkdown],
+    () => quiz ? quiz.questions.map((q, index) => ({ line: index + 1, depth: 2, label: questionLabel(q, language === 'ru'), id: questionAnchor(q) })) : markdownHeadings(displayMarkdown),
+    [displayMarkdown, quiz, language],
   );
   const semanticHeadings = useMemo(() => {
     let previous = 1;
@@ -661,7 +669,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
             <Code2 size={17} />
             <span className="desktop-label">GitHub</span>
           </a>
-          <a className="language-toggle" href={buildLocation(language === "ru" ? "en" : "ru", courseKey, moduleKey)} hrefLang={language === "ru" ? "en" : "ru"} aria-label="Switch language" aria-disabled={loading}>
+          <a className="language-toggle" href={buildLocation(language === "ru" ? "en" : "ru", courseKey, moduleKey, section)} hrefLang={language === "ru" ? "en" : "ru"} aria-label="Switch language" aria-disabled={loading}>
             <Languages size={17} />
             {language === "ru" ? "EN" : "RU"}
           </a>
@@ -671,7 +679,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
       {activeCourse && activeModule && <noscript>
         <style>{`.desktop-left-toggle,.desktop-right-toggle,.mobile-menu,.mobile-right-toggle,.module-search,.drawer-close,.js-only{display:none!important}`}</style>
         <nav className="static-navigation" aria-label={t.contents}>
-          <details><summary>{t.modulesMenu}</summary>{activeCourse.modules.map(module => <a key={module.id} href={buildLocation(language, courseKey, module.module_key)}>{formatModuleNumber(module)} {module.title}</a>)}</details>
+          <details><summary>{t.modulesMenu}</summary>{activeCourse.modules.map(module => <a key={module.id} href={buildLocation(language, courseKey, module.module_key, section === 'tests' && quizFor(courseKey, module.module_key, language) ? 'tests' : undefined)}>{formatModuleNumber(module)} {module.title}</a>)}</details>
           <details><summary>{t.outlineMenu}</summary>{headings.map(heading => <a key={heading.id} href={`#${heading.id}`}>{heading.label}</a>)}</details>
         </nav>
       </noscript>}
@@ -689,7 +697,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
           <StepikNotice language={language} />
           <p><a className="primary-link" href={buildLocation(language, courseKey, activeCourse.modules[0].module_key)}>{t.start} <ArrowRight size={18} /></a></p>
           <h2>{t.contents}</h2>
-          <ol className="course-contents">{activeCourse.modules.map(module => <li key={module.id}><a href={buildLocation(language, courseKey, module.module_key)}>{module.title}</a></li>)}</ol>
+          <ol className="course-contents">{activeCourse.modules.map(module => <li key={module.id}><a href={buildLocation(language, courseKey, module.module_key)}>{module.title}</a>{quizFor(courseKey, module.module_key, language) && <> · <a className="course-quiz-link" href={buildLocation(language, courseKey, module.module_key, 'tests')}>{language === 'ru' ? 'Тесты' : 'Quizzes'}</a></>}</li>)}</ol>
           <p><a href={activeCourse.stepik_url}>{t.stepik}</a> · <a href={leanpubUrls[activeCourse.course_key][language]}>{t.leanpub}</a></p>
         </main>
       ) : !activeCourse || !activeModule ? (
@@ -862,7 +870,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                 visibleModules.map((module) => (
                   <a key={module.id} className={module.id === activeModule.id ? "active" : ""}
                     aria-current={module.id === activeModule.id ? "page" : undefined}
-                    href={buildLocation(language, activeCourse.course_key, module.module_key)}>
+                    href={buildLocation(language, activeCourse.course_key, module.module_key, section === 'tests' && quizFor(courseKey, module.module_key, language) ? 'tests' : undefined)}>
                     <span>{formatModuleNumber(module)}</span>
                     <strong>{module.title.replace(/^(Module|Модуль)\s+\d+b?[.:]?\s*/i, "")}</strong>
                   </a>
@@ -895,10 +903,16 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
               <span style={{ width: `${((moduleIndex + 1) / activeCourse.modules.length) * 100}%` }} />
             </div>
 
+            <nav className="material-tabs" aria-label={language === 'ru' ? 'Материалы модуля' : 'Module materials'}>
+              <a href={buildLocation(language, courseKey, moduleKey)} aria-current={!section ? 'page' : undefined}>{language === 'ru' ? 'Лекция' : 'Lecture'}</a>
+              {activeQuiz && <a href={buildLocation(language, courseKey, moduleKey, 'tests')} aria-current={section === 'tests' ? 'page' : undefined}>{language === 'ru' ? 'Тесты' : 'Quizzes'} <span>{activeQuiz.count}</span></a>}
+            </nav>
+
             <StepikNotice language={language} />
-            {loading && !markdown && <div className="lecture-state">{t.loading}</div>}
+            {loading && !markdown && <div className="lecture-state">{section === 'tests' ? (language === 'ru' ? 'Загружаю тесты…' : 'Loading quizzes…') : t.loading}</div>}
             {loadError && <div className="lecture-state error">{t.error}</div>}
-            {markdown && !loadError && (
+            {quiz && activeQuiz && !loadError && <QuizReader key={`${courseKey}:${moduleKey}`} quiz={quiz} revision={activeQuiz.revision} />}
+            {markdown && !loadError && section !== 'tests' && (
               <div className="lecture-prose" aria-busy={loading}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkMath]}
@@ -961,7 +975,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
 
             <nav className="module-pagination" aria-label="Module navigation">
               {previousModule ? (
-                <a href={buildLocation(language, activeCourse.course_key, previousModule.module_key)}>
+                <a href={buildLocation(language, activeCourse.course_key, previousModule.module_key, section === 'tests' && quizFor(courseKey, previousModule.module_key, language) ? 'tests' : undefined)}>
                   <ChevronLeft size={18} />
                   <span>
                     <small>{t.previous}</small>
@@ -972,7 +986,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                 <span />
               )}
               {nextModule && (
-                <a href={buildLocation(language, activeCourse.course_key, nextModule.module_key)}>
+                <a href={buildLocation(language, activeCourse.course_key, nextModule.module_key, section === 'tests' && quizFor(courseKey, nextModule.module_key, language) ? 'tests' : undefined)}>
                   <span>
                     <small>{t.next}</small>
                     {formatModuleNumber(nextModule)}
@@ -991,7 +1005,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
             <nav>
               {headings.map((heading) => (
                 <a key={heading.id} href={`#${heading.id}`} onClick={() => setTocDrawerOpen(false)}>
-                  {heading.label.replace(/^\d+[.:]\s*/, "")}
+                  {section === 'tests' ? <QuizMarkdown inline>{heading.label}</QuizMarkdown> : heading.label.replace(/^\d+[.:]\s*/, "")}
                 </a>
               ))}
             </nav>

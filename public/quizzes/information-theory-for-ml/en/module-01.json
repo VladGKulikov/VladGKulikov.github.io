@@ -1,0 +1,385 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-01",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Which question is about the surprisal of one realized outcome rather than the source's average uncertainty?",
+      "explanation": "**Correct answer: B.** Surprisal refers to one realized outcome. Entropy averages surprisal over outcomes, mutual information measures the average reduction in uncertainty, and the last option describes the entropy rate. All four are called \"information\" in ordinary speech.",
+      "topic": "Required quiz: Sections 1.1–1.4",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "What is the source's average uncertainty before observation?"
+        },
+        {
+          "value": "B",
+          "text": "How surprising is this particular outcome under the chosen model?"
+        },
+        {
+          "value": "C",
+          "text": "By how much does observing $Y$ reduce uncertainty about $X$ on average?"
+        },
+        {
+          "value": "D",
+          "text": "How many bits does an optimal code need per symbol on long sequences?"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "1.1.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "Why was separating information from meaning a source of strength for Shannon's theory?",
+      "explanation": "**Correct answer: D.** Restricting the scope is what made a precise mathematical theory possible. The framework does not deny meaning and does not promise to reconstruct it; it simply leaves it outside its defined quantities.",
+      "topic": "Required quiz: Sections 1.1–1.4",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It replaced every semantic problem with a single probability"
+        },
+        {
+          "value": "B",
+          "text": "It proved that meaning does not exist"
+        },
+        {
+          "value": "C",
+          "text": "It showed that semantics can always be recovered from the statistics afterwards"
+        },
+        {
+          "value": "D",
+          "text": "It isolated a measurable engineering problem and made rigorous limits on coding and transmission possible"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "1.1.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Why can the same message have different surprisal in different contexts?",
+      "explanation": "**Correct answer: C.** Surprisal is −log p relative to a particular model, and the model's probability is conditional on what is already known. The quantity is defined after the outcome but computed from a probability assigned before it.",
+      "topic": "Required quiz: Sections 1.1–1.4",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Surprisal depends only on the message length in characters"
+        },
+        {
+          "value": "B",
+          "text": "Meaning changes the base of the logarithm"
+        },
+        {
+          "value": "C",
+          "text": "Context changes the conditional probability of the message under the chosen model"
+        },
+        {
+          "value": "D",
+          "text": "Surprisal is measured after the outcome, so it cannot depend on context at all"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "1.1.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "What follows correctly from the fact that a next-token objective contains no separate criterion of factual truth?",
+      "explanation": "**Correct answer: A.** This is a statement about what the objective guarantees, not a claim that factual knowledge is impossible, that accuracy degrades, or that it cannot be evaluated by other means.",
+      "topic": "Required quiz: Sections 1.1–1.4",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Low cross-entropy alone does not guarantee that every answer is true"
+        },
+        {
+          "value": "B",
+          "text": "Every improvement in cross-entropy reduces factual accuracy"
+        },
+        {
+          "value": "C",
+          "text": "A language model is fundamentally unable to store facts or perform reasoning"
+        },
+        {
+          "value": "D",
+          "text": "Factual accuracy cannot be measured for such a model at all"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "1.2.1"
+    },
+    {
+      "id": "item-005",
+      "prompt": "Which requirement leads to the functional equation $s(pq)=s(p)+s(q)$?",
+      "explanation": "**Correct answer: D.** Independent probabilities multiply while their information contributions should add, and the logarithm is exactly the function that converts products into sums.",
+      "topic": "Required quiz: Sections 1.1–1.4",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All events must be equally likely"
+        },
+        {
+          "value": "B",
+          "text": "Surprise must not depend on probability"
+        },
+        {
+          "value": "C",
+          "text": "Surprise must be bounded"
+        },
+        {
+          "value": "D",
+          "text": "Independent stages should contribute additive surprise"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "1.3.1"
+    },
+    {
+      "id": "item-006",
+      "prompt": "A sequence has token conditional probabilities $(1/2,1/2,1/4)$. What is its negative log-likelihood in bits?",
+      "explanation": "**Correct answer: C.** The joint probability is 1/16, so −log₂(1/16) = 4 bits. Equivalently the token contributions 1 + 1 + 2 add up, which is the point of taking the logarithm in the first place.",
+      "topic": "Required quiz: Sections 1.1–1.4",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "2 bits"
+        },
+        {
+          "value": "B",
+          "text": "3 bits"
+        },
+        {
+          "value": "C",
+          "text": "4 bits"
+        },
+        {
+          "value": "D",
+          "text": "8 bits"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "1.3.2"
+    },
+    {
+      "id": "item-007",
+      "prompt": "What is the most precise relationship between the NLL of one observation and empirical cross-entropy?",
+      "explanation": "**Correct answer: A.** Practice often uses the two words interchangeably, but the aggregation matters: one observation contributes one term, while cross-entropy is an expectation or an empirical average of such terms.",
+      "topic": "Required quiz: Sections 1.1–1.4",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "NLL is the contribution of one observation, and the average NLL over a dataset is empirical cross-entropy"
+        },
+        {
+          "value": "B",
+          "text": "They are unrelated quantities"
+        },
+        {
+          "value": "C",
+          "text": "They are numerically identical without specifying summation or averaging"
+        },
+        {
+          "value": "D",
+          "text": "Cross-entropy is the NLL of the single least probable observation"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "1.3.3"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What follows from monotonicity and $f(mk)=f(m)+f(k)$ for uniform sources?",
+      "explanation": "**Correct answer: B.** This is only the first stage of the derivation. The base is fixed later by a normalization, and moving to unequal probabilities requires weighted grouping and continuity.",
+      "topic": "Optional second-pass quiz: Sections 1.9–1.10",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The full Shannon formula for arbitrary real-valued probabilities"
+        },
+        {
+          "value": "B",
+          "text": "The logarithmic form $f(n)=c\\log n$ on uniform distributions"
+        },
+        {
+          "value": "C",
+          "text": "A unique logarithm base"
+        },
+        {
+          "value": "D",
+          "text": "Continuity of $f$ on the probability simplex"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "1.9.1"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Which property transfers the result from uniform micro-outcomes to rational probabilities?",
+      "explanation": "**Correct answer: D.** Rational probabilities can be written as groups of equally likely micro-outcomes, and weighted grouping is what links the two levels of the choice. Plain additivity is too weak, which the Rényi counterexample shows.",
+      "topic": "Optional second-pass quiz: Sections 1.9–1.10",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Symmetry under relabeling alone"
+        },
+        {
+          "value": "B",
+          "text": "Second-order differentiability"
+        },
+        {
+          "value": "C",
+          "text": "Additivity for independent sources"
+        },
+        {
+          "value": "D",
+          "text": "Weighted grouping for a two-stage choice"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "1.10.1"
+    },
+    {
+      "id": "item-010",
+      "prompt": "Why is continuity needed in the Shannon-entropy derivation?",
+      "explanation": "**Correct answer: C.** Rational points are dense in the probability simplex, so continuity extends the formula to its closure. Differentiability is never required.",
+      "topic": "Optional second-pass quiz: Sections 1.9–1.10",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To prove the logarithmic form on natural numbers"
+        },
+        {
+          "value": "B",
+          "text": "Only to choose bits instead of nats"
+        },
+        {
+          "value": "C",
+          "text": "To extend the result from rational probability vectors to arbitrary real-valued ones"
+        },
+        {
+          "value": "D",
+          "text": "To guarantee that entropy is differentiable in the probabilities"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "1.10.2"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What does the counterexample based on Rényi entropy of order $2$ show?",
+      "explanation": "**Correct answer: A.** Rényi entropy of order 2 has both of those properties, including agreement on uniform distributions, and still fails weighted grouping. That is precisely why the derivation needs the stronger axiom.",
+      "topic": "Optional second-pass quiz: Sections 1.9–1.10",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Additivity on independent products and the value $\\log n$ on uniform sources do not yet single out Shannon entropy"
+        },
+        {
+          "value": "B",
+          "text": "Shannon entropy is not additive"
+        },
+        {
+          "value": "C",
+          "text": "Weighted grouping follows from symmetry alone"
+        },
+        {
+          "value": "D",
+          "text": "Rényi entropy of order 2 disagrees with Shannon entropy already on uniform distributions"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "1.10.3"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What does the normalization $H(1/2,1/2)=1$ bit accomplish?",
+      "explanation": "**Correct answer: B.** The axioms determine the form only up to a nonnegative constant, and that constant may be zero. The normalization picks a nonzero scale, which is the same as choosing base 2.",
+      "topic": "Optional second-pass quiz: Sections 1.9–1.10",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It proves weighted grouping"
+        },
+        {
+          "value": "B",
+          "text": "It excludes the zero solution and fixes the unit of information"
+        },
+        {
+          "value": "C",
+          "text": "It restricts the number of outcomes to two"
+        },
+        {
+          "value": "D",
+          "text": "It makes the maximum of entropy equal to one for every alphabet"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "1.10.4"
+    },
+    {
+      "id": "item-013",
+      "prompt": "A source emits one of 27 equally likely symbols. How many bits does one symbol carry? (tolerance 0.002)",
+      "explanation": "**Numeric answer: 4.755** (tolerance 0.002). For a uniform source over n outcomes the surprisal of every outcome is log₂ n, so here it is log₂ 27 = 4.755 bits. This is Hartley's answer and the starting point of Shannon's table for printed English in Module 2.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 4.755,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "1.C.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "For $P=(1/2,1/4,1/4)$, compute the Rényi entropy of order $2$, that is $-\\log_2\\sum_i p_i^2$, in bits. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 1.415** (tolerance 0.002). The sum of squares is 0.375, so H₂ = −log₂ 0.375 = 1.415 bits, while the Shannon entropy of the same distribution is exactly 1.5 bits. Two additive measures that agree on uniform distributions can still disagree here, which is the counterexample of §1.10 in numbers.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.415,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "1.C.2"
+    }
+  ]
+}

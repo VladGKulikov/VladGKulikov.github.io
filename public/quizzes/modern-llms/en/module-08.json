@@ -1,0 +1,439 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-08",
+  "language": "en",
+  "questions": [
+    {
+      "id": "9.4.1",
+      "prompt": "What does a compute-optimal scaling law optimize under the constraint C = 6ND?",
+      "explanation": "**Correct answer: A.** The law answers \"how to divide the compute\", not \"how much is needed\". The budget is given from outside, and the optimum splits it between N and D so as to minimize loss.",
+      "topic": "9.4. Formalism: compute, a fitted loss surface, and its analytic optimum",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The split of a fixed budget between model size and data volume"
+        },
+        {
+          "value": "B",
+          "text": "The number of training steps at a pre-selected model size"
+        },
+        {
+          "value": "C",
+          "text": "The convergence rate of the optimizer under a fixed schedule"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "9.4.2",
+      "prompt": "For a budget of $7.23\\cdot10^{23}$ FLOP, the analytic optimum of the fitted law gives $N=35.7$B and $D=3.38$T. What is $D/N$?",
+      "explanation": "**Correct answer: B.** The fitted exponents on $N$ and $D$ differ, so the optimal ratio changes with budget. The value 94.7 belongs to this calculation; it is not a universal Chinchilla constant.",
+      "topic": "9.4. Formalism: compute, a fitted loss surface, and its analytic optimum",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Exactly 20 tokens per parameter"
+        },
+        {
+          "value": "B",
+          "text": "94.7 — close to one hundred tokens per parameter"
+        },
+        {
+          "value": "C",
+          "text": "1868 — the ratio in the Llama 3 8B/15T scenario"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.5.1",
+      "prompt": "What are effective epochs for a domain inside a data mixture?",
+      "explanation": "**Correct answer: C.** Giving a small domain a substantial mixture weight causes repeated use of its documents. Effective epochs quantify that repetition; memorization risk increases gradually rather than appearing at one universal epoch threshold.",
+      "topic": "9.5. From raw web pages to a training distribution",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The number of steps after which the domain loss stops decreasing"
+        },
+        {
+          "value": "B",
+          "text": "The domain's share of the mixture multiplied by the total epoch count"
+        },
+        {
+          "value": "C",
+          "text": "The domain token presentations divided by its unique-token pool: average reuse"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "9.5.2",
+      "prompt": "DCLM starts from a standardized candidate pool of roughly 240T tokens, while DCLM-Baseline trains on 2.6T tokens. Why should those numbers be reported separately?",
+      "explanation": "**Correct answer: A.** The candidate pool defines the space in which selection strategies are compared. A run’s training volume records the selected token presentations that the model actually consumes.",
+      "topic": "9.5. From raw web pages to a training distribution",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The candidate pool and the selected training volume describe different stages of the pipeline"
+        },
+        {
+          "value": "B",
+          "text": "The 2.6T figure is only the validation set and is unrelated to training"
+        },
+        {
+          "value": "C",
+          "text": "The 240T figure counts bytes whereas 2.6T counts tokens after a unit conversion"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "9.6.1",
+      "prompt": "Why can the \"20 tokens per parameter\" rule give the wrong optimum?",
+      "explanation": "**Correct answer: B.** When α ≠ β the optimal N and D grow with budget at different exponents, so their ratio is not constant. At Llama-3's budget the rule of thumb gives 77.6B against an exact 35.7B.",
+      "topic": "9.6. Worked example A: two budgets and the cost of a mnemonic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It was derived for encoder models and does not carry to decoder-only"
+        },
+        {
+          "value": "B",
+          "text": "The D/N ratio itself depends on budget, while the rule treats it as constant"
+        },
+        {
+          "value": "C",
+          "text": "It ignores vocabulary size, which is part of the model's parameter count"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.7.1",
+      "prompt": "What does an isoFLOP curve show?",
+      "explanation": "**Correct answer: C.** The fitted valley is relatively shallow on the data-heavy side: training a smaller model longer may increase fitted loss only modestly. That geometry makes token-heavier allocations worth considering.",
+      "topic": "9.7. The isoFLOP valley and the fitted cost of long training",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "How loss falls over time at a fixed model size"
+        },
+        {
+          "value": "B",
+          "text": "How the required budget grows as the quality target rises"
+        },
+        {
+          "value": "C",
+          "text": "Loss as a function of N at constant budget, with a minimum at the optimum"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "9.7.2",
+      "prompt": "Llama-3 8B: 8.03B parameters and 15T tokens. How far from its budget's optimum is that?",
+      "explanation": "**Correct answer: A.** At $C=6ND=7.23\\cdot10^{23}$, the analytic optimum of the fitted law is 35.7B parameters and 3.38T tokens. The 8.03B/15T scenario incurs $\\Delta L=0.0258$ inside that law but uses a model about 4.4 times smaller, reducing dense inference cost.",
+      "topic": "9.7. The isoFLOP valley and the fitted cost of long training",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "D/N is about 1868 rather than 94.7, nearly 20 times larger in this comparison"
+        },
+        {
+          "value": "B",
+          "text": "The model sits exactly at the optimum: 15T is what the law prescribes"
+        },
+        {
+          "value": "C",
+          "text": "The model is undertrained: the law would call for around 30T tokens"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "9.8.1",
+      "prompt": "Why can an inference-aware objective prefer a smaller model trained on more data?",
+      "explanation": "**Correct answer: B.** In the teaching model, dense decode costs roughly $2N$ FLOP per token. Extra compute spent training the smaller model can be recovered over a large serving volume; the break-even in this scenario is about $2.12\\cdot10^{12}$ generated tokens.",
+      "topic": "9.8. Inference-aware allocation: when does the smaller model repay its training?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A larger model is always cheaper to train and therefore prepays its serving cost"
+        },
+        {
+          "value": "B",
+          "text": "Training cost is paid once, while the cost of every generated token is paid repeatedly"
+        },
+        {
+          "value": "C",
+          "text": "A smaller model always requires a more expensive accelerator class"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.9.1",
+      "prompt": "What does the \"data wall\" mean?",
+      "explanation": "**Correct answer: C.** Compute capacity can grow faster than the supply of high-quality, sufficiently independent data. Reuse, synthetic transformations, and better curation address different parts of that constraint.",
+      "topic": "9.9. The data wall: token counts stop being interchangeable",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A limit on the context length available during model training"
+        },
+        {
+          "value": "B",
+          "text": "A ceiling on corpus read speed from disk on large clusters"
+        },
+        {
+          "value": "C",
+          "text": "The pool of quality text grows slower than training runs consume it"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "9.10.1",
+      "prompt": "What is Muon's core idea for matrix parameters?",
+      "explanation": "**Correct answer: A.** Coordinate-wise scaling is AdamW. Muon instead flattens the update's spectrum with a Newton–Schulz iteration, and it carries no second moment — hence the saving on optimizer state. A finite quintic trace does not set every nonzero singular value exactly to one.",
+      "topic": "9.10. Muon: change the spectrum of a matrix update",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Narrow the update’s singular-value spread with a short matrix iteration"
+        },
+        {
+          "value": "B",
+          "text": "Scale the step coordinate-wise by the accumulated second moment"
+        },
+        {
+          "value": "C",
+          "text": "Zero out update components whose magnitude falls below a threshold"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "9.10.2",
+      "prompt": "Which Gram matrix is cheaper for a 64×32 update?",
+      "explanation": "**Correct answer: B.** Transposing makes the left Gram matrix square on the smaller dimension.",
+      "topic": "9.10. Muon: change the spectrum of a matrix update",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "64×64 without transposing"
+        },
+        {
+          "value": "B",
+          "text": "32×32 after transposing"
+        },
+        {
+          "value": "C",
+          "text": "64×32 without multiplication"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.11.1",
+      "prompt": "What does QK-Clip do when it detects excessively large attention logits?",
+      "explanation": "**Correct answer: B.** QK-Clip acts on the parameter source of excessive bilinear logits by rescaling $W_Q$ and $W_K$, rather than clipping one forward pass. The Kimi K2 report presents it as one component of the stabilization system for a 15.5T-token run; the reported absence of loss spikes belongs to the complete run, not to an isolated causal test.",
+      "topic": "9.11. MuonClip: correct the parameter source of unstable attention logits",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Clips the logits from above while leaving the projection weights alone"
+        },
+        {
+          "value": "B",
+          "text": "Rescales the q and k projection weights, bringing logits back under threshold"
+        },
+        {
+          "value": "C",
+          "text": "Skips the optimizer step for the layer where the outlier occurred"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.11.2",
+      "prompt": "Where should post-correction logit regrowth start?",
+      "explanation": "**Correct answer: B.** Starting at the old maxima would simulate a branch where the correction never happened.",
+      "topic": "9.11. MuonClip: correct the parameter source of unstable attention logits",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The original, uncorrected maxima"
+        },
+        {
+          "value": "B",
+          "text": "The corrected maxima"
+        },
+        {
+          "value": "C",
+          "text": "Always zero"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.12.1",
+      "prompt": "Why does this Newton–Schulz implementation transpose a tall matrix (more rows than columns)?",
+      "explanation": "**Correct answer: C.** For an m×n input with m>n, transposition gives n×m X and an n×n left Gram matrix rather than m×m. The saving depends on shape; there is no universal factor of two. Transposing the result restores the input shape.",
+      "topic": "9.12. Code (level 1): small functions that expose their assumptions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every tall matrix necessarily diverges without transposition"
+        },
+        {
+          "value": "B",
+          "text": "Transposition replaces matrix multiplication by element-wise operations"
+        },
+        {
+          "value": "C",
+          "text": "To form the smaller left Gram matrix, then restore the original orientation"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "9.14.1",
+      "prompt": "What problem does µP solve?",
+      "explanation": "**Correct answer: A.** Without a consistent parameterization, useful update scales and learning rates can shift substantially with width. µP defines a model family in which tuning on a small proxy transfers much more reliably; it is not a guarantee across arbitrary architectures.",
+      "topic": "9.14. µP and MetaP: make small-model tuning informative",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Transferring tuned hyperparameters across widths within a consistently parameterized family"
+        },
+        {
+          "value": "B",
+          "text": "Training stability when moving from bf16 to still lower precision"
+        },
+        {
+          "value": "C",
+          "text": "Aligning the learning-rate schedule with the training set length"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "9.15.1",
+      "prompt": "What does ZeRO-3's ideal memory floor mean?",
+      "explanation": "**Correct answer: B.** ZeRO-3 shards the listed persistent state. Activation memory must be accounted for separately: at fixed local microbatch size it does not acquire the same inverse-rank scaling. Gather windows, communication buffers, and allocator overhead also affect peak memory.",
+      "topic": "9.15. Parallelism: fitting the training state before optimizing communication",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The minimum below which training must fall back to CPU offload"
+        },
+        {
+          "value": "B",
+          "text": "Weights, gradients and states are sharded across ranks; activations are not"
+        },
+        {
+          "value": "C",
+          "text": "The volume occupied by one model layer on one accelerator of the cluster"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.15.2",
+      "prompt": "For eight stages, f=7/(m+7). What is the smallest m with f strictly below 5%?",
+      "explanation": "**Correct answer: B.** At m=133 the result is exactly 5%; m=134 gives 7/141 ≈ 4.965%.",
+      "topic": "9.15. Parallelism: fitting the training state before optimizing communication",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "133"
+        },
+        {
+          "value": "B",
+          "text": "134"
+        },
+        {
+          "value": "C",
+          "text": "128"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.16.1",
+      "prompt": "Why can reported wall-clock training time not be equated directly with the arithmetic compute estimate $C\\approx6ND$?",
+      "explanation": "**Correct answer: C.** $C\\approx6ND$ estimates useful arithmetic work. Converting it to seconds requires cluster size and effective throughput; without MFU and downtime, neither quantity determines the other.",
+      "topic": "9.16. Four directions in contemporary pretraining",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Time is always reported for one accelerator while the formula is for the full cluster"
+        },
+        {
+          "value": "B",
+          "text": "The formula counts only the forward pass whereas time counts forward and backward"
+        },
+        {
+          "value": "C",
+          "text": "Accelerator count, peak throughput, MFU, communication, and downtime stand between arithmetic FLOP and wall-clock time"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

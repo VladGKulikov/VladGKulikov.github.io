@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-15",
+  "language": "en",
+  "questions": [
+    {
+      "id": "17.4.1",
+      "prompt": "Why does BM25 remain useful alongside dense retrieval?",
+      "explanation": "**Correct answer: A.** Rare strings may distinguish semantically similar documents. The analyzer must retain the required identifiers; neither branch is guaranteed to succeed on every query.",
+      "topic": "17.4. BM25 and learned sparse retrieval: the branch that protects exact terms",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It preserves rare literal terms when the analyzer retains them"
+        },
+        {
+          "value": "B",
+          "text": "It runs faster and is therefore needed as the first filtering stage"
+        },
+        {
+          "value": "C",
+          "text": "It needs no training and transfers between languages unchanged"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "17.5.1",
+      "prompt": "How is the bi-encoder trained in the lecture’s contrastive example?",
+      "explanation": "**Correct answer: B.** The positive pair should receive a higher relative score. Hard negatives teach fine distinctions, while false negatives supply an incorrect training signal.",
+      "topic": "17.5. Dense bi-encoders: learning a semantic space",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "By recovering masked tokens inside query-document pairs"
+        },
+        {
+          "value": "B",
+          "text": "By contrasting pairs: the relevant pair is encouraged to outscore in-batch negatives"
+        },
+        {
+          "value": "C",
+          "text": "By regression onto relevance scores labelled by human assessors"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.6.1",
+      "prompt": "How does Matryoshka Representation Learning allow the embedding size to vary?",
+      "explanation": "**Correct answer: C.** At inference a slice v[:k] with renormalization suffices — no separate model is needed. Hence the working pattern: coarse search on the short representation, rescoring with the full vector.",
+      "topic": "17.6. Matryoshka Representation Learning (MRL), quantization, and worked example A: the price of storing meaning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It stores several versions of the vector and picks one per query"
+        },
+        {
+          "value": "B",
+          "text": "It trains a separate projection compressing the vector to a target size"
+        },
+        {
+          "value": "C",
+          "text": "Losses applied to several prefixes train useful nested representations"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "17.6.2",
+      "prompt": "Ten million 1024-component vectors: what is the payload?",
+      "explanation": "**Correct answer: A.** MRL-256 plus int8 gives 2.38 GiB — a ×16 compromise. The table counts vectors only: index metadata, graph edges and replication are added separately on top.",
+      "topic": "17.6. Matryoshka Representation Learning (MRL), quantization, and worked example A: the price of storing meaning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "38.15 GiB in fp32 against 1.19 GiB in binary — a ×32 saving"
+        },
+        {
+          "value": "B",
+          "text": "38.15 GiB in fp32 against 9.54 GiB in binary — a ×4 saving"
+        },
+        {
+          "value": "C",
+          "text": "4.10 GiB in fp32: one byte for each component of the vector"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "17.7.1",
+      "prompt": "How does a cross-encoder differ from a bi-encoder?",
+      "explanation": "**Correct answer: B.** Joint attention operates within the pair and requires new computation for each candidate. This expands what the scorer can model; target-query evaluation determines quality. Pairs can be batched; scoring each one does not require a separate sequential call.",
+      "topic": "17.7. One vector, one pair, or a matrix: where query-document interaction happens",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It trains on the same pairs but with a different loss function"
+        },
+        {
+          "value": "B",
+          "text": "It encodes the pair jointly; its final score cannot be computed before the query"
+        },
+        {
+          "value": "C",
+          "text": "It emits a fixed-length vector for every document in the corpus"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.7.2",
+      "prompt": "What does late interaction do in ColBERT-style systems?",
+      "explanation": "**Correct answer: C.** Document token vectors are precomputed. The index is generally larger than a single-vector index; the ratio depends on dimensions, vector count, and compression.",
+      "topic": "17.7. One vector, one pair, or a matrix: where query-document interaction happens",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It defers comparison until the full answer context has been assembled"
+        },
+        {
+          "value": "B",
+          "text": "It computes similarity using only the last layers of both encoders"
+        },
+        {
+          "value": "C",
+          "text": "It keeps a vector per token and matches them between query and document"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "17.8.1",
+      "prompt": "At 10 GFLOP/s, what is the arithmetic-only estimate for 10M 1024-dimensional vectors?",
+      "explanation": "**Correct answer: A.** 2Nd = 2·10⁷·1024 ≈ 2.05·10¹⁰ operations. This is a transparent model of operation count, not a benchmark: graph traversal, memory access and recall are outside it.",
+      "topic": "17.8. Worked example B: exact search and the arithmetic of ANN",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "2.048 s against 0.4096 ms for a 2,000-distance scenario — a factor of 5,000"
+        },
+        {
+          "value": "B",
+          "text": "20.48 ms: modern libraries fit comfortably inside that budget"
+        },
+        {
+          "value": "C",
+          "text": "0.4096 ms — and that is the measured latency of an HNSW index"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "17.9.1",
+      "prompt": "What is HNSW's main trade-off?",
+      "explanation": "**Correct answer: B.** The efSearch knob moves the recall-versus-latency trade-off, and it must be measured on your own index. Graph edges meanwhile occupy memory on top of the vectors themselves.",
+      "topic": "17.9. ANN under the hood: three indexes for three resource constraints",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "High recall at the price of slow index rebuilds during inserts"
+        },
+        {
+          "value": "B",
+          "text": "Fast search at the price of graph memory and an approximate answer"
+        },
+        {
+          "value": "C",
+          "text": "An exact answer at the price of time growing linearly with corpus size"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.10.1",
+      "prompt": "How does RRF merge rankings without comparable raw scores?",
+      "explanation": "**Correct answer: C.** RRF replaces original scores with rank contributions. Score calibration is another valid strategy, but RRF requires none and guarantees no quality improvement.",
+      "topic": "17.10. Hybrid retrieval, reciprocal-rank fusion, and worked example F",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It brings scores to a common scale by normalizing per branch maximum"
+        },
+        {
+          "value": "B",
+          "text": "It takes documents that landed in the top of both branches at once"
+        },
+        {
+          "value": "C",
+          "text": "It sums 1/(k + rank): the position matters, not the score value"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "17.10.2",
+      "prompt": "Why is hybrid search not obliged to win on every metric at once?",
+      "explanation": "**Correct answer: A.** Fusion changes candidate order. Average quality can improve or worsen; measure it on fixed queries and inspect distinct error classes.",
+      "topic": "17.10. Hybrid retrieval, reciprocal-rank fusion, and worked example F",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Another branch can promote irrelevant items above relevant ones"
+        },
+        {
+          "value": "B",
+          "text": "Hybrid is tuned for recall and therefore always loses on precision"
+        },
+        {
+          "value": "C",
+          "text": "Hybrid metrics are incomparable with single-branch metrics by construction"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "17.10.3",
+      "prompt": "Two documents are relevant; one reaches the top five. What is Recall@5?",
+      "explanation": "**Correct answer: B.** Recall divides retrieved relevant documents by all relevant documents, not by ranking length.",
+      "topic": "17.10. Hybrid retrieval, reciprocal-rank fusion, and worked example F",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "1 if it ranks first"
+        },
+        {
+          "value": "B",
+          "text": "0.5"
+        },
+        {
+          "value": "C",
+          "text": "0.2"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.11.1",
+      "prompt": "What semantic relationship can be lost when chunks are too short and have no overlap?",
+      "explanation": "**Correct answer: B.** A boundary may separate a definition from its use. Both pieces can remain retrievable while neither is sufficient alone. Overlap, section headings, or wider context are possible remedies to evaluate.",
+      "topic": "17.11. Chunking: deciding what the index is allowed to retrieve",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Indexing speed: short chunks simply produce many more of them"
+        },
+        {
+          "value": "B",
+          "text": "Coherence: a definition and its use land in two separate chunks"
+        },
+        {
+          "value": "C",
+          "text": "The option to use a reranker, which needs chunks of equal length"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.12.1",
+      "prompt": "What must a context assembler guarantee under a hard token budget?",
+      "explanation": "**Correct answer: C.** Deterministic truncation is reproducible, but can remove necessary context. The teaching packer accepts whole chunks and records every skip; it counts the budget after citations are added.",
+      "topic": "17.12. The full cascade and worked example D: where request latency lives",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "That every retrieved document enters the context at least in fragments"
+        },
+        {
+          "value": "B",
+          "text": "That the document order matches the order of their relevance scores"
+        },
+        {
+          "value": "C",
+          "text": "Determinism and an explicit decision about what exactly was dropped"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "17.12.2",
+      "prompt": "Why is the 1.658 s total not a rigorous lower bound?",
+      "explanation": "**Correct answer: A.** It is a conditional serial budget; assumed rates are not hardware guarantees.",
+      "topic": "17.12. The full cascade and worked example D: where request latency lives",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Decode and MFU are assumed; some costs are omitted"
+        },
+        {
+          "value": "B",
+          "text": "Stage times can never be added"
+        },
+        {
+          "value": "C",
+          "text": "2PT counts only KV"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "17.15.1",
+      "prompt": "How does agentic RAG differ from a retrieve-once pipeline?",
+      "explanation": "**Correct answer: A.** Another search can use newly read evidence to refine the query. This may help with multi-hop tasks, but the benefit needs measurement. Call count, latency, and cost depend on the chosen trajectory.",
+      "topic": "17.15. The evolution of RAG: repair the measured failure, not the acronym list",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model itself decides whether to search again and how to rephrase"
+        },
+        {
+          "value": "B",
+          "text": "It uses several indexes instead of one shared vector store"
+        },
+        {
+          "value": "C",
+          "text": "It searches after generation in order to verify the produced answer"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "17.16.1",
+      "prompt": "A 200K-token document against a 3,712-token RAG context. What does the gap give?",
+      "explanation": "**Correct answer: B.** The ratio 200000/3712 belongs to the assumed linear model. Quadratic attention, caching, and answer quality require separate treatment.",
+      "topic": "17.16. Worked example E: RAG or long context",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Nothing in the limit: long context is processed in parallel anyway"
+        },
+        {
+          "value": "B",
+          "text": "53.88× in input length and the linear prefill estimate: 6.489 s versus 0.120 s"
+        },
+        {
+          "value": "C",
+          "text": "×53.88 on input, but prefill is the same — it does not follow length"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.17.1",
+      "prompt": "Which pair of metrics separates the retrieval and generation stages?",
+      "explanation": "**Correct answer: C.** Low recall can come from chunking, representations, filters, or the index. At high recall, inspect context assembly and generation: fluent prose does not replace evidence.",
+      "topic": "17.17. Evaluation and the embedder passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Answer completeness and its factual correctness in a judge's opinion"
+        },
+        {
+          "value": "B",
+          "text": "Request latency and the cost of processing it in tokens"
+        },
+        {
+          "value": "C",
+          "text": "Retrieval recall and the answer's groundedness in the retrieved context"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "17.17.2",
+      "prompt": "Why reject a repeated ID in an nDCG ranking?",
+      "explanation": "**Correct answer: A.** The ideal ranking contains each document once. Counting its gain repeatedly can inflate nDCG above one.",
+      "topic": "17.17. Evaluation and the embedder passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Its gain can be counted twice"
+        },
+        {
+          "value": "B",
+          "text": "Logarithms are undefined for repeated strings"
+        },
+        {
+          "value": "C",
+          "text": "MRR always becomes zero"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "17.14.1",
+      "prompt": "What does matching an excerpt to source offsets establish?",
+      "explanation": "**Correct answer: C.** Exact text and a citation establish provenance; relevance and completeness need separate checks.",
+      "topic": "17.14. Level 2: what the notebook makes reproducible",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Answer correctness"
+        },
+        {
+          "value": "B",
+          "text": "LLM generation quality"
+        },
+        {
+          "value": "C",
+          "text": "The excerpt's provenance"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

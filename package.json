@@ -8,13 +8,15 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "build:pages": "vite build --config vite.pages.config.ts && vite build --config vite.prerender.config.ts && node scripts/prerender.mjs && node scripts/validate-static.mjs",
+    "build:pages": "vite build --config vite.pages.config.ts && vite build --config vite.prerender.config.ts && node scripts/prerender.mjs && node scripts/validate-static.mjs && node scripts/validate-quizzes.mjs",
     "check:math": "node scripts/validate-math.mjs",
     "check:markup": "node scripts/validate-markup.mjs",
     "check:publication": "node scripts/validate-publication.mjs",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-pages --ignore-pattern .next",
-    "check:static": "node scripts/validate-static.mjs"
+    "check:static": "node scripts/validate-static.mjs",
+    "check:quizzes": "node scripts/validate-quizzes.mjs",
+    "check:quiz-markup": "node scripts/validate-markup.mjs --quizzes"
   },
   "dependencies": {
     "katex": "^0.18.3",

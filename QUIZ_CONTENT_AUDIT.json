@@ -1,0 +1,778 @@
+{
+  "status": "PASS",
+  "sources": [
+    {
+      "course": "modern-llms",
+      "module": "module-01",
+      "language": "ru",
+      "source": "modules/module-01/ru/module_01_tests_RU.md",
+      "sha256": "a5fecb76b3f5d7a7c02ade50aef75fb91e886c2939fe045f4d31399e75b97bb9",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-02",
+      "language": "ru",
+      "source": "modules/module-02/ru/module_02_tests_RU.md",
+      "sha256": "5aeb53a1ee0f7c1944b35812f42c3c672574320f935911724534c2ff2d2c1668",
+      "count": 16
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-18",
+      "language": "ru",
+      "source": "modules/module-03/ru/module_03_tests_RU.md",
+      "sha256": "84f850cd9271a2d5690cac0e73361bde92adb7b5f5f94f0ceae8de8f17fbf0bf",
+      "count": 46
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-03",
+      "language": "ru",
+      "source": "modules/module-04/ru/module_04_tests_RU.md",
+      "sha256": "ca839db73fcc9fba74130b07ada00454b7d7e3e6b4ed5a1b0ddb84d973be98ba",
+      "count": 23
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-04",
+      "language": "ru",
+      "source": "modules/module-05/ru/module_05_tests_RU.md",
+      "sha256": "941c62773aaa72ca7dc1896fe04fd4a7ad9a69c00db99053a2358e7b1f16dd97",
+      "count": 23
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-05",
+      "language": "ru",
+      "source": "modules/module-06/ru/module_06_tests_RU.md",
+      "sha256": "46b3b7203e61a485adfebd81c84cb49051f4b02eb91cae53a9588f33de9929a9",
+      "count": 22
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-06",
+      "language": "ru",
+      "source": "modules/module-07/ru/module_07_tests_RU.md",
+      "sha256": "5d80a0e24f5801aa855143b7961f9f777e531836cdf236a2099b4f68e5b12f47",
+      "count": 21
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-07",
+      "language": "ru",
+      "source": "modules/module-08/ru/module_08_tests_RU.md",
+      "sha256": "f539e034565faaca217ca73dd1a313b25e577968138ed66689443ae814d605a9",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-08",
+      "language": "ru",
+      "source": "modules/module-09/ru/module_09_tests_RU.md",
+      "sha256": "6b90d9b0afe2e38966dad8f758f534b732ada721cea98e88acf0c58c41372509",
+      "count": 18
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-09",
+      "language": "ru",
+      "source": "modules/module-10/ru/module_10_tests_RU.md",
+      "sha256": "b0eaeb96f627cc3c523a3bcc785b2de677062e44cf4e2ac0e3cb35c16a1b4479",
+      "count": 20
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-10",
+      "language": "ru",
+      "source": "modules/module-11/ru/module_11_tests_RU.md",
+      "sha256": "cea72d896e0a9b45cd45bfab1596bab2a106841ee8b8f513209e4061c68b7165",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-07b",
+      "language": "ru",
+      "source": "modules/module-12/ru/module_12_tests_RU.md",
+      "sha256": "dc8d633d63a7624cb708b456e200eb2a41e587a767a72991bd34ee7e49dc7bf3",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-11",
+      "language": "ru",
+      "source": "modules/module-13/ru/module_13_tests_RU.md",
+      "sha256": "2685f452968d45fc16af2900c62ad72a8168ff0a5aa6d501233083e4f8e31d9a",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-12",
+      "language": "ru",
+      "source": "modules/module-14/ru/module_14_tests_RU.md",
+      "sha256": "815ba5a068c87bee4b9be512bdced74c1928b69ff77746f387c202d09af58c2a",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-13",
+      "language": "ru",
+      "source": "modules/module-15/ru/module_15_tests_RU.md",
+      "sha256": "9ac3f503ec7ae271d358897959f63490d2ff0e3bd529dd7d43f26b702d024020",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-14",
+      "language": "ru",
+      "source": "modules/module-16/ru/module_16_tests_RU.md",
+      "sha256": "f9a51bf6d2f3cc694f7826be0da55740c6d43a7be772f0884522e8d6f6e24ff2",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-15",
+      "language": "ru",
+      "source": "modules/module-17/ru/module_17_tests_RU.md",
+      "sha256": "aa479c80a6c4f9c5ca39b60794fa88423f2adea808743aea48684dc2ea0d05b5",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-16",
+      "language": "ru",
+      "source": "modules/module-18/ru/module_18_tests_RU.md",
+      "sha256": "0bda96a8123c98d63eec8bb3774aed9fe984eccc83f6495b9e95dfc01ae21d16",
+      "count": 20
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-17",
+      "language": "ru",
+      "source": "modules/module-19/ru/module_19_tests_RU.md",
+      "sha256": "3c3b8bcc18fa1d8a98c31e927aeb8e248ac4ee37757c440c7d12f7c62f79e4b5",
+      "count": 20
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-20",
+      "language": "ru",
+      "source": "modules/module-20/ru/module_20_tests_RU.md",
+      "sha256": "c24dd8ad6a85400c32f3f0ece2f97925067230b004e00e624fa4b12bb8f43170",
+      "count": 15
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-01",
+      "language": "en",
+      "source": "modules/module-01/en/module_01_tests_EN.md",
+      "sha256": "870f5a365ebc59498d1547efde3ad2f748553580c3fb1974f5e10eca709cd75c",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-02",
+      "language": "en",
+      "source": "modules/module-02/en/module_02_tests_EN.md",
+      "sha256": "2fff74b45da6c128e0a685ed7376494838e5786226f003eeff5742fb52952aad",
+      "count": 16
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-18",
+      "language": "en",
+      "source": "modules/module-03/en/module_03_tests_EN.md",
+      "sha256": "7df8f988a8a74397f0dbeb48b0abc30ea4792cc6b63178848d4e503aa405c1e2",
+      "count": 46
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-03",
+      "language": "en",
+      "source": "modules/module-04/en/module_04_tests_EN.md",
+      "sha256": "cacf5c718dcd78112a30a2655c24f2995af8132312b795d8327bec0d57016cea",
+      "count": 23
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-04",
+      "language": "en",
+      "source": "modules/module-05/en/module_05_tests_EN.md",
+      "sha256": "2e61f97d44f285a1c14879702ec89906da7a271d543c0d151ae47ea76687fbd0",
+      "count": 23
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-05",
+      "language": "en",
+      "source": "modules/module-06/en/module_06_tests_EN.md",
+      "sha256": "7e9d715a43bd365672459a5ebafdbb5c030902c5720953f9979b6bd1b8ba622e",
+      "count": 22
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-06",
+      "language": "en",
+      "source": "modules/module-07/en/module_07_tests_EN.md",
+      "sha256": "3418f4026bc133ac650653ea840c767a795f9edc9f624167fdf0eed62e7b9bdb",
+      "count": 21
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-07",
+      "language": "en",
+      "source": "modules/module-08/en/module_08_tests_EN.md",
+      "sha256": "6fe15bf998ce4932842aa5ec15e8439b4b456df500504c0ee654bf75c91c26bb",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-08",
+      "language": "en",
+      "source": "modules/module-09/en/module_09_tests_EN.md",
+      "sha256": "8437777cdcbccf96c93212ee24fdce9c069fa89be788b7084368ebcc483a38c2",
+      "count": 18
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-09",
+      "language": "en",
+      "source": "modules/module-10/en/module_10_tests_EN.md",
+      "sha256": "6f07a2c55ef91bdd7a92193fdd4dade1eb53a038c8cb6c987cedbc7d9590bea8",
+      "count": 20
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-10",
+      "language": "en",
+      "source": "modules/module-11/en/module_11_tests_EN.md",
+      "sha256": "0d4e574d2e887ecede7642b14c81bd011f0be41c1eecb97a9db191c5dd0d0238",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-07b",
+      "language": "en",
+      "source": "modules/module-12/en/module_12_tests_EN.md",
+      "sha256": "4d940d9b5c2da9f7f3e71337b0be4f10d52b1ae63aa1a655b238d9177952165a",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-11",
+      "language": "en",
+      "source": "modules/module-13/en/module_13_tests_EN.md",
+      "sha256": "670388e7013651c5ac937f2bd5e9bb1c318fea771e894b20e0d0dfcf176af7fe",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-12",
+      "language": "en",
+      "source": "modules/module-14/en/module_14_tests_EN.md",
+      "sha256": "1fc1a755dfc0616e0ecc1251ae0b81fd4799f05d3878dd91c0d95f599c8e8ae1",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-13",
+      "language": "en",
+      "source": "modules/module-15/en/module_15_tests_EN.md",
+      "sha256": "1e5b8a859f214fac59886ab35fd49b0bf02e1c0dbdff3544608507bafd27819f",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-14",
+      "language": "en",
+      "source": "modules/module-16/en/module_16_tests_EN.md",
+      "sha256": "4d50c827a5a0157da7601822d9beb152ec722be64796d7873ebb8dd3cad6d98b",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-15",
+      "language": "en",
+      "source": "modules/module-17/en/module_17_tests_EN.md",
+      "sha256": "e85467979bbe7dfb518f8595ea6638e806a4f6aea6b85c87344bc528728d3051",
+      "count": 19
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-16",
+      "language": "en",
+      "source": "modules/module-18/en/module_18_tests_EN.md",
+      "sha256": "1d4f9515c778e4b52f0e5b7e188c1881c03016dbba1eea63da7d034245aa3be4",
+      "count": 20
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-17",
+      "language": "en",
+      "source": "modules/module-19/en/module_19_tests_EN.md",
+      "sha256": "6e0dc897d89cfa22a8920c45139f202dbf1d4e2faadc63ff16da4e8bdbf1b313",
+      "count": 20
+    },
+    {
+      "course": "modern-llms",
+      "module": "module-20",
+      "language": "en",
+      "source": "modules/module-20/en/module_20_tests_EN.md",
+      "sha256": "3b82299bff9c96b18c1e90d39dc48ea0befa36210fc0d32f67a5df0b3aa9263f",
+      "count": 15
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-01",
+      "language": "ru",
+      "source": "modules/module-01/Module_1_Assessment_RU.md",
+      "sha256": "3e8d16cbd5725c2e9b636712fab53005d1f29ceba7a370d30f692bbf8cf92211",
+      "count": 10
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-02",
+      "language": "ru",
+      "source": "modules/module-02/Module_2_Assessment_RU.md",
+      "sha256": "aa9080b4fa5aa0df3723b25be5433c48c64361de115651371b036ae337303c64",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-03",
+      "language": "ru",
+      "source": "modules/module-03/Module_3_Assessment_RU.md",
+      "sha256": "69eb394ee23cfaa0b80cbad68c778e0309837f1c67d4aa569b349dcca1f5afcd",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-04",
+      "language": "ru",
+      "source": "modules/module-04/Module_4_Assessment_RU.md",
+      "sha256": "c3a219d5bbd9b4e2d0639e1dc55822c2697ebb81d2f930b5c4e279706376e684",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-05",
+      "language": "ru",
+      "source": "modules/module-05/Module_5_Assessment_RU.md",
+      "sha256": "867bfae5be2cdb02f94296b851e5436c5cba6e9c334fb7afe15d08a9de2be78b",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-06",
+      "language": "ru",
+      "source": "modules/module-06/Module_6_Assessment_RU.md",
+      "sha256": "0992334048046b623e39e178da22030adf4dc85657013ea619f7f4557c2b8d1a",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-07",
+      "language": "ru",
+      "source": "modules/module-07/Module_7_Assessment_RU.md",
+      "sha256": "39f5271fe3dcee9d3e3bec68ced93e2523ded2e65c7da64bbfbe54bc311d47c0",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-08",
+      "language": "ru",
+      "source": "modules/module-08/Module_8_Assessment_RU.md",
+      "sha256": "88c6be81e0e4afc95636e960747c1a34b1a956ef1e3139ec57da26633d9629d8",
+      "count": 9
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-09",
+      "language": "ru",
+      "source": "modules/module-09/Module_9_Assessment_RU.md",
+      "sha256": "ebf926ca76fdbab4d62a228ba1b5ad2a3411b0231228cf49407ef292b4355e85",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-10",
+      "language": "ru",
+      "source": "modules/module-10/Module_10_Assessment_RU.md",
+      "sha256": "df62f5fc3329c736f49de313ee4650d8f9c702c381c806ff4f4ff648162bb495",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-11",
+      "language": "ru",
+      "source": "modules/module-11/Module_11_Assessment_RU.md",
+      "sha256": "94d74182808f8181bfbb27cc33c26d2ff12f2d409de8a810f1f5b79619f8d021",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-12",
+      "language": "ru",
+      "source": "modules/module-12/Module_12_Assessment_RU.md",
+      "sha256": "89a80074b8df7e5b39755d52db9fde3bd0f6ad7e0b32502c037a66ccf6869c56",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-13",
+      "language": "ru",
+      "source": "modules/module-13/Module_13_Assessment_RU.md",
+      "sha256": "9fe30127a93ce5541551da2fd3e741df12327d171ae498f36a077300409308c2",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-01",
+      "language": "en",
+      "source": "modules/module-01/Module_1_Assessment_EN.md",
+      "sha256": "6c61d4eb9e7f7180c632b13e96907df065454193629d4b86e53d7b978d0724aa",
+      "count": 10
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-02",
+      "language": "en",
+      "source": "modules/module-02/Module_2_Assessment_EN.md",
+      "sha256": "bed113d7b959403b830f1422feb7611e449653167962ecc075678dfe0ae7e41f",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-03",
+      "language": "en",
+      "source": "modules/module-03/Module_3_Assessment_EN.md",
+      "sha256": "c97e1da57533c1deeb047030f991f1563b1ca1997f208f0570d5b5d6d55a2293",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-04",
+      "language": "en",
+      "source": "modules/module-04/Module_4_Assessment_EN.md",
+      "sha256": "a02846ed2170840fcf4632986a747aa4ed58fb4a555e46a9c43b1470fce1742b",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-05",
+      "language": "en",
+      "source": "modules/module-05/Module_5_Assessment_EN.md",
+      "sha256": "6ed6f9462662c952dadb42c39f606678c505599a50bbcb32d0e73dddb33c1a2b",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-06",
+      "language": "en",
+      "source": "modules/module-06/Module_6_Assessment_EN.md",
+      "sha256": "73ee0ef5866f71d3ad6eabacdb8d213b8fad2c406498b88c791098f19fe78026",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-07",
+      "language": "en",
+      "source": "modules/module-07/Module_7_Assessment_EN.md",
+      "sha256": "0fde3eb480b538edc7a9ea0a4c13f829034bc175d59d4c0a17a4c908cb78969c",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-08",
+      "language": "en",
+      "source": "modules/module-08/Module_8_Assessment_EN.md",
+      "sha256": "6c4b24d0245b59f79025f02fc913d9c4bf6aed8a86b1407ff7404d9e38f182e8",
+      "count": 9
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-09",
+      "language": "en",
+      "source": "modules/module-09/Module_9_Assessment_EN.md",
+      "sha256": "60efbcf8a8870552bf7220098ec4443ef0f6f65c2e3032982c65c2776c95fd56",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-10",
+      "language": "en",
+      "source": "modules/module-10/Module_10_Assessment_EN.md",
+      "sha256": "6a52729649c6453c311dbc544d105284811ee69d24e616acd4d1755c219f46ae",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-11",
+      "language": "en",
+      "source": "modules/module-11/Module_11_Assessment_EN.md",
+      "sha256": "233d07a9606c6195296f4cc3000291b238fb05d0cd3c968d65d07c218ad03b0d",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-12",
+      "language": "en",
+      "source": "modules/module-12/Module_12_Assessment_EN.md",
+      "sha256": "854d66718a73e82b19a0993291d5cc9e38da95daf9c163d318961e7d03a40f31",
+      "count": 12
+    },
+    {
+      "course": "rl-for-llm",
+      "module": "module-13",
+      "language": "en",
+      "source": "modules/module-13/Module_13_Assessment_EN.md",
+      "sha256": "17698defdbb96a87d42771047fc00345f36e1deb5e01a69379c3ad882809332d",
+      "count": 12
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-01",
+      "language": "ru",
+      "source": "Module_01/Module_1__Test_questions_RU.md",
+      "sha256": "b9825944fbf0a1b24d859d6970bc87f014c7d5c031b76f5aefd001b3c813e092",
+      "count": 14
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-02",
+      "language": "ru",
+      "source": "Module_02/Module_2__Test_questions_RU.md",
+      "sha256": "00d97b950c9209a67e511b7eac0c1309aa17b43c3eb7a7bc9b1d3f7be20e74ef",
+      "count": 20
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-03",
+      "language": "ru",
+      "source": "Module_03/Module_3__Test_questions_RU.md",
+      "sha256": "cab1ea8b881b5d32cf9e2088609321f0b5207398b1b0c7bc41ebdd3838001bda",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-04",
+      "language": "ru",
+      "source": "Module_04/Module_4__Test_questions_RU.md",
+      "sha256": "e18b57008289fbd05389fa800b3bf721db2eb68ea23176769a41467973f43f06",
+      "count": 24
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-05",
+      "language": "ru",
+      "source": "Module_05/Module_5__Test_questions_RU.md",
+      "sha256": "e520a2fd25a24803e48b048e11d2d245c7aeadf21bc15cffcd6bdfa6b1443264",
+      "count": 24
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-06",
+      "language": "ru",
+      "source": "Module_06/Module_6__Test_questions_RU.md",
+      "sha256": "947373c913b633be4a160f96022b7dcb9d0551244da03fe9a311d04705c9533f",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-07",
+      "language": "ru",
+      "source": "Module_07/Module_7__Test_questions_RU.md",
+      "sha256": "ac3f5f53972702df528b2b216d29a41aba6217cd1ec54c45f2d442ef548c6deb",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-08",
+      "language": "ru",
+      "source": "Module_08/Module_8__Test_questions_RU.md",
+      "sha256": "67f9343c5043759f47faa0bf820fa7b99a247d654b9196d74c9301ba8d3cf044",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-09",
+      "language": "ru",
+      "source": "Module_09/Module_9__Test_questions_RU.md",
+      "sha256": "1e9f97bc619fd8a1c492f4c54c99d702ce6629d034c49799ddec7398ffade300",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-10",
+      "language": "ru",
+      "source": "Module_10/Module_10__Test_questions_RU.md",
+      "sha256": "275f458e4f54e4b58930e7af3d62147abd431eff456cddca66d1fd3e7045ee4d",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-11",
+      "language": "ru",
+      "source": "Module_11/Module_11__Test_questions_RU.md",
+      "sha256": "d5bc5b4db1a91840f6ca690178d72ff7c9475865503c3ef8627bb114e6231333",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-12",
+      "language": "ru",
+      "source": "Module_12/Module_12__Test_questions_RU.md",
+      "sha256": "50b332b6414bf851a7f8911d634fb0be6c1c8ca9253c3aa9e55263c9a791607d",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-13",
+      "language": "ru",
+      "source": "Module_13/Module_13__Test_questions_RU.md",
+      "sha256": "2e8567af0e02c47f705267917dbfd257cdeb3cb621d91e8c9e0e142de533dc28",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-14",
+      "language": "ru",
+      "source": "Module_14/Module_14__Test_questions_RU.md",
+      "sha256": "ea821fd89241ff651bed3e57ccf5050545521d50c61e1112dc329eef6a9bb6d1",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-15",
+      "language": "ru",
+      "source": "Module_15/Module_15__Test_questions_RU.md",
+      "sha256": "5865bfadbd0b0e45c84f6deaac327426c122fd55f704270455b3927cda3e6920",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-01",
+      "language": "en",
+      "source": "Module_01/Module_1__Test_questions.md",
+      "sha256": "f8589c8dbaf3433f739343530760868b704d911d6af27b50e92eff8153ca695d",
+      "count": 14
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-02",
+      "language": "en",
+      "source": "Module_02/Module_2__Test_questions.md",
+      "sha256": "5ab6a9ef9ee17829ac8f3b62dcc8a3d25407f3a3e3ff31e96c4032db671791d9",
+      "count": 20
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-03",
+      "language": "en",
+      "source": "Module_03/Module_3__Test_questions.md",
+      "sha256": "0ddda2e8b4989db86a49c64274581d6197ecf9a38a62aed71b94df3e29711821",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-04",
+      "language": "en",
+      "source": "Module_04/Module_4__Test_questions.md",
+      "sha256": "509c89d9560b268d647e65f482498245f283fc083abaa2b97e11ff2012d57eb3",
+      "count": 24
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-05",
+      "language": "en",
+      "source": "Module_05/Module_5__Test_questions.md",
+      "sha256": "edd76d22e462990d8ae62552cc939daf8216fd8fe7086bfb44d063ecce4f17a4",
+      "count": 24
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-06",
+      "language": "en",
+      "source": "Module_06/Module_6__Test_questions.md",
+      "sha256": "fa74a60f6be52a05350e6a48be6504fd89ab2b3a520dfc741c871646961ecb5d",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-07",
+      "language": "en",
+      "source": "Module_07/Module_7__Test_questions.md",
+      "sha256": "43f0c4a55ccd0ecf10c23961cebf0ad6ebe19f52adc38c0e6e2e93441c2d83d5",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-08",
+      "language": "en",
+      "source": "Module_08/Module_8__Test_questions.md",
+      "sha256": "8ebdde52469f91b7f77ea9d4b1e75ed104ff869000d995d51eac16ccde8935cb",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-09",
+      "language": "en",
+      "source": "Module_09/Module_9__Test_questions.md",
+      "sha256": "d3057374afa3f4d3c8a0ae53a237b02a58d68f916325de3fda8e08103a8c518e",
+      "count": 29
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-10",
+      "language": "en",
+      "source": "Module_10/Module_10__Test_questions.md",
+      "sha256": "0c7e8596c251e7fe88fc0d5a81bc7b49ab62c42655de8e97f18c361ab1d3dd6a",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-11",
+      "language": "en",
+      "source": "Module_11/Module_11__Test_questions.md",
+      "sha256": "1804fd99526fd1a6e127cf1af3ffb399c971863ce426d8fb6c01d2b21992afd8",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-12",
+      "language": "en",
+      "source": "Module_12/Module_12__Test_questions.md",
+      "sha256": "48b4401056882d2c1d12f9eba27c99e22a26d1c0bf0b5a0d8643fa885778bc47",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-13",
+      "language": "en",
+      "source": "Module_13/Module_13__Test_questions.md",
+      "sha256": "e70947ea6a8960ec560d79a6ee95e2c78d8eac3de91eb8f2f3bea2343f1b13b1",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-14",
+      "language": "en",
+      "source": "Module_14/Module_14__Test_questions.md",
+      "sha256": "ea17ba97124ae47c0773a941a3cb6b47070c44dda493e60216f092c96f57e796",
+      "count": 25
+    },
+    {
+      "course": "information-theory-for-ml",
+      "module": "module-15",
+      "language": "en",
+      "source": "Module_15/Module_15__Test_questions.md",
+      "sha256": "8066a1c6dea454eebe63bc9ed53c1d53c77ffed842e70928c7e1bb27278977e2",
+      "count": 25
+    }
+  ],
+  "counts": {
+    "modern-llms": 415,
+    "rl-for-llm": 151,
+    "information-theory-for-ml": 377
+  }
+}

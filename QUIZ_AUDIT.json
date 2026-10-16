@@ -1,0 +1,337 @@
+{
+  "status": "PASS",
+  "date": "2026-10-16",
+  "stage": "Bilingual module quizzes with browser-local grading",
+  "backup": "site-before-quizzes-2026-10-16.bundle (verified full Git history at 6f0a8da)",
+  "content": {
+    "questionsPerLanguage": 943,
+    "modernLLMs": 415,
+    "rlForLLM": 151,
+    "informationTheoryForML": 377,
+    "localizedQuizPages": 96,
+    "automaticQuestionsPerLanguage": 858,
+    "selfCheckQuestionsPerLanguage": 85,
+    "referenceAppendixHasNoAuthoredQuiz": true
+  },
+  "static": {
+    "status": "PASS",
+    "counts": {
+      "pages": 202,
+      "lectures": 98,
+      "quizzes": 96,
+      "links": 11542,
+      "images": 857,
+      "formulas": 15688
+    },
+    "errors": []
+  },
+  "grading": {
+    "status": "PASS",
+    "counts": {
+      "pages": 96,
+      "questions": 1886,
+      "automatic": 1716,
+      "selfCheck": 170,
+      "assertions": 16567
+    }
+  },
+  "markup": {
+    "status": "PASS",
+    "totals": {
+      "documents": 96,
+      "headings": 1886,
+      "tables": 14,
+      "lists": 1622,
+      "listItems": 5644,
+      "images": 0,
+      "links": 0,
+      "formulas": 2410,
+      "codeBlocks": 34
+    },
+    "courses": {
+      "modern-llms": {
+        "ru": 20,
+        "en": 20
+      },
+      "rl-for-llm": {
+        "ru": 13,
+        "en": 13
+      },
+      "information-theory-for-ml": {
+        "ru": 15,
+        "en": 15
+      }
+    },
+    "errors": []
+  },
+  "browser": {
+    "mobile": {
+      "390x844": {
+        "pages": 96,
+        "failures": 0
+      },
+      "320x740": {
+        "pages": 96,
+        "failures": 0
+      }
+    },
+    "languageAndMenus": {
+      "courses": 3,
+      "states": [
+        "closed",
+        "left open",
+        "right open"
+      ],
+      "checks": 12,
+      "allPassed": true,
+      "preserves": [
+        "question",
+        "within-question reading position",
+        "selected choices",
+        "numeric input",
+        "grading feedback",
+        "left/right drawers",
+        "body scroll lock"
+      ]
+    },
+    "lectureRegression": [
+      {
+        "course": "modern-llms",
+        "before": {
+          "language": "ru",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "3",
+          "top": 95.74799346923828
+        },
+        "en": {
+          "language": "en",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "3",
+          "top": 95.74799346923828
+        },
+        "ru": {
+          "language": "ru",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "3",
+          "top": 95.74799346923828
+        },
+        "ok": true
+      },
+      {
+        "course": "rl-for-llm",
+        "before": {
+          "language": "ru",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "1.3",
+          "top": 95.8919906616211
+        },
+        "en": {
+          "language": "en",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "1.3",
+          "top": 95.74799346923828
+        },
+        "ru": {
+          "language": "ru",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "1.3",
+          "top": 95.8919906616211
+        },
+        "ok": true
+      },
+      {
+        "course": "information-theory-for-ml",
+        "before": {
+          "language": "ru",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "1.3",
+          "top": 96.17999267578124
+        },
+        "en": {
+          "language": "en",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "1.3",
+          "top": 96.02399444580078
+        },
+        "ru": {
+          "language": "ru",
+          "left": true,
+          "overflow": false,
+          "right": false,
+          "section": "1.3",
+          "top": 96.17999267578124
+        },
+        "ok": true
+      }
+    ],
+    "history": {
+      "before": {
+        "block": "quiz-controls js-only",
+        "bodyLocked": false,
+        "expanded": false,
+        "feedback": "Верно.",
+        "language": "ru",
+        "left": false,
+        "numbers": [],
+        "progress": 0.4100609514810436,
+        "question": "1.7.1",
+        "right": false,
+        "selected": [
+          "C"
+        ]
+      },
+      "back": {
+        "block": "quiz-controls js-only",
+        "bodyLocked": false,
+        "expanded": false,
+        "feedback": "Верно.",
+        "language": "ru",
+        "left": false,
+        "numbers": [],
+        "progress": 0.4100609514810436,
+        "question": "1.7.1",
+        "right": false,
+        "selected": [
+          "C"
+        ]
+      },
+      "second": {
+        "block": "markdown-h2",
+        "bodyLocked": false,
+        "expanded": false,
+        "feedback": "",
+        "language": "ru",
+        "left": false,
+        "numbers": [],
+        "progress": 0.9956215165375962,
+        "question": "2.3.1",
+        "right": false,
+        "selected": [
+          "A"
+        ]
+      },
+      "forward": {
+        "block": "markdown-h2",
+        "bodyLocked": false,
+        "expanded": false,
+        "feedback": "",
+        "language": "ru",
+        "left": false,
+        "numbers": [],
+        "progress": 0.9956215165375962,
+        "question": "2.3.1",
+        "right": false,
+        "selected": [
+          "A"
+        ]
+      }
+    },
+    "anchorHistory": {
+      "before": {
+        "block": "quiz-controls js-only",
+        "bodyLocked": false,
+        "expanded": false,
+        "feedback": "Верно.",
+        "language": "ru",
+        "left": false,
+        "numbers": [],
+        "progress": 0.4100609514810436,
+        "question": "1.7.1",
+        "right": false,
+        "selected": [
+          "C"
+        ]
+      },
+      "back": {
+        "block": "quiz-controls js-only",
+        "bodyLocked": false,
+        "expanded": false,
+        "feedback": "Верно.",
+        "language": "ru",
+        "left": false,
+        "numbers": [],
+        "progress": 0.4100609514810436,
+        "question": "1.7.1",
+        "right": false,
+        "selected": [
+          "C"
+        ]
+      },
+      "anchorTop": 95.79598999023438,
+      "forwardTop": 95.79598999023438
+    },
+    "desktop": {
+      "before": 849.9959716796875,
+      "hidden": 1424.639892578125,
+      "layout": "reader-layout left-menu-hidden right-menu-hidden",
+      "overflow": false
+    },
+    "expandedAnswersAt320": [
+      {
+        "errors": 0,
+        "language": "ru",
+        "languageVisible": true,
+        "overflow": false,
+        "questions": 12,
+        "url": "/__nojs/ru/courses/rl-for-llm/module-12/tests/",
+        "viewport": 320,
+        "wideContainers": []
+      },
+      {
+        "errors": 0,
+        "language": "ru",
+        "languageVisible": true,
+        "overflow": false,
+        "questions": 23,
+        "url": "/__nojs/ru/courses/modern-llms/module-03/tests/",
+        "viewport": 320,
+        "wideContainers": []
+      },
+      {
+        "errors": 0,
+        "language": "ru",
+        "languageVisible": true,
+        "overflow": false,
+        "questions": 25,
+        "url": "/__nojs/ru/courses/information-theory-for-ml/module-15/tests/",
+        "viewport": 320,
+        "wideContainers": []
+      }
+    ],
+    "functionalChecks": [
+      "wrong and correct single-choice answers",
+      "partial, complete and extra multiple-choice answers",
+      "comma decimal numeric input",
+      "ordered matching and wrong matching",
+      "answer expansion persists across RU/EN and reload",
+      "open-answer draft persists across RU/EN and reload",
+      "cancel reset preserves draft; confirm reset clears current module only; other module retained"
+    ],
+    "noJavaScript": {
+      "method": "Local preview strips scripts and exposes noscript fallbacks",
+      "questions": 12,
+      "nativeAnswerExpansion": true,
+      "nativeModuleIndex": true,
+      "nativeRuEnNavigation": true,
+      "pageOverflowAt320": false
+    },
+    "consoleErrorsObserved": 0
+  },
+  "scope": "No code execution, server submissions, external analytics, DNS/hosting changes or OpenAI mirror publication. Original lecture and image hashes remain unchanged."
+}

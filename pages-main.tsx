@@ -14,8 +14,8 @@ const route = parseUrl(new URL(window.location.href));
 if (initial && !initial.initialPage.notFound && route.notFound) {
   window.location.replace("/404.html");
 } else if (initial && !initial.initialPage.notFound && !route.notFound &&
-    buildLocation(route.language, route.courseKey, route.moduleKey) !== window.location.pathname) {
-  window.location.replace(`${buildLocation(route.language, route.courseKey, route.moduleKey)}${window.location.hash}`);
+    buildLocation(route.language, route.courseKey, route.moduleKey, route.section) !== window.location.pathname) {
+  window.location.replace(`${buildLocation(route.language, route.courseKey, route.moduleKey, route.section)}${window.location.hash}`);
 } else {
   const app = <StrictMode><CourseLibrary {...initial} /></StrictMode>;
   if (initial) hydrateRoot(root, app);

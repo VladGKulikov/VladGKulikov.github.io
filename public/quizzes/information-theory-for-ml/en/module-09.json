@@ -1,0 +1,794 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-09",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "What is minimized in the definition of the rate–distortion function $R(D)$?",
+      "explanation": "**Correct answer: A.** After optimization, mutual information has the operational meaning of the minimum asymptotic rate.",
+      "topic": "9.2. Rate–distortion: the minimum rate at an allowed loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$I(X;\\widehat X)$ over test channels satisfying the average-distortion constraint"
+        },
+        {
+          "value": "B",
+          "text": "Only the reconstruction entropy $H(\\widehat X)$"
+        },
+        {
+          "value": "C",
+          "text": "The number of decoder parameters"
+        },
+        {
+          "value": "D",
+          "text": "The worst single-example error independently of the setup"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "What is a test channel $P_{\\widehat X\\mid X}$?",
+      "explanation": "**Correct answer: B.** It is a mathematical object in the variational definition of R(D) and need not model a physical link.",
+      "topic": "9.2. Rate–distortion: the minimum rate at an allowed loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Necessarily a physical noisy communication channel"
+        },
+        {
+          "value": "B",
+          "text": "A conditional distribution of allowed reconstructions for each source outcome"
+        },
+        {
+          "value": "C",
+          "text": "Only a deterministic quantizer"
+        },
+        {
+          "value": "D",
+          "text": "The training-data distribution"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "9.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "When is the simple statement $R(0)=H(X)$ valid?",
+      "explanation": "**Correct answer: C.** For a continuous source under squared error, R(D) typically diverges as D↓0.",
+      "topic": "9.2. Rate–distortion: the minimum rate at an allowed loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "For every continuous source under MSE"
+        },
+        {
+          "value": "B",
+          "text": "Only for a Gaussian source"
+        },
+        {
+          "value": "C",
+          "text": "For a finite discrete source when zero distortion requires exact reconstruction"
+        },
+        {
+          "value": "D",
+          "text": "Always, independently of the distortion"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "9.2.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "For $X\\sim\\mathcal N(0,\\sigma^2)$ under squared error, what is $R(D)$ for $0<D<\\sigma^2$ in bits?",
+      "explanation": "**Correct answer: D.** The factor 1/2 corresponds to one real-valued source symbol.",
+      "topic": "9.2. Rate–distortion: the minimum rate at an allowed loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\log_2(\\sigma^2/D)$"
+        },
+        {
+          "value": "B",
+          "text": "$\\sigma^2-D$"
+        },
+        {
+          "value": "C",
+          "text": "$h_2(D)$"
+        },
+        {
+          "value": "D",
+          "text": "$\\tfrac12\\log_2(\\sigma^2/D)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "9.2.4"
+    },
+    {
+      "id": "item-005",
+      "prompt": "Why is the choice of distortion part of the model?",
+      "explanation": "**Correct answer: A.** The theory does not decide which differences matter to the user.",
+      "topic": "9.2. Rate–distortion: the minimum rate at an allowed loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because the theory optimizes rate only after a cost of error has been specified"
+        },
+        {
+          "value": "B",
+          "text": "Because all distortion measures are equivalent"
+        },
+        {
+          "value": "C",
+          "text": "Because MSE always matches human perception"
+        },
+        {
+          "value": "D",
+          "text": "Because distortion does not affect the optimal code"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.2.5"
+    },
+    {
+      "id": "item-006",
+      "prompt": "What does $I(X;T)-\\beta I(T;Y)$ balance?",
+      "explanation": "**Correct answer: B.** I(X;T) plays the role of rate, while I(T;Y) measures relevance.",
+      "topic": "9.3. Information Bottleneck: preserve what is needed for $Y$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Optimizer speed and batch size"
+        },
+        {
+          "value": "B",
+          "text": "Compression of the input and preservation of target information"
+        },
+        {
+          "value": "C",
+          "text": "Reconstruction error only"
+        },
+        {
+          "value": "D",
+          "text": "Number of classes and network depth"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "9.3.1"
+    },
+    {
+      "id": "item-007",
+      "prompt": "Under the convention $I(X;T)-\\beta I(T;Y)$, what does increasing $\\beta$ do?",
+      "explanation": "**Correct answer: C.** Other parameterizations exist, so the objective itself must be read.",
+      "topic": "9.3. Information Bottleneck: preserve what is needed for $Y$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It always reduces $I(T;Y)$"
+        },
+        {
+          "value": "B",
+          "text": "Nothing, because $\\beta$ cancels"
+        },
+        {
+          "value": "C",
+          "text": "It values preservation of information about $Y$ more strongly"
+        },
+        {
+          "value": "D",
+          "text": "It automatically makes $T=X$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "9.3.2"
+    },
+    {
+      "id": "item-008",
+      "prompt": "Which distortion arises naturally in IB?",
+      "explanation": "**Correct answer: D.** It measures how much the representation damages the predictive distribution of the target.",
+      "topic": "9.3. Information Bottleneck: preserve what is needed for $Y$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only Euclidean distance between $x$ and $t$"
+        },
+        {
+          "value": "B",
+          "text": "Hamming distance between cluster indices"
+        },
+        {
+          "value": "C",
+          "text": "MSE between network weights"
+        },
+        {
+          "value": "D",
+          "text": "$D_{\\mathrm{KL}}(P(Y\\mid x)\\|P(Y\\mid t))$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "9.3.3"
+    },
+    {
+      "id": "item-009",
+      "prompt": "When may two inputs share an IB code with little loss of relevance?",
+      "explanation": "**Correct answer: A.** IB preserves task-relevant distinctions, not necessarily every input detail.",
+      "topic": "9.3. Information Bottleneck: preserve what is needed for $Y$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When their $P(Y\\mid x)$ distributions are similar"
+        },
+        {
+          "value": "B",
+          "text": "Only when their byte representations are identical"
+        },
+        {
+          "value": "C",
+          "text": "When their Euclidean distance is maximal"
+        },
+        {
+          "value": "D",
+          "text": "Always, provided $T$ is low-dimensional"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.3.4"
+    },
+    {
+      "id": "item-010",
+      "prompt": "Why is the classical IB equation self-consistent?",
+      "explanation": "**Correct answer: B.** The iterative algorithm updates these quantities jointly.",
+      "topic": "9.3. Information Bottleneck: preserve what is needed for $Y$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It contains no probabilities"
+        },
+        {
+          "value": "B",
+          "text": "$P(t)$ and $P(Y\\mid t)$ themselves depend on the unknown $P(t\\mid x)$"
+        },
+        {
+          "value": "C",
+          "text": "Its solution is always unique"
+        },
+        {
+          "value": "D",
+          "text": "It applies only to Gaussian variables"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "9.3.5"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What is classification cross-entropy in the VIB interpretation?",
+      "explanation": "**Correct answer: C.** The gap is a KL divergence between the true P(Y|T) and the variational decoder.",
+      "topic": "9.4. Variational Information Bottleneck: a loss we can train",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Exactly $-I(T;Y)$ for every classifier"
+        },
+        {
+          "value": "B",
+          "text": "An upper bound on $H(Y)$"
+        },
+        {
+          "value": "C",
+          "text": "A trainable variational bound related to $H(Y\\mid T)$ and relevance"
+        },
+        {
+          "value": "D",
+          "text": "The actual number of transmitted bits"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "9.4.1"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What is the exact decomposition of the average encoder KL to a prior $r(T)$?",
+      "explanation": "**Correct answer: A.** Hence this KL upper-bounds I(X;T).",
+      "topic": "9.4. Variational Information Bottleneck: a loss we can train",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$I(X;T)+D_{\\mathrm{KL}}(q(T)\\|r(T))$"
+        },
+        {
+          "value": "B",
+          "text": "Only $H(T)$"
+        },
+        {
+          "value": "C",
+          "text": "$I(T;Y)-I(X;Y)$"
+        },
+        {
+          "value": "D",
+          "text": "Reconstruction error plus a constant"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.4.2"
+    },
+    {
+      "id": "item-013",
+      "prompt": "When does the VIB KL-rate equal $I(X;T)$ exactly?",
+      "explanation": "**Correct answer: B.** Otherwise an extra mismatch cost remains.",
+      "topic": "9.4. Variational Information Bottleneck: a loss we can train",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "For every standard-normal prior"
+        },
+        {
+          "value": "B",
+          "text": "When the prior equals the aggregate posterior $q(T)$"
+        },
+        {
+          "value": "C",
+          "text": "Only for a deterministic encoder"
+        },
+        {
+          "value": "D",
+          "text": "When classifier accuracy is zero"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "9.4.3"
+    },
+    {
+      "id": "item-014",
+      "prompt": "How does the averaged negative ELBO decompose?",
+      "explanation": "**Correct answer: D.** Distortion is defined by the decoder likelihood, while rate is the average posterior-to-prior KL.",
+      "topic": "9.5. VAE: a rate–distortion view of the ELBO, not literal supervised IB",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Accuracy plus calibration error"
+        },
+        {
+          "value": "B",
+          "text": "Mutual information only"
+        },
+        {
+          "value": "C",
+          "text": "Entropy plus perplexity"
+        },
+        {
+          "value": "D",
+          "text": "Distortion plus rate"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "9.5.1"
+    },
+    {
+      "id": "item-015",
+      "prompt": "Which statement about VAEs and supervised IB is most accurate?",
+      "explanation": "**Correct answer: A.** The constructions are related, but their variables and optimization problems differ.",
+      "topic": "9.5. VAE: a rate–distortion view of the ELBO, not literal supervised IB",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A VAE naturally admits a rate–distortion interpretation but is not literally supervised IB with an external $Y$"
+        },
+        {
+          "value": "B",
+          "text": "Every VAE exactly maximizes $I(Z;Y)$"
+        },
+        {
+          "value": "C",
+          "text": "The ELBO contains no bottleneck"
+        },
+        {
+          "value": "D",
+          "text": "$\\beta$ always has the same meaning in VAE and IB"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.5.2"
+    },
+    {
+      "id": "item-016",
+      "prompt": "When is $\\mathbb E[-\\log_2p_\\psi(\\widehat Z)]$ close to a real coding rate?",
+      "explanation": "**Correct answer: A.** A concrete entropy coder turns NLL into actual bits.",
+      "topic": "9.6. Where rate–distortion appears in real ML code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When the entropy model is used by a compatible arithmetic/ANS coder and overhead is accounted for"
+        },
+        {
+          "value": "B",
+          "text": "Always, even without an entropy coder"
+        },
+        {
+          "value": "C",
+          "text": "Only when the latent is continuous and unquantized"
+        },
+        {
+          "value": "D",
+          "text": "Never"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.6.1"
+    },
+    {
+      "id": "item-017",
+      "prompt": "What is not automatically included in the phrase “4 bits per parameter”?",
+      "explanation": "**Correct answer: B.** Nominal bit-width and actual rate can differ.",
+      "topic": "9.6. Where rate–distortion appears in real ML code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The quantized values themselves"
+        },
+        {
+          "value": "B",
+          "text": "Scales, zero-points, codebooks, padding, and metadata"
+        },
+        {
+          "value": "C",
+          "text": "The number of model layers"
+        },
+        {
+          "value": "D",
+          "text": "Training labels"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "9.6.2"
+    },
+    {
+      "id": "item-018",
+      "prompt": "Why can weight MSE be a poor distortion surrogate for an LLM?",
+      "explanation": "**Correct answer: C.** Network sensitivity is anisotropic.",
+      "topic": "9.6. Where rate–distortion appears in real ML code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Weights are always binary"
+        },
+        {
+          "value": "B",
+          "text": "MSE cannot be computed"
+        },
+        {
+          "value": "C",
+          "text": "Equal errors in different parameter directions can affect logits, NLL, and downstream quality very differently"
+        },
+        {
+          "value": "D",
+          "text": "MSE is always equal to KL"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "9.6.3"
+    },
+    {
+      "id": "item-019",
+      "prompt": "How should GPTQ, AWQ, and SmoothQuant be read in rate–distortion language?",
+      "explanation": "**Correct answer: D.** Their engineering success is not a proof of reaching the classical limit.",
+      "topic": "9.6. Where rate–distortion appears in real ML code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "As proofs that theoretical $R(D)$ is achieved"
+        },
+        {
+          "value": "B",
+          "text": "As methods unrelated to distortion"
+        },
+        {
+          "value": "C",
+          "text": "As universally optimal codes for i.i.d. Gaussian weights"
+        },
+        {
+          "value": "D",
+          "text": "As practical ways to choose a surrogate distortion and allocate a budget non-uniformly"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "9.6.4"
+    },
+    {
+      "id": "item-020",
+      "prompt": "What is required for an honest size–quality comparison?",
+      "explanation": "**Correct answer: A.** A single point does not reveal the trade-off curve.",
+      "topic": "9.6. Where rate–distortion appears in real ML code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Trace a frontier over several $\\lambda$, $\\beta$, bit-width, or capacity values and measure actual rate"
+        },
+        {
+          "value": "B",
+          "text": "Compare one random operating point"
+        },
+        {
+          "value": "C",
+          "text": "Use nominal bit-width only"
+        },
+        {
+          "value": "D",
+          "text": "Ignore latency and hardware support"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.6.5"
+    },
+    {
+      "id": "item-021",
+      "prompt": "Which statement is rigorous, and which is empirical?",
+      "explanation": "**Correct answer: B.** A normative objective and a descriptive model of training are different levels of claim.",
+      "topic": "9.8. The information plane: a normative principle and a descriptive hypothesis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The IB objective is empirical, while every SGD trajectory follows a theorem"
+        },
+        {
+          "value": "B",
+          "text": "IB as a specified optimization problem is rigorous; a spontaneous IB trajectory of an ordinary network requires empirical validation"
+        },
+        {
+          "value": "C",
+          "text": "Both follow automatically from DPI"
+        },
+        {
+          "value": "D",
+          "text": "Both are false"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "9.8.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "Why can $I(X;T)$ be problematic for a deterministic continuous layer?",
+      "explanation": "**Correct answer: C.** Information-plane plots depend on the probabilistic setup and estimator.",
+      "topic": "9.8. The information plane: a normative principle and a descriptive hypothesis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is always zero"
+        },
+        {
+          "value": "B",
+          "text": "It always equals layer width"
+        },
+        {
+          "value": "C",
+          "text": "It is often infinite, while binning or added noise changes the quantity being measured"
+        },
+        {
+          "value": "D",
+          "text": "It can be read exactly from training loss"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "9.8.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "What is the I–MMSE identity for $Y_\\gamma=\\sqrt\\gamma X+N$ with information in nats?",
+      "explanation": "**Correct answer: A.** In bits, an additional factor 1/ln 2 appears.",
+      "topic": "Optional block",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\dfrac d{d\\gamma}I(X;Y_\\gamma)=\\dfrac12\\operatorname{mmse}(\\gamma)$"
+        },
+        {
+          "value": "B",
+          "text": "$I(X;Y_\\gamma)=\\operatorname{mmse}(\\gamma)^2$"
+        },
+        {
+          "value": "C",
+          "text": "The derivative equals $H(X)$"
+        },
+        {
+          "value": "D",
+          "text": "$\\operatorname{mmse}(\\gamma)$ is always constant"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "9.9.1"
+    },
+    {
+      "id": "item-024",
+      "prompt": "Why can we not write $h(X)=\\tfrac12\\int_0^\\infty\\operatorname{mmse}(\\gamma)d\\gamma$ for a continuous $X$ without qualification?",
+      "explanation": "**Correct answer: B.** For a Gaussian input, the integral grows as 1/2 ln(1+Γ).",
+      "topic": "Optional block",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "MMSE is negative"
+        },
+        {
+          "value": "B",
+          "text": "The integral corresponding to $I(X;Y_\\Gamma)$ generally diverges as $\\Gamma\\to\\infty$ and requires renormalization"
+        },
+        {
+          "value": "C",
+          "text": "I–MMSE holds only for discrete variables"
+        },
+        {
+          "value": "D",
+          "text": "Differential entropy is always infinite"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "9.9.2"
+    },
+    {
+      "id": "item-025",
+      "prompt": "What does Tweedie's formula rigorously provide on a Gaussian noising path?",
+      "explanation": "**Correct answer: D.** The other algorithmic choices do not follow from this identity alone.",
+      "topic": "Optional block",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The required number of diffusion sampling steps"
+        },
+        {
+          "value": "B",
+          "text": "A universal perceptual noise schedule"
+        },
+        {
+          "value": "C",
+          "text": "A proof that flow matching and IB are equivalent"
+        },
+        {
+          "value": "D",
+          "text": "A relation between the true score of the perturbed distribution and the posterior mean, the optimal MSE denoiser"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "9.9.3"
+    },
+    {
+      "id": "item-026",
+      "prompt": "A Bernoulli(0.3) source is coded under Hamming distortion with $D=0.1$. Compute $R(D)$ in bits. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.412** (tolerance 0.002). Here R(D) = h₂(0.3) − h₂(0.1) = 0.881 − 0.469 = 0.412 bits. For D ≥ 0.3 the rate drops to zero, because always emitting the more likely symbol already meets the distortion budget.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.412,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "9.C.1"
+    },
+    {
+      "id": "item-027",
+      "prompt": "A Gaussian source with variance $\\sigma^2=4$ is coded under squared error with $D=1$. Compute $R(D)$ in bits. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 1** (tolerance 0.005). Here R(D) = ½ log₂(4/1) = 1 bit. Every doubling of the allowed distortion saves exactly half a bit, and the rate diverges as D approaches zero, which is why a continuous source has no finite lossless rate.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.0,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "9.C.2"
+    },
+    {
+      "id": "item-028",
+      "prompt": "In the Gaussian channel $Y_\\gamma=\\sqrt\\gamma X+N$ with $X,N\\sim\\mathcal N(0,1)$, compute $\\operatorname{mmse}(\\gamma)$ at $\\gamma=3$. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.25** (tolerance 0.002). The posterior variance is 1/(1 + γ) = 0.25. The observation has removed three quarters of the prior variance. In nats, the I–MMSE derivative is one half of this value: dI/dγ = ½ mmse(γ) = 0.125.",
+      "topic": "Computational block",
+      "note": "(optional)",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.25,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "9.C.3"
+    },
+    {
+      "id": "item-029",
+      "prompt": "For the same channel, compute $I(X;Y_\\gamma)$ at $\\gamma=3$ in nats. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.693** (tolerance 0.002). Here I = ½ ln(1 + 3) = ½ ln 4 = 0.693 nats. Differentiating gives 1/(2(1 + γ)) = 0.125, which is exactly half the MMSE computed above, as the I–MMSE identity requires.",
+      "topic": "Computational block",
+      "note": "(optional)",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.693,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "9.C.4"
+    }
+  ]
+}

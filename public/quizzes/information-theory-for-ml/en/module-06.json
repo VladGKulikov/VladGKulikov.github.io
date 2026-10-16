@@ -1,0 +1,793 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-06",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Under ideal coding of data from $P$ using model $Q$, how is $D_{\\mathrm{KL},2}(P\\|Q)$ interpreted?",
+      "explanation": "**Correct answer: B.** Cross-entropy decomposes as H₂(P) + D_KL,2(P‖Q), so the KL term is exactly the mismatch surcharge. Integer rounding is a separate cost that appears on top of it.",
+      "topic": "6.1. Engineering setup: the probabilistic model and the entropy coder",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "As the maximum codeword length"
+        },
+        {
+          "value": "B",
+          "text": "As the expected extra length caused by model mismatch, in bits per symbol"
+        },
+        {
+          "value": "C",
+          "text": "As the alphabet size"
+        },
+        {
+          "value": "D",
+          "text": "As the rounding overhead of integer codeword lengths"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "6.1.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "Which property defines a prefix code?",
+      "explanation": "**Correct answer: D.** This is what permits left-to-right decoding without separators. Equal lengths give a prefix code but are far from necessary, and lengths should decrease with probability, not increase.",
+      "topic": "6.2. Prefix codes and the Kraft–McMillan inequality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All codewords have the same length"
+        },
+        {
+          "value": "B",
+          "text": "Every symbol uses at most two bits"
+        },
+        {
+          "value": "C",
+          "text": "Codeword lengths increase with symbol probability"
+        },
+        {
+          "value": "D",
+          "text": "No codeword is the beginning of another codeword"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "6.2.1"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Which lengths can be the lengths of a binary prefix code?",
+      "explanation": "**Correct answer: D.** This is Kraft's criterion. Requiring equality, as in option C, would exclude codes that leave part of the tree unused, and such codes exist and are perfectly valid.",
+      "topic": "6.2. Prefix codes and the Kraft–McMillan inequality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Any positive integer lengths"
+        },
+        {
+          "value": "B",
+          "text": "Only lengths whose sum equals one"
+        },
+        {
+          "value": "C",
+          "text": "Only lengths satisfying $\\sum_i2^{-\\ell_i}=1$"
+        },
+        {
+          "value": "D",
+          "text": "Exactly the positive integer lengths satisfying $\\sum_i2^{-\\ell_i}\\le1$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "6.2.2"
+    },
+    {
+      "id": "item-004",
+      "prompt": "What does the lower bound $L\\ge H_2(P)$ state for lossless coding?",
+      "explanation": "**Correct answer: A.** The bound is about an expectation under a specified source. Individual sequences can and do come out shorter than the average, which is what options B, C and D deny.",
+      "topic": "6.3. The one-symbol source coding theorem",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Expected code length for a specified source cannot be smaller than its entropy"
+        },
+        {
+          "value": "B",
+          "text": "Every individual file must have length at least $nH(P)$"
+        },
+        {
+          "value": "C",
+          "text": "No particular string can be compressed below the source average"
+        },
+        {
+          "value": "D",
+          "text": "No code can compress any string at all below its raw length"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "6.3.1"
+    },
+    {
+      "id": "item-005",
+      "prompt": "When can a one-symbol prefix code attain $L=H_2(P)$ exactly?",
+      "explanation": "**Correct answer: C.** Such a distribution is dyadic. A uniform distribution qualifies only when its size is a power of two, so options B and D each capture one special case rather than the condition.",
+      "topic": "6.3. The one-symbol source coding theorem",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "For every distribution after reordering the symbols"
+        },
+        {
+          "value": "B",
+          "text": "Only for a uniform distribution"
+        },
+        {
+          "value": "C",
+          "text": "When $p_i=2^{-\\ell_i}$ for integer lengths, so the Kraft budget is fully used"
+        },
+        {
+          "value": "D",
+          "text": "Whenever the alphabet size is a power of two"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "6.3.2"
+    },
+    {
+      "id": "item-006",
+      "prompt": "What does Huffman's algorithm optimize?",
+      "explanation": "**Correct answer: B.** Its optimality is within one class: binary prefix codes with one codeword per symbol. Coding blocks of symbols can do better, which is why option D claims too much.",
+      "topic": "6.4. Huffman coding, arithmetic coding, and range coding",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The maximum codeword length"
+        },
+        {
+          "value": "B",
+          "text": "Expected length among binary prefix codes for a known finite distribution"
+        },
+        {
+          "value": "C",
+          "text": "The parameter size of a language model"
+        },
+        {
+          "value": "D",
+          "text": "Expected length among all uniquely decodable codes, including block codes"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "6.4.1"
+    },
+    {
+      "id": "item-007",
+      "prompt": "For the binary source $P=(0.99,0.01)$, a one-symbol binary prefix code has $L=1$ although $H_2(P)\\approx0.0808$. Which conclusion is correct?",
+      "explanation": "**Correct answer: D.** The bound H ≤ L < H + 1 permits exactly this. Huffman is optimal in its class; the class of one-symbol integer lengths is simply too coarse for a highly skewed source.",
+      "topic": "6.4. Huffman coding, arithmetic coding, and range coding",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Shannon's theorem is violated"
+        },
+        {
+          "value": "B",
+          "text": "Entropy must be at least one bit"
+        },
+        {
+          "value": "C",
+          "text": "Huffman's algorithm failed to find the optimum here"
+        },
+        {
+          "value": "D",
+          "text": "Integer one-symbol lengths can cost almost one extra bit per symbol"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "6.4.2"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What is the width of the final ideal arithmetic-coding interval for $x_{1:n}$?",
+      "explanation": "**Correct answer: A.** The interval is narrowed multiplicatively at every step, so its width is the sequence probability and the ideal length is −log₂ q(x_(1:n)).",
+      "topic": "6.4. Huffman coding, arithmetic coding, and range coding",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$q(x_{1:n})=\\prod_tq(x_t\\mid x_{<t})$"
+        },
+        {
+          "value": "B",
+          "text": "The mean token probability"
+        },
+        {
+          "value": "C",
+          "text": "$1/n$"
+        },
+        {
+          "value": "D",
+          "text": "$2^{-n}$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "6.4.3"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Which statement about a practical range coder or ANS is most accurate?",
+      "explanation": "**Correct answer: C.** The ideal information length remains the reference, but an implementation has its own protocol and overhead. Adaptive models are the normal case, not an exception.",
+      "topic": "6.4. Huffman coding, arithmetic coding, and range coding",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It emits exactly $-\\log_2q(x)$ bits without qualification"
+        },
+        {
+          "value": "B",
+          "text": "It does not use model probabilities"
+        },
+        {
+          "value": "C",
+          "text": "Finite precision, metadata, and boundary rules can add a small redundancy"
+        },
+        {
+          "value": "D",
+          "text": "It requires the probability model to be static"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "6.4.5"
+    },
+    {
+      "id": "item-010",
+      "prompt": "What follows from encoding i.i.d. blocks of length $n$ as supersymbols?",
+      "explanation": "**Correct answer: B.** One unit of rounding is spread over n symbols. Option D is the one-symbol bound, which is exactly what block coding improves on.",
+      "topic": "6.5. Long sequences: block coding, AEP, and entropy rate",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$L_n/n=0$ for every source"
+        },
+        {
+          "value": "B",
+          "text": "$H(X)\\le L_n/n<H(X)+1/n$"
+        },
+        {
+          "value": "C",
+          "text": "Decoding must have a nonzero error probability"
+        },
+        {
+          "value": "D",
+          "text": "$H(X)\\le L_n/n<H(X)+1$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "6.5.1"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What does the AEP state for an i.i.d. source?",
+      "explanation": "**Correct answer: D.** Typical sequences are approximately equiprobable, and they carry almost all the probability mass. Option B drops the word \"typical\" and thereby makes a false claim about all sequences.",
+      "topic": "6.5. Long sequences: block coding, AEP, and entropy rate",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All sequences have equal probability"
+        },
+        {
+          "value": "B",
+          "text": "Every sequence of length $n$ has probability close to $2^{-nH}$"
+        },
+        {
+          "value": "C",
+          "text": "Single-symbol entropy tends to zero"
+        },
+        {
+          "value": "D",
+          "text": "$-n^{-1}\\log_2p(X^n)$ concentrates near $H_2(X)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "6.5.2"
+    },
+    {
+      "id": "item-012",
+      "prompt": "How does a typical-set code usually differ from a zero-error variable-length code?",
+      "explanation": "**Correct answer: A.** Atypical sequences are either errors or need a separate escape mechanism. No code beats the entropy rate asymptotically, which rules out option D.",
+      "topic": "6.5. Long sequences: block coding, AEP, and entropy rate",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It can be fixed-rate and allow an error probability that tends to zero"
+        },
+        {
+          "value": "B",
+          "text": "It must be longer than the uncompressed message"
+        },
+        {
+          "value": "C",
+          "text": "It applies only to one symbol"
+        },
+        {
+          "value": "D",
+          "text": "It achieves a rate strictly below the entropy rate"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "6.5.3"
+    },
+    {
+      "id": "item-013",
+      "prompt": "Which quantity determines the asymptotic coding cost of a stationary dependent source?",
+      "explanation": "**Correct answer: C.** Dependencies can lower the cost far below the marginal entropy, and both options A and D ignore them by treating positions separately.",
+      "topic": "6.5. Long sequences: block coding, AEP, and entropy rate",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only $H(X_1)$"
+        },
+        {
+          "value": "B",
+          "text": "The maximum token length"
+        },
+        {
+          "value": "C",
+          "text": "The entropy rate $h=\\lim_nH(X_{1:n})/n$"
+        },
+        {
+          "value": "D",
+          "text": "The average of $H(X_i)$ over positions"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "6.5.4"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Why can token perplexity usually not be compared directly across tokenizers?",
+      "explanation": "**Correct answer: D.** Even at a fixed probability for the text, a different grouping gives a different per-unit average. The direction of the change is not fixed either, so option C is not a rescue.",
+      "topic": "6.6. Language-model metrics: PPL, BPC, and BPB",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Perplexity is defined only for ASCII characters"
+        },
+        {
+          "value": "B",
+          "text": "Every tokenizer gives the same PPL"
+        },
+        {
+          "value": "C",
+          "text": "A larger vocabulary always lowers perplexity"
+        },
+        {
+          "value": "D",
+          "text": "Mean NLL is normalized by different units: tokens of different size and composition"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "6.6.1"
+    },
+    {
+      "id": "item-015",
+      "prompt": "Which statement about BPC and BPB is correct?",
+      "explanation": "**Correct answer: A.** Fixing the unit removes one source of incomparability and leaves the rest: data, normalization, model, context policy. That is also why option D overstates the case.",
+      "topic": "6.6. Language-model metrics: PPL, BPC, and BPB",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They provide a common denominator but do not guarantee invariance to tokenizer and model changes"
+        },
+        {
+          "value": "B",
+          "text": "They always equal eight"
+        },
+        {
+          "value": "C",
+          "text": "They are independent of preprocessing"
+        },
+        {
+          "value": "D",
+          "text": "They make results comparable across corpora"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "6.6.2"
+    },
+    {
+      "id": "item-016",
+      "prompt": "If a fixed text probability is merely regrouped from single tokens into pairs, without changing $q(x)$, what happens?",
+      "explanation": "**Correct answer: C.** The message probability has not changed, so the code length cannot change. What changes is the unit the average is taken over, which is precisely the point of options C and D differing.",
+      "topic": "6.6. Language-model metrics: PPL, BPC, and BPB",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The total number of bits doubles"
+        },
+        {
+          "value": "B",
+          "text": "BPB becomes zero"
+        },
+        {
+          "value": "C",
+          "text": "The total number of bits stays fixed, while perplexity per pair is the square of the token perplexity"
+        },
+        {
+          "value": "D",
+          "text": "Both the total bits and the perplexity stay the same"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "6.6.3"
+    },
+    {
+      "id": "item-017",
+      "prompt": "Which limitation matters for the raw compression ratios reported for Chinchilla 70B by Delétang et al.?",
+      "explanation": "**Correct answer: D.** A self-contained archive must also carry the weights, which changes the picture radically for a gigabyte of data. The result is still a valid statement about predictive log loss.",
+      "topic": "6.7. A language model as part of a compressor",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Reconstruction was lossy"
+        },
+        {
+          "value": "B",
+          "text": "Only a one-bit vocabulary was used"
+        },
+        {
+          "value": "C",
+          "text": "The evaluation used a single language"
+        },
+        {
+          "value": "D",
+          "text": "The cost of the model parameters was excluded from the raw ratio"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "6.7.1"
+    },
+    {
+      "id": "item-018",
+      "prompt": "What cannot be inferred solely from a smooth scaling-law decrease in test cross-entropy?",
+      "explanation": "**Correct answer: B.** Extrapolating a fit to an asymptote and calling it the source entropy requires assumptions about the source, the model family, optimization, and context. The other three are just restatements of what was measured.",
+      "topic": "6.8. Model size, scaling laws, and total description length",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "That the larger model had lower loss in the measured range"
+        },
+        {
+          "value": "B",
+          "text": "That the fitted asymptote equals the true entropy rate and the KL gap tends to zero"
+        },
+        {
+          "value": "C",
+          "text": "That loss can be measured in nats or bits"
+        },
+        {
+          "value": "D",
+          "text": "That the trend held across the scales that were actually tested"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "6.8.1"
+    },
+    {
+      "id": "item-019",
+      "prompt": "Which length corresponds to a self-contained two-part compressor?",
+      "explanation": "**Correct answer: C.** Both parts must be transmitted, along with the protocol needed to decode them. Validation NLL usually measures only the second part, because the model is already known to both sides.",
+      "topic": "6.8. Model size, scaling laws, and total description length",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only $L(x\\mid\\theta)$"
+        },
+        {
+          "value": "B",
+          "text": "Only the parameter count"
+        },
+        {
+          "value": "C",
+          "text": "$L(\\theta)+L(x\\mid\\theta)$, plus the necessary metadata"
+        },
+        {
+          "value": "D",
+          "text": "$L(\\theta)$ alone, since the data follow from the model"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "6.8.2"
+    },
+    {
+      "id": "item-020",
+      "prompt": "Which final statement about compression and intelligence is most defensible?",
+      "explanation": "**Correct answer: B.** The prediction-compression link is an exact construction. Moving from there to a general notion of intelligence is a much stronger empirical and philosophical claim, and the construction itself is not restricted to text.",
+      "topic": "6.10. Compression quality and model capabilities",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The better compressor must be better at every form of intelligence"
+        },
+        {
+          "value": "B",
+          "text": "Compression quality is exactly linked to predictive log loss and may proxy some capabilities, but is not a universal definition of intelligence"
+        },
+        {
+          "value": "C",
+          "text": "Prediction and compression have no mathematical relationship"
+        },
+        {
+          "value": "D",
+          "text": "The link holds only for text and breaks down for other modalities"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "6.10.1"
+    },
+    {
+      "id": "item-021",
+      "prompt": "Why is the five-bit prefix `01111` not a valid termination for $[0.45,0.48)$?",
+      "explanation": "**Correct answer: C.** The whole interval of binary continuations has to fit, not just one point. The value 15/32 is in fact inside the target interval, which is exactly why option A is tempting and wrong.",
+      "topic": "6.4. Huffman coding, arithmetic coding, and range coding",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The number $15/32$ lies outside the interval"
+        },
+        {
+          "value": "B",
+          "text": "Arithmetic codes must have an even length"
+        },
+        {
+          "value": "C",
+          "text": "The dyadic interval $[15/32,16/32)$ is not fully contained in the target interval"
+        },
+        {
+          "value": "D",
+          "text": "Five bits are fewer than the ideal length of about 5.06 bits"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "6.4.4"
+    },
+    {
+      "id": "item-022",
+      "prompt": "How should the Shannon–McMillan–Breiman theorem be read?",
+      "explanation": "**Correct answer: A.** The theorem is about a specified stochastic source, not about an undefined object called \"language\". Ergodicity is part of the hypothesis and cannot be dropped.",
+      "topic": "6.5. Long sequences: block coding, AEP, and entropy rate",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "For a stationary ergodic source, the normalized information density converges to the entropy rate under standard conditions"
+        },
+        {
+          "value": "B",
+          "text": "Every text has a universal entropy of one bit per character"
+        },
+        {
+          "value": "C",
+          "text": "Every neural network reaches the Shannon limit"
+        },
+        {
+          "value": "D",
+          "text": "It holds for any stationary source, ergodic or not"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "6.5.5"
+    },
+    {
+      "id": "item-023",
+      "prompt": "For a Bayesian mixture $Q=\\sum_jw_jP_j$, what is the regret relative to model $P_j$ on a particular sequence?",
+      "explanation": "**Correct answer: A.** It follows immediately from Q(x) ≥ w_j P_j(x). The bound is for the whole sequence, so per symbol it vanishes as the sequence grows, which is the point option D misses.",
+      "topic": "6.9. Mathematical deepening: universal coding, online log-loss, and ICL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "At most $\\log_2(1/w_j)$ bits"
+        },
+        {
+          "value": "B",
+          "text": "Exactly $n$ bits"
+        },
+        {
+          "value": "C",
+          "text": "Always infinite"
+        },
+        {
+          "value": "D",
+          "text": "At most $\\log_2(1/w_j)$ bits per symbol"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "6.9.1"
+    },
+    {
+      "id": "item-024",
+      "prompt": "What is the careful connection between universal prediction and in-context learning?",
+      "explanation": "**Correct answer: B.** Specific theoretical models supply useful mechanisms rather than a universal guarantee about real systems. Option D states as fact what those models assume.",
+      "topic": "6.9. Mathematical deepening: universal coding, online log-loss, and ICL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every LLM is a proven optimal Bayesian predictor for every prompt"
+        },
+        {
+          "value": "B",
+          "text": "Context can adapt predictions without weight updates, but theorems require explicit structural assumptions"
+        },
+        {
+          "value": "C",
+          "text": "ICL is unrelated to probabilistic prediction"
+        },
+        {
+          "value": "D",
+          "text": "ICL is exactly Bayesian mixture prediction over a known model class"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "6.9.2"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Why must a sliding-window causal-LM evaluator count targets after the label shift?",
+      "explanation": "**Correct answer: A.** A correct protocol verifies that every original token enters the loss exactly once. The first token of a window is indeed not scored, but that is a consequence of the shift rather than the reason to count carefully.",
+      "topic": "6.11. A practical protocol for evaluating an LLM as a compressor",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model compares `logits[:, :-1]` with `labels[:, 1:]`, so a naive suffix length can cause an off-by-one error"
+        },
+        {
+          "value": "B",
+          "text": "Logits do not contain probabilities"
+        },
+        {
+          "value": "C",
+          "text": "To reduce perplexity artificially"
+        },
+        {
+          "value": "D",
+          "text": "Because the first token of every window is unpredictable"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "6.11.1"
+    },
+    {
+      "id": "item-026",
+      "prompt": "For $P=(0.40,0.20,0.15,0.15,0.10)$ an optimal Huffman code has lengths $(1,3,3,3,3)$. Compute the expected code length in bits per symbol. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 2.2** (tolerance 0.005). The expected length is 0.40 · 1 + 0.60 · 3 = 2.20 bits, while the entropy is 2.146 bits. The gap of about 0.054 bits is the price of integer lengths, comfortably inside the guarantee H ≤ L < H + 1.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 2.2,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "6.C.1"
+    },
+    {
+      "id": "item-027",
+      "prompt": "Data come from $P=(0.5,0.25,0.25)$ but ideal fractional code lengths are built from the model $Q=(0.25,0.25,0.5)$. Compute the expected length in bits per symbol. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 1.75** (tolerance 0.002). The expected length is the cross-entropy H₂(P,Q) = 1.75 bits, and the entropy of P is 1.5 bits. The difference of 0.25 bits is D_KL(P‖Q), the mismatch surcharge, before any rounding is considered.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.75,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "6.C.2"
+    },
+    {
+      "id": "item-028",
+      "prompt": "With $p(A)=0.5$, $p(B)=0.3$ and $p(C)=0.2$, compute the ideal arithmetic-code length of the string `ACB` in bits. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 5.059** (tolerance 0.005). The final interval has width 0.5 · 0.2 · 0.3 = 0.03, so the ideal length is −log₂ 0.03 = 5.059 bits. Terminating the code needs a whole dyadic interval inside the target one, which is why the emitted prefix here is six bits rather than five.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 5.059,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "6.C.3"
+    },
+    {
+      "id": "item-029",
+      "prompt": "A Bayesian mixture assigns weight $w_j=1/64$ to model $P_j$. What is the worst-case regret of the mixture relative to $P_j$ on any sequence, in bits? (tolerance 0.005)",
+      "explanation": "**Numeric answer: 6** (tolerance 0.005). The regret is at most log₂ 64 = 6 bits for the whole sequence, no matter how long it is. Per symbol it therefore tends to zero, which is what makes a mixture a usable universal code.",
+      "topic": "Computational block",
+      "note": "(optional)",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 6.0,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "6.C.4"
+    }
+  ]
+}

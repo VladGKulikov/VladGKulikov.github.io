@@ -1,0 +1,487 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-09",
+  "language": "en",
+  "questions": [
+    {
+      "id": "10.4.1",
+      "prompt": "For Llama-3-8B, use 32 layers, 8 KV heads, head dimension 128, and bf16. What is the KV payload per token?",
+      "explanation": "**Correct answer: A.** The two in the formula stands for K and V, and query heads do not enter it. The same count gives 2,560 KiB for a 70B MHA equivalent and 68.625 KiB for DeepSeek-V3 with MLA.",
+      "topic": "10.4. Formalism and worked example A: how many bytes does one token add?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "128 KiB per token — that is 2·32·8·128·2 bytes by the cache formula"
+        },
+        {
+          "value": "B",
+          "text": "512 KiB per token, because all 32 query heads are counted in"
+        },
+        {
+          "value": "C",
+          "text": "16 KiB per token, since K and V share one common table"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.4.2",
+      "prompt": "Why does MLA need its own memory formula instead of the standard GQA one?",
+      "explanation": "**Correct answer: B.** Ordinary KV stores 2LHkv·dh scalars; MLA stores L(dc+dr). At bf16, the V3 example uses 61·(512+64)·2 = 70272 bytes = 68.625 KiB per token.",
+      "topic": "10.4. Formalism and worked example A: how many bytes does one token add?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because MLA stores the cache at reduced precision while GQA uses bf16"
+        },
+        {
+          "value": "B",
+          "text": "It caches a latent plus a separate RoPE part, not per-head K and V"
+        },
+        {
+          "value": "C",
+          "text": "Because MLA reconstructs the keys anew on every decode step"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "10.5.1",
+      "prompt": "Which profile is common for a long prefill and a small-batch decode?",
+      "explanation": "**Correct answer: C.** Prefill reuses weights across many prompt positions. Decode adds one token per request and reads accumulated state. These are common regimes, not guarantees: batch size, context, kernels, and hardware matter.",
+      "topic": "10.5. One request, two computational regimes",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Prefill needs more memory, decode needs more memory bandwidth"
+        },
+        {
+          "value": "B",
+          "text": "Prefill works with the cache while decode builds it from scratch each step"
+        },
+        {
+          "value": "C",
+          "text": "Prefill often approaches the compute limit; decode often approaches the weight-plus-KV bandwidth limit"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "10.6.1",
+      "prompt": "Use 16 GB of weights, 128 KiB/token, 3.35 TB/s, and batch one. What bandwidth ceiling does the 8B teaching model give at 128K?",
+      "explanation": "**Correct answer: A.** BW/(W+NbKV) gives 100.965 tok/s under the one-read traffic assumption. Other work and traffic are excluded. The 1M row gives 22.778 tok/s but cannot fit the hypothetical 80-GiB capacity.",
+      "topic": "10.6. Worked example B: the bandwidth ceiling and the KV term",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "101 tok/s: the decode step reads 16 GiB of cache on top of the weights"
+        },
+        {
+          "value": "B",
+          "text": "209 tok/s: context length does not affect the speed of reading weights"
+        },
+        {
+          "value": "C",
+          "text": "196 tok/s: the cache adds only a few percent to what must be read"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.6.2",
+      "prompt": "In GQA, which head counts enter KV storage and the teaching QK/AV FLOP estimate?",
+      "explanation": "**Correct answer: A.** KV is retained per KV head; each query head still performs attention. Including QK/AV changes the 8B/128K intensity from 0.48222 to 2.55334 FLOP/B.",
+      "topic": "10.6. Worked example B: the bandwidth ceiling and the KV term",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Storage uses Hkv; the QK/AV estimate uses Hq"
+        },
+        {
+          "value": "B",
+          "text": "Both calculations always use Hkv"
+        },
+        {
+          "value": "C",
+          "text": "Both calculations always use Hq"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.7.1",
+      "prompt": "What does the batch knee B* = W / KV(N) mean?",
+      "explanation": "**Correct answer: B.** B* marks a change in the dominant traffic term, not a capacity limit or an optimal batch. More requests still raise aggregate throughput beyond it, with diminishing weight-amortization gains.",
+      "topic": "10.7. Batch economics: where weight amortization stops being the whole story",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The largest batch fitting into 80 GiB of the given device's memory"
+        },
+        {
+          "value": "B",
+          "text": "The batch size where total KV traffic equals one read of the weights"
+        },
+        {
+          "value": "C",
+          "text": "The batch at which accelerator utilization reaches 100 percent"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "10.8.1",
+      "prompt": "What problem does PagedAttention solve?",
+      "explanation": "**Correct answer: C.** Preallocating for the maximum length wastes memory on requests that never reach it. Pages allow allocation as the sequence grows and let requests share common prefixes.",
+      "topic": "10.8. PagedAttention: decouple logical length from physical placement",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It speeds up attention itself by splitting the logit matrix into blocks"
+        },
+        {
+          "value": "B",
+          "text": "It compresses the cache by keeping pages at reduced precision on disk"
+        },
+        {
+          "value": "C",
+          "text": "Fragmentation: the cache is allocated in pages, not one contiguous buffer"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "10.8.2",
+      "prompt": "Why is copy-on-write needed when a partially filled KV block is shared?",
+      "explanation": "**Correct answer: A.** While the block is only read, no copy is needed. The moment one branch appends its token into the shared partial block, the contents must diverge — otherwise the branches corrupt each other's cache.",
+      "topic": "10.8. PagedAttention: decouple logical length from physical placement",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Branches diverge from a shared prefix and begin writing into one block"
+        },
+        {
+          "value": "B",
+          "text": "To keep pages from being evicted to disk while another request reads them"
+        },
+        {
+          "value": "C",
+          "text": "To synchronize writes between different groups of serving devices"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.8.3",
+      "prompt": "How many unused slots does an exactly 2048-token sequence have with 16-token pages?",
+      "explanation": "**Correct answer: A.** 2048 is divisible by 16. The 7.5-slot expectation applies to uniform remainders across varying lengths, not this fixed length.",
+      "topic": "10.8. PagedAttention: decouple logical length from physical placement",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0"
+        },
+        {
+          "value": "B",
+          "text": "7.5 in every individual sequence"
+        },
+        {
+          "value": "C",
+          "text": "128"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.9.1",
+      "prompt": "What does prefix caching give?",
+      "explanation": "**Correct answer: B.** Reuse depends on an identical token history and compatible state, not merely similar text. The uncached suffix still attends to the prefix; billing depends on the service contract.",
+      "topic": "10.9. Prefix caching: do not rebuild an identical beginning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It shrinks the cache by dropping positions with low attention weight"
+        },
+        {
+          "value": "B",
+          "text": "It avoids recomputing an exactly matching prefix under matching model and execution settings"
+        },
+        {
+          "value": "C",
+          "text": "It speeds up decode by predicting the next tokens of the shared prefix"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "10.9.2",
+      "prompt": "A 7680-token prefix is cached and a 512-token suffix arrives. Which work remains?",
+      "explanation": "**Correct answer: A.** Caching avoids rebuilding prefix state, not reading it for new attention queries. The teaching QK/AV-inclusive ratio is 14.402, versus 16 for projections alone.",
+      "topic": "10.9. Prefix caching: do not rebuild an identical beginning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Suffix projections and suffix attention to the prefix and earlier suffix positions"
+        },
+        {
+          "value": "B",
+          "text": "Suffix projections only; attention is unnecessary"
+        },
+        {
+          "value": "C",
+          "text": "Full prefill of all 8192 positions"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.9.3",
+      "prompt": "Identical token blocks follow different earlier prefixes. Are their KV states interchangeable?",
+      "explanation": "**Correct answer: A.** Matching local tokens does not imply matching contextual state. The demo key includes the full prefix and model revision.",
+      "topic": "10.9. Prefix caching: do not rebuild an identical beginning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "No: state depends on preceding context and model settings"
+        },
+        {
+          "value": "B",
+          "text": "Yes: a hash of the block alone is enough"
+        },
+        {
+          "value": "C",
+          "text": "Yes: equal block length guarantees it"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.10.1",
+      "prompt": "What is the main trade-off of tiered KV offloading?",
+      "explanation": "**Correct answer: C.** Compare the expected benefit of reuse with writing, storage, and restore costs. If transfer is more expensive than recomputing the required state, offloading does not pay.",
+      "topic": "10.10. Tiered placement: when HBM is only the first level",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A cache on the CPU takes more room because of different page alignment"
+        },
+        {
+          "value": "B",
+          "text": "Offloaded blocks cannot be shared between several concurrent requests"
+        },
+        {
+          "value": "C",
+          "text": "Space is cheaper, but bringing blocks back runs over a slow bus"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "10.11.1",
+      "prompt": "Why separate prefill and decode onto different device groups?",
+      "explanation": "**Correct answer: A.** Independent pools allow different batching and parallelism policies. The trade-off is KV transfer and coordination; separation is not always better at low load.",
+      "topic": "10.11. Prefill/decode disaggregation: give each phase its own pool",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The phases have different profiles; separate pools can protect decode from long prefills"
+        },
+        {
+          "value": "B",
+          "text": "So that the cache fits entirely into the memory of one of the groups"
+        },
+        {
+          "value": "C",
+          "text": "So that training and inference can share one and the same cluster"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.12.1",
+      "prompt": "How should a KV pool behave when blocks run out during append?",
+      "explanation": "**Correct answer: B.** Preflight the allocation. If it fails, preserve page tables and reference counts so that the scheduler can decide how to proceed.",
+      "topic": "10.12. Code (level 1): geometry, bandwidth, and private pages",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Silently overwrite the oldest blocks of that same sequence"
+        },
+        {
+          "value": "B",
+          "text": "Raise an explicit error without partially changing the pool"
+        },
+        {
+          "value": "C",
+          "text": "Halve the block size repeatedly until free space is found"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "10.12.2",
+      "prompt": "A cache retains absolute positions [2,5). What should truncate(1) do?",
+      "explanation": "**Correct answer: A.** The earlier prefix is gone. Reject without mutation; recovering it requires a separate snapshot or recomputation.",
+      "topic": "10.12. Code (level 1): geometry, bandwidth, and private pages",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Reject rollback outside the retained interval"
+        },
+        {
+          "value": "B",
+          "text": "Restore the evicted position 1"
+        },
+        {
+          "value": "C",
+          "text": "Reset all absolute positions to zero"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.14.1",
+      "prompt": "How does eviction based on accumulated attention mass differ from a simple streaming policy?",
+      "explanation": "**Correct answer: C.** Streaming decides in advance and identically: keep the head and the tail of the window. Attention-aware ranks tokens by contribution but must accumulate statistics and pays its own price.",
+      "topic": "10.14. Compression I: eviction changes which history exists",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It offloads blocks to the CPU while streaming deletes them for good"
+        },
+        {
+          "value": "B",
+          "text": "It works during prefill, whereas streaming applies only at decode"
+        },
+        {
+          "value": "C",
+          "text": "It looks at accumulated attention weights rather than token position"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "10.15.1",
+      "prompt": "Why does bf16→3 bits per coordinate not guarantee a 16/3 reduction in total memory?",
+      "explanation": "**Correct answer: A.** 16/3 compares ideal value codes only. Scales, zero points when used, alignment, high-precision residuals, and page metadata add bytes; model weights remain too.",
+      "topic": "10.15. Compression II: quantization, low rank, and the order of operations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Group scales, zero points and page metadata occupy space as well"
+        },
+        {
+          "value": "B",
+          "text": "Because only K is quantized while V always stays in the original dtype"
+        },
+        {
+          "value": "C",
+          "text": "Because the first layers of the stack are always excluded from quantization"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.15.2",
+      "prompt": "Why does the suggested evaluation order leave eviction until last?",
+      "explanation": "**Correct answer: A.** Evicted positions are unavailable to future attention unless recomputed, potentially breaking a long-range dependency. Quantization and architectural compression also need quality checks: this is an evaluation order, not a quality guarantee.",
+      "topic": "10.15. Compression II: quantization, low rank, and the order of operations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Eviction irreversibly removes part of the context and may change the model output"
+        },
+        {
+          "value": "B",
+          "text": "Eviction works only after the KV cache has been moved to local SSD"
+        },
+        {
+          "value": "C",
+          "text": "Eviction requires every KV block to use the same bit width"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "10.17.1",
+      "prompt": "What must an inference passport contain besides the weight size?",
+      "explanation": "**Correct answer: B.** Weights are a constant, the cache is a function of load. Without length, batch and cache scheme the weight size does not answer \"will this fit on the card\".",
+      "topic": "10.17. Reading a model’s inference passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model's release date and the licence its weights are published under"
+        },
+        {
+          "value": "B",
+          "text": "KV per token, target length, batch, engine and cache quantization mode"
+        },
+        {
+          "value": "C",
+          "text": "The parameter count together with the layer count and vocabulary size"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    }
+  ]
+}

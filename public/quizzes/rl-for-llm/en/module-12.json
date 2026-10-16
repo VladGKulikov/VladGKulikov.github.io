@@ -1,0 +1,230 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-12",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Placement does not determine synchrony",
+      "prompt": "The rollout engine is a separate vLLM server and the trainer is another process. Which statement is correct?",
+      "explanation": "The correct answer is **B**.\n\nPlacement asks **where** roles execute; synchrony asks **when** generation and updates are allowed to proceed. A separate server can still participate in a strict batch-barrier loop. Disaggregation also neither removes policy lag nor guarantees lower total memory, because state may be duplicated across pools.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "The system is asynchronous by definition."
+        },
+        {
+          "value": "2",
+          "text": "It may remain synchronous if the trainer waits for the whole batch and the next generation phase starts only after the update."
+        },
+        {
+          "value": "3",
+          "text": "Disaggregation automatically removes off-policy data."
+        },
+        {
+          "value": "4",
+          "text": "Disaggregation guarantees a smaller total cluster-memory peak."
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Logical full-training memory",
+      "prompt": "A model has 7 billion parameters. The profile uses 2 bytes for each model parameter, 2 bytes for its gradient, and 8 bytes for the two Adam moments. There is no master copy.\n\nCompute the logical full-training state:\n\n1. in decimal GB;\n2. in binary GiB.\n\nRound GiB to two decimal places.",
+      "explanation": "Each trainable parameter uses\n\n$$\n2+2+8=12\\ \\text{bytes}.\n$$\n\nTherefore,\n\n$$\n7\\cdot10^9\\cdot12\n=\n84\\cdot10^9\\ \\text{bytes}\n=\n84.00\\ \\text{GB}.\n$$\n\nIn GiB,\n\n$$\n\\frac{84\\cdot10^9}{2^{30}}\n\\approx78.23\\ \\text{GiB}.\n$$\n\nThis is a logical model-state ledger. Activations, communication buffers, fragmentation, and temporary full-parameter materialization are excluded.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Memory, GB",
+          "expected": 84,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Memory, GiB",
+          "expected": 78.23,
+          "tolerance": 0.005
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "KV cache for long responses",
+      "prompt": "A teaching architecture has:\n\n- 32 layers;\n- 8 KV heads;\n- head dimension 128;\n- bf16 values, or 2 bytes per element;\n- 16 sequences with 8192 retained tokens each.\n\nEstimate the useful KV-cache payload in GiB. Exclude pages, block tables, and temporary buffers.",
+      "explanation": "Use\n\n$$\nB_{\\mathrm{KV}}\n=\n2L H_{\\mathrm{kv}}d_hN_{\\mathrm{tok}}b.\n$$\n\nThe retained-token count is\n\n$$\nN_{\\mathrm{tok}}=16\\cdot8192=131072.\n$$\n\nThus,\n\n$$\nB_{\\mathrm{KV}}\n=\n2\\cdot32\\cdot8\\cdot128\\cdot131072\\cdot2\n=\n17179869184\\ \\text{bytes}\n=\n16\\ \\text{GiB}.\n$$\n\nThe leading factor two accounts for keys and values.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "KV cache, GiB",
+          "expected": 16,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "Two architectural axes",
+      "prompt": "Match each description to one combination.\n\n1. One GPU pool; generation finishes before training starts.  \n2. Separate GPU pools with a shared batch barrier.  \n3. One pool releases memory between phases and overlaps only limited preparation.  \n4. A queue connects separate pools and the trainer may consume multiple policy versions.\n\nCombinations:\n\nA. colocated + synchronous;  \nB. disaggregated + synchronous;  \nC. colocated + limited overlap;  \nD. disaggregated + asynchronous.",
+      "explanation": "The mapping is:\n\n- 1 → **A**;\n- 2 → **B**;\n- 3 → **C**;\n- 4 → **D**.\n\nThe exercise separates role placement from the order in which data may be produced and consumed.",
+      "type": "matching",
+      "options": [
+        {
+          "value": "A",
+          "text": "colocated + synchronous;"
+        },
+        {
+          "value": "B",
+          "text": "disaggregated + synchronous;"
+        },
+        {
+          "value": "C",
+          "text": "colocated + limited overlap;"
+        },
+        {
+          "value": "D",
+          "text": "disaggregated + asynchronous."
+        }
+      ],
+      "correct": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "matchLabels": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Pipeline fill and drain",
+      "prompt": "Generating one batch takes $G=45$ s and training it takes $T=30$ s. There are $n=8$ batches.\n\nCompute:\n\n1. sequential time;\n2. ideal two-stage pipeline time;\n3. speedup.\n\nRound the speedup to three decimal places.",
+      "explanation": "Sequential time is\n\n$$\nt_{\\mathrm{seq}}\n=\nn(G+T)\n=\n8\\cdot75\n=\n600\\ \\text{s}.\n$$\n\nThe ideal two-stage pipeline takes\n\n$$\nt_{\\mathrm{pipe}}\n=\nG+T+(n-1)\\max(G,T)\n=\n45+30+7\\cdot45\n=\n390\\ \\text{s}.\n$$\n\nHence,\n\n$$\n\\frac{600}{390}\\approx1.538.\n$$\n\nThis assumes independent resources and omits communication, queues, and duration variance.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Sequential time, s",
+          "expected": 600,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Pipeline time, s",
+          "expected": 390,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Speedup",
+          "expected": 1.538,
+          "tolerance": 0.001
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "A straggling response",
+      "prompt": "Four rollouts run concurrently for 4, 4, 4, and 12 seconds. The batch closes only after the slowest rollout.\n\nCompute useful utilization of the four-worker capacity.",
+      "explanation": "Useful work is\n\n$$\n4+4+4+12=24\\ \\text{worker-seconds}.\n$$\n\nCapacity available before the barrier is\n\n$$\n4\\cdot12=48\\ \\text{worker-seconds}.\n$$\n\nTherefore,\n\n$$\nU=\\frac{24}{48}=0.5.\n$$\n\nHalf of the capacity is lost while workers wait for the slow response; a mean duration alone hides this loss.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Utilization fraction",
+          "expected": 0.5,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "First queue check",
+      "prompt": "A queue receives 8 thousand tokens per second on average, while the trainer processes 10 thousand tokens per second.\n\n1. Compute $\\rho=\\lambda/\\mu$.\n2. Does the system pass the first-order stability check?\n3. Why does this not guarantee short delays?",
+      "explanation": "We obtain\n\n$$\n\\rho=\\frac{8}{10}=0.8.\n$$\n\nBecause $\\rho<1$, mean service capacity exceeds mean arrival rate and the first-order check passes.\n\nIt is not a latency guarantee. Bursts, correlated long completions, heavy tails, synchronization pauses, and bounded buffers can still create large queues. Measure the age distribution and enforce explicit backpressure.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "ρ",
+          "expected": 0.8,
+          "tolerance": 1e-06
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P08",
+      "title": "Effective sample size",
+      "prompt": "Importance weights for four rollouts are $(1,1,1,5)$.\n\nCompute:\n\n1. ESS;\n2. normalized ESS.\n\nRound to four decimal places.",
+      "explanation": "Use\n\n$$\n\\mathrm{ESS}\n=\n\\frac{(\\sum_iw_i)^2}{\\sum_iw_i^2}.\n$$\n\nThe weight sum is 8 and the sum of squares is 28:\n\n$$\n\\mathrm{ESS}\n=\n\\frac{64}{28}\n=\n\\frac{16}{7}\n\\approx2.2857.\n$$\n\nNormalized ESS is\n\n$$\n\\frac{2.2857}{4}\n=\n\\frac47\n\\approx0.5714.\n$$\n\nThis diagnoses weight concentration; it does not prove absence of bias.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "ESS",
+          "expected": 2.2857,
+          "tolerance": 0.0001
+        },
+        {
+          "label": "Normalized ESS",
+          "expected": 0.5714,
+          "tolerance": 0.0001
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "Version age",
+      "prompt": "The current trainer version is 112. Rollouts were collected by versions $(108,109,110,110)$.\n\nCompute:\n\n1. version lags;\n2. mean lag;\n3. maximum lag.",
+      "explanation": "The lags are\n\n$$\n(112-108,\\ 112-109,\\ 112-110,\\ 112-110)\n=\n(4,3,2,2).\n$$\n\nTheir mean is\n\n$$\n\\bar L=\\frac{4+3+2+2}{4}=2.75,\n$$\n\nand the maximum is 4. This metric requires a monotone, unambiguous version scheme; one scalar is insufficient for branched runs.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Mean version lag",
+          "expected": 2.75,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Maximum version lag",
+          "expected": 4,
+          "tolerance": 0
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P10",
+      "title": "Checkpoint interval",
+      "prompt": "Writing a checkpoint takes $C=120$ s and the mean time between failures in the simplified model is $M=8$ hours.\n\nUsing Young's formula\n\n$$\nI^*=\\sqrt{2CM},\n$$\n\ncompute the interval in seconds and minutes.",
+      "explanation": "Convert eight hours:\n\n$$\nM=8\\cdot3600=28800\\ \\text{s}.\n$$\n\nThen\n\n$$\nI^*\n=\n\\sqrt{2\\cdot120\\cdot28800}\n\\approx2629.07\\ \\text{s}\n\\approx43.82\\ \\text{min}.\n$$\n\nThis is a first-order approximation. Recovery time, multilevel storage, correlated failures, and asynchronous writes change the practical policy.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Interval, s",
+          "expected": 2629.07,
+          "tolerance": 0.01
+        },
+        {
+          "label": "Interval, min",
+          "expected": 43.82,
+          "tolerance": 0.01
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Zero lag but nonzero mismatch",
+      "prompt": "Rollout and trainer recomputation use the same weight version, so policy lag is zero. Sequence log-probabilities still differ.\n\nName at least four possible causes and give the correct diagnostic order.",
+      "explanation": "Possible causes include:\n\n- different tokenization or chat templates;\n- different logit processors or decoding rules;\n- different response masks or causal shifts;\n- precision and reduction-order differences;\n- different kernels or parallel layouts;\n- incorrect selected-token reconstruction.\n\nFirst freeze tokens and masks, compare post-processed logits and log-probabilities at **zero lag**, and locate the first diverging token. Only after the contract matches should one study off-policy drift. Importance correction must not conceal a contract bug.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Which rollout can be accepted",
+      "prompt": "A collector sends tokens, a response mask, reward, and `policy_version`, but omits:\n\n- tokenizer and chat-template versions;\n- decoding parameters;\n- verifier version;\n- termination versus truncation.\n\nMay the trainer use this record? What should happen?",
+      "explanation": "The record must not be accepted automatically. A weight version does not fully determine the behavior policy: tokenization, templating, and decoding matter. Without a verifier version, reward provenance is unknown; without stop semantics, bootstrap targets and masks cannot be reconstructed safely.\n\nReject or quarantine the record. Recover fields only from an immutable authoritative log, then rerun schema validation. Filling them from the current configuration would silently rewrite history.",
+      "type": "self-check"
+    }
+  ]
+}

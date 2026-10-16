@@ -15,10 +15,16 @@ const catalog = JSON.parse(fs.readFileSync(path.join(project, "app/generated/con
 const errors = [];
 const totals = { documents: 0, headings: 0, tables: 0, lists: 0, listItems: 0, images: 0, links: 0, formulas: 0, codeBlocks: 0 };
 const courses = {};
+const quizMode = process.argv.includes('--quizzes');
+const documents = quizMode ? JSON.parse(fs.readFileSync(path.join(project, 'app/generated/quizzes.json'), 'utf8')).modules.map(entry => {
+  const quiz = JSON.parse(fs.readFileSync(path.join(project, 'public/quizzes', entry.file), 'utf8'));
+  const source = quiz.questions.map(q => `## ${q.id} ${q.title ?? ''}\n\n${q.topic ?? ''}\n\n${q.prompt}\n\n${(q.options ?? []).map(o => `- ${o.text}`).join('\n')}\n\n${q.explanation}`).join('\n\n');
+  return {content_file:entry.file, course_key:entry.courseKey, language:entry.language, source};
+}) : catalog.documents;
 
-for (const document of catalog.documents) {
+for (const document of documents) {
   const file = path.join(root, document.content_file);
-  const source = fs.readFileSync(file, "utf8");
+  const source = document.source ?? fs.readFileSync(file, "utf8");
   const headingIndex = markdownHeadings(source);
   const ids = new Set(headingIndex.map((heading) => heading.id));
   const lines = new Set(headingIndex.map((heading) => heading.line));

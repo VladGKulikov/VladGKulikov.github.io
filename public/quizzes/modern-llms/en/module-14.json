@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-14",
+  "language": "en",
+  "questions": [
+    {
+      "id": "16.2.1",
+      "prompt": "Why is multimodal progress better described as coexisting families than as successive eras?",
+      "explanation": "**Correct answer: A.** CLIP-like encoders serve retrieval, connectors retrofit existing LLMs, and unified/omni systems support generation or streaming output. A newer topology does not obsolete every earlier one.",
+      "topic": "16.2. Four families, four places to draw the boundary",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Different families optimize different constraints and remain useful"
+        },
+        {
+          "value": "B",
+          "text": "Every new family fully preserves the architecture of the previous generation"
+        },
+        {
+          "value": "C",
+          "text": "Historical labels are unrelated to training and inference differences"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.4.1",
+      "prompt": "When do visual features create ordinary language-decoder KV state?",
+      "explanation": "**Correct answer: B.** The module’s KV accounting applies to visual positions inside ordinary decoder self-attention. Cross-attention or external visual memory needs different accounting.",
+      "topic": "16.4. The first design: encoder, connector, language decoder",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "With any ViT encoder, even when it connects through cross-attention"
+        },
+        {
+          "value": "B",
+          "text": "When visual positions enter the decoder self-attention stream"
+        },
+        {
+          "value": "C",
+          "text": "Only when the language decoder also generates images"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.5.1",
+      "prompt": "What is the InfoNCE loss in the teaching example at temperature τ=0.1?",
+      "explanation": "**Correct answer: C.** With the same similarities, lower temperature spreads the logits. Loss falls from 0.643738 at τ=0.5 to 0.007409 at τ=0.1; ln 4 is the uniform four-way value.",
+      "topic": "16.5. CLIP, SigLIP, and worked example C: reading InfoNCE numerically",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.643738 — the value at τ=0.5"
+        },
+        {
+          "value": "B",
+          "text": "1.386294 — the uniform ln 4 reference value"
+        },
+        {
+          "value": "C",
+          "text": "0.007409 — the result of sharper softmax competition"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "16.6.1",
+      "prompt": "Four local tiles and one thumbnail each contribute 576 tokens. How many visual tokens result?",
+      "explanation": "**Correct answer: A.** The teaching NeXT scenario uses five views: four local 336×336 tiles and one global thumbnail. Thus 2,880 describes a tiling policy, not one 672×672 grid.",
+      "topic": "16.6. Worked example A: three ways to spend visual tokens",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "2,880 = 5·576"
+        },
+        {
+          "value": "B",
+          "text": "2,304 = 4·576 without the thumbnail"
+        },
+        {
+          "value": "C",
+          "text": "5,184 = the raw grid at 1008×1008"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.7.1",
+      "prompt": "How much KV memory do 1,296 visual positions require at 128 KiB per position?",
+      "explanation": "**Correct answer: B.** 1,296·128 KiB = 162 MiB. A resampler does not change that value if position count and KV format stay fixed. Reducing positions changes total KV; cross-attention requires accounting for a different storage path.",
+      "topic": "16.7. Worked example B: when images create ordinary decoder KV",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "1,296 MiB — one MiB per position"
+        },
+        {
+          "value": "B",
+          "text": "162 MiB — the result of 1,296·128 KiB"
+        },
+        {
+          "value": "C",
+          "text": "72 MiB — the cost of 576 positions without merging"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.8.1",
+      "prompt": "Which resource does a Q-Former or resampler primarily reduce?",
+      "explanation": "**Correct answer: C.** Learned queries extract a bounded set of representations from a larger feature grid. This creates a bottleneck while reducing LLM context length.",
+      "topic": "16.8. Connectors control where computation happens",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The parameter count of every vision-encoder layer"
+        },
+        {
+          "value": "B",
+          "text": "The bandwidth of a separate audio decoder"
+        },
+        {
+          "value": "C",
+          "text": "The number of visual positions passed to the language model"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "16.8.2",
+      "prompt": "Why does freezing an LLM not remove all backward work when training its projector?",
+      "explanation": "**Correct answer: A.** Frozen weights need no weight gradients or optimizer state, but the loss must remain differentiable with respect to the projector output.",
+      "topic": "16.8. Connectors control where computation happens",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The projector still needs gradients through input activations"
+        },
+        {
+          "value": "B",
+          "text": "Every LLM weight is still updated"
+        },
+        {
+          "value": "C",
+          "text": "Freezing doubles visual sequence length"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.9.1",
+      "prompt": "How does M-RoPE relate to visual-token count?",
+      "explanation": "**Correct answer: A.** Position encoding preserves geometry. Resizing, tiling, spatial merging, temporal sampling, and pruning determine token count.",
+      "topic": "16.9. Dynamic resolution makes compute depend on image geometry",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It encodes coordinates; resize, tiling, and merging change length"
+        },
+        {
+          "value": "B",
+          "text": "It always merges four neighboring patches into one token"
+        },
+        {
+          "value": "C",
+          "text": "It replaces dynamic resolution with one fixed visual grid"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.9.2",
+      "prompt": "What controls the geometric image budget in Qwen2-VL?",
+      "explanation": "**Correct answer: B.** Geometry-dependent dynamic resolution is not a learned semantic difficulty classifier.",
+      "topic": "16.9. Dynamic resolution makes compute depend on image geometry",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always the semantic difficulty of the image"
+        },
+        {
+          "value": "B",
+          "text": "Dimensions, aspect ratio and pixel limits"
+        },
+        {
+          "value": "C",
+          "text": "Only the user's task name"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.10.1",
+      "prompt": "How can a unified model remain internally modular?",
+      "explanation": "**Correct answer: B.** Janus separates visual pathways, InternVL-U uses an MMDiT head, and Thinker–Talker has a speech decoder. A unified product does not require one internal representation.",
+      "topic": "16.10. Unified output reveals a conflict between semantics and fidelity",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only if the modalities are never trained jointly"
+        },
+        {
+          "value": "B",
+          "text": "Shared context can coexist with specialized internal modules"
+        },
+        {
+          "value": "C",
+          "text": "Only if the system returns text and no other output modality"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.11.1",
+      "prompt": "Why does a large context window not solve long-video understanding by itself?",
+      "explanation": "**Correct answer: C.** Two hours at 1 fps and 576 tokens per frame produce 4.15 million tokens. Sampling, temporal pooling, and event selection determine retained evidence.",
+      "topic": "16.11. Worked example E: video is an information-selection problem",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Video frames cannot be represented as discrete visual tokens"
+        },
+        {
+          "value": "B",
+          "text": "A language-decoder KV cache cannot encode temporal coordinates"
+        },
+        {
+          "value": "C",
+          "text": "Frames and events must still be selected within the budget"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "16.12.1",
+      "prompt": "How does TMRoPE differ from ARIA in Thinker–Talker?",
+      "explanation": "**Correct answer: A.** They operate at different levels: positional geometry of audio/video input events versus adaptive interleaving of output streams.",
+      "topic": "16.12. Thinker–Talker: coordinating two clocks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "TMRoPE aligns input time; ARIA coordinates output stream rates"
+        },
+        {
+          "value": "B",
+          "text": "TMRoPE generates speech; ARIA recognizes individual images"
+        },
+        {
+          "value": "C",
+          "text": "TMRoPE exists only in Talker; ARIA only in the vision encoder"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.13.1",
+      "prompt": "Why does patch_layout reject silent integer truncation?",
+      "explanation": "**Correct answer: B.** Integer division could hide an incomplete patch. A processor may explicitly resize or pad; accounting for padded regions follows its actual interface and does not always require a separate pixel mask.",
+      "topic": "16.13. Code level 1: geometry before frameworks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To make every image automatically square before tokenization"
+        },
+        {
+          "value": "B",
+          "text": "To avoid losing a border without explicit resize or padding"
+        },
+        {
+          "value": "C",
+          "text": "To force spatial merging to use one universal factor"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.13.2",
+      "prompt": "What does the unpatchify(patchify(image)) round trip verify?",
+      "explanation": "**Correct answer: C.** Matching inverse permutations can pass even if their patch order violates the specification. A separate coordinate fixture is needed to check row-major order; the notebook includes one.",
+      "topic": "16.13. Code level 1: geometry before frameworks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Similarity between image and caption embeddings"
+        },
+        {
+          "value": "B",
+          "text": "Norm preservation through the connector MLP"
+        },
+        {
+          "value": "C",
+          "text": "Mutual consistency of the two operations on the tested input"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "16.15.1",
+      "prompt": "Why does audio need its own systems passport beyond text-token count?",
+      "explanation": "**Correct answer: A.** Audio has its own frame or codec-token rate. First-audio latency, real-time factor, interruptions, and semantic quality require separate measurement.",
+      "topic": "16.15. Audio is a continuous evidence stream",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Cost depends on audio rate, compression, and streaming latency"
+        },
+        {
+          "value": "B",
+          "text": "Audio is always processed without Transformer components"
+        },
+        {
+          "value": "C",
+          "text": "Speech contains no semantics until explicit transcription"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.16.1",
+      "prompt": "How should the internal architecture of a proprietary multimodal API be described?",
+      "explanation": "**Correct answer: B.** One interface may hide a cascade or several specialized models. Architecture claims require technical documentation, code, or configuration.",
+      "topic": "16.16. Reading the public landscape by design axis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Infer the hidden stack from one endpoint’s accepted formats"
+        },
+        {
+          "value": "B",
+          "text": "Record I/O and avoid guessing hidden topology without evidence"
+        },
+        {
+          "value": "C",
+          "text": "Treat every voice API as one end-to-end Transformer"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.16.2",
+      "prompt": "Which variant uses ViR in the InternVL3.5 report?",
+      "explanation": "**Correct answer: A.** The Flash router selects 256 or 64 visual positions per tile. This property must not be assigned to every model in the family.",
+      "topic": "16.16. Reading the public landscape by design axis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "InternVL3.5-Flash"
+        },
+        {
+          "value": "B",
+          "text": "Every VLM regardless of encoder"
+        },
+        {
+          "value": "C",
+          "text": "Only Chameleon"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.17.1",
+      "prompt": "What is the minimum multimodal passport needed to price a request?",
+      "explanation": "**Correct answer: C.** Cost appears at preprocessing, encoder, fusion, prefill, KV, and output-decoder stages. A capability label does not specify them.",
+      "topic": "16.17. Follow one request through a multimodal passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Model name and its best published benchmark result"
+        },
+        {
+          "value": "B",
+          "text": "Only maximum resolution and maximum context length"
+        },
+        {
+          "value": "C",
+          "text": "Processor, fusion, positions, state, latency, and memory"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "16.14.1",
+      "prompt": "What does the tiny VLM's held-out split test?",
+      "explanation": "**Correct answer: C.** The 32 training and 16 held-out renders share the same 16 height pairs. Rendering changes; compositions do not.",
+      "topic": "16.14. Level 2: what the notebook makes reproducible",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Transfer to natural photographs"
+        },
+        {
+          "value": "B",
+          "text": "Previously unseen height pairs"
+        },
+        {
+          "value": "C",
+          "text": "Different brightness for familiar height pairs"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

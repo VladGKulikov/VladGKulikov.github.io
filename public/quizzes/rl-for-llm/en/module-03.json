@@ -1,0 +1,280 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-03",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Why \"pseudo\"",
+      "prompt": "*single answer*\n\nPseudo-regret $\\bar R_T = \\mathbb{E}\\left[\\sum_t (\\mu^* - \\mu_{A_t})\\right]$ is not so named because it is fake. What does the prefix mean?",
+      "explanation": "The correct option is **That random rewards are replaced by their means: along a given trajectory the quantity carries no reward noise, which makes it convenient for a reproducible experiment**.\n\nUnder stationary rewards expected regret equals expected pseudo-regret. The whole mechanism reduces to $R_T = \\sum_a \\Delta_a\\,\\mathbb{E}[N_a(T)]$: the algorithm pays the gap each time it returns to a suboptimal arm.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "That the quantity is approximated from a finite sample"
+        },
+        {
+          "value": "2",
+          "text": "That random rewards are replaced by their means: along a given trajectory the quantity carries no reward noise, which makes it convenient for a reproducible experiment"
+        },
+        {
+          "value": "3",
+          "text": "That the comparison is against the best observed arm rather than the optimal one"
+        },
+        {
+          "value": "4",
+          "text": "That the horizon $T$ is unknown in advance"
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Regret from gaps and pull counts",
+      "prompt": "*numeric answer · tolerance ±0.5*\n\nThree arms with gaps $\\Delta = (0,\\ 0.1,\\ 0.3)$ were pulled on average $\\mathbb{E}[N_a(T)] = (700,\\ 200,\\ 100)$ times.\n\nWhat is the expected regret $R_T = \\sum_a \\Delta_a \\mathbb{E}[N_a(T)]$?",
+      "explanation": "Answer: **50**.\n\n$0.1\\cdot200 + 0.3\\cdot100 = 20 + 30 = 50$. The optimal arm with $\\Delta = 0$ contributes no regret however often it is pulled.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Pseudo-regret",
+          "expected": 50,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "The limits of the UCB1 guarantee",
+      "prompt": "*single answer*\n\nThe UCB1 bound gives $R_T \\le 8\\log T \\sum_{a:\\Delta_a>0} 1/\\Delta_a + \\text{const}$. What follows from it, and what does not?",
+      "explanation": "The correct option is **It is problem-dependent: a near-optimal arm has a small $\\Delta_a$ and needs many observations, so logarithmic asymptotics promise nothing about small regret at a finite horizon**.\n\nThe last option is a standard miscitation: the lower bound is stated for particular parametric families and uniformly efficient strategies, not for every algorithm on every instance.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Logarithmic asymptotics promise small regret at any finite horizon"
+        },
+        {
+          "value": "2",
+          "text": "It is problem-dependent: a near-optimal arm has a small $\\Delta_a$ and needs many observations, so logarithmic asymptotics promise nothing about small regret at a finite horizon"
+        },
+        {
+          "value": "3",
+          "text": "The bound is gap-independent and therefore universal"
+        },
+        {
+          "value": "4",
+          "text": "The Lai–Robbins lower bound implies every algorithm has $\\Omega(\\log T)$ regret on every instance"
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "What transfers from UCB and Thompson",
+      "prompt": "*single answer*\n\nThe module warns against porting bandit recipes to LLMs directly. Which transfer does it call useful?",
+      "explanation": "The correct option is **Exploration should depend on what the system does not yet know, not only on a fixed $\\varepsilon$ coin**.\n\nThe first two are exactly the transfers the module rejects: ensemble spread need not be posterior uncertainty, and entropy is not a confidence interval.",
+      "type": "single",
+      "correct": [
+        "3"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Ensemble spread can be used as posterior uncertainty"
+        },
+        {
+          "value": "2",
+          "text": "Token-distribution entropy serves as a confidence interval on a response's true utility"
+        },
+        {
+          "value": "3",
+          "text": "Exploration should depend on what the system does not yet know, not only on a fixed $\\varepsilon$ coin"
+        },
+        {
+          "value": "4",
+          "text": "A deterministic index maximum is always preferable to a random sample"
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Conditions for IPS unbiasedness",
+      "prompt": "*multiple answers*\n\nWhich conditions are needed for $\\widehat V_{\\mathrm{IPS}}$ to be unbiased? Select all that apply.",
+      "explanation": "The correct options are:\n\n- **Overlap: if $\\pi(a\\mid x) > 0$ then $\\mu(a\\mid x) > 0$**\n- **The logged $p_i$ match the real selection probabilities**\n- **Reward and context are recorded correctly**\n- **Given the context, action choice does not depend on an unrecorded factor that also drives the potential reward**\n\nThe fourth condition is secured by proper randomization or a substantive assignment model — and is the easiest to violate in a real log.",
+      "type": "multiple",
+      "correct": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Overlap: if $\\pi(a\\mid x) > 0$ then $\\mu(a\\mid x) > 0$"
+        },
+        {
+          "value": "2",
+          "text": "The logged $p_i$ match the real selection probabilities"
+        },
+        {
+          "value": "3",
+          "text": "Reward and context are recorded correctly"
+        },
+        {
+          "value": "4",
+          "text": "Given the context, action choice does not depend on an unrecorded factor that also drives the potential reward"
+        },
+        {
+          "value": "5",
+          "text": "The new policy $\\pi$ is deterministic"
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "IPS, SNIPS and the effective sample size",
+      "prompt": "*coding task*\n\n**Specification:** weights $w_i = \\pi(a_i\\mid x_i)/\\mu(a_i\\mid x_i)$. $\\widehat V_{\\mathrm{IPS}} = \\frac1n\\sum_i w_i r_i$; $\\widehat V_{\\mathrm{SNIPS}} = \\sum_i w_i r_i / \\sum_i w_i$; Kish effective sample size $\\mathrm{ESS} = (\\sum_i w_i)^2/\\sum_i w_i^2$.\n\n**Input format:** line 1 — the number of records $n$; then $n$ lines of `r mu pi`.\n**Output format:** lines 1–3 — IPS, SNIPS and ESS (4 decimals).\n\n**Starter code:**\n\n```python\nimport numpy as np\n\ndef offline_estimates(rewards, behavior, target):\n    \"\"\"Return (ips, snips, ess).\"\"\"\n    # YOUR CODE HERE\n    raise NotImplementedError\n\nif __name__ == \"__main__\":\n    n = int(input())\n    rows = [tuple(float(x) for x in input().split()) for _ in range(n)]\n    r = [row[0] for row in rows]\n    mu = [row[1] for row in rows]\n    pi = [row[2] for row in rows]\n    ips, snips, ess = offline_estimates(r, mu, pi)\n    for value in (ips, snips, ess):\n        print(f\"{value:.4f}\")\n```\n\n**Open tests:**\n\n| stdin | stdout |\n|---|---|\n| `3` ⏎ `1 0.2 0.6` ⏎ `0 0.5 0.1` ⏎ `1 0.3 0.3` | `1.3333` ⏎ `0.9524` ⏎ `1.7570` |\n| `2` ⏎ `1 0.5 0.5` ⏎ `0 0.5 0.5` | `0.5000` ⏎ `0.5000` ⏎ `2.0000` |",
+      "explanation": "One correct implementation is:\n\n```python\nimport numpy as np\n\ndef offline_estimates(rewards, behavior, target):\n    r = np.asarray(rewards, dtype=float)\n    mu = np.asarray(behavior, dtype=float)\n    pi = np.asarray(target, dtype=float)\n    if not (r.ndim == mu.ndim == pi.ndim == 1 and r.shape == mu.shape == pi.shape):\n        raise ValueError(\"inputs must be aligned one-dimensional arrays\")\n    if len(r) == 0 or np.any(mu <= 0.0) or np.any(pi < 0.0):\n        raise ValueError(\"need non-empty data, mu > 0, and pi >= 0\")\n    w = pi / mu\n    ips = float(np.mean(w * r))\n    total = float(np.sum(w))\n    if total <= 0.0:\n        raise ValueError(\"the total weight must be positive\")\n    snips = float(np.sum(w * r) / total)\n    denom = float(np.sum(w ** 2))\n    ess = float(total ** 2 / denom) if denom > 0.0 else 0.0\n    return ips, snips, ess\n```\n\nIn the first test the weights are $(3,0.2,1)$. Thus IPS is $(3\\cdot1+0.2\\cdot0+1\\cdot1)/3=4/3$, SNIPS is $4/4.2\\approx0.95238$, and ESS is $4.2^2/(9+0.04+1)\\approx1.757$. The small ESS shows that three logged rows carry roughly the weighted information of fewer than two balanced observations.\n\nIn the first test ESS $\\approx 1.76$ out of three records: one record with weight 3 carries almost the whole estimate. That is why IPS has high variance — and the same Kish quantity reappears in Module 12 for staleness control.",
+      "type": "self-check"
+    },
+    {
+      "id": "P07",
+      "title": "What double robustness does not give",
+      "prompt": "*single answer*\n\nThe DR estimator stays consistent if at least one of the two models is correct. What can it still not do?",
+      "explanation": "The correct option is **Create information where the log has no overlap: if the new policy picks an action the old one never showed in that context, the counterfactual reward is not determined by the log**.\n\nFor LLMs this bites hard: the space of full responses is vast and exact overlap is unattainable. A model may extrapolate, but that is an added assumption, not a statistical fact.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Reduce variance relative to plain IPS"
+        },
+        {
+          "value": "2",
+          "text": "Create information where the log has no overlap: if the new policy picks an action the old one never showed in that context, the counterfactual reward is not determined by the log"
+        },
+        {
+          "value": "3",
+          "text": "Work without a behavior-probability model"
+        },
+        {
+          "value": "4",
+          "text": "Use a direct reward model"
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "Generation temperature versus training exploration",
+      "prompt": "*single answer*\n\nWhy can raising the decoding temperature not be called exploration in the RL sense?",
+      "explanation": "The correct option is **Because temperature changes the candidate distribution without updating any quality estimate: training exploration means actions whose feedback changes the subsequent policy**.\n\nTwo neighbouring caveats on the same step: during training the logits themselves change, and after top-k, top-p and bans the resulting distribution is no longer a single temperature curve — a token zeroed by a filter cannot be restored by raising temperature.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Because temperature affects only the most likely token"
+        },
+        {
+          "value": "2",
+          "text": "Because temperature changes the candidate distribution without updating any quality estimate: training exploration means actions whose feedback changes the subsequent policy"
+        },
+        {
+          "value": "3",
+          "text": "Because temperature is always pinned to one during training"
+        },
+        {
+          "value": "4",
+          "text": "Because entropy does not increase with temperature"
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "How many candidates Best-of-N needs",
+      "prompt": "*numeric answer · tolerance ±0.5*\n\nEach independent candidate succeeds with probability $p = 0.15$, and the verifier detects success without error.\n\nWhat is the minimum number of candidates for a success probability of at least $0.95$?",
+      "explanation": "Answer: **19**.\n\n$N \\ge \\log(0.05)/\\log(0.85) = 18.43$, hence $19$. Verified with `minimum_samples_for_target`. The assumptions are strong: independence, identical $p$, a perfect verifier and cost outside the objective.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Number of candidates N",
+          "expected": 19,
+          "tolerance": 0
+        }
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Why Best-of-N is not a bandit",
+      "prompt": "*single answer*\n\nWhy is ordinary Best-of-N with a frozen LLM not a standard online multi-armed bandit?",
+      "explanation": "The correct option is **Because there is no finite set of unknown arms whose estimates are refined across rounds: this is repeated sampling from one policy plus selection by a verifier**.\n\nA bandit problem appears when the system repeatedly chooses among several models, prompt variants, temperatures or routes and updates those choices from feedback.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Because the number of candidates is finite"
+        },
+        {
+          "value": "2",
+          "text": "Because there is no finite set of unknown arms whose estimates are refined across rounds: this is repeated sampling from one policy plus selection by a verifier"
+        },
+        {
+          "value": "3",
+          "text": "Because the reward is binary"
+        },
+        {
+          "value": "4",
+          "text": "Because the model parameters are frozen and bandits require learning"
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "The unbiased pass@k estimator",
+      "prompt": "*coding task*\n\n**Specification:** a task produced $n$ programs of which $c$ passed the tests, $n \\ge k$. The finite-sample estimator is $\\widehat{\\operatorname{pass@}k} = 1 - \\binom{n-c}{k}\\big/\\binom{n}{k}$, with $\\binom{m}{k} = 0$ for $m < k$.\n\n**Input format:** one line — $n$, $c$, $k$.\n**Output format:** one line — the estimate (6 decimals).\n\n**Starter code:**\n\n```python\nfrom math import comb\n\ndef pass_at_k(n: int, c: int, k: int) -> float:\n    # YOUR CODE HERE\n    raise NotImplementedError\n\nif __name__ == \"__main__\":\n    n, c, k = (int(x) for x in input().split())\n    print(f\"{pass_at_k(n, c, k):.6f}\")\n```\n\n**Open tests:**\n\n| stdin | stdout |\n|---|---|\n| `10 3 4` | `0.833333` |\n| `8 2 2` | `0.464286` |\n| `5 0 3` | `0.000000` |\n| `6 6 2` | `1.000000` |",
+      "explanation": "One correct implementation is:\n\n```python\nfrom math import comb\n\ndef pass_at_k(n: int, c: int, k: int) -> float:\n    if n < 1 or not 0 <= c <= n or not 1 <= k <= n:\n        raise ValueError(\"need n >= 1, 0 <= c <= n, and 1 <= k <= n\")\n    failures = n - c\n    if failures < k:\n        return 1.0\n    return 1.0 - comb(failures, k) / comb(n, k)\n```\n\nThe formula is the probability that a size-$k$ subset drawn without replacement from the observed $n$ programs contains at least one of the $c$ successes. For $(n,c,k)=(10,3,4)$, the probability of drawing only failures is $\\binom{7}{4}/\\binom{10}{4}=1/6$, so the estimate is $5/6\\approx0.833333$.\n\nPlugging $\\widehat p = c/n$ into $1-(1-\\widehat p)^k$ would give $1-0.7^4 = 0.7599$ on the first test — noticeably lower. The combinatorial formula is the probability that a random size-$k$ subset drawn without replacement contains at least one success.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Entropy collapse: observation or theorem",
+      "prompt": "*single answer*\n\nA 2026 preprint reports a substantial entropy drop across several RLVR configurations on mathematics. How does the course ask you to read that?",
+      "explanation": "The correct option is **As a primary empirical report from one specific paper, not proof that group-relative optimization must collapse entropy**.\n\nA falling mean entropy is not itself an error: a successful policy often should grow more confident. The problem is diversity vanishing before the solution space has been explored, or concentration driven by an update pathology.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "As proof that any GRPO run collapses entropy"
+        },
+        {
+          "value": "2",
+          "text": "As a primary empirical report from one specific paper, not proof that group-relative optimization must collapse entropy"
+        },
+        {
+          "value": "3",
+          "text": "As an artifact of the chosen optimizer, removable by changing the learning rate"
+        },
+        {
+          "value": "4",
+          "text": "As a theoretical consequence of PPO clipping"
+        }
+      ]
+    }
+  ]
+}

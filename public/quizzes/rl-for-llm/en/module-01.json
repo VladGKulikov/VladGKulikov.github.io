@@ -1,0 +1,247 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-01",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "The limits of \"an LLM is a policy\"",
+      "prompt": "**Step 1.1.4 — An LLM as a policy: the exact correspondence and its boundary**\n\n*single answer*\n\nIn the token formulation $s_t=(x,y_{<t})$, $a_t=y_t$, and an LLM genuinely defines $\\pi_\\theta(a\\mid s)$. What caveat does the module attach to that statement?",
+      "explanation": "**Correct answer:** Calling an LLM a policy describes how actions are selected; it does not claim the weights came from RL — a pretrained model already defines a policy\n\nThe second limit: in a deployed system an LLM is usually the policy or part of it, not the whole environment — tools, files, the browser and the user carry their own state.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "The correspondence is approximate: softmax merely resembles a policy"
+        },
+        {
+          "value": "2",
+          "text": "Calling an LLM a policy describes how actions are selected; it does not claim the weights came from RL — a pretrained model already defines a policy"
+        },
+        {
+          "value": "3",
+          "text": "The correspondence holds only after RLHF fine-tuning"
+        },
+        {
+          "value": "4",
+          "text": "The correspondence requires a fully observable environment"
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Four questions instead of a label",
+      "prompt": "**Step 1.1.5 — Reward, return, discounting, and the RL objective**\n\n*single answer*\n\nThe module rejects \"supervised learning has a right answer, RL only has a reward\". What does it offer instead?",
+      "explanation": "**Correct answer:** Four questions: what decision the policy makes, what feedback is available, whether actions have delayed consequences, and how the data was obtained\n\nImitation learning, offline RL, contextual bandits and preference learning are four counterexamples, each breaking the short label in its own way.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "A precise definition via the presence of a value function"
+        },
+        {
+          "value": "2",
+          "text": "Four questions: what decision the policy makes, what feedback is available, whether actions have delayed consequences, and how the data was obtained"
+        },
+        {
+          "value": "3",
+          "text": "A split into online and offline regimes"
+        },
+        {
+          "value": "4",
+          "text": "A check of whether an expectation over current-policy trajectories is being optimized"
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "What each abstraction hides",
+      "prompt": "**Step 1.2.1 — Three useful abstractions: response, token, and macro-action**\n\n*multiple answers*\n\nThe three formulations of an LLM task each hide something deliberately. Select every correct pairing.",
+      "explanation": "**Correct answer:**\n\n- The contextual bandit hides per-token credit and decoding cost\n\n- The finite token MDP hides external hidden state and coarse actions\n\n- A POMDP or semi-MDP demands an explicit model of time, tool failures and partial observability\n\nThe last is a common misreading: the internal token sequence is simply left unmodelled, not denied.",
+      "type": "multiple",
+      "correct": [
+        "1",
+        "2",
+        "3"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "The contextual bandit hides per-token credit and decoding cost"
+        },
+        {
+          "value": "2",
+          "text": "The finite token MDP hides external hidden state and coarse actions"
+        },
+        {
+          "value": "3",
+          "text": "A POMDP or semi-MDP demands an explicit model of time, tool failures and partial observability"
+        },
+        {
+          "value": "4",
+          "text": "The contextual bandit claims the response physically appeared in one step"
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "What a denser signal does not do",
+      "prompt": "**Step 1.2.2 — Sparse reward, credit assignment, and rollout cost**\n\n*single answer*\n\nA value function, a group baseline and process rewards all make a sparse signal more informative. What does none of them do?",
+      "explanation": "**Correct answer:** Turn a bad reward into the right objective: denser feedback only helps optimize more precisely what is already specified\n\nThis is the course's throughline in its first form: outcome quality starts with the criterion, not with the choice of optimizer.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Reduce the variance of the gradient estimate"
+        },
+        {
+          "value": "2",
+          "text": "Turn a bad reward into the right objective: denser feedback only helps optimize more precisely what is already specified"
+        },
+        {
+          "value": "3",
+          "text": "Work with a terminal reward of $0$ or $1$"
+        },
+        {
+          "value": "4",
+          "text": "Apply to responses longer than a thousand tokens"
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Offline versus off-policy",
+      "prompt": "**Step 1.3.3 — Classical axes and their limits**\n\n*single answer*\n\nWhy are \"offline\" and \"off-policy\" not synonyms?",
+      "explanation": "**Correct answer:** Offline is a setting: no fresh interaction, fixed data. Off-policy is a property of an estimator or algorithm relative to the behavior policy\n\nThe neighbouring trap on the same step: \"on-policy data\" does not mean \"each sample used exactly once\" — PPO runs several epochs over minibatches.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Offline RL is always off-policy but not conversely"
+        },
+        {
+          "value": "2",
+          "text": "Offline is a setting: no fresh interaction, fixed data. Off-policy is a property of an estimator or algorithm relative to the behavior policy"
+        },
+        {
+          "value": "3",
+          "text": "Off-policy refers to evaluation, offline to critic architecture"
+        },
+        {
+          "value": "4",
+          "text": "The distinction is terminological and does not affect algorithms"
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "The method map",
+      "prompt": "**Step 1.3.5 — SFT, DPO, PPO-RLHF, GRPO/RLVR, and Best-of-N**\n\n*multiple answers*\n\nFrom the table in step 1.3.5 — which statements are true? Select all that apply.",
+      "explanation": "**Correct answer:**\n\n- SFT is behavior cloning from demonstrations, not RL\n\n- DPO is offline preference optimization derived from the KL-regularized RLHF setting; it is not classical offline RL\n\n- Best-of-N is search and selection at frozen parameters, outside training\n\n- RLVR describes a feedback type, GRPO an algorithm\n\nThe last is the most common misreading of the table: the group mean is the baseline.",
+      "type": "multiple",
+      "correct": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "SFT is behavior cloning from demonstrations, not RL"
+        },
+        {
+          "value": "2",
+          "text": "DPO is offline preference optimization derived from the KL-regularized RLHF setting; it is not classical offline RL"
+        },
+        {
+          "value": "3",
+          "text": "Best-of-N is search and selection at frozen parameters, outside training"
+        },
+        {
+          "value": "4",
+          "text": "RLVR describes a feedback type, GRPO an algorithm"
+        },
+        {
+          "value": "5",
+          "text": "The absence of a learned critic in canonical GRPO means there is no baseline"
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "What the temperature formula describes",
+      "prompt": "**Step 1.4.2 — Temperature softmax: a first computable policy**\n\n*single answer*\n\nThe formula $\\pi_i(T) \\propto \\exp(z_i/T)$ and the monotonicity of entropy in $T$ are proved for fixed finite logits. Why need the API's `temperature` parameter not behave the same way?",
+      "explanation": "**Correct answer:** In an API it is applied alongside top-p, top-k, repetition penalties and provider filters; the formula describes pure softmax over given logits, not the whole decoding process\n\nThe same gap returns in Module 6 (truncation and renormalization) and Module 3 (generation temperature is not training exploration).",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "The API uses different units for temperature"
+        },
+        {
+          "value": "2",
+          "text": "In an API it is applied alongside top-p, top-k, repetition penalties and provider filters; the formula describes pure softmax over given logits, not the whole decoding process"
+        },
+        {
+          "value": "3",
+          "text": "Providers round logits to float16, which breaks monotonicity"
+        },
+        {
+          "value": "4",
+          "text": "Monotonicity only holds for $T \\le 1$"
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "Entropy at a given temperature",
+      "prompt": "**Step 1.4.3 — Reproducible experiment: $T\\mapsto H(T)$**\n\n*numeric answer · tolerance ±0.01*\n\nLogits $z = (3, 1, 0)$, temperature $T = 2$.\n\nWhat is the policy entropy in nats?",
+      "explanation": "**Correct answer:** 0.906\n\nVerified with `policy_entropy`: $0.905959$. The ceiling here is $\\ln 3 \\approx 1.0986$, so the distribution is already noticeably flattened but not yet uniform.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Entropy, nats",
+          "expected": 0.906,
+          "tolerance": 0.01
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "The exact corridor value under a finite horizon",
+      "prompt": "**Step 1.4.4 — Return and Monte Carlo evaluation in a corridor**\n\n*coding task*\n\nA symmetric walk over cells $0..4$; start at $2$; left and right are equally likely. The episode terminates at $0$ (reward $0$) or at $4$ (reward $+1$), and is also cut off after `max_steps` actions.\n\n**Specification:** compute $V(2) = \\Pr(T_4 \\le \\texttt{max\\_steps})$ exactly, by dynamic programming over the remaining step count — no simulation.\n\n**Input format:** one line — `max_steps`.\n**Output format:** one line — the value (6 decimals).\n\n**Starter code:**\n\n```python\ndef exact_corridor_value(max_steps: int) -> float:\n    \"\"\"Probability of reaching state 4 from state 2 within max_steps actions.\"\"\"\n    # YOUR CODE HERE\n    raise NotImplementedError\n\nif __name__ == \"__main__\":\n    print(f\"{exact_corridor_value(int(input())):.6f}\")\n```\n\n**Open tests:**\n\n| stdin | stdout |\n|---|---|\n| `2` | `0.250000` |\n| `4` | `0.375000` |\n| `6` | `0.437500` |\n| `20` | `0.499512` |",
+      "explanation": "Without a length cap the answer would be exactly $0.5$; with a cap of 20 it is $1023/2048 = 0.49951171875$. The gap is small but the principle is not: an experiment must be compared against the formulation implemented in the code, not a nearly identical uncapped one.\n\nReference dynamic-programming implementation:\n\n```python\nimport numpy as np\n\n\ndef exact_corridor_value(max_steps: int) -> float:\n    if not isinstance(max_steps, int) or isinstance(max_steps, bool) or max_steps <= 0:\n        raise ValueError(\"max_steps must be a positive integer\")\n\n    # values[s] is the probability of reaching the right terminal\n    # within the currently allowed number of actions when starting from s.\n    values = np.zeros(5, dtype=np.float64)\n    values[4] = 1.0\n    for _ in range(max_steps):\n        updated = values.copy()\n        for state in (1, 2, 3):\n            updated[state] = 0.5 * values[state - 1] + 0.5 * values[state + 1]\n        updated[0] = 0.0\n        updated[4] = 1.0\n        values = updated\n    return float(values[2])\n```\n\nThe running time is $O(\\texttt{max\\_steps})$ and the memory cost is $O(1)$ because the state space is fixed.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "Standard error of the Monte Carlo estimate",
+      "prompt": "**Step 1.4.4 — Return and Monte Carlo evaluation in a corridor**\n\n*numeric answer · tolerance ±0.002*\n\nThe corridor return is a Bernoulli variable with $p = 1023/2048 \\approx 0.4995$. The estimate uses $N = 400$ independent episodes.\n\nWhat is the approximate standard error $\\sqrt{p(1-p)/N}$?",
+      "explanation": "**Correct answer:** 0.025\n\nAt $N = 1000$ it would be $\\approx 0.0158$. Estimates of 0.48 or 0.52 at this $N$ do not contradict the theory — that is ordinary finite-sample error. The same logic returns in RLVR: group size drives variance and cost at once.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Standard error",
+          "expected": 0.025,
+          "tolerance": 0.002
+        }
+      ]
+    }
+  ]
+}

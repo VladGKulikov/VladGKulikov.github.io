@@ -1,0 +1,732 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-15",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "What does the Fisher–Rao metric measure?",
+      "explanation": "**Correct answer: A.** The local Fisher quadratic form describes distinguishability between nearby models.",
+      "topic": "15.2. Fisher information and local KL geometry",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Local statistical distinguishability of distributions"
+        },
+        {
+          "value": "B",
+          "text": "The global cost of mass transport"
+        },
+        {
+          "value": "C",
+          "text": "The Euclidean length of weights"
+        },
+        {
+          "value": "D",
+          "text": "Only score variance under observed labels"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "15.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "What is the quadratic term in local KL?",
+      "explanation": "**Correct answer: B.** Under regularity, D_KL=1/2 dθᵀ G dθ+o(‖dθ‖²).",
+      "topic": "15.2. Fisher information and local KL geometry",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$d\\theta^\\top G\\,d\\theta$"
+        },
+        {
+          "value": "B",
+          "text": "$\\tfrac12 d\\theta^\\top G\\,d\\theta$"
+        },
+        {
+          "value": "C",
+          "text": "$d\\theta^\\top H^2 d\\theta$"
+        },
+        {
+          "value": "D",
+          "text": "$\\|d\\theta\\|_1$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "15.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Why is KL not a Riemannian distance?",
+      "explanation": "**Correct answer: A.** Fisher is the local second-order term of KL, but KL itself is not a metric.",
+      "topic": "15.2. Fisher information and local KL geometry",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is asymmetric and does not satisfy the triangle inequality"
+        },
+        {
+          "value": "B",
+          "text": "It is always infinite"
+        },
+        {
+          "value": "C",
+          "text": "It depends only on parameter coordinates"
+        },
+        {
+          "value": "D",
+          "text": "It equals Fisher only on the simplex"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "15.2.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "What is required for the Fisher matrix to be positive definite?",
+      "explanation": "**Correct answer: B.** Redundant parameterizations can make Fisher singular.",
+      "topic": "15.2. Fisher information and local KL geometry",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A large batch"
+        },
+        {
+          "value": "B",
+          "text": "Local identifiability"
+        },
+        {
+          "value": "C",
+          "text": "A uniform prior"
+        },
+        {
+          "value": "D",
+          "text": "Convexity of the neural network"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "15.2.4"
+    },
+    {
+      "id": "item-005",
+      "prompt": "How does Fisher transform under $\\theta=\\theta(\\phi)$, with $J=\\partial\\theta/\\partial\\phi$?",
+      "explanation": "**Correct answer: A.** This is the transformation law for a metric tensor.",
+      "topic": "15.2. Fisher information and local KL geometry",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$G_\\phi=J^\\top G_\\theta J$"
+        },
+        {
+          "value": "B",
+          "text": "$G_\\phi=JG_\\theta J^\\top$"
+        },
+        {
+          "value": "C",
+          "text": "$G_\\phi=G_\\theta+J$"
+        },
+        {
+          "value": "D",
+          "text": "$G_\\phi=J^{-1}G_\\theta$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "15.2.5"
+    },
+    {
+      "id": "item-006",
+      "prompt": "The natural-gradient direction for minimization is…",
+      "explanation": "**Correct answer: D.** The descent direction is -G† g; the natural gradient itself is G† g.",
+      "topic": "15.3. Natural gradient: a step in distribution space",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$Gg$"
+        },
+        {
+          "value": "B",
+          "text": "$H^{-1}g$"
+        },
+        {
+          "value": "C",
+          "text": "$\\operatorname{diag}(G)g$"
+        },
+        {
+          "value": "D",
+          "text": "$G^\\dagger g$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "15.3.1"
+    },
+    {
+      "id": "item-007",
+      "prompt": "What is correctly invariant under a smooth reparameterization?",
+      "explanation": "**Correct answer: A.** A finite coordinate step is invariant only to first order.",
+      "topic": "15.3. Natural gradient: a step in distribution space",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The natural-gradient vector field"
+        },
+        {
+          "value": "B",
+          "text": "Every finite Euler step"
+        },
+        {
+          "value": "C",
+          "text": "The learning-rate schedule"
+        },
+        {
+          "value": "D",
+          "text": "The momentum buffer"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "15.3.2"
+    },
+    {
+      "id": "item-008",
+      "prompt": "Natural gradient and Newton coincide…",
+      "explanation": "**Correct answer: D.** Fisher and the objective Hessian are distinct, though they coincide in special likelihood settings.",
+      "topic": "15.3. Natural gradient: a step in distribution space",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always for cross-entropy"
+        },
+        {
+          "value": "B",
+          "text": "Only in reinforcement learning"
+        },
+        {
+          "value": "C",
+          "text": "Never"
+        },
+        {
+          "value": "D",
+          "text": "Only under additional conditions"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "15.3.3"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Where do labels in the inner expectation of the conditional model Fisher come from?",
+      "explanation": "**Correct answer: A.** The inner expectation is over y~p_θ(·|x).",
+      "topic": "15.4. Which “curvature” is actually used in deep learning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The current model $p_\\theta(y\\mid x)$"
+        },
+        {
+          "value": "B",
+          "text": "The validation set"
+        },
+        {
+          "value": "C",
+          "text": "The hard argmax"
+        },
+        {
+          "value": "D",
+          "text": "Empirical class frequencies"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "15.4.1"
+    },
+    {
+      "id": "item-010",
+      "prompt": "What is the empirical Fisher?",
+      "explanation": "**Correct answer: A.** It uses observed labels and need not equal the model Fisher.",
+      "topic": "15.4. Which “curvature” is actually used in deep learning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The second moment of observed per-example gradients"
+        },
+        {
+          "value": "B",
+          "text": "Fisher after whitening"
+        },
+        {
+          "value": "C",
+          "text": "The exact Hessian"
+        },
+        {
+          "value": "D",
+          "text": "The covariate matrix"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "15.4.2"
+    },
+    {
+      "id": "item-011",
+      "prompt": "How is Adam best described?",
+      "explanation": "**Correct answer: C.** Squared gradients may resemble empirical moments, but they are not the model Fisher.",
+      "topic": "15.4. Which “curvature” is actually used in deep learning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An inverse-Fisher solver"
+        },
+        {
+          "value": "B",
+          "text": "Exact diagonal natural gradient"
+        },
+        {
+          "value": "C",
+          "text": "Adaptive diagonal scaling based on gradient moments"
+        },
+        {
+          "value": "D",
+          "text": "Newton without a Hessian"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "15.4.3"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What does K-FAC usually approximate?",
+      "explanation": "**Correct answer: B.** K-FAC uses Kronecker factorization and damping.",
+      "topic": "15.4. Which “curvature” is actually used in deep learning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The Wasserstein metric"
+        },
+        {
+          "value": "B",
+          "text": "Layerwise Fisher/GGN blocks by Kronecker products"
+        },
+        {
+          "value": "C",
+          "text": "Only a scalar gradient variance"
+        },
+        {
+          "value": "D",
+          "text": "The full Hessian without assumptions"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "15.4.4"
+    },
+    {
+      "id": "item-013",
+      "prompt": "Which KL orientation is normally used in practical TRPO?",
+      "explanation": "**Correct answer: B.** The practical constraint usually uses D_KL(π_old‖π_new).",
+      "topic": "15.5. Policy geometry: NPG, TRPO, PPO, and KL in RLHF",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$D_{\\mathrm{KL}}(\\pi_{\\mathrm{new}}\\|\\pi_{\\mathrm{old}})$"
+        },
+        {
+          "value": "B",
+          "text": "$D_{\\mathrm{KL}}(\\pi_{\\mathrm{old}}\\|\\pi_{\\mathrm{new}})$"
+        },
+        {
+          "value": "C",
+          "text": "The symmetric Jensen–Shannon divergence"
+        },
+        {
+          "value": "D",
+          "text": "$D_{\\mathrm{KL}}(\\pi_{\\mathrm{ref}}\\|\\text{data})$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "15.5.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Why does PPO clipping not guarantee a global trust region?",
+      "explanation": "**Correct answer: C.** Probability mass may move among actions absent from the minibatch.",
+      "topic": "15.5. Policy geometry: NPG, TRPO, PPO, and KL in RLHF",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It uses no gradients"
+        },
+        {
+          "value": "B",
+          "text": "It requires an exact Hessian"
+        },
+        {
+          "value": "C",
+          "text": "It controls ratios of sampled actions, not the whole policy"
+        },
+        {
+          "value": "D",
+          "text": "It always increases KL"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "15.5.2"
+    },
+    {
+      "id": "item-015",
+      "prompt": "How does fixed-reference KL in RLHF differ from the TRPO KL?",
+      "explanation": "**Correct answer: B.** The reference anchor limits accumulated drift, whereas TRPO constrains the next local update.",
+      "topic": "15.5. Policy geometry: NPG, TRPO, PPO, and KL in RLHF",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is always symmetric"
+        },
+        {
+          "value": "B",
+          "text": "It compares the current policy with a fixed base/SFT policy"
+        },
+        {
+          "value": "C",
+          "text": "It does not use probabilities"
+        },
+        {
+          "value": "D",
+          "text": "It is a PAC-Bayes bound"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "15.5.3"
+    },
+    {
+      "id": "item-016",
+      "prompt": "What is the ideal KL-regularized policy optimum?",
+      "explanation": "**Correct answer: C.** This is an exponential tilt of the reference policy.",
+      "topic": "15.5. Policy geometry: NPG, TRPO, PPO, and KL in RLHF",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\pi^*=\\pi_{\\mathrm{ref}}+\\beta r$"
+        },
+        {
+          "value": "B",
+          "text": "$\\pi^*\\propto\\exp(-r)$"
+        },
+        {
+          "value": "C",
+          "text": "$\\pi^*\\propto\\pi_{\\mathrm{ref}}\\exp(r/\\beta)$"
+        },
+        {
+          "value": "D",
+          "text": "$\\pi^*=\\arg\\max r$, with no reference policy"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "15.5.4"
+    },
+    {
+      "id": "item-017",
+      "prompt": "What does Wasserstein-2 measure?",
+      "explanation": "**Correct answer: D.** Wasserstein uses a ground metric and a coupling.",
+      "topic": "15.6. Another geometry: Wasserstein, CNFs, and Flow Matching",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A local Fisher norm"
+        },
+        {
+          "value": "B",
+          "text": "Parameter-space curvature"
+        },
+        {
+          "value": "C",
+          "text": "Only support overlap"
+        },
+        {
+          "value": "D",
+          "text": "The minimum expected squared transport cost"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "15.6.1"
+    },
+    {
+      "id": "item-018",
+      "prompt": "When does Flow Matching define a Wasserstein geodesic?",
+      "explanation": "**Correct answer: C.** General Flow Matching permits other paths and couplings.",
+      "topic": "15.6. Another geometry: Wasserstein, CNFs, and Flow Matching",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always"
+        },
+        {
+          "value": "B",
+          "text": "Only for a diffusion path"
+        },
+        {
+          "value": "C",
+          "text": "With an optimal coupling and displacement interpolation"
+        },
+        {
+          "value": "D",
+          "text": "Only for discrete data"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "15.6.2"
+    },
+    {
+      "id": "item-019",
+      "prompt": "What is true of a probability-flow ODE and its corresponding SDE?",
+      "explanation": "**Correct answer: C.** Their couplings and trajectories differ, while their marginals agree.",
+      "topic": "15.6. Another geometry: Wasserstein, CNFs, and Flow Matching",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The ODE is always OT-optimal"
+        },
+        {
+          "value": "B",
+          "text": "They have identical sample paths"
+        },
+        {
+          "value": "C",
+          "text": "With an exact score, they have the same one-time marginals"
+        },
+        {
+          "value": "D",
+          "text": "The SDE has no density"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "15.6.3"
+    },
+    {
+      "id": "item-020",
+      "prompt": "The score $\\nabla_x\\log p(x)$ is…",
+      "explanation": "**Correct answer: D.** The score is local in sample space and is not a parameter natural gradient.",
+      "topic": "15.6. Another geometry: Wasserstein, CNFs, and Flow Matching",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The natural gradient in parameter space"
+        },
+        {
+          "value": "B",
+          "text": "A Fisher-vector product"
+        },
+        {
+          "value": "C",
+          "text": "A global direction to the nearest mode"
+        },
+        {
+          "value": "D",
+          "text": "A gradient with respect to the observation coordinate"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "15.6.4"
+    },
+    {
+      "id": "item-021",
+      "prompt": "For an exponential family, Fisher equals…",
+      "explanation": "**Correct answer: D.** The Hessian of the log-partition function is the covariance of sufficient statistics.",
+      "topic": "15.7. Exponential families, dual coordinates, and mirror descent",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$A(\\theta)$"
+        },
+        {
+          "value": "B",
+          "text": "Entropy under all conditions"
+        },
+        {
+          "value": "C",
+          "text": "$A^*(\\eta)$ without derivatives"
+        },
+        {
+          "value": "D",
+          "text": "$\\nabla^2A(\\theta)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "15.7.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "What is the Bregman argument order in $D_{\\mathrm{KL}}(p_{\\theta_1}\\|p_{\\theta_2})$?",
+      "explanation": "**Correct answer: B.** KL orientation reverses the Bregman arguments in natural coordinates.",
+      "topic": "15.7. Exponential families, dual coordinates, and mirror descent",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$B_A(\\theta_1,\\theta_2)$"
+        },
+        {
+          "value": "B",
+          "text": "$B_A(\\theta_2,\\theta_1)$"
+        },
+        {
+          "value": "C",
+          "text": "A symmetric average"
+        },
+        {
+          "value": "D",
+          "text": "$B_{A^*}(\\theta_2,\\theta_1)$ under all conditions"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "15.7.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "What does dually flat mean?",
+      "explanation": "**Correct answer: D.** The Levi–Civita curvature of the Fisher–Rao metric may still be nonzero.",
+      "topic": "15.7. Exponential families, dual coordinates, and mirror descent",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "KL becomes symmetric"
+        },
+        {
+          "value": "B",
+          "text": "Fisher–Rao curvature is zero in every sense"
+        },
+        {
+          "value": "C",
+          "text": "The parameter norm is Euclidean"
+        },
+        {
+          "value": "D",
+          "text": "The e- and m-affine connections are flat"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "15.7.3"
+    },
+    {
+      "id": "item-024",
+      "prompt": "Which update is induced by a negative-entropy mirror map?",
+      "explanation": "**Correct answer: A.** The KL-Bregman proximal step normalizes p_i exp(-η g_i).",
+      "topic": "15.7. Exponential families, dual coordinates, and mirror descent",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Exponentiated or multiplicative weights"
+        },
+        {
+          "value": "B",
+          "text": "Linear interpolation"
+        },
+        {
+          "value": "C",
+          "text": "A Wasserstein barycenter"
+        },
+        {
+          "value": "D",
+          "text": "Ordinary Newton"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "15.7.4"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Which statement is most accurate?",
+      "explanation": "**Correct answer: C.** First determine what object should change little and how that change is measured.",
+      "topic": "15.8. Practical map: which geometry should you choose?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Shampoo is always a Fisher approximation"
+        },
+        {
+          "value": "B",
+          "text": "One geometry fits every ML task"
+        },
+        {
+          "value": "C",
+          "text": "Choose geometry by the object and meaning of a small change"
+        },
+        {
+          "value": "D",
+          "text": "PPO, Adam, and Flow Matching are one algorithm"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "15.8.1"
+    }
+  ]
+}

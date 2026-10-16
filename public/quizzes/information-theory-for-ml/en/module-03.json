@@ -1,0 +1,792 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-03",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "What are the roles of $P$ and $Q$ in $H(P,Q)$?",
+      "explanation": "**Correct answer: C.** By definition H(P,Q) is the expectation over X drawn from P of −log q(X). Swapping the two gives H(Q,P), a different number.",
+      "topic": "3.2. Cross-entropy: the model's average logarithmic bill",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$P$ supplies the probabilities inside the logarithm; $Q$ is the distribution the expectation is taken over"
+        },
+        {
+          "value": "B",
+          "text": "$P$ and $Q$ may be interchanged, because both appear inside the same sum"
+        },
+        {
+          "value": "C",
+          "text": "$P$ is the distribution the expectation is taken over; $Q$ supplies the probabilities inside the logarithm"
+        },
+        {
+          "value": "D",
+          "text": "Both are model distributions, taken before and after the current gradient step"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "3.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "What happens if $p(x)>0$ but $q(x)=0$ for some outcome $x$?",
+      "explanation": "**Correct answer: B.** The model has declared an outcome possible under P to be impossible, so −log q(x) is infinite and it carries positive weight p(x). This is why smoothing or a floor on probabilities matters in practice.",
+      "topic": "3.2. Cross-entropy: the model's average logarithmic bill",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The term contributes zero, because the outcome is never sampled from $Q$"
+        },
+        {
+          "value": "B",
+          "text": "Both $H(P,Q)$ and $D_{\\mathrm{KL}}(P\\|Q)$ become infinite"
+        },
+        {
+          "value": "C",
+          "text": "Cross-entropy stays finite, while KL becomes negative"
+        },
+        {
+          "value": "D",
+          "text": "Nothing changes, since the missing mass is redistributed by normalization"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "3.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Does a one-hot label in a dataset row imply that the true $P(Y\\mid X=x)$ is degenerate?",
+      "explanation": "**Correct answer: D.** The one-hot vector records the observed target for the per-example loss. It is evidence about the conditional law, not a proof that aleatoric uncertainty and label noise are absent.",
+      "topic": "3.2. Cross-entropy: the model's average logarithmic bill",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Yes, because one-hot encoding stores the full true conditional distribution"
+        },
+        {
+          "value": "B",
+          "text": "Yes, otherwise cross-entropy would be undefined"
+        },
+        {
+          "value": "C",
+          "text": "Only when the model ends with a softmax layer"
+        },
+        {
+          "value": "D",
+          "text": "No, it is usually one observed draw from a conditional distribution that may well be non-degenerate"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "3.2.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "Which identity is correct?",
+      "explanation": "**Correct answer: B.** Cross-entropy splits into the irreducible entropy of the source plus the surcharge caused by using Q instead of P. Note that the entropy term is H(P), not H(Q), and the KL runs in the direction P to Q.",
+      "topic": "3.3. KL divergence: the part of the loss attributable to the model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H(P,Q)=H(P)-D_{\\mathrm{KL}}(P\\|Q)$"
+        },
+        {
+          "value": "B",
+          "text": "$H(P,Q)=H(P)+D_{\\mathrm{KL}}(P\\|Q)$"
+        },
+        {
+          "value": "C",
+          "text": "$H(P,Q)=H(Q)+D_{\\mathrm{KL}}(P\\|Q)$"
+        },
+        {
+          "value": "D",
+          "text": "$H(P,Q)=H(P)+D_{\\mathrm{KL}}(Q\\|P)$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "3.3.1"
+    },
+    {
+      "id": "item-005",
+      "prompt": "When is $D_{\\mathrm{KL}}(P\\|Q)=0$?",
+      "explanation": "**Correct answer: A.** Equal entropy, a shared argmax and a shared support are all much weaker conditions. Gibbs' inequality gives KL greater than zero for any other pair.",
+      "topic": "3.3. KL divergence: the part of the loss attributable to the model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only when $P=Q$ almost everywhere"
+        },
+        {
+          "value": "B",
+          "text": "Whenever $P$ and $Q$ have the same entropy"
+        },
+        {
+          "value": "C",
+          "text": "Whenever $P$ and $Q$ agree on the most probable outcome"
+        },
+        {
+          "value": "D",
+          "text": "Whenever $P$ and $Q$ have the same support"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "3.3.2"
+    },
+    {
+      "id": "item-006",
+      "prompt": "Why is log-loss called a strictly proper scoring rule?",
+      "explanation": "**Correct answer: D.** This follows from H(P,Q) = H(P) + D_KL(P‖Q) together with the strict positivity of KL away from P. Reporting anything other than the truth strictly increases expected loss.",
+      "topic": "3.3. KL divergence: the part of the loss attributable to the model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because it is always non-negative"
+        },
+        {
+          "value": "B",
+          "text": "Because it returns an integer number of bits"
+        },
+        {
+          "value": "C",
+          "text": "Because it guarantees the correct argmax on every individual example"
+        },
+        {
+          "value": "D",
+          "text": "Because its expected value is uniquely minimized by reporting the true conditional distribution"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "3.3.3"
+    },
+    {
+      "id": "item-007",
+      "prompt": "In what sense is $D_{\\mathrm{KL},2}(P\\|Q)$ a number of “extra bits”?",
+      "explanation": "**Correct answer: A.** KL is the mismatch term in the ideal fractional-length accounting. Integer rounding is a separate cost, which adds less than one further bit per symbol in a one-shot prefix code.",
+      "topic": "3.4. The wrong code: how KL becomes extra bits",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is the expected difference between ideal code lengths when $P$-data are coded under $Q$ rather than under $P$"
+        },
+        {
+          "value": "B",
+          "text": "It is exactly one extra bit per message"
+        },
+        {
+          "value": "C",
+          "text": "It is the size in bits of the model's parameters"
+        },
+        {
+          "value": "D",
+          "text": "It is the rounding overhead incurred by using integer codeword lengths"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "3.4.2"
+    },
+    {
+      "id": "item-008",
+      "prompt": "How does conditional cross-entropy decompose?",
+      "explanation": "**Correct answer: C.** The same split as in the unconditional case, applied per context and then averaged. The KL is between conditional distributions, and the averaging is over contexts drawn from the data.",
+      "topic": "3.5. One formula for classification and language modeling",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It equals the model's own predictive entropy averaged over contexts"
+        },
+        {
+          "value": "B",
+          "text": "It equals the marginal entropy $H(Y)$ regardless of context"
+        },
+        {
+          "value": "C",
+          "text": "$\\mathbb E_P[-\\log q(Y\\mid C)]=H_P(Y\\mid C)+\\mathbb E_C D_{\\mathrm{KL}}(P(\\cdot\\mid C)\\|Q(\\cdot\\mid C))$"
+        },
+        {
+          "value": "D",
+          "text": "$\\mathbb E_P[-\\log q(Y\\mid C)]=H_P(Y\\mid C)+D_{\\mathrm{KL}}(P(C)\\|Q(C))$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "3.5.1"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Under ordinary teacher forcing, which prefixes weight the autoregressive KL decomposition?",
+      "explanation": "**Correct answer: B.** Teacher forcing conditions on the true prefix, so the chain rule for KL between the two sequence distributions weights each position by contexts from the data.",
+      "topic": "3.5. One formula for classification and language modeling",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Prefixes generated by the model $Q$ during training"
+        },
+        {
+          "value": "B",
+          "text": "Prefixes drawn from the data distribution $P$"
+        },
+        {
+          "value": "C",
+          "text": "A uniform distribution over all strings of the given length"
+        },
+        {
+          "value": "D",
+          "text": "Prefixes from a mixture of $P$ and $Q$ with a scheduled weight"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "3.5.2"
+    },
+    {
+      "id": "item-010",
+      "prompt": "Why does a good teacher-forced NLL not fully describe free-running generation?",
+      "explanation": "**Correct answer: D.** An early mistake changes every later context and can move the model outside the region the training data covered well. This is the exposure-mismatch problem, not a defect of the loss.",
+      "topic": "3.5. One formula for classification and language modeling",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because NLL discards the logarithm at inference time"
+        },
+        {
+          "value": "B",
+          "text": "Because softmax becomes symmetric once sampling starts"
+        },
+        {
+          "value": "C",
+          "text": "Because generation uses a different vocabulary"
+        },
+        {
+          "value": "D",
+          "text": "Because during generation the model conditions on its own prefixes, whose distribution may differ from $P$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "3.5.3"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What does the next-token objective guarantee on its own?",
+      "explanation": "**Correct answer: A.** The objective is a statement about log-loss and nothing else. Factuality, utility and appropriate abstention require additional assumptions, data or objectives.",
+      "topic": "3.5. One formula for classification and language modeling",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Minimization of conditional log-loss under the data distribution, in the population formulation"
+        },
+        {
+          "value": "B",
+          "text": "Factual correctness of the generated answers"
+        },
+        {
+          "value": "C",
+          "text": "Correct causal reasoning about the described world"
+        },
+        {
+          "value": "D",
+          "text": "Calibrated abstention when the model does not know"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "3.5.4"
+    },
+    {
+      "id": "item-012",
+      "prompt": "For a soft target $r$, what is the gradient of softmax cross-entropy with respect to the logits?",
+      "explanation": "**Correct answer: C.** The softmax Jacobian and the logarithm cancel, leaving the difference between the predicted and the target distribution. For a one-hot target this becomes q − e_y. The sign matters: the gradient of the loss points from the target toward the prediction.",
+      "topic": "3.6. Why `CrossEntropyLoss` is so convenient to optimize",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$r-q$"
+        },
+        {
+          "value": "B",
+          "text": "$-\\log q$"
+        },
+        {
+          "value": "C",
+          "text": "$q-r$"
+        },
+        {
+          "value": "D",
+          "text": "$q(1-q)(q-r)$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "3.6.1"
+    },
+    {
+      "id": "item-013",
+      "prompt": "What is the standard input to `torch.nn.CrossEntropyLoss` that avoids redundant transformations of the model output?",
+      "explanation": "**Correct answer: B.** The operation combines log_softmax and NLL in a numerically stable computation. Applying softmax first makes the probabilities act as new logits, changing the distribution and loss. A log_softmax output gives the same mathematical CE, but the extra normalization is redundant; NLLLoss is intended for already computed log-probabilities.",
+      "topic": "3.6. Why `CrossEntropyLoss` is so convenient to optimize",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Probabilities produced by an explicit `softmax`"
+        },
+        {
+          "value": "B",
+          "text": "Raw, unnormalized logits"
+        },
+        {
+          "value": "C",
+          "text": "Log-probabilities produced by `log_softmax`"
+        },
+        {
+          "value": "D",
+          "text": "Class indices of the predicted labels"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "3.6.2"
+    },
+    {
+      "id": "item-014",
+      "prompt": "If mean NLL is measured in nats, then",
+      "explanation": "**Correct answer: A.** Perplexity undoes the logarithm in whichever base the loss was measured: exp for nats, 2 to the power of the loss for bits. Reporting the base is part of reporting the number.",
+      "topic": "3.7. Perplexity: returning from the logarithmic scale",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\operatorname{PPL}=e^{\\widehat L}$"
+        },
+        {
+          "value": "B",
+          "text": "$\\operatorname{PPL}=2^{\\widehat L}$"
+        },
+        {
+          "value": "C",
+          "text": "$\\operatorname{PPL}=\\ln\\widehat L$"
+        },
+        {
+          "value": "D",
+          "text": "$\\operatorname{PPL}=\\widehat L$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "3.7.1"
+    },
+    {
+      "id": "item-015",
+      "prompt": "What is the exact empirical interpretation of PPL?",
+      "explanation": "**Correct answer: D.** Perplexity is the exponentiated mean log-loss, which is exactly a geometric mean of reciprocal probabilities of the observed tokens. The reading as a number of equiprobable candidates is exact only for a uniform distribution.",
+      "topic": "3.7. Perplexity: returning from the logarithmic scale",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The mean predictive entropy of the model"
+        },
+        {
+          "value": "B",
+          "text": "The average number of candidate tokens the model considered"
+        },
+        {
+          "value": "C",
+          "text": "The top-1 error rate on the evaluation set"
+        },
+        {
+          "value": "D",
+          "text": "The geometric mean of $1/q_i(y_i)$ over the observed targets"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "3.7.2"
+    },
+    {
+      "id": "item-016",
+      "prompt": "Can a model have low predictive entropy and high perplexity at the same time?",
+      "explanation": "**Correct answer: C.** Predictive entropy measures how concentrated Q is; NLL and PPL measure the probability Q assigned to the target that actually occurred. A confidently wrong model scores badly on the second while looking sharp on the first.",
+      "topic": "3.7. Perplexity: returning from the logarithmic scale",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "No, the two quantities are equal by definition"
+        },
+        {
+          "value": "B",
+          "text": "No, low entropy bounds perplexity from above"
+        },
+        {
+          "value": "C",
+          "text": "Yes, if it confidently concentrates mass on the wrong outcomes"
+        },
+        {
+          "value": "D",
+          "text": "Only when the target distribution is uniform"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "3.7.3"
+    },
+    {
+      "id": "item-017",
+      "prompt": "Why are PPL values from different tokenizers not directly comparable?",
+      "explanation": "**Correct answer: B.** Perplexity is a per-event average, and the events themselves are defined by the tokenizer. Compare under one tokenizer and protocol, or normalize per character or per byte and state the caveats.",
+      "topic": "3.7. Perplexity: returning from the logarithmic scale",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because tokenization does not change the likelihood of the text"
+        },
+        {
+          "value": "B",
+          "text": "Because the tokenizers split the same text into different numbers and kinds of prediction events"
+        },
+        {
+          "value": "C",
+          "text": "Because perplexity is undefined for subword vocabularies"
+        },
+        {
+          "value": "D",
+          "text": "Because a larger vocabulary always raises perplexity"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "3.7.4"
+    },
+    {
+      "id": "item-018",
+      "prompt": "What does maximum likelihood minimize when the model family is misspecified?",
+      "explanation": "**Correct answer: C.** Maximizing likelihood is minimizing forward KL up to a constant. When P lies outside the family, the optimum is the best available approximation in that direction, and the direction is what determines which errors it prefers.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The true distribution $P$ is recovered anyway in the large-sample limit"
+        },
+        {
+          "value": "B",
+          "text": "The reverse KL $D_{\\mathrm{KL}}(Q_\\theta\\|P)$"
+        },
+        {
+          "value": "C",
+          "text": "The forward KL projection $\\arg\\min_\\theta D_{\\mathrm{KL}}(P\\|Q_\\theta)$ at the population level"
+        },
+        {
+          "value": "D",
+          "text": "The symmetrized Jensen–Shannon divergence to $P$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "3.3.4"
+    },
+    {
+      "id": "item-019",
+      "prompt": "Can every distribution be given a one-symbol binary prefix code with lengths exactly $-\\log_2 q(x)$?",
+      "explanation": "**Correct answer: D.** In general the optimal average length lies between H(Q) and H(Q)+1. Block coding or arithmetic coding spreads that one bit of rounding over many symbols.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Yes, always"
+        },
+        {
+          "value": "B",
+          "text": "Only if the alphabet is a power of two"
+        },
+        {
+          "value": "C",
+          "text": "No, because prefix codes cannot represent probabilities below one half"
+        },
+        {
+          "value": "D",
+          "text": "No, because codeword lengths must be integers; this works exactly only for dyadic probabilities"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "3.4.1"
+    },
+    {
+      "id": "item-020",
+      "prompt": "What does label smoothing do?",
+      "explanation": "**Correct answer: A.** The training loss becomes cross-entropy against a smoothed target. This can be useful regularization, but it is no longer the ordinary NLL of the observed labels.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It replaces the one-hot target by a mixture of that target and a smoothing distribution, which changes the objective"
+        },
+        {
+          "value": "B",
+          "text": "It only speeds up the computation, leaving the loss unchanged"
+        },
+        {
+          "value": "C",
+          "text": "It removes the KL term from cross-entropy"
+        },
+        {
+          "value": "D",
+          "text": "It rescales the logits before the softmax"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "3.6.3"
+    },
+    {
+      "id": "item-021",
+      "prompt": "May a weighted or label-smoothed training loss be exponentiated and reported without qualification as token perplexity?",
+      "explanation": "**Correct answer: C.** Weighting, smoothing, masking and the reduction mode all define a different averaged objective. Exponentiating it produces a number that is not comparable with published perplexities.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Yes, any positive loss exponentiates to a perplexity"
+        },
+        {
+          "value": "B",
+          "text": "Yes, provided the same weights are used at evaluation time"
+        },
+        {
+          "value": "C",
+          "text": "No, standard PPL is built from ordinary mean NLL over the observed unmasked targets"
+        },
+        {
+          "value": "D",
+          "text": "No, because perplexity requires a base-2 logarithm"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "3.6.4"
+    },
+    {
+      "id": "item-022",
+      "prompt": "When does the difference between forward and reverse KL become especially visible?",
+      "explanation": "**Correct answer: B.** If the family contains P, both directions share the same global optimum. The directions diverge when the approximation is forced to compromise, and the shape of that compromise is what the two objectives disagree about.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only when $P=Q$"
+        },
+        {
+          "value": "B",
+          "text": "When the model family cannot represent the target exactly"
+        },
+        {
+          "value": "C",
+          "text": "Only for Bernoulli distributions"
+        },
+        {
+          "value": "D",
+          "text": "Whenever the target is multimodal, regardless of the family"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "3.8.1"
+    },
+    {
+      "id": "item-023",
+      "prompt": "Which statement is correct for the canonical example of a bimodal mixture approximated by a single Gaussian?",
+      "explanation": "**Correct answer: D.** Note the direction of the effect, which is easy to reverse in memory. In this example reverse KL also has a broader central local minimum, so even here the mode-seeking description is a tendency rather than a rule.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Both directions produce the same Gaussian"
+        },
+        {
+          "value": "B",
+          "text": "Reverse KL is guaranteed to have exactly one local minimum"
+        },
+        {
+          "value": "C",
+          "text": "Forward KL selects one mode and reverse KL covers both"
+        },
+        {
+          "value": "D",
+          "text": "Forward KL gives a broad moment-matching Gaussian, while reverse KL has minima near the individual modes; this is an illustration, not a universal theorem"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "3.8.2"
+    },
+    {
+      "id": "item-024",
+      "prompt": "Is posterior collapse in a VAE just another name for reverse KL selecting one mode?",
+      "explanation": "**Correct answer: A.** Both belong to variational inference, but they are different failures. Mode under-coverage is about the shape of the approximation; collapse is about the latent variable becoming uninformative.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "No, collapse usually means the approximate posterior falls back to the prior and stops carrying information about $x$"
+        },
+        {
+          "value": "B",
+          "text": "Yes, the two are the same phenomenon"
+        },
+        {
+          "value": "C",
+          "text": "Only for discrete latent variables"
+        },
+        {
+          "value": "D",
+          "text": "Only when the decoder is deterministic"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "3.8.3"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Which description of DPO is most accurate?",
+      "explanation": "**Correct answer: C.** The KL enters through the optimization problem the method is derived from and through the closed-form relation between the optimal policy and the reward, not as a term computed during training.",
+      "topic": "Optional mathematical and reference deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is ordinary next-token maximum likelihood applied to preference data"
+        },
+        {
+          "value": "B",
+          "text": "It is a different name for PPO with the same training loop"
+        },
+        {
+          "value": "C",
+          "text": "It is derived from a KL-regularized formulation but trained with a preference-classification loss, without evaluating a KL penalty on each batch"
+        },
+        {
+          "value": "D",
+          "text": "It adds an explicit KL penalty to the loss of every minibatch"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "3.9.1"
+    },
+    {
+      "id": "item-026",
+      "prompt": "Let\n\n\n\n$$\nP=(0.5,\\ 0.25,\\ 0.25),\n\\qquad\nQ=(0.7,\\ 0.2,\\ 0.1).\n$$\n\nCompute the cross-entropy $H(P,Q)$ in bits, rounded to three decimals. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 1.668** (tolerance 0.002). H(P,Q) is the sum of p(x) times −log2 q(x), which gives 1.668. Since H(P) = 1.5 bits exactly, the model mismatch costs D_KL(P‖Q) = 0.168 bits on top of the irreducible entropy.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.668,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "3.C.1"
+    },
+    {
+      "id": "item-027",
+      "prompt": "For the same $P$ and $Q$, compute $D_{\\mathrm{KL}}(Q\\|P)$ in bits, rounded to three decimals. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.143** (tolerance 0.002). The reverse direction gives 0.143, while the forward one gives 0.168. The two numbers describe the same pair of distributions and are not interchangeable; nothing forces them to be close.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.143,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "3.C.2"
+    },
+    {
+      "id": "item-028",
+      "prompt": "A model assigns probabilities $0.5$, $0.25$, $0.125$ and $0.5$ to the four tokens that were actually observed. Compute the perplexity, rounded to three decimals. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 3.364** (tolerance 0.005). Mean NLL is (1 + 2 + 3 + 1)/4 = 1.75 bits, and 2 to the power 1.75 is 3.364. The same number is the geometric mean of 1/0.5, 1/0.25, 1/0.125 and 1/0.5, which is what perplexity means exactly.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 3.364,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "3.C.3"
+    },
+    {
+      "id": "item-029",
+      "prompt": "Logits $z=(2,1,0)$ enter a softmax, and the observed class is the first one. Compute the gradient of the cross-entropy with respect to the logit of that class, rounded to three decimals. (tolerance 0.002)",
+      "explanation": "**Numeric answer: -0.335** (tolerance 0.002). The softmax gives approximately (0.665, 0.245, 0.090), and the gradient is q − e_y, so the first component is 0.665 − 1 = −0.335. It is negative, which means gradient descent raises the logit of the observed class.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": -0.335,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "3.C.4"
+    }
+  ]
+}

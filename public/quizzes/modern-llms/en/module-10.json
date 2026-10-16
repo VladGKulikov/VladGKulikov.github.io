@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-10",
+  "language": "en",
+  "questions": [
+    {
+      "id": "11.4.1",
+      "prompt": "How is a proposed token accepted in exact speculative decoding?",
+      "explanation": "**Correct answer: A.** A proposal is always accepted when the target assigns at least as much probability; otherwise it is accepted with probability p/q. Residual correction completes the target distribution.",
+      "topic": "11.4. The exact propose–verify–correct cycle",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "With probability min(1, p/q) for that token"
+        },
+        {
+          "value": "B",
+          "text": "Whenever its target probability exceeds a fixed 0.5 threshold"
+        },
+        {
+          "value": "C",
+          "text": "With the normalized product of p and q"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.4.2",
+      "prompt": "Temperature and top-p are enabled. Which probabilities belong in the exact rule?",
+      "explanation": "**Correct answer: C.** q is the proposal law and p the intended target law at the same history.",
+      "topic": "11.4. The exact propose–verify–correct cycle",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Raw softmax before processing"
+        },
+        {
+          "value": "B",
+          "text": "Only the highest-probability token"
+        },
+        {
+          "value": "C",
+          "text": "Actual normalized sampling laws after processing"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "11.5.1",
+      "prompt": "What defines the correction distribution after the first rejection?",
+      "explanation": "**Correct answer: B.** Correction returns probability mass where the target exceeds the proposer, hence norm((p−q)+).",
+      "topic": "11.5. Worked example A: seeing the balance component by component",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The target distribution with the rejected token removed"
+        },
+        {
+          "value": "B",
+          "text": "The normalized positive part of p − q over the vocabulary"
+        },
+        {
+          "value": "C",
+          "text": "The draft distribution multiplied by p/q"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "11.6.1",
+      "prompt": "Why does the constant-acceptance model give E = 1 + α + … + α^γ?",
+      "explanation": "**Correct answer: C.** Successive reach probabilities are 1, α, α², and so on under constant conditional acceptance. An arbitrary average of observed rates is insufficient.",
+      "topic": "11.6. Expected progress per cycle",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because all γ proposals are accepted independently"
+        },
+        {
+          "value": "B",
+          "text": "Because the bonus token appears only after full acceptance"
+        },
+        {
+          "value": "C",
+          "text": "Reaching position i requires all previous proposals to be accepted"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "11.7.1",
+      "prompt": "In the scenario α = 0.8 and c = 0.1, which γ≤10 is best?",
+      "explanation": "**Correct answer: A.** γ=5 gives about 2.46 and γ=9 about 2.35. Proposal length matters, but acceptance and proposal cost often matter more than exact tuning.",
+      "topic": "11.7. A cost model, an optimum, and an illustrative MTP point",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "γ=6 with S≈2.47, and the optimum is broad"
+        },
+        {
+          "value": "B",
+          "text": "γ=10 because a longer proposal is always better"
+        },
+        {
+          "value": "C",
+          "text": "γ=1 because every extra proposal always costs more than it returns"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.7.2",
+      "prompt": "What does the 1.79× result at γ=1, α=0.875, and c=0.05 mean?",
+      "explanation": "**Correct answer: B.** E=1.875 and S=1.875/1.05=1.78571. It calibrates a scenario rather than reproducing a particular external benchmark.",
+      "topic": "11.7. A cost model, an optimum, and an illustrative MTP point",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A universally measured speedup for every MTP model"
+        },
+        {
+          "value": "B",
+          "text": "The output of the module’s scenario model for those parameters"
+        },
+        {
+          "value": "C",
+          "text": "The exact ceiling of all multi-step MTP architectures"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "11.7.3",
+      "prompt": "For γ=2, conditional acceptance rates are 0.9 and 0.5. What is expected output without EOS?",
+      "explanation": "**Correct answer: B.** E=1+0.9+0.9·0.5=2.35. Averaging rates loses the reach probabilities.",
+      "topic": "11.7. A cost model, an optimum, and an illustrative MTP point",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "2.19"
+        },
+        {
+          "value": "B",
+          "text": "2.35"
+        },
+        {
+          "value": "C",
+          "text": "1.40"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "11.8.1",
+      "prompt": "What distinguishes tree-based proposal from one linear draft continuation?",
+      "explanation": "**Correct answer: C.** A tree can raise the chance of a useful surviving path, while adding mask, selection, and verification complexity.",
+      "topic": "11.8. A taxonomy of proposers",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It always preserves the target distribution without correction"
+        },
+        {
+          "value": "B",
+          "text": "It does not require target verification"
+        },
+        {
+          "value": "C",
+          "text": "It proposes multiple branches that can be verified together"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "11.9.1",
+      "prompt": "What operational advantage does native MTP provide?",
+      "explanation": "**Correct answer: A.** MTP reuses multi-token prediction modules. It need not serve a separate full draft model; some families package modules in a compatible auxiliary checkpoint.",
+      "topic": "11.9. Native multi-token prediction at inference time",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A compatible model needs no separate full draft checkpoint"
+        },
+        {
+          "value": "B",
+          "text": "The MTP distribution automatically matches the target distribution on every workload"
+        },
+        {
+          "value": "C",
+          "text": "Proposal requires no compute or extra memory"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.10.1",
+      "prompt": "Why can verifying several proposals be more efficient than ordinary decode?",
+      "explanation": "**Correct answer: B.** Several positions amortize target-weight movement more effectively. KV traffic, batching, and implementation still determine the realized gain.",
+      "topic": "11.10. Verification as a short, wider decode operation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It eliminates target-weight reads"
+        },
+        {
+          "value": "B",
+          "text": "One pass processes several positions and raises arithmetic intensity"
+        },
+        {
+          "value": "C",
+          "text": "It always uses the same kernel and has the same cost as the original prefill pass"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "11.11.1",
+      "prompt": "How does post-training quantization differ from quantization-aware training?",
+      "explanation": "**Correct answer: C.** When quantization is introduced and which tensors are quantized are separate axes. PTQ is applied after training; QAT incorporates the effect during optimization.",
+      "topic": "11.11. What low-bit quantization actually changes",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "PTQ is for dense models and QAT only for MoE"
+        },
+        {
+          "value": "B",
+          "text": "PTQ always quantizes weights only, while QAT must quantize weights and activations together"
+        },
+        {
+          "value": "C",
+          "text": "PTQ transforms a trained checkpoint; QAT includes quantization effects during training"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "11.12.1",
+      "prompt": "Why does the module count 4.25 bits for MXFP4 and 4.50 for NVFP4?",
+      "explanation": "**Correct answer: A.** (32·4+8)/32=4.25 and (16·4+8)/16=4.50. This counts local-scale metadata, not every byte in a real checkpoint.",
+      "topic": "11.12. Microscaled FP4, W4A4, and the role of hardware",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "One eight-bit local scale serves 32 versus 16 four-bit values"
+        },
+        {
+          "value": "B",
+          "text": "Every NVFP4 value stores an extra half exponent bit inside its own four-bit code"
+        },
+        {
+          "value": "C",
+          "text": "MXFP4 stores no scale metadata"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.12.2",
+      "prompt": "What does the notebook’s 3.32 MSE ratio establish?",
+      "explanation": "**Correct answer: B.** It is a local numerical illustration of range allocation, not a general format or model benchmark.",
+      "topic": "11.12. Microscaled FP4, W4A4, and the role of hardware",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every FP4 format is always 3.32 times more accurate than every INT4 format"
+        },
+        {
+          "value": "B",
+          "text": "On one outlier-containing teaching vector, the selected FP4 grid had lower MSE"
+        },
+        {
+          "value": "C",
+          "text": "NVFP4 universally preserves downstream metrics better than INT4"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "11.13.1",
+      "prompt": "How should the teaching grouped quantizer handle an all-zero block?",
+      "explanation": "**Correct answer: C.** Dividing by a zero maximum would create NaNs. A service scale of one preserves zeros safely.",
+      "topic": "11.13. Code: make the probability contract explicit",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Drop it and reconstruct its position from an index"
+        },
+        {
+          "value": "B",
+          "text": "Reuse the previous group’s scale"
+        },
+        {
+          "value": "C",
+          "text": "Keep it zero with a safe nonzero service scale"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "11.13.2",
+      "prompt": "p and q nearly coincide, but their positive difference is nonzero. How should the residual be handled?",
+      "explanation": "**Correct answer: A.** Small mass makes correction rare; it does not eliminate the correction distribution.",
+      "topic": "11.13. Code: make the probability contract explicit",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Normalize the positive difference by its sum"
+        },
+        {
+          "value": "B",
+          "text": "Discard any sufficiently small difference"
+        },
+        {
+          "value": "C",
+          "text": "Resample from p after rejection"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.15.1",
+      "prompt": "Why are quantization and speculative-decoding multipliers not independent?",
+      "explanation": "**Correct answer: A.** Reducing weight traffic can expose compute, KV, or scheduling limits. The combined configuration must be profiled again.",
+      "topic": "11.15. Combining the levers without multiplying away the bottlenecks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The first optimization changes the bottleneck seen by the second"
+        },
+        {
+          "value": "B",
+          "text": "Quantization always breaks exact acceptance and therefore requires approximate verification"
+        },
+        {
+          "value": "C",
+          "text": "Speculation requires bf16 weights"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.15.2",
+      "prompt": "Which distribution is preserved when the deployed target is quantized?",
+      "explanation": "**Correct answer: B.** The acceptance rule reconstructs the p produced by the verifier. A quantized verifier therefore defines the preserved distribution.",
+      "topic": "11.15. Combining the levers without multiplying away the bottlenecks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The original bf16 checkpoint regardless of logit changes"
+        },
+        {
+          "value": "B",
+          "text": "The distribution of the actually executed quantized target"
+        },
+        {
+          "value": "C",
+          "text": "The average of the quantized and original distributions"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "11.15.3",
+      "prompt": "The target step becomes four times faster while draft time is unchanged. What happens to c?",
+      "explanation": "**Correct answer: B.** c is draft time divided by target-step time. Reducing the denominator increases the ratio.",
+      "topic": "11.15. Combining the levers without multiplying away the bottlenecks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It falls by a factor of four"
+        },
+        {
+          "value": "B",
+          "text": "It rises by a factor of four"
+        },
+        {
+          "value": "C",
+          "text": "It stays constant"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "11.17.1",
+      "prompt": "What must a reproducible quant/spec passport contain?",
+      "explanation": "**Correct answer: C.** Without configuration, workload, hardware, and measurements, a speedup cannot be reproduced or compared fairly.",
+      "topic": "11.17. Reading a quant/spec run passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only the format name and best advertised multiplier"
+        },
+        {
+          "value": "B",
+          "text": "Only checkpoint size, GPU version, memory capacity, and average tokens per second"
+        },
+        {
+          "value": "C",
+          "text": "Format and scales, proposer, verification settings, workload, metrics, and full stack"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

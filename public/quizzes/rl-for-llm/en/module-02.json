@@ -1,0 +1,196 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-02",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "State sufficiency as a testable claim",
+      "prompt": "Two visible state records are identical and the action is the same, yet a tool's next response depends on a hidden authorization token. What follows?",
+      "explanation": "**Answer: 2.**\n\nA Markov model may be stochastic, but the conditional next-transition distribution must be determined by the represented state and action. A hidden authorization variable that changes that distribution makes the visible representation insufficient.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "The Markov property holds because the visible text matches."
+        },
+        {
+          "value": "2",
+          "text": "The representation is incomplete; the authorization state or a sufficient summary must be represented."
+        },
+        {
+          "value": "3",
+          "text": "Any randomness violates the Markov property."
+        },
+        {
+          "value": "4",
+          "text": "Reward, rather than state, must be changed."
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Reward on a terminal transition",
+      "prompt": "An agent enters the goal and receives $+5$. The terminal-state value is zero. What target should the predecessor receive for any $\\gamma$?",
+      "explanation": "**Answer: $5$.**\n\n$$\ny=5+\\gamma\\cdot0=5.\n$$\n\nZero terminal value removes future continuation; it does not remove reward paid on entry.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Target",
+          "expected": 5,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P03",
+      "title": "The numerical cost of a wrong mask",
+      "prompt": "Let $r=1$, $\\gamma=0.9$, and $V(s')=2$. Compute the target for a true terminal and for external truncation. How much does the wrong terminal mask understate the truncated target?",
+      "explanation": "The targets are $1$ and $1+0.9\\cdot2=2.8$. Treating truncation as terminal understates the target by $1.8$. If continuation value were negative, the direction of the bias would reverse.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "True terminal",
+          "expected": 1,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "External truncation",
+          "expected": 2.8,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Target underestimation",
+          "expected": 1.8,
+          "tolerance": 1e-06
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P04",
+      "title": "Policy-weighted zero advantage",
+      "prompt": "A policy has probabilities $[0.2,0.3,0.5]$ and advantages $[-2,1,x]$. Find $x$ if the advantages are correctly centered under the policy.",
+      "explanation": "Solve\n\n$$\n0.2(-2)+0.3(1)+0.5x=0,\n$$\n\nwhich gives $x=0.2$. The unweighted sum need not vanish.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "x",
+          "expected": 0.2,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Bellman residual versus value error",
+      "prompt": "For a fixed policy, $\\gamma=0.95$ and $\\|T_\\pi\\widehat V-\\widehat V\\|_\\infty=0.02$. What upper bound follows for the value error? Is it the exact error?",
+      "explanation": "$$\n\\|\\widehat V-V^\\pi\\|_\\infty\n\\le\n\\frac{0.02}{1-0.95}=0.4.\n$$\n\nThis is an upper bound, not an equality; the actual error may be much smaller.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Error upper bound",
+          "expected": 0.4,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "What changes at gamma = 1",
+      "prompt": "Choose the most accurate statement.",
+      "explanation": "**Answer: 2.**\n\nThe contraction coefficient is no longer below one. Proper episodic tasks may still be well posed, but absorption and nonsingularity must be established separately.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "No episodic problem can have finite value at $\\gamma=1$."
+        },
+        {
+          "value": "2",
+          "text": "The standard strict-contraction proof no longer applies; extra properties of the episodic process are needed."
+        },
+        {
+          "value": "3",
+          "text": "Bellman equations become invalid."
+        },
+        {
+          "value": "4",
+          "text": "Adding a terminal state guarantees that every policy reaches it almost surely."
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "Reading FrozenLake value",
+      "prompt": "Reward $+1$ is paid on entry to the goal, all other rewards are zero, and $\\gamma=0.9$. What is the contribution to $G_0$ of success after 4 transitions? After 7 transitions?",
+      "explanation": "Success after $T$ transitions contributes $\\gamma^{T-1}$.\n\n- $T=4$: $0.9^3=0.729$.\n- $T=7$: $0.9^6=0.531441$.\n\nThus discounted value combines success probability with a preference for earlier success.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "After 4 transitions",
+          "expected": 0.729,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "After 7 transitions",
+          "expected": 0.531441,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "Where bootstrapping begins",
+      "prompt": "A target contains three observed rewards followed by $\\gamma^3V(S_{t+3})$. Which part is bootstrapped, and why?",
+      "explanation": "The term $\\gamma^3V(S_{t+3})$ is bootstrapped because the unobserved continuation is replaced by a current estimate. The preceding rewards were observed directly.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "Another multi-step target",
+      "prompt": "Rewards are $[2,0,-1]$, $\\gamma=0.9$, and $V(S_{t+3})=3$. Compute the three-step target for a non-terminal end of the window and for a true terminal on the third transition.",
+      "explanation": "Non-terminal:\n\n$$\n2+0.9\\cdot0+0.9^2(-1)+0.9^3\\cdot3=3.377.\n$$\n\nTerminal:\n\n$$\n2-0.81=1.19.\n$$",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Nonterminal window end",
+          "expected": 3.377,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "True terminal",
+          "expected": 1.19,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "On-policy without defining it by a replay buffer",
+      "prompt": "Behavior is $\\varepsilon$-greedy. The update target represents the same $\\varepsilon$-greedy policy, while transitions are kept for one training epoch. Is the method on-policy or off-policy in the module's conceptual sense?",
+      "explanation": "It is **on-policy** as long as the target and behavior policies match and the stored data have not become stale relative to a changed policy. Buffer presence alone does not define the category; the degree of reuse and policy drift should be stated separately.",
+      "type": "self-check"
+    },
+    {
+      "id": "P11",
+      "title": "Interpreting CliffWalking without a contradiction",
+      "prompt": "In one run, Q-learning has a greedy return of $-13$ and SARSA has $-17$, yet SARSA obtains better average return during $\\varepsilon$-greedy training. Is this contradictory?",
+      "explanation": "No. Greedy evaluation removes exploration, while training return includes exploratory deviations. Q-learning can learn the short cliff-edge route and suffer costly falls during exploration. SARSA accounts for future exploratory actions and may prefer a longer but safer route.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Best-of-many under a noisy evaluator",
+      "prompt": "Ten equally good responses receive independent zero-mean noisy scores, and the maximum-scoring response is selected. Is the expected maximum score equal to true quality?",
+      "explanation": "Generally not. The maximum preferentially selects a positive noise realization, so the expected winning score is optimistic. Independent reevaluation can reduce this selection effect, but does not make the evaluator error-free.",
+      "type": "self-check"
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-07",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Original pair orientation",
+      "prompt": "A log keeps only `chosen/rejected`; the original A/B order is lost. Which checks become impossible?",
+      "explanation": "You can no longer measure positional bias honestly, reconstruct the observed 0/1 label in the original orientation, or build a sound calibration set. Store the original order, candidate identifiers, and the annotator decision.",
+      "type": "self-check"
+    },
+    {
+      "id": "P02",
+      "title": "Comparison-graph connectivity",
+      "prompt": "Two sets of responses were never compared across sets. Can their absolute BT scores be compared?",
+      "explanation": "No. Each connected component admits an independent additive score shift. Bridging comparisons or an external anchor are required; centering within components does not create cross-component information.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "Row split without prompt isolation",
+      "prompt": "Why can a random row split overstate reward-model quality?",
+      "explanation": "Pairs from the same prompt may appear in both train and test. The model can exploit prompt, generator, or template identity instead of transferring the criterion. Use a prompt-disjoint split and add temporal/domain slices.",
+      "type": "self-check"
+    },
+    {
+      "id": "P04",
+      "title": "Calibration on the test set",
+      "prompt": "Temperature scaling is fitted on the same set used to report ECE. What is wrong?",
+      "explanation": "The estimate is optimistic because the test set tuned the calibrator. Use train, calibration, and evaluation splits; fit temperature on calibration and report metrics on untouched evaluation data.",
+      "type": "self-check"
+    },
+    {
+      "id": "P05",
+      "title": "Accuracy without calibration",
+      "prompt": "Two RMs have the same pair accuracy but different log loss. What does that show?",
+      "explanation": "They get the sign right equally often but differ in probability quality and confidence. Lower log loss usually indicates better probabilistic predictions; accuracy cannot reveal that.",
+      "type": "self-check"
+    },
+    {
+      "id": "P06",
+      "title": "Averaging raw ensemble scores",
+      "prompt": "Why is raw-score averaging across independently trained RMs unsafe?",
+      "explanation": "Each score has an arbitrary origin and scale. Calibrate each model on a common calibration set, convert margins to probabilities, and aggregate probabilities. Ensemble spread is a diagnostic, not automatically a confidence interval.",
+      "type": "self-check"
+    },
+    {
+      "id": "P07",
+      "title": "Proxy overoptimization",
+      "prompt": "Proxy score rises with Best-of-N while independent utility falls after N=32. What follows?",
+      "explanation": "Selection pressure is exploiting a proxy direction. Cap the search pressure, add independent metrics and fresh labels, test distribution shift, and never select N using the proxy alone.",
+      "type": "self-check"
+    },
+    {
+      "id": "P08",
+      "title": "Judge swap test",
+      "prompt": "An LLM judge chooses position A 70% of the time and preserves the same textual winner after swapping only 55% of the time. What is diagnosed?",
+      "explanation": "Strong position sensitivity. Evaluate both orientations, aggregate explicitly, inspect ties, and include independent human audit.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "Soft tie",
+      "prompt": "Annotators split 6:4. Why does a hard label of 1 discard information?",
+      "explanation": "It makes a weak majority indistinguishable from unanimity. A soft target of 0.6 or an annotator model preserves uncertainty and supports calibration analysis.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "Reward model versus cost model",
+      "prompt": "Can a separate cost model always be replaced by negative reward?",
+      "explanation": "No. Utility and risk may depend on different features, thresholds, and error costs. Log and validate them separately; critical constraints should not be compensated by high utility.",
+      "type": "self-check"
+    },
+    {
+      "id": "P11",
+      "title": "Fresh policy responses",
+      "prompt": "Why is RM evaluation only on old candidates insufficient before RL?",
+      "explanation": "Optimization shifts the response distribution into regions not covered by the old set. Evaluate fresh current-policy generations, generator/domain slices, and independent labels.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Outcome and process reward",
+      "prompt": "When are whole-answer and step-level scores not interchangeable?",
+      "explanation": "An outcome score does not locate the faulty step, while local scores need not compose into a correct whole-answer value. A PRM needs its own annotation semantics and validation.",
+      "type": "self-check"
+    }
+  ]
+}

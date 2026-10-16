@@ -1,0 +1,732 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-13",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Which statement best describes a long reasoning chain?",
+      "explanation": "**Correct answer: B.** Trajectory length is a computational resource and an observable artifact, not a correctness certificate.",
+      "topic": "13.1. What changes when a model “thinks longer”",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is always proof of understanding"
+        },
+        {
+          "value": "B",
+          "text": "It can serve as a scratchpad, but by itself guarantees neither correctness nor causal faithfulness"
+        },
+        {
+          "value": "C",
+          "text": "It necessarily contains external facts absent from the prompt"
+        },
+        {
+          "value": "D",
+          "text": "Reasoning quality is determined only by token count"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "13.1.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "When does sequential generation become explicit search?",
+      "explanation": "**Correct answer: D.** One long trajectory remains one trajectory; search requires alternatives and a procedure for selection, branching, or backtracking.",
+      "topic": "13.2. Amortization, scratchpads, and search",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When the answer contains a formula"
+        },
+        {
+          "value": "B",
+          "text": "During any autoregressive generation"
+        },
+        {
+          "value": "C",
+          "text": "When temperature is zero"
+        },
+        {
+          "value": "D",
+          "text": "When the system preserves alternatives, receives feedback, or can revise an earlier choice"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "13.2.1"
+    },
+    {
+      "id": "item-003",
+      "prompt": "What is the correct status of the analogy between an LLM and Solomonoff induction?",
+      "explanation": "**Correct answer: D.** A practical LLM does not implement the universal semimeasure and does not inherit its guarantees.",
+      "topic": "13.2. Amortization, scratchpads, and search",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every LLM inherits universal dominance guarantees"
+        },
+        {
+          "value": "B",
+          "text": "A Transformer literally sums over all computable programs"
+        },
+        {
+          "value": "C",
+          "text": "The analogy proves universal optimality of practical LLMs"
+        },
+        {
+          "value": "D",
+          "text": "It is a useful research lens, not a theorem about a finite trained model"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "13.2.2"
+    },
+    {
+      "id": "item-004",
+      "prompt": "Why can a sequential working state help with parity?",
+      "explanation": "**Correct answer: C.** Computational accessibility changes; the input data do not.",
+      "topic": "13.3. Why intermediate tokens can help",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It changes the correct answer"
+        },
+        {
+          "value": "B",
+          "text": "It adds new training data"
+        },
+        {
+          "value": "C",
+          "text": "It implements a serial computation after which the answer is accessible to a restricted readout"
+        },
+        {
+          "value": "D",
+          "text": "It increases the entropy of the original input"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "13.3.1"
+    },
+    {
+      "id": "item-005",
+      "prompt": "Let $C=G_\\theta(X,U)$ with $U\\perp Y^*\\mid X$. What is $I(Y^*;C\\mid X)$?",
+      "explanation": "**Correct answer: A.** Given X, the internal chain is conditionally independent of the correct answer.",
+      "topic": "13.4. New information or new computation?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Zero"
+        },
+        {
+          "value": "B",
+          "text": "$H(C)$"
+        },
+        {
+          "value": "C",
+          "text": "$I(X;C)$"
+        },
+        {
+          "value": "D",
+          "text": "Always infinite"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "13.4.1"
+    },
+    {
+      "id": "item-006",
+      "prompt": "Why can a restricted model nevertheless become more accurate after constructing a scratchpad?",
+      "explanation": "**Correct answer: D.** Sequential steps and working memory may let the model transform the same evidence more effectively.",
+      "topic": "13.4. New information or new computation?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The data-processing inequality is violated"
+        },
+        {
+          "value": "B",
+          "text": "Conditional mutual information becomes negative"
+        },
+        {
+          "value": "C",
+          "text": "The scratchpad always retrieves a hidden answer from training data"
+        },
+        {
+          "value": "D",
+          "text": "The available computational procedure changes, not the true conditional entropy of the task"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "13.4.2"
+    },
+    {
+      "id": "item-007",
+      "prompt": "Which object can add new Shannon information about $Y^*$ beyond $X$?",
+      "explanation": "**Correct answer: A.** Retrieval, sensors, hidden tests, or environmental feedback may supply evidence absent from the input.",
+      "topic": "13.4. New information or new computation?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An external observation $O$ with $I(Y^*;O\\mid X)>0$"
+        },
+        {
+          "value": "B",
+          "text": "Paraphrasing an internal chain"
+        },
+        {
+          "value": "C",
+          "text": "Rereading the same prompt"
+        },
+        {
+          "value": "D",
+          "text": "Lowering the sampling temperature"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "13.4.3"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What does the model’s predictive entropy after an intermediate step measure?",
+      "explanation": "**Correct answer: C.** A model can become more confident while becoming wrong.",
+      "topic": "13.4. New information or new computation?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The exact probability that the reasoning is correct"
+        },
+        {
+          "value": "B",
+          "text": "The true conditional entropy $H(Y^*\\mid X,C)$"
+        },
+        {
+          "value": "C",
+          "text": "The concentration of the model’s own predictive distribution"
+        },
+        {
+          "value": "D",
+          "text": "The causal faithfulness of the chain"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "13.4.4"
+    },
+    {
+      "id": "item-009",
+      "prompt": "If $S_j=(X,C_{\\le j})$ and the chain is generated only from $X$, what is $I(Y^*;C_j\\mid X,C_{<j})$?",
+      "explanation": "**Correct answer: A.** The new internal token is not an external observation once the complete input is known.",
+      "topic": "13.4. New information or new computation?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Zero"
+        },
+        {
+          "value": "B",
+          "text": "$I(X;Y^*)$"
+        },
+        {
+          "value": "C",
+          "text": "A positive constant"
+        },
+        {
+          "value": "D",
+          "text": "$H(C_j)$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "13.4.5"
+    },
+    {
+      "id": "item-010",
+      "prompt": "When does a difference in auxiliary-predictor cross-entropies equal $I(Y;S_j\\mid S_{j-1})$?",
+      "explanation": "**Correct answer: A.** In general, there is also a lost-information term and a difference between variational gaps.",
+      "topic": "13.5. What can be measured along a trajectory?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When the states are nested and the predictor variational gaps are controlled"
+        },
+        {
+          "value": "B",
+          "text": "Whenever the chain has more than one token"
+        },
+        {
+          "value": "C",
+          "text": "Only when $Y$ is deterministic"
+        },
+        {
+          "value": "D",
+          "text": "Whenever predictive entropy decreases"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "13.5.1"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What is the most direct way to study causal faithfulness of a visible chain?",
+      "explanation": "**Correct answer: C.** Faithfulness is a causal question, so polished prose alone is not enough.",
+      "topic": "13.5. What can be measured along a trajectory?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Measure only its length"
+        },
+        {
+          "value": "B",
+          "text": "Count mathematical symbols"
+        },
+        {
+          "value": "C",
+          "text": "Intervene on intermediate steps and observe how the answer changes"
+        },
+        {
+          "value": "D",
+          "text": "Use only the model’s self-reported confidence"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "13.5.2"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What can an unchanged answer after removing an intermediate step mean?",
+      "explanation": "**Correct answer: B.** Additional interventions and independent checks are needed to distinguish the cases.",
+      "topic": "13.5. What can be measured along a trajectory?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only that the system is perfectly correct"
+        },
+        {
+          "value": "B",
+          "text": "Either robust reconstruction or disregard for the visible chain"
+        },
+        {
+          "value": "C",
+          "text": "Only an evaluation error"
+        },
+        {
+          "value": "D",
+          "text": "Guaranteed absence of internal computation"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "13.5.3"
+    },
+    {
+      "id": "item-013",
+      "prompt": "With independent attempts and $p>1/2$, what happens to majority accuracy as odd $N$ grows?",
+      "explanation": "**Correct answer: B.** This follows from the binomial formula and the law of large numbers.",
+      "topic": "13.6. One long trajectory or many candidates?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It tends to $1/2$"
+        },
+        {
+          "value": "B",
+          "text": "It tends to one"
+        },
+        {
+          "value": "C",
+          "text": "It remains equal to $p$"
+        },
+        {
+          "value": "D",
+          "text": "It must fall"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "13.6.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "What do fully correlated errors do to the benefit of voting?",
+      "explanation": "**Correct answer: A.** Copies of the same error do not create independent evidence.",
+      "topic": "13.6. One long trajectory or many candidates?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Eliminate it: voting is equivalent to one attempt"
+        },
+        {
+          "value": "B",
+          "text": "Double it"
+        },
+        {
+          "value": "C",
+          "text": "Guarantee accuracy one"
+        },
+        {
+          "value": "D",
+          "text": "Turn the problem into Bayesian inference"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "13.6.2"
+    },
+    {
+      "id": "item-015",
+      "prompt": "With an ideal verifier, best-of-$N$ succeeds with probability:",
+      "explanation": "**Correct answer: B.** It is enough for at least one candidate to be correct.",
+      "topic": "13.6. One long trajectory or many candidates?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$p/N$"
+        },
+        {
+          "value": "B",
+          "text": "$1-(1-p)^N$"
+        },
+        {
+          "value": "C",
+          "text": "$p^N$"
+        },
+        {
+          "value": "D",
+          "text": "$1-pN$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "13.6.3"
+    },
+    {
+      "id": "item-016",
+      "prompt": "Why can selected accuracy under a weak verifier decrease as $N$ grows?",
+      "explanation": "**Correct answer: A.** A larger set improves generator coverage but also creates more opportunities for selection failure.",
+      "topic": "13.6. One long trajectory or many candidates?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The chance of encountering a rare incorrect candidate that exploits the scorer increases"
+        },
+        {
+          "value": "B",
+          "text": "Correct solutions disappear from the set"
+        },
+        {
+          "value": "C",
+          "text": "The law of large numbers stops applying"
+        },
+        {
+          "value": "D",
+          "text": "Oracle pass@N must decrease"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "13.6.4"
+    },
+    {
+      "id": "item-017",
+      "prompt": "In a latent-task model, how do prompt demonstrations fundamentally differ from an internal chain?",
+      "explanation": "**Correct answer: D.** If I(Z;D)>0, the examples update knowledge about the current rule.",
+      "topic": "13.7. In-context learning: when context really brings evidence",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "There is no difference"
+        },
+        {
+          "value": "B",
+          "text": "Demonstrations are always shorter"
+        },
+        {
+          "value": "C",
+          "text": "The internal chain necessarily uses another tokenizer"
+        },
+        {
+          "value": "D",
+          "text": "Demonstrations may carry new information about the latent task"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "13.7.1"
+    },
+    {
+      "id": "item-018",
+      "prompt": "What is the correct claim about ICL as Bayesian inference?",
+      "explanation": "**Correct answer: C.** The rigorous result depends on assumptions about data generation and architecture.",
+      "topic": "13.7. In-context learning: when context really brings evidence",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It has been proved for every LLM and every prompt"
+        },
+        {
+          "value": "B",
+          "text": "Bayesian inference is impossible in a Transformer"
+        },
+        {
+          "value": "C",
+          "text": "It is exact in special generative settings and a useful model beyond them"
+        },
+        {
+          "value": "D",
+          "text": "ICL is always nearest-neighbor search"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "13.7.2"
+    },
+    {
+      "id": "item-019",
+      "prompt": "What does an outcome reward directly evaluate?",
+      "explanation": "**Correct answer: C.** Outcome feedback can scale in checkable domains but poorly localizes the source of an error.",
+      "topic": "13.8. How reasoning models are trained",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Faithfulness of every intermediate step"
+        },
+        {
+          "value": "B",
+          "text": "The true causal graph of model computation"
+        },
+        {
+          "value": "C",
+          "text": "The final checkable result"
+        },
+        {
+          "value": "D",
+          "text": "The complete information value of the trajectory"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "13.8.1"
+    },
+    {
+      "id": "item-020",
+      "prompt": "Why is an RLHF KL anchor not a PAC-Bayes certificate?",
+      "explanation": "**Correct answer: D.** PAC-Bayes concerns distributions over hypotheses, whereas RLHF concerns conditional action or response policies.",
+      "topic": "13.8. How reasoning models are trained",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "RLHF has no probabilities"
+        },
+        {
+          "value": "B",
+          "text": "PAC-Bayes forbids KL"
+        },
+        {
+          "value": "C",
+          "text": "RLHF is always deterministic"
+        },
+        {
+          "value": "D",
+          "text": "The KL terms compare different random objects and occur in theorems with different assumptions"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "13.8.2"
+    },
+    {
+      "id": "item-021",
+      "prompt": "Which pair of metrics separates generator coverage from verifier quality?",
+      "explanation": "**Correct answer: A.** Their gap measures the cost of an imperfect selector.",
+      "topic": "13.9. How to evaluate a reasoning system",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Oracle pass@N and selected pass@N"
+        },
+        {
+          "value": "B",
+          "text": "Accuracy and vocabulary size"
+        },
+        {
+          "value": "C",
+          "text": "PPL and temperature"
+        },
+        {
+          "value": "D",
+          "text": "FLOPs and parameter count"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "13.9.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "Why should reasoning systems be compared under matched budgets?",
+      "explanation": "**Correct answer: B.** Without cost accounting, the best scores may correspond to different computational regimes.",
+      "topic": "13.9. How to evaluate a reasoning system",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All models have the same architecture"
+        },
+        {
+          "value": "B",
+          "text": "Additional tokens, trajectories, and tool calls are additional resources"
+        },
+        {
+          "value": "C",
+          "text": "Accuracy is independent of compute"
+        },
+        {
+          "value": "D",
+          "text": "FLOPs always equal latency"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "13.9.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "How should the claim “chain length approximates task computational complexity” be classified?",
+      "explanation": "**Correct answer: B.** Length depends on the model, tokenizer, prompt, and search strategy.",
+      "topic": "13.10. What is proved, observed, and hypothesized?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "As Shannon’s law"
+        },
+        {
+          "value": "B",
+          "text": "As a research hypothesis that requires a defined metric and empirical validation"
+        },
+        {
+          "value": "C",
+          "text": "As a proved universal theorem"
+        },
+        {
+          "value": "D",
+          "text": "As the definition of mutual information"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "13.10.1"
+    },
+    {
+      "id": "item-024",
+      "prompt": "What is the main lesson of Snell et al. on test-time compute?",
+      "explanation": "**Correct answer: D.** Adaptive allocation can be much more efficient than a fixed strategy, but there is no universal monotone guarantee.",
+      "topic": "13.10. What is proved, observed, and hypothesized?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Inference compute always replaces pretraining"
+        },
+        {
+          "value": "B",
+          "text": "Every smaller model beats a larger one"
+        },
+        {
+          "value": "C",
+          "text": "Best-of-N is always optimal"
+        },
+        {
+          "value": "D",
+          "text": "The value of extra compute depends on task difficulty and budget allocation"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "13.10.2"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Which concluding principle is most accurate?",
+      "explanation": "**Correct answer: C.** Data, computation, search, verification, and external observations must be accounted for separately.",
+      "topic": "13.13. Conclusion: information is not computation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Reasoning reduces entirely to entropy reduction"
+        },
+        {
+          "value": "B",
+          "text": "Every long trajectory contains an external fact"
+        },
+        {
+          "value": "C",
+          "text": "Extra tokens usually provide time, working memory, search, and verification—not automatically new knowledge"
+        },
+        {
+          "value": "D",
+          "text": "High accuracy guarantees faithful visible reasoning"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "13.13.1"
+    }
+  ]
+}

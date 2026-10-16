@@ -1,0 +1,732 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-11",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "What is the central object in the definition of $D_f(P\\|Q)$ when $P\\ll Q$?",
+      "explanation": "**Correct answer: A.** An f-divergence is E_Q[f(dP/dQ)].",
+      "topic": "11.2. The f-divergence family",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The density ratio $dP/dQ$, transformed by a convex function and averaged under $Q$"
+        },
+        {
+          "value": "B",
+          "text": "Euclidean distance between the means"
+        },
+        {
+          "value": "C",
+          "text": "Only the difference of entropies"
+        },
+        {
+          "value": "D",
+          "text": "The number of parameters in the two models"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "11.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "Why does adding $a(t-1)$ to the generator $f(t)$ leave the divergence unchanged?",
+      "explanation": "**Correct answer: B.** The linear contribution integrates to a(P(Ω)-Q(Ω))=0.",
+      "topic": "11.2. The f-divergence family",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every linear function is zero"
+        },
+        {
+          "value": "B",
+          "text": "$\\mathbb E_Q[dP/dQ-1]=0$"
+        },
+        {
+          "value": "C",
+          "text": "$P$ and $Q$ must be uniform"
+        },
+        {
+          "value": "D",
+          "text": "The convex conjugate is unchanged"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "11.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Which statement about Rényi divergence is most accurate?",
+      "explanation": "**Correct answer: D.** The logarithm is applied after integration, taking Rényi divergence outside the ordinary form E_Q[f(p/q)].",
+      "topic": "11.2. The f-divergence family",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It always equals total variation"
+        },
+        {
+          "value": "B",
+          "text": "It is an IPM with a Lipschitz critic"
+        },
+        {
+          "value": "C",
+          "text": "It is defined only at $\\alpha=1$"
+        },
+        {
+          "value": "D",
+          "text": "In general it is not an f-divergence, although it is a monotone logarithmic transform of a power integral"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "11.2.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "Which statement about squared Hellinger distance is correct under the convention used in the module?",
+      "explanation": "**Correct answer: A.** Another common convention omits the factor 1/2 and has maximum 2.",
+      "topic": "11.2. The f-divergence family",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H^2(P,Q)=\\frac12\\int(\\sqrt p-\\sqrt q)^2$ and lies in $[0,1]$"
+        },
+        {
+          "value": "B",
+          "text": "It is infinite whenever $P\\ne Q$"
+        },
+        {
+          "value": "C",
+          "text": "It is asymmetric"
+        },
+        {
+          "value": "D",
+          "text": "It equals forward KL"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "11.2.4"
+    },
+    {
+      "id": "item-005",
+      "prompt": "Which property holds for all f-divergences under standard conditions?",
+      "explanation": "**Correct answer: C.** Applying the same stochastic channel cannot increase an f-divergence.",
+      "topic": "11.3. What all f-divergences share—and what $f$ chooses",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Symmetry"
+        },
+        {
+          "value": "B",
+          "text": "Upper boundedness by one"
+        },
+        {
+          "value": "C",
+          "text": "Data Processing Inequality"
+        },
+        {
+          "value": "D",
+          "text": "Triangle inequality"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "11.3.1"
+    },
+    {
+      "id": "item-006",
+      "prompt": "Why does forward KL often show mode-covering behavior when a multimodal $P$ is approximated by one Gaussian?",
+      "explanation": "**Correct answer: B.** A missed data mode produces a large log-loss penalty.",
+      "topic": "11.3. What all f-divergences share—and what $f$ chooses",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It averages only under the model"
+        },
+        {
+          "value": "B",
+          "text": "Assigning tiny model probability to regions with substantial data mass is expensive under the expectation over $P$"
+        },
+        {
+          "value": "C",
+          "text": "It must be symmetric"
+        },
+        {
+          "value": "D",
+          "text": "It uses a ground metric"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "11.3.2"
+    },
+    {
+      "id": "item-007",
+      "prompt": "What is the main limitation of f-divergences on disjoint supports?",
+      "explanation": "**Correct answer: D.** JS and TV saturate, while KL may become infinite, but the magnitude of the shift is not represented.",
+      "topic": "11.3. What all f-divergences share—and what $f$ chooses",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They are always zero"
+        },
+        {
+          "value": "B",
+          "text": "They are undefined for probability measures"
+        },
+        {
+          "value": "C",
+          "text": "They require an RKHS kernel"
+        },
+        {
+          "value": "D",
+          "text": "They generally do not encode the geometric distance between supports"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "11.3.3"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What does the general Fenchel variational form state?",
+      "explanation": "**Correct answer: C.** A restricted neural critic gives only a lower bound on the population divergence.",
+      "topic": "11.5. Variational form: from convex conjugacy to a trainable critic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every critic gives the exact divergence"
+        },
+        {
+          "value": "B",
+          "text": "Every f-divergence is a Wasserstein transport cost"
+        },
+        {
+          "value": "C",
+          "text": "$D_f(P\\|Q)=\\sup_T\\{\\mathbb E_PT-\\mathbb E_Qf^*(T)\\}$ for a sufficiently rich class under suitable conditions"
+        },
+        {
+          "value": "D",
+          "text": "The critic must be linear"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "11.5.1"
+    },
+    {
+      "id": "item-009",
+      "prompt": "What is the optimal critic for differentiable $f$?",
+      "explanation": "**Correct answer: C.** The critic encodes a transformed density ratio.",
+      "topic": "11.5. Variational form: from convex conjugacy to a trainable critic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$T^*(x)=\\|x\\|$"
+        },
+        {
+          "value": "B",
+          "text": "$T^*(x)=p(x)+q(x)$"
+        },
+        {
+          "value": "C",
+          "text": "$T^*(x)=f'(p(x)/q(x))$"
+        },
+        {
+          "value": "D",
+          "text": "$T^*(x)=0$ always"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "11.5.2"
+    },
+    {
+      "id": "item-010",
+      "prompt": "Why can a maximized empirical variational objective exceed the true divergence?",
+      "explanation": "**Correct answer: B.** The lower-bound statement is a population result for a fixed critic, not an automatic guarantee after sample optimization.",
+      "topic": "11.5. Variational form: from convex conjugacy to a trainable critic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The population theorem is false"
+        },
+        {
+          "value": "B",
+          "text": "The critic is adaptively chosen on the same finite sample and can overfit"
+        },
+        {
+          "value": "C",
+          "text": "Jensen's inequality always reverses sign"
+        },
+        {
+          "value": "D",
+          "text": "$f^*$ must be negative"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "11.5.3"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What is the convex conjugate of $f(t)=t\\log t$?",
+      "explanation": "**Correct answer: C.** This yields the NWJ bound E_PT-E_Qe^(T-1).",
+      "topic": "11.5. Variational form: from convex conjugacy to a trainable critic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$s^2/2$"
+        },
+        {
+          "value": "B",
+          "text": "$-\\log s$"
+        },
+        {
+          "value": "C",
+          "text": "$e^{s-1}$"
+        },
+        {
+          "value": "D",
+          "text": "$|s|$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "11.5.4"
+    },
+    {
+      "id": "item-012",
+      "prompt": "How can Donsker–Varadhan be obtained from NWJ?",
+      "explanation": "**Correct answer: A.** The optimal shift turns the exponential expectation into log E_Qe^T.",
+      "topic": "11.5. Variational form: from convex conjugacy to a trainable critic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Optimize the NWJ objective over an additive critic constant"
+        },
+        {
+          "value": "B",
+          "text": "Restrict the critic to 1-Lipschitz functions"
+        },
+        {
+          "value": "C",
+          "text": "Set $T=0$"
+        },
+        {
+          "value": "D",
+          "text": "Replace KL by TV"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "11.5.5"
+    },
+    {
+      "id": "item-013",
+      "prompt": "How is the original minimax GAN linked to Jensen–Shannon divergence?",
+      "explanation": "**Correct answer: A.** This is a population identity for an unrestricted optimal discriminator.",
+      "topic": "11.6. GAN and f-GAN: what the adversarial game minimizes",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "With the optimal discriminator, its value is $-\\log4+2\\,\\mathrm{JS}(P,Q)$"
+        },
+        {
+          "value": "B",
+          "text": "GAN always minimizes reverse KL"
+        },
+        {
+          "value": "C",
+          "text": "The discriminator computes Wasserstein-2"
+        },
+        {
+          "value": "D",
+          "text": "There is no link even in the idealized setting"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "11.6.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Which statement about the non-saturating generator loss is correct?",
+      "explanation": "**Correct answer: D.** The loss was introduced to provide a more informative gradient.",
+      "topic": "11.6. GAN and f-GAN: what the adversarial game minimizes",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It changes the desired optimum to $P\\ne Q$"
+        },
+        {
+          "value": "B",
+          "text": "It equals MLE for every implicit generator"
+        },
+        {
+          "value": "C",
+          "text": "It does not use a discriminator"
+        },
+        {
+          "value": "D",
+          "text": "It has the same desired fixed point but is not literal gradient descent on JS with a finite discriminator"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "11.6.2"
+    },
+    {
+      "id": "item-015",
+      "prompt": "Why cannot mode collapse be explained solely by one choice of f-divergence?",
+      "explanation": "**Correct answer: C.** Real adversarial dynamics are much richer than the ideal population divergence.",
+      "topic": "11.6. GAN and f-GAN: what the adversarial game minimizes",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Mode collapse occurs only in linear regression"
+        },
+        {
+          "value": "B",
+          "text": "All divergences are identical"
+        },
+        {
+          "value": "C",
+          "text": "Architecture, restricted critic capacity, alternating optimization, and the generator objective also matter"
+        },
+        {
+          "value": "D",
+          "text": "GANs do not use probabilities"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "11.6.3"
+    },
+    {
+      "id": "item-016",
+      "prompt": "Which distributions does MINE compare to estimate $I(X;Y)$?",
+      "explanation": "**Correct answer: D.** Mutual information is KL between the joint and product-of-marginals distributions.",
+      "topic": "11.7. MINE and InfoNCE: two different variational MI bounds",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$P_X$ and $P_Y$"
+        },
+        {
+          "value": "B",
+          "text": "Two different priors"
+        },
+        {
+          "value": "C",
+          "text": "Train and test distributions"
+        },
+        {
+          "value": "D",
+          "text": "The joint $P_{XY}$ and the product of marginals $P_XP_Y$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "11.7.1"
+    },
+    {
+      "id": "item-017",
+      "prompt": "Which practical rule improves the reliability of a neural MI estimate?",
+      "explanation": "**Correct answer: B.** Separating training and evaluation reduces adaptive optimistic bias.",
+      "topic": "11.7. MINE and InfoNCE: two different variational MI bounds",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always use the same batch for training and reporting"
+        },
+        {
+          "value": "B",
+          "text": "Train the critic on one sample and evaluate the bound on held-out pairs"
+        },
+        {
+          "value": "C",
+          "text": "Never check a permutation baseline"
+        },
+        {
+          "value": "D",
+          "text": "Treat every reported number as a guaranteed lower bound"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "11.7.2"
+    },
+    {
+      "id": "item-018",
+      "prompt": "What is the ceiling of the standard InfoNCE lower bound with $K$ candidates?",
+      "explanation": "**Correct answer: A.** Since cross-entropy loss is nonnegative, log K-L_NCE≤log K.",
+      "topic": "11.7. MINE and InfoNCE: two different variational MI bounds",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\log K$"
+        },
+        {
+          "value": "B",
+          "text": "$K$"
+        },
+        {
+          "value": "C",
+          "text": "$1/K$"
+        },
+        {
+          "value": "D",
+          "text": "It always equals the true MI"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "11.7.3"
+    },
+    {
+      "id": "item-019",
+      "prompt": "Why is it inaccurate to call InfoNCE simply “MINE plus a shift”?",
+      "explanation": "**Correct answer: B.** Both are related to density-ratio estimation, but they use different variational constructions.",
+      "topic": "11.7. MINE and InfoNCE: two different variational MI bounds",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "InfoNCE does not use scores"
+        },
+        {
+          "value": "B",
+          "text": "InfoNCE is derived as a multi-sample classification bound, not as a simple plug-in DV estimator"
+        },
+        {
+          "value": "C",
+          "text": "MINE is unrelated to MI"
+        },
+        {
+          "value": "D",
+          "text": "InfoNCE requires a tractable density"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "11.7.4"
+    },
+    {
+      "id": "item-020",
+      "prompt": "What exactly is limited by the McAllester–Stratos result?",
+      "explanation": "**Correct answer: A.** A point estimator may output a larger number, but without a universal guarantee.",
+      "topic": "11.7. MINE and InfoNCE: two different variational MI bounds",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Distribution-free high-confidence lower bounds from $N$ samples, which generally cannot reliably be much larger than order $\\log N$"
+        },
+        {
+          "value": "B",
+          "text": "The true MI between finite-dimensional variables"
+        },
+        {
+          "value": "C",
+          "text": "The size of the learned representation"
+        },
+        {
+          "value": "D",
+          "text": "Every numerical value produced by any estimator"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "11.7.5"
+    },
+    {
+      "id": "item-021",
+      "prompt": "What is the dual definition of Wasserstein-1?",
+      "explanation": "**Correct answer: D.** This is Kantorovich–Rubinstein duality.",
+      "topic": "11.8. IPMs, Wasserstein, and MMD: when geometry matters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The number of mismatched model parameters"
+        },
+        {
+          "value": "B",
+          "text": "KL between a joint distribution and product of marginals"
+        },
+        {
+          "value": "C",
+          "text": "Minimum cross-entropy"
+        },
+        {
+          "value": "D",
+          "text": "The supremum of expectation differences over 1-Lipschitz functions"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "11.8.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "Which statement about WGAN-GP is correct?",
+      "explanation": "**Correct answer: A.** The penalty is applied at selected points, usually interpolations, and is not a global certificate.",
+      "topic": "11.8. IPMs, Wasserstein, and MMD: when geometry matters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It uses a gradient penalty as a practical approximation to the Lipschitz constraint"
+        },
+        {
+          "value": "B",
+          "text": "It exactly certifies the Lipschitz constant over the entire space"
+        },
+        {
+          "value": "C",
+          "text": "It minimizes JS with the optimal discriminator"
+        },
+        {
+          "value": "D",
+          "text": "It has no critic"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "11.8.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "When is MMD with a characteristic kernel equal to zero?",
+      "explanation": "**Correct answer: D.** A characteristic kernel makes the kernel mean embedding injective.",
+      "topic": "11.8. IPMs, Wasserstein, and MMD: when geometry matters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only when the means agree"
+        },
+        {
+          "value": "B",
+          "text": "For any pair of distributions"
+        },
+        {
+          "value": "C",
+          "text": "Only for Gaussian distributions"
+        },
+        {
+          "value": "D",
+          "text": "If and only if $P=Q$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "11.8.3"
+    },
+    {
+      "id": "item-024",
+      "prompt": "Which quantity is both an f-divergence and an IPM?",
+      "explanation": "**Correct answer: B.** TV has both density-ratio and supremum-over-tests representations.",
+      "topic": "11.8. IPMs, Wasserstein, and MMD: when geometry matters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Forward KL"
+        },
+        {
+          "value": "B",
+          "text": "Total variation"
+        },
+        {
+          "value": "C",
+          "text": "Rényi divergence"
+        },
+        {
+          "value": "D",
+          "text": "Pearson $\\chi^2$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "11.8.4"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Which principle for choosing an objective is most accurate?",
+      "explanation": "**Correct answer: C.** There is no universally best discrepancy; the objective is part of the full statistical specification.",
+      "topic": "11.9. Choosing a discrepancy in practice",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every bounded divergence guarantees stable gradients"
+        },
+        {
+          "value": "B",
+          "text": "Wasserstein is always better than KL"
+        },
+        {
+          "value": "C",
+          "text": "The choice depends on likelihood availability, sample-space geometry, sample complexity, critic class, and the desired fixed point"
+        },
+        {
+          "value": "D",
+          "text": "InfoNCE always measures MI exactly"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "11.9.1"
+    }
+  ]
+}

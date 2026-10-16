@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-11",
+  "language": "en",
+  "questions": [
+    {
+      "id": "13.4.1",
+      "prompt": "Why is a chat template part of the training contract rather than visual formatting?",
+      "explanation": "**Correct answer: C.** The template turns roles, message boundaries, tool calls, and turn endings into concrete tokens. A mismatch can degrade behavior without raising a runtime error.",
+      "topic": "13.4. Chat templates are executable contracts",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It decides which roles may be stored in the dataset at all"
+        },
+        {
+          "value": "B",
+          "text": "It creates new vocabulary tokens during SFT"
+        },
+        {
+          "value": "C",
+          "text": "It defines the token serialization used in both training and inference"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "13.5.1",
+      "prompt": "Under an assistant-only objective, what goes into `labels` for system and user tokens?",
+      "explanation": "**Correct answer: A.** With `ignore_index=-100`, the tokens remain in the input context but are not direct cross-entropy targets. Full-sequence loss is possible in a different training recipe.",
+      "topic": "13.5. Label masking: a 56-token example",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "`−100`, so those positions contribute no direct loss term"
+        },
+        {
+          "value": "B",
+          "text": "The padding token ID, so all rows have equal length"
+        },
+        {
+          "value": "C",
+          "text": "The original token ID multiplied by a zero weight"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.5.2",
+      "prompt": "A dialogue has 56 tokens and a 20-token assistant reply. What fraction is supervised if the reply terminator is also a target?",
+      "explanation": "**Correct answer: B.** $(20+1)/56=37.5\\%$. The extra position is the assistant turn terminator in this teaching template.",
+      "topic": "13.5. Label masking: a 56-token example",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "35.7%: only reply content is supervised"
+        },
+        {
+          "value": "B",
+          "text": "37.5%: the terminator is added to the twenty reply tokens"
+        },
+        {
+          "value": "C",
+          "text": "71.4%: the reply and preceding user turn are supervised"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "13.5.3",
+      "prompt": "What is the main risk when the assistant turn terminator is excluded from the SFT targets?",
+      "explanation": "**Correct answer: C.** The base model may still stop, but the demonstrations do not reinforce the required terminator. Inspect target tokens at boundaries rather than relying on aggregate loss alone.",
+      "topic": "13.5. Label masking: a 56-token example",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Training loss must become infinite as soon as the first batch reaches the terminator"
+        },
+        {
+          "value": "B",
+          "text": "Every response will stop after its first token"
+        },
+        {
+          "value": "C",
+          "text": "SFT gives no direct signal for ending the turn at the demonstrated boundary"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "13.5.4",
+      "prompt": "Which row predicts labels[t] in causal training?",
+      "explanation": "**Correct answer: A.** The target is stored at its own position and predicted by the preceding position. Shift exactly once.",
+      "topic": "13.5. Label masking: a 56-token example",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "logits[t−1]"
+        },
+        {
+          "value": "B",
+          "text": "logits[t+1]"
+        },
+        {
+          "value": "C",
+          "text": "Any row in the batch"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.6.1",
+      "prompt": "What does the FFD result “24 examples → 5 containers” mean at a length of 2,048?",
+      "explanation": "**Correct answer: A.** The calculation measures fixed-length rows and removed padding. Runtime also depends on attention kernels, batch shape, device occupancy, and overhead.",
+      "topic": "13.6. Packing variable-length examples safely",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Fixed-length rows fall, while utilization rises from 17.7% to 84.9%"
+        },
+        {
+          "value": "B",
+          "text": "Training throughput is guaranteed to improve by exactly 4.8×"
+        },
+        {
+          "value": "C",
+          "text": "Every container holds the same number of source examples"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.6.2",
+      "prompt": "Why do packed examples need a block-diagonal attention mask?",
+      "explanation": "**Correct answer: B.** Without isolation, a token in one dialogue can depend on unrelated text in the same container. EOS marks a boundary but does not by itself remove cross-example attention edges.",
+      "topic": "13.6. Packing variable-length examples safely",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "So that positions of different examples get independent RoPE indices"
+        },
+        {
+          "value": "B",
+          "text": "Otherwise examples in one bin see each other and train on foreign text"
+        },
+        {
+          "value": "C",
+          "text": "So that FlashAttention can process the bin in a single kernel call"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "13.6.3",
+      "prompt": "How do you remove a target pair crossing from A into B?",
+      "explanation": "**Correct answer: A.** Attention masking cannot repair a cross-boundary logit–label pair created by shifting.",
+      "topic": "13.6. Packing variable-length examples safely",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Ignore the first label of each segment"
+        },
+        {
+          "value": "B",
+          "text": "Only reset position_ids"
+        },
+        {
+          "value": "C",
+          "text": "Only insert EOS between examples"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.7.1",
+      "prompt": "What follows from comparing $3.47\\cdot10^{19}$ FLOP for SFT with $7.23\\cdot10^{23}$ FLOP for pretraining?",
+      "explanation": "**Correct answer: C.** The ratio belongs to the stated token and epoch counts. The time estimate additionally assumes 990 TFLOP/s and MFU 0.4; it is not a measured production run.",
+      "topic": "13.7. Compute accounting and hyperparameters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every SFT run is always exactly 20,833× cheaper than every pretraining run"
+        },
+        {
+          "value": "B",
+          "text": "The two stages require equal compute at equal model size"
+        },
+        {
+          "value": "C",
+          "text": "The scenarios differ by 20,833; 24.33 hours is a separate estimate"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "13.7.2",
+      "prompt": "Why is an excessive learning rate especially risky in a short SFT run?",
+      "explanation": "**Correct answer: A.** The dataset is comparatively small, so large updates can cause regressions or overfitting. Validate the learning-rate range on held-out capabilities and behavior.",
+      "topic": "13.7. Compute accounting and hyperparameters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Large updates can erase useful pretrained behavior within a few steps"
+        },
+        {
+          "value": "B",
+          "text": "AdamW cannot finish allocating optimizer state within only a few training epochs"
+        },
+        {
+          "value": "C",
+          "text": "A large step automatically unmasks user tokens"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.8.1",
+      "prompt": "Why does row count alone not determine the quality of a public instruction dataset?",
+      "explanation": "**Correct answer: B.** Correctness, diversity, target-skill coverage, licensing, and contamination matter. Scale does not compensate for systematically poor demonstrations.",
+      "topic": "13.8. Organizing SFT data by capability",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Large datasets are always entirely synthetic"
+        },
+        {
+          "value": "B",
+          "text": "Rows may be duplicate, wrong, or unrelated to the target decisions"
+        },
+        {
+          "value": "C",
+          "text": "SFT depends only on example count and not on token count"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "13.9.1",
+      "prompt": "Which careful conclusion is supported by LIMA?",
+      "explanation": "**Correct answer: C.** LIMA demonstrates the value of curation for an already capable 65B model. It does not establish a universal minimum dataset size.",
+      "topic": "13.9. Reading LIMA correctly",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Modern models no longer need instruction tuning after pretraining"
+        },
+        {
+          "value": "B",
+          "text": "Exactly 1,000 examples suffice for every model and every domain"
+        },
+        {
+          "value": "C",
+          "text": "A strong base model can adapt from 1,000 carefully curated demonstrations"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "13.9.2",
+      "prompt": "When should source-task families be split?",
+      "explanation": "**Correct answer: A.** Derived examples from one source stay in one split to prevent content leakage.",
+      "topic": "13.9. Reading LIMA correctly",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Before generating paraphrases and synthetic answers"
+        },
+        {
+          "value": "B",
+          "text": "After shuffling every generated answer"
+        },
+        {
+          "value": "C",
+          "text": "Only after training"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.10.1",
+      "prompt": "Why does a synthetic data pipeline need a verifier?",
+      "explanation": "**Correct answer: A.** Incorrect demonstrations provide a learning signal in the wrong direction. A verifier applies explicit acceptance criteria, although incomplete tests and imperfect judges can still admit errors.",
+      "topic": "13.10. Synthetic data as a search-and-filter system",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A generator model confidently produces both correct and wrong examples"
+        },
+        {
+          "value": "B",
+          "text": "It is needed to deduplicate the generated examples against each other"
+        },
+        {
+          "value": "C",
+          "text": "It brings the style of generated answers to one common template"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.11.1",
+      "prompt": "How does SFT on worked solutions differ from training on final answers alone?",
+      "explanation": "**Correct answer: B.** When the worked solution is supervised, the model receives token-level signal over intermediate steps. Useful strategies and teacher artifacts can transfer together.",
+      "topic": "13.11. Reasoning demonstrations and the s1 compute scenario",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It always requires a separate `reasoning` role in the template"
+        },
+        {
+          "value": "B",
+          "text": "Intermediate steps are targets, so the student imitates the solution path"
+        },
+        {
+          "value": "C",
+          "text": "It must run after preference optimization"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "13.12.1",
+      "prompt": "What must be represented in a complete call–observation–response demonstration?",
+      "explanation": "**Correct answer: C.** The trajectory should cover the decision to call, the structured action, the environment observation, and the assistant's next step. The tool result is usually context rather than a model target.",
+      "topic": "13.12. Teaching a model to use tools",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The tool must be reachable during training so the call can be verified"
+        },
+        {
+          "value": "B",
+          "text": "The example must contain at least two different tools in sequence"
+        },
+        {
+          "value": "C",
+          "text": "The call itself, the tool response and the model's conclusion after it"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "13.15.1",
+      "prompt": "How does distribution distillation differ from training on one teacher response?",
+      "explanation": "**Correct answer: A.** Soft targets expose probabilities over alternatives, either directly or through teacher logits. The token events must be aligned. Matching only the argmax does not match the distribution.",
+      "topic": "13.15. Distillation channels",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The student matches teacher probabilities, not only one sampled sequence"
+        },
+        {
+          "value": "B",
+          "text": "Teacher and student must use the same architecture and parameter count"
+        },
+        {
+          "value": "C",
+          "text": "The student must choose the same most likely token at every step"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.16.1",
+      "prompt": "Why does LoRA reduce optimizer-state memory?",
+      "explanation": "**Correct answer: B.** The base weights are frozen, so gradients and optimizer state are maintained only for adapters. Total memory still includes base weights, activations, buffers, and overhead.",
+      "topic": "13.16. LoRA and a concrete parameter count",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All optimizer states are automatically stored in four bits"
+        },
+        {
+          "value": "B",
+          "text": "Optimizer state is needed only for trainable adapter parameters"
+        },
+        {
+          "value": "C",
+          "text": "Moments are recomputed from scratch at every step"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "13.16.2",
+      "prompt": "If 208 MiB already includes adapter weights, what is added to the 4-bit base?",
+      "explanation": "**Correct answer: A.** The chosen 16 bytes include the weight, gradient, master copy and moments, each once.",
+      "topic": "13.16. LoRA and a concrete parameter count",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "208 MiB"
+        },
+        {
+          "value": "B",
+          "text": "208 MiB plus another 26 MiB of weights"
+        },
+        {
+          "value": "C",
+          "text": "Only 26 MiB"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    }
+  ]
+}

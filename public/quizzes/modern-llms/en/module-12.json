@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-12",
+  "language": "en",
+  "questions": [
+    {
+      "id": "14.4.1",
+      "prompt": "Which stages form the classical RLHF route?",
+      "explanation": "**Correct answer: A.** This is a three-stage algorithmic route. Policy, reference, reward model, and critic define four logical roles, although an implementation may share backbones, offload, or shard them.",
+      "topic": "14.4. Classical RLHF as an algorithmic contract",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "SFT, reward-model training, and policy updates through PPO"
+        },
+        {
+          "value": "B",
+          "text": "Pretraining, teacher distillation, and output-probability calibration"
+        },
+        {
+          "value": "C",
+          "text": "Pair collection, critic-only training, and best-of-group selection"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.5.1",
+      "prompt": "Annotators prefer one response in 75% of comparisons. What score difference does the Bradley–Terry model imply?",
+      "explanation": "**Correct answer: B.** Bradley–Terry maps a score difference through a sigmoid. The inverse map is the logit, giving ln(3) ≈ 1.099.",
+      "topic": "14.5. Worked example A: invert a Bradley–Terry model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.750 — the win rate is directly the score difference"
+        },
+        {
+          "value": "B",
+          "text": "1.099 — ln(0.75/0.25), the inverse sigmoid transform"
+        },
+        {
+          "value": "C",
+          "text": "0.622 — the sigmoid evaluated at the observed win rate"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "14.6.1",
+      "prompt": "What does DPO remove from the classical RLHF loop?",
+      "explanation": "**Correct answer: C.** Under the chosen KL-regularized formulation, reward differences can be written through policy ratios. This yields a direct pairwise loss, not a universal standalone response evaluator.",
+      "topic": "14.6. DPO: eliminate the explicit reward model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only KL regularization, while retaining the reward model and PPO"
+        },
+        {
+          "value": "B",
+          "text": "Only PPO clipping, replacing it with an ordinary policy gradient"
+        },
+        {
+          "value": "C",
+          "text": "It removes the explicit reward model and PPO, training directly on pairs"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "14.7.1",
+      "prompt": "For a DPO margin z = 0.170, what is the magnitude of the local derivative with respect to z?",
+      "explanation": "**Correct answer: A.** For L = softplus(−z), the derivative magnitude with respect to z is σ(−z). The full parameter gradient also contains β and log-probability derivatives.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.4576 — it is σ(−z)"
+        },
+        {
+          "value": "B",
+          "text": "1.0000 — the DPO derivative is independent of the margin"
+        },
+        {
+          "value": "C",
+          "text": "0.6118 — the derivative equals the loss itself"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.7.2",
+      "prompt": "For the same log-ratio gap, β increases from 0.1 to 0.5. What happens in the numerical example?",
+      "explanation": "**Correct answer: B.** In this fixed example, β scales the margin passed to the sigmoid. This describes local pair geometry; its effect on full training also depends on data and policy dynamics.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The margin is unchanged because β cancels inside the difference"
+        },
+        {
+          "value": "B",
+          "text": "The margin grows to 0.85 and the local pair weight falls to 0.299"
+        },
+        {
+          "value": "C",
+          "text": "The margin shrinks to 0.034 and the local weight rises above 0.5"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "14.7.3",
+      "prompt": "Which positions normally enter the log-probability sum for a DPO pair?",
+      "explanation": "**Correct answer: C.** The preferred and rejected responses share a prompt. The teaching contract sums log-probabilities over completion tokens only and masks padding explicitly.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every position, including the shared prompt and batch padding"
+        },
+        {
+          "value": "B",
+          "text": "Only the first token at which the two responses diverge"
+        },
+        {
+          "value": "C",
+          "text": "Completion tokens; the shared prompt and padding are masked out"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "14.7.4",
+      "prompt": "How large is the DPO derivative magnitude with respect to z when z<0?",
+      "explanation": "**Correct answer: A.** 0.5 is the value at z=0. The parameter gradient also includes β and derivatives of log probabilities.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Above 0.5, approaching 1 as z → −∞"
+        },
+        {
+          "value": "B",
+          "text": "Always below 0.5"
+        },
+        {
+          "value": "C",
+          "text": "Always equal to β"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.8.1",
+      "prompt": "Why are DPO, IPO, KTO, SimPO, and ORPO not merely different names for one method?",
+      "explanation": "**Correct answer: A.** For example, KTO accepts individual binary labels, SimPO uses no separate reference policy, and ORPO combines SFT and preference learning in one objective.",
+      "topic": "14.8. Direct preference losses differ by contract, not branding",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They change labels, the reference, normalization, or the objective"
+        },
+        {
+          "value": "B",
+          "text": "They differ only by laboratory and publication year"
+        },
+        {
+          "value": "C",
+          "text": "They use one loss but different variants of the Adam optimizer"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.9.1",
+      "prompt": "How does RLOO's baseline differ from GRPO's full-group mean?",
+      "explanation": "**Correct answer: B.** A leave-one-out baseline uses the other responses. The full-group mean contains the current response reward, so the two estimators do not automatically share the same statistical properties.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "RLOO uses the previous group whereas GRPO uses the current group"
+        },
+        {
+          "value": "B",
+          "text": "RLOO excludes the current response from its own baseline"
+        },
+        {
+          "value": "C",
+          "text": "RLOO averages log rewards whereas GRPO averages rewards"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "14.9.2",
+      "prompt": "How should a GRPO group with identical rewards be handled?",
+      "explanation": "**Correct answer: C.** With zero variance, z-normalization is undefined. A small ε can prevent NaNs but cannot create information, so handling must be part of the explicit training contract.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Reuse the previous group mean and continue with the same objective"
+        },
+        {
+          "value": "B",
+          "text": "Add ε to the denominator and treat the relative signal as recovered"
+        },
+        {
+          "value": "C",
+          "text": "Explicitly filter the group or assign zero advantages: no relative signal exists"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "14.9.3",
+      "prompt": "Which policy forms the denominator of the clipped objective ratio?",
+      "explanation": "**Correct answer: A.** The old policy describes the sampler. The reference supplies a separate KL anchor.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The policy that sampled this rollout batch"
+        },
+        {
+          "value": "B",
+          "text": "Necessarily the initial SFT policy"
+        },
+        {
+          "value": "C",
+          "text": "The policy after the next update"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.9.4",
+      "prompt": "All rewards are equal and advantages are zero. Can weights still update?",
+      "explanation": "**Correct answer: A.** Zero advantage removes the policy-gradient term, but the KL gradient need not vanish.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Yes, through a separate KL term"
+        },
+        {
+          "value": "B",
+          "text": "No, every gradient must vanish"
+        },
+        {
+          "value": "C",
+          "text": "Yes, division by zero creates a signal"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.10.1",
+      "prompt": "In the 8.03B teaching memory model, how do PPO and DPO compare?",
+      "explanation": "**Correct answer: A.** This is a scenario for persistent parameter states: 16 bytes per trained parameter and 2 per frozen parameter. It excludes activations, KV state, sharding, and shared backbones.",
+      "topic": "14.10. Worked example D: a deliberately simplified memory model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "269.2 GiB and 134.6 GiB in the stated teaching configuration"
+        },
+        {
+          "value": "B",
+          "text": "134.6 GiB versus 119.7 GiB regardless of roles or implementation"
+        },
+        {
+          "value": "C",
+          "text": "119.7 GiB for both algorithms in every configuration"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.10.2",
+      "prompt": "When can a fixed DPO dataset remove the reference model from memory during optimization?",
+      "explanation": "**Correct answer: B.** For a fixed pair dataset, reference log-probabilities can be computed once. Optimization then keeps one trained network; this is a workflow property, not a universal DPO implementation rule.",
+      "topic": "14.10. Worked example D: a deliberately simplified memory model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When the reference is quantized to four bits at every step"
+        },
+        {
+          "value": "B",
+          "text": "When its log-probabilities have been precomputed for every pair"
+        },
+        {
+          "value": "C",
+          "text": "When the trainable policy and reference always share the same weights"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "14.11.1",
+      "prompt": "Why can rollout generation dominate the time budget in online RL?",
+      "explanation": "**Correct answer: C.** In the module scenario, long responses produce a 39.3× ratio between generation and one estimated training pass. The number depends on length, hardware, and throughput, but the mechanism is general.",
+      "topic": "14.11. Worked example E: rollout generation can dwarf the update",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It necessarily runs on CPU while accelerators remain idle"
+        },
+        {
+          "value": "B",
+          "text": "Every rollout requires training a new reward model"
+        },
+        {
+          "value": "C",
+          "text": "Autoregressive decode produces tokens sequentially"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "14.12.1",
+      "prompt": "Which problems do DAPO and Dr. GRPO address?",
+      "explanation": "**Correct answer: A.** DAPO introduces dynamic sampling, asymmetric clipping, token-level normalization, and overlong-response shaping. Dr. GRPO separately revisits normalization that can induce undesirable bias.",
+      "topic": "14.12. What later GRPO variants are actually fixing",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Group selection, clipping, length normalization, and token efficiency"
+        },
+        {
+          "value": "B",
+          "text": "Only reward-model training speed on the original labels"
+        },
+        {
+          "value": "C",
+          "text": "Restoring a mandatory critic to every group-relative RL method"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.12.2",
+      "prompt": "Responses have lengths 1 and 3 with per-token values 2 and 0. What is the token mean?",
+      "explanation": "**Correct answer: A.** The sum is 2 across 4 tokens. A response mean would be 1.",
+      "topic": "14.12. What later GRPO variants are actually fixing",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.5"
+        },
+        {
+          "value": "B",
+          "text": "1"
+        },
+        {
+          "value": "C",
+          "text": "2"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.15.1",
+      "prompt": "Why does a verifiable reward not eliminate reward hacking automatically?",
+      "explanation": "**Correct answer: B.** Verifiability makes the signal reproducible, but tests, rules, and length limits can contain loopholes. Hidden tasks, rollout audits, and verifier evaluation are still required.",
+      "topic": "14.15. RLVR still obeys Goodhart's law",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The verifier is always slower than the model and cannot score responses"
+        },
+        {
+          "value": "B",
+          "text": "The policy optimizes the check, not necessarily the intended task"
+        },
+        {
+          "value": "C",
+          "text": "Formal tests cannot be used for mathematics or programming"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "14.16.1",
+      "prompt": "What is the published Constitutional AI route?",
+      "explanation": "**Correct answer: C.** The method includes supervised critique and revision followed by RLAIF: a model produces constitutional preferences, which train a reward model and then an RL policy. Human effort is reduced, not eliminated.",
+      "topic": "14.16. Three open patterns: RLAIF, multi-stage reasoning, and environments",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The constitution only filters the raw dataset before SFT"
+        },
+        {
+          "value": "B",
+          "text": "The principles are appended as a system prompt to every user request"
+        },
+        {
+          "value": "C",
+          "text": "Critique and revision under principles, followed by RLAIF with a reward model and RL"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

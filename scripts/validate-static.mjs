@@ -11,7 +11,7 @@ const catalog = JSON.parse(fs.readFileSync("app/generated/content.json", "utf8")
 const pages = new Map(manifest.map(page => [page.path, page]));
 const titles = new Set(), descriptions = new Set();
 const errors = [];
-const counts = { pages: 0, lectures: 0, links: 0, images: 0, formulas: 0 };
+const counts = { pages: 0, lectures: 0, quizzes: 0, links: 0, images: 0, formulas: 0 };
 const attr = (node, name) => node.attrs?.find(a => a.name === name)?.value;
 const hasClass = (node, value) => (attr(node, "class") ?? "").split(" ").includes(value);
 function flatten(node) { return [node, ...(node.childNodes ?? []).flatMap(flatten)]; }
@@ -42,7 +42,7 @@ for (const page of manifest) {
   check(!headNodes.some(node => Object.values(Object.fromEntries((node.attrs ?? []).map(a => [a.name, a.value]))).some(value => /localhost|127\.0\.0\.1|vladgkulikov\.github\.io|chatgpt\.site/.test(value))), label, "Non-production metadata URL");
   for (const language of ["en", "ru"]) {
     const alternate = headNodes.find(node => attr(node, "hreflang") === language);
-    const expected = buildLocation(language, page.courseKey, page.moduleKey);
+    const expected = buildLocation(language, page.courseKey, page.moduleKey, page.section);
     check(attr(alternate, "href") === origin + expected && pages.has(expected), label, "Wrong reciprocal hreflang");
   }
   for (const field of ["og:title", "og:description", "og:url", "og:image", "twitter:card", "twitter:title", "twitter:description", "twitter:image"]) {
@@ -51,10 +51,10 @@ for (const page of manifest) {
   const initial = nodes.find(node => attr(node, "id") === "page-data");
   const props = JSON.parse(text(initial));
   if (page.moduleKey) {
-    counts.lectures++;
+    if (page.section === 'tests') counts.quizzes++; else counts.lectures++;
     const prose = nodes.find(node => hasClass(node, "lecture-prose"));
-    check(Boolean(prose) && text(prose).length > 1000, label, "Lecture missing from original HTML");
-    check(props.initialMarkdown === fs.readFileSync(path.join("public/content", page.contentFile), "utf8"), label, "Lecture source changed");
+    check(Boolean(prose) && text(prose).length > 1000, label, "Reading content missing from original HTML");
+    check(props.initialMarkdown === fs.readFileSync(path.join(page.section === 'tests' ? "public/quizzes" : "public/content", page.contentFile), "utf8"), label, "Published source changed");
     let previous = 1;
     for (const node of flatten(prose).filter(node => /^h[2-6]$/.test(node.tagName))) {
       const depth = Number(node.tagName[1]);
@@ -86,7 +86,7 @@ for (const page of manifest) {
   }
   counts.pages++;
 }
-check(manifest.length === 106 && counts.lectures === 98, "catalog", "Expected 106 pages and 98 lectures");
+check(manifest.length === 202 && counts.lectures === 98 && counts.quizzes === 96, "catalog", "Expected 202 pages, 98 lectures and 96 quiz pages");
 const sitemap = fs.readFileSync("dist-pages/sitemap.xml", "utf8");
 check((sitemap.match(/<loc>/g) ?? []).length === manifest.length, "sitemap", "Wrong URL count");
 for (const page of manifest) check(sitemap.includes(`<loc>${origin}${page.path}</loc>`), "sitemap", `Missing ${page.path}`);

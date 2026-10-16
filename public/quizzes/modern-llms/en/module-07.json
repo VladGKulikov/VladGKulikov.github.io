@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-07",
+  "language": "en",
+  "questions": [
+    {
+      "id": "8.4.1",
+      "prompt": "What does Zero-Order Hold compute for a linear SSM?",
+      "explanation": "**Correct answer: A.** ZOH gives $\\bar A=e^{\\Delta A}$ and the exact held-input coefficient $\\bar B$. A neural implementation may still choose another effective input update.",
+      "topic": "8.4. Discretization with Zero-Order Hold",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The exact discrete transition for an input held constant over the interval"
+        },
+        {
+          "value": "B",
+          "text": "An approximate distribution over coordinates of the previous state"
+        },
+        {
+          "value": "C",
+          "text": "Only the eigenvalues associated with the observation matrix"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.4.2",
+      "prompt": "Why is |a|<10⁻¹⁴ insufficient to replace the ZOH input factor by Δ?",
+      "explanation": "**Correct answer: A.** For a=−10⁻¹⁵ and Δ=10¹⁵ the product is −1. Use the exact zero-mode limit at a=0.",
+      "topic": "8.4. Discretization with Zero-Order Hold",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The product Δa matters: tiny a with large Δ need not be a small step."
+        },
+        {
+          "value": "B",
+          "text": "Because expm1 only accepts positive a."
+        },
+        {
+          "value": "C",
+          "text": "Because zero eigenvalues are forbidden."
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.5.1",
+      "prompt": "At which $\\Delta$ does the $\\Delta B$ approximation have ten-percent relative error for $a=-1$?",
+      "explanation": "**Correct answer: B.** The root of $\\Delta/(1-e^{-\\Delta})-1=0.1$ is approximately 0.193747558.",
+      "topic": "8.5. Worked example: the cost of replacing exact ZOH by $\\Delta B$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About 0.10"
+        },
+        {
+          "value": "B",
+          "text": "About 0.19375"
+        },
+        {
+          "value": "C",
+          "text": "About 0.50"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "8.6.1",
+      "prompt": "What does selectivity mean in Mamba?",
+      "explanation": "**Correct answer: C.** Input-dependent $B_t$, $C_t$, and $\\Delta_t$ let different tokens be written, exposed, and forgotten differently.",
+      "topic": "8.6. What selectivity changes in Mamba",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model selects one of several full-attention mechanisms"
+        },
+        {
+          "value": "B",
+          "text": "The recurrent-state size grows with token importance"
+        },
+        {
+          "value": "C",
+          "text": "Writing, reading, and step parameters depend on the current input"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "8.7.1",
+      "prompt": "What is the correct scope of State Space Duality?",
+      "explanation": "**Correct answer: A.** SSD connects a defined structured SSM class to multiple execution forms. It is not an identity between all SSMs and softmax attention.",
+      "topic": "8.7. Mamba-2 and the scope of State Space Duality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A structured SSM class corresponds to a semiseparable masked matrix form"
+        },
+        {
+          "value": "B",
+          "text": "Every continuous SSM is bitwise identical to ordinary softmax attention"
+        },
+        {
+          "value": "C",
+          "text": "Every recurrent network is replaced by a single dense-attention layer"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.7.2",
+      "prompt": "What does associativity of state-transform composition permit?",
+      "explanation": "**Correct answer: B.** Associativity is not commutativity. The boundary state carries contributions from earlier chunks.",
+      "topic": "8.7. Mamba-2 and the scope of State Space Duality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Arbitrary token reordering."
+        },
+        {
+          "value": "B",
+          "text": "Regrouping operations while preserving step order."
+        },
+        {
+          "value": "C",
+          "text": "Discarding the state at a chunk boundary."
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "8.8.1",
+      "prompt": "What does the delta rule do for a normalized key at $\\beta=1$?",
+      "explanation": "**Correct answer: B.** The update uses the error $v-Sk$, so retrieval along the normalized key becomes exactly $v$.",
+      "topic": "8.8. Delta-rule memory and adaptive forgetting",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It sums the new and old values without removing the old association"
+        },
+        {
+          "value": "B",
+          "text": "It exactly replaces the readout along the selected key direction"
+        },
+        {
+          "value": "C",
+          "text": "It clears the entire state matrix before inserting the new association"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "8.9.1",
+      "prompt": "What does rising MSE in the toy additive linear memory show?",
+      "explanation": "**Correct answer: C.** This is a result for the declared synthetic associative memory, not a Mamba benchmark or a theorem about every SSM.",
+      "topic": "8.9. What a fixed state can and cannot preserve",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every Mamba necessarily loses all records after thirty-two tokens"
+        },
+        {
+          "value": "B",
+          "text": "Every softmax-attention system always produces exactly zero error"
+        },
+        {
+          "value": "C",
+          "text": "A fixed matrix memory can accumulate interference among associations"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "8.9.2",
+      "prompt": "What does a logit multiplier of 20 do in the softmax control?",
+      "explanation": "**Correct answer: C.** Multiplying logits by 20 is dividing by temperature 0.05. Finite-temperature error is generally nonzero.",
+      "topic": "8.9. What a fixed state can and cannot preserve",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Sets temperature to 20 and flattens the weights."
+        },
+        {
+          "value": "B",
+          "text": "Guarantees exact recovery of arbitrary values."
+        },
+        {
+          "value": "C",
+          "text": "Sets temperature to 0.05 and sharpens the weights."
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "8.10.1",
+      "prompt": "Which states belong in a Mamba-style serving cache?",
+      "explanation": "**Correct answer: A.** Autoregressive causal convolution also needs its recent tail; counting only `ssm_state` is incomplete.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The main SSM state and the causal-convolution tail"
+        },
+        {
+          "value": "B",
+          "text": "Only the last hidden state of the final layer"
+        },
+        {
+          "value": "C",
+          "text": "The complete list of input tokens and their logits"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.10.2",
+      "prompt": "A complete Mamba-1-like cache is 10 MiB and KV costs 128 KiB/token. Where is crossover?",
+      "explanation": "**Correct answer: B.** $10\\text{ MiB}/128\\text{ KiB}=80$. The 10 MiB includes 8 MiB of SSM state and 2 MiB of convolution state.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "At 64 tokens"
+        },
+        {
+          "value": "B",
+          "text": "At 80 tokens"
+        },
+        {
+          "value": "C",
+          "text": "At 512 tokens"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "8.10.3",
+      "prompt": "A Mamba-2-like cache is 66.0625 MiB and KV costs 128 KiB/token. Which is the first integer token beyond crossover?",
+      "explanation": "**Correct answer: C.** The exact ratio is 528.5, so token 529 is the first integer position at which the KV cache is larger.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Token 512"
+        },
+        {
+          "value": "B",
+          "text": "Token 528"
+        },
+        {
+          "value": "C",
+          "text": "Token 529"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "8.10.4",
+      "prompt": "With 10 MiB of fixed state and 128 KiB of KV per token, when is KV strictly larger?",
+      "explanation": "**Correct answer: A.** The sizes are equal at 80; strict inequality begins at 81.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Starting at token 81."
+        },
+        {
+          "value": "B",
+          "text": "Starting at token 80."
+        },
+        {
+          "value": "C",
+          "text": "Starting at token 79."
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.11.1",
+      "prompt": "Why does a hybrid with occasional full-attention layers retaining all K/V use O(N) cache memory?",
+      "explanation": "**Correct answer: A.** Fewer such layers reduce the coefficient while retaining linear growth with length. If every addressable branch uses a fixed local window, this unbounded-cache conclusion no longer follows.",
+      "topic": "8.11. Three hybrid patterns",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Those full-attention layers retain K/V for every token"
+        },
+        {
+          "value": "B",
+          "text": "The recurrent state doubles at every attention layer"
+        },
+        {
+          "value": "C",
+          "text": "The MoE router stores a separate log for every position"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.11.2",
+      "prompt": "Which layer pattern is published for Qwen3.5?",
+      "explanation": "**Correct answer: B.** The official contract uses a repeated 3:1 layout: three Gated DeltaNet → MoE layers and one Gated Attention → MoE layer.",
+      "topic": "8.11. Three hybrid patterns",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Seven Mamba layers followed by one full-attention layer"
+        },
+        {
+          "value": "B",
+          "text": "Three Gated DeltaNet layers followed by one full-attention layer"
+        },
+        {
+          "value": "C",
+          "text": "Parallel Mamba-2 and attention branches inside every block"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "8.12.1",
+      "prompt": "Why can an affine scan be parallelized?",
+      "explanation": "**Correct answer: C.** Associativity permits tree-structured prefix composition and correct chunk stitching.",
+      "topic": "8.12. Level-1 code: exact discretization, delta update, and scan composition",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All steps are computed independently of every preceding state"
+        },
+        {
+          "value": "B",
+          "text": "Every transition matrix is required to be strictly orthogonal"
+        },
+        {
+          "value": "C",
+          "text": "Affine-transition composition forms an associative operator"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "8.12.2",
+      "prompt": "Which test is especially important for a chunked scan?",
+      "explanation": "**Correct answer: A.** A partial final chunk exposes state-carry and off-by-one bugs hidden at perfectly divisible lengths.",
+      "topic": "8.12. Level-1 code: exact discretization, delta update, and scan composition",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A length not divisible by the chunk size"
+        },
+        {
+          "value": "B",
+          "text": "Only a length exactly equal to one chunk"
+        },
+        {
+          "value": "C",
+          "text": "Only an all-zero sequence"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.15.1",
+      "prompt": "Why is the label `linear attention` insufficient for a serving passport?",
+      "explanation": "**Correct answer: B.** Models with the same label may use a pure recurrent stack, a 3:1 hybrid, or a sparse/full branch with very different memory.",
+      "topic": "8.15. A current architecture passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It omits license conditions and permitted modes of redistribution"
+        },
+        {
+          "value": "B",
+          "text": "It omits layer ratios, state shapes, and the remaining KV cache"
+        },
+        {
+          "value": "C",
+          "text": "It applies only to encoders and cannot describe autoregressive decode"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "8.16.1",
+      "prompt": "Why is a recurrent carrier attractive for audio and video?",
+      "explanation": "**Correct answer: C.** The advantage comes from the number of sequential time steps. Exact return to an event may still require attention or external memory.",
+      "topic": "8.16. Audio, video, and other long streams",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Those modalities never require exact access to the past"
+        },
+        {
+          "value": "B",
+          "text": "Their inputs are always statistically uniform"
+        },
+        {
+          "value": "C",
+          "text": "Long temporal streams can be updated with fixed-size state"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

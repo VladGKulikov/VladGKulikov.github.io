@@ -1,0 +1,532 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-02",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Which quantity is the surprisal of a particular outcome $x$ relative to a distribution $P$?",
+      "explanation": "**Correct answer: C.** Surprisal refers to one outcome. Option A is entropy, the expectation of surprisal, and option D simplifies back to p(x) itself.",
+      "topic": "2.1. Definition and properties",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$-\\sum_xp(x)\\log_2p(x)$"
+        },
+        {
+          "value": "B",
+          "text": "$\\sum_xp(x)^2$"
+        },
+        {
+          "value": "C",
+          "text": "$-\\log_2p(x)$"
+        },
+        {
+          "value": "D",
+          "text": "$2^{-\\log_2p(x)}$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "2.1.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "A random variable has an alphabet of $n$ symbols, but only $m<n$ have positive probability. What is the sharpest general upper bound on its entropy?",
+      "explanation": "**Correct answer: D.** Entropy cannot exceed the logarithm of the positive support size. The bound log₂ n is also true but weaker, and it cannot be attained when m < n, which is exactly why option B is wrong about the equality case.",
+      "topic": "2.1. Definition and properties",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H(X)\\le\\log_2(n-m)$"
+        },
+        {
+          "value": "B",
+          "text": "$H(X)\\le\\log_2n$, attained by the uniform distribution on the $m$ symbols"
+        },
+        {
+          "value": "C",
+          "text": "$H(X)\\le m/n$"
+        },
+        {
+          "value": "D",
+          "text": "$H(X)\\le\\log_2m$, attained by the uniform distribution on the support"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "2.1.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Which inequality correctly states concavity of entropy?",
+      "explanation": "**Correct answer: A.** The entropy of a mixture is no smaller than the average entropy of its components. It need not exceed every component, so option D claims more than concavity gives.",
+      "topic": "2.1. Definition and properties",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H(\\lambda p+(1-\\lambda)q)\\ge\\lambda H(p)+(1-\\lambda)H(q)$"
+        },
+        {
+          "value": "B",
+          "text": "$H(\\lambda p+(1-\\lambda)q)\\le\\lambda H(p)+(1-\\lambda)H(q)$"
+        },
+        {
+          "value": "C",
+          "text": "$H(\\lambda p+(1-\\lambda)q)=H(p)+H(q)$"
+        },
+        {
+          "value": "D",
+          "text": "$H(\\lambda p+(1-\\lambda)q)\\ge\\max\\{H(p),H(q)\\}$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "2.1.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "What is the chain rule for three random variables?",
+      "explanation": "**Correct answer: B.** Each new variable is added conditioned on all previous ones, not just the most recent. Conditioning only on Y, as in option C, drops information that X may still carry about Z.",
+      "topic": "2.2. Joint and conditional entropy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H(X,Y,Z)=H(X)+H(Y)+H(Z)$ for all $X,Y,Z$"
+        },
+        {
+          "value": "B",
+          "text": "$H(X,Y,Z)=H(X)+H(Y\\mid X)+H(Z\\mid X,Y)$"
+        },
+        {
+          "value": "C",
+          "text": "$H(X,Y,Z)=H(X)+H(Y\\mid X)+H(Z\\mid Y)$"
+        },
+        {
+          "value": "D",
+          "text": "$H(X,Y,Z)=H(X)H(Y\\mid X)H(Z\\mid X,Y)$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "2.2.1"
+    },
+    {
+      "id": "item-005",
+      "prompt": "Which statement about conditional entropy is correct?",
+      "explanation": "**Correct answer: D.** The inequality concerns the average over X. A particular observation can reveal a more ambiguous regime, and under independence the inequality is an equality, which rules out option C.",
+      "topic": "2.2. Joint and conditional entropy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "For every $x$, necessarily $H(Y\\mid X=x)\\le H(Y)$"
+        },
+        {
+          "value": "B",
+          "text": "Always $H(Y\\mid X)=H(Y)-H(X)$"
+        },
+        {
+          "value": "C",
+          "text": "Always $H(Y\\mid X)<H(Y)$ unless $Y$ is constant"
+        },
+        {
+          "value": "D",
+          "text": "Always $H(Y\\mid X)\\le H(Y)$, but for an individual $x$ it may happen that $H(Y\\mid X=x)>H(Y)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "2.2.2"
+    },
+    {
+      "id": "item-006",
+      "prompt": "When does\n\n\n\n$$H(X,Y)=H(X)+H(Y)$$\n\nhold?",
+      "explanation": "**Correct answer: C.** By the chain rule, equality is equivalent to H(Y|X) = H(Y), which happens exactly under independence. Zero correlation is a much weaker condition and does not suffice.",
+      "topic": "2.2. Joint and conditional entropy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "For all discrete $X$ and $Y$"
+        },
+        {
+          "value": "B",
+          "text": "If and only if $X=Y$"
+        },
+        {
+          "value": "C",
+          "text": "If and only if $X$ and $Y$ are independent"
+        },
+        {
+          "value": "D",
+          "text": "Whenever $X$ and $Y$ are uncorrelated"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "2.2.3"
+    },
+    {
+      "id": "item-007",
+      "prompt": "Suppose data are generated by a distribution $P$, while an autoregressive model defines $Q_\\theta$. What does\n\n\n\n$$\\mathbb E_{X_{1:n}\\sim P}\\!\\left[-\\log_2q_\\theta(X_{1:n})\\right]$$\n\ncompute?",
+      "explanation": "**Correct answer: B.** Whose distribution sits inside the logarithm and whose supplies the averaging are different questions. This equals the entropy of P only when the model and source conditionals agree P-almost surely, and it is not the model's own predictive entropy, which averages under Q.",
+      "topic": "2.2. Joint and conditional entropy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The entropy of $P$ for every model"
+        },
+        {
+          "value": "B",
+          "text": "The cross-entropy of source $P$ relative to model $Q_\\theta$"
+        },
+        {
+          "value": "C",
+          "text": "The entropy of the parameters $\\theta$"
+        },
+        {
+          "value": "D",
+          "text": "The predictive entropy of $Q_\\theta$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "2.2.4"
+    },
+    {
+      "id": "item-008",
+      "prompt": "For a stationary process on a finite alphabet, the entropy rate can be written as",
+      "explanation": "**Correct answer: D.** Under stationarity the next-symbol conditional entropies are non-increasing and converge, and normalized block entropy has the same limit as a Cesàro mean. Note that the conditional entropy is not divided by n, which is the error in option C.",
+      "topic": "2.3. A coin, entropy rate, and English text",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\displaystyle h=\\lim_{n\\to\\infty}H(X_n)$"
+        },
+        {
+          "value": "B",
+          "text": "$\\displaystyle h=\\sum_{n=1}^{\\infty}H(X_n)$"
+        },
+        {
+          "value": "C",
+          "text": "$\\displaystyle h=\\lim_{n\\to\\infty}\\frac1nH(X_n\\mid X_1,\\ldots,X_{n-1})$"
+        },
+        {
+          "value": "D",
+          "text": "$\\displaystyle h=\\lim_{n\\to\\infty}H(X_n\\mid X_1,\\ldots,X_{n-1})=\\lim_{n\\to\\infty}\\frac1nH(X_1,\\ldots,X_n)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "2.3.2"
+    },
+    {
+      "id": "item-009",
+      "prompt": "What is the most accurate reading of Shannon's 1951 result for English text?",
+      "explanation": "**Correct answer: A.** Shannon emphasized the limits of the sample and the method. The result is historically important, but it is not an exact constant, and it is stated for a specific 27-symbol alphabet and protocol.",
+      "topic": "2.3. A coin, entropy rate, and English text",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "In a particular prediction experiment he obtained roughly 0.6 to 1.3 bits per symbol as lower and upper bounds at long context, and concluded the magnitude was about one bit"
+        },
+        {
+          "value": "B",
+          "text": "He measured the loss of a language model on a test corpus"
+        },
+        {
+          "value": "C",
+          "text": "He proved a universal constant of exactly 1 bit for every English character"
+        },
+        {
+          "value": "D",
+          "text": "He established the entropy rate of English independently of the alphabet and the preprocessing"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "2.3.3"
+    },
+    {
+      "id": "item-010",
+      "prompt": "What does bits per character computed from a particular LLM on a fixed corpus primarily measure?",
+      "explanation": "**Correct answer: C.** The result depends on corpus, preprocessing, available context, model, and possible leakage. Expected cross-entropy is no smaller than the corresponding source entropy. Average NLL on one finite corpus can fluctuate in either direction and does not by itself certify an upper or lower bound on entropy rate.",
+      "topic": "2.3. A coin, entropy rate, and English text",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The number of model parameters per character"
+        },
+        {
+          "value": "B",
+          "text": "A universal entropy of English independent of corpus and model"
+        },
+        {
+          "value": "C",
+          "text": "A model-dependent cross-entropy, that is a coding rate under the specified evaluation setup"
+        },
+        {
+          "value": "D",
+          "text": "A lower bound on the entropy rate of the source"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "2.3.4"
+    },
+    {
+      "id": "item-011",
+      "prompt": "Low predictive entropy of an LLM at a fixed context means that",
+      "explanation": "**Correct answer: A.** Entropy measures concentration and nothing else. A model can be confidently wrong, which is exactly the case where the entropy is low and the loss on the observed token is large.",
+      "topic": "2.4. Applications in ML/NLP/LLMs",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "probability mass is concentrated on a small number of tokens"
+        },
+        {
+          "value": "B",
+          "text": "the most probable token is factually correct"
+        },
+        {
+          "value": "C",
+          "text": "the model is well calibrated"
+        },
+        {
+          "value": "D",
+          "text": "the loss on the observed token will be small"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "2.4.1"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What is the general relationship between mean loss $\\widehat L_b$ and perplexity?",
+      "explanation": "**Correct answer: B.** The base must match the base the loss was measured in: e for nats, 2 for bits. The tokenizer defines the prediction events themselves, so perplexities from different tokenizers are not directly comparable.",
+      "topic": "2.4. Applications in ML/NLP/LLMs",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\operatorname{PPL}=\\log_b\\widehat L_b$, independent of tokenization"
+        },
+        {
+          "value": "B",
+          "text": "$\\operatorname{PPL}=b^{\\widehat L_b}$, and its numerical value also depends on tokenization"
+        },
+        {
+          "value": "C",
+          "text": "$\\operatorname{PPL}=b^{\\widehat L_b}$, and it is comparable across tokenizers"
+        },
+        {
+          "value": "D",
+          "text": "$\\operatorname{PPL}=1-\\widehat L_b$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "2.4.4"
+    },
+    {
+      "id": "item-013",
+      "prompt": "Why is it convenient to restrict to the support $\\mathcal S=\\{x:p(x)>0\\}$ in the Jensen proof of $H(X)\\le\\log_2n$?",
+      "explanation": "**Correct answer: C.** The convention 0 log 0 = 0 defines entropy correctly on the boundary of the simplex, so entropy itself is fine there. It is the intermediate expression inside the Jensen step that breaks at zero probability.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because entropy is defined only for strictly positive probabilities"
+        },
+        {
+          "value": "B",
+          "text": "To change the logarithm base from 2 to $e$"
+        },
+        {
+          "value": "C",
+          "text": "To avoid the undefined expression $1/p(x)$ when $p(x)=0$"
+        },
+        {
+          "value": "D",
+          "text": "Because Jensen's inequality requires a finite support"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "2.1.4"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Why does the module denote binary entropy by $h_2(p)$ rather than $H_2(p)$?",
+      "explanation": "**Correct answer: D.** The subscript 2 means two outcomes here, while in H₂ it usually means the Rényi order. The case of the letter is the only thing separating the two conventions.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Lowercase marks a quantity measured in nats"
+        },
+        {
+          "value": "B",
+          "text": "Uppercase $H$ is reserved for continuous random variables"
+        },
+        {
+          "value": "C",
+          "text": "The notation changes the logarithm base from 2 to $e$"
+        },
+        {
+          "value": "D",
+          "text": "Lowercase $h_2$ avoids confusion with Rényi entropy of order 2"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "2.3.1"
+    },
+    {
+      "id": "item-015",
+      "prompt": "Let $q_T(v)\\propto\\exp(z_v/T)$ for fixed logits. How does entropy vary with $T$?",
+      "explanation": "**Correct answer: B.** Unless all logits are equal, entropy increases strictly with temperature. The statement is specific to pure temperature scaling: truncation methods first change the support and then renormalize, so they need a separate argument.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is non-increasing"
+        },
+        {
+          "value": "B",
+          "text": "It is non-decreasing; in nats, $\\displaystyle \\frac{dH(q_T)}{dT}=\\frac{\\operatorname{Var}_{q_T}(z)}{T^3}\\ge0$"
+        },
+        {
+          "value": "C",
+          "text": "It is always constant"
+        },
+        {
+          "value": "D",
+          "text": "It is non-decreasing, and the same argument covers top-$k$ and top-$p$ filtering"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "2.4.2"
+    },
+    {
+      "id": "item-016",
+      "prompt": "In basic one-step exact speculative decoding, the mean probability of accepting a draft token is",
+      "explanation": "**Correct answer: A.** Acceptance is determined by the overlap of the draft and target distributions. Two drafts with identical entropy can have completely different acceptance rates, because entropy says nothing about where the mass lies.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\sum_v\\min\\{p(v),q(v)\\}=1-\\operatorname{TV}(p,q)$"
+        },
+        {
+          "value": "B",
+          "text": "$H(p)+H(q)$"
+        },
+        {
+          "value": "C",
+          "text": "$1-\\operatorname{TV}(p,q)$ only when $p$ and $q$ have equal entropy"
+        },
+        {
+          "value": "D",
+          "text": "$1-H(q)$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "2.4.3"
+    },
+    {
+      "id": "item-017",
+      "prompt": "Compute the entropy of $q_B=(0.40,0.30,0.20,0.10)$ in bits. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 1.846** (tolerance 0.002). The classifier q_A = (0.97, 0.01, 0.01, 0.01) from §2.1 has the same argmax but an entropy of only 0.242 bits. Entropy is what separates them; the decision does not.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.846,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "2.C.1"
+    },
+    {
+      "id": "item-018",
+      "prompt": "For the same $q_B$, compute the effective number of alternatives $2^{H}$. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 3.596** (tolerance 0.005). Four outcomes with these probabilities carry as much uncertainty as about 3.6 equally likely ones. The number need not be an integer and is not the size of the support.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 3.596,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "2.C.2"
+    },
+    {
+      "id": "item-019",
+      "prompt": "A biased die has $p=(1/2,1/4,1/8,1/16,1/32,1/32)$. Compute its entropy in bits. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 1.9375** (tolerance 0.002). Every probability is a power of two, so each surprisal is a whole number of bits and the entropy comes out exactly. A fair die would cost log₂ 6 = 2.585 bits, so the bias saves about 0.647 bits per roll.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.9375,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "2.C.3"
+    },
+    {
+      "id": "item-020",
+      "prompt": "A target distribution is $p=(0.9,0.1)$ and a draft is $q=(0.1,0.9)$. Compute the mean acceptance probability in one-step exact speculative decoding. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 0.2** (tolerance 0.005). The overlap is min(0.9, 0.1) + min(0.1, 0.9) = 0.2. A draft equal to p would give 1.0 at exactly the same entropy, which is why acceptance depends on agreement rather than on sharpness.",
+      "topic": "Computational block",
+      "note": "(optional)",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.2,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "2.C.4"
+    }
+  ]
+}

@@ -1,0 +1,487 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-17",
+  "language": "en",
+  "questions": [
+    {
+      "id": "19.4.1",
+      "prompt": "Why can a public benchmark lose discriminating power over time?",
+      "explanation": "**Correct answer: A.** Exposure can inflate scores, while saturation compresses differences among strong systems. Both effects motivate refreshed, private, or harder evaluation sets.",
+      "topic": "19.4. How a benchmark loses measurement power",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Item exposure combines with strong systems approaching the benchmark ceiling"
+        },
+        {
+          "value": "B",
+          "text": "A public metric stops reflecting human judgment after its first year"
+        },
+        {
+          "value": "C",
+          "text": "Published items can no longer be audited or corrected by experts"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "19.5.1",
+      "prompt": "Why should a model-selection decision not be based on one aggregate score?",
+      "explanation": "**Correct answer: B.** A product decision is multidimensional. Two systems with the same mean can differ sharply on a critical slice, cost, or tail latency.",
+      "topic": "19.5. Build an evaluation map before choosing benchmark names",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Aggregates are valid only for tasks with one correct class"
+        },
+        {
+          "value": "B",
+          "text": "The mean hides critical slices, cost, latency, and risk"
+        },
+        {
+          "value": "C",
+          "text": "Every aggregate metric has a systematic downward bias"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.5.2",
+      "prompt": "A confidence threshold retains 4 correct responses from 20 requests. What follows?",
+      "explanation": "**Correct answer: B.** Risk uses accepted responses as its denominator; coverage uses all requests. Four successes do not establish future reliability. If no responses were accepted, risk would be undefined.",
+      "topic": "19.5. Build an evaluation map before choosing benchmark names",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The system is proven error-free on all future requests"
+        },
+        {
+          "value": "B",
+          "text": "Coverage is 20%; observed risk is zero over four responses"
+        },
+        {
+          "value": "C",
+          "text": "Each token probability equals the probability of a correct response"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.6.1",
+      "prompt": "At planned N=500, assume success probabilities 0.955 and 0.950. What does the independent approximation imply?",
+      "explanation": "**Correct answer: C.** These are assumed probabilities: 95.5% cannot be observed in one N=500 binary run. The normal half-width is about 2.64 points, larger than the 0.5-point gap; an observed comparison on shared tasks requires paired outcomes.",
+      "topic": "19.6. Worked example A: what does half a percentage point mean?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "System A is proven better under every item-level error pattern"
+        },
+        {
+          "value": "B",
+          "text": "The gap is exactly five extra successes and is therefore significant"
+        },
+        {
+          "value": "C",
+          "text": "The planned half-width is substantially larger than the probability gap"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "19.6.2",
+      "prompt": "How many tasks per system target a normal 95% difference-interval half-width of 0.5 pp for independent rates near 95%?",
+      "explanation": "**Correct answer: A.** Rounding 2·0.95·0.05·(1.96/0.005)² up gives 14,599. This plans interval precision, not a specified statistical power.",
+      "topic": "19.6. Worked example A: what does half a percentage point mean?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About 14,599 items per system"
+        },
+        {
+          "value": "B",
+          "text": "About 3,650 items per system"
+        },
+        {
+          "value": "C",
+          "text": "About 500 items per system"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "19.6.3",
+      "prompt": "Two N=200 tables give 85%/80%. Which has the smaller exact McNemar p-value?",
+      "explanation": "**Correct answer: B.** All ten disagreements favor A in the second table: p=0.001953, versus about 0.098737 in the first. Aggregates are insufficient.",
+      "topic": "19.6. Worked example A: what does half a percentage point mean?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "20 A-only successes, 10 B-only"
+        },
+        {
+          "value": "B",
+          "text": "10 A-only successes, 0 B-only"
+        },
+        {
+          "value": "C",
+          "text": "Equal p-values because accuracies match"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.7.1",
+      "prompt": "Why use several hard sets—HLE, FrontierMath, and ARC-AGI—instead of one “hardest benchmark”?",
+      "explanation": "**Correct answer: B.** A low score can have different causes. The sets probe expert knowledge, original mathematical problems, and transfer of rules to novel visual structures.",
+      "topic": "19.7. Difficulty has several sources: HLE, FrontierMath, and ARC-AGI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To obtain one averaged coefficient of general intelligence"
+        },
+        {
+          "value": "B",
+          "text": "To separate expert knowledge, mathematics, and abstract generalization"
+        },
+        {
+          "value": "C",
+          "text": "Because each set supports only one architecture family"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.8.1",
+      "prompt": "With n=20 generations and c=4 successes, what is the unbiased pass@10 estimate?",
+      "explanation": "**Correct answer: C.** The formula 1−C(n−c,k)/C(n,k) gives 0.9567. Unbiasedness for at least one success requires independent draws from a fixed policy. Plugging c/n into the nonlinear formula introduces bias.",
+      "topic": "19.8. `pass@k`: finding one solution is not the same as being reliable",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.8926 — the plug-in estimate with independent repeated attempts"
+        },
+        {
+          "value": "B",
+          "text": "0.2000 — the observed success rate of one random generation"
+        },
+        {
+          "value": "C",
+          "text": "0.9567 — the finite-sample estimate without replacement"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "19.8.2",
+      "prompt": "What does a large gap between pass@1 and pass@10 mean?",
+      "explanation": "**Correct answer: A.** The gap separates search capability from single-attempt reliability. A product that permits one try may gain little from a high pass@10.",
+      "topic": "19.8. `pass@k`: finding one solution is not the same as being reliable",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "There is solution-finding headroom, but the first attempt remains unreliable"
+        },
+        {
+          "value": "B",
+          "text": "The model necessarily switches among ten different solution algorithms"
+        },
+        {
+          "value": "C",
+          "text": "pass@10 penalizes errors more strictly than a one-attempt metric"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "19.9.1",
+      "prompt": "What is the main limitation of a composite index or arena rating?",
+      "explanation": "**Correct answer: B.** A composite is useful as a broad map, but its coordinate system is determined by its users, tasks, weights, and aggregation protocol. Product decisions need private slices as well.",
+      "topic": "19.9. Human arenas and composite indices answer someone else’s question",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An arena cannot collect human pairwise preferences at scale"
+        },
+        {
+          "value": "B",
+          "text": "The index inherits someone else’s task weights, audience, and aggregation"
+        },
+        {
+          "value": "C",
+          "text": "A composite is always statistically less stable than a single metric"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.10.1",
+      "prompt": "How can position bias in pairwise LLM judging be reduced?",
+      "explanation": "**Correct answer: C.** Swapping exposes preference for the first or second position. A stronger protocol also controls rubric, length, judge family, and cost.",
+      "topic": "19.10. LLM judges: a synthetic 30-point illusion",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always show the new system first in every comparison"
+        },
+        {
+          "value": "B",
+          "text": "Raise judge temperature until order dependence disappears"
+        },
+        {
+          "value": "C",
+          "text": "Evaluate A/B and B/A and aggregate by candidate identity"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "19.10.2",
+      "prompt": "How many calls per pair are required by three LLM judges evaluating both A/B and B/A orders?",
+      "explanation": "**Correct answer: A.** Each of the three judges evaluates two orderings, so the protocol uses 3×2=6 calls. Bias control has a measurable cost.",
+      "topic": "19.10. LLM judges: a synthetic 30-point illusion",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "6 calls per pair"
+        },
+        {
+          "value": "B",
+          "text": "3 calls per pair"
+        },
+        {
+          "value": "C",
+          "text": "2 calls per pair"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "19.11.1",
+      "prompt": "Why should safety, truthfulness, and general capability not be collapsed into one number?",
+      "explanation": "**Correct answer: B.** A system can be capable but unsafe, or factually strong yet vulnerable to adversarial prompts. These axes should be measured separately and combined only through an explicit product utility.",
+      "topic": "19.11. Multimodal capability, safety, truthfulness, and honesty are not one axis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Safety cannot be measured quantitatively on a fixed evaluation set"
+        },
+        {
+          "value": "B",
+          "text": "The axes describe different risks and need different failure criteria"
+        },
+        {
+          "value": "C",
+          "text": "Truthfulness requires humans, while capability requires only tests"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.12.1",
+      "prompt": "How does working context differ from a nominal context window?",
+      "explanation": "**Correct answer: C.** Accepting one million tokens does not guarantee uniform use of the beginning, middle, and end. Working context depends on task, evidence position, and quality threshold.",
+      "topic": "19.12. Long context: accepted length versus usable evidence",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Working context is always half of the advertised context length"
+        },
+        {
+          "value": "B",
+          "text": "Nominal length belongs to prefill, while working length belongs to decode"
+        },
+        {
+          "value": "C",
+          "text": "It is the region where evidence is used above a chosen threshold"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "19.12.2",
+      "prompt": "What does 0.246752 mean for the synthetic U-shaped profile?",
+      "explanation": "**Correct answer: A.** The 0.9 threshold selects two disjoint edges under a uniform position distribution and an assumed curve.",
+      "topic": "19.12. Long context: accepted length versus usable evidence",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The combined measure of two edge regions"
+        },
+        {
+          "value": "B",
+          "text": "A contiguous 246752-token usable window"
+        },
+        {
+          "value": "C",
+          "text": "Measured accuracy of a particular LLM"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "19.13.1",
+      "prompt": "Why should a harness call the system once per item within a fixed run and trial?",
+      "explanation": "**Correct answer: A.** A second call to a stochastic or stateful model can produce a different answer and add cost. All metrics should be derived from one stored observation.",
+      "topic": "19.13. A minimal evaluation harness: one call, one observed output",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "So output, metrics, latency, and cost refer to one observed response"
+        },
+        {
+          "value": "B",
+          "text": "Because a second call deterministically reproduces the first response"
+        },
+        {
+          "value": "C",
+          "text": "To prohibit computing several different metrics on the same example"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "19.13.2",
+      "prompt": "A metric raises after a successful model response. What does the full teaching notebook do?",
+      "explanation": "**Correct answer: C.** An evaluator bug is not a model failure. A None aggregate prevents publication of a misleading quality result.",
+      "topic": "19.13. A minimal evaluation harness: one call, one observed output",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Drops the row and reduces the denominator"
+        },
+        {
+          "value": "B",
+          "text": "Silently assigns a model failure"
+        },
+        {
+          "value": "C",
+          "text": "Retains the response and invalidates the aggregate"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "19.15.1",
+      "prompt": "Why keep a private golden set versioned?",
+      "explanation": "**Correct answer: B.** Privacy reduces direct tuning to the test; versioning ties a result to specific items, rules, slices, and date. The set becomes reproducible change control.",
+      "topic": "19.15. A private golden set in seven deliberate steps",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To avoid documenting criteria, slices, and evaluation rules"
+        },
+        {
+          "value": "B",
+          "text": "To reduce test-specific tuning and track dataset versions"
+        },
+        {
+          "value": "C",
+          "text": "To prevent the model from solving any publicly released task"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.15.2",
+      "prompt": "A private set repeatedly guides prompt tuning. What changes?",
+      "explanation": "**Correct answer: B.** Selection based on results creates adaptation without gradients or public task disclosure.",
+      "topic": "19.15. A private golden set in seven deliberate steps",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It automatically becomes weight training"
+        },
+        {
+          "value": "B",
+          "text": "It becomes development evidence; a separate final audit is needed"
+        },
+        {
+          "value": "C",
+          "text": "Secrecy alone preserves its independence"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "19.17.1",
+      "prompt": "What should a reported-result passport contain beyond benchmark name and score?",
+      "explanation": "**Correct answer: C.** The same benchmark name does not guarantee the same protocol. Without a full passport, the result cannot be reproduced or attributed to model versus system scaffolding.",
+      "topic": "19.17. Read two passports: the benchmark and the reported run",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only parameter count, context length, and model name"
+        },
+        {
+          "value": "B",
+          "text": "Only run date, GPU type, and the final aggregate score"
+        },
+        {
+          "value": "C",
+          "text": "Version, protocol, attempts, tools, cost, and uncertainty"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

@@ -4,13 +4,15 @@
 
 Personal website and course library: <https://vladkulikov.com/>
 
-Public bilingual lecture library for three courses:
+Public bilingual lecture and quiz library for three courses:
 
 - Modern LLMs
 - RL for LLM
 - Information Theory for Machine Learning
 
-The repository contains lecture text and illustrations only. Quizzes, exercises, solutions, project materials, and notebooks are intentionally excluded and remain part of the complete Stepik courses.
+The repository contains lectures, illustrations, and authored module quizzes with
+answer checking and worked answers. Exercises, project materials, and downloadable
+notebooks remain a later publication stage.
 
 ## Course editions on Stepik
 
@@ -22,29 +24,31 @@ The repository contains lecture text and illustrations only. Quizzes, exercises,
 
 ## What the complete Stepik courses add
 
-This repository is the open lecture reader. The complete Stepik editions add the assessment and practical routes:
+The website now includes 943 authored quiz questions per language. The complete
+Stepik editions also provide the remaining practical routes:
 
-| Course | Additional assessment and practice on Stepik |
-|---|---|
-| Modern LLMs | 299 auto-graded questions; 137 self-checks; 65 analytical and computational exercises; 36 project exercises; 19 main, 17 project-demo, and 4 Capstone notebooks. The complete course is free on Stepik |
-| Reinforcement Learning for LLM | 109 native Stepik tests; 151 self-checks; 77 analytical and computational tasks; 77 programming tasks; 13 notebooks |
-| Information Theory for ML | 377 auto-graded questions; all 78 exercises with detailed solutions, including 12 Python exercises. The complete course is free on Stepik |
+| Course | Published website quizzes (per language) | Further practice on Stepik |
+|---|---|---|
+| Modern LLMs | 415 choice questions across 20 modules | Exercises, projects, solutions and notebooks |
+| Reinforcement Learning for LLM | 151 platform-bank questions across 13 modules; objective parts checked automatically, open/code tasks reviewed against worked answers | Core exercises, programming tasks, solutions and notebooks |
+| Information Theory for ML | 377 choice and numeric questions across 15 modules; module 16 is a reference appendix without an authored quiz | Exercises and detailed solutions |
 
 The canonical authoring repositories are maintained separately. This public repository is a generated, publication-safe copy.
 
 ## Static pages and search metadata
 
 `npm run build:pages` creates a portable `dist-pages/` directory for GitHub Pages:
-two home pages, six course overviews, 98 complete lecture pages, and a custom
+two home pages, six course overviews, 98 complete lecture pages, 96 quiz pages, and a custom
 `404.html`. Lectures, KaTeX formulas, illustrations and ordinary navigation are
 present in the original HTML. React hydrates that same interface to provide
 module search, collapsible panels and preservation of reading position on
 language changes. With JavaScript unavailable, native navigation and expandable
-module/section indexes remain available.
+module/section indexes remain available. Quiz questions, options, and native
+expandable worked answers also remain readable without JavaScript.
 
 Permanent addresses use `/courses/<course-key>/<module-key>/` in English and
 `/ru/courses/<course-key>/<module-key>/` in Russian. Course overviews omit the
-module key. Module keys identify subjects, not reading order: in Modern LLMs,
+module key. Module quiz URLs append `tests/` to the lecture URL. Module keys identify subjects, not reading order: in Modern LLMs,
 for example, `module-18` is the Basic Transformer lecture at reading position 3.
 Do not renumber keys when changing the catalog order. Previous query-based URLs
 are translated to permanent addresses by the browser, preserving section hashes;
@@ -79,14 +83,46 @@ links, heading hierarchy, formulas, images, legacy route mappings and content
 hashes. It runs automatically at the end of `build:pages`. The source markup
 and publication/license checks remain separate.
 
-## Planned learning materials
+## Quiz publication and progress
 
-The next passes are authorized to add public assessments with answer checking,
-exercises with answers hidden until expanded, and existing notebooks/solutions
-as text or downloadable files. Code execution is outside that scope. These
-materials have not been copied into this first static-lecture migration; their
-publication boundaries and access wording must be updated together when the
-actual materials and answer-checking interface are implemented.
+`python scripts/export-quizzes.py` exports the current authored question files
+from the three local canonical repositories without modifying them. It accepts
+the same `--source-root COURSE=PATH` overrides as the lecture exporter. Modern
+module keys follow `previous_id`; RU/EN question and grading parity is required.
+Information Theory uses stable internal question IDs because a few optional
+topics have different section numbers in the translations; original source
+question numbers are still displayed. File provenance and SHA-256 hashes are
+recorded in `QUIZ_CONTENT_AUDIT.json`.
+
+`public/quizzes/**` contains the localized question banks and worked answers.
+`app/generated/quizzes.json` is their lightweight route manifest. RL uses only
+the current canonical `route="platform"` records, rather than obsolete Stepik
+build artifacts. Reviewed numeric/matching contracts and ordinal answer keys
+are declared in `scripts/quiz-grading-overrides.json`; original reasoning stays
+available in full. Where a prompt also asks for an explanation, the UI explicitly
+labels the automatic result as checking only the selection/numeric part.
+
+Checking uses exact sets for choices, ordered values for matching, and displayed
+absolute tolerances for finite numeric inputs (including decimal commas and
+simple fractions). Open reasoning and code tasks use self-review, never keyword
+grading. There is no server-side grading or code execution. All published answer
+keys are public study material, not secure examination credentials.
+
+Progress, checked state, expanded answers, and free-form drafts use localStorage
+under a language-independent module/revision key. They stay in the browser and
+are not sent to a server. If storage is blocked, the current session still works
+in memory. Module reset asks for an explicit inline confirmation. Menus and the
+reading position use the same navigation/restoration logic as lectures.
+
+`npm run check:quizzes` tests every published key, alternative choice, numeric
+parser, tolerance boundary, translation contract, and quiz route. It runs after
+HTML validation in `build:pages`, including the existing Pages deployment job.
+
+## Later learning materials
+
+Later passes will add exercises with answers hidden until expanded, and existing
+notebooks/solutions as text or downloadable files. Code execution is outside that
+scope. Those additional materials have not been copied in this quiz stage.
 
 ## Publication edition
 
@@ -104,6 +140,7 @@ To rebuild from local canonical repositories without changing them:
 
 ```powershell
 python scripts/refresh-course-content.py
+python scripts/export-quizzes.py
 npm ci
 npm run check:math
 npm run check:publication

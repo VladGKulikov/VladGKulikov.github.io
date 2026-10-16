@@ -1,0 +1,463 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-01",
+  "language": "en",
+  "questions": [
+    {
+      "id": "1.1.1",
+      "prompt": "What does an autoregressive language model compute at each step?",
+      "explanation": "**Correct answer: C.** The model scores the next token; the system selects it and repeats the step. Source retrieval and answer verification are separate system responsibilities.",
+      "topic": "1.1. Start with a decision",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All tokens of the completed answer simultaneously"
+        },
+        {
+          "value": "B",
+          "text": "Independent external verification of every statement"
+        },
+        {
+          "value": "C",
+          "text": "Scores for the next token given the available context"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "1.2.1",
+      "prompt": "What does the third form of work—reading an open implementation—mean in this course?",
+      "explanation": "**Correct answer: B.** We inspect selected operations and relate them to formulas. Kernel development, distributed-training implementation, and production operation require separate study. The MiniLLM final project remains a trainable teaching model.",
+      "topic": "1.2. From a small calculation to an implementation you can read",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Developing distributed training and specialized kernels for a production service"
+        },
+        {
+          "value": "B",
+          "text": "Connecting a studied mechanism to its configuration and selected source code"
+        },
+        {
+          "value": "C",
+          "text": "Certifying operational readiness by running the program on a GPU"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "1.5.1",
+      "prompt": "What most reliably answers the question \"how is the computation graph built\"?",
+      "explanation": "**Correct answer: A.** A verified configuration and implementation let you trace the computation graph. A brand name or leaderboard position does not determine KV-head geometry, MoE routing, or positional encoding.",
+      "topic": "1.5. Two passports: model and system",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A verified config.json together with the model's implementation code"
+        },
+        {
+          "value": "B",
+          "text": "The model's name and the size class claimed by the vendor"
+        },
+        {
+          "value": "C",
+          "text": "The model's position on a public leaderboard at release time"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "1.5.2",
+      "prompt": "Why does the model passport need a system passport beside it?",
+      "explanation": "**Correct answer: C.** The same weights produce different capabilities and risks under different tools, network access, shared memory, and controls. Without a system passport, a result or incident cannot be reproduced or interpreted correctly.",
+      "topic": "1.5. Two passports: model and system",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To collapse every model metric into one number"
+        },
+        {
+          "value": "B",
+          "text": "To conceal the exact weight revision in a published result"
+        },
+        {
+          "value": "C",
+          "text": "To record tools, permissions, isolation, memory, and evaluation"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "1.6.1",
+      "prompt": "An announcement reads “1.6T total / 49B active.” What primarily determines weight storage?",
+      "explanation": "**Correct answer: B.** The router selects different experts for different tokens, so the full parameter bank must be available, locally or through distributed placement. Active parameters provide a first estimate of weight-side compute per token, not total weight storage.",
+      "topic": "1.6. Axis I up close: dense and MoE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The 49B active: only experts selected for the current token need storage"
+        },
+        {
+          "value": "B",
+          "text": "The 1.6T total: the full bank must remain available for execution"
+        },
+        {
+          "value": "C",
+          "text": "The 1.6T-to-49B ratio: memory is set only by the sparsity factor"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "1.6.2",
+      "prompt": "A card reports different active counts for prefill and decode. How should the passport record them?",
+      "explanation": "**Correct answer: B.** The active path can vary by phase. Neither count replaces total parameters or directly measures latency.",
+      "topic": "1.6. Axis I up close: dense and MoE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Use the smaller count for every phase"
+        },
+        {
+          "value": "B",
+          "text": "Keep both counts with their phase and counting convention"
+        },
+        {
+          "value": "C",
+          "text": "Add them and call the sum the stored weight count"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "1.7.1",
+      "prompt": "gpt-oss-120b has 117B parameters and ships with MXFP4 weights. How should the artifact size be read?",
+      "explanation": "**Correct answer: C.** 57.89 GiB assumes every parameter costs the same 4.25 bits. The official index reports 65,248,815,744 bytes, about 60.77 GiB, because tensor formats, packing, and auxiliary data are heterogeneous.",
+      "topic": "1.7. Worked comparison: gpt-oss-120b and Llama 4 Scout",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "117B × 4.25/8 ≈ 57.89 GiB is the exact complete size of the official files"
+        },
+        {
+          "value": "B",
+          "text": "MXFP4 affects speed only, so the artifact remains about 218 GiB"
+        },
+        {
+          "value": "C",
+          "text": "Idealized: 57.89 GiB; official original artefact: about 60.77 GiB"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "1.7.2",
+      "prompt": "What does the ratio 34/10.2 ≈ 3.33 mean in the Scout versus gpt-oss-120b teaching comparison?",
+      "explanation": "**Correct answer: A.** The 2·N_active estimate gives about 34 versus 10.2 GFLOP per token for weight-side matrix operations. Actual latency also depends on attention, memory, routing, communication, batching, and kernels.",
+      "topic": "1.7. Worked comparison: gpt-oss-120b and Llama 4 Scout",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A weight-matrix FLOP ratio; the latency ratio depends on the runtime"
+        },
+        {
+          "value": "B",
+          "text": "A guaranteed latency ratio at every context length and on every device"
+        },
+        {
+          "value": "C",
+          "text": "Only a checkpoint-size ratio; the two models perform identical compute"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "1.8.1",
+      "prompt": "What exactly does an advertised 1M-token context window mean?",
+      "explanation": "**Correct answer: B.** The advertised window specifies supported length. It does not guarantee uniform quality across positions or tasks. Evaluate how well the system uses distant evidence on the intended workload, and account for KV memory separately from that quality measurement.",
+      "topic": "1.8. Axis II: context means length, quality, and cost",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The KV cache for such a request is guaranteed to fit on one accelerator"
+        },
+        {
+          "value": "B",
+          "text": "The model accepts that length; per-position quality is measured separately"
+        },
+        {
+          "value": "C",
+          "text": "The model makes equally good use of every one of the million positions"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "1.9.1",
+      "prompt": "Why is the label \"multimodal\" not enough to compare two models?",
+      "explanation": "**Correct answer: A.** The same label covers both \"understands an image\" and \"generates audio\". Axis III of the passport requires input, output and the fusion method to be stated separately.",
+      "topic": "1.9. Axis III: modalities are directional",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It says nothing about input and output modalities or where fusion happens"
+        },
+        {
+          "value": "B",
+          "text": "Multimodal models all rely on one and the same vision encoder"
+        },
+        {
+          "value": "C",
+          "text": "Modalities affect neither the token price nor the context budget"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "1.10.1",
+      "prompt": "How does configurable reasoning effort differ from adaptive thinking?",
+      "explanation": "**Correct answer: C.** Configurable effort lets the caller select an effort level; adaptive thinking allocates computation through the model or controller. Both can coexist. Neither alone guarantees fixed cost, latency, or better quality.",
+      "topic": "1.10. Axis IV: who controls the reasoning budget?",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Adaptive mode switches reasoning off entirely in favour of answer speed"
+        },
+        {
+          "value": "B",
+          "text": "Configurable mode exists only in multimodal model families"
+        },
+        {
+          "value": "C",
+          "text": "The caller selects an effort level; the model may allocate computation adaptively"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "1.11.1",
+      "prompt": "Which statement most precisely describes the open-weights status?",
+      "explanation": "**Correct answer: B.** Published weights make a specific artefact inspectable and runnable under its licence. Training data, code, and logs require separate checks: openness has several independent dimensions.",
+      "topic": "1.11. Axis V: access, licensing, and practical openness",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model is cleared for any commercial use with no restrictions at all"
+        },
+        {
+          "value": "B",
+          "text": "Weights are published, but data and the training stack may stay closed"
+        },
+        {
+          "value": "C",
+          "text": "Data, training recipe, checkpoints and training logs are all reproducible"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "1.12.1",
+      "prompt": "One instruction requires keeping experiment logs for 30 days; another requires deleting temporary exports after 7 days. The assistant answers “30 days” about a log but cites the export instruction. What is wrong?",
+      "explanation": "**Correct answer: A.** The number is correct, but the cited passage concerns a different object. Answer correctness and source support need separate checks; an existing document is not enough.",
+      "topic": "1.12. Axis VI: from token prices to accepted answers",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The source exists, but an export rule does not support the log-retention claim"
+        },
+        {
+          "value": "B",
+          "text": "Nothing: a correct number is enough for acceptance"
+        },
+        {
+          "value": "C",
+          "text": "The number of days must also be wrong"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "1.12.2",
+      "prompt": "What do you need to know to estimate the real cost of an API task?",
+      "explanation": "**Correct answer: A.** Include every billed attempt and tool call under the applicable cache and pricing rules. To compare cost per accepted task, divide by the number of results that meet the same acceptance criterion.",
+      "topic": "1.12. Axis VI: from token prices to accepted answers",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Applicable rates, billed tokens, caching, tools, and all execution attempts"
+        },
+        {
+          "value": "B",
+          "text": "The input token price and the size of the system prompt in characters"
+        },
+        {
+          "value": "C",
+          "text": "The model's total parameter count and the accelerator class in use"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "1.12.3",
+      "prompt": "A model has 550B total and 55B active parameters. What are its idealized four-bit weight payload and weight-matmul estimate per generated token?",
+      "explanation": "**Correct answer: A.** At four bits per parameter, 550B × 4/8 = 275 GB. The decode weight-matmul estimate is 2 × 55B = 110 GFLOP/token. Format metadata, attention, state, and system overhead are separate.",
+      "topic": "1.12. Axis VI: from token prices to accepted answers",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "275 GB and roughly 110 GFLOP/token"
+        },
+        {
+          "value": "B",
+          "text": "27.5 GB and roughly 55 GFLOP/token"
+        },
+        {
+          "value": "C",
+          "text": "1.10 TB and roughly 550 GFLOP/token"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "1.12.4",
+      "prompt": "A system spent 2.80 USD on 100 tasks, including failures, and accepted 80 results. What is the cost per accepted task?",
+      "explanation": "**Correct answer: A.** Divide total spend by accepted tasks: 2.80 / 80 = 0.035 USD. Dividing by 100 would give cost per submitted task.",
+      "topic": "1.12. Axis VI: from token prices to accepted answers",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.035 USD"
+        },
+        {
+          "value": "B",
+          "text": "0.028 USD"
+        },
+        {
+          "value": "C",
+          "text": "0.280 USD"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "1.13.1",
+      "prompt": "A model is announced but accessible only through a restricted programme. What is its status for an ordinary API customer?",
+      "explanation": "**Correct answer: C.** Announcement, restricted access, general API availability, and weight release are separate events. Record only the status supported by evidence.",
+      "topic": "1.13. Dated reference: APIs and product availability",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Generally available: an announcement is sufficient"
+        },
+        {
+          "value": "B",
+          "text": "Open weights: someone has access"
+        },
+        {
+          "value": "C",
+          "text": "Restricted access; general API availability is unconfirmed"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "1.15.1",
+      "prompt": "Why can provider-reported scores from different models not simply be merged into one ranking?",
+      "explanation": "**Correct answer: C.** A reported number may be valid for its setup yet incomparable with another harness, budget, or dataset version. One ranking requires one protocol—the subject of Module 19.",
+      "topic": "1.15. From public signal to engineering evidence",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Benchmark scores are random and carry no useful signal about a model"
+        },
+        {
+          "value": "B",
+          "text": "Only models with open weights can be compared against one another"
+        },
+        {
+          "value": "C",
+          "text": "The harnesses, budgets, dataset versions, and attempt counts may differ"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "1.17.1",
+      "prompt": "Which way of fetching config.json makes the result reproducible?",
+      "explanation": "**Correct answer: B.** A branch moves: after its next update, the same URL may serve a different file and silently change the passport arithmetic. Reproducibility comes from an immutable revision recorded with the result.",
+      "topic": "1.17. Code, level 1: a passport from a validated `config.json`",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Downloading the main branch and recording the access date alongside"
+        },
+        {
+          "value": "B",
+          "text": "Resolving the branch to an exact commit SHA with schema and hash checks"
+        },
+        {
+          "value": "C",
+          "text": "Copying the config out of a model card or a survey blog post"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,735 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-10",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "What does prefix Kolmogorov complexity $K_U(x)$ measure?",
+      "explanation": "**Correct answer: D.** K_U(x) measures program length, not runtime, semantics, or probability without a specified model.",
+      "topic": "10.2. The shortest program as a description length",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The semantic value of the string"
+        },
+        {
+          "value": "B",
+          "text": "The entropy of an unknown distribution that generated $x$"
+        },
+        {
+          "value": "C",
+          "text": "The runtime of the fastest algorithm"
+        },
+        {
+          "value": "D",
+          "text": "The length of the shortest self-delimiting program for $x$ on a fixed universal machine $U$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "10.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "Why does a general upper bound for prefix complexity contain overhead beyond $|x|$?",
+      "explanation": "**Correct answer: D.** A typical bound is K(x)≤|x|+K(|x|)+O(1).",
+      "topic": "10.2. The shortest program as a description length",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A universal machine must be slow"
+        },
+        {
+          "value": "B",
+          "text": "Prefix complexity is defined only for random strings"
+        },
+        {
+          "value": "C",
+          "text": "The string is always encrypted first"
+        },
+        {
+          "value": "D",
+          "text": "The program must be self-delimiting, so the decoder must identify where the length description ends and $x$ begins"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "10.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "What does the invariance theorem state?",
+      "explanation": "**Correct answer: A.** The machine remains part of the definition; the theorem controls the difference by a fixed interpreter cost.",
+      "topic": "10.2. The shortest program as a description length",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An optimal universal machine simulates another prefix machine with an additive constant independent of $x$"
+        },
+        {
+          "value": "B",
+          "text": "Every universal machine has the same shortest program"
+        },
+        {
+          "value": "C",
+          "text": "$K(x)$ is completely independent of programming language"
+        },
+        {
+          "value": "D",
+          "text": "The interpreter cost is always zero"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "10.2.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "How should $K(x\\mid y)$ be interpreted?",
+      "explanation": "**Correct answer: A.** y is side information, and the quantity concerns two individual objects.",
+      "topic": "10.2. The shortest program as a description length",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The length of the shortest additional description of $x$ when $y$ is already available to the decoder"
+        },
+        {
+          "value": "B",
+          "text": "The Hamming distance between $x$ and $y$"
+        },
+        {
+          "value": "C",
+          "text": "The decoding time of $x$"
+        },
+        {
+          "value": "D",
+          "text": "The entropy of $y$ after observing $x$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "10.2.4"
+    },
+    {
+      "id": "item-005",
+      "prompt": "Which statement about a short algorithmic description is correct?",
+      "explanation": "**Correct answer: D.** Description length and semantic or computational properties are different levels of analysis.",
+      "topic": "10.2. The shortest program as a description length",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It automatically provides a causal model"
+        },
+        {
+          "value": "B",
+          "text": "It proves that an intelligent agent created the object"
+        },
+        {
+          "value": "C",
+          "text": "gzip will always find it"
+        },
+        {
+          "value": "D",
+          "text": "It is evidence of regularity, but does not guarantee meaning, truth, usefulness, or fast computation"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "10.2.5"
+    },
+    {
+      "id": "item-006",
+      "prompt": "According to the counting argument, what is the largest possible fraction of $n$-bit strings with $K(x)<n-c$?",
+      "explanation": "**Correct answer: B.** There are fewer than 2^(n-c) programs shorter than n-c and 2^n strings of length n.",
+      "topic": "10.3. Incompressibility, uncomputability, and real compressors",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$1/c$"
+        },
+        {
+          "value": "B",
+          "text": "Less than $2^{-c}$"
+        },
+        {
+          "value": "C",
+          "text": "Exactly $1/2$"
+        },
+        {
+          "value": "D",
+          "text": "It approaches one"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "10.3.1"
+    },
+    {
+      "id": "item-007",
+      "prompt": "What computability property does $K(x)$ have?",
+      "explanation": "**Correct answer: D.** Program enumeration improves upper bounds but cannot certify that the minimum has been reached.",
+      "topic": "10.3. Incompressibility, uncomputability, and real compressors",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is computable, but only exponentially slowly"
+        },
+        {
+          "value": "B",
+          "text": "It is lower semicomputable"
+        },
+        {
+          "value": "C",
+          "text": "It equals the length of the best ZIP archive"
+        },
+        {
+          "value": "D",
+          "text": "It is upper semicomputable but uncomputable"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "10.3.2"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What does a real lossless compressor $C$ provide for $K(x)$?",
+      "explanation": "**Correct answer: D.** The constant pays for the decoder, format, and input conventions.",
+      "topic": "10.3. Incompressibility, uncomputability, and real compressors",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An exact value within one bit"
+        },
+        {
+          "value": "B",
+          "text": "A lower bound"
+        },
+        {
+          "value": "C",
+          "text": "An unbiased statistical estimate"
+        },
+        {
+          "value": "D",
+          "text": "A computable upper bound $K(x)\\le |C(x)|+c_C$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "10.3.3"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Why can a PRNG stream with a short seed compress poorly under gzip despite having small $K(x)$ relative to its length?",
+      "explanation": "**Correct answer: A.** The short generative description may lie outside the language of the chosen compressor.",
+      "topic": "10.3. Incompressibility, uncomputability, and real compressors",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "gzip searches a restricted class of regularities rather than enumerating all programs"
+        },
+        {
+          "value": "B",
+          "text": "A PRNG must use genuine physical randomness"
+        },
+        {
+          "value": "C",
+          "text": "Kolmogorov complexity applies only to text"
+        },
+        {
+          "value": "D",
+          "text": "The seed is not part of the description"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "10.3.4"
+    },
+    {
+      "id": "item-010",
+      "prompt": "How are the entropy of a computable distribution $P$ and expected prefix complexity related?",
+      "explanation": "**Correct answer: C.** The upper bound additionally pays for describing the distribution; on long blocks this cost vanishes per symbol.",
+      "topic": "10.4. Where Shannon and Kolmogorov meet",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They are exactly equal for every individual outcome"
+        },
+        {
+          "value": "B",
+          "text": "$\\mathbb E K(X)\\le0$"
+        },
+        {
+          "value": "C",
+          "text": "$H_2(P)\\le\\mathbb E K(X)\\le H_2(P)+K(P)+O(1)$"
+        },
+        {
+          "value": "D",
+          "text": "They are unrelated even in expectation"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "10.4.1"
+    },
+    {
+      "id": "item-011",
+      "prompt": "Why is $2^{-|p|}$ a natural weight for a prefix program $p$?",
+      "explanation": "**Correct answer: B.** Prefix-freeness turns program lengths into admissible code weights.",
+      "topic": "10.5. Algorithmic probability and Solomonoff induction",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All programs have the same length"
+        },
+        {
+          "value": "B",
+          "text": "Prefix programs satisfy Kraft's inequality, so these weights sum to at most one"
+        },
+        {
+          "value": "C",
+          "text": "This choice makes the universal predictor computable"
+        },
+        {
+          "value": "D",
+          "text": "The weight is independent of the universal machine"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "10.5.1"
+    },
+    {
+      "id": "item-012",
+      "prompt": "How does the sequential Solomonoff $M(x)$ differ from an ordinary probability measure?",
+      "explanation": "**Correct answer: B.** Hence M(x)≥M(x0)+M(x1) in general.",
+      "topic": "10.5. Algorithmic probability and Solomonoff induction",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is always uniform"
+        },
+        {
+          "value": "B",
+          "text": "It is a semimeasure: mass may be lost to programs that halt or compute forever"
+        },
+        {
+          "value": "C",
+          "text": "It does not use programs"
+        },
+        {
+          "value": "D",
+          "text": "It is defined only for a one-symbol alphabet"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "10.5.2"
+    },
+    {
+      "id": "item-013",
+      "prompt": "What does universal dominance express?",
+      "explanation": "**Correct answer: C.** Typically M(x)≥2^(-K(μ)-O(1))μ(x), which bounds excess cumulative log loss.",
+      "topic": "10.5. Algorithmic probability and Solomonoff induction",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All computable models have the same prior"
+        },
+        {
+          "value": "B",
+          "text": "$M$ equals the true source after one symbol"
+        },
+        {
+          "value": "C",
+          "text": "For any computable model $\\mu$, $M$ assigns at least $\\mu(x)$ times a factor determined by the model's description complexity"
+        },
+        {
+          "value": "D",
+          "text": "Every LLM implements $M$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "10.5.3"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Why can Solomonoff induction not be implemented directly?",
+      "explanation": "**Correct answer: A.** One cannot decide which additional programs will eventually contribute to the required prefix.",
+      "topic": "10.5. Algorithmic probability and Solomonoff induction",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The universal mixture is uncomputable because of the halting problem"
+        },
+        {
+          "value": "B",
+          "text": "It requires a very large but finite dataset"
+        },
+        {
+          "value": "C",
+          "text": "It applies only to Gaussian sources"
+        },
+        {
+          "value": "D",
+          "text": "It cannot use conditional probabilities"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "10.5.4"
+    },
+    {
+      "id": "item-015",
+      "prompt": "What distinction is hidden by the popular notation “universal probability $\\approx2^{-K}$”?",
+      "explanation": "**Correct answer: D.** A coding theorem must specify whether it concerns a finite output, a prefix, and the corresponding complexity notion.",
+      "topic": "10.5. Algorithmic probability and Solomonoff induction",
+      "note": "[Optional]",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The two expressions are identical for every choice of universal machine"
+        },
+        {
+          "value": "B",
+          "text": "One formula uses bits and the other always uses nats"
+        },
+        {
+          "value": "C",
+          "text": "The sequential semimeasure contains no programs"
+        },
+        {
+          "value": "D",
+          "text": "Finite-output and sequential semimeasures use related but nonidentical machine models and complexity notions"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "10.5.5"
+    },
+    {
+      "id": "item-016",
+      "prompt": "What does a simple two-part MDL code minimize?",
+      "explanation": "**Correct answer: C.** The model is paid for together with the residual data it fails to explain.",
+      "topic": "10.6. MDL: the model must pay for itself",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Training loss only"
+        },
+        {
+          "value": "B",
+          "text": "Parameter count only"
+        },
+        {
+          "value": "C",
+          "text": "$L(h)+L(D\\mid h)$"
+        },
+        {
+          "value": "D",
+          "text": "Training time only"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "10.6.1"
+    },
+    {
+      "id": "item-017",
+      "prompt": "What does a prequential code measure beyond one final accuracy value?",
+      "explanation": "**Correct answer: B.** Early mistakes increase message length even when final performance is equal.",
+      "topic": "10.6. MDL: the model must pay for itself",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only the size of the weight file"
+        },
+        {
+          "value": "B",
+          "text": "How quickly the learning algorithm begins assigning good probabilities to new labels"
+        },
+        {
+          "value": "C",
+          "text": "Accelerator temperature"
+        },
+        {
+          "value": "D",
+          "text": "Exact Kolmogorov complexity"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "10.6.2"
+    },
+    {
+      "id": "item-018",
+      "prompt": "When does a Gaussian prior induce an $L_2$ penalty as MAP?",
+      "explanation": "**Correct answer: A.** A literal coding interpretation for continuous parameters also requires a base measure and representation precision.",
+      "topic": "10.6. MDL: the model must pay for itself",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "In a fixed parameterization with the corresponding prior and likelihood"
+        },
+        {
+          "value": "B",
+          "text": "For every optimizer and parameterization without conditions"
+        },
+        {
+          "value": "C",
+          "text": "Only for discrete parameters"
+        },
+        {
+          "value": "D",
+          "text": "Never"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "10.6.3"
+    },
+    {
+      "id": "item-019",
+      "prompt": "What does practical NCD substitute for uncomputable $K$?",
+      "explanation": "**Correct answer: C.** NCD therefore inherits the inductive bias, headers, and limitations of the chosen compressor.",
+      "topic": "10.7. Similarity through shared structure",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Pearson correlation"
+        },
+        {
+          "value": "B",
+          "text": "Euclidean distance"
+        },
+        {
+          "value": "C",
+          "text": "Lengths produced by a particular compressor $C$"
+        },
+        {
+          "value": "D",
+          "text": "Neural-network parameter count"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "10.7.1"
+    },
+    {
+      "id": "item-020",
+      "prompt": "Why are both $C(xy)$ and $C(yx)$ sometimes computed for NCD?",
+      "explanation": "**Correct answer: A.** Taking the minimum or average reduces artificial asymmetry.",
+      "topic": "10.7. Similarity through shared structure",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A real compressor may be sensitive to concatenation order"
+        },
+        {
+          "value": "B",
+          "text": "To double the dataset"
+        },
+        {
+          "value": "C",
+          "text": "Because $K(x)=K(y)$"
+        },
+        {
+          "value": "D",
+          "text": "Theoretical NID is always negative"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "10.7.2"
+    },
+    {
+      "id": "item-021",
+      "prompt": "Which connection between a language model and compression is exact?",
+      "explanation": "**Correct answer: A.** Prediction–compression equivalence is operational; semantic conclusions require separate evidence.",
+      "topic": "10.8. LLMs and universal prediction",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A probabilistic predictor plus a matching entropy coder yields a lossless compressor"
+        },
+        {
+          "value": "B",
+          "text": "Low perplexity proves understanding"
+        },
+        {
+          "value": "C",
+          "text": "Context length equals the Kolmogorov complexity of the text"
+        },
+        {
+          "value": "D",
+          "text": "An LLM sums over all computable programs"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "10.8.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "What is the most accurate description of the Bayesian interpretation of in-context learning?",
+      "explanation": "**Correct answer: B.** A structured mixture of HMMs is one setting in which such an analysis can be proved.",
+      "topic": "10.8. LLMs and universal prediction",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is a universal theorem for every Transformer and prompt"
+        },
+        {
+          "value": "B",
+          "text": "It can be derived rigorously in specific generative settings and can be a useful model, but is not a universal mechanism"
+        },
+        {
+          "value": "C",
+          "text": "ICL is independent of the pretraining distribution"
+        },
+        {
+          "value": "D",
+          "text": "It makes an LLM equivalent to the Solomonoff predictor"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "10.8.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "What is the precise status of AIXI?",
+      "explanation": "**Correct answer: C.** Its properties depend on the universal machine, environment class, reward, and other details of the setup.",
+      "topic": "10.9. Mathematical deepening: AIXI",
+      "note": "[Optional]",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A practical polynomial-time algorithm"
+        },
+        {
+          "value": "B",
+          "text": "A machine-independent upper bound on intelligence"
+        },
+        {
+          "value": "C",
+          "text": "An uncomputable normative object combining universal prediction with expected-reward planning"
+        },
+        {
+          "value": "D",
+          "text": "A standard supervised classifier"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "10.9.1"
+    },
+    {
+      "id": "item-024",
+      "prompt": "What does the bound $k_BT\\ln2$ directly concern?",
+      "explanation": "**Correct answer: B.** Relating it to a real device requires a physical implementation and identification of logically irreversible operations.",
+      "topic": "10.10. Optional physical bridge",
+      "note": "[Optional]",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every FLOP regardless of hardware"
+        },
+        {
+          "value": "B",
+          "text": "The minimum average heat dissipated by quasistatic erasure of a fair bit"
+        },
+        {
+          "value": "C",
+          "text": "Shortest-program length"
+        },
+        {
+          "value": "D",
+          "text": "Every LLM token"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "10.10.1"
+    },
+    {
+      "id": "item-025",
+      "prompt": "Which statement best summarizes the boundaries of the module?",
+      "explanation": "**Correct answer: C.** The module studies several related but distinct notions of complexity and description cost.",
+      "topic": "10.12. Takeaways",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The best archive program computes $K(x)$"
+        },
+        {
+          "value": "B",
+          "text": "Compression, prediction, understanding, and intelligence are one number"
+        },
+        {
+          "value": "C",
+          "text": "Before comparing “complexity,” specify the code, language, decoder, precision, compute budget, and included costs"
+        },
+        {
+          "value": "D",
+          "text": "A short program always runs quickly"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "10.12.1"
+    }
+  ]
+}

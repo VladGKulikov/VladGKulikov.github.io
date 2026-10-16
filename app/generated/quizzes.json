@@ -1,0 +1,1218 @@
+{
+  "modules": [
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-01",
+      "language": "ru",
+      "file": "modern-llms/ru/module-01.json",
+      "hash": "002983f8cf36d43bd0d8414f30eff295e812ed6207dbdf15deed41024c597eee",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "54b00a69828c0872"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "file": "modern-llms/ru/module-02.json",
+      "hash": "758b3acc379ee97401dbd3495497e4430f3a20e886b43fb5643a92ada6c6f0a5",
+      "count": 16,
+      "kinds": {
+        "single": 16
+      },
+      "revision": "e49060183304b7f3"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-18",
+      "language": "ru",
+      "file": "modern-llms/ru/module-18.json",
+      "hash": "6aec2c184c47452925eef33ea833479172f229ec4b6d116b9e366cabf824b645",
+      "count": 46,
+      "kinds": {
+        "single": 46
+      },
+      "revision": "da14867978c85da2"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "file": "modern-llms/ru/module-03.json",
+      "hash": "e26b408894ab4f020747659a28c30f217ffe78abbfc6edc5f8dd892cc29b7487",
+      "count": 23,
+      "kinds": {
+        "single": 23
+      },
+      "revision": "45780d7b4dfa5353"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "file": "modern-llms/ru/module-04.json",
+      "hash": "ed67c8961abc4b3ca04c1b74674896b60ee2556b99bb3dfcc6b5f93a5fd57a10",
+      "count": 23,
+      "kinds": {
+        "single": 23
+      },
+      "revision": "464abd7806a24419"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "file": "modern-llms/ru/module-05.json",
+      "hash": "1133f2fcee801c4c0d80ab32739621dd10a6376d93be740c98f784424c0ff2b2",
+      "count": 22,
+      "kinds": {
+        "single": 22
+      },
+      "revision": "d1f6d05ac26a91ee"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "file": "modern-llms/ru/module-06.json",
+      "hash": "523fa5d7a2e96aba908eb04135c2b7d04ff8def960ee116fb55226ec164f4bea",
+      "count": 21,
+      "kinds": {
+        "single": 21
+      },
+      "revision": "9e83a79c75dc6626"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "file": "modern-llms/ru/module-07.json",
+      "hash": "a0d6e76e5f4000f00ecdda92c4a2da14f44575fa645650dc47316472056eafea",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "eccc7a7f093f6941"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "file": "modern-llms/ru/module-08.json",
+      "hash": "a544b75dd78e930d9fb01ed2508ee1cd49217592dcd9d644ec9cc399717c2a46",
+      "count": 18,
+      "kinds": {
+        "single": 18
+      },
+      "revision": "e6a35b76d3a9976d"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "file": "modern-llms/ru/module-09.json",
+      "hash": "95a284bc76624a278faead2cacfe77bfc89a169b5a5a2f986695d358b4a0930c",
+      "count": 20,
+      "kinds": {
+        "single": 20
+      },
+      "revision": "08feeca547a1878c"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "file": "modern-llms/ru/module-10.json",
+      "hash": "b3f5a2d49ab0ab3c27ed3b63a1fcf29285c5cd23c78233ce9b852515e579b9ab",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "702c4f86f93727d2"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07b",
+      "language": "ru",
+      "file": "modern-llms/ru/module-07b.json",
+      "hash": "e31598ad51a7fc063411782bd21cb5abfcebc89d1d4b2bb3294d67fc824016a0",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "fb909f86159f9a09"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "file": "modern-llms/ru/module-11.json",
+      "hash": "55507734564b0f5710449ef00397d126cf4a860099e9c7ba827f8f62620dfeaa",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "ae2cf640774c817c"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "file": "modern-llms/ru/module-12.json",
+      "hash": "354a690ef16b4ec6aea2c529cfefe1ff25ac1b4221acb8f083228dc7f912f870",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "9b52b988cfa235bb"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "file": "modern-llms/ru/module-13.json",
+      "hash": "31a583720fba95b4393725e21812dc7f8d563d53bfd5443e63ad8c102df56917",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "fd86eeb50d678b5a"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-14",
+      "language": "ru",
+      "file": "modern-llms/ru/module-14.json",
+      "hash": "e6d2404df7778390ff43bdb87021a1ebee1f77e64a3d5f84666646351b154e7a",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "f790e7ea8423d4c5"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-15",
+      "language": "ru",
+      "file": "modern-llms/ru/module-15.json",
+      "hash": "13ef1ffb8d812f3f4d5564d6d7ce11c86ba48eaef8bbcc363148aeb293fcfa94",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "977f091673a82a2e"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-16",
+      "language": "ru",
+      "file": "modern-llms/ru/module-16.json",
+      "hash": "b6408b14945f76b8592c9292ea928c4d02360d9ce7944ede6a0955f050d1ab9c",
+      "count": 20,
+      "kinds": {
+        "single": 20
+      },
+      "revision": "5ad7a5507f971229"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-17",
+      "language": "ru",
+      "file": "modern-llms/ru/module-17.json",
+      "hash": "ab60e43eaa9189b54df13ea3fb206fd738a24e84e1e7f892f6cfb0c824353a14",
+      "count": 20,
+      "kinds": {
+        "single": 20
+      },
+      "revision": "deb378be61d755ed"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-20",
+      "language": "ru",
+      "file": "modern-llms/ru/module-20.json",
+      "hash": "56d521513c8f01956f3bd91166be833f276999b9c3b4afccef0b35e5078383bd",
+      "count": 15,
+      "kinds": {
+        "single": 15
+      },
+      "revision": "cced8ac77bad4bc6"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-01",
+      "language": "en",
+      "file": "modern-llms/en/module-01.json",
+      "hash": "f2e57e7621a3e4a6c08048c585159b8898e1b7a2a2deae1704702e8e40653b0b",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "54b00a69828c0872"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-02",
+      "language": "en",
+      "file": "modern-llms/en/module-02.json",
+      "hash": "7653d5dbb959b8ef36c1f868b6265f6f99b44d6208959e1ad77cb6c2def4cc51",
+      "count": 16,
+      "kinds": {
+        "single": 16
+      },
+      "revision": "e49060183304b7f3"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-18",
+      "language": "en",
+      "file": "modern-llms/en/module-18.json",
+      "hash": "6fd0ae835d3093f31ff70f206e7417ef5da11e215223c09d4d5049b36fcdb59e",
+      "count": 46,
+      "kinds": {
+        "single": 46
+      },
+      "revision": "da14867978c85da2"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-03",
+      "language": "en",
+      "file": "modern-llms/en/module-03.json",
+      "hash": "e140da6504b6c71ba22c43e441fa588f693bbe26fbd3e80d05fa27bc1caf47ee",
+      "count": 23,
+      "kinds": {
+        "single": 23
+      },
+      "revision": "45780d7b4dfa5353"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-04",
+      "language": "en",
+      "file": "modern-llms/en/module-04.json",
+      "hash": "5f1c28b2b32738687043858d7e819626f0542a9dd2b1395938a5f91bf2a92f0e",
+      "count": 23,
+      "kinds": {
+        "single": 23
+      },
+      "revision": "464abd7806a24419"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-05",
+      "language": "en",
+      "file": "modern-llms/en/module-05.json",
+      "hash": "23c83a8d627d368b518b8e5e3bc7766fca41703431ecf4ea542a386ca6360917",
+      "count": 22,
+      "kinds": {
+        "single": 22
+      },
+      "revision": "d1f6d05ac26a91ee"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-06",
+      "language": "en",
+      "file": "modern-llms/en/module-06.json",
+      "hash": "7c2645c4d81b8f5638f53ea2f1620f4f9921d061ae41fb59e2d146ee3c9f05d6",
+      "count": 21,
+      "kinds": {
+        "single": 21
+      },
+      "revision": "9e83a79c75dc6626"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07",
+      "language": "en",
+      "file": "modern-llms/en/module-07.json",
+      "hash": "e070a21462497802688b2a35e6107c1bb4a470995b1d3941fbf5fbed8041f934",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "eccc7a7f093f6941"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-08",
+      "language": "en",
+      "file": "modern-llms/en/module-08.json",
+      "hash": "7278b10ab34272c2ead4135aeeda967e809e3b5415429ce5e724aac5b15a9071",
+      "count": 18,
+      "kinds": {
+        "single": 18
+      },
+      "revision": "e6a35b76d3a9976d"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-09",
+      "language": "en",
+      "file": "modern-llms/en/module-09.json",
+      "hash": "d9819da4c6950a77d1196f587ae4a9991f0566d63d30c3e862f4e886bbf7ef8a",
+      "count": 20,
+      "kinds": {
+        "single": 20
+      },
+      "revision": "08feeca547a1878c"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-10",
+      "language": "en",
+      "file": "modern-llms/en/module-10.json",
+      "hash": "b518c14162449663294420f5bcca2eb802d8f709a049bcb5f99204d3d8e6eccf",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "702c4f86f93727d2"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07b",
+      "language": "en",
+      "file": "modern-llms/en/module-07b.json",
+      "hash": "05842ccea5da1a8f5e4c4bfcef5f3fcf7101056ad851f186c190328654e28bbd",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "fb909f86159f9a09"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-11",
+      "language": "en",
+      "file": "modern-llms/en/module-11.json",
+      "hash": "5a2a03f11c3d8a44316e7545625b862ce2417f2ebaa512195c1c228ef300634f",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "ae2cf640774c817c"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-12",
+      "language": "en",
+      "file": "modern-llms/en/module-12.json",
+      "hash": "26108c63df4aa419f8c258cb57fea71ac32e5c289459a2923920711c29bf9fb9",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "9b52b988cfa235bb"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-13",
+      "language": "en",
+      "file": "modern-llms/en/module-13.json",
+      "hash": "dbf10e24a95e0582f8024d9b2111f1bd8ae6bc9f2ada5b5266e5db1769cdfb42",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "fd86eeb50d678b5a"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-14",
+      "language": "en",
+      "file": "modern-llms/en/module-14.json",
+      "hash": "cf6cdd1537500436a1c7f4b3be5d4dfba2ef3a19ff43cba07a52824c2492de12",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "f790e7ea8423d4c5"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-15",
+      "language": "en",
+      "file": "modern-llms/en/module-15.json",
+      "hash": "83370bacc8a599aa769109a4c920ceb93572c1f9d61614fb9b039a844b3e81e8",
+      "count": 19,
+      "kinds": {
+        "single": 19
+      },
+      "revision": "977f091673a82a2e"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-16",
+      "language": "en",
+      "file": "modern-llms/en/module-16.json",
+      "hash": "f2b69dfbe2454cbfad2c582983b4f0d8aca518025dd01d01384d0bc2d6323ca4",
+      "count": 20,
+      "kinds": {
+        "single": 20
+      },
+      "revision": "5ad7a5507f971229"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-17",
+      "language": "en",
+      "file": "modern-llms/en/module-17.json",
+      "hash": "397ce7129e414149e7dd404e4c7362abaccc6875ee65e753ad479a19c99c2ecc",
+      "count": 20,
+      "kinds": {
+        "single": 20
+      },
+      "revision": "deb378be61d755ed"
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-20",
+      "language": "en",
+      "file": "modern-llms/en/module-20.json",
+      "hash": "3f03b67ad5ac60c58867e278196b58a1c00c2c459b65fd88a9c59af35b14267c",
+      "count": 15,
+      "kinds": {
+        "single": 15
+      },
+      "revision": "cced8ac77bad4bc6"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-01",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-01.json",
+      "hash": "15d603a32231e03975babb025dd8e4190c5e3876999318961c8b119b819b4341",
+      "count": 10,
+      "kinds": {
+        "single": 5,
+        "multiple": 2,
+        "numeric": 2,
+        "self-check": 1
+      },
+      "revision": "7e75590107dba01c"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-02.json",
+      "hash": "5d69f687860b99b02c48f4ab18f527f3fab2eb5c9b139c3a32b79b373107c6ec",
+      "count": 12,
+      "kinds": {
+        "single": 2,
+        "numeric": 6,
+        "self-check": 4
+      },
+      "revision": "fb76352d3d799368"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-03.json",
+      "hash": "5f6a92cec8752545bdfdd36d8d83934cb4ca86562dc155e379298f62bf05dc4c",
+      "count": 12,
+      "kinds": {
+        "single": 7,
+        "numeric": 2,
+        "multiple": 1,
+        "self-check": 2
+      },
+      "revision": "e394a5cb6efb88cb"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-04.json",
+      "hash": "c4d1887cf1a0aac43ce9869384da6ef3524dd59df489cae7df68dc07268e848e",
+      "count": 12,
+      "kinds": {
+        "single": 5,
+        "self-check": 4,
+        "numeric": 2,
+        "multiple": 1
+      },
+      "revision": "06d6a5e6b347adf8"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-05.json",
+      "hash": "05e46a2fbab9e8632b9520a7f7d3514cca8f745b7f6e963a84fb370d77a8afab",
+      "count": 12,
+      "kinds": {
+        "numeric": 2,
+        "self-check": 7,
+        "single": 2,
+        "matching": 1
+      },
+      "revision": "872381c49bc0d6fa"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-06.json",
+      "hash": "4b277b73b959d528c0910ba9b440572a43fd39ab708e3867b3d2fbbf96fb11d6",
+      "count": 12,
+      "kinds": {
+        "self-check": 10,
+        "numeric": 2
+      },
+      "revision": "4280acd3ba8333b7"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-07.json",
+      "hash": "5340021c975bd37a5aef2f95138faeaf7a676bbd2d8309a0dc83b50d40a8856c",
+      "count": 12,
+      "kinds": {
+        "self-check": 12
+      },
+      "revision": "59d99b81f46803d6"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-08.json",
+      "hash": "aab31e56bb2bc4c86ab9906b9d3287518fc821afeb32f245d26569a522948059",
+      "count": 9,
+      "kinds": {
+        "self-check": 9
+      },
+      "revision": "2d243f8dd4303f21"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-09.json",
+      "hash": "b4b4116faf76f66e9e860d4f9808ea9d94e7fe50f7523c111f05aeeea2138339",
+      "count": 12,
+      "kinds": {
+        "single": 2,
+        "numeric": 4,
+        "self-check": 6
+      },
+      "revision": "3e41fae1c2065029"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-10.json",
+      "hash": "a3eefc33bafac9935196f47103b45453bc8ab8e47e799c30fdb03b54e6372880",
+      "count": 12,
+      "kinds": {
+        "self-check": 8,
+        "numeric": 4
+      },
+      "revision": "83c5d0a032b39d5a"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-11.json",
+      "hash": "ad01648c637dfe9be2e689dc0994d72be85e38c7fa1bf7ba4d9c5a0912c376e7",
+      "count": 12,
+      "kinds": {
+        "self-check": 8,
+        "numeric": 4
+      },
+      "revision": "2c7719c5bf5915f7"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-12.json",
+      "hash": "259030ef9849c0e76f59dba53e05301184b0d1fecca5bb7eaf7a52585b6429ad",
+      "count": 12,
+      "kinds": {
+        "single": 1,
+        "numeric": 8,
+        "matching": 1,
+        "self-check": 2
+      },
+      "revision": "c57ba9f3195abc5c"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "file": "rl-for-llm/ru/module-13.json",
+      "hash": "a5a6c6080dcc8d9eb62e50b092d405e4ea4a43960a9a3544e6f77ee906658248",
+      "count": 12,
+      "kinds": {
+        "self-check": 12
+      },
+      "revision": "59d99b81f46803d6"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-01",
+      "language": "en",
+      "file": "rl-for-llm/en/module-01.json",
+      "hash": "7cc4712315786a5a9b0b02494739adf8bb064854ab23d52952770b525de5e382",
+      "count": 10,
+      "kinds": {
+        "single": 5,
+        "multiple": 2,
+        "numeric": 2,
+        "self-check": 1
+      },
+      "revision": "7e75590107dba01c"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-02",
+      "language": "en",
+      "file": "rl-for-llm/en/module-02.json",
+      "hash": "13d7db949d53b7afdef7b56fb6e7c9af80ae188938537185096f4a0fe315b292",
+      "count": 12,
+      "kinds": {
+        "single": 2,
+        "numeric": 6,
+        "self-check": 4
+      },
+      "revision": "fb76352d3d799368"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-03",
+      "language": "en",
+      "file": "rl-for-llm/en/module-03.json",
+      "hash": "ea4a56a683caf35069935b9549730cfe77d2669cbabf78b8ad58547af5d96c02",
+      "count": 12,
+      "kinds": {
+        "single": 7,
+        "numeric": 2,
+        "multiple": 1,
+        "self-check": 2
+      },
+      "revision": "e394a5cb6efb88cb"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-04",
+      "language": "en",
+      "file": "rl-for-llm/en/module-04.json",
+      "hash": "915afebf64ad3098588a70be3937d5ec1c4b460b3756917d5d1f312bf93ec368",
+      "count": 12,
+      "kinds": {
+        "single": 5,
+        "self-check": 4,
+        "numeric": 2,
+        "multiple": 1
+      },
+      "revision": "06d6a5e6b347adf8"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-05",
+      "language": "en",
+      "file": "rl-for-llm/en/module-05.json",
+      "hash": "12eac127f29cc50bffbcc8f007a191d8b077cbcbee90cadd7fdb3a5791a65d5d",
+      "count": 12,
+      "kinds": {
+        "numeric": 2,
+        "self-check": 7,
+        "single": 2,
+        "matching": 1
+      },
+      "revision": "872381c49bc0d6fa"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-06",
+      "language": "en",
+      "file": "rl-for-llm/en/module-06.json",
+      "hash": "0ee54e046bdd4627de237c4e13e8c6861f05e573c07bf1ffe959b257ed998847",
+      "count": 12,
+      "kinds": {
+        "self-check": 10,
+        "numeric": 2
+      },
+      "revision": "4280acd3ba8333b7"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-07",
+      "language": "en",
+      "file": "rl-for-llm/en/module-07.json",
+      "hash": "a13fe1377d09cdf475ce4db2df0b23f78afa5f2455603682020591e78487f2e5",
+      "count": 12,
+      "kinds": {
+        "self-check": 12
+      },
+      "revision": "59d99b81f46803d6"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-08",
+      "language": "en",
+      "file": "rl-for-llm/en/module-08.json",
+      "hash": "ba25f585db9c9680dee6f018a4eaadba5e005ca9eaf33f2e45829f3462cc4f17",
+      "count": 9,
+      "kinds": {
+        "self-check": 9
+      },
+      "revision": "2d243f8dd4303f21"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-09",
+      "language": "en",
+      "file": "rl-for-llm/en/module-09.json",
+      "hash": "a9d10de564b4a283798b66b03ea2d476be0a786cf41525d6554e07617b94ae35",
+      "count": 12,
+      "kinds": {
+        "single": 2,
+        "numeric": 4,
+        "self-check": 6
+      },
+      "revision": "3e41fae1c2065029"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-10",
+      "language": "en",
+      "file": "rl-for-llm/en/module-10.json",
+      "hash": "419b988c8842fe7fe3153a7001592025f7c73a938523286befd147d60e2e258e",
+      "count": 12,
+      "kinds": {
+        "self-check": 8,
+        "numeric": 4
+      },
+      "revision": "83c5d0a032b39d5a"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-11",
+      "language": "en",
+      "file": "rl-for-llm/en/module-11.json",
+      "hash": "80e4bb27572a37852940bf32c1e5ff4cd37533ebdaef1bc6dc5dadcd1c497e2e",
+      "count": 12,
+      "kinds": {
+        "self-check": 8,
+        "numeric": 4
+      },
+      "revision": "2c7719c5bf5915f7"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-12",
+      "language": "en",
+      "file": "rl-for-llm/en/module-12.json",
+      "hash": "0810b49024b89515bd4d419500a9b1ed26f777015294d6f5dd5cff3303de9ffd",
+      "count": 12,
+      "kinds": {
+        "single": 1,
+        "numeric": 8,
+        "matching": 1,
+        "self-check": 2
+      },
+      "revision": "c57ba9f3195abc5c"
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-13",
+      "language": "en",
+      "file": "rl-for-llm/en/module-13.json",
+      "hash": "96318a65618af608ce030b8d8f0d0d4778eb16d605807d9236113eae029963e7",
+      "count": 12,
+      "kinds": {
+        "self-check": 12
+      },
+      "revision": "59d99b81f46803d6"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-01",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-01.json",
+      "hash": "f6c9de38261c0b18a3e946d321c2a9f1e848d7544ded088b570bd1d596cad5fb",
+      "count": 14,
+      "kinds": {
+        "single": 12,
+        "numeric": 2
+      },
+      "revision": "c551c330d87721fd"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-02.json",
+      "hash": "d80675483768840bf6f7ede73ae85074cc0f9d1fb6a7df3c06a995fb539e675a",
+      "count": 20,
+      "kinds": {
+        "single": 16,
+        "numeric": 4
+      },
+      "revision": "7985a23959d782ec"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-03.json",
+      "hash": "5df1dd9fbceb746354d9ddda2f4fae0ef985e1a21a7dff82dc0224a6836d3b46",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "5f9c80c486e8ce66"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-04.json",
+      "hash": "a5c1d1b224450f4c72ccf9349752d0490b67dec3284b5a18d95500e097875b24",
+      "count": 24,
+      "kinds": {
+        "single": 20,
+        "numeric": 4
+      },
+      "revision": "b3e64f6c8ea56bcd"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-05.json",
+      "hash": "64efcd8862ecd05dd27be7caf6065475899810b39c0d39b767db47cde99b33c8",
+      "count": 24,
+      "kinds": {
+        "single": 20,
+        "numeric": 4
+      },
+      "revision": "8322d9d61519aa14"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-06.json",
+      "hash": "3cb26fb4ad38966a7a153d32167b99b6cf517b5aca1a2a5efa0b0bd0e4b24607",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "e1cae7bf6199e684"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-07.json",
+      "hash": "6f17dab633c1f83dc6a1d3a8d3c4163f78fdff69932ad550594ee7811c69767e",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "54c471be1c4136ae"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-08.json",
+      "hash": "5760989ab2934c06fcac0f6d6e04e3bca4b286242d5d9fdb60082d2d4fdb4451",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "464b5d0581b15657"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-09.json",
+      "hash": "14865d10196ae98a9be45b2ac944f9492adfa94e84f2d94f486b734a6ce733d1",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "7535890b8f53f346"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-10.json",
+      "hash": "eaf87493c541adbace7851bcce3a007364673b8e4ed1a69eb6e6379c4c21f669",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "a197e736e46158c8"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-11.json",
+      "hash": "2d3da97a2c6df6239395ff1728117f0ad691ae40315585adb7ab499d27700b55",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "f0efd37922dd4af8"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-12.json",
+      "hash": "bd28290f3bcbd11b7b9a2bc1f8521447654d4f69014bd4ab1df286056c3276f9",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "038ec0f0aaf6456c"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-13.json",
+      "hash": "4780b0a4ee82de358419ed6b78fae20193361889690317e65b152e8f78baacb7",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "53d09b3bf2b681ca"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-14",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-14.json",
+      "hash": "3ecad705bc325eccbcfed15734f3a89e2417996bc5fb1d7efbc477528ca57d8f",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "378377b659f10bcd"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-15",
+      "language": "ru",
+      "file": "information-theory-for-ml/ru/module-15.json",
+      "hash": "50484f7de2bf059624a9b501561e124c31443d1891b531d1fa5bb6ac7c6813a7",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "a2dfa317cd35ac56"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-01",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-01.json",
+      "hash": "70bd74efeec5c80d0c11c98510c6f21f65943f9dd58541aab10d242f5ff04ec1",
+      "count": 14,
+      "kinds": {
+        "single": 12,
+        "numeric": 2
+      },
+      "revision": "c551c330d87721fd"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-02",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-02.json",
+      "hash": "7234ad0ad12881ba382616a1b29605a701d0d3047d3135e28db218b8c9acab6b",
+      "count": 20,
+      "kinds": {
+        "single": 16,
+        "numeric": 4
+      },
+      "revision": "7985a23959d782ec"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-03",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-03.json",
+      "hash": "6a8fef3fa194e7206069986f98bda35785883f89740abbc4e4a6e5fc9b060609",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "5f9c80c486e8ce66"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-04",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-04.json",
+      "hash": "3ba33977b9b26f0e21ee42bc28dca95ecb2b153fa909963f2f603f7d90510adc",
+      "count": 24,
+      "kinds": {
+        "single": 20,
+        "numeric": 4
+      },
+      "revision": "b3e64f6c8ea56bcd"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-05",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-05.json",
+      "hash": "c590d9d9d6701d27e6813602a3b7118edc9bc524d47b8a55e2ca4c64e3aaea2e",
+      "count": 24,
+      "kinds": {
+        "single": 20,
+        "numeric": 4
+      },
+      "revision": "8322d9d61519aa14"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-06",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-06.json",
+      "hash": "4c17e54f039d55f61e239aa97f50c2529cffd3a57952864d800b8d3259b4e7aa",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "e1cae7bf6199e684"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-07",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-07.json",
+      "hash": "b9132da0a22197fa64bbd9d173cdc86b2404e75f3641bfd175cefb433f8ed528",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "54c471be1c4136ae"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-08",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-08.json",
+      "hash": "29d8855c45e0d3ccd9319d1c2ab5e280729d2c57b8712bc5e8cc143e21010034",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "464b5d0581b15657"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-09",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-09.json",
+      "hash": "f9fabd78052b19fa68886be3d3b09569fb2b26caee71193f9242add6b61bd346",
+      "count": 29,
+      "kinds": {
+        "single": 25,
+        "numeric": 4
+      },
+      "revision": "7535890b8f53f346"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-10",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-10.json",
+      "hash": "3507e956357806fe9e15c43d9c3d2f7e0c92ec883ff9af684c5951bde8623fde",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "a197e736e46158c8"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-11",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-11.json",
+      "hash": "f17f93fa5831c5156d2e936dd54cebc8be3e1409552edd228b32bfe51b269e7c",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "f0efd37922dd4af8"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-12",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-12.json",
+      "hash": "5cb86cf8cdcef607528ffad593574c10f662b1b2ffafec44d2104e44bcfad599",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "038ec0f0aaf6456c"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-13",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-13.json",
+      "hash": "db2cee0155db7484f5f02ba755a42db41c6fe04b0f1e426bd21b086a62a5fdcb",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "53d09b3bf2b681ca"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-14",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-14.json",
+      "hash": "cb5c28880bb04382d3d27910a923ab91579f09b0981597afef7f6af8bb8e87cf",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "378377b659f10bcd"
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-15",
+      "language": "en",
+      "file": "information-theory-for-ml/en/module-15.json",
+      "hash": "5cb83ab9a1872e0e75291ebaf36e3c526be5f124f49c2a20be2f67f686dd60d7",
+      "count": 25,
+      "kinds": {
+        "single": 25
+      },
+      "revision": "a2dfa317cd35ac56"
+    }
+  ]
+}

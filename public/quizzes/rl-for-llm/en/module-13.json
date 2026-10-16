@@ -1,0 +1,91 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-13",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Configuration, not a model nickname",
+      "prompt": "Only the chat template and decoding settings changed. What is the evaluated object?",
+      "explanation": "The full versioned system configuration. The weight file is unchanged, but the response distribution is not.",
+      "type": "self-check"
+    },
+    {
+      "id": "P02",
+      "title": "Hierarchical resampling",
+      "prompt": "There are twenty generations for each of twelve prompts. What is the first resampling level for a claim about new prompts?",
+      "explanation": "Resample prompts as whole clusters. Generations can be resampled within a selected prompt or aggregated by a predeclared prompt-level protocol.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "Exact McNemar reasoning",
+      "prompt": "`A_only=9`, `B_only=2`; the asymptotic result crosses 0.05 but the exact value is 0.06543. What is the primary conclusion?",
+      "explanation": "With only eleven discordant tasks, use the exact binomial result: the evidence does not cross the 0.05 threshold.",
+      "type": "self-check"
+    },
+    {
+      "id": "P04",
+      "title": "Coverage and selector quality",
+      "prompt": "A correct candidate exists in the pool but the selector returns another candidate. Which two booleans describe the run?",
+      "explanation": "`coverage=True` and `selection_success=False`. pass@k alone does not describe delivered quality.",
+      "type": "self-check"
+    },
+    {
+      "id": "P05",
+      "title": "Containment versus Jaccard",
+      "prompt": "Why can a Jaccard threshold of 0.7 not be copied to benchmark-side containment?",
+      "explanation": "The denominators differ, so the same text pair receives different values. A detector threshold belongs to its exact metric and calibration protocol.",
+      "type": "self-check"
+    },
+    {
+      "id": "P06",
+      "title": "Adaptive test reuse",
+      "prompt": "A team selects the best of eighty prompts on one private set. Why is that set no longer an independent final test?",
+      "explanation": "Its feedback selected the configuration, making it part of development. A fresh holdout or a controlled adaptive-query procedure is required.",
+      "type": "self-check"
+    },
+    {
+      "id": "P07",
+      "title": "Identity and position",
+      "prompt": "A judge is identity-consistent on a pair but shows first-slot preference elsewhere. Are the diagnostics contradictory?",
+      "explanation": "No. Candidate identity and screen position are different random variables and should be reported separately.",
+      "type": "self-check"
+    },
+    {
+      "id": "P08",
+      "title": "Structural isolation",
+      "prompt": "Which is stronger: “ignore candidate instructions” or passing the candidate as untrusted data with a structured output schema?",
+      "explanation": "Structural isolation is the stronger engineering contract, but it is not a formal security boundary for a single LLM.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "Two safety denominators",
+      "prompt": "Why not divide harmful compliance and benign refusals by one mixed test-set size?",
+      "explanation": "They estimate different conditional rates: ASR on harmful attempts and over-refusal on benign neighbors. A mixed denominator hides test composition.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "Critical event",
+      "prompt": "Average metrics pass, but a confirmed sandbox escape was predeclared as release-blocking. What is the decision?",
+      "explanation": "NO-GO. A critical gate is not compensated by an average score; preserve an incident record and regression test.",
+      "type": "self-check"
+    },
+    {
+      "id": "P11",
+      "title": "Evidence bundle",
+      "prompt": "What minimally allows a new scorer version to recompute results without another model run?",
+      "explanation": "Versioned samples, raw responses/transcripts keyed by `sample_id`, solver configuration, scorer revision, summary, and an artifact-hash passport.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Current software contract",
+      "prompt": "What Python entry point does current `lm-evaluation-harness` documentation recommend, and what must happen before publication?",
+      "explanation": "Use `simple_evaluate()` for Python integration, then pin the actual dependency version, backend, task configuration, and full result artifact.",
+      "type": "self-check"
+    }
+  ]
+}

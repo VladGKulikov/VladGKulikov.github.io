@@ -1,0 +1,232 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-04",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "The price of the log-derivative identity",
+      "prompt": "*single answer*\n\nThe identity $\\nabla_\\theta \\mathbb{E}[f(X)] = \\mathbb{E}[f(X)\\nabla_\\theta\\log p_\\theta(X)]$ removes the need to differentiate $f$. What is received in exchange?",
+      "explanation": "The correct choice is **the second**. The identity does not make a discrete sample differentiable and does not remove sampling noise. It moves the derivative onto the log-probability of the sampled outcome. A non-differentiable $f$ is therefore acceptable, but the Monte Carlo gradient can have high variance. For a softmax policy, $\\nabla_z\\log\\pi(a)=e_a-\\pi$.\n\n**Additional note.** This is exactly why $f$ may be a compilation result, a human rating or a verifier's binary answer — the formula still applies. For a softmax policy, $\\nabla_z\\log\\pi(a) = e_a - \\pi$.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Bias in the gradient estimate"
+        },
+        {
+          "value": "2",
+          "text": "Monte Carlo variance: the estimate is built from samples, and its spread is the price"
+        },
+        {
+          "value": "3",
+          "text": "A requirement to know the environment model"
+        },
+        {
+          "value": "4",
+          "text": "A restriction to finite action spaces"
+        }
+      ]
+    },
+    {
+      "id": "P02",
+      "title": "Reward-to-go",
+      "prompt": "*coding task*\n\n**Specification:** $G_t = \\sum_{k=t}^{T-1}\\gamma^{k-t} r_{k+1}$ — the return from the current step to the end of the episode. Compute it in a backward pass: $G_t = r_{t+1} + \\gamma G_{t+1}$, $G_T = 0$.\n\n**Input format:** line 1 — space-separated rewards; line 2 — $\\gamma$.\n**Output format:** one line — $G_0, \\ldots, G_{T-1}$ space-separated (6 decimals).\n\n**Starter code:**\n\n```python\nimport numpy as np\n\ndef reward_to_go(rewards, gamma=1.0):\n    # YOUR CODE HERE\n    raise NotImplementedError\n\nif __name__ == \"__main__\":\n    rewards = [float(x) for x in input().split()]\n    gamma = float(input())\n    print(\" \".join(f\"{x:.6f}\" for x in reward_to_go(rewards, gamma)))\n```\n\n**Open tests:**\n\n| stdin | stdout |\n|---|---|\n| `1 0 2 3` ⏎ `0.9` | `4.807000 4.230000 4.700000 3.000000` |\n| `1 0 2 3` ⏎ `1.0` | `6.000000 5.000000 5.000000 3.000000` |\n| `0 0 1` ⏎ `0.5` | `0.250000 0.500000 1.000000` |",
+      "explanation": "The correct algorithm scans from right to left and keeps one accumulator. After processing position $t$, that accumulator is $G_t$.\n\n```python\nimport numpy as np\n\ndef reward_to_go(rewards, gamma=1.0):\n    rewards = np.asarray(rewards, dtype=float)\n    if rewards.ndim != 1:\n        raise ValueError(\"rewards must be one-dimensional\")\n    if not np.isfinite(gamma) or gamma < 0.0:\n        raise ValueError(\"gamma must be finite and non-negative\")\n\n    result = np.empty_like(rewards)\n    running = 0.0\n    for t in range(rewards.size - 1, -1, -1):\n        running = rewards[t] + gamma * running\n        result[t] = running\n    return result\n```\n\nFor the first public test, the backward recursion gives $G_3=3$, $G_2=2+0.9\\cdot3=4.7$, $G_1=0+0.9\\cdot4.7=4.23$, and $G_0=1+0.9\\cdot4.23=4.807$.\n\nAction $a_t$ cannot change rewards already observed. Their expected contribution to the score-function gradient is zero because $\\mathbb E[\\nabla_\\theta\\log\\pi_\\theta(a_t\\mid s_t)\\mid s_t]=0$. Reward-to-go therefore preserves the expected gradient and usually lowers variance.\n\n**Additional note.** Action $a_t$ cannot change rewards collected before $t$: their contribution has zero mean because $\\mathbb{E}[\\nabla_\\theta\\log\\pi_\\theta(a_t\\mid s_t)] = 0$. Replacing the full return by $G_t$ leaves the expected gradient unchanged while reducing variance.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "What can be subtracted without a correction",
+      "prompt": "*single answer*\n\nA baseline is subtracted from $Q^\\pi(s,a)$. What condition makes the substitution safe for the expected gradient?",
+      "explanation": "The correct choice is **the second**. For a baseline $b(s)$ independent of the current action, $\\mathbb E_a[b(s)\\nabla\\log\\pi(a\\mid s)]=b(s)\\nabla\\sum_a\\pi(a\\mid s)=0$. An arbitrary $b(s,a)$ generally changes the expected gradient unless a compensating term is added.\n\n**Additional note.** An arbitrary $b(s,a)$ cannot be subtracted without a correction: its contribution generally has non-zero mean. Action-dependent control variates exist but require compensating terms.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "The baseline must be non-negative"
+        },
+        {
+          "value": "2",
+          "text": "The baseline must depend on the state only and not on the chosen action: then $\\mathbb{E}_{a}[b(s)\\nabla\\log\\pi(a\\mid s)] = 0$"
+        },
+        {
+          "value": "3",
+          "text": "The baseline must equal the mean reward over the whole dataset"
+        },
+        {
+          "value": "4",
+          "text": "The baseline must be learned"
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "The scale of group centering",
+      "prompt": "*numeric answer · tolerance ±0.005*\n\nGroup rewards are centered on the group mean: $A_i = R_i - \\bar R$, group size $G = 8$, responses conditionally independent.\n\nBy what factor does the expectation of the resulting gradient estimate differ from $\\mathbb{E}[RS]$?",
+      "explanation": "The answer is **$0.875$**. Because the group mean contains the current reward, the conditional expectation is scaled by $(G-1)/G$. At $G=8$, this is $7/8=0.875$. The direction is preserved at fixed group size, but the estimator is not literally unbiased.\n\n**Additional note.** $(G-1)/G = 7/8 = 0.875$. The direction of the expected gradient is preserved but the scale shrinks: $\\bar R$ contains $R_i$ itself, so the baseline is not action-independent. At fixed $G$ the factor is absorbed by the learning rate, but the estimator cannot be called literally unbiased.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Scale",
+          "expected": 0.875,
+          "tolerance": 0.001
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "RLOO and the group mean: collinear but rescaled",
+      "prompt": "*coding task*\n\n**Specification:** $A_i^{\\text{mean}} = R_i - \\bar R$ with $\\bar R$ the full group mean; $A_i^{\\mathrm{LOO}} = R_i - \\frac{1}{G-1}\\sum_{j\\ne i} R_j$. Requires $G \\ge 2$.\n\n**Input format:** line 1 — the group size $G$; line 2 — space-separated rewards.\n**Output format:** line 1 — group-mean advantages (6 decimals); line 2 — RLOO advantages (6 decimals); line 3 — the ratio $A^{\\mathrm{LOO}}_0/A^{\\text{mean}}_0$ (6 decimals), or `undefined` if the denominator is zero.\n\n**Starter code:**\n\n```python\nimport numpy as np\n\ndef group_and_loo(rewards):\n    \"\"\"Return (mean_advantages, loo_advantages).\"\"\"\n    # YOUR CODE HERE\n    raise NotImplementedError\n\nif __name__ == \"__main__\":\n    g = int(input())\n    rewards = [float(x) for x in input().split()]\n    mean_adv, loo_adv = group_and_loo(rewards)\n    print(\" \".join(f\"{x:.6f}\" for x in mean_adv))\n    print(\" \".join(f\"{x:.6f}\" for x in loo_adv))\n    print(f\"{loo_adv[0] / mean_adv[0]:.6f}\" if abs(mean_adv[0]) > 1e-12 else \"undefined\")\n```\n\n**Open tests:**\n\n| stdin | stdout |\n|---|---|\n| `4` ⏎ `1 0 1 0` | `0.500000 -0.500000 0.500000 -0.500000` ⏎ `0.666667 -0.666667 0.666667 -0.666667` ⏎ `1.333333` |\n| `3` ⏎ `2 2 2` | `0.000000 0.000000 0.000000` ⏎ `0.000000 0.000000 0.000000` ⏎ `undefined` |",
+      "explanation": "Let $S=\\sum_jR_j$ and let $G$ be the group size. Then\n\n$$\nA_i^{\\mathrm{LOO}}\n=R_i-\\frac{S-R_i}{G-1}\n=\\frac{G}{G-1}(R_i-\\bar R).\n$$\n\nThe two vectors are collinear but differ by $G/(G-1)$ at finite group size.\n\n```python\nimport numpy as np\n\ndef group_and_loo(rewards):\n    rewards = np.asarray(rewards, dtype=float)\n    if rewards.ndim != 1 or rewards.size < 2:\n        raise ValueError(\"a one-dimensional group of at least two rewards is required\")\n    if not np.all(np.isfinite(rewards)):\n        raise ValueError(\"rewards must be finite\")\n\n    mean_advantages = rewards - rewards.mean()\n    loo_baselines = (rewards.sum() - rewards) / (rewards.size - 1)\n    loo_advantages = rewards - loo_baselines\n    return mean_advantages, loo_advantages\n```\n\nEqual rewards produce zero under both schemes: the group contains no relative signal. That does not prove the policy is optimal; the verifier may simply be too coarse.\n\n**Additional note.** The ratio is $G/(G-1)$: at $G=4$ that is $4/3 \\approx 1.3333$. The coefficients are collinear and differ only in scale at finite group size. The second test is a degenerate group: all rewards equal, no signal under either scheme.",
+      "type": "self-check"
+    },
+    {
+      "id": "P06",
+      "title": "Generalized advantage estimation",
+      "prompt": "*coding task*\n\n**Specification:** the episode terminates on its last step. $\\delta_t = r_t + \\gamma V_{t+1} - V_t$ with $V_{T} = 0$; $\\widehat A_t = \\delta_t + \\gamma\\lambda \\widehat A_{t+1}$, $\\widehat A_T = 0$. Critic target: $\\widehat V_t = V_t + \\widehat A_t$.\n\n**Input format:** line 1 — rewards; line 2 — value estimates $V_t$; line 3 — $\\gamma$ and $\\lambda$.\n**Output format:** line 1 — $\\widehat A_t$ space-separated (6 decimals); line 2 — critic targets (6 decimals).\n\n**Starter code:**\n\n```python\nimport numpy as np\n\ndef gae(rewards, values, gamma, lam):\n    \"\"\"Return (advantages, value_targets).\"\"\"\n    # YOUR CODE HERE\n    raise NotImplementedError\n\nif __name__ == \"__main__\":\n    rewards = [float(x) for x in input().split()]\n    values = [float(x) for x in input().split()]\n    gamma, lam = (float(x) for x in input().split())\n    adv, targets = gae(rewards, values, gamma, lam)\n    print(\" \".join(f\"{x:.6f}\" for x in adv))\n    print(\" \".join(f\"{x:.6f}\" for x in targets))\n```\n\n**Open tests:**\n\n| stdin | stdout |\n|---|---|\n| `0 0 1` ⏎ `0.4 0.5 0.6` ⏎ `1.0 0.5` | `0.250000 0.300000 0.400000` ⏎ `0.650000 0.800000 1.000000` |\n| `0 0 1` ⏎ `0.4 0.5 0.6` ⏎ `1.0 0.0` | `0.100000 0.100000 0.400000` ⏎ `0.500000 0.600000 1.000000` |",
+      "explanation": "At the final transition the continuation value is zero. Build the shifted next-value array first, then scan the deltas backward.\n\n```python\nimport numpy as np\n\ndef gae(rewards, values, gamma, lam):\n    rewards = np.asarray(rewards, dtype=float)\n    values = np.asarray(values, dtype=float)\n    if rewards.ndim != 1 or values.shape != rewards.shape:\n        raise ValueError(\"rewards and values must be one-dimensional with equal shape\")\n    if not (0.0 <= gamma <= 1.0 and 0.0 <= lam <= 1.0):\n        raise ValueError(\"gamma and lam must lie in [0, 1]\")\n\n    next_values = np.concatenate([values[1:], np.array([0.0])])\n    deltas = rewards + gamma * next_values - values\n    advantages = np.empty_like(deltas)\n    running = 0.0\n    for t in range(deltas.size - 1, -1, -1):\n        running = deltas[t] + gamma * lam * running\n        advantages[t] = running\n    return advantages, values + advantages\n```\n\nAt $\\lambda=0$ this is the one-step TD error. At $\\lambda=1$ with a true terminal, the recursion telescopes to Monte Carlo return minus the old value. Advantages may be normalized for the policy update, but the same transformation must not silently alter critic targets.\n\n**Additional note.** The second test uses $\\lambda = 0$, the pure one-step TD error. Keep three objects apart: the old value prediction, the advantage estimate and the regression target — normalizing advantages before the policy update must not silently change the critic's target.",
+      "type": "self-check"
+    },
+    {
+      "id": "P07",
+      "title": "Bootstrapping at the episode boundary",
+      "prompt": "*single answer*\n\nA batch was collected with a length cap; some episodes were cut off by it and some ended at a real terminal. What happens to the advantage estimate if both groups are treated identically, as terminal?",
+      "explanation": "The correct choice is **the second**. A true terminal removes continuation from the task. A technical truncation only stops data collection; the process could continue, so TD/GAE should bootstrap from the final observation. The GAE recursion must still stop before the reset record. Advantage normalization cannot repair this semantic mistake.\n\n**Additional note.** The same distinction was introduced in step 2.1.3 at the level of the TD target. It returns once more in RLVR: truncation at `max_tokens` is not the same as a wrong answer.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "Nothing: $\\widehat A$ is zeroed at the episode boundary anyway"
+        },
+        {
+          "value": "2",
+          "text": "Truncated trajectories are assigned a zero continuation although the process could have continued; advantage estimates and critic targets are biased, with direction determined by the sign of the omitted continuation value"
+        },
+        {
+          "value": "3",
+          "text": "The estimate becomes biased only at $\\lambda = 1$"
+        },
+        {
+          "value": "4",
+          "text": "Normalizing the advantages removes the problem"
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "When the clipping plateau is active",
+      "prompt": "*multiple answers*\n\nFor which combinations of advantage sign and ratio movement does the clipped branch actually bound the objective? Select all that apply.",
+      "explanation": "The **first two** cases are correct. For $A>0$, clipping caps an excessive ratio increase above $1+\\varepsilon$; for $A<0$, it caps an excessive decrease below $1-\\varepsilon$. In the opposite directions, `min` keeps the full penalty. Hence `ratio_outside_fraction` and `active_clip_fraction` are distinct.\n\n**Additional note.** The `min` builds a pessimistic version of the local gain: clipping caps excess reward but never removes a penalty. Hence the fraction of ratios outside the interval and the fraction where clipping actually changed the objective are different metrics.",
+      "type": "multiple",
+      "correct": [
+        "1",
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "$\\widehat A > 0$, the ratio rose above $1+\\varepsilon$"
+        },
+        {
+          "value": "2",
+          "text": "$\\widehat A < 0$, the ratio fell below $1-\\varepsilon$"
+        },
+        {
+          "value": "3",
+          "text": "$\\widehat A > 0$, the ratio fell below $1-\\varepsilon$"
+        },
+        {
+          "value": "4",
+          "text": "$\\widehat A < 0$, the ratio rose above $1+\\varepsilon$"
+        }
+      ]
+    },
+    {
+      "id": "P09",
+      "title": "PPO diagnostics: outside the interval versus actively clipped",
+      "prompt": "*coding task*\n\n**Specification:** each sample supplies a ratio $r_i$ and an advantage $\\widehat A_i$. Compute three quantities at a given $\\varepsilon$:\n\n1. the fraction with $r_i \\notin [1-\\varepsilon, 1+\\varepsilon]$;\n2. the fraction where the pessimistic branch is strictly below the unclipped one, i.e. $\\min(r_i\\widehat A_i,\\ \\operatorname{clip}(r_i)\\widehat A_i) < r_i\\widehat A_i$;\n3. the non-negative sample estimate $\\widehat D = \\frac1N\\sum_i[(r_i-1) - \\log r_i]$.\n\n**Input format:** line 1 — the number of samples $N$ and $\\varepsilon$; then $N$ lines of `ratio advantage`.\n**Output format:** three lines — quantities 1, 2 and 3 (6 decimals).\n\n**Starter code:**\n\n```python\nimport numpy as np\n\ndef ppo_diagnostics(ratio, advantage, clip_epsilon):\n    \"\"\"Return (outside_fraction, active_clip_fraction, approx_kl).\"\"\"\n    # YOUR CODE HERE\n    raise NotImplementedError\n\nif __name__ == \"__main__\":\n    n, eps = input().split()\n    rows = [tuple(float(x) for x in input().split()) for _ in range(int(n))]\n    r = np.array([row[0] for row in rows])\n    a = np.array([row[1] for row in rows])\n    for value in ppo_diagnostics(r, a, float(eps)):\n        print(f\"{value:.6f}\")\n```\n\n**Open tests:**\n\n| stdin | stdout |\n|---|---|\n| `5 0.2` ⏎ `0.75 1.0` ⏎ `1.00 1.0` ⏎ `1.30 1.0` ⏎ `1.10 -1.0` ⏎ `0.85 -1.0` | `0.400000` ⏎ `0.200000` ⏎ `0.018505` |",
+      "explanation": "“Outside the interval” and “the clipped branch actually reduced the surrogate” are different events. The second depends on the sign of the advantage.\n\n```python\nimport numpy as np\n\ndef ppo_diagnostics(ratio, advantage, clip_epsilon):\n    ratio = np.asarray(ratio, dtype=float)\n    advantage = np.asarray(advantage, dtype=float)\n    if ratio.ndim != 1 or advantage.shape != ratio.shape or ratio.size == 0:\n        raise ValueError(\"ratio and advantage must be non-empty one-dimensional arrays of equal shape\")\n    if np.any(ratio <= 0.0) or not np.all(np.isfinite(ratio)):\n        raise ValueError(\"probability ratios must be finite and positive\")\n    if clip_epsilon < 0.0:\n        raise ValueError(\"clip_epsilon must be non-negative\")\n\n    lower, upper = 1.0 - clip_epsilon, 1.0 + clip_epsilon\n    outside = np.mean((ratio < lower) | (ratio > upper))\n    unclipped = ratio * advantage\n    clipped = np.clip(ratio, lower, upper) * advantage\n    active = np.mean(np.minimum(unclipped, clipped) < unclipped)\n    approx_kl = np.mean((ratio - 1.0) - np.log(ratio))\n    return float(outside), float(active), float(approx_kl)\n```\n\nIn the public example, $0.75$ and $1.30$ lie outside the interval, so the first fraction is $2/5=0.4$. Only $1.30$ with positive advantage changes the objective, giving $1/5=0.2$. The term $(r-1)-\\log r$ is non-negative for every $r>0$, but its batch mean is still a diagnostic rather than a hard trust-region guarantee.\n\n**Additional note.** Exactly the case the two metrics exist to separate: two of five samples fall outside the interval ($0.75$ and $1.30$), but only one changes the objective — $r=1.30$ with $\\widehat A>0$. The sample $r=0.75$ with $\\widehat A>0$ is outside, yet `min` keeps the unclipped branch: a falling ratio stays fully penalized.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "The non-negative sample KL estimate",
+      "prompt": "*numeric answer · tolerance ±0.001*\n\nProbability ratios on three samples: $r = (0.8,\\ 1.0,\\ 1.25)$.\n\nWhat is $\\widehat D = \\frac13\\sum_i[(r_i - 1) - \\log r_i]$?",
+      "explanation": "The answer is **$0.0167$** at the requested precision. The terms are $0.8-1-\\log0.8\\approx0.023144$, $0$, and $1.25-1-\\log1.25\\approx0.026856$; their mean is $0.016667$. Non-negativity follows from $x-1\\ge\\log x$, but there is no universal PPO threshold across tasks.\n\n**Additional note.** Terms: $0.023144$, $0$, $0.026856$; mean $0.016667$. The expression is pointwise non-negative because $x - 1 \\ge \\log x$. There is no universal \"right\" value: the threshold depends on model size, token aggregation, epoch count, batch size and advantage quality.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "KL estimate",
+          "expected": 0.0167,
+          "tolerance": 0.001
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "RLOO and GRPO: the shared idea and the differences",
+      "prompt": "*single answer*\n\nRLOO and GRPO both generate several responses per prompt and build a relative signal. What separates them in canonical form?",
+      "explanation": "The correct choice is **the second**. The shared idea is multiple responses per prompt and a relative signal. Basic RLOO is response-level REINFORCE with a leave-one-out baseline. Canonical GRPO uses PPO-style ratios, a clipped surrogate, group centering/normalization, and reference-policy regularization. Later variants alter details, so the family name does not imply one immutable formula.\n\n**Additional note.** The correct map: the shared idea is several responses per prompt and a relative signal; RLOO is a leave-one-out baseline for response-level REINFORCE; GRPO is a family of critic-free PPO-style algorithms.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "RLOO uses a critic and GRPO does not"
+        },
+        {
+          "value": "2",
+          "text": "GRPO uses PPO-style probability ratios, a clipped surrogate, group centering and normalization, plus regularization toward a reference policy; base RLOO is a leave-one-out REINFORCE estimator and need include none of that"
+        },
+        {
+          "value": "3",
+          "text": "RLOO only works at $G = 2$"
+        },
+        {
+          "value": "4",
+          "text": "GRPO does not use group centering"
+        }
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "What one weight across all tokens does not solve",
+      "prompt": "*single answer*\n\nA response-level advantage $A(y)$ is broadcast across every token and multiplied by the mask. What does this construction do correctly, and what does it not?",
+      "explanation": "The correct choice is **the first**. Under on-policy sampling and a correct response mask, the summed score functions weighted by $A(y)$ estimate the gradient of expected whole-response reward. Every token still receives one sign and scale, so local responsibility is not identified. Length normalization changes response weighting; it does not create process-level credit assignment.\n\n**Additional note.** Possible extensions — intermediate verifiable rewards, process models, a prefix value function, decomposition into macro-actions. Each adds assumptions: process rewards are denser but can be wrong; a value function cuts variance but adds bias.",
+      "type": "single",
+      "correct": [
+        "1"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "It correctly optimizes the expected reward of the full response but does not solve credit assignment: every token gets one sign and one scale"
+        },
+        {
+          "value": "2",
+          "text": "It is incorrect as a gradient and needs a length correction"
+        },
+        {
+          "value": "3",
+          "text": "It solves credit assignment once length normalization is added"
+        },
+        {
+          "value": "4",
+          "text": "It is equivalent to a process reward model"
+        }
+      ]
+    }
+  ]
+}

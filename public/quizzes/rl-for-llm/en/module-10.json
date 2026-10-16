@@ -1,0 +1,147 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-10",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Three metrics for one candidate pool",
+      "prompt": "A system generates 32 completions. At least one correct completion exists in 96% of runs, plurality voting is correct in 71%, and a reward-model selector is correct in 83%. Match the numbers to `pass@32`, self-consistency accuracy, and Best-of-32 accuracy. Why is reporting only the largest number misleading?",
+      "explanation": "`0.96` is `pass@32` coverage, `0.71` is the accuracy of plurality voting, and `0.83` is the deployed accuracy of the reward-model selector. Coverage says a solution exists, not that the system returns it. A useful report therefore includes coverage, selected-answer accuracy, and cost.",
+      "type": "self-check"
+    },
+    {
+      "id": "P02",
+      "title": "Repeated attempts and conditional independence",
+      "prompt": "Single-attempt empirical accuracy is 0.2, so independence predicts `pass@8 = 1-0.8^8`. In a real run, all eight answers often repeat the same error. Is that observation enough to establish dependence or the direction of error in the calculation? Give an independent-sampling counterexample and propose a protocol check.",
+      "explanation": "No. An independent generator can return one correct answer with probability 0.2 and the same wrong answer with probability 0.8. All eight attempts then repeat that error with probability $0.8^8$, while the coverage formula remains exact. Repetition alone establishes neither dependence nor the sign of a discrepancy. Check for shared prefixes, randomness, or search branches; measure coverage across repeated groups for fixed prompts, its uncertainty, and distinct answers. Prompt heterogeneity also prevents replacing each conditional $p$ with an overall average accuracy.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "Ties and positional bias",
+      "prompt": "Four votes produce counts `(2,2,0)`. The correct category has index 1. What is its success probability under uniform random tie-breaking? What does `np.argmax` return?",
+      "explanation": "Uniform tie-breaking gives probability `1/2`. `np.argmax` returns index 0 and is always wrong here. If the correct category were stored at index 0, it would always win the tie. The result therefore depends on array order rather than the intended voting protocol.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Probability of a correct choice",
+          "expected": 0.5,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "np.argmax index",
+          "expected": 0,
+          "tolerance": 0
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P04",
+      "title": "A verifier with anti-signal",
+      "prompt": "Let $p=0.3$, $\\alpha=0.2$, and $\\beta=0.6$. Does selecting uniformly among accepted candidates improve on the 0.3 base rate at large $N$?",
+      "explanation": "No. Accepted-candidate precision is\n$$\n\\rho=\\frac{0.3\\cdot0.2}{0.3\\cdot0.2+0.7\\cdot0.6}=0.125.\n$$\nWith positive acceptance probability, large $N$ drives this protocol toward 0.125. The verifier is anti-informative because $\\alpha<\\beta$; inverting its decision might help, but that requires separate validation.",
+      "type": "self-check"
+    },
+    {
+      "id": "P05",
+      "title": "Uncertainty in a prefix label",
+      "prompt": "Eight independent continuations are sampled from one prefix and six succeed. The Wilson 95% interval is approximately `(0.4093, 0.9285)`. What does its width tell you?",
+      "explanation": "The point estimate is $6/8=0.75$, but the interval is wide. Eight rollouts provide a noisy process target even when the mean looks high. A PRM trained on such labels may need more rollouts, uncertainty-aware weighting, or shrinkage.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Success estimate",
+          "expected": 0.75,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Wilson lower bound",
+          "expected": 0.4093,
+          "tolerance": 0.0001
+        },
+        {
+          "label": "Wilson upper bound",
+          "expected": 0.9285,
+          "tolerance": 0.0001
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P06",
+      "title": "A hidden length penalty",
+      "prompt": "Two paths have identical per-step scores 0.9 but lengths 2 and 10. Compare product and mean aggregation. What preference does the product introduce?",
+      "explanation": "Both means equal 0.9. The products are $0.9^2=0.81$ and $0.9^{10}\\approx0.3487$. Product aggregation strongly prefers the shorter path. That is meaningful only under an appropriate joint-probability interpretation; otherwise it is an implicit length penalty.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Product, 2 steps",
+          "expected": 0.81,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Product, 10 steps",
+          "expected": 0.3487,
+          "tolerance": 0.0001
+        },
+        {
+          "label": "Mean for either path",
+          "expected": 0.9,
+          "tolerance": 1e-06
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P07",
+      "title": "One UCT index",
+      "prompt": "A child has mean value 0.6 and 10 visits; its parent has 100 visits; $c=\\sqrt2$. Compute $0.6+c\\sqrt{\\ln100/10}$.",
+      "explanation": "The score is approximately $1.5597$. It is an optimistic selection index, not a success probability. Its scale depends on the value range and exploration coefficient.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "UCT index",
+          "expected": 1.5597,
+          "tolerance": 0.0001
+        }
+      ]
+    },
+    {
+      "id": "P08",
+      "title": "A good tree with a bad scorer",
+      "prompt": "Why can a wider beam hurt under a biased process score even when the correct branch exists in the tree?",
+      "explanation": "A wider search exposes more prefixes that exploit the scorer's bias. Inflated dead ends can occupy the beam and prune the correct route. Existence of the route is coverage; retaining and selecting it is a separate property of the search controller.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "The Pareto frontier",
+      "prompt": "Modes have `(cost, quality)`: A `(1,0.70)`, B `(2,0.80)`, C `(3,0.75)`, D `(4,0.85)`. Which points are non-dominated?",
+      "explanation": "A, B, and D are non-dominated. C is dominated by B because B is cheaper and better. Choosing among frontier points requires a product-level trade-off over quality, latency, money, and risk.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "Early stopping in a vote",
+      "prompt": "The maximum budget is 11 votes. After 8 votes, the leader has 6 and the runner-up 2. Can the procedure stop if all three remaining votes could go to the runner-up?",
+      "explanation": "Yes. The runner-up can reach at most 5, below the leader's 6. Stopping preserves the result of the full 11-vote protocol, but it does not establish that the leader is correct.",
+      "type": "self-check"
+    },
+    {
+      "id": "P11",
+      "title": "The price of a minimum quota",
+      "prompt": "Why can “at least one completion for every prompt” reduce expected total coverage while still being a defensible product constraint?",
+      "explanation": "The mathematical optimum may allocate zero attempts to nearly hopeless prompts and spend them where marginal gain is larger. A minimum quota lowers modelled average coverage but preserves basic availability, fairness, and an opportunity to detect a miscalibrated difficulty predictor. It is an external constraint, not a consequence of pass@N.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "A release passport",
+      "prompt": "Give two required fields for each layer: generator, selection/search, cost, and independent quality.",
+      "explanation": "One valid answer is:\n\n- generator: model version and decoding parameters;\n- selection/search: verifier version and search hyperparameters;\n- cost: generated tokens/nodes and latency quantiles;\n- independent quality: selected-answer accuracy and held-out results.\n\nUseful additions include seeds, rejection reasons, GPU-seconds, API price, calibration, and audits of proxy–goal disagreement.",
+      "type": "self-check"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-11",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Full history and hidden state",
+      "prompt": "Consider a POMDP with a fixed environment model and initial distribution. A complete log contains every action, observation, and received reward, but an access flag has never been directly observed. Does uncertainty about the flag prevent the complete log from being a Markov information state? How does a belief state differ, and what can change when the log is truncated?",
+      "explanation": "It does not. Under these assumptions, the complete history $H_t$ determines the conditional distribution of the future and can serve as a growing Markov information state without identifying the hidden flag. The belief $b_t(s)=P(s_t=s\\mid H_t)$ is a distribution over hidden states that summarizes history for prediction; it does not add a missing observation. A text log is not automatically an explicitly computed $b_t$. A truncated window or summary can discard relevant observations and therefore need not remain sufficient. Different hidden realizations compatible with one full history express uncertainty, not a violation of the Markov property.",
+      "type": "self-check"
+    },
+    {
+      "id": "P02",
+      "title": "A controller-generated token sequence",
+      "prompt": "The model emits the symbolic action `OPEN_RED`, after which a controller serializes it into long JSON. Which tokens belong in the policy loss?",
+      "explanation": "If the model chose only the symbolic action, the learned action is `OPEN_RED` and its recorded probability. The JSON tokens were produced by a deterministic controller and receive no policy-gradient term. A stochastic serializer treated as part of a composite policy would need its own logged probability.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "Collector truncation",
+      "prompt": "A transition gives reward 0, the next value is 0.7, and $\\gamma=0.9$. Collection stops, but the environment has not terminated. Compute the one-step critic target.",
+      "explanation": "Bootstrap through the collector boundary: $y=0+0.9\\cdot0.7=0.63$. A zero target would correspond to true task termination or a separately declared no-continuation objective.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Target",
+          "expected": 0.63,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "title": "Semantic action probability",
+      "prompt": "Two JSON strings parse to the same action and have probabilities 0.25 and 0.35. What is the semantic-action probability?",
+      "explanation": "The mutually exclusive serializations add: $0.25+0.35=0.60$. A standard token loss still scores the sampled string unless it explicitly sums over all equivalent serializations.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Action probability",
+          "expected": 0.6,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P05",
+      "title": "Turn probability ratio",
+      "prompt": "The turn log-probability sums under current and behavior policies are $-2.1$ and $-2.4$. Compute the sequence ratio.",
+      "explanation": "$r=\\exp[-2.1-(-2.4)]=e^{0.3}\\approx1.34986$. Products across many turns can become heavy-tailed even when each local ratio looks modest.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Probability ratio",
+          "expected": 1.34986,
+          "tolerance": 1e-05
+        }
+      ]
+    },
+    {
+      "id": "P06",
+      "title": "Synchronous straggler cost",
+      "prompt": "Four rollouts take 1, 1, 2, and 8 seconds. What is utilization for four synchronous workers?",
+      "explanation": "Useful work is 12 worker-seconds; batch capacity is $4\\cdot8=32$. Utilization is $12/32=0.375$ and idle fraction is $0.625$. Module 12 develops the asynchronous systems consequences.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Utilization fraction",
+          "expected": 0.375,
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "id": "P07",
+      "title": "Branching without a state snapshot",
+      "prompt": "An agent branches after a search call, but every branch queries the live search service again. Are the actions compared from one state?",
+      "explanation": "Not necessarily. Index contents, ranking, and hidden session state may differ. A local comparison requires a restorable snapshot or deterministic replay, fixed randomness, and the same shared prefix; otherwise action effects are confounded with environment differences.",
+      "type": "self-check"
+    },
+    {
+      "id": "P08",
+      "title": "A homogeneous group",
+      "prompt": "All eight rewards in a rollout group equal 1. What remains after subtracting the group mean?",
+      "explanation": "Every relative advantage is zero. A larger learning rate cannot create missing variation. Change the task distribution, group design, or signal source. KL and entropy terms may still have gradients, but they are different signals.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "Repeatable inspect reward",
+      "prompt": "Why is $+0.1$ for every `inspect` more dangerous than a first-visit bonus?",
+      "explanation": "A repeatable bonus turns a loop into an independent source of return. First-visit payment limits repetition but still lacks the general invariance theorem. Potential-based shaping has a stricter form under its assumptions.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "What an agent benchmark measures",
+      "prompt": "A browser-controller replacement improves success without changing model weights. Can the gain be attributed to RL?",
+      "explanation": "No. The score entangles the model, controller, observation representation, budget, retries, environment, and verifier. Attribution requires ablations with a fixed execution contract.",
+      "type": "self-check"
+    },
+    {
+      "id": "P11",
+      "title": "Online or offline first",
+      "prompt": "The environment sends real emails and has no safe reset. Which initial training route is preferable?",
+      "explanation": "Start with a simulator, shadow mode, expert logs, or state-conditioned offline preferences. Online RL with irreversible production actions is unacceptable without sandboxing, least privilege, and a confirmation protocol.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Experiment passport",
+      "prompt": "Name at least six fields needed to reproduce a multi-turn rollout.",
+      "explanation": "At minimum: task/environment ID and version; initial state or seed; actions and observations; policy token IDs and provenance mask; behavior log-probabilities; policy version per turn; decoding settings; rewards and verifier version; stop reason with terminated/truncated/infra status; duration and cost. External tools make exact versions and state snapshots even more important.",
+      "type": "self-check"
+    }
+  ]
+}

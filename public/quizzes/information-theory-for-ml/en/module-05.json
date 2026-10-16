@@ -1,0 +1,647 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-05",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Under population-optimal probabilistic prediction with log loss, what does $I(X;Y)=H(Y)-H(Y\\mid X)$ mean?",
+      "explanation": "**Correct answer: A.** Without X the minimum expected log loss is H(Y), and with X it is H(Y|X). The statement is about the population optimum, so no actual model is guaranteed to realize that gain.",
+      "topic": "5.2. One quantity, three readings",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The expected reduction in the minimum achievable log loss after observing $X$"
+        },
+        {
+          "value": "B",
+          "text": "The difference between the accuracies of two classifiers"
+        },
+        {
+          "value": "C",
+          "text": "The number of parameters that can be removed from a model"
+        },
+        {
+          "value": "D",
+          "text": "The reduction in log loss achieved by a particular trained model"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "5.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "What does $I(X;Y)=0$ imply?",
+      "explanation": "**Correct answer: D.** Zero mutual information is equivalent to independence, which is strictly stronger than zero correlation. Options A and C describe what vanishing correlation gives, not what vanishing MI gives.",
+      "topic": "5.2. One quantity, three readings",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "There is no linear relationship, but nonlinear dependence may remain"
+        },
+        {
+          "value": "B",
+          "text": "$X=Y$ almost surely"
+        },
+        {
+          "value": "C",
+          "text": "$X$ and $Y$ are uncorrelated"
+        },
+        {
+          "value": "D",
+          "text": "$X$ and $Y$ are independent"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "5.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "Let $Y=g(X)$ be a deterministic discrete function. What is $I(X;Y)$?",
+      "explanation": "**Correct answer: D.** Since H(Y|X) = 0, mutual information equals H(Y). A non-invertible g makes this strictly smaller than H(X), which is why option A holds only for invertible functions.",
+      "topic": "5.2. One quantity, three readings",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always $H(X)$"
+        },
+        {
+          "value": "B",
+          "text": "Zero"
+        },
+        {
+          "value": "C",
+          "text": "$H(X)-H(Y)$"
+        },
+        {
+          "value": "D",
+          "text": "$H(Y)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "5.2.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "Can pointwise mutual information be negative?",
+      "explanation": "**Correct answer: C.** The average is nonnegative, but individual terms may have either sign. A pair seen less often than chance would predict has a log ratio below zero.",
+      "topic": "5.3. PMI: the local log ratio of association",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only for Gaussian variables"
+        },
+        {
+          "value": "B",
+          "text": "No, because MI is always nonnegative"
+        },
+        {
+          "value": "C",
+          "text": "Yes, when a pair occurs less often than independence predicts"
+        },
+        {
+          "value": "D",
+          "text": "Only when one of the marginals is zero"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "5.3.1"
+    },
+    {
+      "id": "item-005",
+      "prompt": "In feature selection, what does $I(X;Y\\mid Z)$ measure?",
+      "explanation": "**Correct answer: C.** Under log loss it is the expected extra gain from X after Z is already available. Shared information is a different quantity, and conditional MI can be larger than the unconditional one.",
+      "topic": "5.4. Conditional MI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only the marginal entropy $H(X)$"
+        },
+        {
+          "value": "B",
+          "text": "A linear coefficient between $X$ and $Z$"
+        },
+        {
+          "value": "C",
+          "text": "The additional information $X$ provides about $Y$ once $Z$ is known"
+        },
+        {
+          "value": "D",
+          "text": "The information shared by $X$ and $Z$ about $Y$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "5.4.1"
+    },
+    {
+      "id": "item-006",
+      "prompt": "In the XOR example $Y=X_1\\oplus X_2$ with independent fair bits, which statement is correct?",
+      "explanation": "**Correct answer: D.** This is pure synergy: each feature alone is useless, and together they determine Y. Option B is the standard trap, because conditioning on X₂ raises the value from 0 to a full bit.",
+      "topic": "5.4. Conditional MI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Each individual feature carries one bit about $Y$"
+        },
+        {
+          "value": "B",
+          "text": "$I(X_1;Y)=0$, so $I(X_1;Y\\mid X_2)=0$ as well"
+        },
+        {
+          "value": "C",
+          "text": "The pair of features is independent of $Y$"
+        },
+        {
+          "value": "D",
+          "text": "$I(X_1;Y)=I(X_2;Y)=0$, but $I((X_1,X_2);Y)=1$ bit"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "5.4.2"
+    },
+    {
+      "id": "item-007",
+      "prompt": "What can go wrong when features are ranked only by $I(X_i;Y)$?",
+      "explanation": "**Correct answer: B.** Marginal relevance cannot see interactions, so a XOR-like pair is thrown away. Redundancy is a real weakness of the method too, but it is a separate one and not what a marginal ranking is blind to.",
+      "topic": "5.4. Conditional MI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The procedure always selects every feature"
+        },
+        {
+          "value": "B",
+          "text": "It can discard features that are useful only jointly"
+        },
+        {
+          "value": "C",
+          "text": "It guarantees the absence of leakage"
+        },
+        {
+          "value": "D",
+          "text": "It systematically prefers features that are redundant with each other"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "5.4.3"
+    },
+    {
+      "id": "item-008",
+      "prompt": "What does DPI state for a Markov chain $Y\\to X\\to T$?",
+      "explanation": "**Correct answer: A.** A fixed transformation cannot create target information that was not already in X. Equality is possible for a sufficient statistic, so the strict version in option D is false.",
+      "topic": "5.5. DPI and representation learning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$I(Y;T)\\le I(Y;X)$"
+        },
+        {
+          "value": "B",
+          "text": "$I(Y;T)\\ge I(Y;X)$"
+        },
+        {
+          "value": "C",
+          "text": "$I(Y;T)=0$ for every encoder"
+        },
+        {
+          "value": "D",
+          "text": "$I(Y;T)<I(Y;X)$ unless $T=X$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "5.5.1"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Why can linear-probe accuracy improve after an encoder without violating DPI?",
+      "explanation": "**Correct answer: C.** DPI limits how much information is present, not how easily a particular model class can extract it. Rearranging information is allowed; creating it is not.",
+      "topic": "5.5. DPI and representation learning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "DPI applies only to regression"
+        },
+        {
+          "value": "B",
+          "text": "Accuracy and MI are numerically equal"
+        },
+        {
+          "value": "C",
+          "text": "The encoder can make already available information more accessible to a restricted readout"
+        },
+        {
+          "value": "D",
+          "text": "The probe is trained on more data than the encoder"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "5.5.2"
+    },
+    {
+      "id": "item-010",
+      "prompt": "Which condition describes a task-sufficient representation $T=f(X)$?",
+      "explanation": "**Correct answer: B.** Sufficiency is about target-relevant information only. Preserving all of X, as in options A and D, is far more than the task requires.",
+      "topic": "5.5. DPI and representation learning",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$T$ must preserve every detail of $X$"
+        },
+        {
+          "value": "B",
+          "text": "$Y\\perp X\\mid T$, which gives $I(Y;T)=I(Y;X)$"
+        },
+        {
+          "value": "C",
+          "text": "$I(Y;T)$ should be as small as possible"
+        },
+        {
+          "value": "D",
+          "text": "$I(X;T)$ should equal $H(X)$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "5.5.3"
+    },
+    {
+      "id": "item-011",
+      "prompt": "Why does $\\operatorname{Corr}(X,Y)=0$ not imply independence?",
+      "explanation": "**Correct answer: B.** For a symmetric X and Y = X² the covariance vanishes while the dependence is deterministic. Mutual information sees that dependence, which is exactly the difference between the two measures.",
+      "topic": "5.6. MI, correlation, and causality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Correlation is always larger than MI"
+        },
+        {
+          "value": "B",
+          "text": "Correlation detects linear association and can miss nonlinear dependence"
+        },
+        {
+          "value": "C",
+          "text": "Correlation is defined only for discrete variables"
+        },
+        {
+          "value": "D",
+          "text": "Correlation is undefined whenever the dependence is deterministic"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "5.6.1"
+    },
+    {
+      "id": "item-012",
+      "prompt": "For a BSC with uniform input, what is the mutual information at $\\varepsilon=1$, when every bit is deterministically flipped?",
+      "explanation": "**Correct answer: A.** Mutual information measures preserved dependence, not agreement of symbols. A known deterministic flip is fully reversible, so nothing is lost; the channel is worst at ε = 1/2, not at ε = 1.",
+      "topic": "5.7. Noisy labels",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "1 bit, because the transformation is invertible"
+        },
+        {
+          "value": "B",
+          "text": "0 bits, because every label is wrong"
+        },
+        {
+          "value": "C",
+          "text": "$1/2$ bit"
+        },
+        {
+          "value": "D",
+          "text": "It is undefined, because the channel is degenerate"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "5.7.1"
+    },
+    {
+      "id": "item-013",
+      "prompt": "Where should MI-based feature selection be performed during cross-validation?",
+      "explanation": "**Correct answer: B.** Any selection that has seen a validation fold makes the score on that fold optimistic. Options A and C both let the held-out data influence which features are kept.",
+      "topic": "5.8. Feature selection",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Once on the full dataset before splitting"
+        },
+        {
+          "value": "B",
+          "text": "Inside each training fold"
+        },
+        {
+          "value": "C",
+          "text": "On the union of the training and validation folds"
+        },
+        {
+          "value": "D",
+          "text": "Only on the test set"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "5.8.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Under which sampling scheme does the standard InfoNCE bound take the form $I(X;Y)\\ge\\log N-\\mathcal L_{\\mathrm{NCE}}$?",
+      "explanation": "**Correct answer: D.** The bound is derived for that specific scheme. If negatives come from the conditional instead of the marginal, or if minibatch structure creates dependence, the interpretation has to be derived again.",
+      "topic": "5.9. InfoNCE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Any arbitrary candidates drawn from the same minibatch"
+        },
+        {
+          "value": "B",
+          "text": "Negatives drawn from the same conditional distribution as the positive"
+        },
+        {
+          "value": "C",
+          "text": "Deterministic positives with no randomness"
+        },
+        {
+          "value": "D",
+          "text": "One positive from the conditional distribution and independent negatives from the marginal"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "5.9.1"
+    },
+    {
+      "id": "item-015",
+      "prompt": "What is upper-bounded by $\\log N$ in standard InfoNCE?",
+      "explanation": "**Correct answer: D.** The ceiling belongs to the estimator, not to the quantity it estimates. True MI may well exceed log N, in which case the bound simply stops being informative.",
+      "topic": "5.9. InfoNCE",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The true MI of the representations"
+        },
+        {
+          "value": "B",
+          "text": "Downstream task quality"
+        },
+        {
+          "value": "C",
+          "text": "The batch size that can be used in practice"
+        },
+        {
+          "value": "D",
+          "text": "The particular lower bound $\\log N-\\mathcal L_{\\mathrm{NCE}}$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "5.9.2"
+    },
+    {
+      "id": "item-016",
+      "prompt": "Which statement about numerical MI estimation is most accurate?",
+      "explanation": "**Correct answer: A.** High-dimensional MI is hard to estimate and a learned critic can overfit. Plug-in estimates carry a positive bias at small sample sizes, which is why a permutation baseline on independent data is worth running.",
+      "topic": "5.10. MI estimation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Population MI, its estimator, and a training proxy must be kept separate, with stability and permutation baselines checked"
+        },
+        {
+          "value": "B",
+          "text": "Any neural estimator returns exact population MI"
+        },
+        {
+          "value": "C",
+          "text": "Attention entropy equals MI between tokens"
+        },
+        {
+          "value": "D",
+          "text": "Plug-in estimates are unbiased whenever the sample exceeds the alphabet size"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "5.10.1"
+    },
+    {
+      "id": "item-017",
+      "prompt": "What is usually called the self-information of an individual outcome $x$?",
+      "explanation": "**Correct answer: C.** This is the surprisal of one outcome, and entropy is its expectation. The pointwise version of mutual information is PMI, which is a different quantity.",
+      "topic": "5.2. Terminology",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$H(X)$"
+        },
+        {
+          "value": "B",
+          "text": "$I(X;X)/2$"
+        },
+        {
+          "value": "C",
+          "text": "$-\\log p(x)$"
+        },
+        {
+          "value": "D",
+          "text": "$I(X;Y)$ evaluated at that outcome"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "5.2.4"
+    },
+    {
+      "id": "item-018",
+      "prompt": "Why can a very rare word pair receive an extremely large PMI?",
+      "explanation": "**Correct answer: A.** A single co-occurrence of two rare words gives a huge ratio with almost no evidence behind it. Frequency thresholds, smoothing, and stability checks exist precisely for this reason.",
+      "topic": "5.3. Rare events and PMI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because the product of marginal probabilities in the denominator is tiny"
+        },
+        {
+          "value": "B",
+          "text": "Because PMI equals the logarithm of the frequency"
+        },
+        {
+          "value": "C",
+          "text": "Because PMI is upper-bounded by the pair frequency"
+        },
+        {
+          "value": "D",
+          "text": "Because rare events always carry more information about each other"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "5.3.2"
+    },
+    {
+      "id": "item-019",
+      "prompt": "What trade-off does the Information Bottleneck seek?",
+      "explanation": "**Correct answer: C.** Relevance is maximized while rate is penalized. Option D swaps the roles of the two terms, which turns the objective into its opposite.",
+      "topic": "5.5. Information Bottleneck",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Minimize both $I(T;Y)$ and $I(X;T)$ as far as possible"
+        },
+        {
+          "value": "B",
+          "text": "Maximize the size of the representation"
+        },
+        {
+          "value": "C",
+          "text": "Preserve information about $Y$ while reducing unnecessary information about $X$"
+        },
+        {
+          "value": "D",
+          "text": "Maximize $I(X;T)$ subject to a bound on $I(T;Y)$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "5.5.4"
+    },
+    {
+      "id": "item-020",
+      "prompt": "Which description of DINO is most accurate?",
+      "explanation": "**Correct answer: B.** Not every self-supervised method is contrastive classification against negatives. Reading the whole family as MI maximization is a useful lens, not a theorem about each method.",
+      "topic": "5.9. Map of self-supervised methods",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An exact kNN mutual-information estimator"
+        },
+        {
+          "value": "B",
+          "text": "Self-distillation without labels, rather than standard InfoNCE with negative pairs"
+        },
+        {
+          "value": "C",
+          "text": "A causal discovery algorithm"
+        },
+        {
+          "value": "D",
+          "text": "Contrastive learning with a very large number of negatives"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "5.9.3"
+    },
+    {
+      "id": "item-021",
+      "prompt": "A binary symmetric channel has crossover probability $\\varepsilon=0.1$ and a uniform input. Compute $I(X;Y)$ in bits. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.531** (tolerance 0.002). Here I = 1 − h₂(0.1) = 1 − 0.469 = 0.531 bits. At ε = 0.5 this would be 0 and at ε = 1 it returns to a full bit, so the curve is not monotone in the noise level.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.531,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "5.C.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "For the XOR example $Y=X_1\\oplus X_2$ with independent fair bits, compute the conditional mutual information $I(X_1;Y\\mid X_2)$ in bits. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 1** (tolerance 0.005). Given X₂ the target is a deterministic function of X₁, so the conditional MI is a full bit, while the unconditional I(X₁;Y) is exactly 0. Conditioning can raise mutual information, and here it raises it from nothing to the maximum.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 1.0,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "5.C.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "In an InfoNCE setup with $N=256$ candidates the loss is $\\mathcal L_{\\mathrm{NCE}}=2.0$ nats. Compute the resulting lower bound on $I(X;Y)$ in nats. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 3.545** (tolerance 0.005). The bound is log 256 − 2.0 = 5.545 − 2.0 = 3.545 nats. Its ceiling is 5.545 nats, so if the true MI is larger the bound cannot report it however well the critic is trained.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 3.545,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "5.C.3"
+    },
+    {
+      "id": "item-024",
+      "prompt": "For a pair with $p(x,y)=0.002$, $p(x)=0.1$ and $p(y)=0.05$, compute the pointwise mutual information in bits. (tolerance 0.002)",
+      "explanation": "**Numeric answer: -1.322** (tolerance 0.002). The ratio is 0.002/0.005 = 0.4, and log₂ 0.4 = −1.322 bits. The pair occurs less often than independence would predict, so its PMI is negative even though the average over all pairs cannot be.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": -1.322,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "5.C.4"
+    }
+  ]
+}

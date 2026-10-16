@@ -1,0 +1,511 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-06",
+  "language": "en",
+  "questions": [
+    {
+      "id": "7.4.1",
+      "prompt": "Why is the total/active parameter ratio not a guaranteed MoE speedup?",
+      "explanation": "**Correct answer: A.** The ratio measures parameter sparsity under a stated convention. Attention and output-projection parameters are included in this module's gpt-oss active count. That count does not determine attention runtime, communication cost, or kernel utilization.",
+      "topic": "7.4. A typed contract for routing and parameter accounting",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It does not model actual compute time, data movement, or device utilization"
+        },
+        {
+          "value": "B",
+          "text": "Total is always counted in bf16 whereas active is counted only after 4-bit quantization"
+        },
+        {
+          "value": "C",
+          "text": "Routed experts are excluded from total but automatically included in active"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "7.5.1",
+      "prompt": "What total does the open gpt-oss-120b implementation yield after its bias parameters are counted?",
+      "explanation": "**Correct answer: B.** Including attention, router, and expert biases gives 116,829,156,672. The 116,789,050,944 count retains the same matrices, norms, and attention sinks but excludes linear-layer biases, whose contribution is 40,105,728.",
+      "topic": "7.5. Rebuilding both gpt-oss models from open code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "116,789,050,944 — the count without linear biases"
+        },
+        {
+          "value": "B",
+          "text": "116,829,156,672 — matrices, norms, sinks, and visible biases"
+        },
+        {
+          "value": "C",
+          "text": "117,000,000,000 — the rounded model-size headline"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "7.5.2",
+      "prompt": "What should be checked before comparing active-parameter headlines from two MoE models?",
+      "explanation": "**Correct answer: C.** Active parameters have no single universal convention. A comparison must align the shared path, expert path, and auxiliary components.",
+      "topic": "7.5. Rebuilding both gpt-oss models from open code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Compare only routed-expert counts and top-k in one MoE layer"
+        },
+        {
+          "value": "B",
+          "text": "Convert both checkpoints to the same numerical storage format"
+        },
+        {
+          "value": "C",
+          "text": "Align the treatment of embeddings, output heads, shared parts, and auxiliary modules"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "7.6.1",
+      "prompt": "Selection bias changes top-k membership. What defines mixture weights in the studied sigmoid router?",
+      "explanation": "**Correct answer: A.** Bias affects selection, while mixture weights are normalized from the clean sigmoid scores of selected experts. Selection score and mixture weight are distinct.",
+      "topic": "7.6. A numerical router trace",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The clean sigmoid scores of the experts that were selected"
+        },
+        {
+          "value": "B",
+          "text": "Scores plus bias after a softmax over every expert"
+        },
+        {
+          "value": "C",
+          "text": "Raw logits after replacing them by integer top-k ranks"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "7.6.2",
+      "prompt": "A top-1 router normalizes its sole gate to 1. Away from route changes, what is that gate’s logit gradient?",
+      "explanation": "**Correct answer: B.** The discrete index is not differentiated. Router gradients depend on the complete gating contract.",
+      "topic": "7.6. A numerical router trace",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The sigmoid derivative of the selected logit."
+        },
+        {
+          "value": "B",
+          "text": "Zero: this normalized gate is constant."
+        },
+        {
+          "value": "C",
+          "text": "The selected expert index."
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "7.7.1",
+      "prompt": "What does Auxiliary-Loss-Free Balancing remove?",
+      "explanation": "**Correct answer: B.** The method adds no separate auxiliary objective to language-model loss. Bias still changes routes and therefore which experts receive LM gradients.",
+      "topic": "7.7. Load balancing without conflating three mechanisms",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every effect of changed routing on expert training"
+        },
+        {
+          "value": "B",
+          "text": "The direct interference gradient from a separate balancing objective"
+        },
+        {
+          "value": "C",
+          "text": "The need to measure token-assignment frequencies for experts"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "7.7.2",
+      "prompt": "Which bias-update rule is the main one in the Loss-Free Balancing paper?",
+      "explanation": "**Correct answer: C.** The paper’s main algorithm uses the sign of the load deviation. The notebook’s proportional controller is separate and explicitly pedagogical.",
+      "topic": "7.7. Load balancing without conflating three mechanisms",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A proportional step equal to the full load deviation"
+        },
+        {
+          "value": "B",
+          "text": "A gradient step on router z-loss with an adaptive rate"
+        },
+        {
+          "value": "C",
+          "text": "A fixed sign step up or down relative to mean load"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "7.7.3",
+      "prompt": "How is router z-loss computed across tokens?",
+      "explanation": "**Correct answer: A.** ST-MoE uses the mean squared log partition. Squaring the mean generally gives a different result.",
+      "topic": "7.7. Load balancing without conflating three mechanisms",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Square each token’s logsumexp, then average."
+        },
+        {
+          "value": "B",
+          "text": "Average logsumexp first, then square that mean."
+        },
+        {
+          "value": "C",
+          "text": "Compute the variance of expert selection frequencies."
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "7.7.4",
+      "prompt": "What balancing scheme does the DeepSeek-V3 report describe?",
+      "explanation": "**Correct answer: C.** An auxiliary-loss-free main controller does not imply that the entire model uses no auxiliary losses.",
+      "topic": "7.7. Load balancing without conflating three mechanisms",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Router z-loss alone, without measuring load."
+        },
+        {
+          "value": "B",
+          "text": "No auxiliary losses at any level."
+        },
+        {
+          "value": "C",
+          "text": "Bias-based global balancing plus a small complementary sequence-level loss."
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "7.8.1",
+      "prompt": "How should C(128,4)=10,668,000 be interpreted?",
+      "explanation": "**Correct answer: A.** This is a combinatorial upper bound on subsets, not a count of learned skills. Training, correlated routes, and router constraints reduce the realized patterns.",
+      "topic": "7.8. Fine-grained experts and always-on shared capacity",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "10,668,000 unordered top-4 subsets before any extra routing constraints"
+        },
+        {
+          "value": "B",
+          "text": "128 independently learned skills, each of which activates 4 experts"
+        },
+        {
+          "value": "C",
+          "text": "4 experts that every batch is guaranteed to choose from all 128"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "7.8.2",
+      "prompt": "What is the most defensible interpretation of a shared expert?",
+      "explanation": "**Correct answer: B.** A shared expert always participates in the MoE branch and is motivated by common computation and reduced duplication. Its semantic content requires intervention-based evidence.",
+      "topic": "7.8. Fine-grained experts and always-on shared capacity",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is guaranteed to store grammar, arithmetic, and common function words"
+        },
+        {
+          "value": "B",
+          "text": "It provides always-on capacity for common work and may reduce bank redundancy"
+        },
+        {
+          "value": "C",
+          "text": "It replaces attention for tokens that occurred frequently during training"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "7.8.3",
+      "prompt": "Which change preserves expert weights and active FFN work when each of eight width-i experts is split into four?",
+      "explanation": "**Correct answer: C.** Both E·i and k·i stay constant. Routing and communication costs can still change.",
+      "topic": "7.8. Fine-grained experts and always-on shared capacity",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Choose 2 of 32 width-i/4 experts."
+        },
+        {
+          "value": "B",
+          "text": "Choose 8 of 128 width-i experts."
+        },
+        {
+          "value": "C",
+          "text": "Choose 8 of 32 width-i/4 experts instead of 2 of 8 width-i experts."
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "7.9.1",
+      "prompt": "How should routing frequency be turned into a claim about expert specialization?",
+      "explanation": "**Correct answer: C.** Routing frequency is correlational. A causal intervention or ablation tests whether the capability changes when the expert is modified.",
+      "topic": "7.9. What expert specialization evidence can actually support",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Name the expert after its ten most frequently routed tokens"
+        },
+        {
+          "value": "B",
+          "text": "Choose the most frequent domain and treat it as the expert’s function"
+        },
+        {
+          "value": "C",
+          "text": "Run an intervention or ablation and measure the functional change"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "7.10.1",
+      "prompt": "For E=128, k=4, and N=16, what is the expected touched-expert fraction under independent uniform routing?",
+      "explanation": "**Correct answer: A.** The formula gives 0.3982897, or about 39.83%. It assumes independent uniform routing and is not a prediction of a trained router.",
+      "topic": "7.10. Inference: the expert bank, all-to-all, and batch union",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About 39.83% from 1-(1-4/128)^16"
+        },
+        {
+          "value": "B",
+          "text": "Exactly 3.125%, because one token selects 4 of 128"
+        },
+        {
+          "value": "C",
+          "text": "About 86.89%, which is the same setup with N=64"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "7.10.2",
+      "prompt": "What does 2Thkb measure in the Expert Parallelism estimate?",
+      "explanation": "**Correct answer: A.** Local assignments need no network transfer, aggregation can reduce messages, and padding or protocols add bytes.",
+      "topic": "7.10. Inference: the expert bank, all-to-all, and batch union",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Logical dispatch-and-return payload for all assignments."
+        },
+        {
+          "value": "B",
+          "text": "Exact per-GPU traffic under any placement."
+        },
+        {
+          "value": "C",
+          "text": "A mandatory lower bound on network traffic."
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "7.11.1",
+      "prompt": "What is the central idea of LatentMoE?",
+      "explanation": "**Correct answer: B.** LatentMoE keeps discrete experts and top-k. A narrower routed representation reduces communication and expert compute before projection back to model width.",
+      "topic": "7.11. LatentMoE and alternatives to fixed discrete top-k",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Replace the discrete expert bank by a continuous basis-matrix mixture"
+        },
+        {
+          "value": "B",
+          "text": "Keep discrete top-k while doing dispatch and expert compute in a narrower space"
+        },
+        {
+          "value": "C",
+          "text": "Route attention heads only and remove feed-forward experts entirely"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "7.12.1",
+      "prompt": "One assignment is removed by capacity overflow. What happens to the remaining mixture weight?",
+      "explanation": "**Correct answer: C.** Dropping and rerouting policies vary. The course notebook renormalizes surviving weights, but that is not a universal MoE contract.",
+      "topic": "7.12. Level-one code: policies should be visible",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every MoE runtime must leave it numerically unchanged"
+        },
+        {
+          "value": "B",
+          "text": "Every implementation must reroute the token to another expert"
+        },
+        {
+          "value": "C",
+          "text": "Runtime policy decides; the notebook renormalizes surviving weights"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "7.14.1",
+      "prompt": "How does the gpt-oss router differ from the DeepSeek-V3-style contract discussed here?",
+      "explanation": "**Correct answer: A.** The open gpt-oss router selects top-k logits and softmaxes them. In the studied DeepSeek-style contract, selection uses sigmoid score plus bias, while mixture weights use clean scores.",
+      "topic": "7.14. Reading the gpt-oss implementation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "gpt-oss selects top-k logits then softmaxes them; DeepSeek uses sigmoid plus selection bias"
+        },
+        {
+          "value": "B",
+          "text": "gpt-oss uses sigmoid plus bias whereas DeepSeek softmaxes selected logits"
+        },
+        {
+          "value": "C",
+          "text": "gpt-oss has no trained router whereas DeepSeek has no discrete top-k"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "7.15.1",
+      "prompt": "How should the “Kimi K3: 2.8T / 104B” line be read?",
+      "explanation": "**Correct answer: B.** A total/active pair is only the beginning of a passport. Interpretation also needs top-k, shared/routed structure, attention, auxiliary modules, and the counting convention.",
+      "topic": "7.15. A source-aware snapshot of current MoE architectures",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "As proof of exactly a 26.9× speedup on any hardware"
+        },
+        {
+          "value": "B",
+          "text": "As a total/active passport requiring the expert contract and counting convention"
+        },
+        {
+          "value": "C",
+          "text": "As the sizes of the vision encoder and language decoder"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "7.15.2",
+      "prompt": "Qwen3.5 includes MTP. Must its weights count as active on every ordinary decoding step?",
+      "explanation": "**Correct answer: B.** A configuration lists available components; an active count describes a particular execution path.",
+      "topic": "7.15. A source-aware snapshot of current MoE architectures",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Yes: the field guarantees execution."
+        },
+        {
+          "value": "B",
+          "text": "Only if the specified execution path uses MTP."
+        },
+        {
+          "value": "C",
+          "text": "No: MTP is never used for inference."
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "7.16.1",
+      "prompt": "What may change when visual tokens enter a shared MoE router while top-k stays fixed?",
+      "explanation": "**Correct answer: C.** With fixed top-k, per-token expert compute need not increase. A more diverse batch may touch more distinct experts and change all-to-all traffic.",
+      "topic": "7.16. Multimodal MoE is not one architecture",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The expert compute of every individual token must double"
+        },
+        {
+          "value": "B",
+          "text": "Every expert automatically becomes modality-specific"
+        },
+        {
+          "value": "C",
+          "text": "The batch expert union and communication profile may widen"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

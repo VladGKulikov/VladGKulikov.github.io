@@ -1,0 +1,559 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-04",
+  "language": "en",
+  "questions": [
+    {
+      "id": "5.4.1",
+      "prompt": "Why does SDPA divide dot products by $\\sqrt{d_h}$?",
+      "explanation": "**Correct answer: A.** If all query and key components are independent, zero-mean, and unit-variance, then Var(q·k)=d_h. Division by sqrt(d_h) restores unit variance. This motivates the initial scale; it does not assert permanent independence of learned features.",
+      "topic": "5.4. SDPA, masks, and the square-root scale",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To normalize dot-product variance to order one"
+        },
+        {
+          "value": "B",
+          "text": "To force softmax to select exactly one allowed key per row"
+        },
+        {
+          "value": "C",
+          "text": "To make output shape independent of query- and KV-head counts"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.4.2",
+      "prompt": "Which keys may query position 5 attend to with W=3 including the current position?",
+      "explanation": "**Correct answer: B.** The condition 0 ≤ p_q − p_k < 3 retains positions 3–5 and excludes the future.",
+      "topic": "5.4. SDPA, masks, and the square-root scale",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0, 1, 2"
+        },
+        {
+          "value": "B",
+          "text": "3, 4, 5"
+        },
+        {
+          "value": "C",
+          "text": "4, 5, 6"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.4.3",
+      "prompt": "Why can SDPA is_causal=True be wrong for one query after a prefix?",
+      "explanation": "**Correct answer: A.** Row 0 need not be token position 0. Supply an explicit position-aware mask with is_causal disabled.",
+      "topic": "5.4. SDPA, masks, and the square-root scale",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The rectangular mask is upper-left aligned"
+        },
+        {
+          "value": "B",
+          "text": "SDPA cannot use float64"
+        },
+        {
+          "value": "C",
+          "text": "Caching automatically disables every mask"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.5.1",
+      "prompt": "Under which storage policy does the gpt-oss-120b K/V estimate at 131,072 positions fall from 9 to 4.504 GiB?",
+      "explanation": "**Correct answer: B.** 4.5 GiB for full layers plus 4.5 MiB for local layers gives 4.50439453125 GiB of K/V payload for one sequence. A mask alone does not guarantee eviction; weights and workspace are excluded.",
+      "topic": "5.5. Worked storage arithmetic: four head layouts and one hybrid model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All hybrid KV values use int8 rather than bf16 storage"
+        },
+        {
+          "value": "B",
+          "text": "The runtime caps 18 local caches at 128 positions; 18 other layers retain the full context"
+        },
+        {
+          "value": "C",
+          "text": "Half of each layer’s query heads are disabled at long context"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.5.2",
+      "prompt": "What does the 56.89× factor mean in the teaching MLA comparison?",
+      "explanation": "**Correct answer: C.** It compares the stated MHA baseline with (512+64)·61·2 MLA storage. It is not the same baseline as the paper’s 93.3% cache reduction.",
+      "topic": "5.5. Worked storage arithmetic: four head layouts and one hybrid model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "End-to-end DeepSeek-V2 speedup over every possible MHA model"
+        },
+        {
+          "value": "B",
+          "text": "Reduction of the full checkpoint including MoE, embeddings, and optimizer"
+        },
+        {
+          "value": "C",
+          "text": "Raw-byte ratio between two stated KV-cache geometries"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "5.6.1",
+      "prompt": "With $H_q=64$ and $H_{kv}=8$, what is the GQA group size $g=H_q/H_{kv}$?",
+      "explanation": "**Correct answer: A.** 64/8=8. MHA has g=1, while MQA has H_kv=1.",
+      "topic": "5.6. GQA is a grouping invariant, not a quality guarantee",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$g=8$: one KV head serves eight query heads"
+        },
+        {
+          "value": "B",
+          "text": "$g=1/8$: each query head owns one eighth of a KV head"
+        },
+        {
+          "value": "C",
+          "text": "$g=72$: the head counts are added after projection"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.6.2",
+      "prompt": "Which quality conclusion is supported by the original GQA paper?",
+      "explanation": "**Correct answer: B.** The result is empirical and protocol-specific. It motivates the tradeoff but does not define a universal optimal group size.",
+      "topic": "5.6. GQA is a grouping invariant, not a quality guarantee",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every GQA with group size eight is guaranteed to match MHA quality"
+        },
+        {
+          "value": "B",
+          "text": "In the authors’ tests, GQA was near MHA quality and MQA speed"
+        },
+        {
+          "value": "C",
+          "text": "MQA always outperforms GQA when both are trained from scratch"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.7.1",
+      "prompt": "Why does MLA decouple the RoPE branch when absorbing projections?",
+      "explanation": "**Correct answer: C.** (R_m q)^T R_n A c_n produces effective query A^T R_(n-m)^T q, which depends on n. RoPE is linear; RA and AR may not even have compatible shapes.",
+      "topic": "5.7. MLA: cache a shared latent and move the projections",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "RoPE is nonlinear, so no matrices can ever be composed around it"
+        },
+        {
+          "value": "B",
+          "text": "The branch exists only for saved-format compatibility with GQA"
+        },
+        {
+          "value": "C",
+          "text": "Rotating reconstructed keys makes the effective query depend on the key position"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "5.7.2",
+      "prompt": "How can q^T A c be evaluated without expanding key A c?",
+      "explanation": "**Correct answer: A.** For A of shape d_k × d_c, A^T q has width d_c. Associativity moves the projection to the query side.",
+      "topic": "5.7. MLA: cache a shared latent and move the projections",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "(A^T q)^T c"
+        },
+        {
+          "value": "B",
+          "text": "(A q)^T c for arbitrary shapes"
+        },
+        {
+          "value": "C",
+          "text": "q^T c with no A"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.8.1",
+      "prompt": "Which three quantities does online softmax carry across tiles?",
+      "explanation": "**Correct answer: A.** State (m, l, n) supports exact rescaling when a later tile raises the maximum, with final output n/l.",
+      "topic": "5.8. FlashAttention: dense attention without the quadratic HBM object",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Running maximum, normalization sum, and weighted output numerator"
+        },
+        {
+          "value": "B",
+          "text": "The full logit row, probability row, and its causal mask"
+        },
+        {
+          "value": "C",
+          "text": "Maximum index, top-k keys, and an unweighted sum of values"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.8.2",
+      "prompt": "What does FlashAttention make linear in sequence length?",
+      "explanation": "**Correct answer: B.** Dense arithmetic remains O(N²d). Additional storage becomes linear; IO is reduced but still depends on SRAM and tile geometry.",
+      "topic": "5.8. FlashAttention: dense attention without the quadratic HBM object",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The number of dense dot products between all Q and K rows"
+        },
+        {
+          "value": "B",
+          "text": "Additional memory: the full $N\\times N$ matrix is not stored in HBM"
+        },
+        {
+          "value": "C",
+          "text": "The number of keys visible to each query in dense attention"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.8.3",
+      "prompt": "What should online softmax do with a fully masked tile before any allowed key?",
+      "explanation": "**Correct answer: B.** This avoids undefined subtraction. If every tile is empty, apply the chosen empty-row policy.",
+      "topic": "5.8. FlashAttention: dense attention without the quadratic HBM object",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Evaluate exp(-inf - (-inf))"
+        },
+        {
+          "value": "B",
+          "text": "Skip the tile and keep the empty state"
+        },
+        {
+          "value": "C",
+          "text": "Return uniform weights over forbidden keys"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.8.4",
+      "prompt": "Why does streaming computation not guarantee linear memory for the whole program?",
+      "explanation": "**Correct answer: A.** Account for inputs, output, masks and temporaries. The teaching streaming path builds its mask per tile.",
+      "topic": "5.8. FlashAttention: dense attention without the quadratic HBM object",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A prebuilt dense N × N mask itself uses quadratic memory"
+        },
+        {
+          "value": "B",
+          "text": "Softmax retains every training epoch"
+        },
+        {
+          "value": "C",
+          "text": "The output always has shape N × N"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.9.1",
+      "prompt": "What does distance $L(W-1)$ describe for L consecutive local layers with equal windows W, including the current position, and no dilation?",
+      "explanation": "**Correct answer: C.** A signal may travel through intermediate layers, but every hop transforms it. Path existence is not reliable direct retrieval.",
+      "topic": "5.9. Windowed attention and layer schedules",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Guaranteed preservation of every fact across the stated distance"
+        },
+        {
+          "value": "B",
+          "text": "Exact equivalence to one global layer with the same radius"
+        },
+        {
+          "value": "C",
+          "text": "An upper bound on a dependency path, not a memory guarantee"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "5.10.1",
+      "prompt": "How is the learned sink implemented in gpt-oss?",
+      "explanation": "**Correct answer: A.** The sink is appended as a logit column, participates in normalization, and is removed before the V product.",
+      "topic": "5.10. “Attention sink” refers to two different objects",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An extra scalar score per head with no value contribution"
+        },
+        {
+          "value": "B",
+          "text": "The first real token whose KV is forbidden from leaving the window"
+        },
+        {
+          "value": "C",
+          "text": "One fixed key vector shared by every query head"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.10.2",
+      "prompt": "Why can an ordinary fixed key not generally replace a constant learned sink?",
+      "explanation": "**Correct answer: B.** An ordinary dot product changes with q. Exact equivalence needs a special score slot or an augmented constant coordinate.",
+      "topic": "5.10. “Attention sink” refers to two different objects",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An ordinary key necessarily adds a nonzero value to the output"
+        },
+        {
+          "value": "B",
+          "text": "$q^\\top k$ varies with the query, while a learned sink is constant"
+        },
+        {
+          "value": "C",
+          "text": "The key cannot use the same data format as ordinary keys"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.10.3",
+      "prompt": "Does adding 2 only to token logits preserve the result when a learned sink is fixed?",
+      "explanation": "**Correct answer: B.** Softmax shift invariance requires shifting every logit, including the sink.",
+      "topic": "5.10. “Attention sink” refers to two different objects",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Yes, for all inputs"
+        },
+        {
+          "value": "B",
+          "text": "Generally no: the sink probability changes"
+        },
+        {
+          "value": "C",
+          "text": "Yes, because the sink value is zero"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.11.1",
+      "prompt": "When was DSA officially introduced?",
+      "explanation": "**Correct answer: C.** DeepSeek-V3.2-Exp was built on V3.1-Terminus and debuted DeepSeek Sparse Attention with a report, weights, and kernels.",
+      "topic": "5.11. Sparse attention: selecting a subset of positions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "In the DeepSeek-V2 technical report published in May 2024"
+        },
+        {
+          "value": "B",
+          "text": "In the closed GLM-5.1 release announced in December 2025"
+        },
+        {
+          "value": "C",
+          "text": "In the open DeepSeek-V3.2-Exp release on 29 September 2025"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "5.11.2",
+      "prompt": "How does the original MoBA score a block?",
+      "explanation": "**Correct answer: B.** There are no extra router parameters; Q/K representations learn with the model. Arbitrary attention replacement still needs quality evaluation.",
+      "topic": "5.11. Sparse attention: selecting a subset of positions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A separate new trainable router"
+        },
+        {
+          "value": "B",
+          "text": "The query dot product with the mean block key"
+        },
+        {
+          "value": "C",
+          "text": "Only the block index"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.11.3",
+      "prompt": "With N=2048, d=32, r=8, k=64, what is (Nr+kd)/(Nd)?",
+      "explanation": "**Correct answer: B.** r/d + k/N = 0.25 + 0.03125. This counts score multiplications only, excluding top-k, projections and value aggregation; it is not measured speedup.",
+      "topic": "5.11. Sparse attention: selecting a subset of positions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0.03125"
+        },
+        {
+          "value": "B",
+          "text": "0.28125"
+        },
+        {
+          "value": "C",
+          "text": "1.28125"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.12.1",
+      "prompt": "Why can a fully masked row produce NaN even before a division by zero?",
+      "explanation": "**Correct answer: A.** A row with no finite logit defines no distribution. The implementation must reject it, zero an explicit padding row, or provide a finite sink score.",
+      "topic": "5.12. A transparent NumPy reference",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Stable softmax encounters the undefined $-\\infty-(-\\infty)$"
+        },
+        {
+          "value": "B",
+          "text": "A causal mask necessarily adds positive infinity to the row"
+        },
+        {
+          "value": "C",
+          "text": "The bf16 format cannot represent a probability of zero"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "5.14.1",
+      "prompt": "Why does `np.tile` give the correct shape but wrong GQA grouping?",
+      "explanation": "**Correct answer: B.** The required order is kv0,kv0,…,kv1,kv1,… . Tiling produces kv0,kv1,…,kv0,kv1,… and silently changes assignments.",
+      "topic": "5.14. Reading gpt-oss configuration and code",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It converts K/V from float to integer during repetition"
+        },
+        {
+          "value": "B",
+          "text": "It repeats the whole block; each KV head must repeat consecutively"
+        },
+        {
+          "value": "C",
+          "text": "It automatically averages adjacent KV heads before expansion"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "5.16.1",
+      "prompt": "What does 4096 × 72 KiB = 288 MiB count for early-fusion visual tokens?",
+      "explanation": "**Correct answer: B.** The hypothetical decoder uses 72 KiB per position. Weights, vision activations and temporary arrays are excluded. Local layers require window-aware accounting.",
+      "topic": "5.16. Multimodal attention: where image information is stored",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All memory of the multimodal model"
+        },
+        {
+          "value": "B",
+          "text": "Only added K/V for one sequence in the specified all-full layout"
+        },
+        {
+          "value": "C",
+          "text": "Only vision-encoder memory"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,367 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-20",
+  "language": "en",
+  "questions": [
+    {
+      "id": "20.1.1",
+      "prompt": "What distinguishes a forward pass from generation?",
+      "explanation": "**Correct answer: A.** Selection, appending, and stopping are generation rules. Computing logits alone does not choose a continuation.",
+      "topic": "20.1. Three computations that should not be conflated",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A forward pass computes a distribution; generation also selects and appends a token"
+        },
+        {
+          "value": "B",
+          "text": "A forward pass updates weights, while generation only computes loss"
+        },
+        {
+          "value": "C",
+          "text": "A forward pass always selects the most likely token"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "20.3.1",
+      "prompt": "For sequence [BOS, A, B, EOS], the inputs are [BOS, A, B]. What are the targets?",
+      "explanation": "**Correct answer: B.** Targets are shifted by one position so that every row predicts the next token from its known past.",
+      "topic": "20.3. Embedding lookup starts the computation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "[BOS, A, B]"
+        },
+        {
+          "value": "B",
+          "text": "[A, B, EOS]"
+        },
+        {
+          "value": "C",
+          "text": "[EOS, EOS, EOS]"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "20.4.1",
+      "prompt": "Why does RMSNorm in this model preserve causal visibility?",
+      "explanation": "**Correct answer: C.** RMSNorm operates across features within one position. The attention mask separately controls visibility between positions.",
+      "topic": "20.4. RMSNorm controls scale before a sublayer",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It subtracts a mean over all sequence positions"
+        },
+        {
+          "value": "B",
+          "text": "It zeroes keys after the current position"
+        },
+        {
+          "value": "C",
+          "text": "It computes scale separately within each representation row"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "20.5.1",
+      "prompt": "What does RoPE transform in the base M20 configuration?",
+      "explanation": "**Correct answer: A.** Positional rotations act on Q/K activations. Fixed frequencies are not learned projection matrices.",
+      "topic": "20.5. Projections and RoPE attach a position to a comparison",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Queries and keys; values remain unrotated"
+        },
+        {
+          "value": "B",
+          "text": "Only values, because they are combined"
+        },
+        {
+          "value": "C",
+          "text": "All linear weights whenever a new token arrives"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "20.6.1",
+      "prompt": "With h_q=4 and h_kv=2, which zero-based query heads share the first K/V head?",
+      "explanation": "**Correct answer: B.** The map g(j)=floor(j/2) assigns consecutive pairs of query heads to each K/V head. Their query projections remain distinct.",
+      "topic": "20.6. Causal attention and shared key/value heads",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "0 and 2"
+        },
+        {
+          "value": "B",
+          "text": "0 and 1"
+        },
+        {
+          "value": "C",
+          "text": "Only 0"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "20.7.1",
+      "prompt": "What travels along the first residual branch of a pre-norm block?",
+      "explanation": "**Correct answer: C.** The block computes Z=H+Attention(N(H)). Normalization belongs to the transformation branch; the skip connection carries H.",
+      "topic": "20.7. SwiGLU completes the block",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only the normalized attention input N(H)"
+        },
+        {
+          "value": "B",
+          "text": "The attention probability matrix A"
+        },
+        {
+          "value": "C",
+          "text": "The representation H before attention normalization"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "20.8.1",
+      "prompt": "The example has V=4, d=m=2, and one block. How many parameters remain after tying E and U?",
+      "explanation": "**Correct answer: A.** The untied model has 50 parameters. Tying removes one 4×2 table of 8 parameters; the final normalization is still present.",
+      "topic": "20.8. The stack, output projection, and parameter inventory",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "42"
+        },
+        {
+          "value": "B",
+          "text": "50"
+        },
+        {
+          "value": "C",
+          "text": "34"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "20.10.1",
+      "prompt": "The sole selected target, EOS, has probability 0.183502. What is the masked mean loss?",
+      "explanation": "**Correct answer: B.** Only one target is selected, so the denominator is one. The loss is −ln(0.183502), with no extra division by the number of input positions.",
+      "topic": "20.10. From a next-token distribution to sequence likelihood and loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About 0.565177 nats"
+        },
+        {
+          "value": "B",
+          "text": "About 1.695530 nats"
+        },
+        {
+          "value": "C",
+          "text": "About 0.183502 nats"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "20.11.1",
+      "prompt": "How are gradients accumulated for tied embedding table E?\n\n\n\n*Second pass — after Section 11.*",
+      "explanation": "**Correct answer: C.** One parameter participates in two graph locations. The chain rule adds both contributions before the parameter update.",
+      "topic": "20.11. Backpropagation reaches every learned part",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only the contribution from the final layer is used"
+        },
+        {
+          "value": "B",
+          "text": "Two independent tables receive separate updates"
+        },
+        {
+          "value": "C",
+          "text": "Contributions from input lookup and output projection are added"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "20.12.1",
+      "prompt": "What follows from the loss falling from 1.109374 to 1.084832 after one AdamW step?",
+      "explanation": "**Correct answer: A.** This verifies one update on the training example, not monotonic convergence or generalization.",
+      "topic": "20.12. AdamW turns derivatives into a new model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Loss decreased on the same sequence under the specified settings"
+        },
+        {
+          "value": "B",
+          "text": "The model necessarily improved on unseen texts"
+        },
+        {
+          "value": "C",
+          "text": "Every later update must also decrease loss"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "20.13.1",
+      "prompt": "Top-2 removes EOS from the selection distribution. What does that imply about the base model?",
+      "explanation": "**Correct answer: B.** Top-k changes the decoder distribution q without updating weights. The original p can still assign positive probability to EOS.",
+      "topic": "20.13. Generation adds a selection rule",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Its EOS weights have been set to zero"
+        },
+        {
+          "value": "B",
+          "text": "Its EOS probability may still be positive"
+        },
+        {
+          "value": "C",
+          "text": "It can no longer terminate any sequence"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "20.14.1",
+      "prompt": "Which cache can be used after training updates the weights?",
+      "explanation": "**Correct answer: C.** K/V depend on weights and intermediate activations. Identical text does not make a cache from earlier weights valid.",
+      "topic": "20.14. KV-cache preserves a computation already performed",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The old cache is always valid if token IDs are unchanged"
+        },
+        {
+          "value": "B",
+          "text": "Changing only the next position index is sufficient"
+        },
+        {
+          "value": "C",
+          "text": "Recompute prefix K/V using the new weights"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "20.15.1",
+      "prompt": "Where does MiniLLM's sigmoid router use the balancing offset?\n\n\n\n*Second pass — after Section 15.*",
+      "explanation": "**Correct answer: A.** Top-k selection on score+bias is separate from normalization of the original scores. This is the routing contract of the example.",
+      "topic": "20.15. MoE replaces a specific operator",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "In expert selection; mixture weights normalize the original sigmoid scores"
+        },
+        {
+          "value": "B",
+          "text": "Only in normalizing the selected mixture weights"
+        },
+        {
+          "value": "C",
+          "text": "It replaces both expert weights and expert outputs"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "20.19.1",
+      "prompt": "What can remain unchanged when attention is replaced by a causal SSM?",
+      "explanation": "**Correct answer: B.** A causal SSM changes the context operator and carried state. It can retain the autoregressive objective without retaining the old block structure.",
+      "topic": "20.19. Where the construction changes: SSMs and diffusion",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Mandatory separate K/V records for every past position"
+        },
+        {
+          "value": "B",
+          "text": "Next-token prediction and the autoregressive probability product"
+        },
+        {
+          "value": "C",
+          "text": "The exact internal structure of every Transformer block"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "20.19.2",
+      "prompt": "Why does the diffusion probability sum over hidden sequences?",
+      "explanation": "**Correct answer: C.** The product of reverse transitions describes one trajectory. The sum marginalizes intermediate states, not token positions.",
+      "topic": "20.19. Where the construction changes: SSMs and diffusion",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To replace token probabilities with their arithmetic mean"
+        },
+        {
+          "value": "B",
+          "text": "Because every diffusion step appends exactly one token on the right"
+        },
+        {
+          "value": "C",
+          "text": "Different refinement trajectories can reach the same clean result"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    }
+  ]
+}

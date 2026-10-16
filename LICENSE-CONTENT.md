@@ -2,7 +2,8 @@
 
 Copyright © 2026 Vlad Kulikov.
 
-Unless otherwise marked, the course lecture text, course illustrations, course
+Unless otherwise marked, the course lecture text, published quiz questions and
+worked answers, course illustrations, course
 metadata, and author-written explanatory prose in this repository are licensed
 under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0
 International Public License (CC BY-NC-SA 4.0)**.

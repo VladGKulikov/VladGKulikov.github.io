@@ -1,0 +1,197 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-05",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Terminal transition versus external truncation",
+      "prompt": "A transition has reward $r=0.2$, $\\gamma=0.95$, and $\\max_{a'}Q_{\\theta^-}(s',a')=1.6$.\n\n1. Compute the DQN target after a true terminal trap.\n2. Compute the target when collection stops at an external time limit, $s'$ is observed, and the task could continue.\n3. Explain why a single `done=True` flag can corrupt learning.",
+      "explanation": "A true terminal disables bootstrapping:\n\n$$\ny_{\\mathrm{terminal}}=0.2.\n$$\n\nAn external truncation retains continuation value when $s'$ is available:\n\n$$\ny_{\\mathrm{truncated}}=0.2+0.95\\cdot1.6=1.72.\n$$\n\nCollapsing both cases into `done=True` assigns zero continuation value to a technical boundary. That creates an artificial terminal and systematically depresses values near the limit. If the horizon is part of the task itself, the remaining budget must instead be represented in the state.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Terminal",
+          "expected": 0.2,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "External truncation",
+          "expected": 1.72,
+          "tolerance": 1e-06
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P02",
+      "title": "Map the support of a fixed log",
+      "prompt": "At state $s$, a log contains 900 `left` transitions, 100 `up` transitions, and no `right` or `down` transitions. A Q-network outputs\n\n$$\nQ(s,\\cdot)=(0.4,\\ 0.3,\\ 2.8,\\ 2.1)\n$$\n\nin the order `left`, `up`, `right`, `down`.\n\nWhich actions are empirically supported? What does a naive greedy policy choose? What extra assumption would be required to trust `right`?",
+      "explanation": "`left` and `up` are supported by the log; `right` and `down` are unobserved. A naive greedy policy chooses `right` because $2.8$ is largest, but that number is entirely an extrapolation of the function approximator.\n\nTrust would require explicit structure: known smoothness of dynamics and features, a validated transition model, symmetry, or external data connecting the action to observed behavior. A large neural output is not such an assumption.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "Replay memory is not a fixed offline dataset",
+      "prompt": "Two systems train from one million transitions.\n\n- System A keeps interacting, evicts old replay entries, and adds new ones.\n- System B receives one immutable file and never runs the environment while training.\n\nBoth use the same DQN target. Which system is offline RL, and why does the common local loss not make the regimes equivalent?",
+      "explanation": "System B is offline RL because its data are fixed: the policy cannot test a new action or repair missing coverage. System A is ordinary off-policy online RL. Its mini-batch may come from older policies, but the future data stream still responds to the current agent.\n\nA local loss does not define the statistical regime. Data provenance, exploration, and feedback between the learned policy and future observations are decisive.",
+      "type": "self-check"
+    },
+    {
+      "id": "P04",
+      "title": "What feedback standard DAgger requires",
+      "prompt": "For each signal, decide whether it is sufficient for a standard DAgger iteration:\n\n\n\nWhy does the phrase “feedback on current-policy behavior” not make all four algorithms identical?",
+      "explanation": "Only **1** supplies the action label required by standard DAgger, so the pair $(s,\\pi_E(s))$ can be added to supervised training.\n\nSignals 2–4 are preferences or rewards. They can support reward modeling, policy gradients, search, or other objectives, but not the standard DAgger reduction without an additional mechanism that recovers expert actions.\n\nThe outer feedback loop is similar; the observation format determines the statistical problem and admissible loss.",
+      "type": "single",
+      "correct": [
+        "1"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "the expert gives the correct action in each learner-visited state;"
+        },
+        {
+          "value": "2",
+          "text": "a person picks the better of two complete episodes;"
+        },
+        {
+          "value": "3",
+          "text": "a verifier returns an episode-level score;"
+        },
+        {
+          "value": "4",
+          "text": "a reward model scores a response."
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P05",
+      "title": "Find the sign error in a CQL penalty",
+      "prompt": "The function below operates on one state. `q_values` contains all action values and `logged_action` is the dataset action.\n\n```python\nimport numpy as np\n\ndef cql_penalty_bad(q_values: np.ndarray, logged_action: int) -> float:\n    q = np.asarray(q_values, dtype=float)\n    return float(np.log(np.exp(q).sum()) + q[logged_action])\n```\n\n1. Find the sign error.\n2. Make the computation numerically stable.\n3. Explain why this term alone is not a full CQL algorithm.",
+      "explanation": "The discrete penalty is\n\n$$\n\\log\\sum_a e^{Q(s,a)}-Q(s,a_D),\n$$\n\nso the logged value must be subtracted. A stable implementation is:\n\n```python\nimport numpy as np\n\ndef cql_penalty(q_values: np.ndarray, logged_action: int) -> float:\n    q = np.asarray(q_values, dtype=float)\n    if q.ndim != 1 or not 0 <= logged_action < q.size:\n        raise ValueError(\"invalid q_values or action\")\n    m = float(q.max())\n    logsumexp = m + float(np.log(np.exp(q - m).sum()))\n    return logsumexp - float(q[logged_action])\n```\n\nFull CQL also includes Bellman regression, the action distribution used in the conservative term, a coefficient, a target network, optimization, and assumptions. The function computes only one local component.",
+      "type": "self-check"
+    },
+    {
+      "id": "P06",
+      "title": "An expectile above the mean",
+      "prompt": "For one state, dataset-action values are $Q=(0,1,4)$. Let $V=1$ and $\\tau=0.8$.\n\n1. Compute the weighted squared residuals.\n2. Which way will $V$ move?\n3. Why is this not the same as taking the maximum 4?",
+      "explanation": "Residuals $u=Q-V$ are $(-1,0,3)$. A negative residual has weight $1-\\tau=0.2$, a positive residual has weight $\\tau=0.8$, and the zero residual contributes nothing. The terms are $0.2$, $0$, and $0.8\\cdot9=7.2$.\n\nThe large positive residual dominates, so optimization raises $V$. An expectile is a smooth functional of the entire dataset-action value distribution. For finite $\\tau<1$ it remains distinct from the maximum and depends on observation mass, whereas a max uses only the largest value.",
+      "type": "self-check"
+    },
+    {
+      "id": "P07",
+      "title": "One FQE target",
+      "prompt": "At the next state, the evaluation policy chooses two actions with probabilities $(0.25,0.75)$. The target Q-model outputs $(2,4)$. The transition has $r=-0.1$, $\\gamma=0.9$, and is non-terminal.\n\n1. Compute the FQE target.\n2. Compare it with a Q-learning target.\n3. What changes at a true terminal?",
+      "explanation": "The target-policy continuation value is\n\n$$\n0.25\\cdot2+0.75\\cdot4=3.5.\n$$\n\nThus\n\n$$\ny^{\\mathrm{FQE}}=-0.1+0.9\\cdot3.5=3.05.\n$$\n\nQ-learning would use the maximum 4 and produce $-0.1+0.9\\cdot4=3.5$. FQE evaluates a fixed action distribution rather than improving it. At a true terminal, continuation is removed and both targets equal $r=-0.1$.",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "FQE target",
+          "expected": 3.05,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Q-learning target",
+          "expected": 3.5,
+          "tolerance": 1e-06
+        },
+        {
+          "label": "Terminal target",
+          "expected": -0.1,
+          "tolerance": 1e-06
+        }
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P08",
+      "title": "A Decision Transformer target outside the data",
+      "prompt": "Training return-to-go values lie between $-1$ and $1$. Deployment requests $G_1^{\\mathrm{target}}=20$.\n\nName three possible outcomes. Which one is guaranteed by the DT training loss, and how should the regime be tested?",
+      "explanation": "The model may ignore the unfamiliar condition and reproduce ordinary behavior, extrapolate into a bad region, or happen to generate a strong trajectory. The supervised loss guarantees none of these outside the training support.\n\nCompare the requested value with the training range; evaluate actual return across several conditions inside and near support; use multiple seeds/episodes; and inspect failure rates as well as means. A return condition is an input, not a feasibility certificate.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "Causal leakage in Decision Transformer",
+      "prompt": "A preprocessing pipeline feeds current return-to-go, state, the **current correct action**, and asks the model to predict that same action.\n\nWhy is training accuracy misleading? What causal shift is required?",
+      "explanation": "The current action directly reveals the label. The model can copy it without learning a deployable policy, so high accuracy measures leakage.\n\nTo predict $a_t$, the model may use return conditions and states through $s_t$, but only previous actions $a_{<t}$. Logits and action targets must be shifted causally, just as logits and next-token labels are shifted in language modeling.",
+      "type": "self-check"
+    },
+    {
+      "id": "P10",
+      "title": "Match data to method",
+      "prompt": "Match each dataset to the most direct baseline objective: SFT/BC, classical offline RL, DPO, or ILQL.\n\n1. a prompt and one demonstration response without reward;\n2. preferred/rejected response pairs;\n3. prefix–token sequences with an outcome reward;\n4. environment transitions $(s,a,r,s')$.\n\nFor each, name one object absent from the other settings.",
+      "explanation": "1 → SFT/BC: direct demonstrator action labels, with no separate reward.  \n2 → DPO: a pairwise preference relation and a reference-policy likelihood ratio.  \n3 → ILQL: token transitions with reward/value information for learning $Q$ and $V$.  \n4 → classical offline RL: explicit next-state dynamics and transition reward.\n\nReal datasets can combine signals, but “offline” alone is insufficient to choose an algorithm.",
+      "type": "matching",
+      "options": [
+        {
+          "value": "1",
+          "text": "BC/SFT"
+        },
+        {
+          "value": "2",
+          "text": "Classical offline RL"
+        },
+        {
+          "value": "3",
+          "text": "DPO"
+        },
+        {
+          "value": "4",
+          "text": "ILQL"
+        }
+      ],
+      "correct": [
+        "1",
+        "3",
+        "4",
+        "2"
+      ],
+      "matchLabels": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "manualReview": true
+    },
+    {
+      "id": "P11",
+      "title": "Hidden tests for a behavior-support mask",
+      "prompt": "A student implements\n\n```python\ndef behavior_support_mask(probabilities, threshold):\n    \"\"\"Return a Boolean mask for actions whose behavior probability is supported.\"\"\"\n```\n\nPropose at least six hidden tests that reject `return probabilities > 0` and constant masks.",
+      "explanation": "Useful tests include:\n\n1. a mixed vector with values above and below the threshold;\n2. equality at the threshold, with an explicit `>=` or `>` contract;\n3. zero probabilities;\n4. thresholds 0 and 1;\n5. invalid shapes, `NaN`, negatives, or a sum far from one according to the declared input contract;\n6. Boolean dtype and shape preservation;\n7. permutation equivariance;\n8. all-supported and none-supported examples;\n9. no mutation of the input.\n\n`probabilities > 0` fails on small positive probabilities below threshold. Constant masks fail on paired examples with opposite expected outcomes.",
+      "type": "self-check"
+    },
+    {
+      "id": "P12",
+      "title": "Report an internal experiment without overclaiming",
+      "prompt": "In one pinned run, naive offline DQN solved no episodes while CQL and IQL solved all episodes. Choose the defensible statement and reject the others.",
+      "explanation": "**B** is defensible because it reports the observation, a plausible mechanism, and the boundary of inference.\n\nA turns one run into a theorem. C is false in general: offline DQN can work with adequate coverage and approximation. D erases differences among action restriction, conservative value learning, and expectile/advantage-weighted methods. A teaching plot should report seed, log size, training budget, and that it is not an external benchmark.",
+      "type": "single",
+      "correct": [
+        "2"
+      ],
+      "options": [
+        {
+          "value": "1",
+          "text": "“CQL and IQL are proven better than offline DQN.”"
+        },
+        {
+          "value": "2",
+          "text": "“In this configuration, naive offline DQN exploited out-of-data error while two protected objectives learned successful policies; broader comparison requires other seeds, logs, and hyperparameters.”"
+        },
+        {
+          "value": "3",
+          "text": "“Offline DQN always diverges.”"
+        },
+        {
+          "value": "4",
+          "text": "“All pessimistic methods are equivalent.”"
+        }
+      ],
+      "manualReview": true
+    }
+  ]
+}

@@ -1,0 +1,732 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-12",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Why can a concentration bound for a pre-specified model not be applied directly to $W=A(S)$?",
+      "explanation": "**Correct answer: B.** Adaptive selection creates selection bias: the output has already adapted to fluctuations of the particular sample.",
+      "topic": "12.2. From a fixed model to adaptive selection",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because neural networks are not measurable functions"
+        },
+        {
+          "value": "B",
+          "text": "Because the trained model depends on the same sample on which empirical risk is measured"
+        },
+        {
+          "value": "C",
+          "text": "Because the loss is always unbounded"
+        },
+        {
+          "value": "D",
+          "text": "Because PAC learning forbids optimization"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "12.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "What is the most accurate statement about classical uniform-convergence bounds for very large networks?",
+      "explanation": "**Correct answer: D.** The problem is usually not validity but the coarse global complexity of the class.",
+      "topic": "12.2. From a fixed model to adaptive selection",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They are mathematically false"
+        },
+        {
+          "value": "B",
+          "text": "They apply only to linear models"
+        },
+        {
+          "value": "C",
+          "text": "They are always tighter than PAC-Bayes"
+        },
+        {
+          "value": "D",
+          "text": "They are valid worst-case bounds but can be numerically vacuous with coarse complexity measures"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "12.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "What does $D_{\\mathrm{KL}}(Q\\|P)$ measure in the standard PAC-Bayes setup?",
+      "explanation": "**Correct answer: A.** The KL term charges for posterior adaptation to the sample relative to a valid reference distribution.",
+      "topic": "12.3. PAC-Bayes: prior, posterior, and the Gibbs classifier",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The cost of moving a data-dependent posterior away from a pre-chosen prior"
+        },
+        {
+          "value": "B",
+          "text": "The number of network parameters"
+        },
+        {
+          "value": "C",
+          "text": "The distance between train and test distributions"
+        },
+        {
+          "value": "D",
+          "text": "The entropy of the labels"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "12.3.1"
+    },
+    {
+      "id": "item-004",
+      "prompt": "Why must the prior in a basic PAC-Bayes theorem be independent of the certification sample?",
+      "explanation": "**Correct answer: C.** The posterior may depend on data because the bound is simultaneous over Q; an uncorrected prior may not.",
+      "topic": "12.3. PAC-Bayes: prior, posterior, and the Gibbs classifier",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To make the posterior uniform"
+        },
+        {
+          "value": "B",
+          "text": "To force the KL to zero"
+        },
+        {
+          "value": "C",
+          "text": "Otherwise the data could be used to shrink the complexity term without being charged"
+        },
+        {
+          "value": "D",
+          "text": "To make the Gibbs classifier deterministic"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "12.3.2"
+    },
+    {
+      "id": "item-005",
+      "prompt": "Which predictor is directly described by the basic PAC-Bayes risk $L(Q)$?",
+      "explanation": "**Correct answer: B.** L(Q)=E_(W~Q)L(W) is the risk of the randomized Gibbs predictor.",
+      "topic": "12.3. PAC-Bayes: prior, posterior, and the Gibbs classifier",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The network with mean weights"
+        },
+        {
+          "value": "B",
+          "text": "The Gibbs classifier that randomly draws $W\\sim Q$"
+        },
+        {
+          "value": "C",
+          "text": "A majority vote without additional arguments"
+        },
+        {
+          "value": "D",
+          "text": "The best model in the posterior support"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "12.3.3"
+    },
+    {
+      "id": "item-006",
+      "prompt": "What is the PAC-Bayes-kl inequality used in the module?",
+      "explanation": "**Correct answer: A.** It is a high-probability statement holding simultaneously for all posteriors Q.",
+      "topic": "12.4. PAC-Bayes-kl: the main high-probability bound",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\operatorname{kl}(\\widehat L_S(Q)\\|L(Q))\\le [D_{\\mathrm{KL}}(Q\\|P)+\\ln(2\\sqrt n/\\delta)]/n$"
+        },
+        {
+          "value": "B",
+          "text": "$L(Q)\\le D_{\\mathrm{KL}}(Q\\|P)$"
+        },
+        {
+          "value": "C",
+          "text": "$I(W;S)\\le\\widehat L_S(Q)$"
+        },
+        {
+          "value": "D",
+          "text": "$L(Q)=\\widehat L_S(Q)$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "12.4.1"
+    },
+    {
+      "id": "item-007",
+      "prompt": "If $\\widehat L_S(Q)=0$ and $\\operatorname{kl}(0\\|L(Q))\\le c$, what exact upper bound follows?",
+      "explanation": "**Correct answer: D.** Because kl(0‖L)=-ln(1-L).",
+      "topic": "12.4. PAC-Bayes-kl: the main high-probability bound",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$L(Q)\\le c^2$"
+        },
+        {
+          "value": "B",
+          "text": "$L(Q)\\le e^{-c}$"
+        },
+        {
+          "value": "C",
+          "text": "$L(Q)\\le\\sqrt{2c}$"
+        },
+        {
+          "value": "D",
+          "text": "$L(Q)\\le1-e^{-c}$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "12.4.2"
+    },
+    {
+      "id": "item-008",
+      "prompt": "How does the Pinsker corollary compare with exact binary-KL inversion?",
+      "explanation": "**Correct answer: C.** Pinsker replaces the binary-KL geometry by a quadratic inequality and loses information.",
+      "topic": "12.4. PAC-Bayes-kl: the main high-probability bound",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is always identical"
+        },
+        {
+          "value": "B",
+          "text": "It is always tighter"
+        },
+        {
+          "value": "C",
+          "text": "It is simpler but usually weaker, especially near zero empirical risk"
+        },
+        {
+          "value": "D",
+          "text": "It applies only when $n=1$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "12.4.3"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Which tool transfers a fixed-hypothesis exponential-moment bound from prior $P$ to an arbitrary posterior $Q$?",
+      "explanation": "**Correct answer: B.** Change of measure adds the cost D_KL(Q‖P).",
+      "topic": "12.4. PAC-Bayes-kl: the main high-probability bound",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The Pythagorean theorem"
+        },
+        {
+          "value": "B",
+          "text": "Donsker–Varadhan change of measure"
+        },
+        {
+          "value": "C",
+          "text": "The central limit theorem"
+        },
+        {
+          "value": "D",
+          "text": "Kraft inequality"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "12.4.4"
+    },
+    {
+      "id": "item-010",
+      "prompt": "What does the Gibbs posterior $Q_\\lambda\\propto P\\exp[-\\lambda n\\widehat L_S]$ minimize?",
+      "explanation": "**Correct answer: D.** This follows directly from the Gibbs variational principle.",
+      "topic": "12.5. Turning the bound into a trainable objective",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Empirical risk alone"
+        },
+        {
+          "value": "B",
+          "text": "$I(X;T)-\\beta I(T;Y)$"
+        },
+        {
+          "value": "C",
+          "text": "Posterior entropy alone"
+        },
+        {
+          "value": "D",
+          "text": "$\\widehat L_S(Q)+D_{\\mathrm{KL}}(Q\\|P)/(\\lambda n)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "12.5.1"
+    },
+    {
+      "id": "item-011",
+      "prompt": "When does a Gibbs posterior literally coincide with an ordinary Bayesian posterior?",
+      "explanation": "**Correct answer: D.** Algebraic similarity does not replace a likelihood model.",
+      "topic": "12.5. Turning the bound into a trainable objective",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always"
+        },
+        {
+          "value": "B",
+          "text": "Only for linear models"
+        },
+        {
+          "value": "C",
+          "text": "Never"
+        },
+        {
+          "value": "D",
+          "text": "When the loss and scale match a negative log-likelihood and the chosen prior"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "12.5.2"
+    },
+    {
+      "id": "item-012",
+      "prompt": "Why is deterministic weight decay not equivalent to a full PAC-Bayes training objective?",
+      "explanation": "**Correct answer: C.** The quadratic mean term is only one part of the Gaussian KL.",
+      "topic": "12.5. Turning the bound into a trainable objective",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because KL contains no mean-weight term"
+        },
+        {
+          "value": "B",
+          "text": "Because PAC-Bayes forbids Gaussian distributions"
+        },
+        {
+          "value": "C",
+          "text": "PAC-Bayes optimizes a distribution, includes variance terms, and certifies a Gibbs predictor"
+        },
+        {
+          "value": "D",
+          "text": "Because weight decay always increases loss"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "12.5.3"
+    },
+    {
+      "id": "item-013",
+      "prompt": "What happens to $D_{\\mathrm{KL}}(\\delta_{w_*}\\|P)$ when $P$ has a continuous density?",
+      "explanation": "**Correct answer: A.** A point mass is not absolutely continuous with respect to a continuous prior.",
+      "topic": "12.5. Turning the bound into a trainable objective",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is infinite"
+        },
+        {
+          "value": "B",
+          "text": "It equals $\\|w_*\\|^2$"
+        },
+        {
+          "value": "C",
+          "text": "It is always zero"
+        },
+        {
+          "value": "D",
+          "text": "It equals the prior entropy"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "12.5.4"
+    },
+    {
+      "id": "item-014",
+      "prompt": "What type of guarantee is usually provided by the basic Xu–Raginsky MI generalization bound?",
+      "explanation": "**Correct answer: B.** It controls |E[L(W)-L̂_S(W)]|.",
+      "topic": "12.6. MI bounds: learning as a channel from sample to model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A high-probability certificate for one run"
+        },
+        {
+          "value": "B",
+          "text": "An expectation bound over the sample and algorithmic randomness"
+        },
+        {
+          "value": "C",
+          "text": "An adversarial-robustness guarantee"
+        },
+        {
+          "value": "D",
+          "text": "The exact test risk"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "12.6.1"
+    },
+    {
+      "id": "item-015",
+      "prompt": "For a loss in $[0,1]$, which sub-Gaussian variance proxy follows from Hoeffding’s lemma?",
+      "explanation": "**Correct answer: C.** This yields |Egen|≤√(I(W;S)/(2n)).",
+      "topic": "12.6. MI bounds: learning as a channel from sample to model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$1$"
+        },
+        {
+          "value": "B",
+          "text": "$1/2$"
+        },
+        {
+          "value": "C",
+          "text": "$1/4$"
+        },
+        {
+          "value": "D",
+          "text": "$n$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "12.6.2"
+    },
+    {
+      "id": "item-016",
+      "prompt": "What is true for a deterministic algorithm with an exact continuous output $W$?",
+      "explanation": "**Correct answer: D.** Determinism alone does not ensure finite mutual information in the continuous case.",
+      "topic": "12.6. MI bounds: learning as a channel from sample to model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "MI is always zero"
+        },
+        {
+          "value": "B",
+          "text": "MI always equals the number of parameters"
+        },
+        {
+          "value": "C",
+          "text": "MI is necessarily finite"
+        },
+        {
+          "value": "D",
+          "text": "MI is often infinite, making the basic MI bound vacuous"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "12.6.3"
+    },
+    {
+      "id": "item-017",
+      "prompt": "Why are individual-sample MI bounds used?",
+      "explanation": "**Correct answer: D.** They aggregate local I(W;Z_i) contributions rather than placing one square root over a global quantity.",
+      "topic": "12.7. The exact decomposition connecting PAC-Bayes and MI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To prove a causal effect"
+        },
+        {
+          "value": "B",
+          "text": "To replace loss by accuracy"
+        },
+        {
+          "value": "C",
+          "text": "To make the prior depend on the test set"
+        },
+        {
+          "value": "D",
+          "text": "To account for dependence on individual examples and sometimes obtain a tighter bound"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "12.7.1"
+    },
+    {
+      "id": "item-018",
+      "prompt": "Which exact identity connects average posterior-to-prior KL and mutual information?",
+      "explanation": "**Correct answer: A.** The second term is the mismatch between the marginal output distribution and the chosen prior.",
+      "topic": "12.7. The exact decomposition connecting PAC-Bayes and MI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\mathbb E_S D_{\\mathrm{KL}}(Q_S\\|P)=I(W;S)+D_{\\mathrm{KL}}(P_W\\|P)$"
+        },
+        {
+          "value": "B",
+          "text": "$I(W;S)=H(S)$"
+        },
+        {
+          "value": "C",
+          "text": "$D_{\\mathrm{KL}}(Q_S\\|P)=I(X;T)$"
+        },
+        {
+          "value": "D",
+          "text": "$I(W;S)=\\widehat L_S(W)$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "12.7.2"
+    },
+    {
+      "id": "item-019",
+      "prompt": "Which prior minimizes $\\mathbb E_S D_{\\mathrm{KL}}(Q_S\\|P)$?",
+      "explanation": "**Correct answer: A.** This is the oracle prior; it makes the mismatch term vanish.",
+      "topic": "12.7. The exact decomposition connecting PAC-Bayes and MI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$P=P_W$, the marginal distribution of the algorithm output"
+        },
+        {
+          "value": "B",
+          "text": "A point mass at the trained weights"
+        },
+        {
+          "value": "C",
+          "text": "A uniform prior"
+        },
+        {
+          "value": "D",
+          "text": "Any Gaussian prior"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "12.7.3"
+    },
+    {
+      "id": "item-020",
+      "prompt": "What is the precise status of the oracle prior $P_W$ in a standard high-probability PAC-Bayes bound?",
+      "explanation": "**Correct answer: B.** “Oracle” means unavailable, not automatically invalid. If the marginal law of the algorithm output is known independently of the realized sample, it is a fixed prior; a same-sample estimate is instead a data-dependent prior and needs a separate theorem.",
+      "topic": "12.7. The exact decomposition connecting PAC-Bayes and MI",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It is always invalid because it depends on the learning algorithm"
+        },
+        {
+          "value": "B",
+          "text": "The exact $P_W$, fixed before the realized sample, is admissible, but it usually requires knowledge of the unknown data distribution; estimating it from the same sample creates dependence that must be paid for"
+        },
+        {
+          "value": "C",
+          "text": "It may be estimated from the certification sample and inserted without a correction"
+        },
+        {
+          "value": "D",
+          "text": "It always has infinite entropy"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "12.7.4"
+    },
+    {
+      "id": "item-021",
+      "prompt": "When does the PAC-Bayes complexity term have a literal MDL code-length interpretation?",
+      "explanation": "**Correct answer: B.** In bits, -log₂P(w) is the ideal prior-code length of the hypothesis.",
+      "topic": "12.8. Connections to MDL, Information Bottleneck, and KL-regularized policies",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only for Wasserstein distance"
+        },
+        {
+          "value": "B",
+          "text": "For discrete $Q=\\delta_w$ with prior mass $P(w)>0$, where KL equals $-\\ln P(w)$"
+        },
+        {
+          "value": "C",
+          "text": "Only if $I(X;T)=0$"
+        },
+        {
+          "value": "D",
+          "text": "Never"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "12.8.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "Why should $I(W;S)$ in generalization theory not be identified with $I(X;T)$ in the Information Bottleneck?",
+      "explanation": "**Correct answer: A.** W,S describe an algorithm and dataset; X,T describe an individual input and representation.",
+      "topic": "12.8. Connections to MDL, Information Bottleneck, and KL-regularized policies",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They involve different random objects and appear in different theorems"
+        },
+        {
+          "value": "B",
+          "text": "They always use different log bases"
+        },
+        {
+          "value": "C",
+          "text": "IB forbids stochastic encoders"
+        },
+        {
+          "value": "D",
+          "text": "PAC-Bayes does not use KL"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "12.8.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "Why is the KL anchor in RLHF not the same object as the PAC-Bayes KL?",
+      "explanation": "**Correct answer: A.** Using the same KL notation does not make the random objects identical.",
+      "topic": "12.8. Connections to MDL, Information Bottleneck, and KL-regularized policies",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "RLHF compares output policies at a context, whereas PAC-Bayes compares distributions over models or weights"
+        },
+        {
+          "value": "B",
+          "text": "PAC-Bayes KL is always symmetric"
+        },
+        {
+          "value": "C",
+          "text": "RLHF never uses probabilities"
+        },
+        {
+          "value": "D",
+          "text": "They differ only in log base"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "12.8.3"
+    },
+    {
+      "id": "item-024",
+      "prompt": "What else must be accounted for when empirical Gibbs risk is estimated from a finite Monte Carlo sample from $Q$?",
+      "explanation": "**Correct answer: C.** Otherwise a noisy random estimate is inserted into the theorem without an additional guarantee.",
+      "topic": "12.9. Building a practical PAC-Bayes certificate",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The KL term may be dropped"
+        },
+        {
+          "value": "B",
+          "text": "One may automatically replace the Gibbs predictor by the mean network"
+        },
+        {
+          "value": "C",
+          "text": "Monte Carlo estimation error must be included in the certificate"
+        },
+        {
+          "value": "D",
+          "text": "Test risk becomes part of the bound"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "12.9.1"
+    },
+    {
+      "id": "item-025",
+      "prompt": "How can a data-dependent prior be used validly through sample splitting?",
+      "explanation": "**Correct answer: C.** The cost is a smaller effective certification sample.",
+      "topic": "12.10. Mathematical deepening: more local information costs",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Train prior and posterior on the test set"
+        },
+        {
+          "value": "B",
+          "text": "Ignore prior dependence on data"
+        },
+        {
+          "value": "C",
+          "text": "Build the prior on $S_0$ and conditionally apply the bound to an independent subset $S_1$"
+        },
+        {
+          "value": "D",
+          "text": "Always set prior equal to posterior"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "12.10.1"
+    }
+  ]
+}

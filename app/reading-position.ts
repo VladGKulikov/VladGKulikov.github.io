@@ -18,6 +18,12 @@ const blockKind = (block: HTMLElement) => block.querySelector("img") ? "IMAGE" :
 function readingSections(): ReadingSection[] {
   const prose = document.querySelector(".lecture-prose");
   if (!prose) return [];
+  if (prose.hasAttribute('data-quiz')) {
+    return Array.from(prose.querySelectorAll<HTMLElement>(':scope > [data-question-id]')).map(question => ({
+      key: `question:${question.dataset.questionId}`,
+      blocks: Array.from(question.children).filter(child => child.tagName !== 'NOSCRIPT') as HTMLElement[],
+    }));
+  }
   const sections: ReadingSection[] = [{ key: "preamble", blocks: [] }];
   for (const block of Array.from(prose.children) as HTMLElement[]) {
     if (block.tagName === "H2" || block.tagName === "H3") {
@@ -67,11 +73,11 @@ export function captureReadingPosition(): ReadingPosition | null {
 
 export function readingPositionAtAnchor(anchor: HTMLElement): ReadingPosition | null {
   const sections = readingSections();
-  const sectionIndex = sections.findIndex(section => section.blocks.includes(anchor));
+  const sectionIndex = sections.findIndex(section => section.blocks.includes(anchor) || section.key === `question:${anchor.dataset.questionId}`);
   if (sectionIndex < 0) return null;
   const section = sections[sectionIndex];
-  const blockIndex = section.blocks.indexOf(anchor);
-  const kind = blockKind(anchor);
+  const blockIndex = Math.max(0, section.blocks.indexOf(anchor));
+  const kind = blockKind(section.blocks[blockIndex]);
   return {
     sectionKey: section.key, sectionIndex, blockKind: kind,
     blockOrdinal: section.blocks.slice(0, blockIndex).filter(block => blockKind(block) === kind).length,

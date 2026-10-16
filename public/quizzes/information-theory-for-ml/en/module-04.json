@@ -1,0 +1,647 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-04",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "Which inequality is valid for a convex function $\\phi$?",
+      "explanation": "**Correct answer: B.** For a convex function the chord lies above the graph, so averaging the arguments first gives the smaller value. The direction reverses for a concave function, which is where option A comes from.",
+      "topic": "4.2. Jensen's inequality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\phi(\\mathbb E X)\\ge\\mathbb E\\phi(X)$"
+        },
+        {
+          "value": "B",
+          "text": "$\\phi(\\mathbb E X)\\le\\mathbb E\\phi(X)$"
+        },
+        {
+          "value": "C",
+          "text": "$\\phi(\\mathbb E X)=\\mathbb E\\phi(X)$ for every $X$"
+        },
+        {
+          "value": "D",
+          "text": "$\\phi(\\mathbb E X)\\le\\phi(\\mathbb E\\phi(X))$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "4.2.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "Under strict convexity, when can equality hold in Jensen's inequality?",
+      "explanation": "**Correct answer: D.** Affineness on the support is the general equality condition, but strict convexity rules it out on any interval, so only a degenerate X remains. Symmetry and a zero mean say nothing about the gap.",
+      "topic": "4.2. Jensen's inequality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When the distribution of $X$ is symmetric"
+        },
+        {
+          "value": "B",
+          "text": "When $\\mathbb E X=0$"
+        },
+        {
+          "value": "C",
+          "text": "When $\\phi$ is affine on the support of $X$"
+        },
+        {
+          "value": "D",
+          "text": "When $X$ is almost surely constant"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "4.2.2"
+    },
+    {
+      "id": "item-003",
+      "prompt": "What is the Jensen gap for $\\phi(x)=x^2$?",
+      "explanation": "**Correct answer: C.** The gap is E[X²] − (E X)², which is the variance by definition. Note that it is the variance itself and not its square root: the gap has the units of φ, not of X.",
+      "topic": "4.2. Jensen's inequality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\mathbb E X$"
+        },
+        {
+          "value": "B",
+          "text": "$(\\mathbb E X)^2$"
+        },
+        {
+          "value": "C",
+          "text": "$\\operatorname{Var}(X)$"
+        },
+        {
+          "value": "D",
+          "text": "The standard deviation of $X$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "4.2.3"
+    },
+    {
+      "id": "item-004",
+      "prompt": "Which function is concave on $(0,\\infty)$?",
+      "explanation": "**Correct answer: A.** Its second derivative is −1/x², which is negative. The other three are convex, and the pair log x and −log x is exactly why the direction of every inequality in this module has to be tracked.",
+      "topic": "4.2. Jensen's inequality",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\log x$"
+        },
+        {
+          "value": "B",
+          "text": "$-\\log x$"
+        },
+        {
+          "value": "C",
+          "text": "$e^x$"
+        },
+        {
+          "value": "D",
+          "text": "$x\\log x$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "4.2.4"
+    },
+    {
+      "id": "item-005",
+      "prompt": "What does probability averaging guarantee for the NLL of a fixed example?",
+      "explanation": "**Correct answer: D.** This is Jensen for the convex function −log, applied to the observed-class probability. The comparison is with the average member, not with the best one: a strong member can easily beat the mixture.",
+      "topic": "4.3. Ensembles: an exact guarantee for log loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The mixture NLL is no larger than the NLL of the best member"
+        },
+        {
+          "value": "B",
+          "text": "The mixture improves top-1 accuracy"
+        },
+        {
+          "value": "C",
+          "text": "The mixture NLL equals the weighted mean NLL of the members"
+        },
+        {
+          "value": "D",
+          "text": "The mixture NLL is no larger than the weighted mean NLL of the members"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "4.3.1"
+    },
+    {
+      "id": "item-006",
+      "prompt": "What distributional average corresponds to averaging logits before the softmax?",
+      "explanation": "**Correct answer: B.** Averaging in log space and renormalizing is a geometric mean. The arithmetic mixture is a different object and requires explicitly mixing probabilities, not logits.",
+      "topic": "4.3. Ensembles: an exact guarantee for log loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "An arithmetic mean of the probabilities"
+        },
+        {
+          "value": "B",
+          "text": "A normalized geometric mean of the probabilities"
+        },
+        {
+          "value": "C",
+          "text": "A componentwise maximum"
+        },
+        {
+          "value": "D",
+          "text": "A componentwise median"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "4.3.2"
+    },
+    {
+      "id": "item-007",
+      "prompt": "Why does improved NLL not guarantee improved top-1 accuracy?",
+      "explanation": "**Correct answer: A.** The two metrics read different information out of the same prediction. A mixture can raise the probability of the correct class without moving it into first place, and it can also lower a wrong maximum without changing the decision.",
+      "topic": "4.3. Ensembles: an exact guarantee for log loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "NLL uses the probability assigned to the observed class, whereas accuracy uses only the argmax"
+        },
+        {
+          "value": "B",
+          "text": "Accuracy always equals $e^{-\\mathrm{NLL}}$"
+        },
+        {
+          "value": "C",
+          "text": "NLL does not depend on the target label"
+        },
+        {
+          "value": "D",
+          "text": "NLL is computed on the training set and accuracy on the test set"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "4.3.3"
+    },
+    {
+      "id": "item-008",
+      "prompt": "Which statement about the two ensemble constructions is correct?",
+      "explanation": "**Correct answer: C.** Each satisfies its own Jensen guarantee relative to the average member, and the module gives two examples where the winner is different. Equal weights do not make them coincide.",
+      "topic": "4.3. Ensembles: an exact guarantee for log loss",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Probability averaging always beats logit averaging"
+        },
+        {
+          "value": "B",
+          "text": "Logit averaging always beats probability averaging"
+        },
+        {
+          "value": "C",
+          "text": "Neither universally dominates the other"
+        },
+        {
+          "value": "D",
+          "text": "They coincide whenever the members are equally weighted"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "4.3.4"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Which function receives Jensen's inequality in the ELBO derivation shown in this module?",
+      "explanation": "**Correct answer: C.** The module uses the concave logarithm: log E[W] ≥ E[log W]. Equivalently, apply Jensen to the convex function −log and then multiply both sides by −1, reversing the inequality. This gives the same lower bound.",
+      "topic": "4.4. The ELBO: the logarithm sits outside hidden explanations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The convex function $-\\log$"
+        },
+        {
+          "value": "B",
+          "text": "The square"
+        },
+        {
+          "value": "C",
+          "text": "The concave logarithm"
+        },
+        {
+          "value": "D",
+          "text": "The exponential"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "4.4.1"
+    },
+    {
+      "id": "item-010",
+      "prompt": "What is the exact ELBO gap?",
+      "explanation": "**Correct answer: A.** The direction matters: the approximate posterior comes first. The bound is tight exactly when the variational posterior equals the true posterior.",
+      "topic": "4.4. The ELBO: the logarithm sits outside hidden explanations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$D_{\\mathrm{KL}}(q_\\phi(z\\mid x)\\|p_\\theta(z\\mid x))$"
+        },
+        {
+          "value": "B",
+          "text": "$D_{\\mathrm{KL}}(p_\\theta(z\\mid x)\\|q_\\phi(z\\mid x))$"
+        },
+        {
+          "value": "C",
+          "text": "$D_{\\mathrm{KL}}(p(z)\\|q_\\phi(z\\mid x))$"
+        },
+        {
+          "value": "D",
+          "text": "$H(X)$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "4.4.2"
+    },
+    {
+      "id": "item-011",
+      "prompt": "What does the KL term in the standard VAE form of the ELBO compare?",
+      "explanation": "**Correct answer: D.** The term follows from the factorization p(x,z) = p(z)p(x|z), so it measures the distance to the prior. The KL against the true posterior is the gap of the bound, which is a different quantity that the objective never computes.",
+      "topic": "4.4. The ELBO: the logarithm sits outside hidden explanations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The approximate posterior with the true posterior"
+        },
+        {
+          "value": "B",
+          "text": "Two target labels"
+        },
+        {
+          "value": "C",
+          "text": "The reconstruction term with itself"
+        },
+        {
+          "value": "D",
+          "text": "The approximate posterior with the prior"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "4.4.3"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What does a higher ELBO not guarantee automatically?",
+      "explanation": "**Correct answer: B.** The other three are restatements of what the bound says. Representation utility depends on the task, the architecture, the variational family, and the optimization, none of which appear in the inequality.",
+      "topic": "4.4. The ELBO: the logarithm sits outside hidden explanations",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A higher lower bound on $\\log p_\\theta(x)$"
+        },
+        {
+          "value": "B",
+          "text": "A latent representation that is useful for every downstream task"
+        },
+        {
+          "value": "C",
+          "text": "A no-larger KL gap when $\\log p_\\theta(x)$ is fixed"
+        },
+        {
+          "value": "D",
+          "text": "A no-smaller value of the variational objective being optimized"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "4.4.4"
+    },
+    {
+      "id": "item-013",
+      "prompt": "Which equality condition for the log-sum inequality is correct when $A,B>0$?",
+      "explanation": "**Correct answer: A.** Equivalently, the ratio a_i/b_i must be constant on the relevant support. Matching totals is not enough, because the inequality is about how the mass is distributed, not how much of it there is.",
+      "topic": "4.5. The log-sum inequality and convexity of KL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The normalized vectors $a_i/A$ and $b_i/B$ must agree"
+        },
+        {
+          "value": "B",
+          "text": "It is enough that $A=B$"
+        },
+        {
+          "value": "C",
+          "text": "All $a_i$ must be equal"
+        },
+        {
+          "value": "D",
+          "text": "All $b_i$ must be equal"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "4.5.1"
+    },
+    {
+      "id": "item-014",
+      "prompt": "After normalization, what directly proves the stated log-sum inequality?",
+      "explanation": "**Correct answer: C.** The difference between the two sides is exactly A times D_KL(P‖Q), which is nonnegative by Gibbs' inequality. KL has no triangle inequality, which is why option D cannot be the mechanism.",
+      "topic": "4.5. The log-sum inequality and convexity of KL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The central limit theorem"
+        },
+        {
+          "value": "B",
+          "text": "Markov's inequality"
+        },
+        {
+          "value": "C",
+          "text": "Nonnegativity of KL"
+        },
+        {
+          "value": "D",
+          "text": "The triangle inequality for KL"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "4.5.2"
+    },
+    {
+      "id": "item-015",
+      "prompt": "What does joint convexity of KL state?",
+      "explanation": "**Correct answer: B.** Mixing hides the component index, and hiding information cannot increase distinguishability. Convexity holds jointly in the pair, not separately with opposite signs.",
+      "topic": "4.5. The log-sum inequality and convexity of KL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "KL is linear in both arguments"
+        },
+        {
+          "value": "B",
+          "text": "The KL between mixtures is no larger than the mixture of the corresponding KL divergences"
+        },
+        {
+          "value": "C",
+          "text": "KL is symmetric in its two arguments"
+        },
+        {
+          "value": "D",
+          "text": "KL is convex in the first argument and concave in the second"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "4.5.3"
+    },
+    {
+      "id": "item-016",
+      "prompt": "What happens to KL when the same coarse-graining is applied to $P$ and $Q$?",
+      "explanation": "**Correct answer: D.** This is the deterministic special case of data processing. Equality is possible, which is why the statement is \"cannot increase\" rather than \"strictly decreases\".",
+      "topic": "4.5. The log-sum inequality and convexity of KL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It always increases strictly"
+        },
+        {
+          "value": "B",
+          "text": "It necessarily becomes zero"
+        },
+        {
+          "value": "C",
+          "text": "It stays exactly the same"
+        },
+        {
+          "value": "D",
+          "text": "It cannot increase"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "4.5.4"
+    },
+    {
+      "id": "item-017",
+      "prompt": "In a local quadratic approximation, what controls the scalar Jensen gap for a twice-differentiable $\\phi$?",
+      "explanation": "**Correct answer: C.** Both ingredients are needed: dispersion in the arguments and curvature of the function. A flat function has no gap however spread out X is, and a constant X has no gap however curved φ is.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only $\\mathbb E X$"
+        },
+        {
+          "value": "B",
+          "text": "Only the sample size"
+        },
+        {
+          "value": "C",
+          "text": "Approximately $\\tfrac12\\phi''(\\mathbb E X)\\operatorname{Var}(X)$"
+        },
+        {
+          "value": "D",
+          "text": "Approximately $\\phi''(\\mathbb E X)$ alone"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "4.6.1"
+    },
+    {
+      "id": "item-018",
+      "prompt": "When does a probability mixture attain equality with the mean member NLL on a fixed example?",
+      "explanation": "**Correct answer: D.** The per-example NLL sees only the probability of the observed class, so the full distributions may still differ. A shared argmax is far too weak a condition.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When all neural-network parameters are identical"
+        },
+        {
+          "value": "B",
+          "text": "When all models share the same argmax"
+        },
+        {
+          "value": "C",
+          "text": "When the models have equal weights"
+        },
+        {
+          "value": "D",
+          "text": "When all positively weighted models assign the observed class the same probability"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "4.6.2"
+    },
+    {
+      "id": "item-019",
+      "prompt": "When does coarse-graining preserve KL exactly?",
+      "explanation": "**Correct answer: B.** Equivalently, the conditional distributions inside each group agree under P and under Q, so merging destroys nothing that distinguished them. Group sizes are irrelevant.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only when all groups have equal size"
+        },
+        {
+          "value": "B",
+          "text": "When $p(x)/q(x)$ is constant within every merged group"
+        },
+        {
+          "value": "C",
+          "text": "When $P$ and $Q$ have the same entropy"
+        },
+        {
+          "value": "D",
+          "text": "When every group contains at most two states"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "4.7.1"
+    },
+    {
+      "id": "item-020",
+      "prompt": "How can an arithmetic probability mixture be computed stably from model log probabilities?",
+      "explanation": "**Correct answer: A.** Averaging logits produces a normalized geometric mean instead. The naive exponentiate-average-log route is mathematically right but underflows exactly where the probabilities matter most.",
+      "topic": "Optional mathematical and engineering deepening",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Apply `logsumexp` to `log_probs + log_weights`"
+        },
+        {
+          "value": "B",
+          "text": "Average the logits and treat the result as one model"
+        },
+        {
+          "value": "C",
+          "text": "Exponentiate, average, and take the logarithm again"
+        },
+        {
+          "value": "D",
+          "text": "Round every probability to zero or one"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "4.7.2"
+    },
+    {
+      "id": "item-021",
+      "prompt": "Let $X$ take the values $1$, $2$ and $6$ with probabilities $0.5$, $0.25$ and $0.25$. Compute the Jensen gap $\\mathbb E[X^2]-(\\mathbb E X)^2$. (tolerance 0.01)",
+      "explanation": "**Numeric answer: 4.25** (tolerance 0.01). E X = 2.5 and E[X²] = 10.5, so the gap is 10.5 − 6.25 = 4.25. For the square the gap is exactly the variance, with no approximation involved.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 4.25,
+          "tolerance": 0.01
+        }
+      ],
+      "sourceId": "4.C.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "Two models predict\n\n\n\n$$\nq_1=(0.83,\\ 0.01,\\ 0.16),\n\\qquad\nq_2=(0.11,\\ 0.88,\\ 0.01),\n$$\n\nwith equal weights, and class 1 is observed. Compute the NLL of the arithmetic probability mixture, rounded to three decimals. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 0.755** (tolerance 0.005). The mixture assigns the observed class (0.83 + 0.11)/2 = 0.47, and −ln 0.47 = 0.755. The mean member NLL is 1.197, so Jensen's guarantee holds. On this example the logit average does better still, at 0.367, which is why neither construction dominates.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.755,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "4.C.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "For a fixed $x$ let $p(x,z=0)=0.09$ and $p(x,z=1)=0.01$, and take the approximation $q(z\\mid x)=(0.5,0.5)$. Compute the gap between $\\log p(x)$ and the ELBO, in nats, rounded to three decimals. (tolerance 0.005)",
+      "explanation": "**Numeric answer: 0.511** (tolerance 0.005). Here log p(x) = −2.303 and the ELBO is −2.813. The difference equals D_KL((0.5, 0.5)‖(0.9, 0.1)) exactly; it is the price of the wrong posterior, not a penalty added by hand.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.511,
+          "tolerance": 0.005
+        }
+      ],
+      "sourceId": "4.C.3"
+    },
+    {
+      "id": "item-024",
+      "prompt": "Let\n\n\n\n$$\nP=(0.5,\\ 0.25,\\ 0.25),\n\\qquad\nQ=(0.25,\\ 0.25,\\ 0.5).\n$$\n\nMerge the second and third states into one and compute $D_{\\mathrm{KL}}$ between the coarse-grained distributions, in nats, rounded to three decimals. (tolerance 0.002)",
+      "explanation": "**Numeric answer: 0.144** (tolerance 0.002). After merging, P becomes (0.5, 0.5) and Q becomes (0.25, 0.75), giving 0.144 nats against 0.173 before the merge. The drop is the information that distinguished the two merged states.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.144,
+          "tolerance": 0.002
+        }
+      ],
+      "sourceId": "4.C.4"
+    }
+  ]
+}

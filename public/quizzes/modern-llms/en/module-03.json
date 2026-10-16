@@ -1,0 +1,559 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-03",
+  "language": "en",
+  "questions": [
+    {
+      "id": "4.1.1",
+      "prompt": "What does permutation equivariance mean for bidirectional self-attention without position or a mask?",
+      "explanation": "**Correct answer: A.** Equivariance means that the output transforms with the input; it is not permutation invariance. A causal mask adds access asymmetry but not a full distance geometry.",
+      "topic": "4.1. Motivation: content attention is not an ordering mechanism",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Permuting input positions produces the same permutation of the outputs"
+        },
+        {
+          "value": "B",
+          "text": "Every permutation leaves the entire output tensor unchanged"
+        },
+        {
+          "value": "C",
+          "text": "Softmax reconstructs order from attention values even without a mask"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "4.3.1",
+      "prompt": "What is exactly true for one sine-cosine pair in classic positional encoding?",
+      "explanation": "**Correct answer: B.** The identity sin(mθ)sin(nθ)+cos(mθ)cos(nθ)=cos((m−n)θ) is exact. RoPE differs by inserting relative phase directly into projected query-key geometry.",
+      "topic": "4.3. Fourier intuition, complex rotations, and what is exact",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Its dot product depends on the sum of absolute positions"
+        },
+        {
+          "value": "B",
+          "text": "The dot product equals cos((m−n)θ) for one fixed frequency θ"
+        },
+        {
+          "value": "C",
+          "text": "Relative dependence appears only after projection weights are trained"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.4.1",
+      "prompt": "Where is RoPE applied in the attention block studied here?",
+      "explanation": "**Correct answer: C.** An arbitrary matrix W generally does not satisfy WR=RW. RoPE integrates cleanly because it is applied after the Q/K projections and preserves tensor shape.",
+      "topic": "4.4. Formalism: the frequency ladder and the rotary identity",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "RoPE rotates only scalar features after normalization"
+        },
+        {
+          "value": "B",
+          "text": "Attention constructs Q and K without any linear projections"
+        },
+        {
+          "value": "C",
+          "text": "Q and K are projected first, then their coordinate pairs are rotated"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.4.2",
+      "prompt": "Partial RoPE rotates D coordinates of a head of width d_k. Which dimension defines the frequencies?",
+      "explanation": "**Correct answer: B.** There are D/2 rotated pairs. Standard attention scaling still uses 1/√d_k.",
+      "topic": "4.4. Formalism: the frequency ladder and the rotary identity",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always the full residual width d_model"
+        },
+        {
+          "value": "B",
+          "text": "The rotated width D"
+        },
+        {
+          "value": "C",
+          "text": "Sequence length T"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.5.1",
+      "prompt": "Why does a common position shift preserve a RoPE score when q, k, and frequencies are fixed?",
+      "explanation": "**Correct answer: A.** R_{m+c}^T R_{n+c}=R_{n−m}. For fixed q and k, the logit depends on displacement rather than the coordinate origin.",
+      "topic": "4.5. Worked example: three placements, one relative displacement",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The common phase cancels, leaving only relative phase"
+        },
+        {
+          "value": "B",
+          "text": "Positions are normalized by context length first"
+        },
+        {
+          "value": "C",
+          "text": "The √d scale removes absolute coordinates"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "4.5.2",
+      "prompt": "The rotated dot product is 1.144248 with d_k=4. What is the standard pre-mask attention logit?",
+      "explanation": "**Correct answer: C.** Divide the dot product by √4=2, not by four.",
+      "topic": "4.5. Worked example: three placements, one relative displacement",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "1.144248"
+        },
+        {
+          "value": "B",
+          "text": "0.286062"
+        },
+        {
+          "value": "C",
+          "text": "0.572124"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.6.1",
+      "prompt": "What does increasing rope_theta primarily do?",
+      "explanation": "**Correct answer: B.** The fastest pair θ₀=1 is unchanged. A larger base reallocates the spectrum toward slower high-index coordinates; it does not guarantee long-context quality.",
+      "topic": "4.6. Reading the RoPE frequency spectrum",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It removes the fastest frequencies and erases local order"
+        },
+        {
+          "value": "B",
+          "text": "It slows higher-index pairs more strongly, adding longer wavelengths"
+        },
+        {
+          "value": "C",
+          "text": "It automatically guarantees a larger usable context"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.6.2",
+      "prompt": "Why is the largest wavelength of one RoPE pair not a hard context limit?",
+      "explanation": "**Correct answer: C.** Each pair is periodic, but the complete code is multi-frequency. Wavelengths and turn counts are diagnostics rather than a physical global limit.",
+      "topic": "4.6. Reading the RoPE frequency spectrum",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All coordinate pairs share one common period for the full vector"
+        },
+        {
+          "value": "B",
+          "text": "The causal mask removes periodicity from every rotary component"
+        },
+        {
+          "value": "C",
+          "text": "The full code combines many frequencies; one repeated pair does not repeat the vector"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.7.1",
+      "prompt": "Why is Position Interpolation normally followed by fine-tuning?",
+      "explanation": "**Correct answer: A.** PI maps m→m/s and slows the whole spectrum. New positions stay inside the old angular range, but local geometry changes as well.",
+      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It compresses every phase and changes the familiar local geometry"
+        },
+        {
+          "value": "B",
+          "text": "It adds a new table of learned vectors for every position"
+        },
+        {
+          "value": "C",
+          "text": "It works only in bidirectional encoders with a full mask"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "4.7.2",
+      "prompt": "What is the most accurate description of static NTK-aware scaling?",
+      "explanation": "**Correct answer: B.** The base·s^(D/(D−2)) formula is motivated by spectral structure, but its effectiveness is model- and length-dependent and must be measured.",
+      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A theorem guaranteeing safe extrapolation without fine-tuning"
+        },
+        {
+          "value": "B",
+          "text": "A heuristic that reshapes the spectrum through a new base"
+        },
+        {
+          "value": "C",
+          "text": "A form of ALiBi with a learned slope for every attention head"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.7.3",
+      "prompt": "The entire query and key are each scaled by a≈1.3466. How does their dot product change?",
+      "explanation": "**Correct answer: C.** Bilinearity gives (aq)ᵀ(ak)=a²qᵀk, with a²≈1.8133. Partial RoPE requires an extra check because unrotated channels may not receive the factor.",
+      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every runtime must multiply final logits by exactly 1.3466"
+        },
+        {
+          "value": "B",
+          "text": "Every inverse frequency is divided by an additional factor of 1.3466"
+        },
+        {
+          "value": "C",
+          "text": "If the factor enters q and k, their dot-product score receives about 1.8133"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.7.4",
+      "prompt": "What does the static NTK-aware formula do for s≥1 and D>2?",
+      "explanation": "**Correct answer: A.** The frequency ratio is s^(−2i/(D−2)): one at i=0 and 1/s at the last pair.",
+      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Preserve the first frequency and divide the last by s"
+        },
+        {
+          "value": "B",
+          "text": "Leave all frequencies unchanged"
+        },
+        {
+          "value": "C",
+          "text": "Guarantee model quality at any length"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "4.8.1",
+      "prompt": "What does ALiBi do?",
+      "explanation": "**Correct answer: A.** ALiBi leaves Q/K unchanged and adds a positional bias. An exponential distance prior appears under fixed content scores, while full attention still depends on qᵀk.",
+      "topic": "4.8. ALiBi: a distance prior in the logits",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It adds a head-specific linear penalty for relative distance to the logit"
+        },
+        {
+          "value": "B",
+          "text": "It rotates queries and keys by a shared relative-position angle"
+        },
+        {
+          "value": "C",
+          "text": "It learns a separate absolute-position table for every attention head"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "4.8.2",
+      "prompt": "Why is a finite ALiBi penalty insufficient for causal attention?",
+      "explanation": "**Correct answer: B.** A finite score generally retains nonzero softmax weight. Future positions must be excluded by the mask.",
+      "topic": "4.8. ALiBi: a distance prior in the logits",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "ALiBi makes all values V negative"
+        },
+        {
+          "value": "B",
+          "text": "Future keys must be masked, not merely assigned lower scores"
+        },
+        {
+          "value": "C",
+          "text": "ALiBi requires a learned absolute-position table"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.9.1",
+      "prompt": "Which statement about NoPE is correct?",
+      "explanation": "**Correct answer: B.** NoPE means no explicit positional mechanism in the relevant layer or model. Interleaved RoPE/NoPE is one hybrid design, not the definition.",
+      "topic": "4.9. NoPE and hybrid position mechanisms",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "NoPE always means strict alternation between RoPE and non-RoPE layers"
+        },
+        {
+          "value": "B",
+          "text": "Pure NoPE models and hybrids with explicit position in only some layers both exist"
+        },
+        {
+          "value": "C",
+          "text": "NoPE is used only in encoders that do not have a causal attention mask"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.10.1",
+      "prompt": "What can be inferred reliably from initial_context_length=4096 in the gpt-oss config?",
+      "explanation": "**Correct answer: C.** The config describes scaling geometry. A full training chronology requires separate documentation and cannot be reconstructed from one field.",
+      "topic": "4.10. Reading the gpt-oss positional configuration",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All model pretraining used only sequences of exactly 4096 tokens"
+        },
+        {
+          "value": "B",
+          "text": "The model necessarily underwent one particular YaRN fine-tuning phase"
+        },
+        {
+          "value": "C",
+          "text": "4096 is the reference length of the published positional scaling contract"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.11.1",
+      "prompt": "How should the teaching implementation handle NaN in the frequency vector?",
+      "explanation": "**Correct answer: C.** Shape and positivity checks are insufficient: NaN≤0 is false. Finiteness must be checked separately.",
+      "topic": "4.11. Level-one code: explicit shapes and explicit scaling placement",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Silently replace NaN with zero"
+        },
+        {
+          "value": "B",
+          "text": "Continue and hide NaN in softmax"
+        },
+        {
+          "value": "C",
+          "text": "Reject the invalid input explicitly"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.12.1",
+      "prompt": "A cached prefix contains p tokens at positions 0…p−1. Which position belongs to the next query?",
+      "explanation": "**Correct answer: A.** The current block size does not reset absolute position. Cached keys have already been rotated at their positions.",
+      "topic": "4.12. What the notebook validates",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "p"
+        },
+        {
+          "value": "B",
+          "text": "0 because this call contains one token"
+        },
+        {
+          "value": "C",
+          "text": "Always p−1"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "4.12.2",
+      "prompt": "Why do integer position_ids not guarantee an exact phase?",
+      "explanation": "**Correct answer: B.** For example, FP16 merges 2048 and 2049. FP32 delays this limit but does not provide arbitrary precision.",
+      "topic": "4.12. What the notebook validates",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Sine accepts only negative indices"
+        },
+        {
+          "value": "B",
+          "text": "Conversion to working floats and multiplication by frequencies introduce rounding"
+        },
+        {
+          "value": "C",
+          "text": "Every integer ID requires a learned parameter"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.13.1",
+      "prompt": "Which position IDs does M-RoPE use for ordinary text tokens?",
+      "explanation": "**Correct answer: B.** All three text axes receive the same index. Every rotary pair therefore sees position m regardless of its assigned section.",
+      "topic": "4.13. M-RoPE and time-aligned multimodal position",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "(m,0,0): only the temporal rotary section receives a position"
+        },
+        {
+          "value": "B",
+          "text": "(m,m,m): the text path is equivalent to ordinary one-dimensional RoPE"
+        },
+        {
+          "value": "C",
+          "text": "(0,h,w): text uses the same coordinates as a still image"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "4.13.2",
+      "prompt": "Which statement about TMRoPE is supported by the published technical report?",
+      "explanation": "**Correct answer: C.** TMRoPE was published in the March 2025 Qwen2.5-Omni report. Time alignment is the general idea; the duration represented by one ID is architecture-specific.",
+      "topic": "4.13. M-RoPE and time-aligned multimodal position",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "By definition it forbids the use of spatial coordinates"
+        },
+        {
+          "value": "B",
+          "text": "It always assigns one temporal ID to exactly 40 ms in every model"
+        },
+        {
+          "value": "C",
+          "text": "It is documented in Qwen2.5-Omni; 40 ms belongs to that implementation"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.13.3",
+      "prompt": "What is interleaved by Qwen3-VL Interleaved-MRoPE?",
+      "explanation": "**Correct answer: C.** This allocates axes across the spectrum. It is separate from adjacent or split-half pairing within each rotary pair.",
+      "topic": "4.13. M-RoPE and time-aligned multimodal position",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Training and evaluation documents"
+        },
+        {
+          "value": "B",
+          "text": "Layers with and without softmax"
+        },
+        {
+          "value": "C",
+          "text": "Temporal and spatial axis assignments across frequency pairs"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "4.14.1",
+      "prompt": "What is the more accurate description of Llama 4 positional architecture?",
+      "explanation": "**Correct answer: A.** The published implementation includes NoPE layers, RoPE elsewhere, and chunked attention. Temperature tuning applies to the NoPE layers. One rope_theta field does not identify the entire design.",
+      "topic": "4.14. The 2026 landscape is a branching architecture map",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A RoPE/NoPE hybrid with chunked attention and temperature tuning"
+        },
+        {
+          "value": "B",
+          "text": "Ordinary RoPE with mandatory YaRN scaling in every layer"
+        },
+        {
+          "value": "C",
+          "text": "Pure ALiBi with a linear bias and no rotary component"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    }
+  ]
+}

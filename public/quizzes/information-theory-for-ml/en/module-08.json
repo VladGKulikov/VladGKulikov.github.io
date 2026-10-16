@@ -1,0 +1,797 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-08",
+  "language": "en",
+  "questions": [
+    {
+      "id": "item-001",
+      "prompt": "What is the most general MaxEnt formulation used in this module?",
+      "explanation": "**Correct answer: B.** Ordinary MaxEnt on a finite set is the special case of minimum-KL projection with a uniform reference m.",
+      "topic": "8.1. From partial knowledge to a distribution",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always choose the uniform distribution"
+        },
+        {
+          "value": "B",
+          "text": "Minimize $D_{\\mathrm{KL}}(q\\|m)$ over distributions compatible with the constraints"
+        },
+        {
+          "value": "C",
+          "text": "Minimize variance at fixed mean"
+        },
+        {
+          "value": "D",
+          "text": "Maximize likelihood without a data model"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "8.1.1"
+    },
+    {
+      "id": "item-002",
+      "prompt": "When does entropy maximization coincide with minimizing $D_{\\mathrm{KL}}(q\\|m)$?",
+      "explanation": "**Correct answer: D.** In that case D_KL(q‖m)=-H(q)+log |X|, so the two problems have the same optimum.",
+      "topic": "8.2. Exponential tilting and information projection",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only for Gaussian $m$"
+        },
+        {
+          "value": "B",
+          "text": "Only with one constraint"
+        },
+        {
+          "value": "C",
+          "text": "For every $m$, regardless of its form"
+        },
+        {
+          "value": "D",
+          "text": "When $m$ is uniform on a finite state space"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "8.2.1"
+    },
+    {
+      "id": "item-003",
+      "prompt": "What is the minimum-KL solution under linear moment constraints?",
+      "explanation": "**Correct answer: C.** It is an exponential tilt of the reference distribution.",
+      "topic": "8.2. Exponential tilting and information projection",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$q(x)=m(x)+\\lambda^\\top f(x)$"
+        },
+        {
+          "value": "B",
+          "text": "$q(x)\\propto 1/\\|f(x)-\\mu\\|$"
+        },
+        {
+          "value": "C",
+          "text": "$q_\\lambda(x)=m(x)e^{\\lambda^\\top f(x)}/Z(\\lambda)$"
+        },
+        {
+          "value": "D",
+          "text": "$q(x)=\\delta(x-\\mu)$"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "8.2.2"
+    },
+    {
+      "id": "item-004",
+      "prompt": "What is the Hessian of the log-partition function $A(\\lambda)=\\log Z(\\lambda)$?",
+      "explanation": "**Correct answer: C.** Positive definiteness requires a minimal family; redundant features can make the Hessian singular.",
+      "topic": "8.2. Exponential tilting and information projection",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Always the identity matrix"
+        },
+        {
+          "value": "B",
+          "text": "The negative covariance matrix"
+        },
+        {
+          "value": "C",
+          "text": "$\\operatorname{Cov}_{q_\\lambda}(f(X))$, hence positive semidefinite"
+        },
+        {
+          "value": "D",
+          "text": "Fisher information only for a Gaussian"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "8.2.3"
+    },
+    {
+      "id": "item-005",
+      "prompt": "What does the Pythagorean identity state for an interior I-projection $q^*$?",
+      "explanation": "**Correct answer: B.** Every other feasible distribution is farther from the reference by exactly D(q‖q*).",
+      "topic": "8.2. Exponential tilting and information projection",
+      "note": "(optional)",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$D(q\\|m)=D(q^*\\|q)+D(m\\|q^*)$"
+        },
+        {
+          "value": "B",
+          "text": "$D(q\\|m)=D(q\\|q^*)+D(q^*\\|m)$ for feasible $q$"
+        },
+        {
+          "value": "C",
+          "text": "$D(q\\|m)=D(m\\|q)$"
+        },
+        {
+          "value": "D",
+          "text": "$D(q\\|q^*)=0$ for every feasible $q$"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "8.2.4"
+    },
+    {
+      "id": "item-006",
+      "prompt": "What may happen when the required moment vector lies on the boundary of the convex hull of feature values?",
+      "explanation": "**Correct answer: D.** The derivation for a strictly positive interior solution then requires a limit or KKT analysis.",
+      "topic": "8.2. Exponential tilting and information projection",
+      "note": "(optional)",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "MaxEnt always becomes uniform"
+        },
+        {
+          "value": "B",
+          "text": "The partition function must equal one"
+        },
+        {
+          "value": "C",
+          "text": "All Lagrange multipliers become zero"
+        },
+        {
+          "value": "D",
+          "text": "The optimum may have zero probabilities and parameters may diverge"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "8.2.5"
+    },
+    {
+      "id": "item-007",
+      "prompt": "What is the exponential order of the probability of empirical type $q$ under a general i.i.d. reference $m$?",
+      "explanation": "**Correct answer: A.** For a uniform reference this reduces to the familiar relation between the number of sequences of type q and e^(nH(q)).",
+      "topic": "8.2. Exponential tilting and information projection",
+      "note": "(optional)",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\exp\\{-nD_{\\mathrm{KL}}(q\\|m)+o(n)\\}$"
+        },
+        {
+          "value": "B",
+          "text": "$\\exp\\{nD_{\\mathrm{KL}}(q\\|m)+o(n)\\}$"
+        },
+        {
+          "value": "C",
+          "text": "$\\exp\\{-nH(m)+o(n)\\}$"
+        },
+        {
+          "value": "D",
+          "text": "It does not depend on $q$"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "8.2.6"
+    },
+    {
+      "id": "item-008",
+      "prompt": "Which modeling choice can change the MaxEnt answer even under the same mean constraint?",
+      "explanation": "**Correct answer: A.** A uniform reference on counts and a uniform reference on binary microstates induce different distributions.",
+      "topic": "8.3. The state space and reference measure",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The elementary state space and base measure"
+        },
+        {
+          "value": "B",
+          "text": "Only the logarithm base"
+        },
+        {
+          "value": "C",
+          "text": "The name of the random variable"
+        },
+        {
+          "value": "D",
+          "text": "The order in which constraints are written"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "8.3.1"
+    },
+    {
+      "id": "item-009",
+      "prompt": "Which success-count distribution arises from MaxEnt on binary microstates with $\\mathbb E[K]=np$?",
+      "explanation": "**Correct answer: A.** The exponential tilt factorizes across coordinates, making them independent Bernoulli(p) variables.",
+      "topic": "8.4. Classical MaxEnt distributions and the AWGN channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\operatorname{Binomial}(n,p)$"
+        },
+        {
+          "value": "B",
+          "text": "Uniform on $\\{0,\\ldots,n\\}$"
+        },
+        {
+          "value": "C",
+          "text": "Poisson for every $n$"
+        },
+        {
+          "value": "D",
+          "text": "Truncated Cauchy"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "8.4.1"
+    },
+    {
+      "id": "item-010",
+      "prompt": "Under which conditions is the exponential distribution a MaxEnt solution?",
+      "explanation": "**Correct answer: C.** The support is an essential part of the problem; a mean alone is insufficient on the whole real line.",
+      "topic": "8.4. Classical MaxEnt distributions and the AWGN channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "On all of $\\mathbb R$ at fixed mean"
+        },
+        {
+          "value": "B",
+          "text": "On $[0,1]$ at fixed variance"
+        },
+        {
+          "value": "C",
+          "text": "On $[0,\\infty)$ at fixed positive mean"
+        },
+        {
+          "value": "D",
+          "text": "On a finite set without constraints"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "8.4.2"
+    },
+    {
+      "id": "item-011",
+      "prompt": "How is the Gaussian MaxEnt property correctly used in the AWGN capacity proof?",
+      "explanation": "**Correct answer: B.** Since I(X;Y)=h(Y)-h(N), fixed noise means that output entropy is the quantity to maximize.",
+      "topic": "8.4. Classical MaxEnt distributions and the AWGN channel",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only noise entropy is maximized"
+        },
+        {
+          "value": "B",
+          "text": "Gaussian input makes the output Gaussian and maximizes $h(Y)$ under the output-variance constraint"
+        },
+        {
+          "value": "C",
+          "text": "Every input distribution gives the same $I(X;Y)$"
+        },
+        {
+          "value": "D",
+          "text": "Maximizing $h(X)$ automatically maximizes $I(X;Y)$ without analyzing the output"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "8.4.3"
+    },
+    {
+      "id": "item-012",
+      "prompt": "What is the form of a conditional MaxEnt model with features $f(x,y)$?",
+      "explanation": "**Correct answer: D.** This is a conditional log-linear model normalized separately for each input x.",
+      "topic": "8.5. Conditional MaxEnt and log-linear models",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$q(y\\mid x)=\\theta^\\top f(x,y)$"
+        },
+        {
+          "value": "B",
+          "text": "$q(y\\mid x)\\propto |\\theta^\\top f(x,y)|$"
+        },
+        {
+          "value": "C",
+          "text": "$q(y\\mid x)$ must be Gaussian"
+        },
+        {
+          "value": "D",
+          "text": "$q_\\theta(y\\mid x)=e^{\\theta^\\top f(x,y)}/Z_\\theta(x)$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "8.5.1"
+    },
+    {
+      "id": "item-013",
+      "prompt": "When does a zero conditional-log-likelihood gradient give exact moment matching?",
+      "explanation": "**Correct answer: D.** Moment matching is an exact exponential-family property under the relevant conditions, not a universal property of every neural network.",
+      "topic": "8.5. Conditional MaxEnt and log-linear models",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "For every deep network and every local minimum"
+        },
+        {
+          "value": "B",
+          "text": "Only after label smoothing"
+        },
+        {
+          "value": "C",
+          "text": "Only when all features are independent"
+        },
+        {
+          "value": "D",
+          "text": "At a finite interior optimum of an unregularized log-linear model; regularization and separability change the result"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "8.5.2"
+    },
+    {
+      "id": "item-014",
+      "prompt": "Which optimization problem is solved exactly by $\\operatorname{softmax}(z/\\tau)$?",
+      "explanation": "**Correct answer: A.** The maximum value is τ log Σ_i e^(z_i/τ) and the gap is τ D_KL(q‖softmax).",
+      "topic": "8.6. Softmax as score-plus-entropy optimization",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\max_{q\\in\\Delta}\\{q^\\top z+\\tau H(q)\\}$"
+        },
+        {
+          "value": "B",
+          "text": "$\\min_q\\|q-z\\|_2^2$ without constraints"
+        },
+        {
+          "value": "C",
+          "text": "$\\max_q H(q)$ independently of $z$"
+        },
+        {
+          "value": "D",
+          "text": "$\\min_qD_{\\mathrm{KL}}(z\\|q)$ where $z$ is a distribution"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "8.6.1"
+    },
+    {
+      "id": "item-015",
+      "prompt": "What happens to softmax as temperature $\\tau$ increases for fixed logits?",
+      "explanation": "**Correct answer: C.** As τ→0, mass concentrates on maximizers; at high temperature the entropy term has greater influence.",
+      "topic": "8.6. Softmax as score-plus-entropy optimization",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It always becomes one-hot"
+        },
+        {
+          "value": "B",
+          "text": "It changes the ranking of classes"
+        },
+        {
+          "value": "C",
+          "text": "The distribution becomes flatter and tends to uniform as $\\tau\\to\\infty$"
+        },
+        {
+          "value": "D",
+          "text": "The normalizing constant disappears"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "8.6.2"
+    },
+    {
+      "id": "item-016",
+      "prompt": "What is the gradient of EBM negative log-likelihood when the reference measure is independent of $\\theta$?",
+      "explanation": "**Correct answer: B.** It is the difference between the positive phase on data and a model expectation, which is often the difficult part of EBM training.",
+      "topic": "8.7. Energy-based models and the partition function",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only $\\nabla_\\theta E_\\theta(x)$"
+        },
+        {
+          "value": "B",
+          "text": "$\\nabla E_\\theta(x)-\\mathbb E_{q_\\theta}[\\nabla E_\\theta(X)]$"
+        },
+        {
+          "value": "C",
+          "text": "$\\mathbb E_{q_\\theta}[E_\\theta(X)]$"
+        },
+        {
+          "value": "D",
+          "text": "It is always zero because of the partition function"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "8.7.1"
+    },
+    {
+      "id": "item-017",
+      "prompt": "What is the most accurate description of the relation between score-based diffusion models and EBMs?",
+      "explanation": "**Correct answer: B.** The common Gibbs/score structure is real, but “diffusion = MaxEnt without normalization” hides essential details.",
+      "topic": "8.7. Energy-based models and the partition function",
+      "note": "(optional)",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Diffusion does not use probability distributions"
+        },
+        {
+          "value": "B",
+          "text": "Scores are related to gradients of log-density/energy, but diffusion usually learns time-dependent scores of noise-perturbed distributions"
+        },
+        {
+          "value": "C",
+          "text": "Every diffusion model is an exact MaxEnt solution with known moments"
+        },
+        {
+          "value": "D",
+          "text": "The partition function in diffusion is always computed analytically"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "8.7.2"
+    },
+    {
+      "id": "item-018",
+      "prompt": "What is the unconstrained optimum of a KL-regularized policy objective?",
+      "explanation": "**Correct answer: D.** The formula requires a finite normalizer and optimization on the support of the reference policy.",
+      "topic": "8.8. A KL-regularized policy and its Gibbs optimum",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\pi^*=\\pi_{\\mathrm{ref}}+r/\\beta$"
+        },
+        {
+          "value": "B",
+          "text": "$\\pi^*\\propto e^{-r}$"
+        },
+        {
+          "value": "C",
+          "text": "$\\pi^*$ is always uniform"
+        },
+        {
+          "value": "D",
+          "text": "$\\pi^*(y\\mid x)\\propto\\pi_{\\mathrm{ref}}(y\\mid x)e^{r(x,y)/\\beta}$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "8.8.1"
+    },
+    {
+      "id": "item-019",
+      "prompt": "How should $\\beta$ be interpreted in KL-regularized policy optimization?",
+      "explanation": "**Correct answer: A.** Scaling reward is equivalent to inversely scaling β.",
+      "topic": "8.8. A KL-regularized policy and its Gibbs optimum",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only relative to reward scale: large $\\beta$ strengthens the anchor, small $\\beta$ strengthens the reward tilt"
+        },
+        {
+          "value": "B",
+          "text": "As an absolute universal safety measure"
+        },
+        {
+          "value": "C",
+          "text": "As the optimizer learning rate"
+        },
+        {
+          "value": "D",
+          "text": "As the number of samples in the preference dataset"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "8.8.2"
+    },
+    {
+      "id": "item-020",
+      "prompt": "Which statement about PPO and DPO is correct?",
+      "explanation": "**Correct answer: C.** They differ in data, parameterization, estimators, regularization, and training dynamics.",
+      "topic": "8.8. A KL-regularized policy and its Gibbs optimum",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They must produce identical model weights"
+        },
+        {
+          "value": "B",
+          "text": "DPO always computes an explicit KL on every minibatch"
+        },
+        {
+          "value": "C",
+          "text": "The Gibbs optimum enters the DPO derivation, but finite-data PPO and DPO can yield different policies"
+        },
+        {
+          "value": "D",
+          "text": "PPO is unrelated to reward optimization"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "8.8.3"
+    },
+    {
+      "id": "item-021",
+      "prompt": "What is the derivative of expected proxy reward along the Gibbs path with respect to $\\alpha=1/\\beta$?",
+      "explanation": "**Correct answer: C.** Expected proxy reward is therefore monotonically nondecreasing as optimization pressure increases.",
+      "topic": "8.9. Reward overoptimization and the role of KL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$-\\operatorname{Var}(r_{\\mathrm{proxy}})$"
+        },
+        {
+          "value": "B",
+          "text": "$D_{\\mathrm{KL}}(\\pi_\\alpha\\|\\pi_{\\mathrm{ref}})$"
+        },
+        {
+          "value": "C",
+          "text": "$\\operatorname{Var}_{\\pi_\\alpha}(r_{\\mathrm{proxy}})\\ge0$"
+        },
+        {
+          "value": "D",
+          "text": "It is always one"
+        }
+      ],
+      "correct": [
+        "C"
+      ],
+      "sourceId": "8.9.1"
+    },
+    {
+      "id": "item-022",
+      "prompt": "What is the derivative of expected true reward along the same path?",
+      "explanation": "**Correct answer: A.** The covariance can change sign, so true reward may rise, plateau, or fall.",
+      "topic": "8.9. Reward overoptimization and the role of KL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$\\operatorname{Cov}_{\\pi_\\alpha}(r_{\\mathrm{true}},r_{\\mathrm{proxy}})$"
+        },
+        {
+          "value": "B",
+          "text": "Always the positive variance of true reward"
+        },
+        {
+          "value": "C",
+          "text": "$1/\\beta$ independently of the rewards"
+        },
+        {
+          "value": "D",
+          "text": "Zero because of KL regularization"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "8.9.2"
+    },
+    {
+      "id": "item-023",
+      "prompt": "How does $D_{\\mathrm{KL}}(\\pi_\\alpha\\|\\pi_{\\mathrm{ref}})$ change along the Gibbs path for a fixed proxy reward?",
+      "explanation": "**Correct answer: D.** This is an exact monotonicity law for KL to the reference along the idealized path, not a law for KL to an unknown true-optimal policy.",
+      "topic": "8.9. Reward overoptimization and the role of KL",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It always decreases"
+        },
+        {
+          "value": "B",
+          "text": "It has no derivative"
+        },
+        {
+          "value": "C",
+          "text": "It always equals $1/\\beta$"
+        },
+        {
+          "value": "D",
+          "text": "Its derivative is $\\alpha\\operatorname{Var}_{\\pi_\\alpha}(r_{\\mathrm{proxy}})\\ge0$"
+        }
+      ],
+      "correct": [
+        "D"
+      ],
+      "sourceId": "8.9.3"
+    },
+    {
+      "id": "item-024",
+      "prompt": "Which qualification is essential for the Pitman–Koopman–Darmois theorem?",
+      "explanation": "**Correct answer: B.** The family Uniform(0,θ) illustrates why parameter-dependent support cannot be ignored.",
+      "topic": "8.10. Mathematical deepening: exponential families and sufficiency",
+      "note": "(optional)",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It applies only to discrete distributions"
+        },
+        {
+          "value": "B",
+          "text": "It requires regularity, i.i.d. sampling, and common support independent of the parameter"
+        },
+        {
+          "value": "C",
+          "text": "It says that every family is exponential"
+        },
+        {
+          "value": "D",
+          "text": "It is an unconditional converse theorem to MaxEnt"
+        }
+      ],
+      "correct": [
+        "B"
+      ],
+      "sourceId": "8.10.1"
+    },
+    {
+      "id": "item-025",
+      "prompt": "What is $\\log_2 6-H_2(q)$ for a die distribution relative to a uniform reference?",
+      "explanation": "**Correct answer: A.** For a finite uniform reference, entropy deficit is exactly the forward KL to uniform.",
+      "topic": "8.11. Exercises",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "$D_{\\mathrm{KL},2}(q\\|U_6)$"
+        },
+        {
+          "value": "B",
+          "text": "$D_{\\mathrm{KL},2}(U_6\\|q)$"
+        },
+        {
+          "value": "C",
+          "text": "$H_2(U_6,q)$"
+        },
+        {
+          "value": "D",
+          "text": "Always zero"
+        }
+      ],
+      "correct": [
+        "A"
+      ],
+      "sourceId": "8.11.1"
+    },
+    {
+      "id": "item-026",
+      "prompt": "A six-sided die is constrained only by the mean $\\mathbb E[X]=4.5$. The MaxEnt solution has $\\lambda\\approx0.371049$ in $q^*(x)\\propto e^{\\lambda x}$. Compute its entropy in bits. (tolerance 0.003)",
+      "explanation": "**Numeric answer: 2.328** (tolerance 0.003). The entropy is 2.328 bits, against log₂ 6 = 2.585 bits for the unconstrained uniform die. The single moment constraint costs about 0.257 bits, and nothing beyond that constraint has been assumed.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 2.328,
+          "tolerance": 0.003
+        }
+      ],
+      "sourceId": "8.C.1"
+    },
+    {
+      "id": "item-027",
+      "prompt": "With $\\pi_{\\mathrm{ref}}=(0.7,0.2,0.1)$, rewards $r=(0,1,2)$ and $\\beta=1$, compute the probability the Gibbs-optimal policy assigns to the third action. (tolerance 0.003)",
+      "explanation": "**Numeric answer: 0.373** (tolerance 0.003). The tilt gives (0.353, 0.274, 0.373). The third action started at 0.1 and now leads, but the reference is not forgotten: two actions with equal reward would keep exactly the probability ratio they had under the reference.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.373,
+          "tolerance": 0.003
+        }
+      ],
+      "sourceId": "8.C.2"
+    },
+    {
+      "id": "item-028",
+      "prompt": "For logits $z=(2,1,0)$ and temperature $\\tau=0.5$, compute the softmax probability of the first class. (tolerance 0.003)",
+      "explanation": "**Numeric answer: 0.867** (tolerance 0.003). The distribution is (0.867, 0.117, 0.016). Lowering the temperature magnifies logit differences, which is the same exponential tilt as in the policy above with the reward playing the role of the logits.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 0.867,
+          "tolerance": 0.003
+        }
+      ],
+      "sourceId": "8.C.3"
+    },
+    {
+      "id": "item-029",
+      "prompt": "For the same logits and temperature, compute the maximum of the score-plus-entropy objective, that is $\\tau\\log\\sum_i e^{z_i/\\tau}$, in nats. (tolerance 0.003)",
+      "explanation": "**Numeric answer: 2.071** (tolerance 0.003). The optimal value is 2.071 nats. Any other distribution falls short of it by exactly τ times the KL divergence to the softmax, which is why the softmax is a global optimum rather than merely a stationary point.",
+      "topic": "Computational block",
+      "type": "numeric",
+      "fields": [
+        {
+          "label": "Answer",
+          "expected": 2.071,
+          "tolerance": 0.003
+        }
+      ],
+      "sourceId": "8.C.4"
+    }
+  ]
+}

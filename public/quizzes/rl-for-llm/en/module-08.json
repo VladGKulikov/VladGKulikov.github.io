@@ -1,0 +1,70 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-08",
+  "language": "en",
+  "questions": [
+    {
+      "id": "P01",
+      "title": "Why beta does not determine realized KL",
+      "prompt": "Two DPO runs use the same $\\beta$ but different learning rates, epoch counts, and data. Must they end with the same KL to the reference?",
+      "explanation": "No. In the variational objective $\\beta$ prices KL; in DPO it scales the classification logit. Realized drift depends on data, log-probability normalization, optimizer, update count, and parameterization. Measure KL separately under a fixed protocol.",
+      "type": "self-check"
+    },
+    {
+      "id": "P02",
+      "title": "Zero reference support",
+      "prompt": "For one completion $\\pi_{\\mathrm{ref}}(y\\mid x)=0$ while the current policy assigns positive probability. What happens to forward KL and the DPO ratio?",
+      "explanation": "Forward KL is infinite for policy mass outside reference support, and $\\log(\\pi_\\theta/\\pi_{\\mathrm{ref}})$ is not finite. Softmax models usually have positive mathematical probabilities, but hard masks, truncation, or numerical underflow can create effective zeros; support is part of the contract.",
+      "type": "self-check"
+    },
+    {
+      "id": "P03",
+      "title": "cDPO is not automatically Robust DPO",
+      "prompt": "Why can label smoothing with $\\varepsilon$ not be called an unbiased noise correction without qualification?",
+      "explanation": "cDPO mixes positive and flipped binary losses as a conservative heuristic. Robust DPO derives a particular correction under a symmetric label-flip model. Neither repairs a systematically wrong rubric, leakage, or distribution shift.",
+      "type": "self-check"
+    },
+    {
+      "id": "P04",
+      "title": "Stale fixed pairs",
+      "prompt": "After several epochs the policy nearly perfectly separates old pairs, but fresh current-policy responses show new errors. What should be done?",
+      "explanation": "Stop drawing conclusions from old pair accuracy, collect fresh current-policy candidates, label or verify them, re-check base capabilities, and consider iterative DPO or online RL. A fixed set need not remain representative.",
+      "type": "self-check"
+    },
+    {
+      "id": "P05",
+      "title": "Margin up, chosen logp down",
+      "prompt": "Mean DPO margin rises from 0.2 to 1.1 while mean `logps/chosen` falls. Is that a contradiction?",
+      "explanation": "No. DPO optimizes a relative reference-corrected gap. The rejected completion may lose likelihood faster, while unlabelled completions gain mass. Track chosen and rejected logp separately and evaluate fresh generations independently.",
+      "type": "self-check"
+    },
+    {
+      "id": "P06",
+      "title": "Truncating one completion",
+      "prompt": "The chosen completion is cut at 256 tokens while the rejected completion fits in 90. Can the pair be treated as an ordinary DPO example?",
+      "explanation": "Only if the truncation rule was defined in advance and the truncated strings are the actual preference objects. Otherwise the label concerns a different sequence than the loss. Filter or re-label such pairs and report truncation rates.",
+      "type": "self-check"
+    },
+    {
+      "id": "P07",
+      "title": "Choose from the data contract",
+      "prompt": "You have separate desirable and undesirable completions but no same-prompt pairs. What is the sound first choice: DPO, KTO, or artificial pairing?",
+      "explanation": "Use a method matching the observed feedback, such as KTO or another binary objective. Pairing unrelated prompts changes the question and breaks the prompt-dependent normalizer cancellation behind DPO.",
+      "type": "self-check"
+    },
+    {
+      "id": "P08",
+      "title": "UltraFeedback provenance",
+      "prompt": "May `trl-lib/ultrafeedback_binarized` be described as direct human preference data?",
+      "explanation": "No. It is a derivative of UltraFeedback with synthetic model-generated feedback. It is useful for engineering practice, but the feedback provenance, candidate generators, and binarization must be stated.",
+      "type": "self-check"
+    },
+    {
+      "id": "P09",
+      "title": "A shared chat template is mathematical",
+      "prompt": "Why must policy and reference log-probabilities use the same chat template and response mask?",
+      "explanation": "Otherwise $\\log\\pi_\\theta-\\log\\pi_{\\mathrm{ref}}$ compares different token sequences or token sets. The margin no longer implements the DPO formula and may measure formatting rather than preference.",
+      "type": "self-check"
+    }
+  ]
+}
