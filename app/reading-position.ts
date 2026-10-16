@@ -34,14 +34,17 @@ export function captureReadingPosition(): ReadingPosition | null {
   const sections = readingSections();
   if (!sections.length) return null;
   const inset = readingInset();
+  // Layout coordinates can round to opposite sides of the reading line at
+  // fractional display scales. Treat a heading within one CSS pixel as reached.
+  const reached = inset + 1;
   let sectionIndex = 0;
   for (let index = 0; index < sections.length; index++) {
-    if (sections[index].blocks[0].getBoundingClientRect().top <= inset) sectionIndex = index;
+    if (sections[index].blocks[0].getBoundingClientRect().top <= reached) sectionIndex = index;
   }
   const section = sections[sectionIndex];
   let blockIndex = 0;
   for (let index = 0; index < section.blocks.length; index++) {
-    if (section.blocks[index].getBoundingClientRect().top <= inset) blockIndex = index;
+    if (section.blocks[index].getBoundingClientRect().top <= reached) blockIndex = index;
   }
   const block = section.blocks[blockIndex];
   const rect = block.getBoundingClientRect();
@@ -59,6 +62,21 @@ export function captureReadingPosition(): ReadingPosition | null {
     headerProgress: sections[0].blocks[0].getBoundingClientRect().top > inset
       ? clamp(window.scrollY / Math.max(window.scrollY + sections[0].blocks[0].getBoundingClientRect().top - inset, 1))
       : null,
+  };
+}
+
+export function readingPositionAtAnchor(anchor: HTMLElement): ReadingPosition | null {
+  const sections = readingSections();
+  const sectionIndex = sections.findIndex(section => section.blocks.includes(anchor));
+  if (sectionIndex < 0) return null;
+  const section = sections[sectionIndex];
+  const blockIndex = section.blocks.indexOf(anchor);
+  const kind = blockKind(anchor);
+  return {
+    sectionKey: section.key, sectionIndex, blockKind: kind,
+    blockOrdinal: section.blocks.slice(0, blockIndex).filter(block => blockKind(block) === kind).length,
+    blockCount: section.blocks.filter(block => blockKind(block) === kind).length,
+    blockProgress: 0, sectionProgress: 0, headerProgress: null,
   };
 }
 

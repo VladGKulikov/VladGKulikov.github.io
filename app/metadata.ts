@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const siteUrl = new URL("https://vlad-kulikov-open-courses.gen-ai-vgk.chatgpt.site");
+const siteUrl = new URL("https://vladkulikov.com");
 
 const languageAlternates = {
   en: "/",

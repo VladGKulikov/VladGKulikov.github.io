@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21877456.svg)](https://doi.org/10.5281/zenodo.21877456)
 
-Personal website and course library: <https://vladgkulikov.github.io/>
+Personal website and course library: <https://vladkulikov.com/>
 
 Public bilingual lecture library for three courses:
 
@@ -31,6 +31,62 @@ This repository is the open lecture reader. The complete Stepik editions add the
 | Information Theory for ML | 377 auto-graded questions; all 78 exercises with detailed solutions, including 12 Python exercises. The complete course is free on Stepik |
 
 The canonical authoring repositories are maintained separately. This public repository is a generated, publication-safe copy.
+
+## Static pages and search metadata
+
+`npm run build:pages` creates a portable `dist-pages/` directory for GitHub Pages:
+two home pages, six course overviews, 98 complete lecture pages, and a custom
+`404.html`. Lectures, KaTeX formulas, illustrations and ordinary navigation are
+present in the original HTML. React hydrates that same interface to provide
+module search, collapsible panels and preservation of reading position on
+language changes. With JavaScript unavailable, native navigation and expandable
+module/section indexes remain available.
+
+Permanent addresses use `/courses/<course-key>/<module-key>/` in English and
+`/ru/courses/<course-key>/<module-key>/` in Russian. Course overviews omit the
+module key. Module keys identify subjects, not reading order: in Modern LLMs,
+for example, `module-18` is the Basic Transformer lecture at reading position 3.
+Do not renumber keys when changing the catalog order. Previous query-based URLs
+are translated to permanent addresses by the browser, preserving section hashes;
+GitHub Pages itself redirects the previous domain to the configured custom domain.
+
+The build generates per-page titles, descriptions, canonical URLs, reciprocal
+language alternates, social cards, `sitemap.xml`, `robots.txt`, `llms.txt`, and
+`agents.txt` from the shared catalog. The two text guides describe the public
+library, stable URLs, languages, author, licenses and edition boundaries. They
+are informational discovery aids, not permission grants or guarantees about
+search ranking or adoption by AI crawlers. `agents.txt` does not advertise any
+agent API or capabilities that the site does not provide.
+
+`SITE_CONFIG.json` holds the canonical origin, the optional dismissible Stepik
+notice, search-verification values and one optional GA4 integration. All
+verification values and analytics identifiers are empty by default; no analytics
+script is loaded in that state. To enable GA4, set provider to `ga4` and supply
+the real measurement ID. In the GA4 web stream, disable automatic enhanced
+measurement (including history-based page views, outbound clicks, site search
+and form tracking): the reader sends its own page views and Stepik/Leanpub
+outbound events once, with canonical paths and without query strings or hashes.
+Do not add a second tag manager or tracker. Search Console and Yandex Webmaster
+verification meta tags are emitted only when their actual values are supplied.
+
+The GitHub Pages custom domain is managed in repository settings. The existing
+GitHub Actions deployment is preserved; DNS and HTTPS are not reconfigured by
+the build. When mirroring onto another static host, retain these page paths and
+canonical references to `vladkulikov.com`.
+
+`npm run check:static` validates the already-built HTML, metadata, internal
+links, heading hierarchy, formulas, images, legacy route mappings and content
+hashes. It runs automatically at the end of `build:pages`. The source markup
+and publication/license checks remain separate.
+
+## Planned learning materials
+
+The next passes are authorized to add public assessments with answer checking,
+exercises with answers hidden until expanded, and existing notebooks/solutions
+as text or downloadable files. Code execution is outside that scope. These
+materials have not been copied into this first static-lecture migration; their
+publication boundaries and access wording must be updated together when the
+actual materials and answer-checking interface are implemented.
 
 ## Publication edition
 

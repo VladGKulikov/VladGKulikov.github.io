@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-16",
+  "result": "PASS",
+  "stage": "Static bilingual lecture library",
+  "baseline_commit": "72c0bf8e483d5bd8d251c902c98078a3d08ee546",
+  "static_html": {
+    "pages": 106,
+    "lectures": 98,
+    "links": 6318,
+    "images": 857,
+    "formulas": 13732
+  },
+  "preservation": "All 98 lecture source hashes match the existing catalog after normalizing checkout line endings; lecture and illustration source files were not changed.",
+  "checks": [
+    "Unique per-page title/description, canonical domain, reciprocal language alternates, social metadata, one h1 and sequential heading levels",
+    "All internal links, section IDs, images, rendered formulas, sitemap entries, legacy course/module mappings and non-indexable 404",
+    "All 106 pages scanned at a 320 x 740 Chromium viewport: no page overflow, no formula/table container outside viewport, and visible header controls",
+    "Keyboard navigation through Read online; Escape closes the mobile drawer; module search finds the final Modern LLMs module",
+    "Legacy query and index.html URLs, lang override, Basic Transformer legacy key module-18, module-20 and a deep section anchor",
+    "Back and Forward restore semantic reading position, including section-anchor history under fractional device scaling",
+    "Stepik notice dismissal survives language changes and reload; analytics and verification stay disabled without real settings",
+    "TypeScript, focused ESLint, source markup and publication/license validation"
+  ],
+  "mobile_language_round_trips": [
+    {
+      "course": "rl-for-llm-final-320",
+      "menus": "closed",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0023874350971131997
+    },
+    {
+      "course": "rl-for-llm-final-320",
+      "menus": "left",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0010516130411442615
+    },
+    {
+      "course": "rl-for-llm-final-320",
+      "menus": "right",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0010516130411442615
+    },
+    {
+      "course": "modern-llms-final-390",
+      "menus": "closed",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0020144015131096926
+    },
+    {
+      "course": "modern-llms-final-390",
+      "menus": "left",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0007267384133928245
+    },
+    {
+      "course": "modern-llms-final-390",
+      "menus": "right",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0007267384133928245
+    },
+    {
+      "course": "information-theory-for-ml-final-390",
+      "menus": "closed",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0028723716606676164
+    },
+    {
+      "course": "information-theory-for-ml-final-390",
+      "menus": "left",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0017194873441521152
+    },
+    {
+      "course": "information-theory-for-ml-final-390",
+      "menus": "right",
+      "result": "PASS",
+      "max_paragraph_progress_difference": 0.0017194873441521152
+    }
+  ],
+  "desktop": {
+    "wideBefore": 849.9959716796875,
+    "wideAfter": 1424.639892578125,
+    "languageRoundTrip": true,
+    "viewport": "1440 x 900"
+  },
+  "without_site_javascript": {
+    "method": "The local verification server removed all script elements and exposed noscript fallback markup; native browser navigation and details controls were exercised.",
+    "courses": [
+      {
+        "formulas": 44,
+        "menuOpen": true,
+        "modules": 20,
+        "overflow": 0,
+        "path": "/__nojs/ru/courses/modern-llms/module-01/",
+        "scripts": 0,
+        "text": 72369,
+        "result": "PASS"
+      },
+      {
+        "formulas": 106,
+        "menuOpen": true,
+        "modules": 13,
+        "overflow": 0,
+        "path": "/__nojs/ru/courses/rl-for-llm/module-01/",
+        "scripts": 0,
+        "text": 49295,
+        "result": "PASS"
+      },
+      {
+        "formulas": 181,
+        "menuOpen": true,
+        "modules": 16,
+        "overflow": 0,
+        "path": "/__nojs/ru/courses/information-theory-for-ml/module-01/",
+        "scripts": 0,
+        "text": 52789,
+        "result": "PASS"
+      }
+    ],
+    "language_link": "Russian to English native navigation passed"
+  },
+  "scope": "Course assessments, exercises, notebooks and solutions are planned for later passes. The OpenAI-hosted mirror is deferred until user acceptance."
+}

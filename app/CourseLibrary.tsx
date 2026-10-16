@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages, @next/next/no-img-element -- Static hosting uses native links and image files. */
 
 import {
   ArrowRight,
@@ -16,42 +17,18 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import publication from "../PUBLICATION.json";
-import content from "./generated/content.json";
 import { markdownHeadings } from "./markdown-headings";
-import { captureReadingPosition, restoreReadingPosition, type ReadingPosition } from "./reading-position";
+import { captureReadingPosition, readingPositionAtAnchor, restoreReadingPosition, type ReadingPosition } from "./reading-position";
 
-type Language = "ru" | "en";
-type CourseKey = "modern-llms" | "rl-for-llm" | "information-theory-for-ml";
-
-type Module = {
-  id: string;
-  module_key: string;
-  position: number;
-  title: string;
-  content_file: string;
-  content_hash: string;
-  characters: number;
-  image_count: number;
-};
-
-type Course = {
-  course_key: CourseKey;
-  language: Language;
-  title: string;
-  description: string;
-  stepik_url: string;
-  module_count: number;
-  characters: number;
-  modules: Module[];
-};
-
-const courses = content.courses as Course[];
+import config from "../SITE_CONFIG.json";
+import { buildLocation, courses, parseUrl, updatePageMetadata, type Language, type CourseKey, type CourseModule as Module, type PageRoute } from "./site";
+import { trackPage } from "./analytics";
 
 const copy = {
   ru: {
@@ -261,33 +238,12 @@ const stepikVolumes: Record<CourseKey, Record<Language, string[]>> = {
   },
 };
 
-function getBaseUrl() {
-  const value = import.meta.env.BASE_URL || "/";
-  return value.endsWith("/") ? value : `${value}/`;
-}
+function getBaseUrl() { return "/"; }
 
-function getLanguagePath(language: Language) {
-  return `${getBaseUrl()}${language === "ru" ? "ru/" : ""}`;
-}
-
-function buildLocation(language: Language, courseKey: CourseKey | null, moduleKey: string | null) {
-  const params = new URLSearchParams();
-  if (courseKey) params.set("course", courseKey);
-  if (moduleKey) params.set("module", moduleKey);
-  const query = params.toString();
-  return `${getLanguagePath(language)}${query ? `?${query}` : ""}`;
-}
-
-function parseLocation(fallbackLanguage: Language) {
-  if (typeof window === "undefined") {
-    return { language: fallbackLanguage, courseKey: null, moduleKey: null };
-  }
-  const params = new URLSearchParams(window.location.search);
-  const russianPath = /\/ru\/?$/.test(window.location.pathname);
-  const language: Language = params.get("lang") === "ru" || russianPath ? "ru" : "en";
-  const courseKey = params.get("course") as CourseKey | null;
-  const moduleKey = params.get("module");
-  return { language, courseKey, moduleKey };
+function parseLocation(fallbackLanguage: Language): PageRoute {
+  return typeof window === "undefined"
+    ? { language: fallbackLanguage, courseKey: null, moduleKey: null }
+    : parseUrl(new URL(window.location.href));
 }
 
 function courseFor(courseKey: CourseKey, language: Language) {
@@ -307,20 +263,46 @@ function findInternalModule(href: string | undefined) {
   return `module-${match[1].toLowerCase().padStart(2, "0")}`;
 }
 
-export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: Language }) {
-  const initial = parseLocation(initialLanguage);
+const subscribeNotice = () => () => {};
+function readNoticePreference() {
+  try { return sessionStorage.getItem("stepik-notice-dismissed") === "1"; } catch { return false; }
+}
+function StepikNotice({ language }: { language: Language }) {
+  const [dismissed, setDismissed] = useState(false);
+  const previouslyDismissed = useSyncExternalStore(subscribeNotice, readNoticePreference, () => false);
+  if (!config.stepikNotice || dismissed || previouslyDismissed) return null;
+  return <aside className="stepik-notice">
+    <span>{language === "ru" ? "Если Stepik недоступен, лекции можно читать на этом сайте." : "If Stepik is unavailable, you can read the lectures on this site."}</span>
+    <button className="js-only" aria-label={language === "ru" ? "Скрыть уведомление" : "Dismiss notice"} onClick={() => {
+      setDismissed(true);
+      try { sessionStorage.setItem("stepik-notice-dismissed", "1"); } catch { /* Storage is optional. */ }
+    }}><X size={16} /></button>
+  </aside>;
+}
+
+export function CourseLibrary({ initialLanguage = "en", initialPage, initialMarkdown = "" }: {
+  initialLanguage?: Language; initialPage?: PageRoute; initialMarkdown?: string;
+}) {
+  const initial = initialPage ?? parseLocation(initialLanguage);
   const [language, setLanguage] = useState<Language>(initial.language);
   const [courseKey, setCourseKey] = useState<CourseKey | null>(initial.courseKey);
   const [moduleKey, setModuleKey] = useState<string | null>(initial.moduleKey);
-  const [markdown, setMarkdown] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [notFound, setNotFound] = useState(Boolean(initial.notFound));
+  const [markdown, setMarkdown] = useState(initialMarkdown);
+  const markdownCache = useRef(new Map<string, string>(initial.moduleKey ? [[`${initial.courseKey}:${initial.language}:${initial.moduleKey}`, initialMarkdown]] : []));
+  const [loading, setLoading] = useState(Boolean(initial.moduleKey && !initialMarkdown));
   const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [tocHidden, setTocHidden] = useState(false);
   const [tocDrawerOpen, setTocDrawerOpen] = useState(false);
+  const [anchorKey, setAnchorKey] = useState("");
   const pendingReadingPosition = useRef<ReadingPosition | null>(null);
+  const pendingScroll = useRef<number | null>(null);
+  const currentHistoryKey = useRef("");
+  const currentHistoryUrl = useRef("");
+  const historyPositions = useRef(new Map<string, { readingPosition: ReadingPosition | null; scrollY: number }>());
   const t = copy[language];
 
   const activeCourse = useMemo(
@@ -333,8 +315,31 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
   );
 
   useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
+    const previous = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    const readerKey = window.history.state?.readerKey ?? window.crypto.randomUUID();
+    window.history.replaceState({ ...window.history.state, readerKey }, "");
+    currentHistoryKey.current = readerKey;
+    currentHistoryUrl.current = window.location.href;
+    const onHashChange = () => {
+      setAnchorKey(window.location.hash);
+      if (currentHistoryUrl.current === window.location.href) return;
+      const readerKey = window.crypto.randomUUID();
+      window.history.replaceState({ readerKey }, "");
+      currentHistoryKey.current = readerKey;
+      currentHistoryUrl.current = window.location.href;
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => {
+      window.history.scrollRestoration = previous;
+      window.removeEventListener("hashchange", onHashChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    updatePageMetadata({ language, courseKey, moduleKey, notFound });
+    trackPage({ language, courseKey, moduleKey, notFound });
+  }, [language, courseKey, moduleKey, notFound]);
 
   useEffect(() => {
     if (!drawerOpen && !tocDrawerOpen) return;
@@ -383,72 +388,97 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     (nextLanguage: Language, nextCourse: CourseKey | null, nextModule: string | null, push = true) => {
       if (typeof window === "undefined") return;
       const url = buildLocation(nextLanguage, nextCourse, nextModule);
-      window.history[push ? "pushState" : "replaceState"]({}, "", url);
+      const readerKey = window.crypto.randomUUID();
+      window.history[push ? "pushState" : "replaceState"]({ readerKey }, "", url);
+      currentHistoryKey.current = readerKey;
+      currentHistoryUrl.current = window.location.href;
     },
     [],
   );
 
-  const selectModule = useCallback(
-    (nextCourse: CourseKey, nextModule: string, push = true) => {
-      pendingReadingPosition.current = null;
-      if (nextCourse !== courseKey || nextModule !== moduleKey) setMarkdown("");
-      setCourseKey(nextCourse);
-      setModuleKey(nextModule);
+  const preparePage = useCallback((next: PageRoute) => {
+    const cached = markdownCache.current.get(`${next.courseKey}:${next.language}:${next.moduleKey}`);
+    setLoadError(false);
+    if (!next.moduleKey) {
+      setMarkdown("");
+      setLoading(false);
+    } else if (cached) {
+      setMarkdown(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+  }, []);
+
+  const navigate = useCallback((next: PageRoute, push = true, hash = "") => {
+    const translated = next.language !== language && next.courseKey === courseKey && next.moduleKey === moduleKey;
+    const bookmark = captureReadingPosition();
+    historyPositions.current.set(currentHistoryKey.current, { readingPosition: bookmark, scrollY: window.scrollY });
+    if (push) window.history.replaceState({ ...window.history.state, readingPosition: bookmark, scrollY: window.scrollY }, "");
+    pendingReadingPosition.current = translated ? bookmark : null;
+    pendingScroll.current = translated ? null : 0;
+    if (!translated) {
+      if (next.courseKey !== courseKey || next.moduleKey !== moduleKey) setMarkdown("");
       setDrawerOpen(false);
       setTocDrawerOpen(false);
-      updateLocation(language, nextCourse, nextModule, push);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    },
-    [courseKey, language, moduleKey, updateLocation],
-  );
-
-  const goHome = useCallback(() => {
-    pendingReadingPosition.current = null;
-    setMarkdown("");
-    setCourseKey(null);
-    setModuleKey(null);
-    setDrawerOpen(false);
-    setTocDrawerOpen(false);
-    updateLocation(language, null, null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [language, updateLocation]);
-
-  const switchLanguage = useCallback(() => {
-    const nextLanguage: Language = language === "ru" ? "en" : "ru";
-    pendingReadingPosition.current = captureReadingPosition();
-    setLanguage(nextLanguage);
-    updateLocation(nextLanguage, courseKey, moduleKey);
-  }, [courseKey, language, moduleKey, updateLocation]);
+    }
+    setLanguage(next.language);
+    setCourseKey(next.courseKey);
+    setModuleKey(next.moduleKey);
+    setNotFound(Boolean(next.notFound));
+    preparePage(next);
+    updateLocation(next.language, next.courseKey, next.moduleKey, push);
+    if (hash) window.history.replaceState(window.history.state, "", `${buildLocation(next.language, next.courseKey, next.moduleKey)}${hash}`);
+    currentHistoryUrl.current = window.location.href;
+    if (!translated) window.scrollTo({ top: 0, behavior: "instant" });
+  }, [language, courseKey, moduleKey, updateLocation, preparePage]);
 
   useEffect(() => {
     const onPopState = () => {
       const next = parseLocation(initialLanguage);
-      pendingReadingPosition.current = next.language !== language && next.courseKey === courseKey && next.moduleKey === moduleKey
-        ? captureReadingPosition() : null;
+      // Capture the outgoing entry before replacing its DOM, including entries
+      // left using the browser's Back/Forward controls rather than a site link.
+      historyPositions.current.set(currentHistoryKey.current, { readingPosition: captureReadingPosition(), scrollY: window.scrollY });
+      const readerKey = window.history.state?.readerKey ?? window.crypto.randomUUID();
+      const saved = historyPositions.current.get(readerKey) ?? window.history.state;
+      currentHistoryKey.current = readerKey;
+      currentHistoryUrl.current = window.location.href;
+      window.history.replaceState({ ...window.history.state, readerKey }, "");
+      pendingReadingPosition.current = saved?.readingPosition ?? null;
+      pendingScroll.current = pendingReadingPosition.current || window.location.hash ? null : saved?.scrollY ?? 0;
       if (next.courseKey !== courseKey || next.moduleKey !== moduleKey) setMarkdown("");
       setLanguage(next.language);
       setCourseKey(next.courseKey);
       setModuleKey(next.moduleKey);
+      setNotFound(Boolean(next.notFound));
+      preparePage(next);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [initialLanguage, language, courseKey, moduleKey]);
+  }, [initialLanguage, language, courseKey, moduleKey, preparePage]);
+
+  useLayoutEffect(() => {
+    if (pendingScroll.current === null || pendingReadingPosition.current || loading || activeModule && !markdown) return;
+    window.scrollTo({ top: pendingScroll.current, behavior: "instant" });
+    pendingScroll.current = null;
+  }, [language, courseKey, moduleKey, markdown, loading, activeModule]);
 
   useEffect(() => {
-    if (!activeModule) {
-      setMarkdown("");
-      return;
-    }
+    if (!activeModule) return;
+    const cacheKey = `${courseKey}:${language}:${moduleKey}`;
+    const cached = markdownCache.current.get(cacheKey);
+    if (cached) return;
     const controller = new AbortController();
-    setLoading(true);
-    setLoadError(false);
     fetch(`${getBaseUrl()}content/${activeModule.content_file}?v=${activeModule.content_hash}`, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.text();
       })
       .then((value) => {
-        if (!controller.signal.aborted) setMarkdown(value);
+        if (!controller.signal.aborted) {
+          markdownCache.current.set(cacheKey, value);
+          setMarkdown(value);
+        }
       })
       .catch((error) => {
         if (!controller.signal.aborted && error.name !== "AbortError") setLoadError(true);
@@ -457,14 +487,19 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [activeModule]);
+  }, [activeModule, courseKey, language, moduleKey]);
 
   useLayoutEffect(() => {
-    const position = pendingReadingPosition.current;
     const prose = document.querySelector(".lecture-prose");
-    if (!position || loading || loadError || !markdown || !prose) return;
+    if (loading || loadError || !markdown || !prose) return;
+    let anchor: HTMLElement | null = null;
+    if (!pendingReadingPosition.current && window.location.hash) {
+      try { anchor = document.getElementById(decodeURIComponent(window.location.hash.slice(1))); } catch { /* Malformed old anchor. */ }
+    }
+    const position = pendingReadingPosition.current ?? (anchor ? readingPositionAtAnchor(anchor) : null);
+    if (!position) return;
+    pendingReadingPosition.current = position;
     let stopped = false;
-    let timeout: number | undefined;
     let frame: number | undefined;
     const restore = () => {
       if (!stopped && pendingReadingPosition.current === position) restoreReadingPosition(position);
@@ -487,7 +522,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
       .filter((picture) => picture.getBoundingClientRect().top < window.innerHeight);
     for (const picture of pictures) picture.loading = "eager";
     for (const event of ["wheel", "touchstart", "pointerdown", "keydown"]) window.addEventListener(event, stop, { passive: true });
-    timeout = window.setTimeout(stop, 5000);
+    const timeout = window.setTimeout(stop, 5000);
     void Promise.allSettled([...pictures.map((picture) => picture.decode()), document.fonts.ready]).then(() => {
       if (stopped) return;
       frame = window.requestAnimationFrame(() => {
@@ -496,7 +531,12 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
       });
     });
     return stop;
-  }, [markdown, loading, loadError]);
+  }, [markdown, loading, loadError, anchorKey]);
+
+  useEffect(() => {
+    if (loading || !markdown || pendingReadingPosition.current || !window.location.hash) return;
+    try { document.getElementById(decodeURIComponent(window.location.hash.slice(1)))?.scrollIntoView(); } catch { /* Malformed old anchor. */ }
+  }, [loading, markdown]);
 
   const visibleModules = useMemo(() => {
     if (!activeCourse) return [];
@@ -520,27 +560,52 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
     () => markdownHeadings(displayMarkdown),
     [displayMarkdown],
   );
+  const semanticHeadings = useMemo(() => {
+    let previous = 1;
+    const result = new Map<number, number>();
+    for (const heading of headingIndex) {
+      const depth = Math.min(heading.depth, previous + 1);
+      result.set(heading.line, depth);
+      previous = depth;
+    }
+    return result;
+  }, [headingIndex]);
   const headingIds = useMemo(() => new Map(headingIndex.map((heading) => [heading.line, heading.id])), [headingIndex]);
   const headings = headingIndex.filter((heading) => heading.depth === 2);
 
-  const openInternalModule = useCallback(
-    (target: string) => {
-      if (!courseKey || !activeCourse?.modules.some((module) => module.module_key === target)) return;
-      selectModule(courseKey, target);
-    },
-    [activeCourse, courseKey, selectModule],
-  );
+  useEffect(() => {
+    const followLink = (event: MouseEvent) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const anchor = (event.target as Element).closest("a[href]") as HTMLAnchorElement | null;
+    if (!anchor || anchor.target || anchor.hasAttribute("download")) return;
+    const url = new URL(anchor.href);
+    if (url.origin !== window.location.origin) return;
+    if (url.pathname === window.location.pathname && url.hash && !url.search) {
+      const saved = { readingPosition: captureReadingPosition(), scrollY: window.scrollY };
+      historyPositions.current.set(currentHistoryKey.current, saved);
+      window.history.replaceState({ ...window.history.state, ...saved }, "");
+      return;
+    }
+    const next = parseUrl(url);
+    if (next.notFound) return;
+    event.preventDefault();
+    if (loading && anchor.classList.contains("language-toggle")) return;
+    navigate(next, true, url.hash);
+    };
+    document.addEventListener("click", followLink);
+    return () => document.removeEventListener("click", followLink);
+  }, [navigate, loading]);
 
   return (
     <div className="site-shell" data-course={courseKey ?? "home"}>
       <header className="topbar">
-        <button className="brand" onClick={goHome} aria-label={t.home}>
+        <a className="brand" href={buildLocation(language)} aria-label={t.home}>
           <span className="brand-mark">VK</span>
           <span>
             <strong>{t.author}</strong>
             <small>{t.brand}</small>
           </span>
-        </button>
+        </a>
         <nav className="top-actions" aria-label="Site navigation">
           {activeCourse && activeModule && (
             <>
@@ -596,14 +661,38 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
             <Code2 size={17} />
             <span className="desktop-label">GitHub</span>
           </a>
-          <button className="language-toggle" onClick={switchLanguage} aria-label="Switch language" disabled={loading}>
+          <a className="language-toggle" href={buildLocation(language === "ru" ? "en" : "ru", courseKey, moduleKey)} hrefLang={language === "ru" ? "en" : "ru"} aria-label="Switch language" aria-disabled={loading}>
             <Languages size={17} />
             {language === "ru" ? "EN" : "RU"}
-          </button>
+          </a>
         </nav>
       </header>
 
-      {!activeCourse || !activeModule ? (
+      {activeCourse && activeModule && <noscript>
+        <style>{`.desktop-left-toggle,.desktop-right-toggle,.mobile-menu,.mobile-right-toggle,.module-search,.drawer-close,.js-only{display:none!important}`}</style>
+        <nav className="static-navigation" aria-label={t.contents}>
+          <details><summary>{t.modulesMenu}</summary>{activeCourse.modules.map(module => <a key={module.id} href={buildLocation(language, courseKey, module.module_key)}>{formatModuleNumber(module)} {module.title}</a>)}</details>
+          <details><summary>{t.outlineMenu}</summary>{headings.map(heading => <a key={heading.id} href={`#${heading.id}`}>{heading.label}</a>)}</details>
+        </nav>
+      </noscript>}
+
+      {notFound ? (
+        <main className="course-overview reading-column"><h1 className="reading-title">404 · {language === "ru" ? "Страница не найдена" : "Page not found"}</h1>
+          <p>{language === "ru" ? "Проверьте адрес или перейдите к библиотеке курсов." : "Check the address or return to the course library."}</p>
+          <a href="/">English library</a> · <a href="/ru/">Библиотека на русском</a>
+        </main>
+      ) : activeCourse && !activeModule ? (
+        <main className="course-overview reading-column">
+          <p className="eyebrow"><a href={buildLocation(language)}>{t.library}</a></p>
+          <h1 className="reading-title">{activeCourse.title}</h1>
+          <div className="lecture-prose"><p>{activeCourse.description}</p></div>
+          <StepikNotice language={language} />
+          <p><a className="primary-link" href={buildLocation(language, courseKey, activeCourse.modules[0].module_key)}>{t.start} <ArrowRight size={18} /></a></p>
+          <h2>{t.contents}</h2>
+          <ol className="course-contents">{activeCourse.modules.map(module => <li key={module.id}><a href={buildLocation(language, courseKey, module.module_key)}>{module.title}</a></li>)}</ol>
+          <p><a href={activeCourse.stepik_url}>{t.stepik}</a> · <a href={leanpubUrls[activeCourse.course_key][language]}>{t.leanpub}</a></p>
+        </main>
+      ) : !activeCourse || !activeModule ? (
         <main className="home-view">
           <section className="hero">
             <div className="hero-copy">
@@ -658,7 +747,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                         <span className="course-number">{courseNumbers[course.course_key]}</span>
                         <BookOpen size={22} />
                       </div>
-                      <h3>{course.title}</h3>
+                      <h3><a href={buildLocation(language, course.course_key)}>{course.title}</a></h3>
                       <p>{course.description}</p>
                       <div className="course-access">
                         <section className="access-panel access-panel-open">
@@ -678,13 +767,10 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                               <dd>{t.illustrations}</dd>
                             </div>
                           </dl>
-                          <button
-                            className="course-open"
-                            onClick={() => selectModule(course.course_key, course.modules[0].module_key)}
-                          >
+                          <a className="course-open" href={buildLocation(language, course.course_key, course.modules[0].module_key)}>
                             {t.start}
                             <ArrowRight size={18} />
-                          </button>
+                          </a>
                         </section>
 
                         <section className={`access-panel access-panel-stepik ${isFullyOpen ? "is-free" : "is-paid"}`}>
@@ -739,15 +825,15 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
         <main className={`reader-layout ${sidebarHidden ? "left-menu-hidden" : ""} ${tocHidden ? "right-menu-hidden" : ""}`}>
           <aside id="course-menu" aria-label={t.modulesMenu} className={`course-sidebar ${drawerOpen ? "is-open" : ""}`}>
             <div className="sidebar-head">
-              <button className="back-home" onClick={goHome}>
+              <a className="back-home" href={buildLocation(language)}>
                 <Home size={16} />
                 {t.home}
-              </button>
+              </a>
               <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label={t.hideModules}>
                 <X size={20} />
               </button>
               <span className="sidebar-course-number">{courseNumbers[activeCourse.course_key]}</span>
-              <h2>{activeCourse.title}</h2>
+              <p className="sidebar-title"><a href={buildLocation(language, courseKey)}>{activeCourse.title}</a></p>
               <div className="sidebar-course-links">
                 <a href={activeCourse.stepik_url} target="_blank" rel="noreferrer">
                   {t.stepik}
@@ -774,14 +860,12 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
             <nav className="module-list" aria-label={t.contents}>
               {visibleModules.length ? (
                 visibleModules.map((module) => (
-                  <button
-                    key={module.id}
-                    className={module.id === activeModule.id ? "active" : ""}
-                    onClick={() => selectModule(activeCourse.course_key, module.module_key)}
-                  >
+                  <a key={module.id} className={module.id === activeModule.id ? "active" : ""}
+                    aria-current={module.id === activeModule.id ? "page" : undefined}
+                    href={buildLocation(language, activeCourse.course_key, module.module_key)}>
                     <span>{formatModuleNumber(module)}</span>
                     <strong>{module.title.replace(/^(Module|Модуль)\s+\d+b?[.:]?\s*/i, "")}</strong>
-                  </button>
+                  </a>
                 ))
               ) : (
                 <p className="empty-search">{t.noResults}</p>
@@ -811,6 +895,7 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
               <span style={{ width: `${((moduleIndex + 1) / activeCourse.modules.length) * 100}%` }} />
             </div>
 
+            <StepikNotice language={language} />
             {loading && !markdown && <div className="lecture-state">{t.loading}</div>}
             {loadError && <div className="lecture-state error">{t.error}</div>}
             {markdown && !loadError && (
@@ -820,24 +905,23 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                   rehypePlugins={[rehypeKatex]}
                   components={{
                     h2: ({ children, node }) => {
-                      return <h2 id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</h2>;
+                      const Tag = `h${node?.position ? semanticHeadings.get(node.position.start.line) ?? 2 : 2}` as "h2" | "h3" | "h4";
+                      return <Tag className="markdown-h2" id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</Tag>;
                     },
                     h3: ({ children, node }) => {
-                      return <h3 id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</h3>;
+                      const Tag = `h${node?.position ? semanticHeadings.get(node.position.start.line) ?? 3 : 3}` as "h2" | "h3" | "h4";
+                      return <Tag className="markdown-h3" id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</Tag>;
                     },
                     h4: ({ children, node }) => {
-                      return <h4 id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</h4>;
+                      const Tag = `h${node?.position ? semanticHeadings.get(node.position.start.line) ?? 4 : 4}` as "h2" | "h3" | "h4";
+                      return <Tag className="markdown-h4" id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</Tag>;
                     },
                     a: ({ href, children, ...props }) => {
                       const internalModule = findInternalModule(href);
                       if (internalModule && activeCourse.modules.some((module) => module.module_key === internalModule)) {
                         return (
                           <a
-                            href={buildLocation(language, activeCourse.course_key, internalModule)}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              openInternalModule(internalModule);
-                            }}
+                            href={`${buildLocation(language, activeCourse.course_key, internalModule)}${href?.includes("#") ? `#${href.split("#")[1]}` : ""}`}
                           >
                             {children}
                           </a>
@@ -855,12 +939,13 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
                         </a>
                       );
                     },
-                    img: ({ src, alt }) => {
+                    img: ({ src, alt, node }) => {
                       const value = String(src ?? "");
                       const resolved = /^https?:|^data:/.test(value)
                         ? value
                         : `${getBaseUrl()}${value.replace(/^\.\//, "")}`;
-                      return <img src={resolved} alt={alt ?? ""} loading="lazy" />;
+                      const section = headingIndex.filter(heading => heading.line < (node?.position?.start.line ?? 0)).at(-1)?.label ?? activeModule.title;
+                      return <img src={resolved} alt={alt || `${language === "ru" ? "Иллюстрация к разделу" : "Illustration for"}: ${section}`} loading="lazy" />;
                     },
                     table: ({ children }) => (
                       <div className="table-scroll">
@@ -876,24 +961,24 @@ export function CourseLibrary({ initialLanguage = "en" }: { initialLanguage?: La
 
             <nav className="module-pagination" aria-label="Module navigation">
               {previousModule ? (
-                <button onClick={() => selectModule(activeCourse.course_key, previousModule.module_key)}>
+                <a href={buildLocation(language, activeCourse.course_key, previousModule.module_key)}>
                   <ChevronLeft size={18} />
                   <span>
                     <small>{t.previous}</small>
                     {formatModuleNumber(previousModule)}
                   </span>
-                </button>
+                </a>
               ) : (
                 <span />
               )}
               {nextModule && (
-                <button onClick={() => selectModule(activeCourse.course_key, nextModule.module_key)}>
+                <a href={buildLocation(language, activeCourse.course_key, nextModule.module_key)}>
                   <span>
                     <small>{t.next}</small>
                     {formatModuleNumber(nextModule)}
                   </span>
                   <ChevronRight size={18} />
-                </button>
+                </a>
               )}
             </nav>
           </article>

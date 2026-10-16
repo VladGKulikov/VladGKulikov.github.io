@@ -8,12 +8,13 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "build:pages": "vite build --config vite.pages.config.ts",
+    "build:pages": "vite build --config vite.pages.config.ts && vite build --config vite.prerender.config.ts && node scripts/prerender.mjs && node scripts/validate-static.mjs",
     "check:math": "node scripts/validate-math.mjs",
     "check:markup": "node scripts/validate-markup.mjs",
     "check:publication": "node scripts/validate-publication.mjs",
     "start": "vinext start",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-pages --ignore-pattern .next"
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-pages --ignore-pattern .next",
+    "check:static": "node scripts/validate-static.mjs"
   },
   "dependencies": {
     "katex": "^0.18.3",
@@ -46,7 +47,8 @@
     "typescript-eslint": "8.59.3",
     "vinext": "1.0.0-beta.2",
     "vite": "8.0.13",
-    "wrangler": "4.92.0"
+    "wrangler": "4.92.0",
+    "parse5": "7.3.0"
   },
   "type": "module"
 }

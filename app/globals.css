@@ -634,7 +634,7 @@ a {
   font-style: italic;
 }
 
-.sidebar-head h2 {
+.sidebar-head .sidebar-title {
   margin: 0 0 18px;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 25px;
@@ -703,7 +703,7 @@ a {
   scrollbar-width: thin;
 }
 
-.module-list button {
+.module-list a {
   display: grid;
   width: 100%;
   grid-template-columns: 34px 1fr;
@@ -717,22 +717,22 @@ a {
   text-align: left;
 }
 
-.module-list button:hover {
+.module-list a:hover {
   color: white;
 }
 
-.module-list button.active {
+.module-list a.active {
   background: var(--accent);
   color: white;
 }
 
-.module-list button span {
+.module-list a span {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 10px;
   line-height: 1.4;
 }
 
-.module-list button strong {
+.module-list a strong {
   font-size: 12px;
   font-weight: 600;
   line-height: 1.35;
@@ -820,14 +820,14 @@ a {
   margin-top: 0;
 }
 
-.lecture-prose h2,
-.lecture-prose h3,
-.lecture-prose h4 {
+.lecture-prose .markdown-h2,
+.lecture-prose .markdown-h3,
+.lecture-prose .markdown-h4 {
   scroll-margin-top: 100px;
   color: var(--ink);
 }
 
-.lecture-prose h2 {
+.lecture-prose .markdown-h2 {
   margin: 2.4em 0 0.8em;
   border-top: 1px solid var(--line);
   padding-top: 1.05em;
@@ -837,14 +837,14 @@ a {
   line-height: 1.18;
 }
 
-.lecture-prose h3 {
+.lecture-prose .markdown-h3 {
   margin: 2em 0 0.7em;
   font-size: 24px;
   font-weight: 600;
   line-height: 1.25;
 }
 
-.lecture-prose h4 {
+.lecture-prose .markdown-h4 {
   margin: 1.7em 0 0.65em;
   font-family: Inter, ui-sans-serif, sans-serif;
   font-size: 16px;
@@ -972,7 +972,7 @@ a {
   padding-top: 28px;
 }
 
-.module-pagination button {
+.module-pagination a {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -982,12 +982,12 @@ a {
   padding: 15px;
 }
 
-.module-pagination button:last-child {
+.module-pagination a:last-child {
   justify-content: flex-end;
   text-align: right;
 }
 
-.module-pagination button:hover {
+.module-pagination a:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -1264,7 +1264,7 @@ a {
     font-size: 30px;
   }
 
-  .sidebar-head h2 {
+  .sidebar-head .sidebar-title {
     font-size: 22px;
   }
 
@@ -1272,7 +1272,7 @@ a {
     padding-bottom: calc(24px + env(safe-area-inset-bottom));
   }
 
-  .module-list button {
+  .module-list a {
     min-height: 48px;
   }
 }
@@ -1286,7 +1286,7 @@ a {
     display: none;
   }
 
-  .sidebar-head h2 {
+  .sidebar-head .sidebar-title {
     margin: 12px 0 10px;
     font-size: 20px;
   }
@@ -1301,7 +1301,7 @@ a {
     display: none;
   }
 
-  .top-actions a {
+  .top-actions a:not(.language-toggle) {
     display: none;
   }
 
@@ -1370,7 +1370,7 @@ a {
     margin-bottom: 38px;
   }
 
-  .lecture-prose h2 {
+  .lecture-prose .markdown-h2 {
     font-size: 27px;
   }
 
@@ -1413,3 +1413,21 @@ a {
     padding: 0;
   }
 }
+
+/* Navigation keeps the same appearance when rendered as crawlable links. */
+.brand, .back-home, .module-list a, .module-pagination a, .course-open,
+.course-card h3 a, .sidebar-head .sidebar-title a { text-decoration: none; }
+.language-toggle[aria-disabled="true"] { opacity: .55; cursor: wait; }
+.course-overview { max-width: 1100px; margin: 0 auto; min-height: 70vh; }
+.course-overview .primary-link { display: inline-flex; align-items: center; gap: 18px; padding: 14px 20px; background: var(--ink); color: white; text-decoration: none; font-size: 13px; font-weight: 700; }
+.course-overview > h2 { margin-top: 40px; font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 500; }
+.course-contents { padding-left: 24px; line-height: 1.6; }
+.course-contents li { margin: 10px 0; }
+.course-contents a { text-underline-offset: 4px; }
+.stepik-notice { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); padding: 10px 12px; margin: 0 0 24px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.stepik-notice span { flex: 1; }
+.stepik-notice button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; }
+.static-navigation { padding: 16px 22px; }
+.static-navigation summary { cursor: pointer; padding: 12px 0; }
+.static-navigation a { display: block; padding: 8px 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
