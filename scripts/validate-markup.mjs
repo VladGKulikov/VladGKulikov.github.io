@@ -12,6 +12,15 @@ import { markdownHeadings } from "../app/markdown-headings.js";
 const project = fileURLToPath(new URL("../", import.meta.url));
 const root = path.join(project, "public/content");
 const catalog = JSON.parse(fs.readFileSync(path.join(project, "app/generated/content.json"), "utf8"));
+const quizModules = JSON.parse(fs.readFileSync(path.join(project, 'app/generated/quizzes.json'), 'utf8')).modules;
+const practiceModules = JSON.parse(fs.readFileSync(path.join(project, 'app/generated/practice.json'), 'utf8')).modules;
+const coursePath = (language, course) => `/${language === 'ru' ? 'ru/' : ''}courses/${course}/`;
+const siteRoutes = new Set(catalog.courses.flatMap(course => {
+  const base = coursePath(course.language, course.course_key);
+  return [base, ...course.modules.map(module => `${base}${module.module_key}/`)];
+}));
+for (const entry of quizModules) siteRoutes.add(`${coursePath(entry.language, entry.courseKey)}${entry.moduleKey}/tests/`);
+for (const entry of practiceModules) siteRoutes.add(`${coursePath(entry.language, entry.courseKey)}${entry.moduleKey}/${entry.section}/`);
 const errors = [];
 const totals = { documents: 0, headings: 0, tables: 0, lists: 0, listItems: 0, images: 0, links: 0, formulas: 0, codeBlocks: 0 };
 const courses = {};
@@ -91,6 +100,10 @@ for (const document of documents) {
           if (!ids.has(decodeURIComponent(url.slice(1)))) add("missing-internal-anchor", node, url);
         } else if (!/^https?:|^mailto:|^data:/.test(url)) {
           const local = decodeURIComponent(url.split(/[?#]/)[0]);
+          if (node.type === 'link' && /^\/(?:ru\/)?courses\//.test(local)) {
+            if (!siteRoutes.has(local)) add('missing-site-route', node, url);
+            break;
+          }
           const target = node.type === "image" || local.startsWith("/")
             ? path.join(project, "public", local)
             : path.resolve(path.dirname(file), local);
