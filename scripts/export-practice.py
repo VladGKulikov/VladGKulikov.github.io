@@ -18,13 +18,61 @@ def text_hash(text): return sha(text.replace('\r\n','\n').encode())
 def read(path):
     raw=path.read_bytes(); sources.append({'source':str(path),'sha256':sha(raw)})
     return raw.decode('utf-8-sig')
+def publish_download_bytes(course,relative,raw):
+    """Adapt Capstone file instructions to the archive published by this site."""
+    if course!='modern-llms' or not re.fullmatch(r'capstone/notebooks/(?:ru|en)/0[1-4]_[^/]+\.ipynb',relative):
+        return raw
+    data=json.loads(raw.decode('utf-8-sig'));language=relative.split('/')[2]
+    archive='https://vladkulikov.com/downloads/modern-llms/course-materials.zip'
+    note=(
+        f'> **Файлы для этого ноутбука.** Скачайте [course-materials.zip]({archive}) на сайте курса и распакуйте архив целиком, сохранив папку `capstone`. В Colab можно загрузить этот же ZIP, когда ноутбук предложит выбрать файлы.\n'
+        if language=='ru' else
+        f'> **Files for this notebook.** Download [course-materials.zip]({archive}) from the course website and extract the complete archive, preserving the `capstone` folder. In Colab, upload the same ZIP when the notebook prompts for files.\n'
+    )
+    for cell in data['cells']:
+        source=''.join(cell.get('source',[]))
+        if cell['cell_type']=='code':
+            if 'search_root / "capstone" / "minillm"' not in source and 'def _find_capstone_root(' in source:
+                source=source.replace(
+                    '    for child in sorted(search_root.glob("modern-llms-capstone-*")):',
+                    f'    for package_root in (search_root / "capstone" / "minillm" / "{language}", search_root / "minillm" / "{language}"):\n'
+                    '        found = _activate_capstone_root(package_root)\n'
+                    '        if found:\n'
+                    '            return found\n'
+                    '    for child in sorted(search_root.glob("modern-llms-capstone-*")):',
+                )
+            if '_find_capstone_root(destination)' not in source:
+                prefix='архив проекта: ' if language=='ru' else 'project archive: '
+                source=source.replace(
+                    '        _safe_extract(archive_path, destination)\n',
+                    '        _safe_extract(archive_path, destination)\n'
+                    '        root = _find_capstone_root(destination)\n'
+                    '        if root:\n'
+                    f'            return {json.dumps(prefix,ensure_ascii=False)} + str(archive_path)\n',
+                )
+            if 'glob("course-materials.zip")' not in source:
+                source=source.replace('sorted(Path.cwd().glob(ARCHIVE_GLOB))', 'sorted(Path.cwd().glob(ARCHIVE_GLOB)) + sorted(Path.cwd().glob("course-materials.zip"))')
+            source=source.replace('Загрузите ZIP-пакет Capstone из урока Stepik.', 'Загрузите course-materials.zip со страницы ноутбуков курса.')
+            source=source.replace('Скачайте языковой ZIP-пакет Capstone из урока Stepik', 'Скачайте course-materials.zip со страницы ноутбуков курса')
+            source=source.replace('Upload the Capstone ZIP package from the Stepik lesson.', 'Upload course-materials.zip from the course notebook page.')
+            source=source.replace('Download the language-specific Capstone ZIP package from the Stepik lesson', 'Download course-materials.zip from the course notebook page')
+            cell['source']=source.splitlines(keepends=True)
+    first=next(cell for cell in data['cells'] if cell['cell_type']=='markdown')
+    source=''.join(first.get('source',[]));heading,separator,rest=source.partition('\n')
+    if '**Файлы для этого ноутбука.**' not in source and '**Files for this notebook.**' not in source:
+        first['source']=(heading+'\n\n'+note+'\n'+rest.lstrip('\n')).splitlines(keepends=True)
+    newline='\r\n' if b'\r\n' in raw else '\n'
+    return (json.dumps(data,ensure_ascii=False,indent=1)+'\n').replace('\n',newline).encode('utf8')
+
 def copy_file(course,root,path):
     path=path.resolve(); relative=path.relative_to(root.resolve()).as_posix()
     assert path.is_file(),path
     assert path.suffix.lower() in {'.ipynb','.py','.json','.csv','.txt','.yaml','.yml','.svg','.png','.jpg','.jpeg','.webp','.npz','.npy','.md'},path
     target=ROOT/'public/downloads'/course/relative
-    target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,target)
-    raw=path.read_bytes();entry={'source':relative,'url':'/downloads/'+course+'/'+quote(relative),'sha256':sha(raw),'bytes':len(raw)}
+    original=path.read_bytes();raw=publish_download_bytes(course,relative,original)
+    target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(raw)
+    entry={'source':relative,'url':'/downloads/'+course+'/'+quote(relative),'sha256':sha(raw),'bytes':len(raw)}
+    if raw!=original:entry.update(source_sha256=sha(original),publication_edits=['capstone-website-downloads-v1'])
     files[(course,relative)]=entry
     return entry
 
@@ -44,6 +92,8 @@ def clean(source,course,root,path):
         s=re.sub(r'(?m)^(\d{1,2}\.\s+)',r'\n\1',s)
         def link(m):
             url=m[2]
+            if url.startswith('https://vladkulikov.com/downloads/'):
+                return f'{m[1]}({url.removeprefix("https://vladkulikov.com")})'
             if re.match(r'^(?:https?:|mailto:|#|/|data:)',url):return m[0]
             value=unquote(url.split('#')[0]); resolved=(path.parent/value).resolve()
             entry=copy_file(course,root,resolved)
@@ -108,7 +158,8 @@ def information_exercises(path,solution_path,course,root):
         'answer':clean(answers[r['id']],course,root,solution_path),'answerKind':'solution'} for r in records]
 
 def notebook(path,course,root,key,language,kind):
-    data=json.loads(read(path));resource=copy_file(course,root,path)
+    read(path);resource=copy_file(course,root,path)
+    data=json.loads((ROOT/'public'/unquote(resource['url']).lstrip('/')).read_text(encoding='utf-8-sig'))
     cells=[];counts=Counter()
     for cell in data['cells']:
         cell_type=cell['cell_type'];source=''.join(cell.get('source',[]));counts[cell_type]+=1

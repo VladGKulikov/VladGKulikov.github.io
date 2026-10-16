@@ -142,11 +142,16 @@ highlighting, line numbers, Copy and Download controls. No notebook section is
 invented for this course. Two Modern LLMs project tasks (module-13 E6/E7) have no
 complete authored answer: the page says so and links the module's demos as guidance.
 
-All 110 original notebook files (55 RU/EN pairs) and the existing support files
-are copied byte-for-byte to `public/downloads/**`. Each course has a ZIP archive
+The 110 notebook files (55 RU/EN pairs) and existing support files are published
+under `public/downloads/**`. Eight Modern LLMs Capstone notebooks have a small
+publication adaptation: their setup instructions link to this site's archive,
+and their archive loader accepts `course-materials.zip` and its RU/EN package folders. The remaining
+notebook cells, IDs, training code and outputs are preserved. Original source
+hashes and the adaptation are recorded in `PRACTICE_CONTENT_AUDIT.json`; all
+other files are copied byte-for-byte. Each course has a ZIP archive
 preserving the source folder hierarchy and license notices. The archive is useful
 for notebooks that import sibling modules or load course configuration/data files.
-Notebook previews show original code cells and normalized explanatory Markdown;
+Notebook previews match the downloadable code cells and normalize explanatory Markdown;
 they do not execute cells, load kernels, or render active notebook output. Current
 source notebooks have no saved outputs; the exporter requires review if this changes.
 

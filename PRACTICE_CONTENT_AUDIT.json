@@ -1684,57 +1684,89 @@
       "course": "modern-llms",
       "source": "capstone/notebooks/en/01_pretrain.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/en/01_pretrain.ipynb",
-      "sha256": "9c8bc258b0800aa722f02e254c98ce9c4e929a73aa44f757b9aac52c79e87b84",
-      "bytes": 43392
+      "sha256": "a4fad503935476a760068b6d1069155fa9844903467f6d33a4ed651e11ac35b6",
+      "bytes": 44201,
+      "source_sha256": "9c8bc258b0800aa722f02e254c98ce9c4e929a73aa44f757b9aac52c79e87b84",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
       "source": "capstone/notebooks/en/02_posttrain.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/en/02_posttrain.ipynb",
-      "sha256": "2ea84bc72ed9c1b174626754668cafed6227c244856ae6b2b1d523dd20fd016f",
-      "bytes": 32017
+      "sha256": "18e3b48debe68a805cc67a42225d872234a44cea6040b887c4d1f8b391857e97",
+      "bytes": 32826,
+      "source_sha256": "2ea84bc72ed9c1b174626754668cafed6227c244856ae6b2b1d523dd20fd016f",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
       "source": "capstone/notebooks/en/03_inference.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/en/03_inference.ipynb",
-      "sha256": "bf153c34fee7eff412d3e39c62840062cb81b5353a7ecf3769cfd80ce832b97f",
-      "bytes": 30427
+      "sha256": "cd8ae30f7e8020183e267e2d3f599490f9a8253786aa20018624b5be1f40ef66",
+      "bytes": 31236,
+      "source_sha256": "bf153c34fee7eff412d3e39c62840062cb81b5353a7ecf3769cfd80ce832b97f",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
       "source": "capstone/notebooks/en/04_ablations.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/en/04_ablations.ipynb",
-      "sha256": "2b3938d48e864944e26147d048ac50fac8c235688c0f6513c060f28a0afdb9de",
-      "bytes": 42432
+      "sha256": "45be118d8928aded3606b4ec43cc3f3ff169fe61614e9eba6e5bfa134b43f3e7",
+      "bytes": 43241,
+      "source_sha256": "2b3938d48e864944e26147d048ac50fac8c235688c0f6513c060f28a0afdb9de",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
       "source": "capstone/notebooks/ru/01_pretrain.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/ru/01_pretrain.ipynb",
-      "sha256": "e68af3e6b57f5de18f81a4308ee7ef1c6f911df1c62deae1fcb57a28d3e304aa",
-      "bytes": 53115
+      "sha256": "38f5cd11735f2ddf21c41c3d286aa1609b736bef6ab65b14d59cf6983f5ed8cf",
+      "bytes": 54100,
+      "source_sha256": "e68af3e6b57f5de18f81a4308ee7ef1c6f911df1c62deae1fcb57a28d3e304aa",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
       "source": "capstone/notebooks/ru/02_posttrain.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/ru/02_posttrain.ipynb",
-      "sha256": "d007a64a3fcaec21b28656147254257b624209450059471223ea2ae3ecf2708d",
-      "bytes": 38486
+      "sha256": "ff92c6994d6d5905326f13cb071f5002f379a863c1dd765797ca7cd83603952b",
+      "bytes": 39471,
+      "source_sha256": "d007a64a3fcaec21b28656147254257b624209450059471223ea2ae3ecf2708d",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
       "source": "capstone/notebooks/ru/03_inference.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/ru/03_inference.ipynb",
-      "sha256": "b127207f6453d5a933996810d847625d4dad2c78440e1c9849edbaabeeeb56f8",
-      "bytes": 37070
+      "sha256": "9dc6206c81c1c0f5a3539e5228b72e0b4b89e403ec3f07596e58795bc921d58d",
+      "bytes": 38055,
+      "source_sha256": "b127207f6453d5a933996810d847625d4dad2c78440e1c9849edbaabeeeb56f8",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
       "source": "capstone/notebooks/ru/04_ablations.ipynb",
       "url": "/downloads/modern-llms/capstone/notebooks/ru/04_ablations.ipynb",
-      "sha256": "a4d57033d89cf550fc576093f7c2e2b17d8613434f5f8cdb5dad89436dbe5890",
-      "bytes": 53283
+      "sha256": "cbf055d0250d19919646375841bfe75fd0cfc4d84374b551a988a5c5326f4bdf",
+      "bytes": 54268,
+      "source_sha256": "a4d57033d89cf550fc576093f7c2e2b17d8613434f5f8cdb5dad89436dbe5890",
+      "publication_edits": [
+        "capstone-website-downloads-v1"
+      ]
     },
     {
       "course": "modern-llms",
@@ -5121,8 +5153,8 @@
   "bundles": {
     "modern-llms": {
       "url": "/downloads/modern-llms/course-materials.zip",
-      "bytes": 2648858,
-      "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+      "bytes": 2650261,
+      "sha256": "e5da7b61384fb9c6b635991c8574abca0bd933ce030ca141a372749e6dbb3ce8"
     },
     "rl-for-llm": {
       "url": "/downloads/rl-for-llm/course-materials.zip",

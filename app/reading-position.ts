@@ -15,6 +15,15 @@ const clamp = (value: number) => Math.max(0, Math.min(1, value));
 const readingInset = () => (document.querySelector(".topbar")?.getBoundingClientRect().height ?? 72) + 32;
 const blockKind = (block: HTMLElement) => block.querySelector("img") ? "IMAGE" : block.tagName;
 
+function visibleReadingBlock(block: HTMLElement): boolean {
+  for (let details = block.closest("details"); details; details = details.parentElement?.closest("details") ?? null) {
+    // Closed native details can retain layout rectangles in some browsers.
+    // Only their summary participates in the visible reading position.
+    if (!details.open && !details.querySelector(":scope > summary")?.contains(block)) return false;
+  }
+  return block.getBoundingClientRect().height > 0;
+}
+
 function readingSections(): ReadingSection[] {
   const prose = document.querySelector(".lecture-prose");
   if (!prose) return [];
@@ -22,7 +31,7 @@ function readingSections(): ReadingSection[] {
     return Array.from(prose.querySelectorAll<HTMLElement>('[data-reading-key]')).map(card => ({
       key: card.dataset.readingKey!,
       blocks: Array.from(card.querySelectorAll<HTMLElement>('[data-reading-block], [data-reading-container] > *')).filter(block =>
-        block.closest('[data-reading-key]') === card && block.getBoundingClientRect().height > 0),
+        block.closest('[data-reading-key]') === card && visibleReadingBlock(block)),
     })).filter(section => section.blocks.length > 0);
   }
   if (prose.hasAttribute('data-quiz')) {
