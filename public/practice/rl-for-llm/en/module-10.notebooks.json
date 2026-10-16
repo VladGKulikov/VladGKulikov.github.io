@@ -1,0 +1,130 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-10",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Module 10. Test-Time Compute: Sampling, Verification, and Search",
+      "format": "ipynb",
+      "filename": "module-10-test-time-search.en.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-10-test-time-search.en.ipynb",
+      "bytes": 20047,
+      "sha256": "6835daef36eb09ca1f6d8cb1fca4da913c51cebb09da0de4039d252dcd4279a2",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Module 10. Test-Time Compute: Sampling, Verification, and Search\n\nThis notebook connects the module’s mathematics to a reproducible CPU laboratory. Coverage, selection quality, verifier uncertainty, proxy pressure, and search efficiency are measured separately. The core route needs neither network access nor a GPU; the optional real-Qwen3 branch is disabled and does not contribute to the release results."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 0. Reproducible setup\n\n`smoke` executes the complete required route. `full` increases the number of independent runs. The code locates the unpacked course root automatically."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\nfrom pathlib import Path\nimport sys\nimport numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nfrom IPython.display import display\n\nPROFILE = \"smoke\"  # \"smoke\" or \"full\"\nRUN_REAL_MODEL = False\nSEEDS = range(40 if PROFILE == \"smoke\" else 100)\n\nROOT = Path.cwd()\nif not (ROOT / \"modules\").exists():\n    if (ROOT.parent / \"modules\").exists():\n        ROOT = ROOT.parent\n    else:\n        raise RuntimeError(\"Run the notebook from the course root or notebooks directory\")\nMODULE = ROOT / \"modules\" / \"module-10\"\nsys.path.insert(0, str(MODULE))\n\nfrom module_10_reference import (\n    pass_at_n, pass_curve, unbiased_pass_at_k,\n    plurality_accuracy_exact, plurality_accuracy_mc,\n    binary_verifier_success, process_score, prefix_success_estimate,\n    wilson_interval, proxy_overoptimization_curve,\n    allocate_budget_greedy, mean_coverage, pareto_frontier,\n    break_even_queries, cost_regularized_utility,\n)\nfrom module_10_search import (\n    ReasoningMaze, repeated_sampling, best_of_n_proxy, beam_search,\n    best_first_search, mcts_search, evaluate_search_methods, maze_to_array,\n)\n\nLABELS = {'coverage': 'probability of at least one success', 'budget': 'budget N', 'exact': 'exact', 'mc': 'Monte Carlo', 'vote': 'voting accuracy', 'proxy': 'proxy score', 'goal': 'independent objective', 'score': 'score', 'success': 'successful-run rate', 'calls': 'model calls', 'good': 'good scorer', 'biased': 'biased scorer', 'allocation': 'allocated samples', 'prompt': 'prompt', 'quality': 'quality', 'cost': 'cost', 'skipped': 'The real-model branch is disabled. Enable it only in a prepared environment with model access.'}\nnp.set_printoptions(precision=4, suppress=True)\nprint(f\"profile={PROFILE}, independent seeds={len(list(SEEDS))}\")"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 1. pass@N coverage and finite-sample pass@k\n\nThe formula $1-(1-p)^N$ describes the presence of at least one success under conditional independence and constant success probability $p$. We also compute the unbiased finite-sample pass@k estimate for an already generated pool."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "budgets = np.array([1, 2, 4, 8, 16, 32, 64])\nfig, ax = plt.subplots(figsize=(8.8, 5.0))\nfor p in (0.0, 0.05, 0.2, 0.5):\n    ax.plot(budgets, pass_curve(p, budgets), marker=\"o\", label=f\"p={p:g}\")\nax.set_xscale(\"log\", base=2)\nax.set_xticks(budgets, labels=budgets)\nax.set_xlabel(LABELS[\"budget\"])\nax.set_ylabel(LABELS[\"coverage\"])\nax.set_ylim(-0.02, 1.02)\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()\n\nfinite = pd.DataFrame({\n    \"n\": [100, 100, 100, 20],\n    \"c\": [1, 5, 20, 3],\n    \"k\": [1, 10, 10, 5],\n})\nfinite[\"pass@k\"] = [unbiased_pass_at_k(int(r.n), int(r.c), int(r.k)) for r in finite.itertuples()]\ndisplay(finite.round(6))\nassert np.isclose(pass_at_n(0.2, 8), 1 - 0.8**8)"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. Voting and ties\n\nVoting is useful only when the correct answer is the largest mode. Ties are split uniformly here, avoiding the hidden positional bias of a plain `argmax`."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "cases = {\n    \"scattered_errors\": np.array([0.40, 0.15, 0.15, 0.15, 0.15]),\n    \"systematic_error\": np.array([0.30, 0.45, 0.25]),\n}\nrows = []\nfor name, probs in cases.items():\n    for k in ((1, 4, 8, 16) if len(probs) == 5 else (1, 8, 32, 64)):\n        exact = plurality_accuracy_exact(probs, k)\n        mc = plurality_accuracy_mc(probs, k, trials=20_000 if PROFILE == \"smoke\" else 80_000, seed=10+k)\n        rows.append({\"case\": name, \"k\": k, \"exact\": exact, \"Monte Carlo\": mc})\nvotes = pd.DataFrame(rows)\ndisplay(votes.round(6))\n\nfig, ax = plt.subplots(figsize=(8.6, 4.8))\nfor name, group in votes.groupby(\"case\"):\n    ax.plot(group[\"k\"], group[\"exact\"], marker=\"o\", label=name)\nax.set_xscale(\"log\", base=2)\nax.set_xlabel(\"k\")\nax.set_ylabel(LABELS[\"vote\"])\nax.set_ylim(0, 1.02)\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()\nassert abs(votes[\"exact\"].iloc[0] - 0.4) < 1e-12"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Binary verification and the fallback protocol\n\nWhen no candidate is accepted, finite-budget accuracy depends on whether the system selects from the already rejected pool or draws a fresh unverified candidate. The two protocols require different formulas."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "p, alpha, beta = 0.2, 0.9, 0.1\nns = np.arange(1, 65)\nrejected = np.array([\n    binary_verifier_success(int(n), p, alpha, beta, fallback_mode=\"rejected_pool\").success_probability\n    for n in ns\n])\nfresh = np.array([\n    binary_verifier_success(int(n), p, alpha, beta, fallback_mode=\"fresh_unverified\").success_probability\n    for n in ns\n])\nexample_rej = binary_verifier_success(8, p, alpha, beta, fallback_mode=\"rejected_pool\")\nexample_fresh = binary_verifier_success(8, p, alpha, beta, fallback_mode=\"fresh_unverified\")\ndisplay(pd.DataFrame([example_rej.__dict__, example_fresh.__dict__]).round(6))\n\nfig, ax = plt.subplots(figsize=(8.7, 4.8))\nax.plot(ns, rejected, label=\"fallback: rejected pool\")\nax.plot(ns, fresh, label=\"fallback: fresh draw\")\nax.axhline(example_rej.accepted_precision, linestyle=\"--\", label=\"accepted-pool precision\")\nax.set_xscale(\"log\", base=2)\nax.set_xlabel(LABELS[\"budget\"])\nax.set_ylabel(LABELS[\"success\"])\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()\nassert np.isclose(example_rej.success_probability, 0.632486004809728)\nassert np.isclose(example_fresh.success_probability, 0.6480396435591987)"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Proxy overoptimization under Best-of-N\n\nA larger pool improves the selected proxy score, while an independent objective may peak and then decline. This is a course-owned synthetic mechanism, not an external benchmark."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "budgets_proxy = np.array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])\nproxy, independent = proxy_overoptimization_curve(\n    budgets_proxy, trials=4_000 if PROFILE == \"smoke\" else 20_000, seed=202_610\n)\nproxy_table = pd.DataFrame({\"N\": budgets_proxy, \"proxy\": proxy, \"independent_objective\": independent})\ndisplay(proxy_table.round(4))\n\nfig, ax = plt.subplots(figsize=(8.8, 4.9))\nax.plot(budgets_proxy, proxy, marker=\"o\", label=LABELS[\"proxy\"])\nax.plot(budgets_proxy, independent, marker=\"o\", label=LABELS[\"goal\"])\nax.set_xscale(\"log\", base=2)\nax.set_xlabel(LABELS[\"budget\"])\nax.set_ylabel(LABELS[\"score\"])\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()\npeak_n = int(budgets_proxy[np.argmax(independent)])\nprint(\"independent-objective peak N =\", peak_n)"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Process scores and prefix uncertainty\n\nA prefix label estimated by Monte Carlo continuations has finite-sample uncertainty. We compare several step-score aggregators and Wilson intervals."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "successes = np.arange(9)\nrows = []\nfor s in successes:\n    lo, hi = wilson_interval(int(s), 8)\n    rows.append({\"successes\": s, \"estimate\": prefix_success_estimate(int(s), 8), \"Wilson_low\": lo, \"Wilson_high\": hi})\nprefix_table = pd.DataFrame(rows)\ndisplay(prefix_table.round(4))\n\nfig, ax = plt.subplots(figsize=(8.6, 4.8))\nmid = prefix_table[\"estimate\"].to_numpy()\nlo = prefix_table[\"Wilson_low\"].to_numpy()\nhi = prefix_table[\"Wilson_high\"].to_numpy()\nax.errorbar(successes, mid, yerr=np.vstack([mid-lo, hi-mid]), fmt=\"o\", capsize=4)\nax.set_xlabel(\"successes out of 8\")\nax.set_ylabel(\"prefix-success estimate and 95% Wilson interval\")\nax.set_ylim(-0.03, 1.03)\nax.grid(True, alpha=0.25)\nplt.show()\n\nstep_scores = [0.92, 0.78, 0.61, 0.85]\naggregation = {m: process_score(step_scores, m) for m in (\"min\", \"mean\", \"product\", \"last\", \"log_product\")}\ndisplay(pd.Series(aggregation, name=\"aggregate\").to_frame())"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 6. Reasoning maze: environment and individual trajectories\n\nThe maze is a controlled analogue of a reasoning tree. The proposal model is frozen while the answer algorithm changes: repeated sampling, Best-of-N, beam, best-first, and MCTS spend the same kind of budget differently."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "env = ReasoningMaze.course_maze()\nmethods = {\n    \"repeated\": repeated_sampling(env, 48, seed=7),\n    \"best_of_n_proxy\": best_of_n_proxy(env, 48, seed=7),\n    \"beam\": beam_search(env, 48, beam_width=3, score_mode=\"good\", seed=7),\n    \"best_first\": best_first_search(env, 48, score_mode=\"good\", seed=7),\n    \"mcts\": mcts_search(env, 48, score_mode=\"good\", seed=7),\n}\nsummary = pd.DataFrame([\n    {\"method\": name, \"success\": r.success, \"model_calls\": r.model_calls,\n     \"generated_trajectories\": r.generated_trajectories, \"path_length\": r.selected_state.depth}\n    for name, r in methods.items()\n])\ndisplay(summary)\n\nchosen = methods[\"best_first\"]\ngrid = maze_to_array(env, chosen.selected_state)\nfig, ax = plt.subplots(figsize=(6.3, 5.5))\nax.imshow(grid)\nfor i in range(env.height):\n    for j in range(env.width):\n        if (i, j) not in env.walls:\n            ax.text(j, i, \"·\", ha=\"center\", va=\"center\", fontsize=10)\nax.set_title(f\"best-first: success={chosen.success}, calls={chosen.model_calls}\")\nax.set_xticks(range(env.width)); ax.set_yticks(range(env.height))\nplt.show()"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 7. Search curves with a good and a biased scorer\n\nThe same search procedure may improve rapidly under an informative process score and fail under a systematically attractive false branch. Search quality therefore cannot be separated from scorer quality."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "search_budgets = np.array([12, 16, 24, 32, 48])\ngood = evaluate_search_methods(search_budgets, seeds=SEEDS, score_mode=\"good\")\nbiased = evaluate_search_methods(search_budgets, seeds=SEEDS, score_mode=\"biased\")\n\nfig, axes = plt.subplots(1, 2, figsize=(13.8, 4.9), sharey=True)\nfor ax, curves, title in zip(axes, (good, biased), (LABELS[\"good\"], LABELS[\"biased\"])):\n    for method, values in curves.items():\n        ax.plot(search_budgets, values, marker=\"o\", label=method)\n    ax.set_title(title)\n    ax.set_xlabel(LABELS[\"calls\"])\n    ax.grid(True, alpha=0.25)\naxes[0].set_ylabel(LABELS[\"success\"])\naxes[0].legend(fontsize=8)\nplt.show()\n\ncomparison = pd.DataFrame({\n    (\"good\", method): values for method, values in good.items()\n} | {\n    (\"biased\", method): values for method, values in biased.items()\n}, index=search_budgets)\ncomparison.index.name = \"model_calls\"\ndisplay(comparison.round(3))"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 8. Adaptive allocation and the Pareto frontier\n\nA uniform quota is simple but need not maximize mean coverage. We compare it with greedy marginal-gain allocation, then identify non-dominated quality–cost points."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "ps = np.array([0.02, 0.08, 0.20, 0.50])\ntotal = 20\nuniform = np.full(len(ps), total // len(ps), dtype=int)\ngreedy = allocate_budget_greedy(ps, total, minimum_per_prompt=1)\nallocation = pd.DataFrame({\"p\": ps, \"uniform\": uniform, \"greedy\": greedy})\ndisplay(allocation)\nprint(\"uniform mean coverage:\", round(mean_coverage(ps, uniform), 6))\nprint(\"greedy mean coverage:\", round(mean_coverage(ps, greedy), 6))\n\ncosts = np.array([8, 12, 16, 24, 32, 48, 64], dtype=float)\nquality = np.array([0.42, 0.55, 0.69, 0.76, 0.79, 0.80, 0.795])\nfront = pareto_frontier(quality, costs)\npareto_table = pd.DataFrame({\"cost\": costs, \"quality\": quality, \"Pareto\": front})\npareto_table[\"utility(lambda=0.004)\"] = [cost_regularized_utility(q, c, 0.004) for q, c in zip(quality, costs)]\ndisplay(pareto_table)\nprint(\"break-even queries:\", break_even_queries(12_000, 0.12, 0.07))\n\nfig, ax = plt.subplots(figsize=(7.6, 4.8))\nax.scatter(costs[~front], quality[~front], label=\"dominated\")\nax.scatter(costs[front], quality[front], label=\"Pareto\")\nax.plot(costs[front], quality[front], linestyle=\"--\")\nax.set_xlabel(LABELS[\"cost\"]); ax.set_ylabel(LABELS[\"quality\"])\nax.grid(True, alpha=0.25); ax.legend(); plt.show()"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 9. Optional real-Qwen3 branch\n\nThe template below performs real multi-candidate generation and extracts normalized transition log-probabilities. It was not executed in the release gate and supports no claims about quality, latency, or memory."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "if not RUN_REAL_MODEL:\n    print('The real-model branch is disabled. Enable it only in a prepared environment with model access.')\nelse:\n    # Install Transformers in a dedicated real-model environment and record\n    # the actually resolved version before a reproducible run.\n    import torch\n    from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed\n\n    model_id = \"Qwen/Qwen3-0.6B\"\n    tokenizer = AutoTokenizer.from_pretrained(model_id)\n    model = AutoModelForCausalLM.from_pretrained(\n        model_id,\n        torch_dtype=\"auto\",\n        device_map=\"auto\",\n    )\n    prompt = \"Solve carefully and end with a boxed integer: 17 * 23\"\n    messages = [{\"role\": \"user\", \"content\": prompt}]\n    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)\n    inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n    set_seed(10)\n    generated = model.generate(\n        **inputs,\n        do_sample=True,\n        temperature=0.8,\n        top_p=0.95,\n        max_new_tokens=192,\n        num_return_sequences=8,\n        return_dict_in_generate=True,\n        output_scores=True,\n    )\n    transition_scores = model.compute_transition_scores(\n        generated.sequences,\n        generated.scores,\n        normalize_logits=True,\n    )\n    prompt_len = inputs.input_ids.shape[1]\n    responses = tokenizer.batch_decode(generated.sequences[:, prompt_len:], skip_special_tokens=True)\n    rows = []\n    for i, response in enumerate(responses):\n        rows.append({\n            \"candidate\": i,\n            \"response\": response,\n            \"sum_logprob\": float(transition_scores[i].sum().cpu()),\n            \"mean_logprob\": float(transition_scores[i].mean().cpu()),\n        })\n    display(pd.DataFrame(rows))"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

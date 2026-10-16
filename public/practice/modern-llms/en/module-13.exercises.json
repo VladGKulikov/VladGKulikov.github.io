@@ -1,0 +1,70 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-13",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. Oracle coverage",
+      "prompt": "Compute oracle coverage for $p=0.25$ at $N=1,4,8,16$. Explain why the table does not describe a verifier.",
+      "answer": "*Solution.* Under independent attempts, no candidate is correct with probability $(1-p)^N$, so oracle coverage is $1-(1-p)^N$.\n\n| $N$ | coverage |\n|---:|---:|\n| 1 | 0.250000 |\n| 4 | 0.683594 |\n| 8 | 0.899887 |\n| 16 | 0.989977 |\n\nThis is the probability that a correct candidate **exists**; calculating it needs no verifier at all. It would equal system accuracy under perfect selection. The table specifies no real verifier TPR/FPR and therefore does not predict which candidate will be selected.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. Non-uniform distractors",
+      "prompt": "Modify the exact voting model so that two distractors are common and four are rare. Compare it with the uniform-distractor case.",
+      "answer": "*Solution.* Make the comparison concrete by keeping $p_{correct}=0.4$ and allocating the remaining 0.6 as `(0.20, 0.20, 0.05, 0.05, 0.05, 0.05)`; the uniform baseline has six distractors at 0.10. In the multinomial-composition enumeration, replace only the probability vector and keep the tie rule fixed.\n\n| $N$ | unique mode, uniform | unique mode, skew | random tie, uniform | random tie, skew |\n|---:|---:|---:|---:|---:|\n| 1 | 0.400000 | 0.400000 | 0.400000 | 0.400000 |\n| 3 | 0.352000 | 0.352000 | 0.472000 | 0.460000 |\n| 5 | 0.509440 | 0.456640 | 0.595840 | 0.554380 |\n| 9 | 0.671058 | 0.583120 | 0.737035 | 0.657549 |\n| 17 | 0.856688 | 0.728538 | 0.889316 | 0.775702 |\n\nCommon distractors consolidate wrong votes and compete more often with the correct mode. Equal one-shot correctness therefore does not imply equal self-consistency gains.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. Noisy verifier",
+      "prompt": "Plot the noisy-verifier curve through $N=64$ for TPR $=0.85$ and FPR $=0.10$. Identify diminishing returns.",
+      "answer": "*Solution.* Use the module scenario $p_{correct}=0.4$: independently accept a correct candidate with probability 0.85 and an incorrect one with 0.10; select uniformly among accepted candidates and fall back to a random generated candidate if none are accepted. Exact enumeration gives:\n\n| $N$ | accuracy |\n|---:|---:|\n| 1 | 0.400000 |\n| 2 | 0.580000 |\n| 4 | 0.752800 |\n| 8 | 0.837403 |\n| 16 | 0.849788 |\n| 32 | 0.850000 |\n| 64 | 0.850000 |\n\nGains diminish sharply around $N=8$. The limit is $q=0.4\\cdot0.85/(0.4\\cdot0.85+0.6\\cdot0.10)=0.85$. Its equality to TPR is a numerical coincidence; the limit is correctness conditional on acceptance. §7 already provides a counterexample: TPR $=0.90$ gives a limit of $12/13$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4. FP8 KV",
+      "prompt": "Recompute the KV table for 48 layers, KV width 512, and fp8 storage.",
+      "answer": "*Solution.* FP8 uses one byte per element, and K and V are stored separately:\n\n$$M_{token}=2\\cdot48\\cdot512\\cdot1=49152\\ \\text{bytes}=48\\ \\text{KiB}.$$\n\n| Tokens | KV per request |\n|---:|---:|\n| 512 | 0.023438 GiB |\n| 1,000 | 0.045776 GiB |\n| 4,000 | 0.183105 GiB |\n| 16,000 | 0.732422 GiB |\n| 64,000 | 2.929688 GiB |\n\nThis is $128/48=2.667$ times smaller than the original 128 KiB/token scenario. It is payload only, excluding scales, alignment, allocator overhead, and runtime buffers.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5 [project]. Adaptive policy",
+      "prompt": "Design an adaptive policy for a chat/code/math workload. Specify the routing signal, stopping rule, and cost of each routing error.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 15](/downloads/modern-llms/project_demos/en/module_15_project_demo.ipynb), sections “Demo 1” and “Demo 2” as starting points for this module’s projects. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-06",
+      "title": "E6 [project]. API passport",
+      "prompt": "Build a reasoning passport for one current API model using only official documentation, and record the snapshot date.",
+      "answer": "",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-07",
+      "title": "E7 [project]. Matched budget",
+      "prompt": "Propose a matched-budget comparison between one long trajectory and eight short candidates.",
+      "answer": "",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-08",
+      "title": "E8. Unit tests as a verifier",
+      "prompt": "Explain how a unit-test suite can be both more reliable than an LLM judge and still incomplete.",
+      "answer": "*Solution.* With fixed inputs and a deterministic environment, a test reproducibly checks a stated requirement. Answer position and verbosity do not change its verdict, and a failure supplies a counterexample. A suite nevertheless checks only its recorded inputs and assertions. A program may overfit visible examples or violate uncovered edge cases, security requirements, or performance constraints. A nondeterministic environment can also make a test flaky. Passing therefore supports correctness within tested coverage; hidden cases, property tests, fuzzing, and review of the specification provide additional evidence.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

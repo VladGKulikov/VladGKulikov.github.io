@@ -1,0 +1,82 @@
+{
+  "golden": {
+    "canary_guess_probability": 2.938735877055719e-39,
+    "canary_hex_characters": 32,
+    "cost": {
+      "completion_tokens": 150,
+      "dense_flops_floor": 6183100000000000.0,
+      "effective_flops_per_second": 495000000000000.0,
+      "examples": 700,
+      "parameter_count": 8030000000,
+      "prompt_tokens": 400,
+      "seconds_floor": 12.491111111111111,
+      "total_tokens": 385000
+    },
+    "expected_rate": 0.8,
+    "n_for_3pp": 683,
+    "n_for_5pp": 246
+  },
+  "judge": {
+    "averaged_a_rate": 0.5,
+    "calls_per_pair": 6,
+    "forward_a_wins": 650,
+    "judges": 3,
+    "orders": 2,
+    "pairs": 1000,
+    "position_bias": 0.15,
+    "swapped_a_wins": 350
+  },
+  "leaderboard": {
+    "aggregate_approximation": {
+      "ci_high": 0.03136546073938403,
+      "ci_low": -0.021365460739384022,
+      "delta": 0.0050000000000000044,
+      "half_width": 0.026365460739384027,
+      "se": 0.013451765683359198,
+      "z_score": 0.3716984162298756
+    },
+    "first_rate": 0.955,
+    "paired_demo": {
+      "both_correct": 150,
+      "both_wrong": 20,
+      "delta": 0.05,
+      "first_accuracy": 0.85,
+      "first_only": 20,
+      "mcnemar_p": 0.09873714670538902,
+      "second_accuracy": 0.8,
+      "second_only": 10,
+      "total": 200
+    },
+    "required_tasks": {
+      "0.005": 14599,
+      "0.01": 3650,
+      "0.02": 913,
+      "0.05": 146
+    },
+    "sample_size": 500,
+    "second_rate": 0.95
+  },
+  "lost_in_middle": {
+    "dip": 0.35,
+    "edge": 0.95,
+    "mean": 0.7749999999999999,
+    "threshold": 0.9,
+    "working_share": 0.2467517144288497,
+    "working_tokens_of_1m": 246752
+  },
+  "pass_at_k": {
+    "correct_samples": 4,
+    "naive": {
+      "1": 0.19999999999999998,
+      "10": 0.8926258176,
+      "5": 0.67232
+    },
+    "total_samples": 20,
+    "unbiased": {
+      "1": 0.19999999999999998,
+      "10": 0.9566563467492261,
+      "5": 0.718266253869969
+    }
+  },
+  "schema_version": 1
+}

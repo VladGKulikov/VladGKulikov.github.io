@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-02",
+  "language": "ru",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "Состояние, наблюдение и скрытая динамика",
+      "prompt": "Рассмотрите четыре ситуации. Для каждой выберите наиболее точный вариант:\n\n- **A.** наблюдение уже является достаточным марковским состоянием;\n- **B.** наблюдение неполно, и естественна постановка с частичной наблюдаемостью.\n\n\n1. Видна только координата мяча, но не его скорость; динамика инерционная.\n\n2. Задана полная шахматная позиция, очередь хода, права рокировки и возможность взятия на проходе.\n\n3. В чистой авторегрессионной генерации известны запрос и весь префикс; переход состоит только в добавлении выбранного токена.\n\n4. Агент видит только последние два сообщения. Ранее инструмент сообщил, какой файл открыт, но это сообщение удалено из контекста; следующий ответ зависит от выбранного файла.\n\nЗапишите ответ как `1-?, 2-?, 3-?, 4-?`. Затем одним предложением объясните, почему фраза «состояние — это сжатая история» полезна, но не является универсальным определением состояния среды.",
+      "answer": "**Ответ:** `1-B, 2-A, 3-A, 4-B`.\n\n\n1. Одна координата не определяет следующий переход: при одинаковом положении разные скорости создают разные распределения следующего положения.\n\n2. Полная шахматная позиция вместе со служебными признаками содержит всю информацию, необходимую правилам следующего хода.\n\n3. При указанных предпосылках запрос и полный префикс достаточны: выбранный токен однозначно задаёт следующий префикс, а случайность выбора описывается политикой.\n\n4. Две полные истории могут содержать разные сообщения о выбранном файле, но совпадать в последних двух сообщениях. Утраченное наблюдение меняет прогноз следующего ответа; короткое окно недостаточно.\n\nВ теории MDP состояние — переменная, относительно которой выполняется марковское свойство; представление истории является лишь одним способом построить такое состояние для агента. Оно может быть неполным, избыточным или вообще не совпадать с физическим состоянием среды.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "Из чего состоит MDP",
+      "prompt": "Выберите **три** корректных утверждения о конечном марковском процессе принятия решений (`Markov decision process`, MDP).\n\n\n1. Политика $\\pi(a\\mid s)$ является частью динамики $P(s'\\mid s,a)$ и не может меняться без изменения MDP.\n\n2. Среднее $\\bar r(s,a)$ получается усреднением $\\bar r(s,a,s')$ по следующим состояниям с вероятностями $P(s'\\mid s,a)$; условная независимость не требуется.\n\n3. Марковское свойство требует, чтобы информация из прошлого, существенная для следующего перехода при известном действии, уже была представлена в состоянии.\n\n4. Любая текстовая история взаимодействия с инструментом автоматически является полным состоянием.\n\n5. Один и тот же MDP можно сочетать с несколькими политиками.\n\n6. Если награда выдаётся на переходе в терминал, её нужно отбросить, потому что ценность терминального состояния равна нулю.",
+      "answer": "**Ответы: 2, 3 и 5.**\n\n- По формуле полного ожидания $\\bar r(s,a)=\\sum_{s'}P(s'\\mid s,a)\\bar r(s,a,s')$. Равенство всех условных средних для разных следующих состояний было бы дополнительным предположением; для самого усреднения оно не требуется.\n- Марковское свойство относится к достаточности состояния для будущей динамики при заданном действии.\n- Политика описывает поведение агента, а не физические правила среды; один MDP допускает разные политики.\n\nПункт 1 смешивает агента со средой. Пункт 4 неверен для произвольного текстового окна, которое может терять существенные прежние наблюдения; наличие скрытого состояния само по себе не опровергает достаточность полной истории. Пункт 6 путает награду **на переходе** с ценностью **после перехода**: финальная награда сохраняется в $R_{t+1}$, а нулём становится только дальнейшее продолжение из терминала.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Завершение и усечение",
+      "prompt": "Для каждого перехода выберите корректную одношаговую TD-цель. Пусть $r=1$, $\\gamma=0.9$, $V(s')=4$.\n\n\n1. Агент достиг терминальной цели задачи.\n\n2. Эпизод остановлен внешним лимитом сбора данных, но процесс мог бы продолжиться.\n\n3. Задача определена как «завершить не более чем за 100 шагов»; оставшийся бюджет входил в состояние, и лимит исчерпан.\n\nВарианты:\n\n- A. $y=r=1$;\n- B. $y=r+\\gamma V(s')=4.6$.\n\nЗапишите ответ как `1-?, 2-?, 3-?`. Одним предложением объясните, почему одного старого признака `done` недостаточно.",
+      "answer": "**Ответ:** `1-A, 2-B, 3-A`.\n\nУдобно записать цель через маску продолжения\n\n$$\nm_t=\\mathbf 1\\{\\text{переход не терминальный}\\},\n\\qquad\ny_t=r_{t+1}+\\gamma m_tV(s_{t+1}).\n$$\n\n\n1. Истинный терминал: $m_t=0$, поэтому $y=1$.\n\n2. Внешнее усечение не уничтожает продолжение задачи: $m_t=1$, поэтому $y=1+0.9\\cdot4=4.6$.\n\n3. Лимит является частью самой задачи и уже представлен в состоянии; его исчерпание — терминальный исход, поэтому $y=1$.\n\nОдин `done` не сообщает, нужно ли обнулить бутстрэппинг или сохранить оценку продолжения.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Ценности V, Q и преимущество",
+      "prompt": "Выберите **три** корректных утверждения.\n\n\n1. $V^\\pi(s)$ всегда равна $\\max_aQ^\\pi(s,a)$.\n\n2. $V^\\pi(s)=\\sum_a\\pi(a\\mid s)Q^\\pi(s,a)$.\n\n3. $A^\\pi(s,a)>0$ означает, что действие лучше среднего действия **текущей политики** в этом состоянии.\n\n4. Если произвольно изменить награды MDP, $A^\\pi$ обязательно останется неизменным.\n\n5. Для любого состояния $\\sum_a A^\\pi(s,a)=0$ независимо от политики.\n\n6. Если ко всем $Q(s,a)$ одного состояния прибавить одну константу $c(s)$ и затем пересчитать $V$, преимущества в этом состоянии не изменятся.\n\nВыберите все утверждения, которые следуют из определений без изменения MDP.",
+      "answer": "**Ответы: 2, 3 и 6.**\n\nПо определению\n\n$$\nV^\\pi(s)=\\sum_a\\pi(a\\mid s)Q^\\pi(s,a),\n\\qquad\nA^\\pi(s,a)=Q^\\pi(s,a)-V^\\pi(s).\n$$\n\nПоэтому положительное преимущество означает превосходство над средним действием той же политики, а не безусловную «хорошесть» действия.\n\nПункт 6 — полезное следствие тех же определений:\n\n$$\nQ'(s,a)=Q(s,a)+c(s)\n\\Longrightarrow\nV'(s)=V(s)+c(s)\n\\Longrightarrow\nA'(s,a)=A(s,a).\n$$\n\nПункт 5 пропускает веса политики: верно $\\sum_a\\pi(a\\mid s)A^\\pi(s,a)=0$. Произвольная смена наград MDP не обязана сохранять преимущества.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "Уравнения и операторы Беллмана",
+      "prompt": "Выберите **пять** корректных утверждений.\n\n\n1. Для фиксированной политики уравнение ожидания Беллмана линейно по $V^\\pi$.\n\n2. Оператор оптимальности заменяет усреднение по действиям политики максимумом по действиям.\n\n3. Уравнение Беллмана само по себе является конкретным алгоритмом обучения нейросети.\n\n4. При $0\\le\\gamma<1$ операторы $T_\\pi$ и $T_*$ являются $\\gamma$-сжатиями в норме максимума.\n\n5. При $\\gamma=1$ отдельные корректные эпизодические задачи могут решаться, но обычное доказательство через строгое сжатие уже не применимо.\n\n6. Малый остаток Беллмана всегда означает такую же по величине ошибку ценности независимо от $\\gamma$.\n\n7. Неподвижная точка $T_\\pi$ соответствует ценности фиксированной политики.",
+      "answer": "**Ответы: 1, 2, 4, 5 и 7.**\n\nДля фиксированной политики $T_\\pi V=r_\\pi+\\gamma P_\\pi V$ — аффинный оператор (линейный лишь при $r_\\pi=0$), а уравнение его неподвижной точки является линейной системой по $V$. Оператор оптимальности использует максимум и имеет неподвижную точку $V^*$. При $0\\le\\gamma<1$ оба оператора являются $\\gamma$-сжатиями в $\\|\\cdot\\|_\\infty$.\n\nПункт 3 неверен: уравнение Беллмана — условие одношаговой согласованности. Из него можно построить разные алгоритмы, но формула не задаёт автоматически данные, параметризацию и оптимизатор.\n\nПункт 5 фиксирует важную границу: при $\\gamma=1$ отдельные эпизодические задачи могут оставаться корректными, но для них нужны дополнительные условия. Пункт 6 неверен, потому что при $\\gamma<1$\n\n$$\n\\|\\widehat V-V^\\pi\\|_\\infty\n\\le\n\\frac{\\|T_\\pi\\widehat V-\\widehat V\\|_\\infty}{1-\\gamma}.\n$$\n\nПри $\\gamma$ близком к единице множитель может быть большим.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "MC, TD(0) и многошаговые цели",
+      "prompt": "Сопоставьте метод и целевое значение.\n\n| Метод | Цель |\n|---|---|\n| A. MC | 1. $R_{t+1}+\\gamma V(S_{t+1})$ |\n| B. TD(0) | 2. полный наблюдённый $G_t$ |\n| C. $n$-шаговая цель | 3. несколько наблюдённых наград, затем $V(S_{t+n})$ |\n\nЗапишите `A-?, B-?, C-?`.\n\nЗатем выберите наиболее точное утверждение:\n\n\n1. MC всегда имеет меньшую дисперсию, чем TD.\n\n2. TD всегда точнее MC при любом бюджете данных.\n\n3. Компромисс зависит от среды, горизонта, представления, размера шага и бюджета; универсального рейтинга нет.\n\n4. Бутстрэппинг в TD означает повторную выборку эпизодов с возвращением.",
+      "answer": "**Соответствие:** `A-2, B-1, C-3`.  \n**Дополнительный ответ:** 3.\n\nMC использует наблюдённый хвост эпизода. TD(0) заменяет весь неизвестный хвост текущей оценкой после одного шага. $n$-шаговая цель сначала берёт несколько реальных наград и лишь затем выполняет бутстрэппинг.\n\nБутстрэппинг в RL означает обновление одной оценки при помощи другой текущей оценки. Это не статистический бутстрэп с повторной выборкой. Дисперсия, смещение и скорость обновления зависят от конкретного протокола, поэтому простого общего рейтинга нет.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Почему Q-learning является off-policy",
+      "prompt": "Действия собирает $\\varepsilon$-жадная политика. Выберите **одно** наиболее точное утверждение.\n\n\n1. SARSA и Q-learning оба off-policy, потому что используют случайные действия.\n\n2. SARSA использует фактически выбранное $A_{t+1}$, а Q-learning — $\\max_{a'}Q(S_{t+1},a')$; поэтому Q-learning оценивает жадную целевую политику по данным $\\varepsilon$-жадного поведения.\n\n3. Q-learning становится off-policy только после добавления буфера повторного использования опыта.\n\n4. SARSA не может использовать $\\varepsilon$-жадное исследование.",
+      "answer": "**Ответ: 2.**\n\nSARSA строит цель по следующему действию, которое действительно выбрала политика поведения:\n\n$$\nY_t^{\\mathrm{SARSA}}=R_{t+1}+\\gamma Q(S_{t+1},A_{t+1}).\n$$\n\nQ-learning строит цель по жадному продолжению:\n\n$$\nY_t^Q=R_{t+1}+\\gamma\\max_{a'}Q(S_{t+1},a').\n$$\n\nСледовательно, данные могут приходить от $\\varepsilon$-жадной политики, а вывод делается о другой, жадной политике. Буфер опыта не входит в определение on-policy и off-policy.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Групповая базовая оценка и смещение максимизации",
+      "prompt": "Выберите **четыре** корректных утверждения.\n\n\n1. Средняя награда группы ответов в канонической GRPO является точным токеновым $V^\\pi(s_t)$ для каждого префикса.\n\n2. Групповая нормировка даёт относительный сигнал без отдельного обучаемого критика, но остаётся выборочной статистикой группы полных ответов.\n\n3. Максимум по шумным несмещённым оценкам может иметь положительное смещение отбора.\n\n4. Double Q-learning разделяет выбор действия и его оценивание между двумя оценивателями.\n\n5. Double Q-learning гарантирует абсолютно несмещённую оценку при любой зависимости ошибок.\n\n6. Выбор лучшего из множества ответов по шумной модели награды имеет статистическое сходство со смещением максимизации, но не является буквально табличным Q-learning.",
+      "answer": "**Ответы: 2, 3, 4 и 6.**\n\nПункт 6 является ограниченной аналогией: статистический механизм отбора похож, но алгоритмы и объекты остаются разными.\n\nВ канонической GRPO статистики группы дают относительный ответный сигнал без обучаемого критика. Они не восстанавливают точную токеновую функцию ценности для каждого префикса.\n\nДаже если $\\widehat Q(a)$ несмещённа для каждого действия отдельно,\n\n$$\n\\mathbb E[\\max_a\\widehat Q(a)]\\ge\\max_aQ(a),\n$$\n\nпотому что максимум предпочитает положительные ошибки. Double Q-learning ослабляет этот механизм, разделяя выбор и оценивание, но не устраняет все виды ошибки и может недооценивать в некоторых режимах.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Вычислите V и A",
+      "prompt": "В состоянии $s$ два действия:\n\n$$\nQ^\\pi(s,a_1)=2,\n\\qquad\nQ^\\pi(s,a_2)=6,\n$$\n\n$$\n\\pi(a_1\\mid s)=0.25,\n\\qquad\n\\pi(a_2\\mid s)=0.75.\n$$\n\nВычислите $V^\\pi(s)$, $A^\\pi(s,a_1)$ и $A^\\pi(s,a_2)$. Затем проверьте нулевое среднее преимущества по политике.",
+      "answer": "$$\nV^\\pi(s)=0.25\\cdot2+0.75\\cdot6=5.\n$$\n\nСледовательно,\n\n$$\nA^\\pi(s,a_1)=2-5=-3,\n\\qquad\nA^\\pi(s,a_2)=6-5=1.\n$$\n\nПроверка:\n\n$$\n0.25\\cdot(-3)+0.75\\cdot1=0.\n$$\n\nОбычная невзвешенная сумма преимуществ равна $-2$, а не нулю. Нулевым является именно среднее по политике.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Один шаг оператора оптимальности",
+      "prompt": "В состоянии $s$ доступны два действия.\n\n- $a_1$ детерминированно ведёт в $s_1$ с наградой $1$, $V(s_1)=3$;\n- $a_2$ с вероятностью $0.5$ ведёт в $s_2$ с наградой $0$, $V(s_2)=6$, и с вероятностью $0.5$ — в $s_3$ с наградой $2$, $V(s_3)=1$.\n\nПусть $\\gamma=0.9$. Вычислите одношаговые $Q(s,a_1)$ и $Q(s,a_2)$, затем $(T_*V)(s)$ и жадное действие.",
+      "answer": "Для первого действия\n\n$$\nQ(s,a_1)=1+0.9\\cdot3=3.7.\n$$\n\nДля второго действия нужно усреднить два перехода:\n\n$$\n\\begin{aligned}\nQ(s,a_2)\n&=0.5(0+0.9\\cdot6)+0.5(2+0.9\\cdot1)\\\\\n&=2.7+1.45=4.15.\n\\end{aligned}\n$$\n\nПоэтому\n\n$$\n(T_*V)(s)=\\max(3.7,4.15)=4.15,\n$$\n\nа жадное действие — $a_2$. Типичная ошибка — сначала усреднить только значения следующих состояний, но забыть, что награда также зависит от конкретного перехода.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "Маленькая линейная система Беллмана",
+      "prompt": "Есть одно нетерминальное состояние $s$ и терминал. Из $s$ фиксированная политика:\n\n- с вероятностью $0.5$ переходит в терминал с наградой $0$;\n- с вероятностью $0.5$ возвращается в $s$ с наградой $1$.\n\nПри $\\gamma=0.9$ запишите уравнение Беллмана для $V^\\pi(s)$ и решите его точно.",
+      "answer": "Награда на переходе в терминал равна нулю, а терминальное продолжение также нулевое. Для возврата в $s$ получаем награду 1 и продолжение $V^\\pi(s)$:\n\n$$\nV^\\pi(s)=0.5\\cdot0+0.5\\bigl(1+0.9V^\\pi(s)\\bigr).\n$$\n\nОтсюда\n\n$$\nV^\\pi(s)=0.5+0.45V^\\pi(s),\n$$\n\n$$\n0.55V^\\pi(s)=0.5,\n\\qquad\nV^\\pi(s)=\\frac{10}{11}\\approx0.90909.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "TD-обновление и терминальная маска",
+      "prompt": "Дано\n\n$$\nV(s)=2,\n\\quad V(s')=3,\n\\quad r=1,\n\\quad \\gamma=0.9,\n\\quad \\alpha=0.1.\n$$\n\nВычислите новое $V(s)$ в трёх случаях:\n\n\n1. обычный нетерминальный переход;\n\n2. настоящий терминальный переход;\n\n3. техническое усечение, после которого процесс мог бы продолжиться.",
+      "answer": "Обновление имеет вид\n\n$$\nV(s)\\leftarrow V(s)+\\alpha(y-V(s)).\n$$\n\n\n1. Нетерминальный переход:\n\n$$\ny=1+0.9\\cdot3=3.7,\n\\qquad\nV_{new}(s)=2+0.1(3.7-2)=2.17.\n$$\n\n\n2. Истинный терминал:\n\n$$\ny=1,\n\\qquad\nV_{new}(s)=2+0.1(1-2)=1.9.\n$$\n\n\n3. Внешнее усечение не обнуляет продолжение, поэтому цель снова равна $3.7$, а новое значение — $2.17$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "Трёхшаговая цель",
+      "prompt": "Наблюдены награды $[1,2,3]$, $\\gamma=0.5$, а $V(S_{t+3})=4$. Вычислите\n\n$$\nG_{t:t+3}\n=R_{t+1}+\\gamma R_{t+2}+\\gamma^2R_{t+3}+\\gamma^3V(S_{t+3}).\n$$\n\nКак изменится ответ, если третий переход завершил задачу терминально?",
+      "answer": "Для нетерминального конца окна\n\n$$\n\\begin{aligned}\nG_{t:t+3}\n&=1+0.5\\cdot2+0.5^2\\cdot3+0.5^3\\cdot4\\\\\n&=1+1+0.75+0.5=3.25.\n\\end{aligned}\n$$\n\nЕсли третий переход является истинным терминалом, бутстрэппинг обнуляется:\n\n$$\nG_{t:t+3}=1+1+0.75=2.75.\n$$\n\nСама третья награда не исчезает: терминальность удаляет только **продолжение после неё**.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Обычная и Double Q цели",
+      "prompt": "Пусть в следующем состоянии\n\n$$\nQ^A(s',\\cdot)=[1,4,3],\n\\qquad\nQ^B(s',\\cdot)=[10,2,8],\n$$\n\n$r=0.5$, $\\gamma=0.9$.\n\n\n1. Вычислите обычную Q-learning цель, используя $Q^A$ и максимум той же таблицы.\n\n2. Вычислите Double Q-цель, если действие выбирается по $Q^A$, а оценивается по $Q^B$.\n\n3. Объясните, почему числа заметно различаются.",
+      "answer": "Обычная Q-learning цель использует максимум $Q^A$:\n\n$$\n\\max_aQ^A(s',a)=4,\n\\qquad\ny_Q=0.5+0.9\\cdot4=4.1.\n$$\n\nDouble Q-learning также выбирает второе действие по $Q^A$, но оценивает **тот же индекс** по $Q^B$:\n\n$$\ny_{Double}=0.5+0.9\\cdot Q^B(s',a_2)\n=0.5+0.9\\cdot2=2.3.\n$$\n\nТаблица выбора считает действие $a_2$ лучшим, а независимая таблица оценивания присваивает ему низкую ценность. Разделение не позволяет положительной ошибке, вызвавшей выбор, автоматически попасть в целевое значение.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "V из Q и преимущество",
+      "prompt": "Реализуйте две небольшие функции. Обе получают массивы формы `(n_states, n_actions)`.\n\n```python\nimport numpy as np\n\n\ndef v_from_q(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    \"\"\"V(s) = sum_a policy[s,a] * q_values[s,a].\"\"\"\n    raise NotImplementedError\n\n\ndef advantage(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    \"\"\"A(s,a) = Q(s,a) - V(s).\"\"\"\n    raise NotImplementedError\n```\n\nМинимальная проверка:\n\n```python\nQ = np.array([[1., 3.], [0., 2.]])\npi = np.array([[0.5, 0.5], [0.2, 0.8]])\nnp.testing.assert_allclose(v_from_q(Q, pi), [2.0, 1.6])\nnp.testing.assert_allclose(advantage(Q, pi), [[-1.0, 1.0], [-1.6, 0.4]])\nnp.testing.assert_allclose((pi * advantage(Q, pi)).sum(axis=1), 0.0, atol=1e-12)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef v_from_q(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    q = np.asarray(q_values, dtype=float)\n    pi = np.asarray(policy, dtype=float)\n    if q.ndim != 2 or pi.shape != q.shape:\n        raise ValueError(\"q_values and policy must have the same 2D shape\")\n    if np.any(pi < 0.0) or not np.allclose(pi.sum(axis=1), 1.0):\n        raise ValueError(\"each policy row must be a probability distribution\")\n    return np.sum(pi * q, axis=1)\n\n\ndef advantage(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    q = np.asarray(q_values, dtype=float)\n    return q - v_from_q(q, policy)[:, None]\n```\n\nИндексирование `[:, None]` превращает вектор формы `(n_states,)` в столбец `(n_states, 1)`. Затем NumPy вычитает одно значение $V(s)$ из всех действий соответствующего состояния.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Точное оценивание политики",
+      "prompt": "Реализуйте решение линейной системы по нетерминальным состояниям:\n\n```python\ndef exact_policy_value(\n    transitions: np.ndarray,  # (nS, nA, nS)\n    rewards: np.ndarray,      # E[R | s,a,s'], та же форма\n    policy: np.ndarray,       # (nS, nA)\n    gamma: float,\n    terminals: np.ndarray,    # bool, (nS,)\n) -> np.ndarray:\n    \"\"\"Терминальные значения остаются нулевыми.\"\"\"\n    raise NotImplementedError\n```\n\nИспользуйте\n\n$$\nP_\\pi(s,s')=\\sum_a\\pi(a\\mid s)P(s'\\mid s,a),\n\\qquad\nr_\\pi(s)=\\sum_{a,s'}\\pi(a\\mid s)P(s'\\mid s,a)\\bar r(s,a,s').\n$$\n\nФункция должна вернуть нули для терминалов и решить $(I-\\gamma P_{NN})V_N=r_N$ для множества нетерминальных состояний $N$.\n\nМинимальная проверка:\n\n```python\nP = np.zeros((2, 1, 2))\nR = np.zeros_like(P)\nP[0, 0] = [0.5, 0.5]\nR[0, 0] = [1.0, 0.0]\nP[1, 0, 1] = 1.0\npi = np.ones((2, 1))\nterminal = np.array([False, True])\nnp.testing.assert_allclose(\n    exact_policy_value(P, R, pi, 0.9, terminal),\n    [10.0 / 11.0, 0.0],\n)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef exact_policy_value(\n    transitions: np.ndarray,\n    rewards: np.ndarray,\n    policy: np.ndarray,\n    gamma: float,\n    terminals: np.ndarray,\n) -> np.ndarray:\n    p = np.asarray(transitions, dtype=float)\n    r = np.asarray(rewards, dtype=float)\n    pi = np.asarray(policy, dtype=float)\n    terminal = np.asarray(terminals, dtype=bool)\n\n    if p.ndim != 3 or r.shape != p.shape:\n        raise ValueError(\"transitions and rewards must have shape (nS, nA, nS)\")\n    if pi.shape != p.shape[:2] or terminal.shape != (p.shape[0],):\n        raise ValueError(\"policy or terminal mask has the wrong shape\")\n\n    p_pi = np.einsum(\"sa,san->sn\", pi, p)\n    r_pi = np.einsum(\"sa,san,san->s\", pi, p, r)\n\n    nonterminal = np.flatnonzero(~terminal)\n    values = np.zeros(p.shape[0], dtype=float)\n    if nonterminal.size:\n        p_nn = p_pi[np.ix_(nonterminal, nonterminal)]\n        system = np.eye(nonterminal.size) - gamma * p_nn\n        values[nonterminal] = np.linalg.solve(system, r_pi[nonterminal])\n    return values\n```\n\nТерминалы исключены из набора неизвестных. Награда **на входе** в терминал уже присутствует в $r_\\pi$ строки предыдущего состояния; нулевым становится только дальнейшее значение терминала.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Одно оптимальное обновление Беллмана",
+      "prompt": "Реализуйте локальную механику итерации ценности: сначала вычислите значения всех действий из старого вектора $V$, затем максимум по действиям.\n\n```python\ndef bellman_optimality_sweep(\n    transitions: np.ndarray,\n    rewards: np.ndarray,\n    values: np.ndarray,\n    gamma: float,\n    terminals: np.ndarray,\n) -> np.ndarray:\n    \"\"\"Верните T_* V; терминальные компоненты равны нулю.\"\"\"\n    raise NotImplementedError\n```\n\nВажно: функция выполняет **один синхронный проход**, а не обновляет состояния последовательно на месте.\n\nМинимальная проверка одного синхронного прохода:\n\n```python\nP = np.zeros((3, 2, 3))\nR = np.zeros_like(P)\nP[0, 0, 1] = 1.0\nP[0, 1, 2] = 1.0\nR[0, 0, 1] = 1.0\nR[0, 1, 2] = 2.0\nP[1, :, 1] = 1.0\nP[2, :, 2] = 1.0\nV = np.array([0.0, 3.0, 1.0])\nout = bellman_optimality_sweep(P, R, V, 0.9, np.zeros(3, dtype=bool))\nassert abs(out[0] - 3.7) < 1e-12\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef bellman_optimality_sweep(\n    transitions: np.ndarray,\n    rewards: np.ndarray,\n    values: np.ndarray,\n    gamma: float,\n    terminals: np.ndarray,\n) -> np.ndarray:\n    p = np.asarray(transitions, dtype=float)\n    r = np.asarray(rewards, dtype=float)\n    v = np.asarray(values, dtype=float)\n    terminal = np.asarray(terminals, dtype=bool)\n\n    if p.ndim != 3 or r.shape != p.shape:\n        raise ValueError(\"P and R must have shape (nS, nA, nS)\")\n    if v.shape != (p.shape[0],) or terminal.shape != v.shape:\n        raise ValueError(\"values or terminals has the wrong shape\")\n\n    continuation = v.copy()\n    continuation[terminal] = 0.0\n    q = np.sum(\n        p * (r + gamma * continuation[None, None, :]),\n        axis=2,\n    )\n    updated = np.max(q, axis=1)\n    updated[terminal] = 0.0\n    return updated\n```\n\nСинхронность обеспечивается тем, что все $Q(s,a)$ строятся из одного неизменяемого `continuation`. Полная итерация ценности повторяет эту функцию до выполнения критерия остановки; такая реализация есть в ноутбуке.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "Цели TD с явной терминальностью",
+      "prompt": "Реализуйте одношаговую и $n$-шаговую цели. Внешнее `truncated=True` само по себе не должно обнулять продолжение.\n\n```python\ndef td_target(\n    reward: float,\n    next_value: float,\n    gamma: float,\n    *,\n    terminated: bool,\n    truncated: bool = False,\n) -> float:\n    raise NotImplementedError\n\n\ndef n_step_target(\n    rewards: list[float],\n    bootstrap_value: float,\n    gamma: float,\n    *,\n    terminated_at_end: bool,\n) -> float:\n    raise NotImplementedError\n```\n\nПроверки:\n\n```python\nassert td_target(1, 2, 0.9, terminated=False) == 2.8\nassert td_target(1, 2, 0.9, terminated=True) == 1.0\nassert td_target(1, 2, 0.9, terminated=False, truncated=True) == 2.8\nassert abs(n_step_target([1, 2, 3], 4, 0.5, terminated_at_end=False) - 3.25) < 1e-12\nassert abs(n_step_target([1, 2, 3], 4, 0.5, terminated_at_end=True) - 2.75) < 1e-12\n```",
+      "answer": "```python\nimport math\n\n\ndef td_target(\n    reward: float,\n    next_value: float,\n    gamma: float,\n    *,\n    terminated: bool,\n    truncated: bool = False,\n) -> float:\n    if not math.isfinite(reward) or not math.isfinite(gamma):\n        raise ValueError(\"reward and gamma must be finite\")\n    if not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must be in [0, 1]\")\n    if not isinstance(terminated, bool) or not isinstance(truncated, bool):\n        raise TypeError(\"flags must be boolean\")\n    if terminated:\n        return float(reward)\n    if not math.isfinite(next_value):\n        raise ValueError(\"next_value must be finite for a non-terminal target\")\n    return float(reward + gamma * next_value)\n\n\ndef n_step_target(\n    rewards: list[float],\n    bootstrap_value: float,\n    gamma: float,\n    *,\n    terminated_at_end: bool,\n) -> float:\n    if not math.isfinite(gamma) or not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must be finite and in [0, 1]\")\n    if not isinstance(terminated_at_end, bool):\n        raise TypeError(\"terminated_at_end must be boolean\")\n    total = 0.0\n    discount = 1.0\n    for reward in rewards:\n        reward = float(reward)\n        if not math.isfinite(reward):\n            raise ValueError(\"rewards must be finite\")\n        total += discount * reward\n        discount *= gamma\n    if terminated_at_end:\n        return total\n    if not math.isfinite(bootstrap_value):\n        raise ValueError(\"bootstrap_value must be finite for a non-terminal target\")\n    return total + discount * float(bootstrap_value)\n```\n\nПараметр `truncated` остаётся в интерфейсе, чтобы различие причин окончания было явным. Математическую маску задаёт `terminated`. Если лимит является частью задачи, вызывающий код должен передать `terminated=True` и включить оставшийся бюджет в состояние.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "Цели SARSA и Q-learning",
+      "prompt": "Реализуйте две функции для уже известного вектора $Q(s',\\cdot)$.\n\n```python\ndef q_learning_target(\n    reward: float,\n    next_q_values: np.ndarray,\n    gamma: float,\n    *,\n    terminated: bool,\n) -> float:\n    raise NotImplementedError\n\n\ndef sarsa_target(\n    reward: float,\n    next_q_values: np.ndarray,\n    next_action: int,\n    gamma: float,\n    *,\n    terminated: bool,\n) -> float:\n    raise NotImplementedError\n```\n\nТерминальный переход не должен обращаться к продолжению. Для нетерминального перехода Q-learning использует максимум, а SARSA — значение фактически выбранного `next_action`.\n\nМинимальная проверка:\n\n```python\nq_next = np.array([1.0, 4.0, 3.0])\nassert q_learning_target(0.5, q_next, 0.9, terminated=False) == 4.1\nassert sarsa_target(0.5, q_next, 2, 0.9, terminated=False) == 3.2\nassert q_learning_target(1.0, np.array([]), 0.9, terminated=True) == 1.0\nassert sarsa_target(1.0, np.array([]), 99, 0.9, terminated=True) == 1.0\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef q_learning_target(\n    reward: float,\n    next_q_values: np.ndarray,\n    gamma: float,\n    *,\n    terminated: bool,\n) -> float:\n    if terminated:\n        return float(reward)\n    q_next = np.asarray(next_q_values, dtype=float)\n    if q_next.ndim != 1 or q_next.size == 0:\n        raise ValueError(\"next_q_values must be a non-empty vector\")\n    return float(reward + gamma * np.max(q_next))\n\n\ndef sarsa_target(\n    reward: float,\n    next_q_values: np.ndarray,\n    next_action: int,\n    gamma: float,\n    *,\n    terminated: bool,\n) -> float:\n    if terminated:\n        return float(reward)\n    q_next = np.asarray(next_q_values, dtype=float)\n    if q_next.ndim != 1 or not 0 <= next_action < q_next.size:\n        raise ValueError(\"invalid next-action value\")\n    return float(reward + gamma * q_next[next_action])\n```\n\nРазличие действительно помещается в одну строку кода, но эта строка задаёт разные целевые политики. В полноценной SARSA-реализации `next_action` должен быть выбран той же политикой поведения, которая будет действовать дальше.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Выбор и оценивание в Double Q-learning",
+      "prompt": "Реализуйте Double Q-цель: одна таблица выбирает индекс действия, другая оценивает выбранный индекс.\n\n```python\ndef double_q_target(\n    reward: float,\n    selector_q: np.ndarray,\n    evaluator_q: np.ndarray,\n    gamma: float,\n    *,\n    terminated: bool,\n) -> float:\n    raise NotImplementedError\n```\n\nПроверка:\n\n```python\nqa = np.array([1., 4., 3.])\nqb = np.array([10., 2., 8.])\nassert double_q_target(0.5, qa, qb, 0.9, terminated=False) == 2.3\nassert double_q_target(0.5, qa, qb, 0.9, terminated=True) == 0.5\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef double_q_target(\n    reward: float,\n    selector_q: np.ndarray,\n    evaluator_q: np.ndarray,\n    gamma: float,\n    *,\n    terminated: bool,\n) -> float:\n    if terminated:\n        return float(reward)\n    selector = np.asarray(selector_q, dtype=float)\n    evaluator = np.asarray(evaluator_q, dtype=float)\n    if selector.ndim != 1 or evaluator.shape != selector.shape:\n        raise ValueError(\"selector_q and evaluator_q must be equal-length vectors\")\n    if selector.size == 0:\n        raise ValueError(\"Q vectors must be non-empty\")\n    selected = int(np.argmax(selector))\n    return float(reward + gamma * evaluator[selected])\n```\n\nВажно не брать `np.max(evaluator)`: тогда вторая таблица снова выбирала бы собственное действие. Double Q-learning требует оценить именно индекс, выбранный первой таблицей.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

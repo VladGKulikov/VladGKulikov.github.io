@@ -1,0 +1,338 @@
+{
+  "block_mask": {
+    "allowed": [
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    ],
+    "block_length": 4,
+    "prefix_length": 3
+  },
+  "corruption": {
+    "clean_tokens": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    "eligible_positions": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "mask_id": -1,
+    "masked_positions": [
+      2,
+      4,
+      5,
+      7
+    ],
+    "noisy_tokens": [
+      10,
+      11,
+      -1,
+      13,
+      -1,
+      -1,
+      16,
+      -1
+    ],
+    "time": 0.5
+  },
+  "diffusiongemma_passport": {
+    "active_parameters": 3800000000,
+    "active_routed_experts": 8,
+    "canvas_tokens": 256,
+    "committed_tokens_per_pass_max": 20,
+    "committed_tokens_per_pass_min": 15,
+    "context_tokens": 262144,
+    "h100_developer_reported_tokens_per_s_lower_bound": 1100,
+    "h100_precision": "FP8",
+    "idealized_active_4bit_bytes": 1900000000.0,
+    "idealized_active_4bit_decimal_gb": 1.9,
+    "idealized_active_4bit_gib": 1.7695128917694092,
+    "idealized_full_bank_4bit_bytes": 12600000000.0,
+    "idealized_full_bank_4bit_decimal_gb": 12.6,
+    "idealized_full_bank_4bit_gib": 11.73466444015503,
+    "layers": 30,
+    "native_nvfp4_hardware_family": "NVIDIA Blackwell",
+    "release_date": "2026-06-10",
+    "routed_experts": 128,
+    "shared_experts": 1,
+    "sliding_window_tokens": 1024,
+    "source_snapshot": "2026-10-11",
+    "total_parameters": 25200000000,
+    "traffic_note": "Neither idealized payload equals measured bytes per diffusion pass; actual traffic depends on expert union, precision, metadata, cache, kernels, and runtime."
+  },
+  "loss": {
+    "correct_probabilities": [
+      0.9,
+      0.7,
+      0.6,
+      0.8
+    ],
+    "masked_positions_count": 4,
+    "reduction": "sum_over_masked_positions_then_multiply_by_1_over_t",
+    "target_tokens": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "time": 0.5,
+    "value": 2.392009269353518
+  },
+  "policy": {
+    "confidence": 1.0,
+    "random": 0.6854166666666667,
+    "random_with_remask": 0.8291666666666666,
+    "target": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1,
+      2,
+      3,
+      4,
+      5,
+      0
+    ],
+    "trials": 200
+  },
+  "roofline": {
+    "ar_compute_time_fraction_of_step": 0.003383838383838384,
+    "autoregressive": {
+      "bottleneck": "memory",
+      "compute_time_s": 1.616161616161616e-05,
+      "ideal_arithmetic_share_of_step": 0.003383838383838384,
+      "memory_time_s": 0.004776119402985075,
+      "step_time_s": 0.004776119402985075,
+      "tokens_per_s": 209.375,
+      "weight_bits": 16.0,
+      "weight_payload_bytes": 16000000000.0,
+      "weight_payload_decimal_gb": 16.0,
+      "weight_payload_gib": 14.901161193847656
+    },
+    "batch1_throughput_ratio_at_64_steps": 4.617537313432836,
+    "batch_parity_under_linear_ar_scaling": 4.617537313432836,
+    "block_4bit": {
+      "bottleneck": "compute",
+      "compute_time_s": 0.004137373737373737,
+      "memory_time_s": 0.0011940298507462687,
+      "step_time_s": 0.004137373737373737,
+      "tokens_per_s": 3867.1875,
+      "weight_bits": 4.0,
+      "weight_payload_bytes": 4000000000.0,
+      "weight_payload_decimal_gb": 4.0,
+      "weight_payload_gib": 3.725290298461914
+    },
+    "block_bf16": {
+      "bottleneck": "memory",
+      "compute_time_s": 0.004137373737373737,
+      "memory_time_s": 0.004776119402985075,
+      "step_time_s": 0.004776119402985075,
+      "tokens_per_s": 3350.0,
+      "weight_bits": 16.0,
+      "weight_payload_bytes": 16000000000.0,
+      "weight_payload_decimal_gb": 16.0,
+      "weight_payload_gib": 14.901161193847656
+    },
+    "block_steps_for_1000_tokens_per_s_4bit": 61.875,
+    "diffusion": {
+      "128": {
+        "bottleneck": "compute",
+        "compute_time_s": 0.01654949494949495,
+        "memory_time_s": 0.004776119402985075,
+        "step_time_s": 0.01654949494949495,
+        "tokens_per_s": 483.3984375,
+        "weight_bits": 16.0,
+        "weight_payload_bytes": 16000000000.0,
+        "weight_payload_decimal_gb": 16.0,
+        "weight_payload_gib": 14.901161193847656
+      },
+      "16": {
+        "bottleneck": "compute",
+        "compute_time_s": 0.01654949494949495,
+        "memory_time_s": 0.004776119402985075,
+        "step_time_s": 0.01654949494949495,
+        "tokens_per_s": 3867.1875,
+        "weight_bits": 16.0,
+        "weight_payload_bytes": 16000000000.0,
+        "weight_payload_decimal_gb": 16.0,
+        "weight_payload_gib": 14.901161193847656
+      },
+      "64": {
+        "bottleneck": "compute",
+        "compute_time_s": 0.01654949494949495,
+        "memory_time_s": 0.004776119402985075,
+        "step_time_s": 0.01654949494949495,
+        "tokens_per_s": 966.796875,
+        "weight_bits": 16.0,
+        "weight_payload_bytes": 16000000000.0,
+        "weight_payload_decimal_gb": 16.0,
+        "weight_payload_gib": 14.901161193847656
+      }
+    },
+    "hardware": {
+      "memory_bandwidth_bytes_per_s": 3350000000000.0,
+      "peak_flops_per_s": 990000000000000.0
+    },
+    "maximum_steps_strictly_faster": 295,
+    "model": {
+      "flops_per_parameter_per_token": 2.0,
+      "parameter_count": 8000000000
+    },
+    "scenario": "generic_dense_8b_h100_lower_bound",
+    "scope": "Arithmetic lower-bound scenario only: excludes KV traffic, activations, communication, routing, kernel/runtime overhead, batching, and measured utilization."
+  },
+  "schedule": {
+    "counts": [
+      8,
+      6,
+      4,
+      2,
+      0
+    ],
+    "length": 8,
+    "steps": 4,
+    "weights": {
+      "0.25": 4.0,
+      "0.5": 2.0,
+      "0.75": 1.3333333333333333
+    }
+  },
+  "trace": {
+    "candidates": [
+      3,
+      1,
+      4,
+      0,
+      3,
+      2,
+      4,
+      3
+    ],
+    "confidence": [
+      0.447488947046876,
+      0.595067902012219,
+      0.6111163345147275,
+      0.40178371163146176,
+      0.2776006503454896,
+      0.5910785484224659,
+      0.9279309181635038,
+      0.46568452224635726
+    ],
+    "correct": 6,
+    "final": [
+      3,
+      1,
+      4,
+      0,
+      3,
+      2,
+      4,
+      3
+    ],
+    "model_calls": 4,
+    "opened_order": [
+      [
+        2,
+        6
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        0,
+        7
+      ],
+      [
+        3,
+        4
+      ]
+    ],
+    "target": [
+      3,
+      1,
+      4,
+      1,
+      0,
+      2,
+      4,
+      3
+    ]
+  }
+}

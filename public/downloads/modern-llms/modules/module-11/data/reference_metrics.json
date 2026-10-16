@@ -1,0 +1,268 @@
+{
+  "edge_cases": {
+    "identical_distributions": {
+      "acceptance_by_token": [
+        1.0,
+        1.0
+      ],
+      "alpha": 1.0,
+      "balance": [
+        0.55,
+        0.45
+      ],
+      "p": [
+        0.55,
+        0.45
+      ],
+      "q": [
+        0.55,
+        0.45
+      ],
+      "residual": [
+        0.0,
+        0.0
+      ],
+      "residual_mass": 0.0,
+      "total_variation": 0.0
+    },
+    "q_zero_support_gap": {
+      "acceptance_by_token": [
+        0.5,
+        0.0
+      ],
+      "alpha": 0.5,
+      "balance": [
+        0.5,
+        0.5
+      ],
+      "p": [
+        0.5,
+        0.5
+      ],
+      "q": [
+        1.0,
+        0.0
+      ],
+      "residual": [
+        0.0,
+        1.0
+      ],
+      "residual_mass": 0.5,
+      "total_variation": 0.5
+    }
+  },
+  "expected_tokens": {
+    "alpha_one_gamma_4": 5.0,
+    "alpha_zero_gamma_4": 1.0,
+    "calibration_alpha_0_7_gamma_5": 2.9411699999999996,
+    "grid": {
+      "0.6": {
+        "1": 1.6,
+        "3": 2.176,
+        "5": 2.3833599999999997,
+        "7": 2.4580096
+      },
+      "0.7": {
+        "1": 1.7,
+        "3": 2.533,
+        "5": 2.9411699999999996,
+        "7": 3.1411732999999997
+      },
+      "0.8": {
+        "1": 1.8,
+        "3": 2.9520000000000004,
+        "5": 3.6892800000000006,
+        "7": 4.161139200000001
+      },
+      "0.9": {
+        "1": 1.9,
+        "3": 3.439,
+        "5": 4.68559,
+        "7": 5.6953279000000006
+      }
+    },
+    "trace_alpha_0_85_gamma_4": 3.70863125
+  },
+  "monte_carlo": {
+    "cycles": 20000,
+    "distribution_atol": 0.01,
+    "gamma": 4,
+    "mean_length_atol": 0.04,
+    "seed": 7
+  },
+  "quantization": {
+    "e2m1_dequantized": [
+      0.0,
+      0.5937278925048495,
+      0.0,
+      -7.124734710058194,
+      -0.5937278925048495,
+      -1.187455785009699,
+      0.0,
+      1.187455785009699,
+      -0.5937278925048495,
+      -0.5937278925048495,
+      0.5937278925048495,
+      0.5937278925048495,
+      0.0,
+      -1.187455785009699,
+      0.0,
+      0.5937278925048495
+    ],
+    "e2m1_scale": [
+      1.187455785009699
+    ],
+    "group_size": 16,
+    "int4_dequantized": [
+      0.0,
+      0.0,
+      -0.0,
+      -7.124734710058194,
+      -0.0,
+      -1.0178192442940277,
+      0.0,
+      1.0178192442940277,
+      -0.0,
+      -1.0178192442940277,
+      0.0,
+      0.0,
+      0.0,
+      -1.0178192442940277,
+      -0.0,
+      1.0178192442940277
+    ],
+    "int4_over_e2m1_mse_ratio": 3.3179967976624045,
+    "int4_scale": [
+      1.0178192442940277
+    ],
+    "mse_e2m1": 0.02581465276871833,
+    "mse_int4": 0.08565293521937434,
+    "seed": 7,
+    "vector": [
+      0.0012301533574825742,
+      0.2987455375084699,
+      -0.2741378553622176,
+      -7.124734710058194,
+      -0.45467078517172255,
+      -0.9916465549964624,
+      0.060143602597438485,
+      1.3402152455545335,
+      -0.49220651855132963,
+      -0.6204748998199404,
+      0.4898420501851982,
+      0.35688700816006075,
+      0.10541424899789856,
+      -0.9304680447082047,
+      -0.02925182246327349,
+      0.6953031944582878
+    ]
+  },
+  "roofline": {
+    "bandwidth_TB_per_second_decimal": 3.35,
+    "bandwidth_bytes_per_second": 3350000000000.0,
+    "combined_nvfp4_mtp_scenario_tokens_per_second": 1329.3650793650793,
+    "combined_scenario_vs_bf16": 6.349206349206349,
+    "formats": {
+      "FP8": {
+        "bits_per_weight": 8.0,
+        "payload_GB": 8.0,
+        "payload_GiB": 7.450580596923828,
+        "payload_bytes": 8000000000.0,
+        "weight_stream_ceiling_tokens_per_second": 418.75
+      },
+      "MXFP4 (32 + E8M0)": {
+        "bits_per_weight": 4.25,
+        "payload_GB": 4.25,
+        "payload_GiB": 3.9581209421157837,
+        "payload_bytes": 4250000000.0,
+        "weight_stream_ceiling_tokens_per_second": 788.2352941176471
+      },
+      "NVFP4 (16 + E4M3)": {
+        "bits_per_weight": 4.5,
+        "payload_GB": 4.5,
+        "payload_GiB": 4.190951585769653,
+        "payload_bytes": 4500000000.0,
+        "weight_stream_ceiling_tokens_per_second": 744.4444444444445
+      },
+      "bf16": {
+        "bits_per_weight": 16.0,
+        "payload_GB": 16.0,
+        "payload_GiB": 14.901161193847656,
+        "payload_bytes": 16000000000.0,
+        "weight_stream_ceiling_tokens_per_second": 209.375
+      },
+      "ideal W4": {
+        "bits_per_weight": 4.0,
+        "payload_GB": 4.0,
+        "payload_GiB": 3.725290298461914,
+        "payload_bytes": 4000000000.0,
+        "weight_stream_ceiling_tokens_per_second": 837.5
+      }
+    },
+    "parameter_count": 8000000000,
+    "speculative_bf16": {
+      "alpha": 0.8,
+      "ceiling_tokens_per_second": 594.1869230769231,
+      "draft_cost": 0.06,
+      "gamma": 5
+    }
+  },
+  "schema_version": 1,
+  "speedup": {
+    "external": {
+      "alpha": 0.8,
+      "draft_cost": 0.1,
+      "gamma_star": 6,
+      "speedup_gamma_5": 2.4595200000000004,
+      "speedup_gamma_9": 2.3490153094736845,
+      "speedup_star": 2.4696400000000005
+    },
+    "mtp_scenario": {
+      "alpha": 0.875,
+      "draft_cost": 0.05,
+      "expected_tokens": 1.875,
+      "gamma": 1,
+      "speedup": 1.7857142857142856
+    }
+  },
+  "trace": {
+    "acceptance_by_token": [
+      1.0,
+      0.8571428571428572,
+      0.7499999999999999,
+      1.0,
+      0.5
+    ],
+    "alpha": 0.8500000000000001,
+    "balance": [
+      0.4,
+      0.3,
+      0.15,
+      0.1,
+      0.05
+    ],
+    "p": [
+      0.4,
+      0.3,
+      0.15,
+      0.1,
+      0.05
+    ],
+    "q": [
+      0.25,
+      0.35,
+      0.2,
+      0.1,
+      0.1
+    ],
+    "residual": [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "residual_mass": 0.15000000000000002,
+    "total_variation": 0.15
+  }
+}

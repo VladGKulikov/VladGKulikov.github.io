@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-09",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "RLVR or not?",
+      "prompt": "Classify each case as **RLVR**, **not RLVR**, or **insufficient information**.\n\n\n1. A model produces 16 programs, tests select the best, and weights do not change.\n\n2. A model produces programs and test outcomes enter a policy-gradient update.\n\n3. A policy is trained with DPO on a fixed set of paired mathematical solutions.\n\n4. An LLM judge scores responses and PPO follows.\n\n5. An agent receives reward from a simulator state.\n\nExplain every label briefly.",
+      "answer": "1. **Not an RLVR training stage:** tests are used for Best-of-N only; weights do not change.\n\n2. **RLVR:** verifiable test outcomes enter a policy update.\n\n3. **Not RLVR in this stage:** fixed-pair DPO has no fresh verifier reward inside the update.\n\n4. **Insufficient information / usually not RLVR:** an LLM judge is a learned evaluator rather than an automatically verifiable rule; the regime is typically RLHF or RLAIF.\n\n5. **RLVR in the broad operational sense** when simulator transition and reward are reproducible and enter learning.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "Three policies",
+      "prompt": "Responses were collected by checkpoint `step_1200`; optimization has reached `step_1203`; KL is measured against the original SFT model. Identify the old, current, and reference policies. Which one belongs in the importance-ratio denominator?",
+      "answer": "Old policy: `step_1200`; current policy: `step_1203`; reference policy: the original SFT model. The importance denominator is the actual behavior policy `step_1200`, including sampling transforms.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Two verifier error types",
+      "prompt": "Give one false-positive and one false-negative reward example for:\n\n\n1. a numerical task;\n\n2. a programming task.\n\nExplain how repeated optimization could amplify each error.",
+      "answer": "Numerical false positive: parse gold `42` from an incorrect sentence ending in 41. Numerical false negative: reject the correct fraction `1/2` because only decimals are accepted. Code false positive: incomplete tests accept a constant answer. Code false negative: a correct program times out in an unstable environment. Repeated optimization promotes systematic passes and suppresses systematic failures.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "“Critic-free”",
+      "prompt": "Evaluate this statement in three independent parts:\n\n> “GRPO has no critic, therefore it has no baseline and provides unbiased token-level credit assignment.”",
+      "answer": "GRPO can remove a learned value critic. It still has a baseline, usually the group mean. A single response-level advantage applied to every token does not identify causal token contributions and is not an unbiased token-level credit assignment oracle.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "The cost of dynamic sampling",
+      "prompt": "Why can removing all-equal-reward groups simultaneously:\n\n- increase the useful signal per update;\n- increase generation cost;\n- change the training-prompt distribution?\n\nName at least two audit metrics.",
+      "answer": "Filtering increases the nonzero-gradient fraction, but requires extra generation and shifts training toward intermediate-difficulty prompts. Log rejection fraction/reason, generated tokens per accepted group, original pass-rate distribution, and full-distribution held-out quality.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Match the variants",
+      "prompt": "Match each method to its defining change.\n\n\n1. Dr. GRPO\n\n2. DAPO\n\n3. GSPO\n\n4. original GRPO\n\nA. geometric-mean sequence ratio and response-level clipping  \nB. group standard-deviation scaling and per-response token averaging  \nC. remove standard-deviation scaling and response-specific length normalization  \nD. Clip-Higher, dynamic sampling, shared token normalization, and overlong handling\n\nWhy may a production run match none of the rows exactly?",
+      "answer": "`1–C`, `2–D`, `3–A`, `4–B`. Implementations can combine Dr. GRPO reward centering, DAPO token normalization, asymmetric clipping, and token-level ratios, forming a hybrid.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Entropy and diversity",
+      "prompt": "Explain why the following are not interchangeable:\n\n- mean token entropy;\n- number of distinct strings in a group;\n- number of distinct solution strategies;\n- pass@k.\n\nGive one example where one is high while another is low.",
+      "answer": "Token entropy is local vocabulary uncertainty; string diversity can be punctuation variation; strategy diversity requires semantic grouping; pass@k measures at least one correct sample. Many paraphrases can yield high string diversity but one strategy, while two deterministic solution templates can create strategy diversity concentrated at one branching token.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Truncation",
+      "prompt": "A response reaches the length limit without producing EOS. Compare:\n\n\n1. reward it as incorrect;\n\n2. mask it from the loss;\n\n3. add a soft length penalty;\n\n4. increase the limit.\n\nGive one possible benefit and one risk for each.",
+      "answer": "Incorrect reward creates termination pressure but may punish sound incomplete work. Masking removes unknown-sign noise but can reward never stopping. A soft penalty gives a graded signal but may shorten difficult solutions prematurely. A larger limit reveals more endings but raises cost and repetition risk.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Informative-group probability",
+      "prompt": "For binary reward, $p=0.1$, and $G=8$, compute\n\n$$\nP_{\\mathrm{info}}=1-p^G-(1-p)^G.\n$$\n\nHow many prompts are expected to obtain 32 informative groups? State one assumption that may make the calculation optimistic.",
+      "answer": "$$\nP_{\\mathrm{info}}=1-0.1^8-0.9^8\\approx0.56953278,\n$$\n\nso $32/P_{\\mathrm{info}}\\approx56.19$ prompt draws. Conditional independence and stationary $p$ are the fragile assumptions.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "One success in a group",
+      "prompt": "A group of $G=8$ contains one reward 1 and seven rewards 0. Compute normalized advantages using population standard deviation and verify that they sum to zero.",
+      "answer": "Mean $1/8$, population standard deviation $\\sqrt7/8$. The success has $\\sqrt7\\approx2.6458$ and each failure has $-1/\\sqrt7\\approx-0.3780$. Their sum is zero.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "Token weight and response length",
+      "prompt": "Two responses have rewards $[1,0]$ and lengths $[50,500]$. Original GRPO uses group standard-deviation scaling and token coefficient $\\widehat A_i/(G|o_i|)$.\n\n\n1. Compute the advantages.\n\n2. Compute one-token weights.\n\n3. Compute total response contributions before importance ratios.\n\n4. What is the token-weight ratio?",
+      "answer": "Advantages are $[1,-1]$. Token coefficients are $1/(2\\cdot50)=0.01$ and $-1/(2\\cdot500)=-0.001$. Response contributions are $0.5$ and $-0.5$; token magnitudes differ by 10.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "DAPO soft overlong penalty",
+      "prompt": "Let $L_{\\max}=1000$ and $L_{\\mathrm{cache}}=200$. Compute $R_{\\mathrm{length}}$ at lengths 750, 900, 1000, and 1200. Why is the value at 900 not a binary penalty?",
+      "answer": "The no-penalty boundary is 800. Penalties are 0, -0.5, -1, and -1. Length 900 lies inside the linear cache interval.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "GSPO sequence ratio",
+      "prompt": "Token ratios are\n\n$$\n(1.01,0.99,1.02,1.00).\n$$\n\nCompute\n\n$$\ns=\\exp\\left(\\frac14\\sum_t\\log\\rho_t\\right).\n$$\n\nCompare it with the arithmetic mean and explain the geometric mean.",
+      "answer": "$$\ns=(1.01\\cdot0.99\\cdot1.02\\cdot1.00)^{1/4}\\approx1.0049.\n$$\n\nThe arithmetic mean is 1.005. The geometric mean follows from sequence probability products and can be computed stably through mean log-ratios.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Independent pass@k model",
+      "prompt": "For one-attempt success probability $p=0.2$, compute at least one success for $k=1$, $4$, and $16$:\n\n$$\n1-(1-p)^k.\n$$\n\nWhy must an LLM group be checked before using this independence model?",
+      "answer": "pass@1 = 0.2, pass@4 = 0.5904, pass@16 $\\approx0.9719$. LLM samples can be correlated and prompt-specific; finite-sample pass@k estimation also uses a separate combinatorial estimator.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Numerical verifier",
+      "prompt": "Implement:\n\n```python\ndef verify_numeric_answer(\n    response: str,\n    gold: str,\n    rtol: float = 1e-6,\n    atol: float = 1e-9,\n) -> int:\n    ...\n```\n\nContract:\n\n- the last `\\\\boxed{...}` takes precedence;\n- otherwise use the last number or fraction;\n- support thousands separators, decimals, scientific notation, and fractions;\n- a zero denominator, `NaN`, infinity, or no answer returns 0;\n- compare with `abs(a-g) <= atol + rtol*max(1, abs(g))`.\n\nAdd at least eight tests, including two adversarial cases.\n\nOpen checks:\n\n```python\nassert verify_numeric_answer(r\"\\\\boxed{3/7}\", \"0.428571\") == 1\nassert verify_numeric_answer(r\"wrong 42, final \\\\boxed{41}\", \"42\") == 0\nassert verify_numeric_answer(\"1,000\", \"1000\") == 1\n```",
+      "answer": "```python\nfrom fractions import Fraction\nimport math\nimport re\n\nNUMBER_PATTERN = re.compile(\n    r\"-?\\d+\\s*/\\s*-?\\d+|-?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?\"\n)\nBOXED_PATTERN = re.compile(r\"\\\\boxed\\{([^{}]*)\\}\")\nTHOUSANDS_SEPARATOR = re.compile(r\"(?<=\\d),(?=\\d{3}(?:\\D|$))\")\n\n\ndef extract_numeric_answer(text: str) -> str | None:\n    if not isinstance(text, str):\n        raise TypeError(\"text must be a string\")\n    boxed = BOXED_PATTERN.findall(text)\n    if boxed:\n        candidate = boxed[-1].strip()\n        return candidate or None\n    normalized = THOUSANDS_SEPARATOR.sub(\"\", text)\n    matches = list(NUMBER_PATTERN.finditer(normalized))\n    return matches[-1].group(0).strip() if matches else None\n\n\ndef parse_numeric(value: str) -> float:\n    if not isinstance(value, str):\n        raise TypeError(\"value must be a string\")\n    value = THOUSANDS_SEPARATOR.sub(\"\", value).replace(\" \", \"\").strip()\n    if not value:\n        raise ValueError(\"empty numeric value\")\n    if \"/\" in value:\n        parts = value.split(\"/\")\n        if len(parts) != 2:\n            raise ValueError(\"fraction must contain one slash\")\n        numerator, denominator = (int(part) for part in parts)\n        if denominator == 0:\n            raise ZeroDivisionError(\"fraction denominator must be non-zero\")\n        result = float(Fraction(numerator, denominator))\n    else:\n        result = float(value)\n    if not math.isfinite(result):\n        raise ValueError(\"numeric value must be finite\")\n    return result\n\n\ndef verify_numeric_answer(\n    response: str,\n    gold: str,\n    rtol: float = 1e-6,\n    atol: float = 1e-9,\n) -> int:\n    if rtol < 0 or atol < 0 or not math.isfinite(rtol) or not math.isfinite(atol):\n        raise ValueError(\"rtol and atol must be finite and non-negative\")\n    answer = extract_numeric_answer(response)\n    if answer is None:\n        return 0\n    try:\n        observed = parse_numeric(answer)\n        expected = parse_numeric(gold)\n    except (TypeError, ValueError, ZeroDivisionError, OverflowError):\n        return 0\n    tolerance = atol + rtol * max(1.0, abs(expected))\n    return int(abs(observed - expected) <= tolerance)\n```\n\nChecks:\n\n```python\ncases = [\n    (r\"\\\\boxed{42}\", \"42\", 1),\n    (\"answer: 1/2\", \"0.5\", 1),\n    (r\"wrong 42, final \\\\boxed{41}\", \"42\", 0),\n    (\"1,000\", \"1000\", 1),\n    (\"1e3\", \"1000\", 1),\n    (r\"\\\\boxed{1/0}\", \"0\", 0),\n    (\"no answer\", \"1\", 0),\n    (\"42 items minus 1 = 41\", \"42\", 0),\n]\nfor response, gold, expected in cases:\n    assert verify_numeric_answer(response, gold) == expected\n```\n\nThe fraction alternative comes before the ordinary-number alternative in the regular expression; otherwise `1/2` could be split into two integers. This verifier deliberately does not attempt symbolic equivalence. Its transparent contract is appropriate only for the stated class of numeric answers.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Group-relative advantages",
+      "prompt": "Implement:\n\n```python\nimport numpy as np\n\ndef group_relative_advantages(\n    rewards,\n    scale: bool = True,\n    eps: float = 1e-8,\n) -> np.ndarray:\n    ...\n```\n\nRequirements:\n\n- use population standard deviation;\n- `scale=False` returns centering only;\n- a degenerate group returns zeros when `scale=True`;\n- reject `NaN` and infinity.\n\nTest the groups `[1,0,0,0]`, `[0.9,1.0,0.8,0.9]` and `[1,1,1,1]`.\n\nOpen checks:\n\n```python\na = group_relative_advantages([1, 0, 0, 0])\nexpected = [np.sqrt(3), -1 / np.sqrt(3), -1 / np.sqrt(3), -1 / np.sqrt(3)]\nassert np.allclose(a, expected, atol=1e-7)\nassert np.array_equal(group_relative_advantages([1, 1, 1, 1]), np.zeros(4))\n```",
+      "answer": "```python\nimport math\nimport numpy as np\n\n\ndef group_relative_advantages(\n    rewards,\n    scale: bool = True,\n    eps: float = 1e-8,\n) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    if r.ndim != 1 or r.size == 0 or not np.all(np.isfinite(r)):\n        raise ValueError(\"rewards must be a non-empty finite 1D array\")\n    if eps < 0 or not math.isfinite(eps):\n        raise ValueError(\"eps must be finite and non-negative\")\n    centered = r - r.mean()\n    if not scale:\n        return centered\n    std = float(r.std(ddof=0))\n    if std == 0.0:\n        return np.zeros_like(r)\n    return centered / (std + eps)\n```\n\n```python\nassert np.allclose(\n    group_relative_advantages([1, 0, 0, 0]),\n    [np.sqrt(3), -1/np.sqrt(3), -1/np.sqrt(3), -1/np.sqrt(3)],\n    atol=1e-7,\n)\nassert np.allclose(\n    group_relative_advantages([0.9, 1.0, 0.8, 0.9], scale=False),\n    [0.0, 0.1, -0.1, 0.0],\n)\nassert np.array_equal(group_relative_advantages([1, 1, 1, 1]), np.zeros(4))\n```\n\nThe zero result for a degenerate group comes from the zero centered numerator. We do not divide numerical noise by `eps` and manufacture a relative signal when every reward is equal.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Asymmetric clipping",
+      "prompt": "Implement token-level surrogate terms and a mask for the active clipped branch:\n\n```python\nimport numpy as np\n\ndef clipped_terms(\n    ratios,\n    advantages,\n    eps_low: float = 0.2,\n    eps_high: float | None = None,\n) -> np.ndarray:\n    ...\n\n\ndef clip_activity(\n    ratios,\n    advantages,\n    eps_low: float = 0.2,\n    eps_high: float | None = None,\n) -> np.ndarray:\n    ...\n```\n\nCompare symmetric clipping `0.2/0.2` and Clip-Higher `0.2/0.28` on\n\n```text\nratios     = [1.50, 1.25, 0.70, 1.10]\nadvantages = [1.00, 1.00,-1.00, 1.00]\n```\n\nOpen checks:\n\n```python\nout = clipped_terms([1.5, 0.7, 1.1], [1.0, -1.0, -1.0], eps_low=0.2)\nassert np.allclose(out, [1.2, -0.8, -1.1])\nactive = clip_activity([1.5, 0.7, 1.1], [1.0, -1.0, -1.0], eps_low=0.2)\nassert np.array_equal(active, [True, True, False])\n```",
+      "answer": "```python\nimport math\nimport numpy as np\n\n\ndef _paired_vectors(ratios, advantages):\n    rho = np.asarray(ratios, dtype=float)\n    adv = np.asarray(advantages, dtype=float)\n    if rho.ndim != 1 or adv.shape != rho.shape or rho.size == 0:\n        raise ValueError(\"ratios and advantages must be equal non-empty vectors\")\n    if not np.all(np.isfinite(rho)) or not np.all(np.isfinite(adv)):\n        raise ValueError(\"ratios and advantages must be finite\")\n    if np.any(rho <= 0):\n        raise ValueError(\"ratios must be strictly positive\")\n    return rho, adv\n\n\ndef clipped_terms(ratios, advantages, eps_low=0.2, eps_high=None):\n    rho, adv = _paired_vectors(ratios, advantages)\n    if eps_high is None:\n        eps_high = eps_low\n    if eps_low < 0 or eps_high < 0 or not math.isfinite(eps_low) or not math.isfinite(eps_high):\n        raise ValueError(\"clip widths must be finite and non-negative\")\n    clipped = np.clip(rho, 1.0 - eps_low, 1.0 + eps_high)\n    return np.minimum(rho * adv, clipped * adv)\n\n\ndef clip_activity(ratios, advantages, eps_low=0.2, eps_high=None):\n    rho, adv = _paired_vectors(ratios, advantages)\n    if eps_high is None:\n        eps_high = eps_low\n    if eps_low < 0 or eps_high < 0:\n        raise ValueError(\"clip widths must be non-negative\")\n    return ((adv > 0) & (rho > 1.0 + eps_high)) | ((adv < 0) & (rho < 1.0 - eps_low))\n```\n\n```python\nratios = np.array([1.50, 1.25, 0.70, 1.10])\nadvs = np.array([1.00, 1.00, -1.00, 1.00])\nsym = clipped_terms(ratios, advs, eps_low=0.2)\nasym = clipped_terms(ratios, advs, eps_low=0.2, eps_high=0.28)\nassert np.allclose(sym, [1.2, 1.2, -0.8, 1.1])\nassert np.allclose(asym, [1.28, 1.25, -0.8, 1.1])\nassert np.array_equal(\n    clip_activity(ratios, advs, eps_low=0.2, eps_high=0.28),\n    [True, False, True, False],\n)\n```\n\nClip-Higher releases the second positive term but does not change the lower bound for a negative advantage. The mask marks positions where the minimum selected the constant clipped branch, so the local derivative with respect to the ratio is zero.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "Three normalizers",
+      "prompt": "For one reward/length batch, return token coefficients and total response contributions for:\n\n\n1. original GRPO;\n\n2. Dr. GRPO with fixed length $L$;\n\n3. DAPO with a shared active-token denominator.\n\nTest `rewards=[1,0]`, `lengths=[10,1000]`, and `L=1000`. Explain which reduction equalizes response totals and which makes them proportional to length.\n\nSignatures:\n\n```python\nimport numpy as np\n\ndef original_grpo_token_weights(rewards, lengths, *, eps: float = 1e-8) -> list[np.ndarray]: ...\ndef dr_grpo_token_weights(rewards, lengths, *, fixed_length: int) -> list[np.ndarray]: ...\ndef dapo_token_weights(rewards, lengths, *, scale_rewards: bool = True) -> list[np.ndarray]: ...\ndef response_contributions(token_weights) -> np.ndarray: ...\n```\n\nOpen checks:\n\n```python\nrewards, lengths = [1.0, 0.0], [10, 1000]\ngrpo = response_contributions(original_grpo_token_weights(rewards, lengths))\ndr = response_contributions(dr_grpo_token_weights(rewards, lengths, fixed_length=1000))\ndapo = response_contributions(dapo_token_weights(rewards, lengths))\nassert np.allclose(grpo, [0.5, -0.5])\nassert abs(dr[0] - 0.0025) < 1e-9\nassert abs(dapo[0] - 0.009901) < 1e-6\n```",
+      "answer": "```python\nimport math\nimport numpy as np\n\n\ndef _rewards_and_lengths(rewards, lengths):\n    r = np.asarray(rewards, dtype=float)\n    lens = np.asarray(lengths, dtype=int)\n    if r.ndim != 1 or r.size == 0 or not np.all(np.isfinite(r)):\n        raise ValueError(\"rewards must be a non-empty finite vector\")\n    if lens.ndim != 1 or lens.shape != r.shape or np.any(lens <= 0):\n        raise ValueError(\"lengths must be positive and match rewards\")\n    return r, lens\n\n\ndef _advantages(rewards, *, scale, eps=1e-8):\n    centered = rewards - rewards.mean()\n    if not scale:\n        return centered\n    if eps < 0 or not math.isfinite(eps):\n        raise ValueError(\"eps must be finite and non-negative\")\n    std = float(rewards.std(ddof=0))\n    return np.zeros_like(rewards) if std == 0.0 else centered / (std + eps)\n\n\ndef original_grpo_token_weights(rewards, lengths, *, eps=1e-8):\n    r, lens = _rewards_and_lengths(rewards, lengths)\n    adv = _advantages(r, scale=True, eps=eps)\n    group_size = r.size\n    return [\n        np.full(int(length), a / (group_size * length), dtype=float)\n        for a, length in zip(adv, lens)\n    ]\n\n\ndef dr_grpo_token_weights(rewards, lengths, *, fixed_length):\n    r, lens = _rewards_and_lengths(rewards, lengths)\n    if fixed_length <= 0:\n        raise ValueError(\"fixed_length must be positive\")\n    adv = _advantages(r, scale=False)\n    group_size = r.size\n    return [\n        np.full(int(length), a / (group_size * fixed_length), dtype=float)\n        for a, length in zip(adv, lens)\n    ]\n\n\ndef dapo_token_weights(rewards, lengths, *, scale_rewards=True):\n    r, lens = _rewards_and_lengths(rewards, lengths)\n    adv = _advantages(r, scale=scale_rewards)\n    total_active_tokens = int(lens.sum())\n    return [\n        np.full(int(length), a / total_active_tokens, dtype=float)\n        for a, length in zip(adv, lens)\n    ]\n\n\ndef response_contributions(token_weights):\n    if not token_weights:\n        raise ValueError(\"token_weights must be non-empty\")\n    return np.asarray([np.asarray(w, dtype=float).sum() for w in token_weights])\n```\n\n```python\nrewards, lengths = [1.0, 0.0], [10, 1000]\nassert np.allclose(\n    response_contributions(original_grpo_token_weights(rewards, lengths)),\n    [0.5, -0.5],\n)\nassert np.allclose(\n    response_contributions(dr_grpo_token_weights(rewards, lengths, fixed_length=1000)),\n    [0.0025, -0.25],\n)\nassert np.allclose(\n    response_contributions(dapo_token_weights(rewards, lengths)),\n    [10/1010, -1000/1010],\n    atol=1e-8,\n)\n```\n\nOriginal GRPO divides each response by its own length and therefore produces equal-magnitude response totals. In the shown Dr. GRPO and DAPO reductions, a token coefficient is not divided by that response’s length, so the total contribution becomes proportional to the number of active tokens. Their absolute scales differ because the global denominators and reward normalization differ.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "GSPO sequence ratio and clipping",
+      "prompt": "Implement:\n\n```python\nimport numpy as np\n\ndef sequence_importance_ratio(new_logp, old_logp, mask=None) -> float:\n    ...\n\n\ndef gspo_surrogate_term(\n    new_logp,\n    old_logp,\n    advantage: float,\n    eps_low: float = 3e-4,\n    eps_high: float = 4e-4,\n    mask=None,\n) -> float:\n    ...\n```\n\nCompute the first function as the exponential of the mean active log-ratio. Then use that ratio in the clipped sequence-level term. Tests must include padding masks and a very long sequence so probabilities are never multiplied directly.\n\nOpen checks:\n\n```python\nnew = np.array([-0.4, -0.6])\nold = np.array([-0.5, -0.5])\nmask = np.array([1, 1])\nratio = sequence_importance_ratio(new, old, mask)\nassert abs(ratio - 1.0) < 1e-12\nassert abs(sequence_importance_ratio(old, old, mask) - 1.0) < 1e-12\nassert abs(gspo_surrogate_term(new, old, 1.0, mask=mask) - 1.0) < 1e-12\n```",
+      "answer": "```python\nimport math\nimport numpy as np\n\n\ndef _active_log_ratio(new_logp, old_logp, mask=None):\n    new = np.asarray(new_logp, dtype=float)\n    old = np.asarray(old_logp, dtype=float)\n    if new.ndim != 1 or old.shape != new.shape or new.size == 0:\n        raise ValueError(\"new_logp and old_logp must be equal non-empty vectors\")\n    if not np.all(np.isfinite(new)) or not np.all(np.isfinite(old)):\n        raise ValueError(\"log-probabilities must be finite\")\n    active = np.ones_like(new, dtype=bool)\n    if mask is not None:\n        m = np.asarray(mask)\n        if m.shape != new.shape or np.any((m != 0) & (m != 1)):\n            raise ValueError(\"mask must match and contain only 0/1\")\n        active = m.astype(bool)\n    if not active.any():\n        raise ValueError(\"at least one token must be active\")\n    return (new - old)[active]\n\n\ndef sequence_importance_ratio(new_logp, old_logp, mask=None):\n    mean_log_ratio = float(_active_log_ratio(new_logp, old_logp, mask).mean())\n    return float(np.exp(mean_log_ratio))\n\n\ndef gspo_surrogate_term(\n    new_logp,\n    old_logp,\n    advantage,\n    eps_low=3e-4,\n    eps_high=4e-4,\n    mask=None,\n):\n    if not math.isfinite(advantage):\n        raise ValueError(\"advantage must be finite\")\n    if eps_low < 0 or eps_high < 0:\n        raise ValueError(\"clip widths must be non-negative\")\n    ratio = sequence_importance_ratio(new_logp, old_logp, mask)\n    clipped = float(np.clip(ratio, 1.0 - eps_low, 1.0 + eps_high))\n    return float(min(ratio * advantage, clipped * advantage))\n```\n\n```python\nold = np.log([0.20, 0.40, 0.50, 0.30])\nnew = old + np.log([1.01, 0.99, 1.02, 10.0])\nratio = sequence_importance_ratio(new, old, mask=[1, 1, 1, 0])\nexpected = (1.01 * 0.99 * 1.02) ** (1 / 3)\nassert np.isclose(ratio, expected)\n\n# A long sequence remains numerically stable because log-ratios are summed.\nlong_old = np.full(100_000, -20.0)\nlong_new = long_old + 1e-4\nassert np.isclose(sequence_importance_ratio(long_new, long_old), np.exp(1e-4))\n```\n\nThe calculation uses a mean log-ratio and one exponential, avoiding the numerical failure of directly multiplying thousands of small probabilities.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Minimum rollout record",
+      "prompt": "Create a data structure for one response with:\n\n- `prompt_id`, `group_id`;\n- `token_ids`, `action_mask`, `old_logprobs`;\n- reward components;\n- stop reason;\n- generator version.\n\nWrite a validator for aligned lengths, finite numbers, at least one active action, and an allowed stop reason. Add tests for a valid record, an empty mask, mismatched lengths, and `NaN` log-probabilities.\n\nStarter contract:\n\n```python\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass RolloutRecord:\n    prompt_id: str\n    group_id: str\n    token_ids: tuple[int, ...]\n    action_mask: tuple[int, ...]\n    old_logprobs: tuple[float, ...]\n    reward_components: tuple[float, ...]\n    stop_reason: str\n    generator_version: str\n\n\ndef validate_rollout_record(record: RolloutRecord) -> None:\n    ...\n```\n\n> **This extends earlier work rather than repeating it.** Adapt the batch validator from Module 6 Task C6 (`validate_rollout_batch`) to one record instead of a padded batch. Only the environment and stop-reason fields are new; the alignment and finiteness checks carry over.\n\nOpen checks:\n\n```python\nrecord = RolloutRecord(\n    prompt_id=\"q1\", group_id=\"g1\", token_ids=(1, 2, 3), action_mask=(0, 1, 1),\n    old_logprobs=(0.0, -0.2, -0.3), reward_components=(1.0,),\n    stop_reason=\"eos\", generator_version=\"v1\",\n)\nassert validate_rollout_record(record) is None\nempty_mask = RolloutRecord(\n    prompt_id=\"q1\", group_id=\"g1\", token_ids=(1, 2, 3), action_mask=(0, 0, 0),\n    old_logprobs=(0.0, -0.2, -0.3), reward_components=(1.0,),\n    stop_reason=\"eos\", generator_version=\"v1\",\n)\ntry:\n    validate_rollout_record(empty_mask)\n    raise AssertionError(\"an empty mask must be rejected\")\nexcept ValueError:\n    pass\n```",
+      "answer": "```python\nfrom dataclasses import dataclass\nimport math\n\n\n@dataclass(frozen=True)\nclass RolloutRecord:\n    prompt_id: str\n    group_id: str\n    token_ids: tuple[int, ...]\n    action_mask: tuple[int, ...]\n    old_logprobs: tuple[float, ...]\n    reward_components: tuple[float, ...]\n    stop_reason: str\n    generator_version: str\n\n\ndef validate_rollout_record(record: RolloutRecord) -> None:\n    if not record.prompt_id or not record.group_id or not record.generator_version:\n        raise ValueError(\"prompt_id, group_id, and generator_version must be non-empty\")\n    n = len(record.token_ids)\n    if n == 0 or len(record.action_mask) != n or len(record.old_logprobs) != n:\n        raise ValueError(\"token_ids, action_mask, and old_logprobs must align\")\n    if any(m not in (0, 1) for m in record.action_mask) or not any(record.action_mask):\n        raise ValueError(\"action_mask must contain 0/1 and at least one active action\")\n    if not all(math.isfinite(x) for x in record.old_logprobs):\n        raise ValueError(\"old_logprobs must be finite\")\n    if not record.reward_components or not all(math.isfinite(x) for x in record.reward_components):\n        raise ValueError(\"reward_components must be a non-empty finite sequence\")\n    if record.stop_reason not in {\"eos\", \"stop_string\", \"truncated\", \"environment\", \"error\"}:\n        raise ValueError(\"unsupported stop_reason\")\n```\n\n```python\nvalid = RolloutRecord(\n    prompt_id=\"p-17\",\n    group_id=\"g-4\",\n    token_ids=(101, 102, 103),\n    action_mask=(0, 1, 1),\n    old_logprobs=(-2.0, -0.4, -0.8),\n    reward_components=(1.0, 0.1),\n    stop_reason=\"eos\",\n    generator_version=\"checkpoint-1200\",\n)\nvalidate_rollout_record(valid)\n\nfor invalid in (\n    RolloutRecord(\"p\", \"g\", (1, 2), (0, 0), (-1.0, -1.0), (1.0,), \"eos\", \"v1\"),\n    RolloutRecord(\"p\", \"g\", (1, 2), (1,), (-1.0, -1.0), (1.0,), \"eos\", \"v1\"),\n    RolloutRecord(\"p\", \"g\", (1,), (1,), (float(\"nan\"),), (1.0,), \"eos\", \"v1\"),\n):\n    try:\n        validate_rollout_record(invalid)\n        raise AssertionError(\"invalid record was accepted\")\n    except ValueError:\n        pass\n```\n\nThe validator checks structural integrity but cannot prove that `old_logprobs` came from the actual behavior policy. That requires a replayable generation protocol and policy-version verification.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-02",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "State, observation, and hidden dynamics",
+      "prompt": "Classify each case using the most accurate label:\n\n- **A.** the observation is already a sufficient Markov state;\n- **B.** the observation is incomplete, so partial observability is the natural model.\n\n\n1. Only a ball's position is visible, while velocity is hidden and the dynamics have inertia.\n\n2. A chess position includes the side to move, castling rights, and the en-passant status.\n\n3. Pure autoregressive generation exposes the prompt and complete prefix, and the transition only appends the selected token.\n\n4. An agent sees only the last two messages. An earlier tool message identified the open file, but it has been dropped from context; the next response depends on that file.\n\nWrite `1-?, 2-?, 3-?, 4-?`. Then explain why “state is a compressed history” is a useful construction but not a universal definition of the environment state.",
+      "answer": "**Answer:** `1-B, 2-A, 3-A, 4-B`.\n\n\n1. Equal positions with different velocities induce different next-position distributions.\n\n2. The complete chess position, including rule-relevant flags, is sufficient for the next legal transition.\n\n3. Under the stated abstraction, the prompt and full prefix are sufficient: the selected token determines the next prefix, while token sampling is represented by the policy.\n\n4. Two complete histories can identify different open files yet share the same last two messages. The omitted observation changes the prediction of the next response, so the short window is insufficient.\n\nIn MDP theory, a state is a variable relative to which the Markov property holds. A representation constructed from history may serve as that state, but it can be incomplete, redundant, or different from the physical state of the environment.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "What belongs to an MDP",
+      "prompt": "Choose **three** correct statements about a finite Markov decision process (MDP).\n\n\n1. The policy $\\pi(a\\mid s)$ is part of $P(s'\\mid s,a)$ and cannot change without changing the MDP.\n\n2. The mean $\\bar r(s,a)$ is obtained by averaging $\\bar r(s,a,s')$ over next states with probabilities $P(s'\\mid s,a)$; no conditional independence is needed.\n\n3. The Markov property requires state to retain past information that matters for the next transition once the action is known.\n\n4. A text transcript of tool use is automatically a complete state.\n\n5. The same MDP can be paired with different policies.\n\n6. A reward received on entry to a terminal state must be discarded because the terminal value is zero.",
+      "answer": "**Answers: 2, 3, and 5.**\n\nThe law of total expectation gives $\\bar r(s,a)=\\sum_{s'}P(s'\\mid s,a)\\bar r(s,a,s')$. Equality of all next-state conditional means would be an additional assumption, but averaging is always valid for integrable rewards. Markov sufficiency concerns future dynamics given the current state and action. A policy belongs to the agent's behavior, so different policies can operate in the same MDP.\n\nStatement 1 conflates agent and environment. Statement 4 fails for an arbitrary text window that may omit relevant earlier observations; hidden state alone does not make the complete history insufficient. Statement 6 confuses reward **on the terminal transition** with continuation **after** that transition: the reward remains in $R_{t+1}$, while the terminal continuation value is zero.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Termination versus truncation",
+      "prompt": "For each transition, choose the correct one-step TD target. Let $r=1$, $\\gamma=0.9$, and $V(s')=4$.\n\n\n1. The task reaches its terminal goal.\n\n2. Data collection stops at an external limit although the process could continue.\n\n3. The task is defined as “finish within 100 steps”; remaining budget is part of state and has been exhausted.\n\nOptions:\n\n- A. $y=r=1$;\n- B. $y=r+\\gamma V(s')=4.6$.\n\nWrite `1-?, 2-?, 3-?`, and explain why a single legacy `done` flag is insufficient.",
+      "answer": "**Answer:** `1-A, 2-B, 3-A`.\n\nUsing\n\n$$\nm_t=\\mathbf 1\\{\\text{transition is not terminal}\\},\n\\qquad\ny_t=r_{t+1}+\\gamma m_tV(s_{t+1}),\n$$\n\ncases 1 and 3 have $m_t=0$, while external truncation in case 2 has $m_t=1$. Therefore their targets are $1$, $4.6$, and $1$.\n\nA single `done` flag does not reveal whether continuation should be masked or bootstrapped.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "V, Q, and advantage",
+      "prompt": "Choose **three** correct statements that follow from the definitions without changing the MDP.\n\n\n1. $V^\\pi(s)$ always equals $\\max_aQ^\\pi(s,a)$.\n\n2. $V^\\pi(s)=\\sum_a\\pi(a\\mid s)Q^\\pi(s,a)$.\n\n3. $A^\\pi(s,a)>0$ means the action is better than the **current policy's average action** in that state.\n\n4. Arbitrary reward changes leave $A^\\pi$ unchanged.\n\n5. $\\sum_aA^\\pi(s,a)=0$ for every policy.\n\n6. Adding a common constant $c(s)$ to every $Q(s,a)$ in one state, then recomputing $V$, leaves its advantages unchanged.\n\nSelect all applicable statements.",
+      "answer": "**Answers: 2, 3, and 6.**\n\nThey follow from\n\n$$\nV^\\pi(s)=\\sum_a\\pi(a\\mid s)Q^\\pi(s,a),\n\\qquad\nA^\\pi(s,a)=Q^\\pi(s,a)-V^\\pi(s).\n$$\n\nStatement 6 is a useful consequence: both $Q$ and the policy average $V$ shift by $c(s)$, so their difference is unchanged.\n\nStatement 5 is missing policy weights; the correct identity is $\\sum_a\\pi(a\\mid s)A^\\pi(s,a)=0$. An arbitrary reward modification can change advantages throughout the MDP.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "Bellman equations and operators",
+      "prompt": "Choose **five** correct statements.\n\n\n1. The Bellman expectation equation for a fixed policy is linear in $V^\\pi$.\n\n2. The optimality operator replaces policy averaging over actions with a maximum.\n\n3. A Bellman equation is itself a complete neural-network training algorithm.\n\n4. For $0\\le\\gamma<1$, $T_\\pi$ and $T_*$ are $\\gamma$-contractions in the max norm.\n\n5. At $\\gamma=1$, some proper episodic problems remain solvable, but the usual strict-contraction proof no longer applies.\n\n6. A small Bellman residual always implies an equally small value error, independently of $\\gamma$.\n\n7. The fixed point of $T_\\pi$ is the value of the fixed policy.",
+      "answer": "**Answers: 1, 2, 4, 5, and 7.**\n\nThe fixed-policy operator $T_\\pi V=r_\\pi+\\gamma P_\\pi V$ is affine (linear only when $r_\\pi=0$), while its fixed-point equation is a linear system in $V$; the optimality operator takes a maximum; and for $\\gamma<1$ both are contractions in $\\|\\cdot\\|_\\infty$. The fixed point of $T_\\pi$ is $V^\\pi$.\n\nStatement 3 is false because Bellman consistency does not specify data collection, parameterization, or optimization. Statement 5 records the important $\\gamma=1$ boundary. Statement 6 is false because\n\n$$\n\\|\\widehat V-V^\\pi\\|_\\infty\n\\le\n\\frac{\\|T_\\pi\\widehat V-\\widehat V\\|_\\infty}{1-\\gamma}.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Monte Carlo, TD(0), and multi-step targets",
+      "prompt": "Match each method to its target.\n\n| Method | Target |\n|---|---|\n| A. Monte Carlo | 1. $R_{t+1}+\\gamma V(S_{t+1})$ |\n| B. TD(0) | 2. the complete observed $G_t$ |\n| C. $n$-step target | 3. several observed rewards followed by $V(S_{t+n})$ |\n\nWrite `A-?, B-?, C-?`.\n\nThen choose the most accurate statement:\n\n\n1. MC always has lower variance than TD.\n\n2. TD is always more accurate at every data budget.\n\n3. The trade-off depends on the environment, horizon, representation, step size, and data budget.\n\n4. Bootstrapping means resampling episodes with replacement.",
+      "answer": "**Matching:** `A-2, B-1, C-3`.  \n**Additional answer:** 3.\n\nMC waits for an observed trajectory tail. TD(0) substitutes a current continuation estimate after one transition. An $n$-step target observes several rewards before bootstrapping.\n\nIn RL, bootstrapping means updating an estimate from another current estimate. It is not the statistical bootstrap. Bias, variance, and update delay depend on the protocol, so there is no universal ranking.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Why Q-learning is off-policy",
+      "prompt": "Actions are collected by an $\\varepsilon$-greedy policy. Choose the single most accurate statement.\n\n\n1. SARSA and Q-learning are both off-policy because exploratory actions are random.\n\n2. SARSA uses the actually selected $A_{t+1}$, whereas Q-learning uses $\\max_{a'}Q(S_{t+1},a')$; Q-learning therefore evaluates a greedy target policy from $\\varepsilon$-greedy behavior data.\n\n3. Q-learning becomes off-policy only when a replay buffer is added.\n\n4. SARSA cannot use $\\varepsilon$-greedy exploration.",
+      "answer": "**Answer: 2.**\n\nSARSA's target follows the next action of the behavior policy. Q-learning's target follows a greedy policy even when behavior remains exploratory. That mismatch defines the off-policy relationship; a replay buffer is neither necessary nor sufficient as a definition.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Group baselines and maximization bias",
+      "prompt": "Choose **four** correct statements.\n\n\n1. The group mean reward in canonical GRPO is an exact token-level $V^\\pi(s_t)$ for every prefix.\n\n2. Group normalization creates a relative signal without a learned critic, while remaining a sample statistic over complete responses.\n\n3. The maximum of noisy unbiased estimates can exhibit positive selection bias.\n\n4. Double Q-learning separates action selection from evaluation across two estimators.\n\n5. Double Q-learning is exactly unbiased under every error dependence structure.\n\n6. Selecting the highest-scoring LLM response under a noisy reward model shares a statistical mechanism with maximization bias, but is not literally tabular Q-learning.",
+      "answer": "**Answers: 2, 3, 4, and 6.**\n\nStatement 6 is a limited analogy: the selection mechanism is shared, while the algorithms and objects are not identical.\n\nCanonical GRPO uses response-group statistics rather than an exact token-level critic. Maximizing noisy estimates favors positive noise. Double Q-learning weakens that coupling by selecting with one estimator and evaluating with another, but it does not remove every source of error and may underestimate in some settings.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Compute V and A",
+      "prompt": "At state $s$,\n\n$$\nQ^\\pi(s,a_1)=2,\n\\qquad Q^\\pi(s,a_2)=6,\n$$\n\nand\n\n$$\n\\pi(a_1\\mid s)=0.25,\n\\qquad \\pi(a_2\\mid s)=0.75.\n$$\n\nCompute $V^\\pi(s)$ and both advantages. Verify the policy-weighted zero-mean identity.",
+      "answer": "$$\nV^\\pi(s)=0.25\\cdot2+0.75\\cdot6=5.\n$$\n\nHence\n\n$$\nA^\\pi(s,a_1)=-3,\n\\qquad\nA^\\pi(s,a_2)=1.\n$$\n\nThe weighted check is\n\n$$\n0.25(-3)+0.75(1)=0.\n$$\n\nThe unweighted sum is $-2$; it is the policy-weighted average that must vanish.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "One Bellman optimality backup",
+      "prompt": "State $s$ has two actions.\n\n- $a_1$ deterministically reaches $s_1$ with reward $1$, where $V(s_1)=3$.\n- $a_2$ reaches $s_2$ with probability $0.5$, reward $0$, and $V(s_2)=6$; or reaches $s_3$ with probability $0.5$, reward $2$, and $V(s_3)=1$.\n\nLet $\\gamma=0.9$. Compute both one-step action values, $(T_*V)(s)$, and the greedy action.",
+      "answer": "$$\nQ(s,a_1)=1+0.9\\cdot3=3.7.\n$$\n\nFor $a_2$,\n\n$$\n\\begin{aligned}\nQ(s,a_2)\n&=0.5(0+0.9\\cdot6)+0.5(2+0.9\\cdot1)\\\\\n&=2.7+1.45=4.15.\n\\end{aligned}\n$$\n\nTherefore $(T_*V)(s)=4.15$ and the greedy action is $a_2$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "A one-state Bellman system",
+      "prompt": "There is one non-terminal state $s$ and one terminal state. Under a fixed policy, state $s$\n\n- moves to the terminal with probability $0.5$ and reward $0$;\n- returns to $s$ with probability $0.5$ and reward $1$.\n\nWith $\\gamma=0.9$, write and solve the Bellman equation for $V^\\pi(s)$.",
+      "answer": "$$\nV^\\pi(s)=0.5\\cdot0+0.5\\bigl(1+0.9V^\\pi(s)\\bigr).\n$$\n\nThus\n\n$$\n0.55V^\\pi(s)=0.5,\n\\qquad\nV^\\pi(s)=\\frac{10}{11}\\approx0.90909.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "A TD update with a terminal mask",
+      "prompt": "Let\n\n$$\nV(s)=2,\\quad V(s')=3,\\quad r=1,\\quad \\gamma=0.9,\\quad \\alpha=0.1.\n$$\n\nCompute the new $V(s)$ for\n\n\n1. an ordinary non-terminal transition;\n\n2. a true terminal transition;\n\n3. an external truncation while the process could continue.",
+      "answer": "The update is $V(s)\\leftarrow V(s)+\\alpha(y-V(s))$.\n\n\n1. $y=1+0.9\\cdot3=3.7$, so $V_{new}(s)=2.17$.\n\n2. $y=1$, so $V_{new}(s)=1.9$.\n\n3. External truncation retains the continuation, so the result is again $2.17$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "A three-step target",
+      "prompt": "Observed rewards are $[1,2,3]$, $\\gamma=0.5$, and $V(S_{t+3})=4$. Compute\n\n$$\nG_{t:t+3}=R_{t+1}+\\gamma R_{t+2}+\\gamma^2R_{t+3}+\\gamma^3V(S_{t+3}).\n$$\n\nWhat changes if the third transition truly terminates the task?",
+      "answer": "For a non-terminal end of the window,\n\n$$\n1+0.5\\cdot2+0.5^2\\cdot3+0.5^3\\cdot4=3.25.\n$$\n\nAt a true terminal, only the continuation is removed:\n\n$$\n1+1+0.75=2.75.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Standard and Double-Q targets",
+      "prompt": "At the next state,\n\n$$\nQ^A(s',\\cdot)=[1,4,3],\n\\qquad\nQ^B(s',\\cdot)=[10,2,8].\n$$\n\nLet $r=0.5$ and $\\gamma=0.9$.\n\n\n1. Compute a standard Q-learning target using $Q^A$ for both selection and evaluation.\n\n2. Compute a Double-Q target that selects with $Q^A$ and evaluates with $Q^B$.\n\n3. Explain the difference.",
+      "answer": "Standard Q-learning uses $\\max_aQ^A(s',a)=4$:\n\n$$\ny_Q=0.5+0.9\\cdot4=4.1.\n$$\n\nDouble Q selects the second index with $Q^A$ and evaluates that same index with $Q^B$:\n\n$$\ny_{Double}=0.5+0.9\\cdot2=2.3.\n$$\n\nThe selector regards action 2 as best, while the independent evaluator assigns it a low value. Selection noise is therefore not automatically reused as evaluation noise.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Compute V from Q and form advantages",
+      "prompt": "Implement two functions over arrays of shape `(n_states, n_actions)`.\n\n```python\nimport numpy as np\n\n\ndef v_from_q(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    \"\"\"V(s) = sum_a policy[s,a] * q_values[s,a].\"\"\"\n    raise NotImplementedError\n\n\ndef advantage(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    \"\"\"A(s,a) = Q(s,a) - V(s).\"\"\"\n    raise NotImplementedError\n```\n\nUse the public checks below to verify shapes and the policy-weighted zero mean; the reference module provides further examples.\n\nOpen checks:\n\n```python\nQ = np.array([[1.0, 3.0], [0.0, 2.0]])\npi = np.array([[0.5, 0.5], [0.2, 0.8]])\nnp.testing.assert_allclose(v_from_q(Q, pi), [2.0, 1.6])\nnp.testing.assert_allclose(advantage(Q, pi), [[-1.0, 1.0], [-1.6, 0.4]])\nnp.testing.assert_allclose((pi * advantage(Q, pi)).sum(axis=1), 0.0, atol=1e-12)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef v_from_q(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    q = np.asarray(q_values, dtype=float)\n    pi = np.asarray(policy, dtype=float)\n    if q.ndim != 2 or pi.shape != q.shape:\n        raise ValueError(\"q_values and policy must have the same 2D shape\")\n    if np.any(pi < 0.0) or not np.allclose(pi.sum(axis=1), 1.0):\n        raise ValueError(\"each policy row must be a probability distribution\")\n    return np.sum(pi * q, axis=1)\n\n\ndef advantage(q_values: np.ndarray, policy: np.ndarray) -> np.ndarray:\n    q = np.asarray(q_values, dtype=float)\n    return q - v_from_q(q, policy)[:, None]\n```\n\nThe extra axis turns the state-value vector into a column, allowing one $V(s)$ to be subtracted from every action in that state.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Exact policy evaluation",
+      "prompt": "Solve the Bellman linear system over non-terminal states.\n\n```python\ndef exact_policy_value(\n    transitions: np.ndarray,\n    rewards: np.ndarray,\n    policy: np.ndarray,\n    gamma: float,\n    terminals: np.ndarray,\n) -> np.ndarray:\n    \"\"\"Return zero for terminal-state values.\"\"\"\n    raise NotImplementedError\n```\n\nConstruct $P_\\pi$ and $r_\\pi$, then solve $(I-\\gamma P_{NN})V_N=r_N$ on the non-terminal index set $N$.\n\nOpen check:\n\n```python\nP = np.zeros((2, 1, 2))\nR = np.zeros_like(P)\nP[0, 0] = [0.5, 0.5]\nR[0, 0] = [1.0, 0.0]\nP[1, 0, 1] = 1.0\npi = np.ones((2, 1))\nterminal = np.array([False, True])\nnp.testing.assert_allclose(\n    exact_policy_value(P, R, pi, 0.9, terminal),\n    [10.0 / 11.0, 0.0],\n)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef exact_policy_value(transitions, rewards, policy, gamma, terminals):\n    p = np.asarray(transitions, dtype=float)\n    r = np.asarray(rewards, dtype=float)\n    pi = np.asarray(policy, dtype=float)\n    terminal = np.asarray(terminals, dtype=bool)\n\n    if p.ndim != 3 or r.shape != p.shape:\n        raise ValueError(\"P and R must have shape (nS, nA, nS)\")\n    if pi.shape != p.shape[:2] or terminal.shape != (p.shape[0],):\n        raise ValueError(\"policy or terminal mask has the wrong shape\")\n\n    p_pi = np.einsum(\"sa,san->sn\", pi, p)\n    r_pi = np.einsum(\"sa,san,san->s\", pi, p, r)\n    nonterminal = np.flatnonzero(~terminal)\n    values = np.zeros(p.shape[0], dtype=float)\n    if nonterminal.size:\n        p_nn = p_pi[np.ix_(nonterminal, nonterminal)]\n        values[nonterminal] = np.linalg.solve(\n            np.eye(nonterminal.size) - gamma * p_nn,\n            r_pi[nonterminal],\n        )\n    return values\n```\n\nReward on entry to a terminal is already contained in the predecessor's reward equation. Only continuation after the terminal is zero.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "One Bellman optimality sweep",
+      "prompt": "Implement one synchronous value-iteration backup.\n\n```python\ndef bellman_optimality_sweep(\n    transitions: np.ndarray,\n    rewards: np.ndarray,\n    values: np.ndarray,\n    gamma: float,\n    terminals: np.ndarray,\n) -> np.ndarray:\n    \"\"\"Return T_* V with zero terminal components.\"\"\"\n    raise NotImplementedError\n```\n\nEvery new state value must be computed from the same old vector `values`.\n\nOpen check for one synchronous sweep:\n\n```python\nP = np.zeros((3, 2, 3))\nR = np.zeros_like(P)\nP[0, 0, 1] = 1.0\nP[0, 1, 2] = 1.0\nR[0, 0, 1] = 1.0\nR[0, 1, 2] = 2.0\nP[1, :, 1] = 1.0\nP[2, :, 2] = 1.0\nV = np.array([0.0, 3.0, 1.0])\nout = bellman_optimality_sweep(P, R, V, 0.9, np.zeros(3, dtype=bool))\nassert abs(out[0] - 3.7) < 1e-12\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef bellman_optimality_sweep(transitions, rewards, values, gamma, terminals):\n    p = np.asarray(transitions, dtype=float)\n    r = np.asarray(rewards, dtype=float)\n    v = np.asarray(values, dtype=float)\n    terminal = np.asarray(terminals, dtype=bool)\n\n    continuation = v.copy()\n    continuation[terminal] = 0.0\n    q = np.sum(\n        p * (r + gamma * continuation[None, None, :]),\n        axis=2,\n    )\n    updated = np.max(q, axis=1)\n    updated[terminal] = 0.0\n    return updated\n```\n\nRepeated application with a stopping rule gives value iteration. The notebook implements that complete experiment and stores the full propagation trace.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "TD targets with explicit termination",
+      "prompt": "Implement one-step and $n$-step targets. An external `truncated=True` flag must not mask the continuation by itself.\n\n```python\ndef td_target(reward, next_value, gamma, *, terminated, truncated=False):\n    raise NotImplementedError\n\n\ndef n_step_target(rewards, bootstrap_value, gamma, *, terminated_at_end):\n    raise NotImplementedError\n```\n\nThe numerical checks are $2.8$, $1.0$, $2.8$ for ordinary/terminal/truncated one-step transitions and $3.25$, $2.75$ for the two three-step cases in Task B5.\n\nOpen checks:\n\n```python\nassert td_target(1, 2, 0.9, terminated=False) == 2.8\nassert td_target(1, 2, 0.9, terminated=True) == 1.0\nassert td_target(1, 2, 0.9, terminated=False, truncated=True) == 2.8\nassert abs(n_step_target([1, 2, 3], 4, 0.5, terminated_at_end=False) - 3.25) < 1e-12\nassert abs(n_step_target([1, 2, 3], 4, 0.5, terminated_at_end=True) - 2.75) < 1e-12\n```",
+      "answer": "```python\nimport math\n\n\ndef td_target(reward, next_value, gamma, *, terminated, truncated=False):\n    if not math.isfinite(reward) or not math.isfinite(gamma):\n        raise ValueError(\"reward and gamma must be finite\")\n    if not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must be in [0, 1]\")\n    if not isinstance(terminated, bool) or not isinstance(truncated, bool):\n        raise TypeError(\"flags must be boolean\")\n    if terminated:\n        return float(reward)\n    if not math.isfinite(next_value):\n        raise ValueError(\"next_value must be finite for a non-terminal target\")\n    return float(reward + gamma * next_value)\n\n\ndef n_step_target(rewards, bootstrap_value, gamma, *, terminated_at_end):\n    if not math.isfinite(gamma) or not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must be finite and in [0, 1]\")\n    if not isinstance(terminated_at_end, bool):\n        raise TypeError(\"terminated_at_end must be boolean\")\n    total = 0.0\n    discount = 1.0\n    for reward in rewards:\n        reward = float(reward)\n        if not math.isfinite(reward):\n            raise ValueError(\"rewards must be finite\")\n        total += discount * reward\n        discount *= gamma\n    if terminated_at_end:\n        return total\n    if not math.isfinite(bootstrap_value):\n        raise ValueError(\"bootstrap_value must be finite for a non-terminal target\")\n    return total + discount * float(bootstrap_value)\n```\n\n`truncated` is retained in the interface to make the stopping reason visible. The bootstrap mask is controlled by task termination.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "SARSA and Q-learning targets",
+      "prompt": "Implement the local targets for a known next-state action-value vector.\n\n```python\ndef q_learning_target(reward, next_q_values, gamma, *, terminated):\n    raise NotImplementedError\n\n\ndef sarsa_target(reward, next_q_values, next_action, gamma, *, terminated):\n    raise NotImplementedError\n```\n\nQ-learning uses a maximum; SARSA uses the action actually selected by the behavior policy. Neither should bootstrap at a true terminal.\n\nOpen checks:\n\n```python\nq_next = np.array([1.0, 4.0, 3.0])\nassert q_learning_target(0.5, q_next, 0.9, terminated=False) == 4.1\nassert sarsa_target(0.5, q_next, 2, 0.9, terminated=False) == 3.2\nassert q_learning_target(1.0, np.array([]), 0.9, terminated=True) == 1.0\nassert sarsa_target(1.0, np.array([]), 99, 0.9, terminated=True) == 1.0\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef q_learning_target(reward, next_q_values, gamma, *, terminated):\n    if terminated:\n        return float(reward)\n    q_next = np.asarray(next_q_values, dtype=float)\n    if q_next.ndim != 1 or q_next.size == 0:\n        raise ValueError(\"next_q_values must be a non-empty vector\")\n    return float(reward + gamma * np.max(q_next))\n\n\ndef sarsa_target(reward, next_q_values, next_action, gamma, *, terminated):\n    if terminated:\n        return float(reward)\n    q_next = np.asarray(next_q_values, dtype=float)\n    if q_next.ndim != 1 or not 0 <= next_action < q_next.size:\n        raise ValueError(\"invalid next action\")\n    return float(reward + gamma * q_next[next_action])\n```\n\nThe full SARSA loop must choose `next_action` using the same behavior policy that will act on the next transition.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Selection and evaluation in Double Q-learning",
+      "prompt": "Implement a Double-Q target. One estimator selects the action index; the other evaluates that selected index.\n\n```python\ndef double_q_target(\n    reward: float,\n    selector_q: np.ndarray,\n    evaluator_q: np.ndarray,\n    gamma: float,\n    *,\n    terminated: bool,\n) -> float:\n    raise NotImplementedError\n```\n\nFor `selector=[1,4,3]`, `evaluator=[10,2,8]`, $r=0.5$, and $\\gamma=0.9$, the non-terminal result must be $2.3$.\n\nOpen checks:\n\n```python\nqa = np.array([1.0, 4.0, 3.0])\nqb = np.array([10.0, 2.0, 8.0])\nassert double_q_target(0.5, qa, qb, 0.9, terminated=False) == 2.3\nassert double_q_target(0.5, qa, qb, 0.9, terminated=True) == 0.5\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef double_q_target(reward, selector_q, evaluator_q, gamma, *, terminated):\n    if terminated:\n        return float(reward)\n    selector = np.asarray(selector_q, dtype=float)\n    evaluator = np.asarray(evaluator_q, dtype=float)\n    if selector.ndim != 1 or evaluator.shape != selector.shape or selector.size == 0:\n        raise ValueError(\"Q vectors must be non-empty and have the same shape\")\n    selected = int(np.argmax(selector))\n    return float(reward + gamma * evaluator[selected])\n```\n\nTaking `np.max(evaluator)` would let the second table choose a different action. Double Q-learning evaluates the action selected by the first table.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

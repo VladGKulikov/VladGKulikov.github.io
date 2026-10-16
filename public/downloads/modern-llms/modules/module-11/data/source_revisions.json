@@ -1,0 +1,82 @@
+{
+  "checked_on": "2026-10-11",
+  "scope": "Dated primary-source verification; mutable pages are not immutable snapshots.",
+  "sources": [
+    {
+      "url": "https://arxiv.org/html/2211.17192v2",
+      "claim": "Exact correction and cycle analysis; mathematical reference"
+    },
+    {
+      "url": "https://arxiv.org/abs/2302.01318",
+      "claim": "Independent speculative-sampling paper"
+    },
+    {
+      "url": "https://arxiv.org/abs/2401.10774",
+      "claim": "Medusa proposal heads and typical acceptance; quality is not an exact-law proof"
+    },
+    {
+      "url": "https://arxiv.org/abs/2503.01840",
+      "claim": "EAGLE-3 direct token prediction; author-reported 6.5x and 1.38x at batch 64"
+    },
+    {
+      "url": "https://github.com/SafeAILab/EAGLE",
+      "claim": "Official implementation; dated code-reading reference, not a frozen revision"
+    },
+    {
+      "url": "https://arxiv.org/abs/2412.19437",
+      "claim": "DeepSeek-V3 MTP training objective and inference use"
+    },
+    {
+      "url": "https://arxiv.org/abs/2210.17323",
+      "claim": "GPTQ layerwise reconstruction"
+    },
+    {
+      "url": "https://arxiv.org/abs/2306.00978",
+      "claim": "AWQ activation-aware scaling"
+    },
+    {
+      "url": "https://arxiv.org/abs/2305.14314",
+      "claim": "QLoRA frozen quantized base and trainable adapters"
+    },
+    {
+      "url": "https://arxiv.org/abs/2509.23202",
+      "claim": "MR-GPTQ; format-specific performance, not universal FP4 superiority"
+    },
+    {
+      "url": "https://docs.nvidia.com/deeplearning/transformer-engine/features/low_precision_training/nvfp4/nvfp4.html",
+      "claim": "NVFP4 local/global scales and 1D versus 2D training geometry"
+    },
+    {
+      "url": "https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf",
+      "claim": "MX v1.0: E2M1 values, 32-value blocks and E8M0 scales"
+    },
+    {
+      "url": "https://docs.vllm.ai/en/latest/features/speculative_decoding/",
+      "claim": "Method families and workload-dependent guidance; mutable docs"
+    },
+    {
+      "url": "https://docs.vllm.ai/en/latest/features/speculative_decoding/mtp/",
+      "claim": "Native MTP packaging; Gemma 4 assistant-checkpoint exception"
+    },
+    {
+      "url": "https://cohere.com/blog/command-a-plus",
+      "claim": "Developer-reported 218B/25B and minimum W4A4 devices"
+    },
+    {
+      "url": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-w4a4",
+      "claim": "Official W4A4 artifact and deployment information"
+    },
+    {
+      "url": "https://arxiv.org/abs/2401.15077",
+      "claim": "EAGLE feature-level proposal mechanism"
+    },
+    {
+      "url": "https://arxiv.org/abs/2211.10438",
+      "claim": "SmoothQuant offline migration of activation outliers"
+    },
+    {
+      "url": "https://www.microsoft.com/en-us/research/publication/the-era-of-1-bit-llms-all-large-language-models-are-in-1-58-bits/",
+      "claim": "Native ternary-weight training and representation"
+    }
+  ]
+}

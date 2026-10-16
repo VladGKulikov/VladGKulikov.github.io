@@ -1,0 +1,56 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-02",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. UTF-8 accounting",
+      "prompt": "Before merges, how many byte-level tokens do `Привет, мир!`, `Hello, world!`, and `наивный 🚀` use? Explain every byte.",
+      "answer": "*Solution.* Before BPE merges, each UTF-8 byte is one base token. `Привет, мир!` has nine Cyrillic letters (`Привет` has 6 and `мир` has 3), hence $9\\cdot2=18$ bytes, plus a comma, a space, and `!`: **21**. `Hello, world!` contains 13 ASCII characters and therefore uses **13** bytes. In `наивный 🚀`, seven Cyrillic letters use 14 bytes, the space uses 1, and the emoji uses 4, for **19** total. A tokenizer-free check is `len(text.encode(\"utf-8\"))`.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. Ranked encoding",
+      "prompt": "Implement an encoder that repeatedly merges the pair with the lowest available rank:",
+      "answer": "*Solution.*\n\n```python\ndef encode_by_rank(text, merges):\n    chunks = re.findall(PAT, text)\n    output = []\n    for chunk in chunks:\n        ids = list(chunk.encode(\"utf-8\"))\n        while len(ids) > 1:\n            pairs = set(zip(ids[:-1], ids[1:]))\n            best = min(pairs, key=lambda p: merges.get(p, float(\"inf\")))\n            if best not in merges:\n                break\n            ids = merge([ids], best, merges[best])[0]\n        output.extend(ids)\n    return output\n```\n\nThe regex first splits the text into pre-token chunks, which must be encoded independently. Within each chunk, enumerate adjacent pairs, choose the present pair with the smallest numeric rank, and merge all valid occurrences. Stop when no present pair belongs to `merges`. Corpus frequency is not recomputed at inference: training has already encoded its effect in the learned ranks.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. A reproducible fertility protocol",
+      "prompt": "Fix the corpus, word segmentation rule, tokenizer revision, and aggregation method. Report total tokens divided by total words, plus bytes/token. Explain why averaging per-sentence fertility assigns disproportionate weight to short sentences.",
+      "answer": "*Solution.* Freeze the exact corpus snapshot and strata, normalization and word rule, tokenizer name and revision, and whether special tokens are added. For each line record UTF-8 bytes $b_i$, words $w_i$, and tokenizer IDs $t_i$ (normally excluding beginning-of-sequence and end-of-sequence markers, BOS and EOS), then compute\n\n$$\n\\text{fertility}=\\frac{\\sum_i t_i}{\\sum_i w_i},\\qquad\n\\text{bytes/token}=\\frac{\\sum_i b_i}{\\sum_i t_i}.\n$$\n\nThis micro-average weights every word equally. The alternative $\\frac1N\\sum_i t_i/w_i$ weights every line equally, so a one-word line affects the result as much as a long sentence; zero-word lines also need a separate policy. Publish $\\sum w_i$, $\\sum t_i$, $\\sum b_i$, and excluded-line counts so another reader can reproduce the result.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4 [project]. Multilingual map",
+      "prompt": "Use FLORES-200 with published tokenizers for `o200k_base`, Llama 4, Qwen3, Gemma 3, DeepSeek V4, and Kimi K3. Record exact revisions and let the measurements determine the ranking rather than predicting a winner.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 2](/downloads/modern-llms/project_demos/en/module_02_project_demo.ipynb), section “1. What does the denominator count?”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.\n\n\nSpecify suitable word segmentation for each language, or compare tokens per aligned sentence. A regex matching letter runs treats a Chinese string as one run, not one linguistic word. The demo exposes denominators and units per sentence; its `wordrun_proxy` is not WordPiece.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5 [project]. Harmony audit",
+      "prompt": "In the main notebook’s optional network cell, load `o200k_harmony`, count names and unique IDs, identify the alias at 200018, and classify protocol versus reserved spellings.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 2](/downloads/modern-llms/project_demos/en/module_02_project_demo.ipynb), section “2. Why can names outnumber IDs?”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.\n\n\nExpected for the 11 October 2026 snapshot: 1,091 names, 1,090 unique special IDs, 10 protocol names, 1,081 reserved-form names, and `n_vocab=201088` after adding 199,998 mergeable IDs.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-06",
+      "title": "E6. Lookup and one learning step",
+      "prompt": "Using $E$ from §11, compute `E[[0,2,0]]`, `E[0] @ E.T`, and the tied BF16 weight payload for $V=16384,d=512$. Then minimize $L=\\frac12\\sum_t\\|E_{i_t}-Y_t\\|^2$ with zero targets $Y$ and IDs `[0,2,0]`: what gradient does each row receive?",
+      "answer": "*Solution.* Lookup gives `[[1,0],[0,1],[1,0]]`. The logits are `[1,2,0]`, so ID 1 wins. There are $16384\\cdot512=8388608$ parameters occupying $16777216$ BF16 bytes, or 16 MiB. Repeated ID 0 accumulates two contributions: the gradient is `[[2,0],[0,0],[0,1]]`. A step of 0.1 gives `[[0.8,0],[2,0],[0,0.9]]`, lowering $L$ from 1.5 to 1.045. The notebook checks the gradient with finite differences; this is a lookup exercise rather than semantic model training.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

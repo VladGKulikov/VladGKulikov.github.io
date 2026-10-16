@@ -1,0 +1,52 @@
+{
+  "name": "Parallel Universal Dependencies (PUD)",
+  "release": "UD 2.15 (r2.15)",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+  "attribution": "PUD contributors; DFKI translation teams, Google, and the Universal Dependencies community. Full contributor lists and original notices are in PUD_RU_README.md and PUD_EN_README.md.",
+  "sources": {
+    "ru": {
+      "repository": "https://github.com/UniversalDependencies/UD_Russian-PUD",
+      "revision": "7284f9241af8755cbecdc6f6ce3eaf338f0503c4",
+      "url": "https://raw.githubusercontent.com/UniversalDependencies/UD_Russian-PUD/7284f9241af8755cbecdc6f6ce3eaf338f0503c4/ru_pud-ud-test.conllu",
+      "sha256": "b2c116faa1295dbfee6461c9d2c6911257eed01e2d688f7d74113f7a53f696c6"
+    },
+    "en": {
+      "repository": "https://github.com/UniversalDependencies/UD_English-PUD",
+      "revision": "6e328e8195c04a297c1e375d21fe663be1ce6178",
+      "url": "https://raw.githubusercontent.com/UniversalDependencies/UD_English-PUD/6e328e8195c04a297c1e375d21fe663be1ce6178/en_pud-ud-test.conllu",
+      "sha256": "63eb7eca373bd45912c01f15f1e445d5cdd41245f20da1669474728e484e096d"
+    }
+  },
+  "transform": "Extract # text verbatim; retain original order and aligned sentence/document IDs. No Unicode normalization. Join sentences by LF, including a final LF.",
+  "split": "eval iff int(SHA256(ASCII(document_id))[:8], 16) % 5 == 0; otherwise train. Same source-document partition in both languages.",
+  "scope": "Teaching BBPE only. Upstream labels all sentences as a parsing test set; this is not a parsing benchmark split or evidence of population-level language fairness.",
+  "aligned_file": "pud_parallel.jsonl",
+  "aligned_sha256": "e85e44e6af3532ead8ee674eef1a24ee0c6eb1bd01479a073f5d46b0df1c70c6",
+  "files": {
+    "m2_train_ru.txt": {
+      "sha256": "a6b3e38f3553c3fb1c917cc1727b8334a5c2734696e545ff20e9fb773a08d1b9",
+      "bytes": 180112,
+      "sentences": 833,
+      "documents": 331
+    },
+    "m2_eval_ru.txt": {
+      "sha256": "089b5ee460516511fd695d0abdf7d0675329543c9065a193af8b9881725616e7",
+      "bytes": 33654,
+      "sentences": 167,
+      "documents": 66
+    },
+    "m2_eval_en.txt": {
+      "sha256": "36b29e9c1c56cafa2d653c3ce6d6e5cccbd07d83cda4bb24d15b2c71a7c53dfb",
+      "bytes": 18168,
+      "sentences": 167,
+      "documents": 66
+    },
+    "m2_train_en.txt": {
+      "sha256": "4ddabb4903766fa4fe648280853bfbc4cc74cf11ecbf15082063e202efa970af",
+      "bytes": 93253,
+      "sentences": 833,
+      "documents": 331
+    }
+  }
+}

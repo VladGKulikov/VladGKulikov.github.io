@@ -1,0 +1,1369 @@
+{
+  "ann": {
+    "ann_flops": 4096000.0,
+    "ann_milliseconds": 0.40959999999999996,
+    "exact_flops": 20480000000.0,
+    "exact_seconds": 2.048,
+    "speedup": 5000.0
+  },
+  "cascade": {
+    "ann_ms": 0.40959999999999996,
+    "context_tokens": 3712,
+    "decode_ms": 1432.6647564469915,
+    "decode_share": 0.8639290480052048,
+    "embed_ms": 0.07757575757575758,
+    "prefill_ms": 120.43377777777778,
+    "rerank_ms": 104.72727272727272,
+    "retrieval_before_prefill_share": 0.06344667718450364,
+    "total_ms": 1658.3129827096177
+  },
+  "chunk_example": [
+    {
+      "chunk_id": "demo:c000",
+      "end_char": 53,
+      "end_token": 8,
+      "source_id": "demo",
+      "start_char": 0,
+      "start_token": 0,
+      "text": "retrieval first splits a long source into overlapping",
+      "token_count": 8
+    },
+    {
+      "chunk_id": "demo:c001",
+      "end_char": 94,
+      "end_token": 13,
+      "source_id": "demo",
+      "start_char": 30,
+      "start_token": 5,
+      "text": "source into overlapping windows while keeping source identifiers",
+      "token_count": 8
+    },
+    {
+      "chunk_id": "demo:c002",
+      "end_char": 125,
+      "end_token": 18,
+      "source_id": "demo",
+      "start_char": 68,
+      "start_token": 10,
+      "text": "keeping source identifiers offsets and citations so later",
+      "token_count": 8
+    },
+    {
+      "chunk_id": "demo:c003",
+      "end_char": 159,
+      "end_token": 22,
+      "source_id": "demo",
+      "start_char": 107,
+      "start_token": 15,
+      "text": "citations so later context packing remains traceable",
+      "token_count": 7
+    }
+  ],
+  "corpus": {
+    "binary_mib": 7.26611328125,
+    "chunk_size": 400,
+    "chunks": 59524,
+    "encoder_seconds_floor": 57.72024242424242,
+    "fp32_mib": 232.515625,
+    "int8_mib": 58.12890625,
+    "overlap": 64,
+    "total_tokens": 20000000
+  },
+  "datasets": {
+    "en": {
+      "documents": [
+        {
+          "document_id": "d00",
+          "source_id": "ann",
+          "text": "HNSW builds a multi-layer small-world graph for approximate nearest-neighbor search over vectors."
+        },
+        {
+          "document_id": "d01",
+          "source_id": "ann",
+          "text": "IVF PQ partitions vectors into clusters and quantizes residuals, reducing index memory for hundreds of millions of objects."
+        },
+        {
+          "document_id": "d02",
+          "source_id": "hybrid",
+          "text": "Reciprocal rank fusion RRF combines BM25 and dense-search rankings without calibrating their scores."
+        },
+        {
+          "document_id": "d03",
+          "source_id": "sparse",
+          "text": "BM25 uses term frequency, inverse document frequency, and document-length normalization."
+        },
+        {
+          "document_id": "d04",
+          "source_id": "dense",
+          "text": "A dense bi encoder encodes the query and document independently as vectors and compares them with cosine similarity."
+        },
+        {
+          "document_id": "d05",
+          "source_id": "rerank",
+          "text": "A cross encoder reads the query and document jointly and scores relevance more accurately, but needs a separate forward pass for every pair."
+        },
+        {
+          "document_id": "d06",
+          "source_id": "chunking",
+          "text": "Overlap between adjacent chunks preserves local context at a document boundary."
+        },
+        {
+          "document_id": "d07",
+          "source_id": "chunking",
+          "text": "Late chunking first encodes the long document as a whole, so pronouns and anaphora retain context after splitting."
+        },
+        {
+          "document_id": "d08",
+          "source_id": "routing",
+          "text": "Long context places the entire long document in the prompt and suits holistic analysis of one file."
+        },
+        {
+          "document_id": "d09",
+          "source_id": "rag",
+          "text": "RAG retrieves relevant corpus passages, assembles a cited context, and sends it to the generator."
+        },
+        {
+          "document_id": "d10",
+          "source_id": "metrics",
+          "text": "nDCG supports graded relevance and applies a logarithmic discount to lower ranks."
+        },
+        {
+          "document_id": "d11",
+          "source_id": "metrics",
+          "text": "MRR measures the reciprocal rank of the first relevant result and ignores additional relevant documents."
+        },
+        {
+          "document_id": "d12",
+          "source_id": "packing",
+          "text": "Context packing removes duplicates, respects a token budget, and preserves source citations."
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q0",
+          "relevance": {
+            "d02": 3,
+            "d09": 1
+          },
+          "text": "how to merge bm25 and dense results"
+        },
+        {
+          "query_id": "q1",
+          "relevance": {
+            "d00": 3,
+            "d01": 1
+          },
+          "text": "a graph for approximate nearest neighbor search"
+        },
+        {
+          "query_id": "q2",
+          "relevance": {
+            "d10": 1,
+            "d11": 3
+          },
+          "text": "position of the first useful result"
+        },
+        {
+          "query_id": "q3",
+          "relevance": {
+            "d06": 2,
+            "d07": 3
+          },
+          "text": "preserve anaphora after splitting a document"
+        },
+        {
+          "query_id": "q4",
+          "relevance": {
+            "d04": 1,
+            "d05": 3
+          },
+          "text": "why a cross encoder cannot score the whole corpus"
+        },
+        {
+          "query_id": "q5",
+          "relevance": {
+            "d08": 3,
+            "d09": 2
+          },
+          "text": "when to read the whole long file instead of retrieval"
+        },
+        {
+          "query_id": "q6",
+          "relevance": {
+            "d09": 2,
+            "d12": 3
+          },
+          "text": "pack retrieved passages with citations into a token limit"
+        }
+      ]
+    },
+    "ru": {
+      "documents": [
+        {
+          "document_id": "d00",
+          "source_id": "ann",
+          "text": "HNSW строит многослойный граф малого мира для приближённого поиска ближайших соседей среди векторов."
+        },
+        {
+          "document_id": "d01",
+          "source_id": "ann",
+          "text": "IVF PQ делит векторы на кластеры и кодирует остатки, уменьшая память индекса для сотен миллионов объектов."
+        },
+        {
+          "document_id": "d02",
+          "source_id": "hybrid",
+          "text": "Reciprocal rank fusion RRF объединяет ранги BM25 и dense поиска без калибровки их оценок."
+        },
+        {
+          "document_id": "d03",
+          "source_id": "sparse",
+          "text": "BM25 использует частоту терма, обратную документную частоту и нормировку длины документа."
+        },
+        {
+          "document_id": "d04",
+          "source_id": "dense",
+          "text": "Dense bi encoder независимо кодирует запрос и документ в векторы, после чего сравнивает их косинусом."
+        },
+        {
+          "document_id": "d05",
+          "source_id": "rerank",
+          "text": "Cross encoder совместно читает запрос и документ и точнее оценивает релевантность, но требует отдельного прохода на каждую пару."
+        },
+        {
+          "document_id": "d06",
+          "source_id": "chunking",
+          "text": "Overlap между соседними чанками сохраняет локальный контекст на границе разбиения документа."
+        },
+        {
+          "document_id": "d07",
+          "source_id": "chunking",
+          "text": "Late chunking сначала кодирует длинный документ целиком, поэтому местоимения и анафоры сохраняют контекст после нарезки."
+        },
+        {
+          "document_id": "d08",
+          "source_id": "routing",
+          "text": "Long context помещает целый длинный документ в промпт и подходит для целостного анализа одного файла."
+        },
+        {
+          "document_id": "d09",
+          "source_id": "rag",
+          "text": "RAG извлекает релевантные фрагменты корпуса, собирает контекст с цитатами и передаёт его генератору."
+        },
+        {
+          "document_id": "d10",
+          "source_id": "metrics",
+          "text": "nDCG учитывает градуированную релевантность и логарифмически штрафует низкие позиции."
+        },
+        {
+          "document_id": "d11",
+          "source_id": "metrics",
+          "text": "MRR измеряет обратный ранг первого релевантного результата и игнорирует остальные найденные документы."
+        },
+        {
+          "document_id": "d12",
+          "source_id": "packing",
+          "text": "Context packing удаляет дубликаты, соблюдает токенный бюджет и сохраняет ссылки на источники."
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q0",
+          "relevance": {
+            "d02": 3,
+            "d09": 1
+          },
+          "text": "как слить результаты bm25 и dense"
+        },
+        {
+          "query_id": "q1",
+          "relevance": {
+            "d00": 3,
+            "d01": 1
+          },
+          "text": "граф соседей для approximate nearest neighbor"
+        },
+        {
+          "query_id": "q2",
+          "relevance": {
+            "d10": 1,
+            "d11": 3
+          },
+          "text": "позиция первого полезного результата"
+        },
+        {
+          "query_id": "q3",
+          "relevance": {
+            "d06": 2,
+            "d07": 3
+          },
+          "text": "как сохранить анафоры после нарезки документа"
+        },
+        {
+          "query_id": "q4",
+          "relevance": {
+            "d04": 1,
+            "d05": 3
+          },
+          "text": "почему cross encoder нельзя запустить на всём корпусе"
+        },
+        {
+          "query_id": "q5",
+          "relevance": {
+            "d08": 3,
+            "d09": 2
+          },
+          "text": "когда лучше прочитать весь длинный файл вместо retrieval"
+        },
+        {
+          "query_id": "q6",
+          "relevance": {
+            "d09": 2,
+            "d12": 3
+          },
+          "text": "context packing: как собрать найденные фрагменты с цитатами в лимит токенов"
+        }
+      ]
+    }
+  },
+  "long_context_vs_rag": {
+    "kv_bytes_per_token": 131072,
+    "long_kv_gib": 24.4140625,
+    "long_prefill_seconds": 6.488888888888889,
+    "long_tokens": 200000,
+    "rag_kv_gib": 0.453125,
+    "rag_prefill_seconds": 0.12043377777777778,
+    "rag_tokens": 3712,
+    "ratio": 53.87931034482759
+  },
+  "retrieval_results": {
+    "en": {
+      "context_pack_q6": {
+        "citations": [
+          "[packing:d12]",
+          "[rag:d09]"
+        ],
+        "max_tokens": 42,
+        "rendered_text": "[packing:d12] Context packing removes duplicates, respects a token budget, and preserves source citations.\n\n[rag:d09] RAG retrieves relevant corpus passages, assembles a cited context, and sends it to the generator.",
+        "selected_ids": [
+          "d12",
+          "d09"
+        ],
+        "skipped": {
+          "d01": "budget",
+          "d03": "budget",
+          "d04": "budget",
+          "d05": "budget",
+          "d06": "budget",
+          "d10": "budget"
+        },
+        "used_tokens": 31
+      },
+      "metrics": {
+        "bm25": {
+          "mrr": 1.0,
+          "ndcg_at_5": 0.9706318690479474,
+          "recall_at_5": 0.9285714285714286
+        },
+        "dense_lsa": {
+          "mrr": 0.9047619047619048,
+          "ndcg_at_5": 0.7301304500524601,
+          "recall_at_5": 0.7142857142857143
+        },
+        "reranked": {
+          "mrr": 1.0,
+          "ndcg_at_5": 0.969811453183001,
+          "recall_at_5": 0.9285714285714286
+        },
+        "rrf": {
+          "mrr": 0.9285714285714286,
+          "ndcg_at_5": 0.8546325517881126,
+          "recall_at_5": 0.8571428571428571
+        }
+      },
+      "rankings": {
+        "bm25": {
+          "q0": [
+            "d02",
+            "d03",
+            "d10",
+            "d09",
+            "d04",
+            "d05",
+            "d12",
+            "d11",
+            "d08",
+            "d01",
+            "d07",
+            "d00",
+            "d06"
+          ],
+          "q1": [
+            "d00",
+            "d02",
+            "d05",
+            "d01",
+            "d06",
+            "d10",
+            "d12",
+            "d09",
+            "d04",
+            "d07",
+            "d03",
+            "d08",
+            "d11"
+          ],
+          "q2": [
+            "d11",
+            "d08",
+            "d07",
+            "d01",
+            "d09",
+            "d04",
+            "d05",
+            "d00",
+            "d02",
+            "d03",
+            "d06",
+            "d10",
+            "d12"
+          ],
+          "q3": [
+            "d07",
+            "d06",
+            "d05",
+            "d03",
+            "d04",
+            "d08",
+            "d10",
+            "d12",
+            "d00",
+            "d09",
+            "d01",
+            "d02",
+            "d11"
+          ],
+          "q4": [
+            "d05",
+            "d09",
+            "d07",
+            "d04",
+            "d11",
+            "d08",
+            "d06",
+            "d10",
+            "d12",
+            "d00",
+            "d01",
+            "d02",
+            "d03"
+          ],
+          "q5": [
+            "d08",
+            "d07",
+            "d09",
+            "d11",
+            "d10",
+            "d01",
+            "d04",
+            "d05",
+            "d00",
+            "d02",
+            "d03",
+            "d06",
+            "d12"
+          ],
+          "q6": [
+            "d12",
+            "d09",
+            "d04",
+            "d01",
+            "d05",
+            "d06",
+            "d10",
+            "d00",
+            "d07",
+            "d02",
+            "d03",
+            "d08",
+            "d11"
+          ]
+        },
+        "dense_lsa": {
+          "q0": [
+            "d02",
+            "d09",
+            "d03",
+            "d11",
+            "d04",
+            "d00",
+            "d12",
+            "d10",
+            "d06",
+            "d07",
+            "d05",
+            "d08",
+            "d01"
+          ],
+          "q1": [
+            "d00",
+            "d02",
+            "d11",
+            "d10",
+            "d04",
+            "d09",
+            "d03",
+            "d05",
+            "d01",
+            "d12",
+            "d06",
+            "d07",
+            "d08"
+          ],
+          "q2": [
+            "d11",
+            "d08",
+            "d09",
+            "d07",
+            "d12",
+            "d03",
+            "d06",
+            "d04",
+            "d01",
+            "d02",
+            "d10",
+            "d00",
+            "d05"
+          ],
+          "q3": [
+            "d06",
+            "d07",
+            "d12",
+            "d03",
+            "d08",
+            "d04",
+            "d09",
+            "d11",
+            "d10",
+            "d05",
+            "d02",
+            "d01",
+            "d00"
+          ],
+          "q4": [
+            "d04",
+            "d03",
+            "d10",
+            "d12",
+            "d06",
+            "d05",
+            "d07",
+            "d09",
+            "d08",
+            "d11",
+            "d02",
+            "d00",
+            "d01"
+          ],
+          "q5": [
+            "d08",
+            "d07",
+            "d12",
+            "d06",
+            "d09",
+            "d11",
+            "d03",
+            "d04",
+            "d01",
+            "d10",
+            "d05",
+            "d02",
+            "d00"
+          ],
+          "q6": [
+            "d04",
+            "d03",
+            "d12",
+            "d10",
+            "d06",
+            "d11",
+            "d09",
+            "d08",
+            "d07",
+            "d01",
+            "d05",
+            "d00",
+            "d02"
+          ]
+        },
+        "reranked": {
+          "q0": [
+            "d02",
+            "d03",
+            "d04",
+            "d09",
+            "d10",
+            "d11",
+            "d12",
+            "d00",
+            "d05"
+          ],
+          "q1": [
+            "d00",
+            "d05",
+            "d10",
+            "d09",
+            "d01",
+            "d04",
+            "d02",
+            "d11",
+            "d06",
+            "d03",
+            "d12"
+          ],
+          "q2": [
+            "d11",
+            "d08",
+            "d07",
+            "d01",
+            "d04",
+            "d09",
+            "d03",
+            "d12",
+            "d05",
+            "d06",
+            "d00"
+          ],
+          "q3": [
+            "d07",
+            "d06",
+            "d05",
+            "d04",
+            "d12",
+            "d08",
+            "d03",
+            "d09",
+            "d10",
+            "d11"
+          ],
+          "q4": [
+            "d05",
+            "d07",
+            "d09",
+            "d04",
+            "d10",
+            "d06",
+            "d12",
+            "d03",
+            "d11",
+            "d08"
+          ],
+          "q5": [
+            "d08",
+            "d07",
+            "d09",
+            "d11",
+            "d10",
+            "d04",
+            "d12",
+            "d06",
+            "d01",
+            "d03",
+            "d05"
+          ],
+          "q6": [
+            "d12",
+            "d09",
+            "d04",
+            "d05",
+            "d10",
+            "d01",
+            "d06",
+            "d03",
+            "d11",
+            "d00",
+            "d08"
+          ]
+        },
+        "rrf": {
+          "q0": [
+            "d02",
+            "d03",
+            "d09",
+            "d04",
+            "d10",
+            "d11",
+            "d12",
+            "d00",
+            "d05"
+          ],
+          "q1": [
+            "d00",
+            "d02",
+            "d10",
+            "d05",
+            "d09",
+            "d11",
+            "d01",
+            "d04",
+            "d06",
+            "d03",
+            "d12"
+          ],
+          "q2": [
+            "d11",
+            "d08",
+            "d07",
+            "d09",
+            "d04",
+            "d01",
+            "d12",
+            "d03",
+            "d05",
+            "d06",
+            "d00"
+          ],
+          "q3": [
+            "d06",
+            "d07",
+            "d03",
+            "d12",
+            "d04",
+            "d08",
+            "d05",
+            "d09",
+            "d10",
+            "d11"
+          ],
+          "q4": [
+            "d04",
+            "d05",
+            "d09",
+            "d07",
+            "d10",
+            "d06",
+            "d03",
+            "d12",
+            "d11",
+            "d08"
+          ],
+          "q5": [
+            "d08",
+            "d07",
+            "d09",
+            "d11",
+            "d04",
+            "d12",
+            "d06",
+            "d10",
+            "d01",
+            "d03",
+            "d05"
+          ],
+          "q6": [
+            "d04",
+            "d12",
+            "d09",
+            "d10",
+            "d06",
+            "d03",
+            "d01",
+            "d05",
+            "d11",
+            "d00",
+            "d08"
+          ]
+        }
+      },
+      "rrf_trace_q0": [
+        {
+          "contributions": {
+            "bm25": 0.01639344262295082,
+            "dense_lsa": 0.01639344262295082
+          },
+          "document_id": "d02",
+          "rank": 1,
+          "score": 0.03278688524590164,
+          "source_ranks": {
+            "bm25": 1,
+            "dense_lsa": 1
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.016129032258064516,
+            "dense_lsa": 0.015873015873015872
+          },
+          "document_id": "d03",
+          "rank": 2,
+          "score": 0.03200204813108039,
+          "source_ranks": {
+            "bm25": 2,
+            "dense_lsa": 3
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.015625,
+            "dense_lsa": 0.016129032258064516
+          },
+          "document_id": "d09",
+          "rank": 3,
+          "score": 0.031754032258064516,
+          "source_ranks": {
+            "bm25": 4,
+            "dense_lsa": 2
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.015384615384615385,
+            "dense_lsa": 0.015384615384615385
+          },
+          "document_id": "d04",
+          "rank": 4,
+          "score": 0.03076923076923077,
+          "source_ranks": {
+            "bm25": 5,
+            "dense_lsa": 5
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.015873015873015872,
+            "dense_lsa": 0.014705882352941176
+          },
+          "document_id": "d10",
+          "rank": 5,
+          "score": 0.03057889822595705,
+          "source_ranks": {
+            "bm25": 3,
+            "dense_lsa": 8
+          }
+        }
+      ]
+    },
+    "ru": {
+      "context_pack_q6": {
+        "citations": [
+          "[rag:d09]",
+          "[packing:d12]",
+          "[chunking:d06]"
+        ],
+        "max_tokens": 42,
+        "rendered_text": "[rag:d09] RAG извлекает релевантные фрагменты корпуса, собирает контекст с цитатами и передаёт его генератору.\n\n[packing:d12] Context packing удаляет дубликаты, соблюдает токенный бюджет и сохраняет ссылки на источники.\n\n[chunking:d06] Overlap между соседними чанками сохраняет локальный контекст на границе разбиения документа.",
+        "selected_ids": [
+          "d09",
+          "d12",
+          "d06"
+        ],
+        "skipped": {
+          "d00": "budget",
+          "d04": "budget",
+          "d07": "source_limit",
+          "d08": "budget",
+          "d11": "budget"
+        },
+        "used_tokens": 42
+      },
+      "metrics": {
+        "bm25": {
+          "mrr": 0.9285714285714286,
+          "ndcg_at_5": 0.8719917335378166,
+          "recall_at_5": 0.7857142857142857
+        },
+        "dense_lsa": {
+          "mrr": 0.7619047619047619,
+          "ndcg_at_5": 0.7552817156182359,
+          "recall_at_5": 0.8571428571428571
+        },
+        "reranked": {
+          "mrr": 1.0,
+          "ndcg_at_5": 0.927756548206894,
+          "recall_at_5": 0.8571428571428571
+        },
+        "rrf": {
+          "mrr": 0.9285714285714286,
+          "ndcg_at_5": 0.8660296227599356,
+          "recall_at_5": 0.7857142857142857
+        }
+      },
+      "rankings": {
+        "bm25": {
+          "q0": [
+            "d02",
+            "d03",
+            "d04",
+            "d05",
+            "d10",
+            "d11",
+            "d12",
+            "d09",
+            "d07",
+            "d08",
+            "d01",
+            "d00",
+            "d06"
+          ],
+          "q1": [
+            "d00",
+            "d08",
+            "d01",
+            "d02",
+            "d03",
+            "d04",
+            "d05",
+            "d06",
+            "d07",
+            "d09",
+            "d10",
+            "d11",
+            "d12"
+          ],
+          "q2": [
+            "d11",
+            "d00",
+            "d01",
+            "d02",
+            "d03",
+            "d04",
+            "d05",
+            "d06",
+            "d07",
+            "d08",
+            "d09",
+            "d10",
+            "d12"
+          ],
+          "q3": [
+            "d07",
+            "d03",
+            "d06",
+            "d04",
+            "d00",
+            "d01",
+            "d02",
+            "d05",
+            "d08",
+            "d09",
+            "d10",
+            "d11",
+            "d12"
+          ],
+          "q4": [
+            "d05",
+            "d04",
+            "d06",
+            "d12",
+            "d01",
+            "d00",
+            "d02",
+            "d03",
+            "d07",
+            "d08",
+            "d09",
+            "d10",
+            "d11"
+          ],
+          "q5": [
+            "d07",
+            "d08",
+            "d00",
+            "d01",
+            "d02",
+            "d03",
+            "d04",
+            "d05",
+            "d06",
+            "d09",
+            "d10",
+            "d11",
+            "d12"
+          ],
+          "q6": [
+            "d09",
+            "d12",
+            "d08",
+            "d11",
+            "d04",
+            "d00",
+            "d01",
+            "d02",
+            "d03",
+            "d05",
+            "d06",
+            "d07",
+            "d10"
+          ]
+        },
+        "dense_lsa": {
+          "q0": [
+            "d03",
+            "d02",
+            "d11",
+            "d04",
+            "d00",
+            "d10",
+            "d08",
+            "d05",
+            "d07",
+            "d09",
+            "d12",
+            "d06",
+            "d01"
+          ],
+          "q1": [
+            "d00",
+            "d01",
+            "d02",
+            "d03",
+            "d04",
+            "d08",
+            "d12",
+            "d11",
+            "d06",
+            "d07",
+            "d10",
+            "d05",
+            "d09"
+          ],
+          "q2": [
+            "d11",
+            "d04",
+            "d03",
+            "d10",
+            "d08",
+            "d07",
+            "d02",
+            "d05",
+            "d09",
+            "d06",
+            "d12",
+            "d00",
+            "d01"
+          ],
+          "q3": [
+            "d07",
+            "d09",
+            "d08",
+            "d06",
+            "d11",
+            "d04",
+            "d12",
+            "d03",
+            "d02",
+            "d10",
+            "d05",
+            "d01",
+            "d00"
+          ],
+          "q4": [
+            "d05",
+            "d10",
+            "d12",
+            "d11",
+            "d04",
+            "d06",
+            "d01",
+            "d03",
+            "d02",
+            "d08",
+            "d07",
+            "d00",
+            "d09"
+          ],
+          "q5": [
+            "d07",
+            "d08",
+            "d09",
+            "d06",
+            "d04",
+            "d11",
+            "d12",
+            "d03",
+            "d01",
+            "d02",
+            "d10",
+            "d05",
+            "d00"
+          ],
+          "q6": [
+            "d07",
+            "d08",
+            "d09",
+            "d06",
+            "d04",
+            "d11",
+            "d12",
+            "d03",
+            "d10",
+            "d01",
+            "d02",
+            "d05",
+            "d00"
+          ]
+        },
+        "reranked": {
+          "q0": [
+            "d02",
+            "d03",
+            "d04",
+            "d11",
+            "d05",
+            "d10",
+            "d08",
+            "d00",
+            "d12",
+            "d09"
+          ],
+          "q1": [
+            "d00",
+            "d01",
+            "d08",
+            "d03",
+            "d05",
+            "d12",
+            "d02",
+            "d04",
+            "d06",
+            "d11"
+          ],
+          "q2": [
+            "d11",
+            "d10",
+            "d00",
+            "d05",
+            "d04",
+            "d02",
+            "d03",
+            "d01",
+            "d08",
+            "d07",
+            "d06"
+          ],
+          "q3": [
+            "d07",
+            "d04",
+            "d06",
+            "d03",
+            "d08",
+            "d11",
+            "d09",
+            "d00",
+            "d01",
+            "d02",
+            "d12",
+            "d05"
+          ],
+          "q4": [
+            "d05",
+            "d04",
+            "d01",
+            "d06",
+            "d12",
+            "d10",
+            "d11",
+            "d03",
+            "d00",
+            "d02"
+          ],
+          "q5": [
+            "d08",
+            "d07",
+            "d03",
+            "d01",
+            "d00",
+            "d04",
+            "d06",
+            "d09",
+            "d02",
+            "d11",
+            "d12",
+            "d05"
+          ],
+          "q6": [
+            "d09",
+            "d12",
+            "d08",
+            "d11",
+            "d04",
+            "d06",
+            "d07",
+            "d00",
+            "d01",
+            "d02",
+            "d03"
+          ]
+        },
+        "rrf": {
+          "q0": [
+            "d02",
+            "d03",
+            "d04",
+            "d11",
+            "d10",
+            "d05",
+            "d00",
+            "d08",
+            "d12",
+            "d09"
+          ],
+          "q1": [
+            "d00",
+            "d01",
+            "d02",
+            "d08",
+            "d03",
+            "d04",
+            "d05",
+            "d12",
+            "d06",
+            "d11"
+          ],
+          "q2": [
+            "d11",
+            "d04",
+            "d03",
+            "d02",
+            "d05",
+            "d00",
+            "d01",
+            "d10",
+            "d08",
+            "d07",
+            "d06"
+          ],
+          "q3": [
+            "d07",
+            "d06",
+            "d03",
+            "d04",
+            "d09",
+            "d08",
+            "d00",
+            "d11",
+            "d01",
+            "d02",
+            "d12",
+            "d05"
+          ],
+          "q4": [
+            "d05",
+            "d04",
+            "d12",
+            "d06",
+            "d01",
+            "d03",
+            "d10",
+            "d11",
+            "d00",
+            "d02"
+          ],
+          "q5": [
+            "d07",
+            "d08",
+            "d04",
+            "d03",
+            "d00",
+            "d09",
+            "d01",
+            "d06",
+            "d02",
+            "d11",
+            "d12",
+            "d05"
+          ],
+          "q6": [
+            "d09",
+            "d08",
+            "d12",
+            "d11",
+            "d04",
+            "d07",
+            "d06",
+            "d00",
+            "d01",
+            "d02",
+            "d03"
+          ]
+        }
+      },
+      "rrf_trace_q0": [
+        {
+          "contributions": {
+            "bm25": 0.01639344262295082,
+            "dense_lsa": 0.016129032258064516
+          },
+          "document_id": "d02",
+          "rank": 1,
+          "score": 0.03252247488101534,
+          "source_ranks": {
+            "bm25": 1,
+            "dense_lsa": 2
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.016129032258064516,
+            "dense_lsa": 0.01639344262295082
+          },
+          "document_id": "d03",
+          "rank": 2,
+          "score": 0.03252247488101534,
+          "source_ranks": {
+            "bm25": 2,
+            "dense_lsa": 1
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.015873015873015872,
+            "dense_lsa": 0.015625
+          },
+          "document_id": "d04",
+          "rank": 3,
+          "score": 0.03149801587301587,
+          "source_ranks": {
+            "bm25": 3,
+            "dense_lsa": 4
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.015151515151515152,
+            "dense_lsa": 0.015873015873015872
+          },
+          "document_id": "d11",
+          "rank": 4,
+          "score": 0.031024531024531024,
+          "source_ranks": {
+            "bm25": 6,
+            "dense_lsa": 3
+          }
+        },
+        {
+          "contributions": {
+            "bm25": 0.015384615384615385,
+            "dense_lsa": 0.015151515151515152
+          },
+          "document_id": "d10",
+          "rank": 5,
+          "score": 0.030536130536130537,
+          "source_ranks": {
+            "bm25": 5,
+            "dense_lsa": 6
+          }
+        }
+      ]
+    }
+  },
+  "schema_version": 2,
+  "storage": {
+    "binary_gib": 1.1920928955078125,
+    "dimension": 1024,
+    "fp16_gib": 19.073486328125,
+    "fp32_gib": 38.14697265625,
+    "int8_gib": 9.5367431640625,
+    "mrl256_int8_gib": 2.384185791015625,
+    "num_vectors": 10000000
+  }
+}

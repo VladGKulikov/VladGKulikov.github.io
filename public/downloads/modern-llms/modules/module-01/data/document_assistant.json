@@ -1,0 +1,68 @@
+{
+  "fixture_id": "document-assistant-v1",
+  "provenance": "Original fictional teaching documents; no company policy or external model output is represented.",
+  "languages": {
+    "ru": {
+      "question": "Сколько дней нужно хранить журнал эксперимента после его завершения?",
+      "documents": {
+        "A": "Журнал эксперимента хранится 30 дней после завершения эксперимента.",
+        "B": "Временная выгрузка удаляется через 7 дней после создания."
+      },
+      "labels": [
+        "Верный ответ и источник",
+        "Неверный срок",
+        "Источник о другом объекте"
+      ]
+    },
+    "en": {
+      "question": "How many days must an experiment log be kept after the experiment ends?",
+      "documents": {
+        "A": "Keep an experiment log for 30 days after the experiment ends.",
+        "B": "Delete a temporary export 7 days after it is created."
+      },
+      "labels": [
+        "Correct answer and source",
+        "Wrong retention period",
+        "Source about another object"
+      ]
+    }
+  },
+  "reference": {
+    "days": 30,
+    "document_id": "A"
+  },
+  "prepared_answers": [
+    {
+      "days": 30,
+      "document_id": "A"
+    },
+    {
+      "days": 7,
+      "document_id": "A"
+    },
+    {
+      "days": 30,
+      "document_id": "B"
+    }
+  ],
+  "expected": [
+    {
+      "answer_correct": true,
+      "quote_exists": true,
+      "supported": true,
+      "accepted": true
+    },
+    {
+      "answer_correct": false,
+      "quote_exists": true,
+      "supported": false,
+      "accepted": false
+    },
+    {
+      "answer_correct": true,
+      "quote_exists": true,
+      "supported": false,
+      "accepted": false
+    }
+  ]
+}

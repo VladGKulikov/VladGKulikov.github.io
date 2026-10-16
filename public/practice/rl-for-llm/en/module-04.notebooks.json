@@ -1,0 +1,120 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-04",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Module 4 lab — policy gradients, GAE, and PPO",
+      "format": "ipynb",
+      "filename": "module-04-policy-gradients-ppo.en.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-04-policy-gradients-ppo.en.ipynb",
+      "bytes": 18873,
+      "sha256": "194fe5fcdf697e97860edabac190a7ac5e1aa87e89543f5f8283a6eb26ab8cad",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Module 4 lab — policy gradients, GAE, and PPO\n\nThis notebook assembles the complete computational route of the module: baseline behavior, a realistic PPO loop, and response-token masking for autoregressive policies. CartPole is implemented inside the course, so the notebook is independent of Gymnasium version changes. The code keeps task termination, external truncation, and rollout-buffer cuts distinct.\n\nThe `smoke` profile is a quick end-to-end CPU check. The `full` profile increases both updates and random seeds. The numbers and plots are course-code results under the stated protocol, not external benchmarks."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nfrom dataclasses import replace\nfrom pathlib import Path\nimport os\nimport sys\nimport time\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nROOT = Path.cwd()\nif not (ROOT / \"modules\").is_dir():\n    for parent in [ROOT, *ROOT.parents]:\n        if (parent / \"modules\" / \"module-04\").is_dir():\n            ROOT = parent\n            break\nMODULE_DIR = ROOT / \"modules\" / \"module-04\"\nif str(MODULE_DIR) not in sys.path:\n    sys.path.insert(0, str(MODULE_DIR))\n\nfrom module_4_reference import (\n    gae_advantages,\n    masked_token_ppo_objective,\n    masked_token_ppo_terms,\n    response_token_mask,\n    sequence_log_probability_ratio,\n    sequence_probability_ratio,\n    simulate_group_baseline_bias,\n)\nfrom module_4_ppo_training import (\n    aggregate_training_runs,\n    profile_config,\n    train_ppo,\n)\n\nRUN_MODE = os.environ.get(\"RL_LLM_M4_PROFILE\", \"smoke\").strip().lower()\nif RUN_MODE not in {\"smoke\", \"full\"}:\n    raise ValueError(\"RL_LLM_M4_PROFILE must be 'smoke' or 'full'\")\n\nSEEDS = [11, 37] if RUN_MODE == \"smoke\" else [11, 37, 71, 101, 131]\nprint(\"repository root:\", ROOT)\nprint(\"profile:\", RUN_MODE, \"| seeds:\", SEEDS)\n\nfrom module_4_llm_sequence import (\n    decode_sequence,\n    evaluate_sequence_policy,\n    sequence_profile_config,\n    train_tiny_sequence_policy,\n)\n"
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Baselines: variance reduction and finite-group scale\n\nCompare no baseline, centering on the same group mean, and RLOO. The simulation does not replace the algebra; it checks the predicted $(G-1)/G$ factor and reveals the spread of group gradient estimates."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "baseline_result = simulate_group_baseline_bias(\n    group_size=8,\n    groups=80_000 if RUN_MODE == \"smoke\" else 400_000,\n    seed=2026,\n)\nfor key, value in baseline_result.items():\n    print(f\"{key:>24s}: {value: .6f}\")\n\nlabels = [\"no baseline\", \"same-group mean\", \"RLOO\"]\nstds = [\n    baseline_result[\"plain_std\"],\n    baseline_result[\"same_group_std\"],\n    baseline_result[\"rloo_std\"],\n]\nfig, ax = plt.subplots(figsize=(8.2, 4.8))\nax.bar(labels, stds)\nax.set_ylabel(\"standard deviation of group gradient estimates\")\nax.set_title(\"A baseline changes variance; same-group centering also changes scale\")\nax.grid(axis=\"y\", alpha=0.25)\nplt.xticks(rotation=8)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. GAE: two masks answer two different questions\n\n`terminated` decides whether the next-state value may be used for bootstrapping. `trace_cuts` decides whether the GAE recursion may continue into the next array record. A rollout-buffer boundary can permit bootstrap while still forbidding recursion into an unrelated record."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "rewards = np.array([1.0, 100.0])\nvalues = np.array([2.0, 0.0])\nnext_values = np.array([10.0, 0.0])\nterminated = np.array([False, True])\n\n# Record 0 is cut by the rollout buffer, not by a task terminal. It bootstraps\n# from V(next_state)=10, but its GAE recursion must not leak into record 1.\ntrace_cuts = np.array([True, True])\nadvantages = gae_advantages(\n    rewards,\n    values,\n    next_values,\n    terminated,\n    trace_cuts,\n    gamma=0.9,\n    gae_lambda=1.0,\n)\nprint(\"advantages with separate bootstrap and trace masks:\", advantages)\nprint(\"first record target:\", values[0] + advantages[0])\nassert np.allclose(advantages, [8.0, 100.0])\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Complete PPO on CartPole\n\nThe implementation includes an actor–critic, fixed rollouts, stored old log-probabilities and values, GAE, repeated shuffled minibatch epochs, clipped policy and value objectives, entropy regularization, gradient-norm clipping, KL diagnostics, and separate deterministic evaluation."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "runs = []\nstarted = time.perf_counter()\nfor seed in SEEDS:\n    config = profile_config(RUN_MODE, seed=seed)\n    # In smoke mode, evaluate every second update to keep the notebook quick.\n    if RUN_MODE == \"smoke\":\n        config = replace(config, evaluation_every=2)\n    result = train_ppo(config)\n    runs.append(result)\n    print(\n        f\"seed={seed:3d} | final mean={result['final_evaluation_mean']:7.2f} \"\n        f\"± {result['final_evaluation_std']:6.2f}\"\n    )\nelapsed = time.perf_counter() - started\ncurve = aggregate_training_runs(runs)\nprint(f\"training wall time: {elapsed:.2f} s\")\n"
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "steps = curve[\"environment_steps\"]\nfinite = np.isfinite(curve[\"median\"])\nfig, ax = plt.subplots(figsize=(9.0, 5.0))\nax.fill_between(\n    steps[finite], curve[\"q25\"][finite], curve[\"q75\"][finite],\n    alpha=0.25, label=\"interquartile range\",\n)\nax.plot(steps[finite], curve[\"median\"][finite], marker=\"o\", label=\"median evaluation return\")\nfor run in curve[\"all_curves\"]:\n    ax.plot(steps[finite], run[finite], alpha=0.25, linewidth=0.9)\nax.axhline(500.0, linestyle=\"--\", linewidth=1.0, label=\"time-limit ceiling\")\nax.set_xlabel(\"environment transitions\")\nax.set_ylabel(\"deterministic evaluation return\")\nax.set_title(f\"Self-contained PPO on CartPole — {RUN_MODE} profile\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "A rising curve from one convenient seed would not establish robustness, and CartPole performance does not transfer automatically to LLMs. The plot verifies the end-to-end implementation contract: collection, targets, repeated optimization, and evaluation work together. Meaningful method comparisons require aligned budgets, several seeds, and uncertainty summaries."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "# Diagnostics from the first seed. They are batch-local quantities, not universal thresholds.\nhistory = runs[0][\"history\"]\nupdates = np.asarray(history[\"update\"])\nfig, ax = plt.subplots(figsize=(9.0, 4.8))\nax.plot(updates, history[\"approx_kl\"], marker=\"o\", label=\"non-negative approximate KL\")\nax.plot(updates, history[\"active_clip_fraction\"], marker=\"s\", label=\"active clip fraction\")\nax.plot(updates, history[\"ratio_outside_fraction\"], marker=\"^\", label=\"ratio outside fraction\")\nax.set_xlabel(\"PPO update\")\nax.set_title(\"Local optimization diagnostics for one seed\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Autoregressive responses: shift, mask, and reduction unit\n\nThe next example deliberately places extreme values in prompt and padding columns. A correct response mask must remove them completely. It then compares local token ratios with the exact response-level product and shows three reductions of the tokenwise PPO surrogate.\n\nFor broader tokenization context, see *Modern LLMs*, Module 2 “Tokenization and Embeddings” (`modern_llms.module_02_tokenization`). The post-training architecture is mapped in Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`). This notebook remains self-contained."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "# Original token positions: BOS, prompt_1, prompt_2, response_1, response_2, EOS, PAD.\ninput_ids = np.array([\n    [1, 10, 11, 20, 21, 2, 0],\n    [1, 12, 30, 2, 0, 0, 0],\n])\nprompt_lengths = np.array([3, 2])\nmask = response_token_mask(\n    input_ids,\n    prompt_lengths,\n    pad_token_id=0,\n    eos_token_id=2,\n    include_eos=True,\n)\n\n# Columns align with labels input_ids[:, 1:]. Prompt and padding values below are\n# deliberately extreme so that the mask contract is easy to audit.\nold_log_probs = np.array([\n    [-9.0, -8.0, -1.0, -1.2, -0.8, -20.0],\n    [-7.0, -0.7, -0.9, -30.0, -40.0, -50.0],\n])\nnew_log_probs = np.array([\n    [ 9.0,  8.0, -0.7, -1.5, -0.9,  20.0],\n    [ 7.0, -0.5, -1.2,  30.0,  40.0,  50.0],\n])\nadvantages = np.array([1.5, -0.8])\n\nratio, unclipped, clipped, pessimistic = masked_token_ppo_terms(\n    new_log_probs,\n    old_log_probs,\n    advantages,\n    mask,\n    clip_epsilon=0.2,\n)\nprint(\"response mask aligned with input_ids[:, 1:]:\\n\", mask)\nprint(\"local ratios (masked positions are multiplicative identity 1):\\n\", np.round(ratio, 4))\nprint(\"exact sequence log-ratios:\", np.round(sequence_log_probability_ratio(new_log_probs, old_log_probs, mask), 4))\nprint(\"exact sequence ratios:\", np.round(sequence_probability_ratio(new_log_probs, old_log_probs, mask), 4))\nfor reduction in [\"token_mean\", \"sequence_mean\", \"sequence_sum_mean\"]:\n    value = masked_token_ppo_objective(\n        new_log_probs, old_log_probs, advantages, mask,\n        clip_epsilon=0.2, reduction=reduction,\n    )\n    print(f\"{reduction:>18s}: {value: .6f}\")\n\nassert np.all(pessimistic[mask == 0] == 0.0)\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. A minimal autoregressive RLOO/PPO training run\n\nThe previous autoregressive section exposed the tensor contract without training a policy. We now run the complete path. A small GRU receives one of three prompts and must generate the corresponding two-symbol answer followed by a sampled `EOS`. A deterministic verifier supplies dense but non-differentiable reward. For each prompt, the code samples a response group, constructs leave-one-out advantages, freezes old token log-probabilities, and performs several PPO epochs.\n\nThis is neither a language-quality model nor a miniature claim about production RLHF. Its purpose is narrower and more useful: one executable path contains variable response lengths, the causal shift, prompt/padding masks, generated `EOS`, a group baseline, and token-level clipping."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "sequence_config = sequence_profile_config(RUN_MODE)\nprint(\"Autoregressive experiment profile:\", sequence_config)\nsequence_run = train_tiny_sequence_policy(seed=5, **sequence_config)\nfirst_batch = sequence_run[\"first_batch\"]\nassert first_batch is not None\n\nprint(\"First rows of the initial rollout:\")\nfor i in range(min(6, len(first_batch.prompt_classes))):\n    print(\n        f\"  prompt={first_batch.prompt_classes[i]} | \"\n        f\"{decode_sequence(first_batch.input_ids[i].cpu().numpy())} | \"\n        f\"reward={first_batch.rewards[i]:.2f} | \"\n        f\"advantage={first_batch.advantages[i]:+.3f} | \"\n        f\"mask={first_batch.response_mask[i].cpu().numpy().astype(int).tolist()}\"\n    )\nfor prompt_class in range(3):\n    idx = np.flatnonzero(first_batch.prompt_classes == prompt_class)\n    np.testing.assert_allclose(first_batch.advantages[idx].sum(), 0.0, atol=1e-12)\nprint(\"RLOO advantages sum to zero within every prompt group.\")\n"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "sequence_history = sequence_run[\"history\"]\niterations = np.asarray(sequence_history[\"iteration\"])\nmean_reward = np.asarray(sequence_history[\"evaluation_mean_reward\"])\nplt.figure(figsize=(9, 5))\nplt.plot(iterations, mean_reward)\nplt.xlabel(\"Iteration\")\nplt.ylabel(\"Mean evaluation reward\")\nplt.title(\"A tiny autoregressive policy learns from verifiable reward\")\nplt.tight_layout()\nplt.show()\nprint(\"initial evaluation reward:\", float(mean_reward[0]))\nprint(\"final evaluation reward:\", sequence_run[\"final_evaluation\"][\"mean_reward\"])\n"
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "success = np.asarray(sequence_history[\"success_rate\"])\nplt.figure(figsize=(9, 5))\nplt.plot(iterations, success)\nplt.ylim(-0.02, 1.02)\nplt.xlabel(\"Iteration\")\nplt.ylabel(\"Exact-response success rate\")\nplt.title(\"Whole-response success during training\")\nplt.tight_layout()\nplt.show()\n\nprint(\"Greedy responses after training:\")\ngreedy = evaluate_sequence_policy(\n    sequence_run[\"model\"], samples_per_prompt=1, deterministic=True\n)\nfor prompt_class, row, reward in zip(\n    greedy[\"prompt_classes\"], greedy[\"input_ids\"], greedy[\"rewards\"]\n):\n    print(f\"  prompt={prompt_class} | {decode_sequence(row)} | reward={reward:.2f}\")\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "### What the run establishes—and what it does not\n\nThe curve checks implementation agreement: reward changes the probability of the desired response, while prompt tokens, padding, and positions after `EOS` do not enter policy loss. It does not establish PPO robustness for large language models. Production post-training adds a reference policy, distributed rollout collection, a much richer reward model or verifier, length control, mixed objectives, off-policy delay, and substantial systems constraints.\n\nFor the broader architecture, see *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`). The variational logic behind entropy and KL regularization is developed in *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`). The notebook itself remains self-contained; both links are optional deepening."
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 6. Practical takeaways\n\n\n1. REINFORCE does not require differentiable reward, but its variance depends on parameterization and baseline.\n\n2. Advantages used by the actor loss need an explicit `detach` contract.\n\n3. GAE needs at least two logical masks: one for bootstrap and one for backward recursion.\n\n4. PPO clipping limits local surrogate gain; it does not guarantee a trust region.\n\n5. A complete PPO implementation includes rollout collection, a value function, repeated minibatch updates, diagnostics, and a multi-seed protocol.\n\n6. Transferring the method to LLMs requires careful causal shift, response masking, `EOS` handling, and an explicit token-reduction rule.\n\n7. Group leave-one-out advantages fit into a real autoregressive loop, but one response-level coefficient still does not solve token-level credit assignment.\n\n8. Every instructional curve needs a boundary of inference: a successful smoke run validates the code contract, not the method’s scaling behavior."
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "courseKey": "information-theory-for-ml",
+  "moduleKey": "module-04",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "Exercise 1. See the Jensen gap",
+      "prompt": "Let $X$ take values $0$ and $2$, each with probability $1/2$.\n\n\n1. For $\\phi(x)=x^2$, compute $\\phi(\\mathbb E X)$ and $\\mathbb E\\phi(X)$.\n\n2. Show that their difference equals $\\operatorname{Var}(X)$.\n\n3. Repeat the calculation for $\\phi(x)=e^x$.\n\n4. Explain why both inequalities are strict.",
+      "answer": "Let\n\n$$\nP(X=0)=P(X=2)=\\frac12.\n$$\n\nThen\n\n$$\n\\mathbb E X=1.\n$$\n\n### 1. The square\n\nFor $\\phi(x)=x^2$,\n\n$$\n\\phi(\\mathbb E X)=1^2=1,\n$$\n\nwhile\n\n$$\n\\mathbb E\\phi(X)\n=\n\\frac12\\cdot0^2+\\frac12\\cdot2^2\n=2.\n$$\n\nHence\n\n$$\n\\mathbb E[X^2]-(\\mathbb E X)^2=2-1=1.\n$$\n\n### 2. Relation to variance\n\nBy definition,\n\n$$\n\\operatorname{Var}(X)\n=\n\\mathbb E[X^2]-(\\mathbb E X)^2\n=1.\n$$\n\nThus the Jensen gap for $x^2$ is exactly the variance.\n\n### 3. The exponential\n\nFor $\\phi(x)=e^x$,\n\n$$\n\\phi(\\mathbb E X)=e\\approx2.71828,\n$$\n\nwhereas\n\n$$\n\\mathbb E[e^X]\n=\n\\frac{1+e^2}{2}\n\\approx4.19453.\n$$\n\nThe gap is approximately\n\n$$\n4.19453-2.71828\n\\approx1.47625.\n$$\n\n### 4. Why both inequalities are strict\n\nBoth $x^2$ on $\\mathbb R$ and $e^x$ are strictly convex. Since $X$ is not almost surely constant, equality in Jensen is impossible.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "Exercise 2. Two ways to build an ensemble",
+      "prompt": "Two models predict\n\n$$\nq_1=(0.7,0.2,0.1),\n\\qquad\nq_2=(0.2,0.3,0.5),\n$$\n\nand the observed class is the first one.\n\n\n1. Compute the average NLL of the members.\n\n2. Compute the NLL of the arithmetic probability mixture.\n\n3. Construct the normalized geometric mean and compute its NLL.\n\n4. Verify both Jensen inequalities.\n\n5. Explain why the result does not imply higher top-1 accuracy on a dataset.",
+      "answer": "We have\n\n$$\nq_1=(0.7,0.2,0.1),\n\\qquad\nq_2=(0.2,0.3,0.5),\n$$\n\nequal weights, and target class $y=1$.\n\n### 1. Average member NLL\n\n$$\nL_1=-\\ln0.7\\approx0.356675,\n$$\n\n$$\nL_2=-\\ln0.2\\approx1.609438.\n$$\n\nTherefore\n\n$$\n\\bar L\n=\n\\frac{L_1+L_2}{2}\n\\approx0.983056.\n$$\n\n### 2. Arithmetic probability mixture\n\n$$\nq_{\\mathrm{mix}}\n=\n\\frac{q_1+q_2}{2}\n=\n(0.45,0.25,0.30).\n$$\n\nFor the target class,\n\n$$\nL_{\\mathrm{mix}}\n=\n-\\ln0.45\n\\approx0.798508,\n$$\n\nso\n\n$$\n0.798508<0.983056.\n$$\n\n### 3. Normalized geometric mean\n\nThe unnormalized weights are\n\n$$\nr_k=\\sqrt{q_1(k)q_2(k)}.\n$$\n\nThus\n\n$$\nr\n=\n(\\sqrt{0.14},\\sqrt{0.06},\\sqrt{0.05})\n\\approx\n(0.374166,0.244949,0.223607).\n$$\n\nAfter normalization,\n\n$$\nq_{\\mathrm{geom}}\n\\approx\n(0.443997,0.290664,0.265339).\n$$\n\nIts NLL is\n\n$$\nL_{\\mathrm{geom}}\n=\n-\\ln0.443997\n\\approx0.811938,\n$$\n\nagain below the average member NLL:\n\n$$\n0.811938<0.983056.\n$$\n\n### 4. What has been verified\n\nFor probability averaging, Jensen is applied to $-\\log$:\n\n$$\n-\\log\\frac{q_1(y)+q_2(y)}2\n\\le\n\\frac{-\\log q_1(y)-\\log q_2(y)}2.\n$$\n\nFor logit averaging, we use convexity of softmax cross-entropy in the logits.\n\n### 5. Why dataset accuracy does not follow\n\nThe inequalities concern NLL of the observed class. Accuracy depends only on whether the argmax equals the label, while NLL uses the entire assigned probability. An ensemble may improve NLL without changing accuracy, and it may move some argmax decisions in either direction.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "Exercise 3. The ELBO in a Gaussian model",
+      "prompt": "Let\n\n$$\nz\\sim\\mathcal N(0,1),\n\\qquad\nx\\mid z\\sim\\mathcal N(z,1),\n$$\n\nand suppose $x=1$ is observed.\n\n\n1. Find the marginal distribution $p(x)$.\n\n2. Find the exact posterior $p(z\\mid x)$.\n\n3. For $q(z\\mid x)=\\mathcal N(0,1)$, compute\n   $$\n   D_{\\mathrm{KL}}(q(z\\mid x)\\|p(z\\mid x)).\n   $$\n\n4. Use the exact gap to obtain the ELBO.\n\n5. State which choice of $q$ makes the bound tight.",
+      "answer": "The model is\n\n$$\nz\\sim\\mathcal N(0,1),\n\\qquad\nx\\mid z\\sim\\mathcal N(z,1).\n$$\n\n### 1. Marginal distribution\n\nWrite\n\n$$\nx=z+\\varepsilon,\n\\qquad\n\\varepsilon\\sim\\mathcal N(0,1),\n$$\n\nwith independent $z$ and $\\varepsilon$. Hence\n\n$$\np(x)=\\mathcal N(0,2).\n$$\n\nAt $x=1$,\n\n$$\n\\log p(1)\n=\n-\\frac12\\log(4\\pi)-\\frac14\n\\approx-1.515512.\n$$\n\n### 2. Exact posterior\n\nThe posterior precision is\n\n$$\n1+1=2,\n$$\n\nso its variance is $1/2$. Its mean is\n\n$$\n\\frac{1\\cdot x}{1+1}\n=\n\\frac12.\n$$\n\nTherefore\n\n$$\np(z\\mid x=1)\n=\n\\mathcal N\\left(\\frac12,\\frac12\\right).\n$$\n\n### 3. KL for $q=\\mathcal N(0,1)$\n\nFor univariate Gaussians,\n\n$$\nD_{\\mathrm{KL}}\n\\bigl(\n\\mathcal N(\\mu_q,\\sigma_q^2)\n\\|\n\\mathcal N(\\mu_p,\\sigma_p^2)\n\\bigr)\n=\n\\frac12\n\\left[\n\\frac{\\sigma_q^2}{\\sigma_p^2}\n+\n\\frac{(\\mu_p-\\mu_q)^2}{\\sigma_p^2}\n-1\n+\n\\ln\\frac{\\sigma_p^2}{\\sigma_q^2}\n\\right].\n$$\n\nSubstituting\n\n$$\n\\mu_q=0,\\quad\n\\sigma_q^2=1,\\quad\n\\mu_p=\\frac12,\\quad\n\\sigma_p^2=\\frac12\n$$\n\ngives\n\n$$\n\\begin{aligned}\nD_{\\mathrm{KL}}(q\\|p)\n&=\n\\frac12\n\\left[\n2+\\frac{(1/2)^2}{1/2}-1+\\ln\\frac12\n\\right]\\\\\n&=\n\\frac12\n\\left[\n\\frac32-\\ln2\n\\right]\\\\\n&\\approx0.403426.\n\\end{aligned}\n$$\n\n### 4. ELBO\n\nUsing the exact gap,\n\n$$\n\\log p(x)-\\operatorname{ELBO}(x)\n=\nD_{\\mathrm{KL}}(q\\|p(z\\mid x)).\n$$\n\nTherefore\n\n$$\n\\operatorname{ELBO}(1)\n=\n-1.515512-0.403426\n\\approx-1.918939.\n$$\n\n### 5. Tightness\n\nChoose\n\n$$\nq(z\\mid x)\n=\np(z\\mid x)\n=\n\\mathcal N\\left(\\frac12,\\frac12\\right).\n$$\n\nThen the KL gap is zero.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "Exercise 4. Log-sum and coarse-graining",
+      "prompt": "For\n\n$$\nP=(0.4,0.3,0.2,0.1),\n\\qquad\nQ=(0.1,0.2,0.3,0.4),\n$$\n\nmerge the outcomes into groups $\\{1,2\\}$ and $\\{3,4\\}$.\n\n\n1. Compute $D(P\\|Q)$.\n\n2. Compute the KL divergence between the grouped distributions.\n\n3. Show how the inequality follows from two applications of log-sum.\n\n4. State the equality condition in terms of the conditional distributions within each group.",
+      "answer": "### 1. KL before grouping\n\n$$\n\\begin{aligned}\nD(P\\|Q)\n&=\n0.4\\ln\\frac{0.4}{0.1}\n+\n0.3\\ln\\frac{0.3}{0.2}\\\\\n&\\quad+\n0.2\\ln\\frac{0.2}{0.3}\n+\n0.1\\ln\\frac{0.1}{0.4}\\\\\n&\\approx0.456435\\ \\text{nats}.\n\\end{aligned}\n$$\n\n### 2. KL after grouping\n\nThe grouped distributions are\n\n$$\n\\bar P=(0.7,0.3),\n\\qquad\n\\bar Q=(0.3,0.7).\n$$\n\nThus\n\n$$\n\\begin{aligned}\nD(\\bar P\\|\\bar Q)\n&=\n0.7\\ln\\frac{0.7}{0.3}\n+\n0.3\\ln\\frac{0.3}{0.7}\\\\\n&\\approx0.338919\\ \\text{nats}.\n\\end{aligned}\n$$\n\nHence\n\n$$\nD(\\bar P\\|\\bar Q)\n<\nD(P\\|Q).\n$$\n\n### 3. Two log-sum applications\n\nFor the first group,\n\n$$\n0.4\\ln\\frac{0.4}{0.1}\n+\n0.3\\ln\\frac{0.3}{0.2}\n\\ge\n0.7\\ln\\frac{0.7}{0.3}.\n$$\n\nFor the second,\n\n$$\n0.2\\ln\\frac{0.2}{0.3}\n+\n0.1\\ln\\frac{0.1}{0.4}\n\\ge\n0.3\\ln\\frac{0.3}{0.7}.\n$$\n\nAdding the inequalities proves the result.\n\n### 4. Equality condition\n\nWithin each group, the conditional distributions under $P$ and $Q$ must match:\n\n$$\nP(X=i\\mid X\\in G)\n=\nQ(X=i\\mid X\\in G)\n$$\n\nfor every relevant $i\\in G$.\n\nThus, once the group is known, the finer state must provide no additional ability to distinguish $P$ from $Q$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "bonus",
+      "title": "Bonus. The Jensen gap as a Bregman divergence",
+      "prompt": "Prove that, for differentiable convex $\\phi$,\n\n$$\n\\mathbb E\\phi(X)-\\phi(\\mathbb E X)\n=\n\\mathbb E D_\\phi(X,\\mathbb E X).\n$$\n\nCheck the identity for $\\phi(x)=x^2/2$.",
+      "answer": "Let\n\n$$\nm=\\mathbb E X.\n$$\n\nBy definition,\n\n$$\nD_\\phi(X,m)\n=\n\\phi(X)-\\phi(m)-\\nabla\\phi(m)^\\top(X-m).\n$$\n\nTaking expectations,\n\n$$\n\\begin{aligned}\n\\mathbb E D_\\phi(X,m)\n&=\n\\mathbb E\\phi(X)-\\phi(m)\n-\\nabla\\phi(m)^\\top(\\mathbb E X-m)\\\\\n&=\n\\mathbb E\\phi(X)-\\phi(m).\n\\end{aligned}\n$$\n\nSince $m=\\mathbb E X$,\n\n$$\n\\mathbb E D_\\phi(X,\\mathbb E X)\n=\n\\mathbb E\\phi(X)-\\phi(\\mathbb E X).\n$$\n\nFor $\\phi(x)=x^2/2$,\n\n$$\nD_\\phi(x,m)\n=\n\\frac{x^2}{2}-\\frac{m^2}{2}-m(x-m)\n=\n\\frac12(x-m)^2.\n$$\n\nTherefore\n\n$$\n\\mathbb E D_\\phi(X,\\mathbb E X)\n=\n\\frac12\\operatorname{Var}(X),\n$$\n\nwhich matches the Jensen gap for $x^2/2$.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/information-theory-for-ml/course-materials.zip",
+    "bytes": 34732,
+    "sha256": "87cc3ec74e933f9fbbfe65d3595ebd941238ef2439648e4840d8467c703444c6"
+  }
+}

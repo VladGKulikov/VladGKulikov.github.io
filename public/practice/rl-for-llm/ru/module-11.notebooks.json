@@ -1,0 +1,130 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-11",
+  "language": "ru",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Модуль 11. Практикум: агентная среда, кредитование ходов и длинные траектории",
+      "format": "ipynb",
+      "filename": "module-11-agentic-rl.ru.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-11-agentic-rl.ru.ipynb",
+      "bytes": 32012,
+      "sha256": "514334a302431b524b96ece3d55b11d342038d08a7250e3154b8e6fd6310ee7e",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Модуль 11. Практикум: агентная среда, кредитование ходов и длинные траектории\n\nЭтот ноутбук соединяет математические контракты лекции с небольшой, но полноценной частично наблюдаемой средой. Агент должен осмотреть комнату, запомнить одноходовую подсказку, выбрать ключ, открыть правильную дверь и завершить задачу. В вычислительном маршруте используются настоящий рекуррентный актор–критик, поведенческие логарифмы вероятностей, версии политики, истинные терминалы и внешние усечения.\n\nРезультаты относятся только к синтетической среде курса. Они не являются benchmark-оценкой LLM или современного метода Agentic RL."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Воспроизводимый профиль\n\nПрофиль `smoke` выполняется на CPU и предназначен для проверки всего контура. Профиль `full` увеличивает число начальных значений генератора, обновлений и оценочных эпизодов. Факультативная ветвь с открытой моделью отключена по умолчанию."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nimport os\nimport random\nimport sys\nfrom pathlib import Path\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\nimport torch\nfrom IPython.display import display\n\n\ndef find_repo_root(start: Path) -> Path:\n    \"\"\"Найти корень курса независимо от каталога запуска ноутбука.\"\"\"\n    start = start.resolve()\n    for candidate in (start, *start.parents):\n        if (candidate / \"modules/module-11/module_11_reference.py\").is_file():\n            return candidate\n    raise FileNotFoundError(\"Не найден корень репозитория RL for LLM\")\n\n\nROOT = find_repo_root(Path.cwd())\nMODULE_DIR = ROOT / \"modules/module-11\"\nif str(MODULE_DIR) not in sys.path:\n    sys.path.insert(0, str(MODULE_DIR))\n\nfrom module_11_reference import (\n    collector_target,\n    discounted_return,\n    discounted_td_sum,\n    informative_group_probability,\n    macro_action_logprob,\n    potential_shaping,\n    semantic_action_probability,\n    semi_markov_return,\n    shaped_return_identity,\n    td_residuals,\n    trajectory_mask_report,\n    turn_probability_ratio,\n    validate_rollout_record,\n)\nfrom module_11_agentic_training import (\n    ACTIONS,\n    KeyDoorAgentEnv,\n    RecurrentActorCritic,\n    collect_episode,\n    evaluate_policy,\n    rollout_contract_from_transitions,\n    train_actor_critic,\n)\n\nPROFILE = os.getenv(\"RL_LLM_PROFILE\", \"smoke\").strip().lower()\nRUN_REAL_MODEL = False\nif PROFILE not in {\"smoke\", \"full\", \"real-model\"}:\n    raise ValueError(\"RL_LLM_PROFILE должен быть smoke, full или real-model\")\n\nif PROFILE == \"full\":\n    SEEDS = (1, 2, 3, 4, 5)\n    UPDATES = 30\n    EPISODES_PER_UPDATE = 48\n    EVALUATION_EPISODES = 100\nelse:\n    SEEDS = (1, 2, 3)\n    UPDATES = 8\n    EPISODES_PER_UPDATE = 16\n    EVALUATION_EPISODES = 20\n\nnp.random.seed(0)\nrandom.seed(0)\ntorch.manual_seed(0)\ntorch.set_num_threads(1)\n\nprint(f\"Корень курса: {ROOT}\")\nprint(f\"Профиль: {PROFILE}; семена={SEEDS}; обновления={UPDATES}; эпизодов на обновление={EPISODES_PER_UPDATE}\")\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Среда как контракт, а не декорация\n\nСреда хранит скрытый цвет целевой двери. Наблюдение `clue_red` или `clue_blue` доступно только после `inspect` и затем должно быть удержано рекуррентным состоянием политики. Базовая награда выдаётся лишь за успешное завершение; потенциальная добавка служит контролируемым учебным сигналом."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "env = KeyDoorAgentEnv(seed=0)\nobservation, reset_info = env.reset(target=\"red\")\nrows = []\nfor action in (\"inspect\", \"pickup_red\", \"open_red\", \"finish\"):\n    next_observation, base_reward, terminated, truncated, info = env.step(action, gamma=0.99)\n    rows.append({\n        \"наблюдение\": observation,\n        \"действие\": action,\n        \"следующее наблюдение\": next_observation,\n        \"базовая награда\": base_reward,\n        \"потенциал до\": info[\"potential_before\"],\n        \"потенциал после\": info[\"potential_after\"],\n        \"формированная награда\": info[\"shaped_reward\"],\n        \"истинное завершение\": terminated,\n        \"внешнее усечение\": truncated,\n    })\n    observation = next_observation\n\ntrace_df = pd.DataFrame(rows)\ndisplay(trace_df)\nprint(\"Сумма базовых наград:\", trace_df[\"базовая награда\"].sum())\nprint(\"Дисконтированный возврат сформированных наград:\", discounted_return(trace_df[\"формированная награда\"], 0.99))\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Маска должна следовать происхождению токенов\n\nВ реальном агентном транскрипте результаты инструментов могут быть намного длиннее ходов модели. Если усреднить функцию потерь по всему контексту, токены среды искусственно уменьшат масштаб градиента политики. В простом chat-template роль `assistant` является удобным приближением; при наличии контроллера нужен явный provenance."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "segments = [\n    (\"system\", 44),\n    (\"user\", 63),\n    (\"assistant\", 18),\n    (\"tool\", 162),\n    (\"assistant\", 21),\n]\nreport = trajectory_mask_report(segments)\nmask_table = pd.DataFrame(segments, columns=[\"роль\", \"число токенов\"])\nmask_table[\"входит в функцию потерь политики\"] = mask_table[\"роль\"].eq(\"assistant\")\nmask_table[\"роль\"] = mask_table[\"роль\"].map({\n    \"system\": \"системное сообщение\",\n    \"user\": \"пользователь\",\n    \"assistant\": \"политика\",\n    \"tool\": \"инструмент\",\n})\ndisplay(mask_table)\nprint({\n    \"токенов политики\": report.policy_tokens,\n    \"всего токенов\": report.total_tokens,\n    \"доля исключённых токенов\": report.masked_fraction,\n    \"коэффициент разбавления\": report.dilution_factor,\n})\nprint(\n    f\"Если ошибочно усреднить функцию потерь по всем {report.total_tokens} токенам, \"\n    f\"сигнал {report.policy_tokens} токенов политики уменьшится в {report.dilution_factor:.2f} раза.\"\n)\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. Истинный терминал и усечение сборщиком\n\nОдин и тот же видимый конец буфера может означать разные математические ситуации. При истинном терминале продолжения в задаче нет. При внешнем усечении агент мог бы продолжить, поэтому цель критика обычно сохраняет бутстрэппинг из последнего наблюдения."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "gamma = 0.9\nboundary_table = pd.DataFrame([\n    {\n        \"случай\": \"истинный терминал\",\n        \"награда\": 0.0,\n        \"V следующего состояния\": 0.7,\n        \"целевая величина\": collector_target(0.0, 0.7, gamma=gamma, terminated=True),\n    },\n    {\n        \"случай\": \"внешнее усечение сборщиком\",\n        \"награда\": 0.0,\n        \"V следующего состояния\": 0.7,\n        \"целевая величина\": collector_target(0.0, 0.7, gamma=gamma, terminated=False),\n    },\n])\ndisplay(boundary_table)\n\ncollector_env = KeyDoorAgentEnv(task_horizon=6, collector_limit=2, seed=0)\ncollector_env.reset(target=\"blue\")\ncollector_env.step(\"inspect\")\nfinal_observation, reward, terminated, truncated, info = collector_env.step(\"pickup_blue\")\nprint({\n    \"наблюдение\": final_observation,\n    \"награда\": reward,\n    \"истинное завершение\": terminated,\n    \"внешнее усечение\": truncated,\n    \"причина остановки\": info[\"stop_reason\"],\n})\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. От токенов к ходу и полумарковскому действию\n\nЛогарифм вероятности фактически сгенерированной строки равен сумме токеновых логарифмов вероятностей. Но несколько строк могут разбираться в одно семантическое действие. Кроме того, инструментальные операции имеют разную длительность, поэтому при явном времени возникает полумарковское дисконтирование."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "behavior_logprobs = [-0.42, -0.31, -0.27]\ncurrent_logprobs = [-0.35, -0.26, -0.24]\n\nstring_probabilities = {\n    '{\"name\":\"inspect\"}': 0.25,\n    '{\"name\": \"inspect\"}': 0.15,\n    '{\"name\":\"pickup_red\"}': 0.60,\n}\nparser = {\n    '{\"name\":\"inspect\"}': \"inspect\",\n    '{\"name\": \"inspect\"}': \"inspect\",\n    '{\"name\":\"pickup_red\"}': \"pickup_red\",\n}\n\nmacro_table = pd.DataFrame([\n    {\"величина\": \"логарифм вероятности сгенерированной строки\", \"значение\": macro_action_logprob(behavior_logprobs)},\n    {\"величина\": \"отношение политик за ход\", \"значение\": turn_probability_ratio(current_logprobs, behavior_logprobs)},\n    {\"величина\": \"вероятность семантического действия inspect\", \"значение\": semantic_action_probability(string_probabilities, parser, \"inspect\")},\n    {\"величина\": \"полумарковский возврат (2 и 3 шага)\", \"значение\": semi_markov_return([0.0, 1.0], [2, 3], 0.9)},\n])\ndisplay(macro_table)\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. TD-телескоп и потенциальное формирование награды\n\nTD-остатки дают ходовые сигналы, но их дисконтированная сумма должна согласовываться с траекторным возвратом и граничным значением. Потенциальная добавка перераспределяет награду между переходами; при корректных условиях она меняет возврат только на предсказуемый граничный член."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "gamma = 0.9\nrewards = [0.0, 0.0, 1.0]\nvalues = [0.4, 0.5, 0.6, 0.0]\ndeltas = td_residuals(rewards, values, gamma, terminated=[False, False, True])\nleft = discounted_td_sum(deltas, gamma)\nright = discounted_return(rewards, gamma) - values[0] + gamma**len(rewards) * values[-1]\n\npotentials = [0.0, 0.25, 0.55, 0.0]\nshaped = potential_shaping(rewards, potentials, gamma)\noriginal_return, shaped_return, predicted_return = shaped_return_identity(rewards, potentials, gamma)\n\ndisplay(pd.DataFrame({\n    \"t\": range(len(rewards)),\n    \"r_t\": rewards,\n    \"V_t\": values[:-1],\n    \"V_next\": values[1:],\n    \"delta_t\": deltas,\n    \"Phi_t\": potentials[:-1],\n    \"Phi_next\": potentials[1:],\n    \"r_shaped\": shaped,\n}))\nprint(f\"Телескопическая проверка: {left:.6f} = {right:.6f}\")\nprint(f\"Исходный возврат={original_return:.6f}; сформированный возврат={shaped_return:.6f}; формула={predicted_return:.6f}\")\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. Когда групповое сравнение вообще содержит сигнал\n\nПри бинарной проверке группа полезна для относительной нормировки только тогда, когда в ней есть и успехи, и провалы. Крайне простые и крайне трудные запросы дают однородные группы; скорость обучения не создаёт отсутствующую вариацию."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "probabilities = np.linspace(0.001, 0.999, 500)\ngroup_sizes = (4, 8, 16)\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nfor group_size in group_sizes:\n    values = [informative_group_probability(p, group_size) for p in probabilities]\n    ax.plot(probabilities, values, label=f\"G={group_size}\")\nax.set_xlabel(\"Вероятность успеха одного роллаута p\")\nax.set_ylabel(\"Вероятность смешанной группы\")\nax.set_title(\"Группа информативна только при наличии успехов и провалов\")\nax.legend()\nax.grid(alpha=0.25)\nplt.show()\n\ncheck_ps = (0.005, 0.05, 0.5, 0.95, 0.995)\ngroup_df = pd.DataFrame([\n    {\"p\": p, **{f\"G={g}\": informative_group_probability(p, g) for g in group_sizes}}\n    for p in check_ps\n])\ndisplay(group_df)\n"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 8. Рекуррентный актор–критик в частично наблюдаемой среде\n\nТеперь обучим одну и ту же архитектуру с редкой итоговой наградой и с потенциальным формированием. Показана медиана по нескольким начальным значениям генератора и полный диапазон, а не одна удачная кривая. Сравнение демонстрирует локальную механику среды, но не доказывает универсальное превосходство shaping."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "records = []\nmodels = {}\nfor reward_mode in (\"sparse\", \"potential\"):\n    for seed in SEEDS:\n        model, curve = train_actor_critic(\n            seed=seed,\n            reward_mode=reward_mode,\n            updates=UPDATES,\n            episodes_per_update=EPISODES_PER_UPDATE,\n            evaluation_interval=max(1, UPDATES // 5),\n            evaluation_episodes=EVALUATION_EPISODES,\n        )\n        final_metrics = evaluate_policy(model, episodes=EVALUATION_EPISODES, seed=50_000 + seed)\n        models[(reward_mode, seed)] = (model, final_metrics)\n        for row in curve:\n            records.append({\"reward_mode\": reward_mode, \"seed\": seed, **row})\n\ncurve_df = pd.DataFrame(records)\nsummary_df = (\n    curve_df.groupby([\"reward_mode\", \"update\"], as_index=False)[\"success_rate\"]\n    .agg(median=\"median\", low=\"min\", high=\"max\")\n)\ndisplay(\n    summary_df.rename(columns={\n        \"reward_mode\": \"режим награды\",\n        \"update\": \"обновление\",\n        \"median\": \"медиана\",\n        \"low\": \"минимум\",\n        \"high\": \"максимум\",\n    }).replace({\"режим награды\": {\n        \"sparse\": \"редкая итоговая\",\n        \"potential\": \"потенциальное формирование\",\n    }})\n)\n\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nfor reward_mode, label in ((\"sparse\", \"Редкая итоговая награда\"), (\"potential\", \"Потенциальное формирование награды\")):\n    part = summary_df[summary_df[\"reward_mode\"] == reward_mode].sort_values(\"update\")\n    x = part[\"update\"].to_numpy(dtype=float)\n    median = part[\"median\"].to_numpy(dtype=float)\n    low = part[\"low\"].to_numpy(dtype=float)\n    high = part[\"high\"].to_numpy(dtype=float)\n    ax.plot(x, median, marker=\"o\", label=label)\n    ax.fill_between(x, low, high, alpha=0.18)\nax.set_xlabel(\"Обновление политики (-1 означает оценку до обучения)\")\nax.set_ylabel(\"Доля успешных жадных эпизодов\")\nax.set_ylim(-0.03, 1.03)\nax.set_title(\"Синтетический CPU-эксперимент KeyDoorAgentEnv\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n\nbest_key, (best_model, best_metrics) = max(models.items(), key=lambda item: item[1][1][\"success_rate\"])\nmode_ru = {\n    \"sparse\": \"редкая итоговая награда\",\n    \"potential\": \"потенциальное формирование награды\",\n}[best_key[0]]\nmetrics_ru = {\n    \"доля успехов\": best_metrics[\"success_rate\"],\n    \"среднее число ходов\": best_metrics[\"mean_turns\"],\n    \"доля недопустимых действий\": best_metrics[\"invalid_action_rate\"],\n}\nprint(\"Лучшая конфигурация для следующей диагностики:\", (mode_ru, best_key[1]), metrics_ru)\n"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 9. Журнал роллаута как воспроизводимый объект\n\nДля обучения недостаточно сохранить только текст и итоговую награду. Нужны действия, наблюдения, маска политики, поведенческие log-probabilities, версии политики и причина остановки. Следующая ячейка строит валидный контракт из свежего роллаута и затем намеренно ломает его."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "rollout_env = KeyDoorAgentEnv(seed=123)\ntransitions, _, rollout_report = collect_episode(\n    best_model,\n    rollout_env,\n    reward_mode=\"potential\",\n    greedy=True,\n    target=\"red\",\n    policy_version=\"m11-notebook-policy\",\n)\ntrace = pd.DataFrame([\n    {\n        \"ход\": index,\n        \"наблюдение\": transition.observation,\n        \"действие\": transition.action,\n        \"следующее наблюдение\": transition.next_observation,\n        \"логарифм вероятности поведения\": transition.behavior_logprob,\n        \"базовая награда\": transition.base_reward,\n        \"сформированная награда\": transition.shaped_reward,\n        \"истинное завершение\": transition.terminated,\n        \"внешнее усечение\": transition.truncated,\n    }\n    for index, transition in enumerate(transitions)\n])\ndisplay(trace)\nprint(\"Отчёт роллаута:\", {\n    \"цель\": rollout_report[\"target\"],\n    \"успех\": rollout_report[\"success\"],\n    \"истинное завершение\": rollout_report[\"terminated\"],\n    \"внешнее усечение\": rollout_report[\"truncated\"],\n    \"причина остановки\": rollout_report[\"stop_reason\"],\n    \"версия политики\": rollout_report[\"policy_version\"],\n    \"выбранный возврат\": rollout_report[\"selected_return\"],\n})\n\ncontract = rollout_contract_from_transitions(\n    transitions,\n    task_id=\"m11-keydoor-red\",\n    environment_version=\"1.0\",\n    policy_version=\"m11-notebook-policy\",\n)\nprint(\"Нарушения корректного контракта:\", validate_rollout_record(contract))\n\nbroken_contract = dict(contract)\nbroken_contract[\"policy_versions\"] = {}\nbroken_violations = validate_rollout_record(broken_contract)\ntranslated_violations = [\n    \"отсутствует версия политики для одного или нескольких ходов\"\n    if message.startswith(\"missing policy versions\") else message\n    for message in broken_violations\n]\nprint(\"Нарушения после удаления версии политики:\", translated_violations)\n"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 10. Факультативная ветвь: stateful-среда в TRL\n\nОфициальный интерфейс TRL на дату снимка позволяет передать `environment_factory` в `GRPOTrainer`; для каждой completion создаётся собственный экземпляр среды. API экспериментальный и изменяемый, поэтому перед запуском необходимо зафиксировать реальные версии библиотек и повторно сверить документацию. Ветвь ниже не запускалась в выпускном контуре."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "if not RUN_REAL_MODEL:\n    print(\n        \"Факультативная ветвь отключена. Для запуска создайте отдельную среду, \"\n        \"зафиксируйте версии trl/transformers/datasets и установите RUN_REAL_MODEL = True.\"\n    )\nelse:\n    from datasets import Dataset\n    from trl import GRPOConfig, GRPOTrainer\n\n    class TextKeyDoorEnv:\n        \"\"\"Минимальная stateful-среда для официального environment_factory-контракта TRL.\"\"\"\n\n        def __init__(self):\n            self.target = \"red\"\n            self.inspected = False\n            self.carrying = None\n            self.opened = None\n            self.reward = 0.0\n\n        def reset(self, target: str, **kwargs) -> str:\n            self.target = target\n            self.inspected = False\n            self.carrying = None\n            self.opened = None\n            self.reward = 0.0\n            return \"You are in a room with two locked doors. Inspect before choosing a key.\"\n\n        def inspect(self) -> str:\n            \"\"\"Reveal the target color.\n\n            Returns:\n                A textual clue naming the required color.\n            \"\"\"\n            self.inspected = True\n            return f\"The target door is {self.target}.\"\n\n        def pickup(self, color: str) -> str:\n            \"\"\"Pick up one key.\n\n            Args:\n                color: Either ``red`` or ``blue``.\n\n            Returns:\n                The resulting environment observation.\n            \"\"\"\n            if not self.inspected or color not in {\"red\", \"blue\"}:\n                return \"The pickup failed.\"\n            self.carrying = color\n            return f\"You are carrying the {color} key.\"\n\n        def open_door(self, color: str) -> str:\n            \"\"\"Try to open one door with the carried key.\n\n            Args:\n                color: Either ``red`` or ``blue``.\n\n            Returns:\n                The resulting environment observation.\n            \"\"\"\n            if self.carrying != color:\n                return \"The door did not open.\"\n            self.opened = color\n            return f\"The {color} door is open.\"\n\n        def finish(self) -> str:\n            \"\"\"Finish the episode and store the task reward.\n\n            Returns:\n                A textual terminal observation.\n            \"\"\"\n            self.reward = float(self.opened == self.target)\n            return \"success\" if self.reward == 1.0 else \"failure\"\n\n        def get_reward(self) -> float:\n            return self.reward\n\n    dataset = Dataset.from_dict({\n        \"prompt\": [\n            [{\"role\": \"user\", \"content\": \"Inspect the room, choose the correct key, open the target door, and finish.\"}],\n            [{\"role\": \"user\", \"content\": \"Use the tools to open the required door and finish.\"}],\n        ],\n        \"target\": [\"red\", \"blue\"],\n    })\n\n    trainer = GRPOTrainer(\n        model=\"Qwen/Qwen3-0.6B\",\n        args=GRPOConfig(\n            num_generations=4,\n            max_steps=20,\n            max_completion_length=1024,\n            chat_template_kwargs={\"enable_thinking\": False},\n            output_dir=\"m11-agentic-grpo-output\",\n        ),\n        train_dataset=dataset,\n        environment_factory=TextKeyDoorEnv,\n    )\n    print(\"Trainer создан. trainer.train() намеренно не вызывается автоматически.\")\n"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

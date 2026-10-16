@@ -1,0 +1,64 @@
+schema_version: 1
+release: "2026.25"
+snapshot: "2026-08-06"
+publication:
+  repository_model: separate_repositories
+  preferred_reader_channel: github_pages
+  preferred_enrollment_channel: stepik
+
+courses:
+  it_ml:
+    title_ru: "Теория информации для ML"
+    title_en: "Information Theory for ML"
+    repository_url: null
+    pages_url_ru: null
+    pages_url_en: null
+    stepik_url_ru: null
+    stepik_url_en: null
+    modules:
+      module_02_entropy: "Module 2 — Entropy"
+      module_03_cross_entropy_kl: "Module 3 — Cross-Entropy and KL Divergence"
+      module_08_maxent_kl_policy: "Module 8 — Maximum entropy, exponential models, and KL regularization"
+      module_15_information_geometry: "Module 15 — Information Geometry: Fisher, Natural Gradient, and Distribution Flows"
+
+  # Stable keys retain historical numbers; displayed destinations match the 2026-10-14 Modern LLMs revision.
+  modern_llms:
+    title_ru: "Современные LLM"
+    title_en: "Modern LLMs"
+    repository_url: null
+    pages_url_ru: null
+    pages_url_en: null
+    stepik_url_ru: null
+    stepik_url_en: null
+    modules:
+      module_02_tokenization: "Module 2 — Tokenization and Embeddings"
+      module_08_pretraining: "Module 9 — Pretraining: Data, Scaling Laws, and Optimizers"
+      module_09_inference: "Module 10 — KV Caches and Efficient Inference"
+      module_11_sft: "Module 13 — Supervised Fine-Tuning and Data Work"
+      module_12_preference_optimization: "Module 14 — Learning from Feedback: RLHF, DPO, RLOO, and GRPO"
+      module_13_reasoning: "Module 15 — Reasoning Models and Test-Time Compute"
+      module_16_agents: "Module 18 — Agents and Tool Use"
+      module_17_evaluation: "Module 19 — Evaluating Modern LLM Systems: From Benchmarks to Decisions"
+
+  rl_llm:
+    title_ru: "RL for LLM"
+    title_en: "RL for LLM"
+    repository_url: null
+    pages_url_ru: null
+    pages_url_en: null
+    stepik_url_ru: null
+    stepik_url_en: null
+    modules:
+      module_01_map: "Module 1 — Updating the RL map for LLMs"
+      module_02_values_bellman: "Module 2 — State, value, and Bellman equations"
+      module_03_bandits: "Module 3 — Bandits, exploration, and one-step decisions"
+      module_04_policy_gradients: "Module 4 — Policy gradients and actor-critic methods"
+      module_05_imitation_offline: "Module 5 — Imitation, value methods, and offline RL"
+      module_06_llm_policy: "Module 6 — LLM as a policy: tokens, log-probabilities, and KL"
+      module_07_reward_models: "Module 7 — Reward models and preference data"
+      module_08_rlhf_dpo: "Module 8 — RLHF and direct preference optimization"
+      module_09_rlvr_grpo: "Module 9 — RLVR and GRPO: verifiable reward, group-relative estimation, and stability"
+      module_10_test_time_search: "Module 10 — Test-time compute and search"
+      module_11_agentic_rl: "Module 11 — RL for LLM agents: tools, environments, and long trajectories"
+      module_12_infrastructure: "Module 12 — RL infrastructure: memory, rollouts, and asynchrony"
+      module_13_evaluation: "Module 13 — Evaluation, reward hacking, and safety"

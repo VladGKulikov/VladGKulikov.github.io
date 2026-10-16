@@ -1,0 +1,207 @@
+{
+  "as_of": "2026-10-11",
+  "scope": "Selected updates for Module 1; not an exhaustive catalogue or a performance ranking. Dates are announcement/API release dates unless stated otherwise. Cards document provider claims, not independent measurements.",
+  "entries": [
+    {
+      "id": "gpt-6-astra",
+      "event_date": "2026-09-03",
+      "status": "api",
+      "architecture": "undisclosed",
+      "sources": [
+        "https://developers.openai.com/api/docs/changelog"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "gpt-6-sol / gpt-6-luna",
+      "event_date": "2026-09-22",
+      "status": "api",
+      "architecture": "undisclosed",
+      "sources": [
+        "https://developers.openai.com/api/docs/changelog"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "event_date": "2026-09-29",
+      "status": "api",
+      "context_tokens": 1050000,
+      "max_output_tokens": 128000,
+      "architecture": "undisclosed",
+      "serving_event": {
+        "date": "2026-10-08",
+        "name": "ultrafast"
+      },
+      "sources": [
+        "https://developers.openai.com/api/docs/changelog",
+        "https://developers.openai.com/api/docs/models/gpt-6.1-sol"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "claude-opus-5-5",
+      "event_date": "2026-09-22",
+      "status": "api",
+      "architecture": "undisclosed",
+      "sources": [
+        "https://www.anthropic.com/claude-opus-5-5"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "claude-sonnet-5-5",
+      "event_date": "2026-09-28",
+      "status": "api",
+      "architecture": "undisclosed",
+      "pricing_event": "Cache reads repriced on 2026-10-07; launch pricing is not the current snapshot",
+      "sources": [
+        "https://www.anthropic.com/claude-sonnet-5-5",
+        "https://www.anthropic.com/claude-haiku-5-5"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "claude-haiku-5-5",
+      "event_date": "2026-10-07",
+      "status": "api",
+      "architecture": "undisclosed",
+      "sources": [
+        "https://www.anthropic.com/claude-haiku-5-5"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "gemini-3.8-flash",
+      "event_date": "2026-09-02",
+      "status": "api",
+      "related_access": "Flash Cyber uses restricted Fairwind access",
+      "sources": [
+        "https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "gemini-4-argon",
+      "event_date": "2026-09-30",
+      "status": "announced_restricted_rollout",
+      "max_output_tokens": 1000000,
+      "input_context_tokens": null,
+      "access": "Fairwind trusted cyber defenders; general API availability not established by the announcement",
+      "sources": [
+        "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-argon/"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "grok-4.7",
+      "event_date": "2026-09-21",
+      "status": "api",
+      "architecture": "undisclosed",
+      "sources": [
+        "https://x.ai/news/grok-4-7",
+        "https://docs.x.ai/developers/release-notes"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "Qwen/Qwen3.8-2.4T-A95B",
+      "status": "published_weights",
+      "observed_on": "2026-10-11",
+      "total_parameters_b": 2400,
+      "active_parameters_b": 95,
+      "licence_label": "qwen3.8-max",
+      "modality": "text_to_text",
+      "api_distinction": "The Qwen3.8-Max API has additional features; do not copy its complete contract to the checkpoint",
+      "sources": [
+        "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "Qwen/Qwen3.8-27B",
+      "status": "published_weights",
+      "observed_on": "2026-10-11",
+      "licence_label": "apache-2.0",
+      "sources": [
+        "https://huggingface.co/Qwen/Qwen3.8-27B"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "event_date": "2026-09-10",
+      "status": "api_and_published_weights",
+      "licence_label": "mit",
+      "backbone_parameters_b": 552,
+      "engram_parameters_b_reported_separately": 196,
+      "full_artifact_total_parameters_b": null,
+      "active_parameters_b": {
+        "prefill": 8,
+        "decode": 16
+      },
+      "architecture": "Causal Encoder-Decoder (CED)",
+      "context_tokens": 1000000,
+      "modality": "image_text_to_text",
+      "sources": [
+        "https://api-docs.deepseek.com/updates/",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/blob/main/DeepSeek_V41_Tech_Report.pdf"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "event_date": "2026-08-13",
+      "status": "api_ga_retained",
+      "correction": "Revised changelog retains V4 Pro after September 14; supersedes launch notice proposing retirement. Old V4 Flash aliases route to V4.1 Flash.",
+      "sources": [
+        "https://api-docs.deepseek.com/updates/?release=deepseek-coder",
+        "https://api-docs.deepseek.com/news/news260910/"
+      ],
+      "verified_on": "2026-10-11"
+    },
+    {
+      "id": "zai-org/GLM-5.3",
+      "status": "published_weights",
+      "verified_on": "2026-10-11",
+      "licence_label": "glm-5.3",
+      "change": "Same base as GLM-5.2; reported gains attributed to post-training.",
+      "sources": [
+        "https://huggingface.co/zai-org/GLM-5.3"
+      ]
+    },
+    {
+      "id": "zai-org/GLM-5.3-Flash",
+      "status": "published_weights",
+      "verified_on": "2026-10-11",
+      "total_parameters_b": 320,
+      "active_parameters_b": 18,
+      "licence_label": "mit",
+      "modality": "image_text_to_text",
+      "sources": [
+        "https://huggingface.co/zai-org/GLM-5.3-Flash"
+      ]
+    },
+    {
+      "id": "Olmo-core 3",
+      "event_date": "2026-10-01",
+      "status": "published_training_framework",
+      "verified_on": "2026-10-11",
+      "sources": [
+        "https://allenai.org/blog/olmocore3"
+      ]
+    },
+    {
+      "id": "OpenAI-Hugging-Face incident reports",
+      "event_date": "2026-08-26",
+      "status": "technical_and_independent_reports_published",
+      "verified_on": "2026-10-11",
+      "sources": [
+        "https://openai.com/index/hugging-face-incident-and-the-road-ahead/",
+        "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/",
+        "https://huggingface.co/blog/agent-intrusion-technical-timeline"
+      ]
+    }
+  ]
+}

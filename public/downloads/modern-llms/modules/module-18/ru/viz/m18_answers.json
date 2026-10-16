@@ -1,0 +1,95 @@
+{
+  "agent_trace": {
+    "expected_answer": "27.92",
+    "expected_event_kinds": [
+      "assistant_action",
+      "tool_error",
+      "assistant_action",
+      "tool_result",
+      "assistant_action",
+      "tool_result",
+      "assistant_final",
+      "verification_pass"
+    ],
+    "expected_status": "completed",
+    "expected_tool_calls": 3,
+    "expected_tool_errors": 1
+  },
+  "codeact": {
+    "code_round_trips": 1,
+    "code_tokens": 160,
+    "fsm_comparison_ratio": 9.33997509339975e-06,
+    "json_actions": 5,
+    "json_tokens": 450,
+    "round_trip_ratio": 5.0,
+    "token_ratio": 2.8125,
+    "tokens_per_json_action": 90
+  },
+  "context": {
+    "base_tokens": 3000,
+    "cached_prefill_tokens": 31500,
+    "delta_tokens": 1500,
+    "final_context_tokens": 33000,
+    "final_kv_gib": 4.0283203125,
+    "kv_bytes_per_token": 131072,
+    "naive_prefill_tokens": 345000,
+    "ratio": 10.952380952380953,
+    "steps": 20
+  },
+  "latency": {
+    "decode_ms": 429.79942693409737,
+    "decode_share": 0.5521106576987537,
+    "decode_tokens": 90,
+    "decode_tokens_per_second": 209.4,
+    "effective_flops_per_second": 495000000000000.0,
+    "new_prefill_tokens": 1500,
+    "parameter_count": 8030000000,
+    "prefill_floor_ms": 48.666666666666664,
+    "tool_latency_ms": 300.0,
+    "total_ms": 778.466093600764,
+    "trajectory_20_s": 15.56932187201528
+  },
+  "reliability": {
+    "expected_attempts_p95_one_retry": 1.05,
+    "p95_20": 0.3584859224085419,
+    "p98_20": 0.6676079717550942,
+    "required_p_50_for_90pct": 0.9978950082958632,
+    "retry95": 0.9974999999999999,
+    "retry95_20": 0.9511698752531647,
+    "retry98": 0.9996,
+    "retry98_20": 0.9920303271638743
+  },
+  "safe_calculator": {
+    "accepted": {
+      "(7 + 5) / 3": 4.0,
+      "13.96 * 2": 27.92,
+      "2 ** 10": 1024
+    },
+    "rejected": [
+      "__import__('os').system('echo unsafe')",
+      "open('/etc/passwd').read()",
+      "(1).__class__",
+      "[1, 2][0]",
+      "10 ** 100",
+      "(-1) ** 0.5",
+      "0 ** -1",
+      "1 / 0",
+      "True + 1"
+    ]
+  },
+  "schema_version": 1,
+  "workflow": {
+    "agents": 20,
+    "context_tokens_per_agent": 30000,
+    "end_to_end_limit": 17.0,
+    "end_to_end_speedup": 9.444444444444445,
+    "kv_bytes_per_token": 131072,
+    "kv_gib": 73.2421875,
+    "merge_minutes": 20.0,
+    "parallel_minutes": 45.0,
+    "plan_minutes": 5.0,
+    "work_baseline_limit": 16.0,
+    "work_baseline_speedup": 8.88888888888889,
+    "work_minutes": 400.0
+  }
+}

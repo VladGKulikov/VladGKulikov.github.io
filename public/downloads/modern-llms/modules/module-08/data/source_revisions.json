@@ -1,0 +1,45 @@
+{
+  "checked": "2026-10-11",
+  "sources": [
+    {
+      "url": "https://arxiv.org/abs/2405.21060",
+      "claim": "structured SSD; core-layer 2–8x is author result"
+    },
+    {
+      "url": "https://arxiv.org/html/2412.06464v3",
+      "claim": "decay before delta correction; unit-key readout; earlier delta memory"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/state-spaces/mamba/main/mamba_ssm/modules/mamba2.py",
+      "claim": "allocate_inference_cache shapes; one B/C group scenario; source checked on date, mutable branch"
+    },
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B",
+      "claim": "40 layers; 3:1 layer pattern; context extension distinction"
+    },
+    {
+      "url": "https://arxiv.org/abs/2603.15569",
+      "claim": "Mamba-3 complex recurrence and MIMO; author research results"
+    },
+    {
+      "url": "https://arxiv.org/abs/2606.02332v2",
+      "claim": "SISA augments attention scores; no recurrent state"
+    },
+    {
+      "url": "https://arxiv.org/abs/2507.22448",
+      "claim": "Falcon-H1 parallel Mamba2/attention"
+    },
+    {
+      "url": "https://www.minimax.io/news/why-did-m2-end-up-as-a-full-attention-model",
+      "claim": "M2 full attention; developer experiments"
+    },
+    {
+      "url": "https://arxiv.org/abs/2606.13392",
+      "claim": "MiniMax M3 sparse attention"
+    },
+    {
+      "url": "https://research.nvidia.com/labs/nemotron/Nemotron-3-Ultra/",
+      "claim": "550B/55B; Mamba-attention, MTP, LatentMoE"
+    }
+  ]
+}

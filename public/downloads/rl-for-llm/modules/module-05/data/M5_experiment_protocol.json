@@ -1,0 +1,261 @@
+{
+  "artifact_scope": "Reproduced synthetic course experiments; not external benchmarks.",
+  "snapshot": "2026-08-05",
+  "dagger": {
+    "seed": 17,
+    "expert_episodes": 4,
+    "rounds": 3,
+    "learner_episodes_per_round": 8,
+    "training_epochs_per_round": 12,
+    "evaluation_episodes": 24,
+    "records": [
+      {
+        "round": 0.0,
+        "dataset_size": 100.0,
+        "mean_return": -0.023333333333333355,
+        "success_rate": 0.5833333333333334
+      },
+      {
+        "round": 1.0,
+        "dataset_size": 273.0,
+        "mean_return": 0.7033333333333333,
+        "success_rate": 1.0
+      },
+      {
+        "round": 2.0,
+        "dataset_size": 472.0,
+        "mean_return": 0.7033333333333333,
+        "success_rate": 1.0
+      },
+      {
+        "round": 3.0,
+        "dataset_size": 670.0,
+        "mean_return": 0.7033333333333333,
+        "success_rate": 1.0
+      }
+    ]
+  },
+  "online_dqn": {
+    "seed": 5,
+    "episodes": 130,
+    "evaluation_episodes": 24,
+    "replay_warm_start": 10,
+    "update_every_environment_steps": 4,
+    "dqn": {
+      "evaluation": {
+        "mean_return": 0.40499999999999997,
+        "median_return": 0.7000000000000001,
+        "success_rate": 0.8333333333333334,
+        "mean_length": 29.75
+      },
+      "last_30_training_success": 0.36666667461395264,
+      "seconds": 7.833195209503174
+    },
+    "double_dqn": {
+      "evaluation": {
+        "mean_return": 0.7033333333333333,
+        "median_return": 0.7000000000000001,
+        "success_rate": 1.0,
+        "mean_length": 24.833333333333332
+      },
+      "last_30_training_success": 0.9333333373069763,
+      "seconds": 5.4151482582092285
+    },
+    "warning": "One controlled seed illustrates mechanics and variability; it is not evidence that Double DQN universally outperforms DQN."
+  },
+  "offline_rl": {
+    "seed": 41,
+    "dataset_episodes": 80,
+    "training_epochs": 16,
+    "evaluation_episodes": 24,
+    "cql_alpha": 0.15,
+    "bcq_support_ratio": 0.35,
+    "iql_expectile": 0.75,
+    "action_counts": [
+      860,
+      757,
+      520,
+      270
+    ],
+    "results": {
+      "Behavior cloning": {
+        "mean_return": 0.7033333333333333,
+        "success_rate": 1.0,
+        "mean_length": 24.833333333333332
+      },
+      "Offline DQN": {
+        "mean_return": -2.1750000000000003,
+        "success_rate": 0.0,
+        "mean_length": 64.0
+      },
+      "BCQ-like": {
+        "mean_return": 0.7033333333333333,
+        "success_rate": 1.0,
+        "mean_length": 24.833333333333332
+      },
+      "CQL": {
+        "mean_return": 0.7033333333333333,
+        "success_rate": 1.0,
+        "mean_length": 24.833333333333332
+      },
+      "IQL": {
+        "mean_return": 0.7033333333333333,
+        "success_rate": 1.0,
+        "mean_length": 24.833333333333332
+      }
+    },
+    "fqe": {
+      "Behavior cloning": -0.005357207264751196,
+      "IQL": -0.05611426755785942
+    },
+    "warning": "The environment and hyperparameters are pedagogical. Method rankings are not claimed to generalize."
+  },
+  "decision_transformer": {
+    "seed_data": 41,
+    "seed_model": 61,
+    "dataset_episodes": 120,
+    "context_steps": 16,
+    "epochs": 12,
+    "evaluation_episodes_per_target": 6,
+    "targets": [
+      -0.5,
+      0.20000000298023224,
+      0.699999988079071,
+      1.2000000476837158
+    ],
+    "mean_return": [
+      0.6599999999999998,
+      0.6999999999999998,
+      0.6999999999999998,
+      0.6999999999999998
+    ],
+    "success_rate": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "warning": "Target return is a conditioning variable, not a guarantee; this run did not produce monotone extrapolation outside the data range."
+  },
+  "language_ilql_like": {
+    "seed": 71,
+    "episodes_per_prompt": 45,
+    "bc_epochs": 12,
+    "iql_epochs": 20,
+    "dataset": {
+      "mean_reward": 0.317592591047287,
+      "success_rate": 0.3074074074074074
+    },
+    "evaluation": {
+      "Behavior cloning": {
+        "mean_reward": 0.4333333333333333,
+        "exact_match": 0.3333333333333333,
+        "generations": [
+          {
+            "prompt": "red shape",
+            "tokens": "red square <eos>",
+            "reward": 0.15
+          },
+          {
+            "prompt": "blue shape",
+            "tokens": "blue square <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "green shape",
+            "tokens": "green square <eos>",
+            "reward": 0.15
+          },
+          {
+            "prompt": "red then blue",
+            "tokens": "red then blue <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "blue then green",
+            "tokens": "blue then red <eos>",
+            "reward": 0.15
+          },
+          {
+            "prompt": "green then red",
+            "tokens": "green then blue <eos>",
+            "reward": 0.15
+          }
+        ]
+      },
+      "Advantage-weighted policy": {
+        "mean_reward": 1.0,
+        "exact_match": 1.0,
+        "generations": [
+          {
+            "prompt": "red shape",
+            "tokens": "red circle <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "blue shape",
+            "tokens": "blue square <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "green shape",
+            "tokens": "green triangle <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "red then blue",
+            "tokens": "red then blue <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "blue then green",
+            "tokens": "blue then green <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "green then red",
+            "tokens": "green then red <eos>",
+            "reward": 1.0
+          }
+        ]
+      },
+      "Value-guided behavior": {
+        "mean_reward": 0.8583333333333334,
+        "exact_match": 0.8333333333333334,
+        "generations": [
+          {
+            "prompt": "red shape",
+            "tokens": "red circle <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "blue shape",
+            "tokens": "blue square <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "green shape",
+            "tokens": "green triangle <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "red then blue",
+            "tokens": "red then blue <eos>",
+            "reward": 1.0
+          },
+          {
+            "prompt": "blue then green",
+            "tokens": "blue then red <eos>",
+            "reward": 0.15
+          },
+          {
+            "prompt": "green then red",
+            "tokens": "green then red <eos>",
+            "reward": 1.0
+          }
+        ]
+      }
+    },
+    "limitation": "Educational neural prefix/action implementation of IQL/ILQL mechanics; not a reproduction of the full ILQL paper system."
+  }
+}

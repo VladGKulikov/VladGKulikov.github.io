@@ -1,0 +1,194 @@
+{
+  "history": [
+    {
+      "loss": 0.6931471824645996,
+      "mean_chosen_logp": -0.6742721796035767,
+      "mean_chosen_reward": 0.0,
+      "mean_gradient_weight": 0.10000000894069672,
+      "mean_margin": 0.0,
+      "mean_rejected_logp": -0.7154421210289001,
+      "mean_rejected_reward": 0.0,
+      "pair_accuracy": 0.0,
+      "step": 0.0
+    },
+    {
+      "loss": 0.602861225605011,
+      "mean_chosen_logp": -0.3207104802131653,
+      "mean_chosen_reward": 0.07071235775947571,
+      "mean_gradient_weight": 0.09053455293178558,
+      "mean_margin": 0.9498022198677063,
+      "mean_rejected_logp": -1.3116825819015503,
+      "mean_rejected_reward": -0.11924808472394943,
+      "pair_accuracy": 1.0,
+      "step": 10.0
+    },
+    {
+      "loss": 0.5263382196426392,
+      "mean_chosen_logp": -0.14764761924743652,
+      "mean_chosen_reward": 0.10532491654157639,
+      "mean_gradient_weight": 0.08181441575288773,
+      "mean_margin": 1.840746283531189,
+      "mean_rejected_logp": -2.0295639038085938,
+      "mean_rejected_reward": -0.26282432675361633,
+      "pair_accuracy": 1.0,
+      "step": 20.0
+    },
+    {
+      "loss": 0.45713871717453003,
+      "mean_chosen_logp": -0.06640809774398804,
+      "mean_chosen_reward": 0.1215728297829628,
+      "mean_gradient_weight": 0.07331742346286774,
+      "mean_margin": 2.7404165267944336,
+      "mean_rejected_logp": -2.8479950428009033,
+      "mean_rejected_reward": -0.4265105426311493,
+      "pair_accuracy": 1.0,
+      "step": 30.0
+    },
+    {
+      "loss": 0.39759016036987305,
+      "mean_chosen_logp": -0.03206509351730347,
+      "mean_chosen_reward": 0.1284414380788803,
+      "mean_gradient_weight": 0.06551017612218857,
+      "mean_margin": 3.6116790771484375,
+      "mean_rejected_logp": -3.6849143505096436,
+      "mean_rejected_reward": -0.5938944816589355,
+      "pair_accuracy": 1.0,
+      "step": 40.0
+    },
+    {
+      "loss": 0.3486599028110504,
+      "mean_chosen_logp": -0.017989860847592354,
+      "mean_chosen_reward": 0.13125647604465485,
+      "mean_gradient_weight": 0.0587572380900383,
+      "mean_margin": 4.410329818725586,
+      "mean_rejected_logp": -4.469489574432373,
+      "mean_rejected_reward": -0.7508094906806946,
+      "pair_accuracy": 1.0,
+      "step": 50.0
+    },
+    {
+      "loss": 0.2914722263813019,
+      "mean_chosen_logp": -0.014570183120667934,
+      "mean_chosen_reward": 0.13194040954113007,
+      "mean_gradient_weight": 0.05001452937722206,
+      "mean_margin": 5.840816497802734,
+      "mean_rejected_logp": -5.896556377410889,
+      "mean_rejected_reward": -1.0362229347229004,
+      "pair_accuracy": 1.0,
+      "step": 60.0
+    }
+  ],
+  "profile": "smoke",
+  "purpose": "Pinned numerical history for deterministic lecture figures; not an external benchmark.",
+  "schema_version": 1,
+  "seed": 7,
+  "source": "module_8_training.run_toy_dpo_experiment",
+  "stress_history": [
+    {
+      "loss": 0.6931471824645996,
+      "mean_chosen_logp": -0.6742721796035767,
+      "mean_chosen_reward": 0.0,
+      "mean_gradient_weight": 0.10000000894069672,
+      "mean_margin": 0.0,
+      "mean_rejected_logp": -0.7154421210289001,
+      "mean_rejected_reward": 0.0,
+      "pair_accuracy": 0.0,
+      "step": 0.0
+    },
+    {
+      "loss": 0.3993917405605316,
+      "mean_chosen_logp": -0.031074287369847298,
+      "mean_chosen_reward": 0.1286395937204361,
+      "mean_gradient_weight": 0.06578575074672699,
+      "mean_margin": 3.5748980045318604,
+      "mean_rejected_logp": -3.647142171859741,
+      "mean_rejected_reward": -0.586340069770813,
+      "pair_accuracy": 1.0,
+      "step": 10.0
+    },
+    {
+      "loss": 0.22276358306407928,
+      "mean_chosen_logp": -0.011376449838280678,
+      "mean_chosen_reward": 0.13257916271686554,
+      "mean_gradient_weight": 0.039577633142471313,
+      "mean_margin": 7.415637493133545,
+      "mean_rejected_logp": -7.468183517456055,
+      "mean_rejected_reward": -1.350548267364502,
+      "pair_accuracy": 1.0,
+      "step": 20.0
+    },
+    {
+      "loss": 0.13524474203586578,
+      "mean_chosen_logp": -0.06373707950115204,
+      "mean_chosen_reward": 0.12210702896118164,
+      "mean_gradient_weight": 0.025069773197174072,
+      "mean_margin": 11.515707015991211,
+      "mean_rejected_logp": -11.620613098144531,
+      "mean_rejected_reward": -2.1810343265533447,
+      "pair_accuracy": 1.0,
+      "step": 30.0
+    },
+    {
+      "loss": 0.0820387601852417,
+      "mean_chosen_logp": -0.23265093564987183,
+      "mean_chosen_reward": 0.08832426369190216,
+      "mean_gradient_weight": 0.015631146728992462,
+      "mean_margin": 14.434212684631348,
+      "mean_rejected_logp": -14.708032608032227,
+      "mean_rejected_reward": -2.798518419265747,
+      "pair_accuracy": 1.0,
+      "step": 40.0
+    },
+    {
+      "loss": 0.04011787101626396,
+      "mean_chosen_logp": -1.0805983543395996,
+      "mean_chosen_reward": -0.08126520365476608,
+      "mean_gradient_weight": 0.007815049961209297,
+      "mean_margin": 18.130229949951172,
+      "mean_rejected_logp": -19.251998901367188,
+      "mean_rejected_reward": -3.7073116302490234,
+      "pair_accuracy": 1.0,
+      "step": 50.0
+    },
+    {
+      "loss": 0.015944330021739006,
+      "mean_chosen_logp": -1.804166555404663,
+      "mean_chosen_reward": -0.22597885131835938,
+      "mean_gradient_weight": 0.0031580855138599873,
+      "mean_margin": 22.29977035522461,
+      "mean_rejected_logp": -24.145105361938477,
+      "mean_rejected_reward": -4.685932636260986,
+      "pair_accuracy": 1.0,
+      "step": 60.0
+    },
+    {
+      "loss": 0.0089668994769454,
+      "mean_chosen_logp": -1.8590059280395508,
+      "mean_chosen_reward": -0.23694676160812378,
+      "mean_gradient_weight": 0.0017835882026702166,
+      "mean_margin": 25.12378692626953,
+      "mean_rejected_logp": -27.023963928222656,
+      "mean_rejected_reward": -5.261703968048096,
+      "pair_accuracy": 1.0,
+      "step": 70.0
+    },
+    {
+      "loss": 0.0060490807518363,
+      "mean_chosen_logp": -1.76469087600708,
+      "mean_chosen_reward": -0.2180837243795395,
+      "mean_gradient_weight": 0.0012053303653374314,
+      "mean_margin": 27.00830841064453,
+      "mean_rejected_logp": -28.81416893005371,
+      "mean_rejected_reward": -5.619745254516602,
+      "pair_accuracy": 1.0,
+      "step": 80.0
+    }
+  ],
+  "summary": {
+    "policy_generation_match": 1.0,
+    "reference_generation_match": 1.0,
+    "stress_generation_match": 0.125,
+    "teacher_forced_kl_chosen": 0.22082681953907013,
+    "teacher_forced_kl_rejected": 0.5802281498908997
+  }
+}

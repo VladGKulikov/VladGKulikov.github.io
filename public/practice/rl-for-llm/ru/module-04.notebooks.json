@@ -1,0 +1,120 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-04",
+  "language": "ru",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Модуль 4 — практикум: градиенты политики, GAE и PPO",
+      "format": "ipynb",
+      "filename": "module-04-policy-gradients-ppo.ru.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-04-policy-gradients-ppo.ru.ipynb",
+      "bytes": 26210,
+      "sha256": "8e5853c92d3761fbd10113b5bce15a1a8fe163731e45dee1b0f01d54de5a27ce",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Модуль 4 — практикум: градиенты политики, GAE и PPO\n\nЭтот ноутбук собирает полный вычислительный маршрут модуля: от свойств опорного уровня до реалистичного цикла PPO и токеновой маски для авторегрессионных ответов. Среда CartPole реализована внутри курса, поэтому ноутбук не зависит от версии Gymnasium. Код различает истинное завершение, внешнее усечение и границу роллаут-буфера.\n\nПрофиль `smoke` выполняет быстрый сквозной тест на CPU. Профиль `full` увеличивает число обновлений и начальных значений генератора. Числа и графики ниже — результаты кода курса при указанном протоколе, а не внешний benchmark."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nfrom dataclasses import replace\nfrom pathlib import Path\nimport os\nimport sys\nimport time\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nROOT = Path.cwd()\nif not (ROOT / \"modules\").is_dir():\n    for parent in [ROOT, *ROOT.parents]:\n        if (parent / \"modules\" / \"module-04\").is_dir():\n            ROOT = parent\n            break\nMODULE_DIR = ROOT / \"modules\" / \"module-04\"\nif str(MODULE_DIR) not in sys.path:\n    sys.path.insert(0, str(MODULE_DIR))\n\nfrom module_4_reference import (\n    gae_advantages,\n    masked_token_ppo_objective,\n    masked_token_ppo_terms,\n    response_token_mask,\n    sequence_log_probability_ratio,\n    sequence_probability_ratio,\n    simulate_group_baseline_bias,\n)\nfrom module_4_ppo_training import (\n    aggregate_training_runs,\n    profile_config,\n    train_ppo,\n)\n\nRUN_MODE = os.environ.get(\"RL_LLM_M4_PROFILE\", \"smoke\").strip().lower()\nif RUN_MODE not in {\"smoke\", \"full\"}:\n    raise ValueError(\"RL_LLM_M4_PROFILE должен быть 'smoke' или 'full'\")\n\nSEEDS = [11, 37] if RUN_MODE == \"smoke\" else [11, 37, 71, 101, 131]\nprint(\"корень репозитория:\", ROOT)\nprint(\"профиль:\", RUN_MODE, \"| начальные значения генератора:\", SEEDS)\n\nfrom module_4_llm_sequence import (\n    decode_sequence,\n    evaluate_sequence_policy,\n    sequence_profile_config,\n    train_tiny_sequence_policy,\n)\n"
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Опорный уровень: уменьшение шума и конечновыборочный масштаб\n\nСравним оцениватель без baseline, центрирование по среднему той же группы и RLOO. Эксперимент не заменяет алгебру: он проверяет предсказание о множителе $(G-1)/G$ и показывает разброс групповых оценок."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "baseline_result = simulate_group_baseline_bias(\n    group_size=8,\n    groups=80_000 if RUN_MODE == \"smoke\" else 400_000,\n    seed=2026,\n)\ndisplay_names = {\n    \"exact\": \"точное ожидание\",\n    \"plain_mean\": \"среднее без опоры\",\n    \"same_group_mean\": \"среднее с общей опорой\",\n    \"rloo_mean\": \"среднее RLOO\",\n    \"predicted_same_group\": \"теоретическое среднее группы\",\n    \"plain_std\": \"ст. откл. без опоры\",\n    \"same_group_std\": \"ст. откл. общей опоры\",\n    \"rloo_std\": \"ст. откл. RLOO\",\n}\nfor key, value in baseline_result.items():\n    print(f\"{display_names[key]:>32s}: {value: .6f}\")\n\nlabels = [\"без опорного уровня\", \"среднее той же группы\", \"RLOO\"]\nstds = [\n    baseline_result[\"plain_std\"],\n    baseline_result[\"same_group_std\"],\n    baseline_result[\"rloo_std\"],\n]\nfig, ax = plt.subplots(figsize=(8.2, 4.8))\nax.bar(labels, stds)\nax.set_ylabel(\"стандартное отклонение групповой оценки градиента\")\nax.set_title(\"Опорный уровень меняет дисперсию; среднее той же группы — ещё и масштаб\")\nax.grid(axis=\"y\", alpha=0.25)\nplt.xticks(rotation=8)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. GAE: две маски отвечают на два разных вопроса\n\n`terminated` решает, разрешён ли bootstrap из следующего состояния. `trace_cuts` решает, можно ли продолжить рекурсию GAE к следующей записи массива. На границе роллаут-буфера bootstrap может быть нужен, но перенос рекурсии через несвязанную запись запрещён."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "rewards = np.array([1.0, 100.0])\nvalues = np.array([2.0, 0.0])\nnext_values = np.array([10.0, 0.0])\nterminated = np.array([False, True])\n\n# Запись 0 обрезана границей буфера роллаутов, а не терминалом задачи.\n# Она использует бутстрэппинг из V(next_state)=10, но рекурсия GAE не должна перейти в запись 1.\ntrace_cuts = np.array([True, True])\nadvantages = gae_advantages(\n    rewards,\n    values,\n    next_values,\n    terminated,\n    trace_cuts,\n    gamma=0.9,\n    gae_lambda=1.0,\n)\nprint(\"преимущества при раздельных масках бутстрэппинга и рекурсии:\", advantages)\nprint(\"цель ценности для первой записи:\", values[0] + advantages[0])\nassert np.allclose(advantages, [8.0, 100.0])\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Полный PPO на CartPole\n\nРеализация включает актор–критик, фиксированный роллаут, сохранённые старые логарифмические вероятности и значения функции ценности, GAE, несколько эпох со случайными мини-пакетами, клиппированные цели политики и функции ценности, энтропийный бонус, ограничение нормы градиента, диагностику KL и отдельную детерминированную оценку политики."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "runs = []\nstarted = time.perf_counter()\nfor seed in SEEDS:\n    config = profile_config(RUN_MODE, seed=seed)\n    # В профиле smoke оцениваем политику через одно обновление, чтобы запуск оставался быстрым.\n    if RUN_MODE == \"smoke\":\n        config = replace(config, evaluation_every=2)\n    result = train_ppo(config)\n    runs.append(result)\n    print(\n        f\"начальное значение={seed:3d} | итоговое среднее={result['final_evaluation_mean']:7.2f} \"\n        f\"± {result['final_evaluation_std']:6.2f}\"\n    )\nelapsed = time.perf_counter() - started\ncurve = aggregate_training_runs(runs)\nprint(f\"время обучения: {elapsed:.2f} s\")\n"
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "steps = curve[\"environment_steps\"]\nfinite = np.isfinite(curve[\"median\"])\nfig, ax = plt.subplots(figsize=(9.0, 5.0))\nax.fill_between(\n    steps[finite], curve[\"q25\"][finite], curve[\"q75\"][finite],\n    alpha=0.25, label=\"межквартильный диапазон\",\n)\nax.plot(steps[finite], curve[\"median\"][finite], marker=\"o\", label=\"медиана оценочного возврата\")\nfor run in curve[\"all_curves\"]:\n    ax.plot(steps[finite], run[finite], alpha=0.25, linewidth=0.9)\nax.axhline(500.0, linestyle=\"--\", linewidth=1.0, label=\"потолок по лимиту времени\")\nax.set_xlabel(\"переходы среды\")\nax.set_ylabel(\"возврат при детерминированной оценке\")\nax.set_title(f\"Самодостаточный PPO на CartPole — профиль {RUN_MODE}\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "Одна возрастающая кривая не доказывает устойчивость метода и тем более не переносится автоматически на LLM. Здесь график проверяет сквозной контракт реализации: сбор данных, вычисление целей, многократное обновление и оценивание работают совместно. Для содержательного сравнения вариантов нужны согласованный бюджет, несколько начальных значений генератора и интервалы неопределённости."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "# Диагностики для первого начального значения. Это локальные величины пакета, а не универсальные пороги.\nhistory = runs[0][\"history\"]\nupdates = np.asarray(history[\"update\"])\nfig, ax = plt.subplots(figsize=(9.0, 4.8))\nax.plot(updates, history[\"approx_kl\"], marker=\"o\", label=\"неотрицательная приближённая KL\")\nax.plot(updates, history[\"active_clip_fraction\"], marker=\"s\", label=\"доля активного клиппирования\")\nax.plot(updates, history[\"ratio_outside_fraction\"], marker=\"^\", label=\"доля отношений вне интервала\")\nax.set_xlabel(\"обновление PPO\")\nax.set_title(\"Локальная диагностика оптимизации для одного начального значения\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Авторегрессионный ответ: сдвиг, маска и единица усреднения\n\nСледующий пример намеренно помещает огромные значения в позиции запроса и заполнения (`padding`). Корректная маска должна полностью исключить их. Затем сравниваются локальные токеновые отношения и точное произведение для ответа, а также три разные редукции токеновой PPO-суррогатной цели.\n\nДля более полного контекста токенизации см. *Modern LLMs*, Модуль 2 «Токенизация и эмбеддинги» (`modern_llms.module_02_tokenization`). Архитектура RLHF/RLOO/GRPO рассматривается в Модуле 14 «Обучение по обратной связи: RLHF, DPO, RLOO и GRPO» (`modern_llms.module_12_preference_optimization`). Текущий ноутбук остаётся самодостаточным."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "# Исходные позиции токенов: BOS, prompt_1, prompt_2, response_1, response_2, EOS, PAD.\ninput_ids = np.array([\n    [1, 10, 11, 20, 21, 2, 0],\n    [1, 12, 30, 2, 0, 0, 0],\n])\nprompt_lengths = np.array([3, 2])\nmask = response_token_mask(\n    input_ids,\n    prompt_lengths,\n    pad_token_id=0,\n    eos_token_id=2,\n    include_eos=True,\n)\n\n# Столбцы выровнены с метками input_ids[:, 1:]. Значения запроса и заполнения ниже\n# намеренно экстремальны, чтобы контракт маски было легко проверить.\nold_log_probs = np.array([\n    [-9.0, -8.0, -1.0, -1.2, -0.8, -20.0],\n    [-7.0, -0.7, -0.9, -30.0, -40.0, -50.0],\n])\nnew_log_probs = np.array([\n    [ 9.0,  8.0, -0.7, -1.5, -0.9,  20.0],\n    [ 7.0, -0.5, -1.2,  30.0,  40.0,  50.0],\n])\nadvantages = np.array([1.5, -0.8])\n\nratio, unclipped, clipped, pessimistic = masked_token_ppo_terms(\n    new_log_probs,\n    old_log_probs,\n    advantages,\n    mask,\n    clip_epsilon=0.2,\n)\nprint(\"маска ответа, выровненная с input_ids[:, 1:]:\\n\", mask)\nprint(\"локальные отношения (в маскированных позициях стоит единица):\\n\", np.round(ratio, 4))\nprint(\"точные логарифмы последовательностных отношений:\", np.round(sequence_log_probability_ratio(new_log_probs, old_log_probs, mask), 4))\nprint(\"точные последовательностные отношения:\", np.round(sequence_probability_ratio(new_log_probs, old_log_probs, mask), 4))\nreduction_names = {\n    \"token_mean\": \"среднее по токенам\",\n    \"sequence_mean\": \"среднее по ответам\",\n    \"sequence_sum_mean\": \"сумма по токенам, затем среднее\",\n}\nfor reduction in [\"token_mean\", \"sequence_mean\", \"sequence_sum_mean\"]:\n    value = masked_token_ppo_objective(\n        new_log_probs, old_log_probs, advantages, mask,\n        clip_epsilon=0.2, reduction=reduction,\n    )\n    print(f\"{reduction_names[reduction]:>34s} ({reduction}): {value: .6f}\")\n\nassert np.all(pessimistic[mask == 0] == 0.0)\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Минимальное авторегрессионное обучение RLOO/PPO\n\nДо сих пор авторегрессионная часть показывала только тензорный контракт. Теперь запустим его целиком. Маленькая GRU получает один из трёх запросов и должна породить соответствующую пару символов, а затем сгенерировать `EOS`. Проверяющая функция выдаёт плотную, но недифференцируемую награду. Для каждого запроса собирается группа ответов, строятся преимущества с исключением текущего ответа, замораживаются старые токеновые логарифмические вероятности, после чего выполняются несколько эпох PPO.\n\nЭто не модель качества языка и не имитация промышленного RLHF. Эксперимент нужен, чтобы в одном исполняемом пути увидеть переменную длину ответа, причинный сдвиг, маску запроса и заполнения (`padding`), включённый сгенерированный `EOS`, групповой опорный уровень и токеновое клиппирование."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "sequence_config = sequence_profile_config(RUN_MODE)\nprint(\"Профиль авторегрессионного эксперимента:\", sequence_config)\nsequence_run = train_tiny_sequence_policy(seed=5, **sequence_config)\nfirst_batch = sequence_run[\"first_batch\"]\nassert first_batch is not None\n\nprint(\"Первые строки исходного роллаута:\")\nfor i in range(min(6, len(first_batch.prompt_classes))):\n    print(\n        f\"  запрос={first_batch.prompt_classes[i]} | \"\n        f\"{decode_sequence(first_batch.input_ids[i].cpu().numpy())} | \"\n        f\"награда={first_batch.rewards[i]:.2f} | \"\n        f\"преимущество={first_batch.advantages[i]:+.3f} | \"\n        f\"маска={first_batch.response_mask[i].cpu().numpy().astype(int).tolist()}\"\n    )\nfor prompt_class in range(3):\n    idx = np.flatnonzero(first_batch.prompt_classes == prompt_class)\n    np.testing.assert_allclose(first_batch.advantages[idx].sum(), 0.0, atol=1e-12)\nprint(\"Сумма RLOO-преимуществ в каждой группе равна нулю.\")\n"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "sequence_history = sequence_run[\"history\"]\niterations = np.asarray(sequence_history[\"iteration\"])\nmean_reward = np.asarray(sequence_history[\"evaluation_mean_reward\"])\nplt.figure(figsize=(9, 5))\nplt.plot(iterations, mean_reward)\nplt.xlabel(\"Итерация\")\nplt.ylabel(\"Средняя награда на проверке\")\nplt.title(\"Маленькая авторегрессионная политика учится по проверяемой награде\")\nplt.tight_layout()\nplt.show()\nprint(\"начальная средняя награда на проверке:\", float(mean_reward[0]))\nprint(\"итоговая средняя награда на проверке:\", sequence_run[\"final_evaluation\"][\"mean_reward\"])\n"
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "success = np.asarray(sequence_history[\"success_rate\"])\nplt.figure(figsize=(9, 5))\nplt.plot(iterations, success)\nplt.ylim(-0.02, 1.02)\nplt.xlabel(\"Итерация\")\nplt.ylabel(\"Доля полностью правильных ответов\")\nplt.title(\"Успешность полного ответа во время обучения\")\nplt.tight_layout()\nplt.show()\n\nprint(\"Жадные ответы после обучения:\")\ngreedy = evaluate_sequence_policy(\n    sequence_run[\"model\"], samples_per_prompt=1, deterministic=True\n)\nfor prompt_class, row, reward in zip(\n    greedy[\"prompt_classes\"], greedy[\"input_ids\"], greedy[\"rewards\"]\n):\n    print(f\"  запрос={prompt_class} | {decode_sequence(row)} | награда={reward:.2f}\")\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "### Что этот прогон показывает — и чего не показывает\n\nКривая демонстрирует согласованность реализации: награда действительно влияет на вероятность породить нужный ответ, а маски не дают запросу, заполнению и позициям после `EOS` попасть в потерю политики. Она не доказывает устойчивость PPO на больших языковых моделях. В реальном постобучении добавляются опорная политика (`reference policy`), распределённый сбор роллаутов, намного более сложная модель награды или проверяющая система (`verifier`), управление длиной, смешанные цели, задержки между политикой сбора и обновления (`off-policy`-сдвиг) и инфраструктурные ограничения.\n\nДля более широкой архитектурной карты посмотрите *Modern LLMs*, Модуль 14 «Обучение по обратной связи: RLHF, DPO, RLOO и GRPO» (`modern_llms.module_12_preference_optimization`). Вариационная логика энтропии и KL-регуляризации подробно разобрана в *Information Theory for ML*, Модуле 8 «Максимальная энтропия, экспоненциальные модели и KL-регуляризация» (`it_ml.module_08_maxent_kl_policy`). Но текущий ноутбук самодостаточен: обе ссылки — необязательное углубление."
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 6. Ключевые выводы практикума\n\n\n1. REINFORCE не требует дифференцируемой награды, но его дисперсия зависит от параметризации и опорного уровня.\n\n2. Преимущества для потери актора должны иметь явный контракт остановки градиента (`detach`).\n\n3. GAE нужны как минимум две логические маски: для бутстрэппинга и для обратной рекурсии.\n\n4. Клиппирование PPO ограничивает локальную суррогатную выгоду, но не гарантирует доверительную область.\n\n5. Полноценная реализация PPO включает сбор роллаутов, функцию ценности, несколько эпох обновления по мини-пакетам, диагностику и многозапусковый протокол.\n\n6. Перенос на LLM требует аккуратного причинного сдвига, маски ответа, обработки `EOS` и явного правила токеновой агрегации.\n\n7. Групповое преимущество с исключением текущего ответа можно встроить в реальный авторегрессионный цикл, но общий коэффициент ответа всё ещё не решает локальное распределение вклада между токенами.\n\n8. Любая учебная кривая должна сопровождаться границами вывода: успешный прогон профиля `smoke` проверяет кодовый контракт, а не обещает масштабируемость метода."
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

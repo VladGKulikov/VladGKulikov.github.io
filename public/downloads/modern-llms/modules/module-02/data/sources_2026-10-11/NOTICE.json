@@ -1,0 +1,62 @@
+{
+  "purpose": "Attribution and upstream license notices for the archived original source files; repository names identify authors.",
+  "licenses": {
+    "tiktoken": {
+      "url": "https://raw.githubusercontent.com/openai/tiktoken/4e71bbe0c078468e00fefbf94b39849389f346e5/LICENSE",
+      "status": "READ",
+      "local_file": "sources_2026-10-11/LICENSE__tiktoken.txt",
+      "sha256": "418cb499b436128d653d79941333a5437b7be2ea9213dcc2f04d15d5d2c51d86"
+    },
+    "sentencepiece": {
+      "url": "https://raw.githubusercontent.com/google/sentencepiece/c91fbef0b1b54aee8d3fe19193353a604fc9e060/LICENSE",
+      "status": "READ",
+      "local_file": "sources_2026-10-11/LICENSE__sentencepiece.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "transformers": {
+      "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/LICENSE",
+      "status": "READ",
+      "local_file": "sources_2026-10-11/LICENSE__transformers.txt",
+      "sha256": "77fd4710def9ec3c0f6225800e0235f15a425abd4a8b03559127fcd782612049"
+    },
+    "gpt-oss-120b": {
+      "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/LICENSE",
+      "status": "READ",
+      "local_file": "sources_2026-10-11/LICENSE__gpt-oss-120b.txt",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+    },
+    "DeepSeek-V4": {
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/resolve/60d8d70770c6776ff598c94bb586a859a38244f1/LICENSE",
+      "status": "READ",
+      "local_file": "sources_2026-10-11/LICENSE__DeepSeek-V4.txt",
+      "sha256": "f2c6c602815669d292889e5be8c802f2ed950653b77999b1584e8e6aed25d040"
+    },
+    "Qwen3-8B": {
+      "url": "https://huggingface.co/Qwen/Qwen3-8B/resolve/b968826d9c46dd6066d109eabc6255188de91218/LICENSE",
+      "status": "READ",
+      "local_file": "sources_2026-10-11/LICENSE__Qwen3-8B.txt",
+      "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+    },
+    "Mistral-Small-3.1": {
+      "url": "https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/resolve/68faf511d618ef198fef186659617cfd2eb8e33a/LICENSE",
+      "status": "NOT_RETRIEVED",
+      "reason": "HTTP Error 404: Not Found"
+    },
+    "Kimi-K3": {
+      "url": "https://huggingface.co/moonshotai/Kimi-K3/resolve/f831ab66814297da540d832a5235f8e904f29d06/LICENSE",
+      "status": "READ",
+      "local_file": "sources_2026-10-11/LICENSE__Kimi-K3.txt",
+      "sha256": "20c797ce19af0c17de52c6afb144644768a591c521655f5ebf5712c9850f2887"
+    },
+    "GLM-5": {
+      "url": "https://huggingface.co/zai-org/GLM-5/resolve/c183ef8c61faee82855eca1ed9bb3a9a7ce3b0b2/LICENSE",
+      "status": "NOT_RETRIEVED",
+      "reason": "HTTP Error 404: Not Found"
+    },
+    "Nemotron-3-Super": {
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16/resolve/2dc98e2afe4face0e4ce40972a915c45368bd34a/LICENSE",
+      "status": "NOT_RETRIEVED",
+      "reason": "HTTP Error 404: Not Found"
+    }
+  }
+}

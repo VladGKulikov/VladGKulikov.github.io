@@ -1,0 +1,150 @@
+# =============================================================================
+# configs/models.yaml — единая точка имён моделей для всех практик курса
+# =============================================================================
+# Правила (конвенция 6 README + frontier-политика курса):
+#   • Тексты модулей и спецификации ссылаются на КЛАССЫ моделей («0.5B-instruct»,
+#     «VLM 3–4B»); конкретные HF-идентификаторы живут ТОЛЬКО здесь.
+#   • Обновление имён = обновление снимка (snapshot) + запись в CHANGELOG.md.
+#   • alt-списки — проверенные замены того же класса, если основная модель
+#     недоступна/устарела; поведение задач с ними не гарантируется байт-в-байт.
+#   • Точность: bf16 по умолчанию; fp8 на движке инференса допустим
+#     с обязательной страховкой рассогласования (шаг 12.3.3).
+
+meta:
+  snapshot: "2026.25"
+  updated: "2026-08-06"
+  default_family: "Qwen3"          # один словарь токенов внутри семейства
+                                      # упрощает сравнения политика/ref/RM
+
+# -----------------------------------------------------------------------------
+# Уровень B — факультативные ноутбуки с внешней моделью и подходящим ускорителем
+# -----------------------------------------------------------------------------
+notebooks:
+  module-04-ppo-cartpole:
+    policy: null                      # не LLM: gymnasium CartPole-v1, MLP из ноутбука
+  module-06-logprobs-kl:
+    policy: "Qwen/Qwen3-0.6B"
+    revision: null                    # перед публикационным запуском можно закрепить commit hash
+    alt: ["Qwen/Qwen2.5-0.5B-Instruct", "HuggingFaceTB/SmolLM2-360M-Instruct"]
+    notes: "только прямые проходы и log-probabilities, без обучения весов; реальная ветвь необязательна, а память и время зависят от среды исполнения"
+  module-07-reward-model:
+    backbone: "Qwen/Qwen3-0.6B"
+    revision: null                    # перед публикационным запуском закрепить commit hash
+    dataset: "trl-lib/ultrafeedback_binarized"
+    dataset_provenance: "синтетические пары: кандидаты оценены GPT-4; это не прямые человеческие предпочтения"
+    adaptation: "LoRA; TaskType.SEQ_CLS; modules_to_save=['score']"
+    software_snapshot:
+      trl: "1.9.2"
+      transformers: "5.14.1"
+      datasets: "5.0.1"
+      peft: "0.20.0"
+      accelerate: "1.14.0"
+    alt: ["Qwen/Qwen2.5-0.5B-Instruct", "HuggingFaceTB/SmolLM2-360M-Instruct"]
+    notes: "реальная ветвь является факультативным инженерным шаблоном и в выпускном CPU-контуре не запускалась; память, время и качество не заявляются"
+  module-08-dpo-qwen3:
+    policy: "Qwen/Qwen3-0.6B"
+    revision: null                    # перед публикационным запуском закрепить commit hash
+    dataset: "trl-lib/ultrafeedback_binarized"
+    dataset_provenance: "синтетические пары: кандидаты оценены GPT-4; это не прямые человеческие предпочтения"
+    adaptation: "LoRA; TRL DPOTrainer; q_proj/v_proj"
+    software_snapshot:
+      trl: "1.9.2"
+      transformers: "5.14.1"
+      datasets: "5.0.1"
+      peft: "0.20.0"
+      accelerate: "1.14.0"
+    alt: ["Qwen/Qwen2.5-0.5B-Instruct", "HuggingFaceTB/SmolLM2-360M-Instruct"]
+    notes: "реальная ветвь является факультативным инженерным шаблоном и в выпускном CPU-контуре не запускалась; память, время и качество не заявляются"
+  module-09-grpo-mini:
+    policy: "Qwen/Qwen3-0.6B"
+    revision: null                    # перед публикационным запуском закрепить commit hash
+    dataset: "синтетические проверяемые арифметические запросы из ноутбука"
+    verifier: "детерминированное извлечение <answer>...</answer> и точное сравнение целого числа"
+    adaptation: "LoRA; TRL GRPOTrainer; q_proj/k_proj/v_proj/o_proj"
+    software_snapshot:
+      trl: "1.8.0"
+      transformers: "5.14.0"
+      datasets: "5.0.0"
+      peft: "0.19.1"
+      accelerate: "1.14.0"
+      bitsandbytes: "0.49.2"
+    alt: ["Qwen/Qwen2.5-0.5B-Instruct", "HuggingFaceTB/SmolLM2-360M-Instruct"]
+    notes: "реальная ветвь спроектирована для короткой проверки на бесплатном Colab T4, но в выпуске не запускалась; измеренные память, время и качество не заявляются"
+
+  module-12-rl-infrastructure:
+    policy: "Qwen/Qwen3-0.6B"
+    revision: null
+    synthetic_default: true
+    real_model_default: false
+    runtime: "Transformers forward/generation; optional distributed vLLM or SGLang profiling is intentionally outside the canonical smoke path"
+    alt: ["Qwen/Qwen2.5-0.5B-Instruct", "HuggingFaceTB/SmolLM2-360M-Instruct"]
+    notes: "CPU synthetic route is executed during release validation; the real-model T4 branch remains disabled and unexecuted"
+
+  module-13-evaluation-safety:
+    synthetic_default: true
+    real_model_default: false
+    policy: "Qwen/Qwen3-0.6B"
+    revision: null
+    evaluator: "lm-evaluation-harness"
+    software_snapshot:
+      lm_evaluation_harness: "0.4.12"
+      python_entry_point: "simple_evaluate"
+      huggingface_extra: "lm_eval[hf]"
+    task: "hellaswag"
+    smoke_limit: 10
+    alt: ["Qwen/Qwen2.5-0.5B-Instruct", "HuggingFaceTB/SmolLM2-360M-Instruct"]
+    notes: "синтетический CPU-маршрут выполнен при выпускной проверке; ветвь реальной модели и lm-eval по умолчанию отключена и в выпуске не запускалась"
+
+# -----------------------------------------------------------------------------
+# Уровень C — капстоуны (уровни сметы: minimal / recommended / extended)
+# -----------------------------------------------------------------------------
+capstones:
+  b1_alignment:
+    minimal:
+      policy: "Qwen/Qwen2.5-0.5B-Instruct"
+      rm_backbone: "Qwen/Qwen2.5-0.5B-Instruct"   # BT-голова поверх, LoRA
+    recommended:
+      policy: "Qwen/Qwen2.5-1.5B-Instruct"
+      rm_backbone: "Qwen/Qwen2.5-0.5B-Instruct"   # RM меньше политики — норм (М7)
+    extended:
+      policy: "Qwen/Qwen2.5-7B-Instruct"
+      rm_backbone: "Qwen/Qwen2.5-1.5B-Instruct"
+    alt_policy: ["meta-llama/Llama-3.2-1B-Instruct", "google/gemma-3-1b-it"]
+
+  b2_reasoning:
+    minimal:    { policy: "Qwen/Qwen2.5-0.5B-Instruct" }
+    recommended: { policy: "Qwen/Qwen2.5-1.5B-Instruct" }
+    extended:   { policy: "Qwen/Qwen2.5-7B-Instruct" }
+    alt_policy: ["Qwen/Qwen2.5-3B-Instruct", "HuggingFaceTB/SmolLM2-1.7B-Instruct"]
+    notes: "инструкт-вариант, не math-tuned: цель — увидеть прирост от RLVR"
+
+  b3_agent:
+    base:                              # наблюдения: DOM/текст
+      minimal:    { policy: "Qwen/Qwen2.5-0.5B-Instruct" }
+      recommended: { policy: "Qwen/Qwen2.5-1.5B-Instruct" }
+      extended:   { policy: "Qwen/Qwen2.5-7B-Instruct" }
+    hard_mode:                         # наблюдения: скриншоты (research-мост к B4)
+      policy: "Qwen/Qwen2.5-VL-3B-Instruct"
+    notes: "формат вызовов держат и 0.5B; malformed>30% — сперва промпт, не модель"
+
+  b4_visual:
+    minimal:
+      policy: "Qwen/Qwen2.5-VL-3B-Instruct"
+      image_res: "уменьшенное (см. смету B4: 24 GB только с LoRA + даунскейл)"
+    recommended:
+      policy: "Qwen/Qwen2.5-VL-3B-Instruct"
+      image_res: "полное"
+    extended:
+      policy: "Qwen/Qwen2.5-VL-7B-Instruct"
+    alt_policy: ["google/gemma-3-4b-it"]   # мультимодальная 4B-класса
+    notes: "chat-template с image-плейсхолдером сверять с карточкой модели (грабля №1 B4)"
+
+  b5_eval:
+    judge_local:
+      minimal: "Qwen/Qwen2.5-1.5B-Instruct"   # CPU/T4; высокий ASR — учебный материал
+      alt: ["Qwen/Qwen2.5-0.5B-Instruct"]
+    judge_api: "<впишите дешёвую API-модель вашего провайдера>"  # версия+промпт → хэш в паспорт
+    compared_pair:                     # эксперимент с известным ответом (M3)
+      weak:   "Qwen/Qwen2.5-0.5B-Instruct"
+      strong: "Qwen/Qwen2.5-1.5B-Instruct"
+    notes: "судья должен быть не слабее сравниваемых моделей (асимметрия силы, 13.3.4)"

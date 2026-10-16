@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-04",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "What the log-derivative identity actually provides",
+      "prompt": "First select every correct statement about\n\n$$\n\\nabla_\\theta \\mathbb{E}_{X\\sim p_\\theta}[f(X)]\n=\n\\mathbb{E}[f(X)\\nabla_\\theta\\log p_\\theta(X)].\n$$\n\n\n1. It makes a discrete random sample differentiable.\n\n2. It permits a sample gradient estimate without differentiating $f$.\n\n3. It eliminates Monte Carlo variance.\n\n4. It permits a non-differentiable reward when the sampled outcome's log-probability is differentiable in $\\theta$.\n\n5. It applies without any regularity conditions.\n\nThen let $f_\\theta(X)$ depend directly on $\\theta$. What term must be added, and what does it represent?",
+      "answer": "Statements **2** and **4** are correct.\n\n- **2.** The identity moves the derivative onto $\\log p_\\theta(X)$, so $f(X)$ only needs to be evaluated on the sampled outcome.\n- **4.** A program or human can supply reward. The required differentiable object is the log-probability of the sampled outcome.\n\nStatement 1 is false: sampling remains discrete; the identity constructs a different gradient estimator. Statement 3 is false: Monte Carlo noise remains and may be large. Statement 5 is false: differentiation must be interchangeable with the sum or integral.\n\nWith direct dependence, the product rule gives\n\n$$\n\\nabla_\\theta\\mathbb{E}[f_\\theta(X)]\n=\n\\mathbb{E}\\left[\nf_\\theta(X)\\nabla_\\theta\\log p_\\theta(X)\n+\n\\nabla_\\theta f_\\theta(X)\n\\right].\n$$\n\nThe score term accounts for the changing distribution; the direct term accounts for the integrand changing at a fixed outcome. Classical REINFORCE assumes environment reward has no direct policy-parameter dependence. A differentiable KL penalty or another parametric regularizer must either retain the direct term or deliberately stop that gradient and thereby define a different computational objective.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "When environment dynamics disappear from the derivative",
+      "prompt": "For each scenario, state whether the corresponding part of the environment disappears from the explicit derivative $\\nabla_\\theta\\log p_\\theta(\\tau)$, and explain why.\n\n\n1. A fixed non-differentiable simulator does not depend on $\\theta$.\n\n2. The same parameter $\\theta$ controls both the policy and transition probabilities.\n\n3. A frozen reward model does not depend on $\\theta$ but defines the scalar reward.\n\n4. A known differentiable world model is used by a different estimator that backpropagates through transitions.\n\nAlso explain why “disappears from the derivative” does not mean “has no effect on learning.”",
+      "answer": "1. **Yes.** A fixed simulator appears in $p_\\theta(\\tau)$, but its log-probability has zero derivative with respect to $\\theta$.\n\n2. **No.** If transitions share parameter $\\theta$, an extra term $\\nabla_\\theta\\log P_\\theta(s'\\mid s,a)$ appears.\n\n3. **Yes, from the explicit derivative.** A frozen reward model need not be differentiated, but its output multiplies the score and determines the update direction.\n\n4. **No in that estimator.** If we deliberately backpropagate through a differentiable world model, transition derivatives are part of the pathwise gradient.\n\nThe environment remains in the trajectory distribution. It controls which states and rewards are observed, so “the transition derivative is zero” does not mean “transitions do not affect the gradient estimate through the data.”",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Causality and two discounting conventions",
+      "prompt": "Explain why rewards before action $a_t$ can be removed from its score multiplier. Then compare\n\n$$\nG_t=\\sum_{k=t}^{T-1}\\gamma^{k-t}r_{k+1}\n$$\n\nwith the weight $\\gamma^tG_t$.\n\nWhich derivation produces the outer $\\gamma^t$? Why is the form without it still correct under a different convention?",
+      "answer": "Conditioned on the history before $a_t$, past rewards are fixed. Their contribution has the form\n\n$$\nC\\,\\mathbb{E}_{a_t\\sim\\pi}[\\nabla\\log\\pi(a_t\\mid s_t)]=0.\n$$\n\nOnly rewards that the action could influence remain.\n\nIf the objective is literally\n\n$$\n\\mathbb{E}\\left[\\sum_t\\gamma^t r_{t+1}\\right],\n$$\n\nregrouping the reward terms gives the score weight $\\gamma^tG_t$. A formula containing only $G_t$ commonly uses a discounted occupancy measure or another normalization of the objective. It is not the identical algebraic line under an unchanged convention.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Valid and invalid baselines",
+      "prompt": "Which quantities can be subtracted from $Q(s,a)$ without an additional correction while preserving the expected policy gradient? Assume $s$ is fixed.\n\n\n1. The constant $7$.\n\n2. $V_\\phi(s)$.\n\n3. The mean reward of independent responses to the same prompt, excluding the current response.\n\n4. $Q_\\psi(s,a)$, which depends on the current action.\n\n5. The same-group mean including the current reward.\n\nPlace each choice in one of three categories: “directly valid,” “invalid without correction,” or “known finite-sample scaling rather than literal unbiasedness.”",
+      "answer": "**Directly valid:** 1, 2, and 3.\n\n- A constant and a state-only function do not depend on the current action.\n- The mean of other independent responses is conditionally independent of the current response.\n\n**Invalid without correction:** 4. $Q_\\psi(s,a)$ depends on the current action, so the zero-mean score proof does not apply.\n\n**Known finite-sample scaling:** 5. The same-group mean contains the current reward. Under conditional independence it scales the expected gradient by $(G-1)/G$ rather than preserving it exactly.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "Same-group mean versus leave-one-out",
+      "prompt": "Let $G$ conditionally independent responses to one prompt have rewards $R_i$.\n\n\n1. Why is $\\bar R$ not independent of the current response?\n\n2. What is the expected gradient scale when using $R_i-\\bar R$?\n\n3. Why does a leave-one-out mean restore the correct expectation?\n\n4. How are $R_i-\\bar R$ and $R_i-\\bar R_{-i}$ related?\n\n5. What happens when all rewards are equal?",
+      "answer": "1. $\\bar R$ contains $R_i/G$, and $R_i$ depends on the current response $Y_i$.\n\n2. The expected gradient scale is $(G-1)/G$.\n\n3. The mean of the other responses is conditionally independent of $Y_i$, so its product with the score has zero expectation.\n\n4. Algebraically,\n\n$$\nR_i-\\bar R_{-i}\n=\n\\frac{G}{G-1}(R_i-\\bar R).\n$$\n\n\n5. Both advantage constructions return zero. There is no within-group ranking signal.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Bootstrap and the boundary of the GAE recursion",
+      "prompt": "Analyze two cases.\n\n**Case I.** The agent reaches a time limit without reaching a terminal state. The environment returns a final observation and then resets.\n\n**Case II.** A fixed-size rollout buffer fills up. The episode continues and the environment does not reset, but the next advantage is absent from the current array.\n\nFor each case answer:\n\n\n1. Should $V(s_{t+1})$ enter the TD residual?\n\n2. Should the backward recursion continue into the next element of the current array?\n\n3. What are `terminated` and `trace_cut`?\n\n4. Why is one `done` flag insufficient?",
+      "answer": "**Case I — external truncation followed by reset.**\n\n\n1. **Yes.** The mathematical process can continue, so bootstrap from the final observation before reset.\n\n2. **No.** The next array record after reset belongs to another episode.\n\n3. `terminated=False`, `trace_cut=True`.\n\n**Case II — a local rollout-buffer boundary.**\n\n\n1. **Yes.** The same episode continues, so the next value is needed for bootstrap.\n\n2. **Not inside this array** when the following fragment is not joined to the GAE computation. A streaming implementation could carry recursion state across fragments.\n\n3. `terminated=False`, `trace_cut=True` on the final local record.\n\nA single `done` flag conflates whether continuation value exists with whether the next advantage belongs to the current backward recursion. Zeroing bootstrap at every `done` biases targets near time limits and buffer boundaries: removing positive continuation lowers the target, while removing negative continuation raises it.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Four regions of the clipped PPO objective",
+      "prompt": "For $\\varepsilon=0.2$, complete the table. State whether the clipped branch is active and compute $\\min(rA,\\operatorname{clip}(r)A)$.\n\n| $r$ | $A$ | Does clipping change the objective? | Pessimistic term |\n|---:|---:|---|---:|\n| 1.4 | 2 | ? | ? |\n| 0.6 | 2 | ? | ? |\n| 1.4 | -2 | ? | ? |\n| 0.6 | -2 | ? | ? |\n\nThen explain how `ratio_outside_fraction` can equal 1 while `active_clip_fraction` equals 0.5.",
+      "answer": "With $\\varepsilon=0.2$, the interval is $[0.8,1.2]$.\n\n| $r$ | $A$ | Does clipping change the objective? | Pessimistic term |\n|---:|---:|---|---:|\n| 1.4 | 2 | yes | $1.2\\cdot2=2.4$ |\n| 0.6 | 2 | no | $0.6\\cdot2=1.2$ |\n| 1.4 | -2 | no | $1.4\\cdot(-2)=-2.8$ |\n| 0.6 | -2 | yes | $0.8\\cdot(-2)=-1.6$ |\n\nAll four ratios are outside the interval, so `ratio_outside_fraction=1`. The clipped branch becomes the pessimistic minimum only in rows one and four, hence `active_clip_fraction=2/4=0.5`.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "RLOO, GRPO, and token-level credit",
+      "prompt": "State:\n\n\n1. one idea shared by RLOO and GRPO;\n\n2. two substantive differences between their basic formulations;\n\n3. why a whole-response coefficient broadcast to all tokens gives a valid gradient for whole-response reward;\n\n4. why the same operation does not solve token-level credit assignment.",
+      "answer": "1. Both use several responses to one prompt and form a relative within-group signal without requiring a separate critic.\n\n2. Basic RLOO uses a leave-one-out mean and a REINFORCE objective. Canonical GRPO uses PPO-like probability ratios and clipping, usually normalizes the group signal, and adds regularization toward a reference policy.\n\n3. The response log-probability is a sum of token log-probabilities, so a whole-response coefficient multiplying that sum is the score function of the full sequence.\n\n4. The coefficient is identical for every token and does not identify which local choice caused the reward. It optimizes the whole-response objective but does not localize causal credit.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Gradient of a softmax log-probability",
+      "prompt": "For logits\n\n$$\nz=(1,2,3)\n$$\n\nand sampled action $a=2$, compute\n\n$$\n\\nabla_z\\log\\pi(a)=e_a-\\operatorname{softmax}(z).\n$$\n\nReport at least six decimal places and verify that the components sum to zero.",
+      "answer": "First,\n\n$$\n\\operatorname{softmax}(1,2,3)\n\\approx\n(0.09003057,0.24472847,0.66524096).\n$$\n\nFor action 2,\n\n$$\ne_2-\\pi\n\\approx\n(-0.09003057,-0.24472847,0.33475904).\n$$\n\nThe components sum to zero up to rounding.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Reward-to-go and the outer discount",
+      "prompt": "For rewards\n\n$$\n(r_1,r_2,r_3)=(1,2,3)\n$$\n\nand $\\gamma=0.5$, compute:\n\n\n1. the vector $G_t$;\n\n2. the vector $\\gamma^tG_t$ for $t=0,1,2$.\n\nExplain which objective the second vector corresponds to.",
+      "answer": "Backward recursion gives\n\n$$\nG_2=3,\n$$\n\n$$\nG_1=2+0.5\\cdot3=3.5,\n$$\n\n$$\nG_0=1+0.5\\cdot3.5=2.75.\n$$\n\nThus\n\n$$\nG=(2.75,3.5,3).\n$$\n\nApplying the outer discount:\n\n$$\n\\gamma^tG_t=(2.75,1.75,0.75).\n$$\n\nThe second vector is the direct score weight for the literal objective whose rewards are discounted from the start of the episode.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "State value and the variance-minimizing scalar baseline",
+      "prompt": "A policy has logits $(2,0)$ and action values $(1,4)$.\n\n\n1. Compute the action probabilities.\n\n2. Compute $V^\\pi=\\sum_a\\pi(a)Q(a)$.\n\n3. For each action, compute $\\|\\nabla_z\\log\\pi(a)\\|^2$.\n\n4. Compute\n\n$$\nb^*\n=\n\\frac{\\sum_a\\pi(a)Q(a)\\|\\nabla\\log\\pi(a)\\|^2}\n{\\sum_a\\pi(a)\\|\\nabla\\log\\pi(a)\\|^2}.\n$$\n\nWhy do $V^\\pi$ and $b^*$ differ?",
+      "answer": "The action probabilities are\n\n$$\n\\pi\n=\n\\operatorname{softmax}(2,0)\n\\approx\n(0.88079708,0.11920292).\n$$\n\nThe state value is\n\n$$\nV^\\pi\n=0.88079708\\cdot1+0.11920292\\cdot4\n\\approx1.35760877.\n$$\n\nScore vectors:\n\n$$\ng_0=(0.11920292,-0.11920292),\n$$\n\n$$\ng_1=(-0.88079708,0.88079708).\n$$\n\nSquared norms:\n\n$$\n\\|g_0\\|^2\\approx0.02841867,\n\\qquad\n\\|g_1\\|^2\\approx1.55160699.\n$$\n\nSubstitution yields\n\n$$\nb^*\\approx3.64239123.\n$$\n\nThe two baselines differ because $b^*$ weights action values by squared score norm. The rarer second action has a much larger score vector and therefore receives much more weight than it does in $V^\\pi$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "Group advantages",
+      "prompt": "For rewards\n\n$$\nR=(1,3,8,2),\n$$\n\ncompute:\n\n\n1. the group mean;\n\n2. centered advantages $R_i-\\bar R$;\n\n3. leave-one-out baselines;\n\n4. RLOO advantages;\n\n5. the proportionality factor between the two advantage vectors;\n\n6. the expected scale of the same-group estimator for group size 4.",
+      "answer": "The group mean is\n\n$$\n\\bar R=\\frac{1+3+8+2}{4}=3.5.\n$$\n\nCentered advantages:\n\n$$\nR-\\bar R=(-2.5,-0.5,4.5,-1.5).\n$$\n\nLeave-one-out baselines:\n\n$$\n\\left(\\frac{13}{3},\\frac{11}{3},2,4\\right)\n\\approx(4.333333,3.666667,2,4).\n$$\n\nRLOO advantages:\n\n$$\n\\left(-\\frac{10}{3},-\\frac{2}{3},6,-2\\right)\n\\approx(-3.333333,-0.666667,6,-2).\n$$\n\nThey are $4/3$ times the centered advantages. The expected scale of the same-group estimator is\n\n$$\n\\frac{G-1}{G}=\\frac{3}{4}.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "GAE at a time-limit truncation",
+      "prompt": "Two independent transitions appear consecutively in an array. The first ends an episode because of a time limit; the second belongs to another episode:\n\n$$\nr=(1,100),\\quad\nV=(2,0),\\quad\nV_{\\text{next}}=(10,0).\n$$\n\nMasks:\n\n$$\n\\mathrm{terminated}=(0,1),\\qquad\n\\mathrm{episode\\_end}=(1,1).\n$$\n\nWith $\\gamma=0.9$ and $\\lambda=1$, compute the TD residuals and GAE advantages. Explain why reward 100 does not enter the first transition's advantage.",
+      "answer": "The first transition is truncated but not terminal:\n\n$$\n\\delta_0\n=1+0.9\\cdot10-2=8.\n$$\n\nThe second is terminal:\n\n$$\n\\delta_1\n=100+0-0=100.\n$$\n\nBecause `episode_end[0]=1`, the recursion does not carry $\\delta_1$ backward:\n\n$$\nA_0=8,\n\\qquad\nA_1=100.\n$$\n\nReward 100 belongs to another episode after `reset()`. It is adjacent only in storage, not in the trajectory.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "PPO terms and a sample KL diagnostic",
+      "prompt": "Let\n\n$$\nr=(1.5,0.5,1.5,0.5),\n\\qquad\nA=(2,2,-2,-2),\n\\qquad\n\\varepsilon=0.2.\n$$\n\nCompute:\n\n\n1. the unclipped terms $rA$;\n\n2. the clipped terms;\n\n3. the pessimistic terms;\n\n4. the mean PPO objective;\n\n5. the fraction of ratios outside the interval;\n\n6. the fraction of samples for which clipping changes the objective;\n\n7. the sample diagnostic\n\n$$\n\\widehat D\n=\n\\frac{1}{N}\\sum_i[(r_i-1)-\\log r_i].\n$$",
+      "answer": "The unclipped terms are\n\n$$\nrA=(3,1,-3,-1).\n$$\n\nThe clipped ratios are $(1.2,0.8,1.2,0.8)$, producing\n\n$$\n(2.4,1.6,-2.4,-1.6).\n$$\n\nThe elementwise pessimistic minimum is\n\n$$\n(2.4,1,-3,-1.6).\n$$\n\nThe mean objective is\n\n$$\n\\frac{2.4+1-3-1.6}{4}=-0.3.\n$$\n\nEvery ratio lies outside the interval, so `ratio_outside_fraction=1`. Clipping changes the minimum in two of four cases, so `active_clip_fraction=0.5`.\n\nEach $r=1.5$ contributes $0.5-\\log1.5\\approx0.094535$, while each $r=0.5$ contributes $-0.5-\\log0.5\\approx0.193147$. Hence\n\n$$\n\\widehat D\n\\approx\n\\frac{2\\cdot0.094535+2\\cdot0.193147}{4}\n=\n0.143841.\n$$\n\nThis is a nonnegative sample diagnostic. Its old-policy expectation equals the reverse KL under the required support conditions, but a finite batch does not make it an exact KL constraint.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Stable softmax and the score function",
+      "prompt": "Implement:\n\n```python\nimport numpy as np\n\ndef stable_softmax(logits: np.ndarray) -> np.ndarray:\n    ...\n\ndef grad_log_softmax(logits: np.ndarray, action: int) -> np.ndarray:\n    ...\n```\n\nRequirements:\n\n- input is one-dimensional;\n- `[1000, 999]` is handled stably;\n- gradient components sum to zero within absolute tolerance $10^{-12}$;\n- an invalid action index raises `ValueError`.\n\nOpen checks:\n\n```python\nnp.testing.assert_allclose(stable_softmax([1000.0, 999.0]), [0.7310585786, 0.2689414214], rtol=2e-10)\n```",
+      "answer": "```python\nimport numpy as np\n\ndef stable_softmax(logits: np.ndarray) -> np.ndarray:\n    z = np.asarray(logits, dtype=float)\n    if z.ndim != 1:\n        raise ValueError(\"logits must be one-dimensional\")\n    shifted = z - np.max(z)\n    exp_z = np.exp(shifted)\n    return exp_z / np.sum(exp_z)\n\ndef grad_log_softmax(logits: np.ndarray, action: int) -> np.ndarray:\n    p = stable_softmax(logits)\n    if not 0 <= action < len(p):\n        raise ValueError(\"action is out of range\")\n    result = -p\n    result[action] += 1.0\n    return result\n```\n\nSubtracting the maximum leaves softmax unchanged while preventing exponential overflow.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Reward-to-go and two discounting conventions",
+      "prompt": "Implement:\n\n```python\ndef reward_to_go(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    ...\n\ndef discounted_score_weights(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    ...\n```\n\nThe first function returns $G_t$; the second returns $\\gamma^tG_t$. The algorithm must run in $O(T)$ time without nested loops.\n\nOpen checks:\n\n```python\nnp.testing.assert_allclose(reward_to_go([1.0, 2.0, 3.0], 0.5), [2.75, 3.5, 3.0])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef reward_to_go(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    if r.ndim != 1:\n        raise ValueError(\"rewards must be one-dimensional\")\n    if not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must lie in [0, 1]\")\n    result = np.empty_like(r)\n    running = 0.0\n    for t in range(len(r) - 1, -1, -1):\n        running = r[t] + gamma * running\n        result[t] = running\n    return result\n\ndef discounted_score_weights(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    g = reward_to_go(rewards, gamma)\n    return (gamma ** np.arange(len(g), dtype=float)) * g\n```\n\nOne backward pass gives $O(T)$ time and constant additional storage beyond the result.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Mean, LOO, and within-group normalization",
+      "prompt": "Implement:\n\n```python\ndef leave_one_out_baselines(rewards: np.ndarray) -> np.ndarray:\n    ...\n\ndef group_mean_advantages(rewards: np.ndarray) -> np.ndarray:\n    ...\n\ndef group_zscore_advantages(rewards: np.ndarray, eps: float = 1e-8) -> np.ndarray:\n    ...\n```\n\nLOO must raise `ValueError` for a group of size one. Equal rewards must produce zero z-scored advantages rather than `NaN`.\n\nOpen checks:\n\n```python\nnp.testing.assert_allclose(leave_one_out_baselines([1.0, 3.0, 8.0, 2.0]), [13/3, 11/3, 2.0, 4.0])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef leave_one_out_baselines(rewards: np.ndarray) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    if r.ndim != 1 or len(r) < 2:\n        raise ValueError(\"at least two rewards are required\")\n    return (np.sum(r) - r) / (len(r) - 1)\n\ndef group_mean_advantages(rewards: np.ndarray) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    if r.ndim != 1 or len(r) == 0:\n        raise ValueError(\"rewards must be a non-empty vector\")\n    return r - np.mean(r)\n\ndef group_zscore_advantages(rewards: np.ndarray, eps: float = 1e-8) -> np.ndarray:\n    centered = group_mean_advantages(rewards)\n    scale = float(np.sqrt(np.mean(centered ** 2)))\n    if scale < eps:\n        return np.zeros_like(centered)\n    return centered / scale\n```\n\nThis uses the within-group population variance with denominator $G$, a common convention for normalized advantages.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "GAE with separate bootstrap and recursion masks",
+      "prompt": "Implement the backward recursion:\n\n```python\ndef gae_advantages(\n    rewards: np.ndarray,\n    values: np.ndarray,\n    next_values: np.ndarray,\n    terminated: np.ndarray,\n    trace_cuts: np.ndarray,\n    gamma: float,\n    gae_lambda: float,\n) -> np.ndarray:\n    ...\n```\n\n`terminated` disables bootstrap in the TD residual. `trace_cuts` prevents recursion into the next element of the current array. The last record of a fixed rollout buffer may have `terminated=False`, `trace_cuts=True`.\n\nOpen checks:\n\n```python\nrewards = np.array([1.0, 2.0])\nvalues = np.array([0.5, 0.7])\nnext_values = np.array([0.7, 0.0])\nterm = np.array([False, True])\ncuts = np.array([False, True])\nresult = gae_advantages(rewards, values, next_values, term, cuts, gamma=0.9, gae_lambda=0.8)\ndelta1 = 2.0 - 0.7\ndelta0 = 1.0 + 0.9 * 0.7 - 0.5\nnp.testing.assert_allclose(result, [delta0 + 0.9 * 0.8 * delta1, delta1])\n\n# Nonterminal buffer boundary: keep bootstrap but prevent leakage from row 1.\nresult = gae_advantages(\n    np.array([1.0, 100.0]), np.array([2.0, 0.0]), np.array([10.0, 0.0]),\n    np.array([False, True]), np.array([True, True]), 0.9, 1.0,\n)\nnp.testing.assert_allclose(result, [8.0, 100.0])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef gae_advantages(\n    rewards: np.ndarray,\n    values: np.ndarray,\n    next_values: np.ndarray,\n    terminated: np.ndarray,\n    trace_cuts: np.ndarray,\n    gamma: float,\n    gae_lambda: float,\n) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    v = np.asarray(values, dtype=float)\n    nv = np.asarray(next_values, dtype=float)\n    term = np.asarray(terminated, dtype=bool)\n    cuts = np.asarray(trace_cuts, dtype=bool)\n    if not (r.shape == v.shape == nv.shape == term.shape == cuts.shape) or r.ndim != 1:\n        raise ValueError(\"all inputs must be aligned one-dimensional arrays\")\n    if not (0.0 <= gamma <= 1.0 and 0.0 <= gae_lambda <= 1.0):\n        raise ValueError(\"gamma and gae_lambda must lie in [0, 1]\")\n\n    deltas = r + gamma * (~term).astype(float) * nv - v\n    result = np.empty_like(deltas)\n    running = 0.0\n    for t in range(len(r) - 1, -1, -1):\n        running = deltas[t] + gamma * gae_lambda * (not cuts[t]) * running\n        result[t] = running\n    return result\n```\n\nThe two masks answer different questions. At a truncation or local buffer boundary, `terminated=False` preserves next-state bootstrap, while `trace_cuts=True` stops the current batch recursion.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "Clipped PPO terms and diagnostics",
+      "prompt": "Implement:\n\n```python\ndef ppo_clipped_terms(ratio, advantage, clip_epsilon=0.2):\n    ...\n\ndef ppo_diagnostics(new_log_prob, old_log_prob, advantage, clip_epsilon=0.2):\n    ...\n```\n\nThe diagnostics must return:\n\n- `ratio_outside_fraction`;\n- `active_clip_fraction`;\n- `approx_kl_nonnegative = mean((ratio - 1) - log_ratio)`;\n- `mean_log_ratio`.\n\nCompute ratios from log-probability differences.\n\nOpen checks:\n\n```python\nratio = np.array([0.75, 1.00, 1.30, 1.10])\nadvantage = np.array([1.0, 1.0, 1.0, -1.0])\nunclipped, clipped, pessimistic = ppo_clipped_terms(ratio, advantage, 0.2)\nassert np.allclose(unclipped, [0.75, 1.0, 1.3, -1.1])\nassert np.allclose(clipped, [0.8, 1.0, 1.2, -1.1])\nassert np.allclose(pessimistic, [0.75, 1.0, 1.2, -1.1])\n```",
+      "answer": "```python\nfrom dataclasses import dataclass\nimport numpy as np\n\n@dataclass(frozen=True)\nclass PPODiagnostics:\n    ratio_outside_fraction: float\n    active_clip_fraction: float\n    approx_kl_nonnegative: float\n    mean_log_ratio: float\n\ndef ppo_clipped_terms(ratio, advantage, clip_epsilon=0.2):\n    r = np.asarray(ratio, dtype=float)\n    a = np.asarray(advantage, dtype=float)\n    if r.shape != a.shape or np.any(r <= 0):\n        raise ValueError(\"positive aligned ratios are required\")\n    unclipped = r * a\n    clipped = np.clip(r, 1 - clip_epsilon, 1 + clip_epsilon) * a\n    pessimistic = np.minimum(unclipped, clipped)\n    return unclipped, clipped, pessimistic\n\ndef ppo_diagnostics(new_log_prob, old_log_prob, advantage, clip_epsilon=0.2):\n    log_ratio = np.asarray(new_log_prob, dtype=float) - np.asarray(old_log_prob, dtype=float)\n    ratio = np.exp(log_ratio)\n    a = np.asarray(advantage, dtype=float)\n    unclipped, _, pessimistic = ppo_clipped_terms(ratio, a, clip_epsilon)\n    outside = np.mean((ratio < 1 - clip_epsilon) | (ratio > 1 + clip_epsilon))\n    active = np.mean(pessimistic < unclipped - 1e-15)\n    approx_kl = np.mean((ratio - 1) - log_ratio)\n    return PPODiagnostics(float(outside), float(active), float(approx_kl), float(np.mean(log_ratio)))\n```\n\n`active_clip_fraction` checks whether the pessimistic minimum changed, not merely whether a ratio lies outside the interval.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Response mask, sequence probability, and token advantages",
+      "prompt": "Implement three functions:\n\n```python\ndef response_token_mask(input_ids, prompt_lengths, pad_token_id, eos_token_id):\n    ...\n\ndef sequence_log_probability(token_log_probs, mask=None):\n    ...\n\ndef broadcast_sequence_advantages(sequence_advantages, token_mask):\n    ...\n```\n\nThe first returns a `[batch, T-1]` mask aligned with labels `input_ids[:, 1:]`: prompt and PAD tokens are excluded, the first generated EOS is included, and every later position is excluded. The second sums response-token log-probabilities. The third broadcasts one whole-response advantage to unmasked positions.\n\nOpen check:\n\n```python\nids = np.array([\n    [1, 10, 11, 20, 21, 2, 0],\n    [1, 12, 30, 2, 99, 0, 0],\n])\nmask = response_token_mask(ids, np.array([3, 2]), pad_token_id=0, eos_token_id=2)\nnp.testing.assert_array_equal(mask, [\n    [0, 0, 1, 1, 1, 0],\n    [0, 1, 1, 0, 0, 0],\n])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef response_token_mask(input_ids, prompt_lengths, pad_token_id, eos_token_id):\n    ids = np.asarray(input_ids)\n    lengths = np.asarray(prompt_lengths, dtype=int)\n    if ids.ndim != 2 or lengths.shape != (ids.shape[0],):\n        raise ValueError(\"input_ids must be [B, T] and prompt_lengths [B]\")\n    mask = np.zeros((ids.shape[0], ids.shape[1] - 1), dtype=float)\n    for b in range(ids.shape[0]):\n        active = True\n        for pos in range(1, ids.shape[1]):\n            token = int(ids[b, pos])\n            if pos < lengths[b] or token == pad_token_id or not active:\n                continue\n            mask[b, pos - 1] = 1.0\n            if token == eos_token_id:\n                active = False\n    return mask\n\ndef sequence_log_probability(token_log_probs, mask=None):\n    lp = np.asarray(token_log_probs, dtype=float)\n    if mask is None:\n        return np.sum(lp, axis=-1)\n    m = np.asarray(mask, dtype=float)\n    if m.shape != lp.shape:\n        raise ValueError(\"mask must match token_log_probs\")\n    return np.sum(lp * m, axis=-1)\n\ndef broadcast_sequence_advantages(sequence_advantages, token_mask):\n    a = np.asarray(sequence_advantages, dtype=float)\n    m = np.asarray(token_mask, dtype=float)\n    if a.ndim != 1 or m.ndim != 2 or m.shape[0] != a.shape[0]:\n        raise ValueError(\"advantages must be [B] and token_mask [B, T]\")\n    return a[:, None] * m\n```\n\nThe mask is shifted relative to the original tokens because logits at position $k$ score the label at position $k+1$. A generated EOS is a policy action and is included; prompt, PAD, and the post-EOS tail are excluded. Broadcasting one advantage implements a whole-response score-function objective, but it does not become a local explanation of token credit.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

@@ -1,0 +1,9 @@
+seeds: 11, 37, 71
+num_envs: 16
+rollout_steps: 128
+updates: 32
+update_epochs: 4
+minibatch_size: 512
+evaluation_episodes: 4
+evaluation_every: 4
+environment: self-contained CartPole, max_episode_steps=500

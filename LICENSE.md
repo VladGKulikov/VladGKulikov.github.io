@@ -5,14 +5,14 @@ two licenses.
 
 | Material | License |
 |---|---|
-| Course lecture text, public quiz questions and worked answers, course illustrations, course metadata, and author-written explanatory prose | [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](LICENSE-CONTENT.md) |
+| Course lecture text, public quiz questions, exercises, project guidance, notebook explanations and worked answers, course illustrations, course metadata, and author-written explanatory prose | [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](LICENSE-CONTENT.md) |
 | Site source code, build tooling, publication scripts, and other standalone software written for this repository | [Apache License 2.0](LICENSE-CODE) |
 
 ## Scope
 
 Unless a file carries a more specific notice:
 
-- `public/content/**`, `public/quizzes/**`, `public/assets/**`, `app/generated/content.json`, `app/generated/quizzes.json`, and the
+- `public/content/**`, `public/quizzes/**`, `public/practice/**`, `public/assets/**`, `app/generated/content.json`, `app/generated/quizzes.json`, `app/generated/practice.json`, and the
   course descriptions are licensed under CC BY-NC-SA 4.0;
 - TypeScript, JavaScript, CSS, configuration, build, worker, and validation code
   is licensed under Apache-2.0;
@@ -20,12 +20,16 @@ Unless a file carries a more specific notice:
   under their original licenses, as described in
   [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-The public materials include Reader Editions and the explicitly published quiz
-questions and worked answers in `public/quizzes/**`. Course repositories remain
-the canonical authoring sources. Exercises, notebooks, projects, capstone
-materials and other restricted Stepik course materials absent from this
-repository are not licensed by these files. The browser grading implementation
-is site code covered by Apache-2.0.
+The public materials include lectures, quizzes, exercises, worked solutions,
+project guidance and the existing notebooks explicitly published here.
+`public/downloads/**` and the course ZIP archives preserve original source files:
+notebook explanations and educational task/answer content are CC BY-NC-SA 4.0;
+standalone Python code, notebook code cells and software/configuration files
+are Apache-2.0 unless a file carries a more specific notice. The same split
+applies to code embedded in the structured practice JSON. Course repositories
+remain the canonical authoring sources. Other restricted Stepik course materials
+absent from this repository are not licensed by these files. Browser grading,
+code highlighting and notebook preview implementations are Apache-2.0.
 
 ## Attribution
 

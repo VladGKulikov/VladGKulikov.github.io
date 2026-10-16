@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-03",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "Bandit or sequential problem",
+      "prompt": "For each case, choose the most accurate model: **ordinary bandit**, **contextual bandit**, or **Markov decision process** (MDP).\n\n\n1. For every independent request, a service chooses one of three models. Request features are known, one scalar score arrives after the response, and the choice does not affect later requests.\n\n2. An agent opens web pages, extracts information, and decides which link to follow next.\n\n3. Two fixed banners are rotated for an otherwise identical audience; only the click on the displayed banner is observed.\n\n4. A dialogue system chooses an utterance, after which the user replies and changes the course of the conversation.\n\nFor every answer, name one assumption whose violation would change the model.",
+      "answer": "1. **Contextual bandit.** Request features affect the model choice, but the response does not change the next request. The abstraction fails if serving a user affects retention or later requests.\n\n2. **Markov decision process** (MDP). Opening a page changes the available links and information, so the action creates a successor state.\n\n3. **Ordinary bandit.** Context is treated as constant and only the displayed banner's reward is observed. Audience drift or changing banner appeal would introduce non-stationarity or context.\n\n4. **MDP**, possibly partially observed. The utterance changes the future dialogue. A bandit would be adequate only for one isolated utterance with no continuation.\n\nThe decisive test is whether action value depends on a controlled future state.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "What regret measures",
+      "prompt": "Select **three** correct statements.\n\n\n1. A trajectory's pseudo-regret can be computed without knowing the true reward means.\n\n2. The decomposition $R_T=\\sum_a\\Delta_a\\mathbb{E}[N_a(T)]$ shows that an action with a small gap may be selected more often at a small immediate cost.\n\n3. Sublinear regret means $R_T/T\\to0$.\n\n4. Logarithmic regret guarantees that an algorithm outperforms every other algorithm at every finite horizon.\n\n5. Realized cumulative reward remains random under a fixed action sequence when rewards are noisy.",
+      "answer": "Statements **2, 3, and 5** are correct.\n\nPseudo-regret requires the true means, which are normally known only to a simulator. The gap decomposition assigns cost $\\Delta_a$ to every suboptimal selection. Sublinear regret is exactly $R_T/T\\to0$. An asymptotic order does not rank all algorithms at every finite horizon. Finally, noisy rewards make realized cumulative reward random even under a fixed action sequence.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Constant ε and optimistic initialization",
+      "prompt": "Select the **two** most accurate statements.\n\n\n1. With fixed $\\varepsilon>0$, ε-greedy continues to select suboptimal actions with positive frequency.\n\n2. Optimistic initialization guarantees logarithmic regret in every non-stationary environment.\n\n3. A constant step size can help under reward drift because it downweights old observations.\n\n4. Pure greediness has linear regret on every individual run.\n\n5. Any decaying $\\varepsilon_t$ schedule automatically gives optimal regret.",
+      "answer": "Statements **1 and 3** are correct.\n\nA fixed ε leaves a permanent random branch. A constant step size exponentially downweights old observations and can track drift. Optimistic initialization is not a universal guarantee, pure greediness can succeed on a particular run, and a decaying ε schedule can stop exploration too early if it decreases too fast.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Scope of a classical confidence-bound guarantee",
+      "prompt": "An **upper confidence bound** (UCB) method is used in a stationary bandit; UCB1 is its classical variant.\n\nSelect **three** conditions or qualifications needed to read the UCB1 guarantee correctly.\n\n\n1. Rewards are bounded; the standard theorem uses $[0,1]$.\n\n2. Reward means remain unchanged over time.\n\n3. The logarithmic bound is independent of action gaps $\\Delta_a$.\n\n4. Finite-horizon regret may remain substantial when two actions are nearly equal.\n\n5. Any neural uncertainty score is automatically a UCB confidence bound.\n\n6. The action set may change arbitrarily during learning while the classical UCB1 proof remains unchanged.",
+      "answer": "An **upper confidence bound** (UCB) method and its classical UCB1 variant must be read together with their assumptions. Statements **1, 2, and 4** are correct.\n\nClassical UCB1 uses bounded rewards in $[0,1]$, stationary means, and an instance-dependent bound involving $1/\\Delta_a$. Nearly tied actions can therefore be expensive to distinguish. An arbitrary neural uncertainty score is not automatically a confidence bound. An arbitrarily changing action set is a different problem, so the classical proof cannot simply be reused unchanged.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "What Thompson sampling does",
+      "prompt": "A Bernoulli action starts with a $\\operatorname{Beta}(1,1)$ prior. After 8 successes and 2 failures, select **three** correct statements.\n\n\n1. The posterior is $\\operatorname{Beta}(9,3)$.\n\n2. The algorithm always selects the largest posterior mean with no randomness.\n\n3. On every round, it samples one plausible mean for every action.\n\n4. A poorly observed action can be selected because its posterior is wide.\n\n5. The 1933 publication date itself proves a modern logarithmic regret guarantee.",
+      "answer": "Statements **1, 3, and 4** are correct.\n\nThe posterior is\n\n$$\n\\operatorname{Beta}(1+8,1+2)=\\operatorname{Beta}(9,3).\n$$\n\nThompson sampling draws one plausible mean per action and selects the largest draw. A broad posterior can therefore trigger exploration. The method is not greedy in the posterior mean, and the historical publication date does not establish later regret theory.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "An LLM as a contextual bandit",
+      "prompt": "Select **three** correct statements.\n\n\n1. If the prompt is context, a full response is one action, a scalar reward follows, and the episode ends, the external problem is a contextual bandit.\n\n2. The whole-response abstraction implies that tokens cease to be sequential actions.\n\n3. A multi-turn tool-using agent usually needs state that contains consequences of previous actions.\n\n4. Choosing among several models for independent requests can be a contextual bandit.\n\n5. Every Best-of-N procedure is automatically a multi-armed bandit.",
+      "answer": "Statements **1, 3, and 4** are correct.\n\nA whole-response terminal abstraction is a contextual bandit. Token generation remains sequential internally. Tool-using and multi-turn systems need state because actions change what happens next. Model routing over independent requests is a natural contextual bandit. Fixed-policy Best-of-N is repeated sampling and selection, not automatically a multi-armed bandit.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Overlap in logged-policy evaluation",
+      "prompt": "**Inverse propensity scoring** (IPS) evaluates a target policy $\\pi$ from logs generated by behavior policy $\\mu$. Its self-normalized form is **self-normalized inverse propensity scoring** (SNIPS), while a **doubly robust** (DR) estimator combines reward predictions with propensity weights.\n\nSelect **three** correct statements.\n\n\n1. Every pair $(x,a)$ with $\\pi(a\\mid x)>0$ requires $\\mu(a\\mid x)>0$.\n\n2. Small behavior probabilities can produce large weights and high variance.\n\n3. If behavior probabilities were not logged, they can always be reconstructed exactly from selected actions.\n\n4. Self-normalized IPS is generally biased.\n\n5. A doubly robust estimator creates an observed reward for an action that was never selected or modeled.",
+      "answer": "**Inverse propensity scoring** (IPS), **self-normalized inverse propensity scoring** (SNIPS), and a **doubly robust** (DR) estimator all depend on how the log was collected. Statements **1, 2, and 4** are correct.\n\nIPS needs positive behavior probability wherever the target policy places mass. Small propensities cause large importance weights and high variance. SNIPS usually reduces sensitivity to scale but introduces bias. Chosen actions alone do not identify the randomized selection probability, and DR does not manufacture observed counterfactual outcomes without support.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Temperature, Best-of-N, and entropy",
+      "prompt": "Item 6 refers to **group relative policy optimization** (GRPO). Select **four** correct statements.\n\n\n1. Raising the temperature of a pure softmax with fixed logits flattens the distribution.\n\n2. Temperature sampling from a frozen LLM updates the policy from reward by itself.\n\n3. For independent candidates with the same success probability $p$, $1-(1-p)^N$ is the probability that the pool contains at least one success.\n\n4. The finite-sample pass@$k$ estimator from $n$ candidates and $c$ successes is $1-\\binom{n-c}{k}/\\binom{n}{k}$.\n\n5. Lower entropy always means a worse policy.\n\n6. If all rewards in a GRPO group are equal, subtracting the group mean gives zero relative signal.",
+      "answer": "Statements **1, 3, 4, and 6** are correct.\n\nTemperature changes a fixed softmax distribution but does not update parameters from reward. The coverage formula assumes independence and the same success probability $p$ for a fixed prompt. Perfect selection is an additional condition for equating coverage with returned-answer accuracy; a successful candidate can exist without being selected. The combinatorial expression estimates pass@$k$ from a finite sample. Entropy can decrease for legitimate reasons; it becomes a failure mode only in context. Equal group rewards yield zero mean-centered advantages.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Incremental mean",
+      "prompt": "An action has been selected 4 times and its current estimate is $Q_4=0.35$. The fifth reward is $1$.\n\n\n1. Compute $Q_5$ incrementally.\n\n2. Find the sum of the first four rewards consistent with $Q_4$.\n\n3. Verify the result with the direct mean of all five observations.",
+      "answer": "$$\nQ_5\n=0.35+\\frac{1}{5}(1-0.35)\n=0.48.\n$$\n\nThe first four rewards sum to\n\n$$\nS_4=4Q_4=1.4.\n$$\n\nDirectly,\n\n$$\n\\frac{S_4+1}{5}=\\frac{2.4}{5}=0.48.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Regret decomposition",
+      "prompt": "Three actions have means\n\n$$\n\\mu=(0.2,\\ 0.5,\\ 0.7).\n$$\n\nOver $T=100$ rounds, expected selection counts are\n\n$$\n\\mathbb{E}[N(T)]=(10,\\ 30,\\ 60).\n$$\n\n\n1. Find $\\mu^*$ and the gaps $\\Delta_a$.\n\n2. Compute expected regret.\n\n3. How does regret change if 10 selections of action 2 are replaced by 10 selections of action 3?",
+      "answer": "The optimum is $\\mu^*=0.7$, so\n\n$$\n\\Delta=(0.5,\\ 0.2,\\ 0).\n$$\n\nExpected regret is\n\n$$\nR_T=0.5\\cdot10+0.2\\cdot30=11.\n$$\n\nReplacing ten selections of action 2 by action 3 removes $10\\cdot0.2=2$ regret, leaving $9$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "One UCB1 index calculation",
+      "prompt": "At round $t=101$, two actions have estimates and counts\n\n$$\n\\widehat\\mu_1=0.55,\\quad N_1=80,\n$$\n\n$$\n\\widehat\\mu_2=0.48,\\quad N_2=20.\n$$\n\nFor\n\n$$\nI_a=\\widehat\\mu_a+\\sqrt{\\frac{2\\log t}{N_a}},\n$$\n\ncompute $I_1$ and $I_2$ to three decimals and state the selected action. Explain why the action with the lower sample mean may win.",
+      "answer": "$$\nI_1\n=0.55+\\sqrt{\\frac{2\\log101}{80}}\n\\approx0.890,\n$$\n\n$$\nI_2\n=0.48+\\sqrt{\\frac{2\\log101}{20}}\n\\approx1.159.\n$$\n\nAction 2 is selected. Its sample mean is lower, but it has only one quarter as many observations, so its uncertainty bonus is much larger. The index is an optimistic selection rule, not a claim that action 2 is truly better.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "Beta posterior",
+      "prompt": "Two Bernoulli actions use $\\operatorname{Beta}(1,1)$ priors.\n\n- action 1: 12 successes and 8 failures;\n- action 2: 3 successes and 1 failure.\n\n\n1. Write both posteriors.\n\n2. Compute their means.\n\n3. Which action has the larger posterior mean?\n\n4. Why can Thompson sampling still select the other action?",
+      "answer": "Action 1:\n\n$$\n\\mu_1\\mid\\mathcal D\\sim\\operatorname{Beta}(13,9),\n\\qquad\n\\mathbb E[\\mu_1\\mid\\mathcal D]=\\frac{13}{22}\\approx0.591.\n$$\n\nAction 2:\n\n$$\n\\mu_2\\mid\\mathcal D\\sim\\operatorname{Beta}(4,2),\n\\qquad\n\\mathbb E[\\mu_2\\mid\\mathcal D]=\\frac{4}{6}\\approx0.667.\n$$\n\nAction 2 has the larger posterior mean, but its posterior is based on only four observations and is wider. A sample from $\\operatorname{Beta}(13,9)$ can exceed a sample from $\\operatorname{Beta}(4,2)$ on a given round, so Thompson sampling can choose action 1.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "IPS, SNIPS, and DR on three rows",
+      "prompt": "The log contains:\n\n| $i$ | $r_i$ | $\\mu(a_i\\mid x_i)$ | $\\pi(a_i\\mid x_i)$ | $\\widehat r(x_i,a_i)$ | $\\sum_a\\pi(a\\mid x_i)\\widehat r(x_i,a)$ |\n|---:|---:|---:|---:|---:|---:|\n| 1 | 1 | 0.50 | 1.00 | 0.60 | 0.70 |\n| 2 | 0 | 0.25 | 0.50 | 0.30 | 0.40 |\n| 3 | 1 | 0.80 | 0.40 | 0.70 | 0.65 |\n\n\n1. Compute $w_i=\\pi/\\mu$.\n\n2. Compute $\\widehat V_{\\mathrm{IPS}}=n^{-1}\\sum_iw_ir_i$.\n\n3. Compute $\\widehat V_{\\mathrm{SNIPS}}=\\sum_iw_ir_i/\\sum_iw_i$.\n\n4. Compute the doubly robust (DR) estimate.\n\n5. Which row contributes most to IPS variance, and why?",
+      "answer": "The weights are\n\n$$\nw=(2,\\ 2,\\ 0.5).\n$$\n\nIPS:\n\n$$\n\\widehat V_{\\mathrm{IPS}}\n=\\frac{2\\cdot1+2\\cdot0+0.5\\cdot1}{3}\n\\approx0.8333.\n$$\n\nSNIPS:\n\n$$\n\\widehat V_{\\mathrm{SNIPS}}\n=\\frac{2.5}{4.5}\n\\approx0.5556.\n$$\n\nThe row-wise DR terms are\n\n$$\n0.70+2(1-0.60)=1.50,\n$$\n\n$$\n0.40+2(0-0.30)=-0.20,\n$$\n\n$$\n0.65+0.5(1-0.70)=0.80.\n$$\n\nTherefore\n\n$$\n\\widehat V_{\\mathrm{DR}}=\\frac{1.50-0.20+0.80}{3}=0.70.\n$$\n\nRows 1 and 2 have the largest weights and are most capable of inflating variance. In general, the most dangerous row combines small behavior probability with non-zero target probability.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Entropy-regularized policy, Best-of-N, and pass@k",
+      "prompt": "Two actions have scores $q=(0,1)$ and temperature $\\tau=0.5$.\n\n\n1. Compute $\\pi^*(a)\\propto\\exp(q(a)/\\tau)$.\n\n2. If one independent candidate succeeds with probability $p=0.2$, find the chance of at least one success for $N=5$.\n\n3. Find the smallest $N$ giving probability at least $0.9$.\n\n4. For $n=10$, $c=2$, and $k=3$, compute the finite-sample pass@$k$ estimator.\n\n5. Explain why parts 2 and 4 describe different statistical objects.",
+      "answer": "$$\n\\pi^*(1)=\\frac{1}{1+e^2}\\approx0.1192,\n\\qquad\n\\pi^*(2)=\\frac{e^2}{1+e^2}\\approx0.8808.\n$$\n\nFor five independent samples,\n\n$$\n1-0.8^5=0.67232.\n$$\n\nFor at least 90%,\n\n$$\nN\\ge\\frac{\\log0.1}{\\log0.8}\\approx10.32,\n$$\n\nso $N=11$.\n\nThe finite-sample estimate is\n\n$$\n1-\\frac{\\binom{8}{3}}{\\binom{10}{3}}\n=1-\\frac{56}{120}\n\\approx0.5333.\n$$\n\nThe first number uses a known population success probability for future independent draws. The second is computed from a finite set of ten candidates with two observed successes.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Pseudo-regret from actions",
+      "prompt": "Implement:\n\n```python\nimport numpy as np\n\ndef pseudo_regret_curve(means: np.ndarray, actions: np.ndarray) -> np.ndarray:\n    \"\"\"Return cumulative pseudo-regret after each action.\"\"\"\n    ...\n```\n\nRequirements:\n\n- `means` is a one-dimensional vector of means;\n- `actions` is a one-dimensional integer vector;\n- an invalid action index raises `ValueError`;\n- the result has floating type and the same length as `actions`.\n\nCheck:\n\n```python\nmeans = np.array([0.2, 0.5, 0.7])\nactions = np.array([0, 2, 1])\n# expected: [0.5, 0.5, 0.7]\n```\n\nOpen checks:\n\n```python\nnp.testing.assert_allclose(\n    pseudo_regret_curve([0.2, 0.5, 0.7], [0, 2, 1]),\n    [0.5, 0.5, 0.7],\n)\n```",
+      "answer": "```python\nimport numpy as np\n\ndef pseudo_regret_curve(means: np.ndarray, actions: np.ndarray) -> np.ndarray:\n    means = np.asarray(means, dtype=float)\n    actions = np.asarray(actions, dtype=int)\n    if means.ndim != 1 or means.size < 2:\n        raise ValueError(\"means must be one-dimensional\")\n    if actions.ndim != 1:\n        raise ValueError(\"actions must be one-dimensional\")\n    if np.any((actions < 0) | (actions >= means.size)):\n        raise ValueError(\"invalid action index\")\n    return np.cumsum(means.max() - means[actions], dtype=float)\n```\n\nEvery increment is non-negative, so cumulative pseudo-regret cannot decrease.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "ε-greedy Bernoulli bandit",
+      "prompt": "Implement:\n\n```python\nimport numpy as np\n\ndef run_epsilon_greedy(\n    probabilities: np.ndarray,\n    horizon: int,\n    epsilon: float,\n    seed: int,\n) -> tuple[np.ndarray, np.ndarray]:\n    \"\"\"Return action and reward arrays.\"\"\"\n    ...\n```\n\nRules:\n\n- reward is `rng.random() < probabilities[action]`;\n- break greedy ties uniformly;\n- update estimates as sample means;\n- use `np.random.default_rng(seed)`;\n- decide whether to explore before sampling the reward.\n\nCompare $\\varepsilon=0$, $0.05$, and $0.2$ on one instance over at least 100 independent runs. Report mean pseudo-regret, not a conclusion from one seed.\n\nOpen checks:\n\n```python\nactions, rewards = run_epsilon_greedy([0.1, 0.4, 0.6], 40, 0.1, 17)\nassert actions.shape == (40,)\nassert rewards.shape == (40,)\nassert np.all((rewards == 0.0) | (rewards == 1.0))\n```",
+      "answer": "```python\nimport numpy as np\n\ndef run_epsilon_greedy(probabilities, horizon, epsilon, seed):\n    p = np.asarray(probabilities, dtype=float)\n    if p.ndim != 1 or p.size < 2 or np.any((p < 0) | (p > 1)):\n        raise ValueError(\"invalid probabilities\")\n    if horizon <= 0 or not 0 <= epsilon <= 1:\n        raise ValueError(\"invalid horizon or epsilon\")\n\n    rng = np.random.default_rng(seed)\n    q = np.zeros(p.size)\n    n = np.zeros(p.size, dtype=int)\n    actions = np.empty(horizon, dtype=int)\n    rewards = np.empty(horizon, dtype=float)\n\n    for t in range(horizon):\n        if rng.random() < epsilon:\n            action = int(rng.integers(p.size))\n        else:\n            best = np.flatnonzero(np.isclose(q, q.max()))\n            action = int(rng.choice(best))\n        reward = float(rng.random() < p[action])\n        q[action] += (reward - q[action]) / (n[action] + 1)\n        n[action] += 1\n        actions[t] = action\n        rewards[t] = reward\n    return actions, rewards\n```\n\nAverage over many independent seeds. One greedy run may succeed or fail by chance and does not estimate expected regret.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "UCB1",
+      "prompt": "Implement UCB1 for rewards in $[0,1]$:\n\n```python\nimport numpy as np\n\ndef run_ucb1(\n    probabilities: np.ndarray,\n    horizon: int,\n    seed: int,\n) -> tuple[np.ndarray, np.ndarray]:\n    ...\n```\n\nRequirements:\n\n\n1. select actions `0, 1, ..., K-1` on the first $K$ rounds;\n\n2. then use $\\widehat\\mu_a+\\sqrt{2\\log t/N_a}$;\n\n3. update sample means incrementally;\n\n4. return action and reward arrays.\n\nVerify that every action is selected at least once and cumulative pseudo-regret never decreases.\n\nOpen checks:\n\n```python\nactions, rewards = run_ucb1([0.1, 0.4, 0.6], 3, 5)\nassert np.array_equal(actions, [0, 1, 2])\nassert rewards.shape == (3,)\n```",
+      "answer": "```python\nimport numpy as np\n\ndef run_ucb1(probabilities, horizon, seed):\n    p = np.asarray(probabilities, dtype=float)\n    if p.ndim != 1 or p.size < 2 or np.any((p < 0) | (p > 1)):\n        raise ValueError(\"invalid probabilities\")\n    if horizon <= 0:\n        raise ValueError(\"horizon must be positive\")\n\n    rng = np.random.default_rng(seed)\n    k = p.size\n    q = np.zeros(k)\n    n = np.zeros(k, dtype=int)\n    actions = np.empty(horizon, dtype=int)\n    rewards = np.empty(horizon, dtype=float)\n\n    for t in range(horizon):\n        if t < k:\n            action = t\n        else:\n            index = q + np.sqrt(2 * np.log(t + 1) / n)\n            best = np.flatnonzero(np.isclose(index, index.max()))\n            action = int(rng.choice(best))\n        reward = float(rng.random() < p[action])\n        q[action] += (reward - q[action]) / (n[action] + 1)\n        n[action] += 1\n        actions[t] = action\n        rewards[t] = reward\n    return actions, rewards\n```\n\nThe forced first pass prevents division by zero and ensures every action has at least one observation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "Thompson sampling",
+      "prompt": "Implement Beta–Bernoulli Thompson sampling:\n\n```python\nimport numpy as np\n\ndef run_thompson(\n    probabilities: np.ndarray,\n    horizon: int,\n    seed: int,\n    prior_alpha: float = 1.0,\n    prior_beta: float = 1.0,\n) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:\n    \"\"\"Return actions, rewards, and final alpha/beta arrays.\"\"\"\n    ...\n```\n\nIncrement `alpha[action]` after success and `beta[action]` after failure. Compare with UCB1 on several instances, including one with close means. Distinguish your empirical observation from a general guarantee.\n\nOpen checks:\n\n```python\nactions, rewards, alpha, beta = run_thompson(\n    [0.1, 0.4, 0.6], 10, 23\n)\nassert actions.shape == rewards.shape == (10,)\nassert alpha.shape == beta.shape == (3,)\nassert np.isclose((alpha + beta).sum(), 16.0)\n```",
+      "answer": "```python\nimport numpy as np\n\ndef run_thompson(\n    probabilities,\n    horizon,\n    seed,\n    prior_alpha=1.0,\n    prior_beta=1.0,\n):\n    p = np.asarray(probabilities, dtype=float)\n    if p.ndim != 1 or p.size < 2 or np.any((p < 0) | (p > 1)):\n        raise ValueError(\"invalid probabilities\")\n    if horizon <= 0 or prior_alpha <= 0 or prior_beta <= 0:\n        raise ValueError(\"invalid parameters\")\n\n    rng = np.random.default_rng(seed)\n    alpha = np.full(p.size, float(prior_alpha))\n    beta = np.full(p.size, float(prior_beta))\n    actions = np.empty(horizon, dtype=int)\n    rewards = np.empty(horizon, dtype=float)\n\n    for t in range(horizon):\n        samples = rng.beta(alpha, beta)\n        action = int(np.argmax(samples))\n        reward = float(rng.random() < p[action])\n        alpha[action] += reward\n        beta[action] += 1.0 - reward\n        actions[t] = action\n        rewards[t] = reward\n    return actions, rewards, alpha, beta\n```\n\nA defensible report states the number of independent runs, horizon, reward instance, and summary statistic. It does not promote an instance-specific result into a universal ranking.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "IPS, SNIPS, and doubly robust evaluation",
+      "prompt": "Implement:\n\n```python\ndef ips_value(rewards, behavior_probs, target_probs) -> float:\n    ...\n\ndef snips_value(rewards, behavior_probs, target_probs) -> float:\n    ...\n\ndef doubly_robust_value(\n    rewards,\n    behavior_probs,\n    target_probs,\n    predictions_logged,\n    predictions_target,\n) -> float:\n    ...\n```\n\n`predictions_target[i]` already contains $\\sum_a\\pi(a\\mid x_i)\\widehat r(x_i,a)$. Raise `ValueError` for non-positive behavior probabilities. Add an experiment where one propensity decreases from $0.5$ to $0.01$ and show how its IPS weight changes.\n\nOpen checks:\n\n```python\nactual = ips_value(\n    [1.0, 0.0, 1.0],\n    [0.5, 0.25, 0.5],\n    [1.0, 0.0, 0.5],\n)\nassert np.isclose(actual, 1.0)\n```",
+      "answer": "```python\nimport numpy as np\n\ndef _arrays(rewards, behavior_probs, target_probs):\n    r = np.asarray(rewards, dtype=float)\n    p = np.asarray(behavior_probs, dtype=float)\n    q = np.asarray(target_probs, dtype=float)\n    if r.ndim != 1 or p.shape != r.shape or q.shape != r.shape or r.size == 0:\n        raise ValueError(\"equal non-empty vectors required\")\n    if np.any(p <= 0) or np.any(p > 1) or np.any((q < 0) | (q > 1)):\n        raise ValueError(\"invalid probabilities\")\n    return r, p, q\n\ndef ips_value(rewards, behavior_probs, target_probs):\n    r, p, q = _arrays(rewards, behavior_probs, target_probs)\n    return float(np.mean(q * r / p))\n\ndef snips_value(rewards, behavior_probs, target_probs):\n    r, p, q = _arrays(rewards, behavior_probs, target_probs)\n    w = q / p\n    if w.sum() <= 0:\n        raise ValueError(\"zero total target weight\")\n    return float(np.dot(w, r) / w.sum())\n\ndef doubly_robust_value(\n    rewards,\n    behavior_probs,\n    target_probs,\n    predictions_logged,\n    predictions_target,\n):\n    r, p, q = _arrays(rewards, behavior_probs, target_probs)\n    logged = np.asarray(predictions_logged, dtype=float)\n    target = np.asarray(predictions_target, dtype=float)\n    if logged.shape != r.shape or target.shape != r.shape:\n        raise ValueError(\"prediction shapes must match\")\n    return float(np.mean(target + q / p * (r - logged)))\n```\n\nWith target probability 0.5, lowering behavior probability from 0.5 to 0.01 increases the weight from 1 to 50. One such row can dominate the estimate, which is the practical cost of weak overlap.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Entropy, Best-of-N, and pass@k",
+      "prompt": "Implement:\n\n```python\nimport numpy as np\n\ndef stable_softmax(logits, temperature=1.0) -> np.ndarray:\n    ...\n\ndef categorical_entropy(probabilities) -> float:\n    ...\n\ndef best_of_n_success(p: float, n: int) -> float:\n    ...\n\ndef pass_at_k(n: int, c: int, k: int) -> float:\n    ...\n```\n\nRequirements:\n\n- softmax remains stable for large logits;\n- entropy is in nats and uses $0\\log0=0$;\n- Best-of-N uses stable `log1p`/`expm1` for small $p$ and large $N$;\n- pass@$k$ uses $1-\\binom{n-c}{k}/\\binom{n}{k}$ or an equivalent stable product;\n- invalid $n,c,k,p$ raise `ValueError`.\n\nVerify that entropy rises for temperatures $0.5$, $1$, and $2$ with fixed logits, but do not infer anything about correctness or answer quality from that fact.\n\nOpen checks:\n\n```python\np = stable_softmax([1000.0, 1001.0])\nassert np.isclose(p.sum(), 1.0)\nassert np.all(p > 0.0)\n```",
+      "answer": "```python\nfrom math import comb\nimport numpy as np\n\ndef stable_softmax(logits, temperature=1.0):\n    z = np.asarray(logits, dtype=float)\n    if z.ndim != 1 or z.size == 0 or not np.all(np.isfinite(z)):\n        raise ValueError(\"invalid logits\")\n    if temperature <= 0 or not np.isfinite(temperature):\n        raise ValueError(\"temperature must be positive\")\n    scaled = z / temperature\n    weights = np.exp(scaled - scaled.max())\n    return weights / weights.sum()\n\ndef categorical_entropy(probabilities):\n    p = np.asarray(probabilities, dtype=float)\n    if p.ndim != 1 or np.any(p < 0) or not np.isclose(p.sum(), 1):\n        raise ValueError(\"invalid probability vector\")\n    positive = p[p > 0]\n    return float(-np.dot(positive, np.log(positive)))\n\ndef best_of_n_success(p, n):\n    if not 0 <= p <= 1 or n < 1:\n        raise ValueError(\"invalid p or n\")\n    if p == 1:\n        return 1.0\n    return float(-np.expm1(n * np.log1p(-p)))\n\ndef pass_at_k(n, c, k):\n    if n <= 0 or c < 0 or c > n or k <= 0 or k > n:\n        raise ValueError(\"invalid n, c, k\")\n    if n - c < k:\n        return 1.0\n    return float(1 - comb(n - c, k) / comb(n, k))\n```\n\nFor fixed logits, pure-softmax entropy increases from temperature 0.5 to 1 to 2. That fact alone says nothing about factual correctness, calibration, or task reward.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

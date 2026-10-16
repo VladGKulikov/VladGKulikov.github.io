@@ -1,0 +1,49 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-15",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. Storage, ANN arithmetic, and metrics",
+      "prompt": "For 10M vectors of dimension 1024, compute the raw payload for fp32, fp16, int8, binary, and MRL-256 int8 in GB and GiB. Compare exact scanning with a 2000-distance scenario at 10 GFLOP/s. Then verify the frozen EN-corpus metrics for BM25, LSA, RRF, and the reranker.",
+      "answer": "*Solution.* Raw storage is $Ndb$. With $N=10^7$, $d=1024$, and 4/2/1/0.125 bytes per component, fp32 uses **40.96 GB = 38.147 GiB**, fp16 20.48 GB = 19.073 GiB, int8 10.24 GB = 9.537 GiB, and binary 1.28 GB = 1.192 GiB. MRL-256 int8 retains 256 components and uses 2.56 GB = 2.384 GiB.\n\nA dot product costs roughly $2d$ FLOP. Exact scan uses $10^7\\cdot2\\cdot1024=20.48$ GFLOP, or 2.048 s at 10 GFLOP/s. Two thousand distances use 4.096 MFLOP, or 0.4096 ms. Arithmetic-work ratio is 5000, not a guaranteed latency speedup because indexing, memory traffic, and overhead are omitted.\n\nFrozen EN metrics `(MRR, Recall@5, nDCG@5)` are BM25 `(1.0000, 0.9286, 0.9706)`, LSA `(0.9048, 0.7143, 0.7301)`, RRF `(0.9286, 0.8571, 0.8546)`, and reranker `(1.0000, 0.9286, 0.9698)`. They reproduce this small corpus, not a universal method ranking.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. Chunking and the cascade budget",
+      "prompt": "A corpus has 20M tokens, chunk size 400, overlap 64, and embedding dimension 1024. Find the number of chunks and the binary-vector payload. Then add 0.0776 ms query encoding, 0.4096 ms ANN-scenario distance work, 104.7273 ms reranking, 120.4338 ms prefill, and 1432.6648 ms decode.",
+      "answer": "*Solution.* Stride is $400-64=336$. The first window covers 400 tokens; the rest require\n\n$$1+\\left\\lceil\\frac{20{,}000{,}000-400}{336}\\right\\rceil=59{,}524$$\n\nchunks. A binary 1024D vector uses $1024/8=128$ bytes, so payload is $59{,}524\\cdot128=7{,}619{,}072$ bytes = **7.266 MiB**.\n\nAdding stages gives $0.0776+0.4096+104.7273+120.4338+1432.6648=\\mathbf{1658.313}$ ms. Decode share is 86.39%; retrieval stages before prefill contribute 6.34%. These shares belong only to the stated scenario.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. RAG versus long context",
+      "prompt": "Compare a 200K-token document with a 3712-token RAG context. The full-document conditional linear prefill estimate is 6.4889 s, and KV costs 128 KiB per token. Find the input, prefill, and KV ratios.",
+      "answer": "*Solution.* Length ratio is $200000/3712=\\mathbf{53.8793}$. Under linear prefill scaling, RAG prefill is $6.4889/53.8793=0.120434$ s. Full-document KV is $200000\\cdot128$ KiB = 24.4141 GiB; RAG KV is $3712\\cdot128$ KiB = 0.453125 GiB, again a 53.8793 ratio. The equal factors rely on one architecture, constant KV bytes/token, and a linear prefill estimate; retrieval quality does not follow from this arithmetic.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4 [project]",
+      "prompt": "Build hybrid retrieval over 50,000 abstracts with BM25, an open bi-encoder, and RRF. Judge at least 100 queries, measure Recall@10 and nDCG@10, then rerank top-{20, 50, 100} and plot quality against latency.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 17](/downloads/modern-llms/project_demos/en/module_17_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5 [project]",
+      "prompt": "Compare fixed-window chunking and late chunking on anaphora-heavy questions. Then compare visual page retrieval over PDFs with OCR followed by text retrieval. Report retrieval quality, index size, and indexing time separately.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 17](/downloads/modern-llms/project_demos/en/module_17_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-08",
+  "language": "ru",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "Четыре роли и физическая реализация",
+      "prompt": "В отчёте написано: «Для RLHF всегда нужно одновременно держать в памяти четыре полные LLM: политику, базу, модель награды и критик».\n\n\n1. Разделите логические роли и физические копии параметров.\n\n2. Для каждой роли укажите, что она вычисляет и обновляется ли она.\n\n3. Назовите минимум четыре способа уменьшить память, не меняя математической роли компонента.\n\n4. Объясните, какая вычислительная цена RLHF остаётся после таких оптимизаций.",
+      "answer": "Политика генерирует ответы и обновляется. База задаёт KL-якорь и заморожена. Модель награды оценивает ответы и обычно заморожена на стадии оптимизации политики. Критик оценивает ожидаемую будущую награду и обучается вместе с RL-контуром.\n\nЭто четыре роли, а не четыре обязательные независимые копии. Память уменьшают общей основой политики и головы ценности, LoRA, квантованием замороженных компонентов, кэшированием логарифмов вероятностей базы, выгрузкой на CPU, разнесением ролей между процессами и меньшими моделью награды и критиком. Остаются генерация, прямые проходы базы и модели награды, оценивание ценности, хранение роллаутов и обратный проход политики.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "Ограничение KL и штраф KL",
+      "prompt": "Сравните\n\n$$\n\\max_\\pi\\;\\mathbb E_\\pi[r]\n\\quad\\text{при}\\quad\nD_{\\mathrm{KL}}(\\pi\\|\\pi_{\\mathrm{ref}})\\le\\delta\n$$\n\nи\n\n$$\n\\max_\\pi\\;\\mathbb E_\\pi[r]\n-\n\\beta D_{\\mathrm{KL}}(\\pi\\|\\pi_{\\mathrm{ref}}).\n$$\n\nПочему они связаны, но выбранное $\\beta$ в нейросетевом обучении не задаёт заранее точный фактический KL? Что KL-регуляризация гарантирует в идеализированной задаче и чего она не гарантирует относительно модели награды и сохранения способностей LLM?",
+      "answer": "Штрафованная задача является лагранжевой формой ограниченной. В идеальной выпуклой постановке активному ограничению соответствует множитель $\\beta$. В нейросетевом обучении параметризация невыпукла, оценки стохастичны, а оптимизация конечна, поэтому выбранный $\\beta$ не задаёт точный фактический KL.\n\nВ точной задаче KL устанавливает цену ухода от базы и сохраняет её носитель. Он не доказывает правильность модели награды, не исключает эксплуатацию её ошибок и не гарантирует сохранение каждой способности LLM.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Сэмплированное отношение и точный KL",
+      "prompt": "Для выбранного токена получено\n\n$$\n\\log\\pi_\\theta(a\\mid s)-\\log\\pi_{\\mathrm{ref}}(a\\mid s)=-0.7.\n$$\n\nРазработчик заключил: «KL на этом токене отрицателен». Исправьте вывод. Различите один сэмплированный логарифм отношения, его ожидание по текущей политике, точный категориальный KL и сумму токеновых вкладов для одного ответа. Почему маска ответа и фактическая политика декодирования входят в контракт вычисления?",
+      "answer": "Число $-0.7$ — одно значение\n\n$$\n\\log\\frac{\\pi_\\theta(a\\mid s)}{\\pi_{\\mathrm{ref}}(a\\mid s)},\n$$\n\nкоторое может быть отрицательным. Его ожидание по $a\\sim\\pi_\\theta$ равно\n\n$$\nD_{\\mathrm{KL}}(\\pi_\\theta\\|\\pi_{\\mathrm{ref}})\\ge0.\n$$\n\nТочный категориальный KL суммирует по всему словарю. Последовательностный вклад складывает сэмплированные логарифмы отношений вдоль одного ответа и тоже может быть отрицательным. Маска определяет действия политики, а фактическое декодирование задаёт правильное распределение поведения после температуры, ограничения числа наиболее вероятных токенов, отсечения по накопленной массе и запретов токенов.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Что требуется для вывода DPO",
+      "prompt": "Перечислите предположения, связывающие KL-регуляризованный оптимум, неявную награду и DPO-потерю. Обсудите пары к одному запросу, модель Брэдли—Терри, фиксированную базу, носитель, качество пар и различие между оптимизацией функции потерь и доказанной правильностью предпочтений.",
+      "answer": "Нужны пары к одному запросу, BT-правдоподобие, точный KL-регуляризованный оптимум, фиксированная база и общий носитель. Два ответа должны проходить одинаковую токенизацию, шаблон и обрезку; метки должны отражать нужную рубрику.\n\nЕсли BT неточна, DPO остаётся определённой классификационной потерей, но интерпретация как точного восстановления неявной награды становится приближённой. Ошибочные пары не делают градиент неопределённым — они направляют его к ошибочной цели.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "DPO и классический офлайн-RL",
+      "prompt": "Команда описала DPO как «классический офлайн-RL в точности, только для текста». Сопоставьте методы по единице данных, наличию переходов $(s,a,r,s')$, явной Q-функции, бутстрэппингу Беллмана, роли базы и риску слабого покрытия. Сформулируйте более точное отношение между семействами.",
+      "answer": "DPO получает запрос и пару полных ответов. Классический офлайн-RL обычно получает переходы или траектории с наградами. DPO не требует явной Q-функции, уравнений Беллмана и бутстрэппинга; база входит непосредственно в логарифмические отношения.\n\nОбщее — фиксированные данные и риск слабого покрытия. Но в офлайн-RL ошибка может усиливаться максимизацией и бутстрэппингом, а DPO эксплуатирует ограниченность пар, стиль, длину и неразмеченные альтернативы. Поэтому DPO — прямой метод оптимизации политики по фиксированным предпочтениям, родственный офлайн-обучению, но не тождественный классическому офлайн-RL.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Рост зазора без роста вероятности победителя",
+      "prompt": "В DPO относительный зазор между предпочтённым и отклонённым ответами растёт. Следует ли отсюда рост вероятности предпочтённого ответа? Постройте объяснение с третьим, не размеченным ответом. Укажите минимум четыре диагностические величины, которые нужно смотреть вместе с потерей.",
+      "answer": "Нет. Предпочтённый ответ должен улучшиться **относительно отклонённого**, но оба могут потерять вероятность, если третий ответ получает ещё больше массы. Нужны выбранный и отклонённый логарифмы вероятностей, их отношения к базе, маржа, KL, длина, градиентный вес и независимое качество свежих генераций.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Аудит данных, длины и шаблона диалога",
+      "prompt": "Предпочтённые ответы в среднем длиннее. Для двух ответов применены разные правила обрезки, а логарифмы вероятностей базы вычислены до изменения шаблона диалога. Перечислите независимые ошибки, нужные служебные поля и статистики. Почему деление суммы логарифмов вероятностей на длину не является универсальным исправлением?",
+      "answer": "Здесь есть корреляция длины с меткой, асимметричная обрезка и устаревший кэш базы. Нужно сохранять исходный текст, токены, маски, длины до/после обрезки, причину остановки, токенизатор, шаблон, версии политики и базы, параметры декодирования, происхождение пары и версию предобработки.\n\nДеление на длину меняет целевую функцию. Оно может ослабить одно смещение, но создать предпочтение коротких ответов и не исправляет кэш, обрезку или плохую разметку.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Выбор метода по контракту данных",
+      "prompt": "Для каждого сценария выберите DPO, IPO, SimPO, KTO, ORPO, PPO/RLOO либо RLVR. Допускается «сначала изменить данные».\n\n\n1. Есть качественные пары и память для замороженной базы.\n\n2. Есть только отдельные метки «желательно/нежелательно».\n\n3. Нужен одноэтапный режим без отдельной базы во время обучения.\n\n4. DPO продолжает раздувать зазоры после остановки роста качества.\n\n5. Награда программно проверяется, нужны свежие ответы текущей политики.\n\n6. Длины сильно различаются, команда хочет явную нормировку последовательностной оценки.\n\nДля каждого выбора назовите главное предположение и одну обязательную метрику.",
+      "answer": "1. **DPO** — качественные пары и доступная база; смотреть выбранные/отклонённые логарифмы отдельно.\n\n2. **KTO** — отдельные желательные и нежелательные примеры; контролировать баланс и семантику меток.\n\n3. **ORPO** — одноэтапная SFT+парная цель без отдельной базы; смотреть NLL и парную часть.\n\n4. **IPO**, cDPO или ранняя остановка — конечная маржа/шум; нужна независимая метрика качества.\n\n5. **RLVR** с PPO-, RLOO- или GRPO-подобным обновлением — проверяемая награда и свежие ответы; смотреть награду, KL и энтропию.\n\n6. **SimPO** — явная нормировка по длине; проверять качество по длиновым срезам.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A9",
+      "title": "Скаляризация или явное ограничение",
+      "prompt": "Команда объединяет полезность и риск в одну оценку $R-\\alpha C$ и заявляет: «Достаточно подобрать $\\alpha$, поэтому отдельное ограничение безопасности не нужно».\n\n\n1. Сравните фиксированную скаляризацию с задачей $\\max\\mathbb E[R]$ при $\\mathbb E[C]\\le d$.\n\n2. Объясните роль двойственной переменной $\\lambda$ и почему её адаптация отличается от заранее выбранного $\\alpha$.\n\n3. Почему модель награды и модель стоимости следует обучать, журналировать и проверять отдельно?\n\n4. Почему ограничение на среднюю стоимость не гарантирует безопасность каждого запроса?\n\n5. Назовите минимум три дополнительных механизма для критических действий и объясните, почему контроль выпуска в Модуле 13 остаётся необходимым.",
+      "answer": "Фиксированная сумма $R-\\alpha C$ заранее задаёт цену риска. Если масштаб $C$ изменился или фактическая частота нарушений оказалась выше ожидаемой, сама цель не требует вернуть стоимость к заданному бюджету. Ограниченная задача формулирует проверяемое условие $\\mathbb E[C]\\le d$, а двойственная переменная играет роль адаптивной цены нарушения:\n\n$$\n\\lambda\\leftarrow[\\lambda+\\eta_\\lambda(\\widehat{\\mathbb E}[C]-d)]_+.\n$$\n\nПри превышении бюджета $\\lambda$ растёт и усиливает штраф; при запасе по ограничению он уменьшается, но остаётся неотрицательным. Это не делает метод безошибочным: качество зависит от измерения стоимости и от оптимизации политики.\n\nНаграда и стоимость отвечают на разные вопросы и могут иметь разные данные, ошибки и пороги. Сведение $C$ к $-R$ позволяет высокой полезности компенсировать критический риск. Отдельные модели и журналы позволяют увидеть такой обмен.\n\nОграничение на среднее допускает редкие, но тяжёлые нарушения. Для критических действий нужны, например, жёсткое запрещение части действий, безопасный набор инструментов, изоляция среды, отказ или аварийное прерывание, а также сценарные и поэлементные проверки. Поэтому независимый контроль выпуска из Модуля 13 остаётся обязательным.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Точный KL-регуляризованный оптимум",
+      "prompt": "Даны\n\n$$\n\\pi_{\\mathrm{ref}}=(0.5,0.3,0.2),\n\\qquad\nr=(0,1,-0.5),\n\\qquad\n\\beta=1.\n$$\n\nВычислите ненормированные веса $w_i=\\pi_{\\mathrm{ref},i}\\exp(r_i/\\beta)$, нормированную $\\pi^*$, ожидаемую награду, KL к базе и регуляризованную цель. Сравните с самой базой.",
+      "answer": "$$\nw=(0.5e^0,0.3e^1,0.2e^{-0.5})\n\\approx(0.500000,0.815485,0.121306).\n$$\n\nПосле нормировки\n\n$$\n\\pi^*\\approx(0.347998,0.567574,0.084429).\n$$\n\nДалее\n\n$$\n\\mathbb E_{\\pi^*}[r]\\approx0.525359,\n\\qquad\nD_{\\mathrm{KL}}(\\pi^*\\|\\pi_{\\mathrm{ref}})\\approx0.162947,\n$$\n\nа регуляризованная цель равна примерно $0.362412$. Для базы цель равна $0.3-0.5\\cdot0.2=0.2$, поскольку её KL к себе нулевой.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Сдвиг награды и носитель базы",
+      "prompt": "Докажите для\n\n$$\n\\pi^*(y)\\propto\\pi_{\\mathrm{ref}}(y)\\exp(r(y)/\\beta)\n$$\n\nдва свойства: общий сдвиг всех наград не меняет $\\pi^*$; нулевая вероятность базы остаётся нулевой при конечной награде. Свяжите свойства с неидентифицируемостью уровня награды и условием носителя.",
+      "answer": "Для $r'(y)=r(y)+c$:\n\n$$\n\\pi'(y)\\propto e^{c/\\beta}\\pi_{\\mathrm{ref}}(y)e^{r(y)/\\beta}.\n$$\n\nОбщий множитель сокращается при нормировке. Если $\\pi_{\\mathrm{ref}}(y)=0$, ненормированный вес равен нулю при конечной награде. Первое свойство отражает неидентифицируемость абсолютного уровня награды, второе — ограничение носителя прямым KL.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "От неявной награды к DPO",
+      "prompt": "Из\n\n$$\nr(x,y)\n=\n\\beta\\log\\frac{\\pi^*(y\\mid x)}{\\pi_{\\mathrm{ref}}(y\\mid x)}\n+\n\\beta\\log Z(x)\n$$\n\nвыведите DPO-логит для пары и покажите сокращение $\\log Z(x)$. Получите потерю $-\\log\\sigma(z)$.",
+      "answer": "В BT входит разность наград. Две добавки $\\beta\\log Z(x)$ сокращаются, поэтому\n\n$$\nz=\\beta\\left[\n\\log\\frac{\\pi_\\theta(y^+\\mid x)}{\\pi_{\\mathrm{ref}}(y^+\\mid x)}\n-\n\\log\\frac{\\pi_\\theta(y^-\\mid x)}{\\pi_{\\mathrm{ref}}(y^-\\mid x)}\n\\right].\n$$\n\nОтрицательный логарифм вероятности наблюдаемого выбора:\n\n$$\n\\mathcal L_{\\mathrm{DPO}}=-\\log\\sigma(z)=\\operatorname{softplus}(-z).\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "Потеря и градиентный вес DPO",
+      "prompt": "Даны\n\n$$\n\\log\\pi_\\theta(y^+\\mid x)=-2.0,\n\\quad\n\\log\\pi_\\theta(y^-\\mid x)=-3.0,\n$$\n\n$$\n\\log\\pi_{\\mathrm{ref}}(y^+\\mid x)=-2.2,\n\\quad\n\\log\\pi_{\\mathrm{ref}}(y^-\\mid x)=-2.4,\n$$\n\nи $\\beta=0.5$. Вычислите два логарифма отношений, зазор $h$, логит $z$, потерю $\\operatorname{softplus}(-z)$ и вес $\\beta\\sigma(-z)$. Что происходит с весом при большом положительном зазоре?",
+      "answer": "Выбранное отношение: $-2.0-(-2.2)=0.2$. Отклонённое: $-3.0-(-2.4)=-0.6$. Поэтому\n\n$$\nh=0.8,\n\\qquad\nz=0.4.\n$$\n\n$$\n\\mathcal L=\\operatorname{softplus}(-0.4)\\approx0.513015,\n$$\n\n$$\n\\beta\\sigma(-z)\\approx0.200656.\n$$\n\nПри большом положительном зазоре вес стремится к нулю.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "Конечная цель: cDPO и IPO",
+      "prompt": "1. Для $z=2$ и $\\varepsilon=0.1$ вычислите\n\n$$\n(1-\\varepsilon)\\operatorname{softplus}(-z)\n+\n\\varepsilon\\operatorname{softplus}(z).\n$$\n\n\n2. Для IPO с $\\tau=0.25$ найдите $h^*=1/(2\\tau)$ и потери $(h-h^*)^2$ при $h=1$, $2$, $4$.\n\nОбъясните смысл конечного оптимума IPO.",
+      "answer": "$$\n\\operatorname{softplus}(-2)\\approx0.126928,\n\\qquad\n\\operatorname{softplus}(2)\\approx2.126928.\n$$\n\nСледовательно,\n\n$$\n\\mathcal L_{\\mathrm{cDPO}}\\approx0.9\\cdot0.126928+0.1\\cdot2.126928=0.326928.\n$$\n\nДля $\\tau=0.25$ цель $h^*=2$. Потери при $h=1,2,4$ равны $1,0,4$. IPO штрафует и недостаточный, и чрезмерный зазор, тогда как обычная DPO-потеря продолжает уменьшаться при его росте.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Точный пример смещения правдоподобия",
+      "prompt": "Три ответа имеют логиты\n\n$$\nz(t)=(-t,-3t,4t).\n$$\n\nПервый предпочтён, второй отклонён, третий не наблюдается. Покажите, что $\\log p_1-\\log p_2=2t$, вычислите вероятности при $t=0$, $0.5$, $1$ и объясните падение $p_1$ при росте парного зазора. Какой сигнал остановки обнаружит режим?",
+      "answer": "Нормировочная константа softmax сокращается:\n\n$$\n\\log p_1-\\log p_2=(-t)-(-3t)=2t.\n$$\n\n| $t$ | $p_1$ | $p_2$ | $p_3$ |\n|---:|---:|---:|---:|\n| 0 | 0.333333 | 0.333333 | 0.333333 |\n| 0.5 | 0.073799 | 0.027149 | 0.899052 |\n| 1 | 0.006687 | 0.000905 | 0.992408 |\n\nТретий логит забирает массу, хотя первый падает медленнее второго. Сигнал — рост маржи при падении выбранного логарифма вероятности, дополненный независимой оценкой генераций.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B7",
+      "title": "Два действия и бюджет стоимости",
+      "prompt": "Безопасное действие имеет награду $0.6$ и стоимость $0$, рискованное — награду $1.0$ и стоимость $1$. Политика выбирает рискованное действие с вероятностью $q$.\n\n\n1. Запишите $\\mathbb E[R]$ и $\\mathbb E[C]$.\n\n2. Найдите оптимальное $q^*$ при ограничении $\\mathbb E[C]\\le0.25$ и соответствующую ожидаемую награду.\n\n3. Запишите\n\n$$\n\\mathcal L(q,\\lambda)\n=\n0.6+0.4q-\\lambda(q-0.25).\n$$\n\nКакой $q\\in[0,1]$ максимизирует $\\mathcal L$ при фиксированных $\\lambda<0.4$, $\\lambda>0.4$ и $\\lambda=0.4$?\n\n4. Выполните один двойственный шаг из $\\lambda=0.2$ с оценкой стоимости $0.6$, бюджетом $0.25$ и скоростью $0.5$.\n\n5. Объясните, почему средний бюджет и жёсткий запрет рискованного действия отвечают на разные требования.",
+      "answer": "Для смеси\n\n$$\n\\mathbb E[C]=q,\n\\qquad\n\\mathbb E[R]=(1-q)0.6+q\\cdot1.0=0.6+0.4q.\n$$\n\nНаграда растёт по $q$, а ограничение даёт $q\\le0.25$. Поэтому\n\n$$\nq^*=0.25,\n\\qquad\n\\mathbb E[R]=0.6+0.4\\cdot0.25=0.7.\n$$\n\nЛагранжева функция линейна по $q$:\n\n$$\n\\mathcal L(q,\\lambda)=0.6+0.25\\lambda+(0.4-\\lambda)q.\n$$\n\nСледовательно, при $\\lambda<0.4$ максимум достигается в $q=1$, при $\\lambda>0.4$ — в $q=0$, а при $\\lambda=0.4$ любое $q\\in[0,1]$ даёт одинаковое значение. В седловой точке ограничение и двойственная цена совместно удерживают $q$ на границе допустимого множества.\n\nОдин двойственный шаг:\n\n$$\n\\lambda'\n=\n[0.2+0.5(0.6-0.25)]_+\n=0.375.\n$$\n\nСредний бюджет допускает рискованное действие с ограниченной частотой. Жёсткий запрет задаёт $q=0$ для соответствующего класса состояний. Это разные требования и разные допустимые множества политик.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Оптимальная политика и граница награда–KL",
+      "prompt": "Реализуйте устойчивую функцию:\n\n```python\nimport numpy as np\n\n\ndef optimal_kl_policy(reference: np.ndarray, rewards: np.ndarray, beta: float) -> np.ndarray:\n    \"\"\"Return argmax E_pi[r] - beta * KL(pi || reference).\"\"\"\n    ...\n```\n\nПроверьте $\\beta>0$, носитель базы и устойчивую нормировку. Затем постройте таблицу награды и KL по сетке $\\beta$.\n\nОткрытые проверки:\n\n```python\np = optimal_kl_policy([1/3, 1/3, 1/3], [1.0, 0.0, -1.0], 1.0)\nnp.testing.assert_allclose(p, [0.66524096, 0.24472847, 0.09003057], rtol=1e-7)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef optimal_kl_policy(reference, rewards, beta):\n    reference = np.asarray(reference, dtype=np.float64)\n    rewards = np.asarray(rewards, dtype=np.float64)\n    if reference.ndim != 1 or rewards.shape != reference.shape:\n        raise ValueError(\"aligned vectors required\")\n    if beta <= 0 or not np.isfinite(beta):\n        raise ValueError(\"beta must be finite and positive\")\n    if np.any(reference < 0) or not np.isclose(reference.sum(), 1.0):\n        raise ValueError(\"reference must be a distribution\")\n    support = reference > 0\n    logits = np.full_like(reference, -np.inf)\n    logits[support] = np.log(reference[support]) + rewards[support] / beta\n    maximum = np.max(logits[support])\n    weights = np.zeros_like(reference)\n    weights[support] = np.exp(logits[support] - maximum)\n    return weights / weights.sum()\n```\n\nДля сетки $\\beta$ вычисляются `policy @ rewards` и категориальный KL. В учебном примере при уменьшении $\\beta$ обе величины растут.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Токеновый KL-шейпинг",
+      "prompt": "Реализуйте функцию, добавляющую $-\\beta(\\log\\pi_t-\\log\\pi_{\\mathrm{ref},t})$ к активным токенам и итоговую награду к последнему активному токену.\n\n```python\nimport numpy as np\n\n\ndef shape_token_rewards(policy_logprobs, reference_logprobs, terminal_reward, beta, mask):\n    ...\n```\n\nПроверьте тождество для суммы и обработайте пустую маску как ошибку.\n\nОткрытые проверки:\n\n```python\npolicy = np.array([-0.5, -0.7])\nreference = np.array([-0.4, -0.9])\nshaped = shape_token_rewards(policy, reference, terminal_reward=1.0, beta=0.5, mask=np.ones_like(policy))\nassert shaped.shape == (2,)\nassert abs(float(shaped[0]) - (-0.5 * (-0.5 - -0.4))) < 1e-12\nassert abs(float(shaped.sum()) - (1.0 - 0.5 * float((policy - reference).sum()))) < 1e-12\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef shape_token_rewards(policy_logprobs, reference_logprobs, terminal_reward, beta, mask):\n    p = np.asarray(policy_logprobs, dtype=np.float64)\n    q = np.asarray(reference_logprobs, dtype=np.float64)\n    mask = np.asarray(mask, dtype=np.float64)\n    if p.ndim != 1 or q.shape != p.shape or mask.shape != p.shape:\n        raise ValueError(\"aligned vectors required\")\n    if np.any((mask != 0) & (mask != 1)) or mask.sum() == 0:\n        raise ValueError(\"mask must be non-empty and binary\")\n    rewards = -beta * (p - q) * mask\n    rewards[np.flatnonzero(mask)[-1]] += terminal_reward\n    return rewards\n```\n\nПроверка:\n\n```python\nout = shape_token_rewards([-0.2, -1.0, -2.0], [-0.2, -1.3, -1.8], 1.5, 0.2, [0, 1, 1])\nassert np.isclose(out.sum(), 1.5 - 0.2 * (0.3 - 0.2))\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Пакетная диагностика DPO",
+      "prompt": "Реализуйте функцию, возвращающую среднюю потерю, точность пар, зазор, выбранный и отклонённый логарифмы вероятностей, неявные награды и градиентный вес.\n\n```python\nimport numpy as np\n\n\ndef summarize_pairs(pc, pr, rc, rr, beta) -> dict[str, float]:\n    ...\n```\n\nДобавьте тест, где точность пар растёт, а средняя вероятность предпочтённого ответа падает.\n\nОткрытые проверки:\n\n```python\nreport = summarize_pairs([-2.0, -1.0], [-3.0, -1.5], [-2.5, -1.2], [-2.6, -1.4], 0.1)\nassert abs(report[\"pair_accuracy\"] - 1.0) < 1e-12\nassert abs(report[\"mean_margin\"] - 0.6) < 1e-12\nassert abs(report[\"mean_chosen_logp\"] - (-1.5)) < 1e-12\nassert abs(report[\"mean_loss\"] - 0.6637095) < 1e-6\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef softplus(x):\n    x = np.asarray(x, dtype=np.float64)\n    return np.maximum(x, 0.0) + np.log1p(np.exp(-np.abs(x)))\n\n\ndef summarize_pairs(pc, pr, rc, rr, beta):\n    pc, pr, rc, rr = [np.asarray(x, dtype=np.float64) for x in (pc, pr, rc, rr)]\n    if not (pc.shape == pr.shape == rc.shape == rr.shape):\n        raise ValueError(\"shared shape required\")\n    chosen_ratio = pc - rc\n    rejected_ratio = pr - rr\n    margin = chosen_ratio - rejected_ratio\n    z = beta * margin\n    return {\n        \"mean_loss\": float(np.mean(softplus(-z))),\n        \"pair_accuracy\": float(np.mean(margin > 0)),\n        \"mean_margin\": float(np.mean(margin)),\n        \"mean_chosen_logp\": float(np.mean(pc)),\n        \"mean_rejected_logp\": float(np.mean(pr)),\n        \"mean_implicit_chosen_reward\": float(np.mean(beta * chosen_ratio)),\n        \"mean_implicit_rejected_reward\": float(np.mean(beta * rejected_ratio)),\n        \"mean_gradient_weight\": float(np.mean(beta / (1.0 + np.exp(z)))),\n    }\n```\n\nЛогиты $(-t,-3t,4t)$ дают тест, где маржа растёт, а выбранный `logp` падает.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "cDPO и IPO",
+      "prompt": "Реализуйте векторизованные функции:\n\n```python\nimport numpy as np\n\n\ndef conservative_dpo_loss(margin, beta, label_smoothing):\n    ...\n\n\ndef ipo_loss(margin, tau):\n    ...\n```\n\nПроверьте совпадение cDPO с DPO при нулевом сглаживании и минимум IPO при $1/(2\\tau)$.\n\nОткрытые проверки:\n\n```python\nmargins = np.array([-1.0, 0.0, 2.0])\nbeta = 0.3\nconservative = conservative_dpo_loss(margins, beta, label_smoothing=0.0)\nordinary_dpo = np.logaddexp(0.0, -beta * margins)\nnp.testing.assert_allclose(conservative, ordinary_dpo)\nassert abs(float(ipo_loss(np.array([2.0]), tau=0.25)[0])) < 1e-12\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef softplus(x):\n    x = np.asarray(x, dtype=np.float64)\n    return np.maximum(x, 0.0) + np.log1p(np.exp(-np.abs(x)))\n\n\ndef conservative_dpo_loss(margin, beta, label_smoothing):\n    eps = float(label_smoothing)\n    if beta <= 0 or not 0 <= eps < 0.5:\n        raise ValueError(\"invalid beta or smoothing\")\n    z = beta * np.asarray(margin, dtype=np.float64)\n    return (1.0 - eps) * softplus(-z) + eps * softplus(z)\n\n\ndef ipo_loss(margin, tau):\n    if tau <= 0:\n        raise ValueError(\"tau must be positive\")\n    margin = np.asarray(margin, dtype=np.float64)\n    return (margin - 1.0 / (2.0 * tau)) ** 2\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "SimPO и ORPO",
+      "prompt": "Реализуйте SimPO-оценку на средней логарифмической вероятности, SimPO-потерю, устойчивый логарифм шансов из `logp` и полную ORPO-цель.\n\n```python\n\ndef simpo_reward(sequence_logp: float, length: int, beta: float) -> float:\n    ...\n\n\ndef orpo_total_loss(chosen_mean_nll, chosen_logp, rejected_logp, lam) -> float:\n    ...\n```\n\nОбъясните, почему одинаковые числа гиперпараметров разных методов не означают одинаковый смысл обновления.\n\nОткрытые проверки:\n\n```python\nassert abs(simpo_reward(-4.0, 2, 1.0) - (-2.0)) < 1e-12\nassert abs(simpo_reward(-4.0, 4, 1.0) - (-1.0)) < 1e-12\nassert abs(simpo_reward(-4.0, 2, 2.0) - (-4.0)) < 1e-12\n```",
+      "answer": "```python\nimport math\n\n\ndef softplus(x):\n    return max(x, 0.0) + math.log1p(math.exp(-abs(x)))\n\n\ndef simpo_reward(sequence_logp, length, beta):\n    if length <= 0 or beta <= 0:\n        raise ValueError(\"positive length and beta required\")\n    return beta * sequence_logp / length\n\n\ndef log_odds_from_logprob(logp):\n    if not math.isfinite(logp) or logp >= 0:\n        raise ValueError(\"logp must be finite and negative\")\n    p = math.exp(logp)\n    return logp - math.log1p(-p)\n\n\ndef orpo_total_loss(chosen_mean_nll, chosen_logp, rejected_logp, lam):\n    if chosen_mean_nll < 0 or lam < 0:\n        raise ValueError(\"non-negative inputs required\")\n    ratio = log_odds_from_logprob(chosen_logp) - log_odds_from_logprob(rejected_logp)\n    return chosen_mean_nll + lam * softplus(-ratio)\n```\n\nПараметры разных методов входят в разные формулы; одинаковое численное значение не означает одинакового градиента.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Эксперимент со смещением правдоподобия",
+      "prompt": "Реализуйте:\n\n```python\nimport numpy as np\n\n\ndef likelihood_displacement_curve(ts: np.ndarray) -> dict[str, np.ndarray]:\n    \"\"\"Softmax probabilities for logits [-t, -3t, 4t].\"\"\"\n    ...\n```\n\nПостройте вероятности трёх ответов и парный зазор. Добавьте сигнал тревоги для одновременного роста зазора и падения логарифма вероятности предпочтённого ответа. Почему это диагностика, а не доказательство ухудшения текста?\n\nОткрытые проверки:\n\n```python\nts = np.array([0.0, 0.2, 1.0, 3.0])\ncurve = likelihood_displacement_curve(ts)\nnp.testing.assert_allclose(\n    np.log(curve[\"chosen\"]) - np.log(curve[\"rejected\"]),\n    2.0 * ts,\n    atol=1e-12,\n)\nassert displacement_alert(curve)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef likelihood_displacement_curve(ts):\n    ts = np.asarray(ts, dtype=np.float64)\n    logits = np.stack([-ts, -3.0 * ts, 4.0 * ts], axis=1)\n    logits -= logits.max(axis=1, keepdims=True)\n    p = np.exp(logits)\n    p /= p.sum(axis=1, keepdims=True)\n    return {\"t\": ts, \"chosen\": p[:, 0], \"rejected\": p[:, 1], \"other\": p[:, 2], \"log_margin\": 2.0 * ts}\n\n\ndef displacement_alert(curve):\n    return bool(\n        np.all(np.diff(curve[\"log_margin\"]) > 0)\n        and np.mean(np.diff(np.log(curve[\"chosen\"]))) < 0\n    )\n```\n\nСигнал видит геометрию вероятностей, но не содержание третьего ответа. Поэтому он является диагностикой, а не доказательством снижения качества.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C7",
+      "title": "Ограниченная цель и двойственное обновление",
+      "prompt": "Реализуйте:\n\n```python\nimport numpy as np\n\n\ndef dual_ascent_step(multipliers, expected_costs, limits, step_size):\n    \"\"\"Return projected dual ascent: [lambda + eta * (cost - limit)]_+.\"\"\"\n    ...\n\n\ndef two_action_constrained_optimum(\n    safe_reward,\n    risky_reward,\n    safe_cost,\n    risky_cost,\n    cost_limit,\n):\n    \"\"\"Optimal risky-action probability for a two-action linear mixture.\"\"\"\n    ...\n```\n\nПроверьте учебный пример $q^*=0.25$, обработайте недопустимый бюджет и покажите, что множитель растёт при нарушении и уменьшается без нарушения. Затем объясните, почему корректная численная реализация двойственного шага ещё не доказывает корректность модели стоимости.\n\nОткрытые проверки:\n\n```python\nupdated = dual_ascent_step([0.2, 0.1], [0.6, 0.0], [0.25, 0.2], 0.5)\nnp.testing.assert_allclose(updated, [0.375, 0.0])\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef dual_ascent_step(multipliers, expected_costs, limits, step_size):\n    lam = np.asarray(multipliers, dtype=np.float64)\n    costs = np.asarray(expected_costs, dtype=np.float64)\n    bounds = np.asarray(limits, dtype=np.float64)\n    if lam.shape != costs.shape or lam.shape != bounds.shape:\n        raise ValueError(\"all arrays must have the same shape\")\n    if np.any(lam < 0) or not np.all(np.isfinite(lam)):\n        raise ValueError(\"multipliers must be finite and non-negative\")\n    if step_size <= 0 or not np.isfinite(step_size):\n        raise ValueError(\"step_size must be finite and positive\")\n    return np.maximum(0.0, lam + step_size * (costs - bounds))\n\n\ndef two_action_constrained_optimum(\n    safe_reward,\n    risky_reward,\n    safe_cost,\n    risky_cost,\n    cost_limit,\n):\n    values = np.asarray(\n        [safe_reward, risky_reward, safe_cost, risky_cost, cost_limit],\n        dtype=np.float64,\n    )\n    if not np.all(np.isfinite(values)):\n        raise ValueError(\"all inputs must be finite\")\n    if risky_cost <= safe_cost:\n        raise ValueError(\"the teaching contract requires risky_cost > safe_cost\")\n    if cost_limit < safe_cost:\n        raise ValueError(\"the cost budget is infeasible even for the safe action\")\n    q_max = np.clip(\n        (cost_limit - safe_cost) / (risky_cost - safe_cost),\n        0.0,\n        1.0,\n    )\n    return float(q_max if risky_reward > safe_reward else 0.0)\n```\n\nДля учебных чисел функция возвращает $0.25$. При нарушении, например $C=0.6>d=0.25$, множитель увеличивается; при $C<d$ уменьшается до нуля с проекцией на неотрицательную полуось.\n\nПроверка кода подтверждает только алгебру обновления. Она не проверяет, что $C$ измеряет нужный риск, что данные покрывают будущие запросы или что ограничение на среднее достаточно для критического сценария.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

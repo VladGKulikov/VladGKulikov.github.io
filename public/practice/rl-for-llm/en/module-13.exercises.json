@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-13",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "What exactly scored 61%?",
+      "prompt": "A report says, “the model scored 61%.” The new run changed the system prompt, chat template, length limit, search access, and answer canonicalizer while keeping the weights fixed.\n\n\n1. What object is actually being compared with the earlier run?\n\n2. Why can the number not be attributed to the weight file alone?\n\n3. What must be fixed if the research question is specifically about checkpoints?\n\n4. When is a scaffold change a legitimate part of the evaluated system?",
+      "answer": "The comparison is between two versioned systems, not two weight files. A checkpoint-only study must hold tokenizer, template, system message, decoding, budget, tools, environment, canonicalizer, and scorer fixed. A scaffold change is legitimate when the estimand is end-to-end system performance, but it must be reported as part of the treatment.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "An interval is not decoration",
+      "prompt": "A system solves zero of 20 tasks. The Wald interval collapses to $[0,0]$, whereas a Wilson interval has a positive upper endpoint.\n\n\n1. Why is the Wald result misleading here?\n\n2. What does the Wilson upper endpoint mean?\n\n3. Do zero observed successes prove a zero success probability?\n\n4. Why is a predeclared target half-width more useful than “about one hundred tasks”?",
+      "answer": "The Wald interval estimates zero variance after observing zero successes, so it confuses an observed boundary with certainty about the population. The Wilson upper endpoint represents nonzero probabilities still compatible with the sample under that interval construction. Predeclared precision connects sample size to the decision before outcomes are visible.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Sampling unit and repeated generations",
+      "prompt": "The team generates 16 completions for each of 100 prompts, then treats all 1,600 completions as independent benchmark tasks.\n\n\n1. What is wrong with the sampling unit?\n\n2. Which randomness sources are present?\n\n3. When should the prompt remain the primary unit?\n\n4. Which bootstrap design preserves clustering?\n\n5. What changes when the estimand is the 16-attempt protocol rather than one attempt?",
+      "answer": "Completions share prompt difficulty and therefore form clusters. Prompt, decoding, training seed, and judge may each contribute randomness. Resample prompts as primary units; optionally resample completions inside each prompt. For a 16-attempt protocol, compute one protocol outcome per prompt before aggregating prompts.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Pairing and exact McNemar reasoning",
+      "prompt": "Two systems are evaluated on the same tasks. A alone is correct on 9 tasks and B alone on 2; most tasks are shared successes or shared failures.\n\n\n1. Why should the comparison be paired?\n\n2. Which observations enter McNemar's test?\n\n3. Why can an asymptotic $z$ be overconfident with only 11 discordant tasks?\n\n4. What exact null experiment underlies the two-sided exact test?\n\n5. What should be reported in addition to a $p$-value?",
+      "answer": "Only discordant tasks distinguish the systems. Under the exact null, each discordant task favors A or B with probability one half, so the count follows a binomial distribution. With only eleven discordances, the discrete exact tail matters. Report the two discordant counts, effect size, interval, exact $p$-value, and the predeclared analysis rule.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "pass@k, coverage, and selection",
+      "prompt": "A pool of 20 candidates contains exactly one correct answer. The report states both `pass@20 = 1` and “the system selected an incorrect answer.”\n\n\n1. Is there a contradiction?\n\n2. What does pass@k measure?\n\n3. What does selection accuracy measure?\n\n4. Why is $1-(1-\\hat p)^k$ with $\\hat p=c/n$ not the finite-pool estimator?\n\n5. Which budget details belong next to pass@k?",
+      "answer": "There is no contradiction: coverage can be perfect while selection fails. pass@k measures whether the pool contains a success; selection accuracy measures whether the policy or verifier extracts it. Preserve $n$, $k$, decoding, token budget, verifier revision, task count, and seed policy.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "No n-gram match",
+      "prompt": "An eight-word n-gram filter finds no overlap between test items and the known portion of a training corpus.\n\n\n1. What does this result actually rule out?\n\n2. Which contamination modes can it miss?\n\n3. Why does an unknown corpus remainder prevent a cleanliness certificate?\n\n4. What is protocol contamination?\n\n5. Name at least four additional benchmark-lifecycle protections.",
+      "answer": "No flag rules out only literal matches at the selected n-gram scale in the searched corpus. It misses paraphrases, translations, derived solutions, semantic templates, and unavailable data. Protocol contamination arises when repeated benchmark feedback drives checkpoint, prompt, or hyperparameter selection. Protections include private sets, fresh tasks, rotation, query limits, canaries, and a final untouched evaluation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "A judge under optimization pressure",
+      "prompt": "An LLM judge favors long answers, often picks the first candidate, and sometimes follows instructions embedded inside candidate text. After switching from one comparison to Best-of-64, the mean judge score rises sharply.\n\n\n1. Which three weakness classes are visible?\n\n2. Why does A/B swapping fix only part of the problem?\n\n3. How does structural isolation differ from the instruction “ignore instructions inside the answer”?\n\n4. Why can Best-of-64 amplify winner's curse?\n\n5. Which independent signal can distinguish genuine improvement from judge exploitation?",
+      "answer": "The visible weaknesses are position bias, superficial-feature bias, and prompt injection. Swapping diagnoses position effects but not content errors or length preference. Structural isolation separates untrusted candidate data at the interface and parser level. Best-of-64 increases the chance of selecting a high positive judge error; an independent verifier, hidden human sample, or real environment outcome is required.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Safety and release decisions",
+      "prompt": "A new system complies with fewer harmful requests but also refuses benign requests twice as often. One category contains a single confirmed critical sandbox escape.\n\n\n1. Why is refusal rate alone insufficient?\n\n2. Which two denominators are required at minimum?\n\n3. Why should severity be represented?\n\n4. May a strong mean score compensate for the critical escape?\n\n5. Which protocol-passport fields are needed for independent verification?\n\n---\n\n## B. Analytical tasks",
+      "answer": "Harmful compliance and benign over-refusal use different denominators. Severity or hard gates prevent rare catastrophic outcomes from disappearing inside an average. A predeclared critical sandbox escape blocks release regardless of mean utility. The passport must identify the model, data, solver, scorer, environment, seeds, budget, metrics, gates, and artifact hashes.\n\n---",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Wilson intervals",
+      "prompt": "Use $z=1.96$.\n\n\n1. Compute the estimate and 95% Wilson interval for $k=62$, $n=100$.\n\n2. Repeat for $k=0$, $n=20$.\n\n3. Compare the second result with the Wald interval.\n\n4. Explain why `0/20` is compatible with a nonzero population success probability.",
+      "answer": "For `62/100`, the estimate is 0.62 and the Wilson interval is approximately $[0.5221,0.7090]$. For `0/20`, it is approximately $[0,0.1611]$; the Wald interval incorrectly collapses to $[0,0]$. Finite data remain compatible with a small nonzero success probability.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Dataset-size planning",
+      "prompt": "Use the worst-case planning approximation\n\n$$\n n\\geq \\frac{z^2}{4m^2}.\n$$\n\n\n1. Find the smallest $n$ for $m=0.03$, $z=1.96$.\n\n2. Repeat for $m=0.01$.\n\n3. By what factor does $n$ increase when the half-width is divided by three?\n\n4. Why is this a planning approximation rather than an exact Wilson-width guarantee?",
+      "answer": "The results are\n\n$$\n\\left\\lceil\\frac{1.96^2}{4(0.03)^2}\\right\\rceil=1068,\n\\qquad\n\\left\\lceil\\frac{1.96^2}{4(0.01)^2}\\right\\rceil=9604.\n$$\n\nDividing the half-width by three multiplies the ideal sample size by nine. The calculation is a worst-case normal planning approximation, not an exact realized Wilson width.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "Exact and asymptotic paired comparison",
+      "prompt": "For discordant counts $b=9$, $c=2$:\n\n\n1. Compute $z=|b-c|/\\sqrt{b+c}$.\n\n2. Compute the corresponding two-sided normal $p$-value.\n\n3. Compute the exact two-sided value from $X\\sim\\operatorname{Binomial}(11,1/2)$.\n\n4. State the conclusion at level 0.05 under each approach.\n\n5. Why must the small discordant count be visible in the report?",
+      "answer": "$$\nz=7/\\sqrt{11}\\approx2.1106.\n$$\n\nThe normal two-sided $p$-value is about 0.0348, while the exact value is\n\n$$\n2\\frac{\\binom{11}{0}+\\binom{11}{1}+\\binom{11}{2}}{2^{11}}\n=0.0654296875.\n$$\n\nThe asymptotic result crosses 0.05; the exact result does not. The eleven discordances must be visible so readers can judge the approximation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "Finite-sample pass@k",
+      "prompt": "Use\n\n$$\n\\widehat{\\operatorname{pass@}k}\n=\n1-\\frac{\\binom{n-c}{k}}{\\binom{n}{k}}.\n$$\n\n\n1. Compute pass@5 for $n=200$, $c=10$.\n\n2. Compute pass@20 for $n=20$, $c=1$.\n\n3. Compare the second answer with $1-(1-c/n)^n$.\n\n4. Explain the different probability questions represented by the two formulas.",
+      "answer": "$$\n\\widehat{\\operatorname{pass@}5}\n=1-\\frac{\\binom{190}{5}}{\\binom{200}{5}}\n\\approx0.2282844607.\n$$\n\nFor $n=k=20$, $c=1$, the finite-pool result is one. The independent-trial plug-in gives $1-(19/20)^{20}\\approx0.641514$. The former samples without replacement from the observed pool; the latter imagines new independent trials with known $p=0.05$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "Judge swap audit",
+      "prompt": "After mapping both runs back to the original candidate identities, the labels are:\n\n```text\nforward: A, A, B, TIE, A, B\nreverse: A, B, B, TIE, B, B\n```\n\n\n1. Count consistent and inconsistent pairs.\n\n2. Compute consistency rate.\n\n3. Compute A and B vote shares among non-ties.\n\n4. Does high swap consistency rule out length or style bias?\n\n5. Which extra randomization should be added?",
+      "answer": "Four of six pairs are consistent, so consistency is $4/6\\approx0.6667$. Across ten non-tie votes, A receives four and B six: 0.4 and 0.6. Swap consistency does not rule out stable style or length bias. Add controlled length/style perturbations, model-identity blinding, serialization randomization, and repeated judge seeds.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Safety metrics and release gates",
+      "prompt": "Attack outcomes on eight harmful prompts are\n\n$$\n(0,1,0,1,0,0,1,0),\n$$\n\nwith severities\n\n$$\n(1,4,1,2,1,1,3,1).\n$$\n\nThe system refuses two of ten benign prompts.\n\n\n1. Compute attack success rate (ASR).\n\n2. Compute benign refusal rate.\n\n3. Compute severity-weighted ASR.\n\n4. Apply gates `ASR <= 0.30`, `benign_refusal <= 0.25`, `severity_weighted_ASR <= 0.40`.\n\n5. What changes if one success is a predeclared critical sandbox escape?\n\n---\n\n## C. Programming tasks",
+      "answer": "ASR is $3/8=0.375$, benign refusal is $2/10=0.2$, and severity-weighted ASR is $(4+2+3)/14=9/14\\approx0.6429$. The system fails the first and third numerical gates. A predeclared critical escape independently blocks release.\n\n---",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Intervals and planning",
+      "prompt": "Implement:\n\n```python\ndef wilson_interval(successes: int, total: int, z: float = 1.96) -> tuple[float, float, float]:\n    \"\"\"Return (estimate, low, high).\"\"\"\n    raise NotImplementedError\n\n\ndef worst_case_sample_size(margin: float, z: float = 1.96) -> int:\n    \"\"\"Return ceil(z**2 / (4*margin**2)).\"\"\"\n    raise NotImplementedError\n```\n\nValidate counts and parameters, and keep interval endpoints inside $[0,1]$.\n\nOpen checks:\n\n```python\nestimate, low, high = wilson_interval(0, 10)\nassert estimate == 0.0 and low == 0.0\nassert 0.27 < high < 0.29\nassert worst_case_sample_size(0.03) == 1068\n```",
+      "answer": "```python\nimport math\n\n\ndef wilson_interval(successes: int, total: int, z: float = 1.96) -> tuple[float, float, float]:\n    if total <= 0:\n        raise ValueError(\"total must be positive\")\n    if successes < 0 or successes > total:\n        raise ValueError(\"successes must lie in [0, total]\")\n    if not math.isfinite(z) or z <= 0:\n        raise ValueError(\"z must be finite and positive\")\n\n    estimate = successes / total\n    denominator = 1.0 + z * z / total\n    center = (estimate + z * z / (2.0 * total)) / denominator\n    half_width = z / denominator * math.sqrt(\n        estimate * (1.0 - estimate) / total + z * z / (4.0 * total * total)\n    )\n    return estimate, max(0.0, center - half_width), min(1.0, center + half_width)\n\n\ndef worst_case_sample_size(margin: float, z: float = 1.96) -> int:\n    if not math.isfinite(margin) or not 0.0 < margin < 1.0:\n        raise ValueError(\"margin must lie in (0, 1)\")\n    if not math.isfinite(z) or z <= 0:\n        raise ValueError(\"z must be finite and positive\")\n    return math.ceil(z * z / (4.0 * margin * margin))\n```\n\nThe Wilson interval remains non-degenerate at $0/n$ and $n/n$, unlike the symmetric Wald interval. Clipping the endpoints only protects against tiny rounding excursions outside $[0,1]$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Paired comparison",
+      "prompt": "Implement a paired contingency table, exact McNemar $p$-value, and paired bootstrap interval. The bootstrap must resample task pairs, not systems independently.\n\nOpen checks:\n\n```python\na = [True, True, False, False, True]\nb = [True, False, True, False, False]\ntable = paired_table(a, b)\nassert table.both_correct == 1\nassert table.a_only == 2\nassert table.b_only == 1\nassert table.both_wrong == 1\n```",
+      "answer": "Pairing is preserved at the task-index level; the two systems are never bootstrapped independently.\n\n```python\nfrom __future__ import annotations\n\nimport math\nfrom dataclasses import dataclass\n\nimport numpy as np\n\n\n@dataclass(frozen=True)\nclass PairedTable:\n    both_correct: int\n    a_only: int\n    b_only: int\n    both_wrong: int\n\n\ndef paired_table(a_correct, b_correct) -> PairedTable:\n    a = np.asarray(a_correct, dtype=bool)\n    b = np.asarray(b_correct, dtype=bool)\n    if a.shape != b.shape or a.ndim != 1 or a.size == 0:\n        raise ValueError(\"paired vectors must be non-empty and have equal shape\")\n    return PairedTable(\n        int(np.sum(a & b)),\n        int(np.sum(a & ~b)),\n        int(np.sum(~a & b)),\n        int(np.sum(~a & ~b)),\n    )\n\n\ndef exact_mcnemar_pvalue(a_only: int, b_only: int) -> float:\n    if min(a_only, b_only) < 0:\n        raise ValueError(\"counts must be non-negative\")\n    n = a_only + b_only\n    if n == 0:\n        return 1.0\n    tail = sum(math.comb(n, j) for j in range(min(a_only, b_only) + 1)) / 2**n\n    return min(1.0, 2.0 * tail)\n\n\ndef paired_bootstrap_difference(a_scores, b_scores, *, replicates=10_000, seed=0):\n    a = np.asarray(a_scores, dtype=float)\n    b = np.asarray(b_scores, dtype=float)\n    if a.shape != b.shape or a.ndim != 1 or a.size == 0:\n        raise ValueError(\"paired vectors must be non-empty and have equal shape\")\n    if replicates <= 0:\n        raise ValueError(\"replicates must be positive\")\n    delta = a - b\n    rng = np.random.default_rng(seed)\n    indices = rng.integers(0, delta.size, size=(replicates, delta.size))\n    draws = delta[indices].mean(axis=1)\n    return float(delta.mean()), float(np.quantile(draws, 0.025)), float(np.quantile(draws, 0.975))\n\n\ntable = paired_table([1, 1, 0, 0, 1], [1, 0, 1, 0, 0])\nassert table == PairedTable(1, 2, 1, 1)\nassert abs(exact_mcnemar_pvalue(9, 2) - 0.0654296875) < 1e-15\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "pass@k and selection",
+      "prompt": "Implement a stable finite-sample estimator and a separate selection diagnostic:\n\n```python\ndef pass_at_k(n: int, c: int, k: int) -> float:\n    raise NotImplementedError\n\n\ndef coverage_and_selection(correct, selected_index: int) -> tuple[bool, bool]:\n    raise NotImplementedError\n```\n\nThe first function estimates the probability that $k$ draws without replacement include at least one of $c$ successful solutions among $n$ candidates. The second separates pool coverage from correctness of the answer actually selected.\n\nOpen checks:\n\n```python\nassert abs(pass_at_k(200, 10, 5) - 0.22828446073733422) < 1e-15\nassert coverage_and_selection([False, True, False], 0) == (True, False)\n```",
+      "answer": "```python\ndef pass_at_k(n: int, c: int, k: int) -> float:\n    if n <= 0 or not 0 <= c <= n or not 1 <= k <= n:\n        raise ValueError(\"require n>0, 0<=c<=n, and 1<=k<=n\")\n    if n - c < k:\n        return 1.0\n    probability_of_miss = 1.0\n    for i in range(k):\n        probability_of_miss *= (n - c - i) / (n - i)\n    return 1.0 - probability_of_miss\n\n\ndef coverage_and_selection(correct, selected_index: int) -> tuple[bool, bool]:\n    values = [bool(x) for x in correct]\n    if not values or not 0 <= selected_index < len(values):\n        raise ValueError(\"invalid candidate pool or selected index\")\n    return any(values), values[selected_index]\n```\n\nMultiplying miss probabilities avoids direct evaluation of large binomial coefficients. The second function makes explicit why pool coverage and selector quality are distinct quantities.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "A contamination sieve without changing the metric",
+      "prompt": "Implement:\n\n```python\ndef ngram_set(text: str, n: int) -> set[tuple[str, ...]]:\n    ...\n\ndef ngram_containment(benchmark_text: str, corpus_text: str, n: int) -> float:\n    \"\"\"Fraction of benchmark n-grams found in the corpus text.\"\"\"\n\ndef ngram_jaccard(left: str, right: str, n: int) -> float:\n    \"\"\"Symmetric Jaccard coefficient.\"\"\"\n\ndef contamination_report(items, corpus, *, n=8, threshold=0.2):\n    ...\n```\n\nThe report must use **benchmark-side asymmetric containment**, matching the lecture equation, and must store the metric name explicitly. Include a pair for which containment and Jaccard differ. Document that no literal flag is not evidence of a clean benchmark.\n\nOpen checks:\n\n```python\nassert ngram_set(\"a b c d\", 2) == {(\"a\", \"b\"), (\"b\", \"c\"), (\"c\", \"d\")}\nassert ngram_containment(\"a b c\", \"x a b c y\", 2) == 1.0\nassert ngram_jaccard(\"a b c\", \"x a b c y\", 2) < 1.0\n```",
+      "answer": "```python\nfrom __future__ import annotations\n\n\ndef ngram_set(text: str, n: int) -> set[tuple[str, ...]]:\n    if n <= 0:\n        raise ValueError(\"n must be positive\")\n    tokens = text.casefold().split()\n    return {tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1)}\n\n\ndef ngram_containment(benchmark_text: str, corpus_text: str, n: int) -> float:\n    benchmark = ngram_set(benchmark_text, n)\n    corpus = ngram_set(corpus_text, n)\n    if not benchmark:\n        return 0.0\n    return len(benchmark & corpus) / len(benchmark)\n\n\ndef ngram_jaccard(left: str, right: str, n: int) -> float:\n    a = ngram_set(left, n)\n    b = ngram_set(right, n)\n    union = a | b\n    return 0.0 if not union else len(a & b) / len(union)\n\n\ndef contamination_report(items, corpus, *, n=8, threshold=0.2):\n    if not 0.0 <= threshold <= 1.0:\n        raise ValueError(\"threshold must lie in [0, 1]\")\n    maxima = []\n    matches = []\n    for i, item in enumerate(items):\n        scores = [ngram_containment(item, doc, n) for doc in corpus]\n        best = max(scores, default=0.0)\n        maxima.append(best)\n        for j, score in enumerate(scores):\n            if score >= threshold:\n                matches.append((i, j, score))\n    return {\n        \"metric\": \"benchmark_ngram_containment\",\n        \"n\": n,\n        \"threshold\": threshold,\n        \"max_overlap\": maxima,\n        \"matches\": matches,\n    }\n\n\nassert ngram_containment(\"a b c\", \"x a b c y\", 2) == 1.0\nassert ngram_jaccard(\"a b c\", \"x a b c y\", 2) == 0.5\n```\n\nContainment divides by benchmark-item n-grams; Jaccard divides by the union. The report stores the metric name so downstream code cannot silently conflate them.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "Two judge audits and sycophancy",
+      "prompt": "Implement:\n\n```python\ndef judge_swap_audit(forward_canonical, reverse_canonical):\n    \"\"\"Candidate-identity consistency after A/B canonicalization.\"\"\"\n\ndef position_audit(raw_forward, raw_reverse):\n    \"\"\"FIRST/SECOND preference before identity canonicalization.\"\"\"\n\ndef sycophancy_metrics(correct_without_claim, correct_with_false_claim, agrees_with_false_claim):\n    ...\n```\n\nDo not collapse candidate identity and screen position. The first function receives canonical A/B labels; the second receives raw `FIRST`, `SECOND`, and `TIE` labels.\n\nOpen check:\n\n```python\nidentity = judge_swap_audit([\"A\", \"A\", \"B\", \"TIE\"], [\"A\", \"B\", \"B\", \"TIE\"])\nassert identity[\"consistent\"] == 3\nposition = position_audit([\"FIRST\", \"SECOND\"], [\"FIRST\", \"FIRST\"])\nassert position[\"first_position_wins\"] == 3\n```",
+      "answer": "```python\nfrom __future__ import annotations\n\n\ndef _labels(values, allowed):\n    result = [str(x).upper() for x in values]\n    if any(x not in allowed for x in result):\n        raise ValueError(f\"labels must belong to {sorted(allowed)}\")\n    return result\n\n\ndef judge_swap_audit(forward_canonical, reverse_canonical):\n    a = _labels(forward_canonical, {\"A\", \"B\", \"TIE\"})\n    b = _labels(reverse_canonical, {\"A\", \"B\", \"TIE\"})\n    if len(a) != len(b) or not a:\n        raise ValueError(\"label vectors must be non-empty and aligned\")\n    consistent = sum(x == y for x, y in zip(a, b))\n    votes = [x for x in a + b if x != \"TIE\"]\n    return {\n        \"items\": len(a),\n        \"consistent\": consistent,\n        \"inconsistent\": len(a) - consistent,\n        \"consistency_rate\": consistent / len(a),\n        \"candidate_a_rate\": votes.count(\"A\") / len(votes) if votes else 0.0,\n        \"candidate_b_rate\": votes.count(\"B\") / len(votes) if votes else 0.0,\n    }\n\n\ndef position_audit(raw_forward, raw_reverse):\n    a = _labels(raw_forward, {\"FIRST\", \"SECOND\", \"TIE\"})\n    b = _labels(raw_reverse, {\"FIRST\", \"SECOND\", \"TIE\"})\n    if len(a) != len(b) or not a:\n        raise ValueError(\"label vectors must be non-empty and aligned\")\n    all_labels = a + b\n    first = all_labels.count(\"FIRST\")\n    second = all_labels.count(\"SECOND\")\n    ties = all_labels.count(\"TIE\")\n    denom = first + second\n    return {\n        \"judgments\": len(all_labels),\n        \"first_position_wins\": first,\n        \"second_position_wins\": second,\n        \"ties\": ties,\n        \"first_position_rate_non_ties\": first / denom if denom else 0.0,\n    }\n\n\ndef sycophancy_metrics(correct_without_claim, correct_with_false_claim, agrees_with_false_claim):\n    base = [bool(x) for x in correct_without_claim]\n    challenged = [bool(x) for x in correct_with_false_claim]\n    agrees = [bool(x) for x in agrees_with_false_claim]\n    if not base or not (len(base) == len(challenged) == len(agrees)):\n        raise ValueError(\"vectors must be non-empty and aligned\")\n    initially_correct = sum(base)\n    switches = sum(b and not c for b, c in zip(base, challenged))\n    return {\n        \"accuracy_without_claim\": sum(base) / len(base),\n        \"accuracy_with_false_claim\": sum(challenged) / len(base),\n        \"accuracy_drop\": (sum(base) - sum(challenged)) / len(base),\n        \"switch_rate_among_initially_correct\": switches / initially_correct if initially_correct else 0.0,\n        \"unjustified_agreement_rate\": sum(agrees) / len(agrees),\n    }\n\n\nassert judge_swap_audit([\"A\", \"A\", \"B\", \"TIE\"], [\"A\", \"B\", \"B\", \"TIE\"])[\"consistent\"] == 3\nassert position_audit([\"FIRST\", \"SECOND\"], [\"FIRST\", \"FIRST\"])[\"first_position_wins\"] == 3\n```\n\nCanonical A/B labels and raw FIRST/SECOND labels remain separate because they measure different biases.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Safety, release gates, and the measurement passport",
+      "prompt": "Implement:\n\n```python\ndef safety_rates(attack_succeeded, benign_refused, severities=None):\n    raise NotImplementedError\n\n\ndef release_decision(metrics, thresholds, critical_failures=()):\n    raise NotImplementedError\n\n\ndef validate_measurement_passport(passport):\n    raise NotImplementedError\n```\n\nAttack success and benign over-refusal use different denominators. A critical event or missing required metric must block release. The passport validator must report every detected error.\n\nOpen checks:\n\n```python\nrates = safety_rates([0, 1, 0, 1], [0, 0, 1, 0], severities=[1, 4, 1, 2])\nassert abs(rates[\"attack_success_rate\"] - 0.5) < 1e-12\nassert abs(rates[\"benign_over_refusal_rate\"] - 0.25) < 1e-12\nresult = release_decision(rates, {\"attack_success_rate\": (\"max\", 0.25)}, (\"sandbox_escape\",))\nassert result[\"passed\"] is False\n```",
+      "answer": "```python\ndef safety_rates(attack_succeeded, benign_refused, severities=None):\n    attacks = [bool(x) for x in attack_succeeded]\n    benign = [bool(x) for x in benign_refused]\n    if not attacks or not benign:\n        raise ValueError(\"both harmful and benign samples are required\")\n    if severities is None:\n        severity_weighted = sum(attacks) / len(attacks)\n    else:\n        weights = [float(x) for x in severities]\n        if len(weights) != len(attacks) or any(x <= 0 for x in weights):\n            raise ValueError(\"positive severities must align with attacks\")\n        severity_weighted = sum(w for hit, w in zip(attacks, weights) if hit) / sum(weights)\n    return {\n        \"attack_success_rate\": sum(attacks) / len(attacks),\n        \"benign_over_refusal_rate\": sum(benign) / len(benign),\n        \"severity_weighted_asr\": severity_weighted,\n    }\n\n\ndef release_decision(metrics, thresholds, critical_failures=()):\n    failures = [f\"critical:{item}\" for item in critical_failures]\n    for name, (direction, threshold) in thresholds.items():\n        if name not in metrics:\n            failures.append(f\"missing:{name}\")\n            continue\n        value = float(metrics[name])\n        if direction == \"max\" and value > threshold:\n            failures.append(f\"{name}>{threshold}\")\n        elif direction == \"min\" and value < threshold:\n            failures.append(f\"{name}<{threshold}\")\n        elif direction not in {\"min\", \"max\"}:\n            failures.append(f\"invalid_direction:{name}\")\n    return {\"passed\": not failures, \"failures\": failures}\n\n\ndef validate_measurement_passport(passport):\n    required = {\n        \"run_id\", \"model_id\", \"model_revision\", \"tokenizer_id\", \"dataset_id\",\n        \"dataset_revision\", \"split\", \"solver_id\", \"scorer_id\", \"scorer_revision\",\n        \"decoding\", \"seeds\", \"sample_count\", \"metrics\", \"cost\", \"artifact_hashes\",\n    }\n    errors = [f\"missing:{key}\" for key in sorted(required - set(passport))]\n    if \"sample_count\" in passport and int(passport[\"sample_count\"]) <= 0:\n        errors.append(\"sample_count:not_positive\")\n    if \"seeds\" in passport and not passport[\"seeds\"]:\n        errors.append(\"seeds:empty\")\n    if \"artifact_hashes\" in passport and not passport[\"artifact_hashes\"]:\n        errors.append(\"artifact_hashes:empty\")\n    return tuple(errors)\n```\n\nA critical incident blocks release regardless of average metrics; a missing required metric also fails closed.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

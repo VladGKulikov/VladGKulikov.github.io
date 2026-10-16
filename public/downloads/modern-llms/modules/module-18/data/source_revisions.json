@@ -1,0 +1,53 @@
+{
+  "checked": "2026-10-11",
+  "scope": "Versioned papers and protocol; live product docs are a dated snapshot, not permanent behavior.",
+  "sources": [
+    {
+      "name": "ReAct",
+      "url": "https://arxiv.org/abs/2210.03629v3"
+    },
+    {
+      "name": "CodeAct",
+      "url": "https://arxiv.org/abs/2402.01030"
+    },
+    {
+      "name": "Outlines",
+      "url": "https://arxiv.org/abs/2307.09702v4"
+    },
+    {
+      "name": "MCP core",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28"
+    },
+    {
+      "name": "MCP changes",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/changelog"
+    },
+    {
+      "name": "Claude Code study",
+      "url": "https://arxiv.org/abs/2604.14228v2"
+    },
+    {
+      "name": "Study repository",
+      "url": "https://github.com/VILA-Lab/Dive-into-Claude-Code"
+    },
+    {
+      "name": "Sandbox behavior",
+      "url": "https://code.claude.com/docs/en/sandboxing"
+    },
+    {
+      "name": "Indirect prompt injection",
+      "url": "https://arxiv.org/abs/2302.12173",
+      "scope": "External data may contain adversarial instructions; executor lab does not measure model robustness."
+    },
+    {
+      "name": "Public memory behavior",
+      "url": "https://code.claude.com/docs/en/memory",
+      "scope": "Checked 2026-10-11; distinct from version 2.1.88 source study."
+    },
+    {
+      "name": "OpenAI Agents SDK",
+      "url": "https://developers.openai.com/api/docs/guides/agents",
+      "scope": "SDK runner, handoffs, tools and tracing; application controls deployment."
+    }
+  ]
+}

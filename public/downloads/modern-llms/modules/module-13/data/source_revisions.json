@@ -1,0 +1,27 @@
+{
+  "checked": "2026-10-11",
+  "scope": "Primary-source verification; mutable documentation URLs are not frozen data snapshots.",
+  "urls": [
+    "https://arxiv.org/abs/2106.09685",
+    "https://arxiv.org/abs/2109.01652",
+    "https://arxiv.org/abs/2203.02155",
+    "https://arxiv.org/abs/2212.10560",
+    "https://arxiv.org/abs/2305.11206",
+    "https://arxiv.org/abs/2305.14314",
+    "https://arxiv.org/abs/2406.08464",
+    "https://arxiv.org/abs/2409.00920",
+    "https://arxiv.org/abs/2411.15124",
+    "https://arxiv.org/abs/2501.12948",
+    "https://arxiv.org/abs/2501.19393",
+    "https://github.com/openai/harmony",
+    "https://huggingface.co/datasets/allenai/tulu-3-sft-mixture",
+    "https://huggingface.co/docs/transformers/chat_templating",
+    "https://huggingface.co/docs/trl/sft_trainer",
+    "https://thinkingmachines.ai/news/introducing-inkling/",
+    "https://tinker-docs.thinkingmachines.ai/tinker/"
+  ],
+  "notes": [
+    "Tulu card 939344 differs from current viewer 939343; no corpus embedded.",
+    "Synthetic inputs and deterministic rules belong to this module."
+  ]
+}

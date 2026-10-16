@@ -1,0 +1,59 @@
+{
+  "modeling_llama.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/llama/modeling_llama.py",
+    "sha256": "affc6a4ab36b562a6b4c90b84c4e7939c5417a69ad7bd37e858be5583f189830",
+    "bytes": 20255
+  },
+  "modeling_llama4.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/llama4/modeling_llama4.py",
+    "sha256": "4dca7a5d89ad1f62cc5300d0a945302223a0f9209688417d981b969b2c17cd76",
+    "bytes": 56104
+  },
+  "modeling_gemma2.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gemma2/modeling_gemma2.py",
+    "sha256": "f9070a66627892055a32824900d0524bb6bf91d8203006bb5284447fe8299cb4",
+    "bytes": 23456
+  },
+  "modeling_gemma3.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gemma3/modeling_gemma3.py",
+    "sha256": "bc676863dfcc553ea7867730b540fd677e132ef1a89e3d362a268b881d8c79c3",
+    "bytes": 48831
+  },
+  "modeling_gemma4.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gemma4/modeling_gemma4.py",
+    "sha256": "03d1cc6c92688ca5f155eb1824412e6665757ea932e5445ed5cc74e1d70b674d",
+    "bytes": 126929
+  },
+  "modeling_olmo2.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py",
+    "sha256": "62e11b72f4e667c39e06bfb887e3518b3b6b34040611fe4a43880d75baebe9ee",
+    "bytes": 20897
+  },
+  "modeling_qwen3.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3/modeling_qwen3.py",
+    "sha256": "ca9535e36ea4e689c76d7d753b91aec9ea00da837fbf223c8ea4c01a3b50cac0",
+    "bytes": 22034
+  },
+  "modeling_deepseek_v4.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/deepseek_v4/modeling_deepseek_v4.py",
+    "sha256": "d6eb834f9d10eca879ca5390f219259eb452d19e1cf72d827f4334cbe4682266",
+    "bytes": 80921
+  },
+  "gpt_oss_model.py": {
+    "sha256": "319ba3c6e4d827eb3115fe4838942af448376b513c02cea4b6b471bf6c21a346",
+    "bytes": 16251,
+    "url": "https://raw.githubusercontent.com/openai/gpt-oss/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py"
+  },
+  "gpt_oss_original_config.json": {
+    "sha256": "063aaa98e012cac330d58d18471700f0b0eb90bb15c58fb227809d45090f3e65",
+    "bytes": 377,
+    "repo": "openai/gpt-oss-120b",
+    "revision": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
+    "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/config.json"
+  },
+  "checked_on": "2026-10-10",
+  "llama_geometry": {
+    "url": "https://arxiv.org/html/2407.21783v3#S3.T3",
+    "note": "Table 3 provides layer/head/FFN geometry. Exact vocabulary (128256), no biases and untied tables are the explicit frozen counting contract; the gated HF config returned HTTP 401 during this audit."
+  }
+}

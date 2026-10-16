@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "seed_rule": "150000 + task_id*10000 + candidate_index",
+  "held_out_tasks": 100,
+  "metrics": {
+    "one": {
+      "accuracy": 0.02,
+      "mean_candidates": 1.0,
+      "observed_coverage": 0.02,
+      "generator_calls": 100,
+      "verifier_calls": 100,
+      "visible_test_cases": 200
+    },
+    "fixed16": {
+      "accuracy": 0.45,
+      "mean_candidates": 16.0,
+      "observed_coverage": 0.45,
+      "generator_calls": 1600,
+      "verifier_calls": 1600,
+      "visible_test_cases": 3200
+    },
+    "stop_partial": {
+      "accuracy": 0.15,
+      "mean_candidates": 4.4,
+      "observed_coverage": 0.15,
+      "generator_calls": 440,
+      "verifier_calls": 440,
+      "visible_test_cases": 880
+    },
+    "stop_complete": {
+      "accuracy": 0.45,
+      "mean_candidates": 12.25,
+      "observed_coverage": 0.45,
+      "generator_calls": 1225,
+      "verifier_calls": 1225,
+      "visible_test_cases": 2450
+    }
+  }
+}

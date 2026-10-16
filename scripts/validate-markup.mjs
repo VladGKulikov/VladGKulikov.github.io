@@ -16,7 +16,13 @@ const errors = [];
 const totals = { documents: 0, headings: 0, tables: 0, lists: 0, listItems: 0, images: 0, links: 0, formulas: 0, codeBlocks: 0 };
 const courses = {};
 const quizMode = process.argv.includes('--quizzes');
-const documents = quizMode ? JSON.parse(fs.readFileSync(path.join(project, 'app/generated/quizzes.json'), 'utf8')).modules.map(entry => {
+const practiceMode = process.argv.includes('--practice');
+const codeFence = source => { const fence = '`'.repeat(Math.max(3, ...(source.match(/`+/g) ?? []).map(s => s.length + 1))); return `${fence}python\n${source}\n${fence}`; };
+const documents = practiceMode ? JSON.parse(fs.readFileSync(path.join(project, 'app/generated/practice.json'), 'utf8')).modules.map(entry => {
+  const page = JSON.parse(fs.readFileSync(path.join(project, 'public/practice', entry.file), 'utf8'));
+  const source = [page.introduction ?? '', ...page.items.flatMap(item => page.section === 'exercises' ? [`## ${item.title}`, item.prompt, item.answer, ...(item.codeFiles ?? []).map(file => codeFence(file.source))] : [`## ${item.title}`, ...item.cells.map(cell => cell.type === 'markdown' ? cell.source : codeFence(cell.source))])].join('\n\n');
+  return {content_file: entry.file, course_key: entry.courseKey, language: entry.language, source};
+}) : quizMode ? JSON.parse(fs.readFileSync(path.join(project, 'app/generated/quizzes.json'), 'utf8')).modules.map(entry => {
   const quiz = JSON.parse(fs.readFileSync(path.join(project, 'public/quizzes', entry.file), 'utf8'));
   const source = quiz.questions.map(q => `## ${q.id} ${q.title ?? ''}\n\n${q.topic ?? ''}\n\n${q.prompt}\n\n${(q.options ?? []).map(o => `- ${o.text}`).join('\n')}\n\n${q.explanation}`).join('\n\n');
   return {content_file:entry.file, course_key:entry.courseKey, language:entry.language, source};
@@ -62,7 +68,7 @@ for (const document of documents) {
       }
       case "paragraph":
         if (/^\s*\|[^\n]*\|/m.test(raw(node))) add("unparsed-table", node, raw(node));
-        if (/\n\s*\d+\.\s+/.test(raw(node))) add("unparsed-numbered-list", node, raw(node));
+        if (/\n\s*\d{1,2}\.\s+/.test(raw(node))) add("unparsed-numbered-list", node, raw(node));
         break;
       case "list":
         totals.lists++;
@@ -85,7 +91,7 @@ for (const document of documents) {
           if (!ids.has(decodeURIComponent(url.slice(1)))) add("missing-internal-anchor", node, url);
         } else if (!/^https?:|^mailto:|^data:/.test(url)) {
           const local = decodeURIComponent(url.split(/[?#]/)[0]);
-          const target = node.type === "image"
+          const target = node.type === "image" || local.startsWith("/")
             ? path.join(project, "public", local)
             : path.resolve(path.dirname(file), local);
           if (!fs.existsSync(target)) add("missing-local-target", node, url);

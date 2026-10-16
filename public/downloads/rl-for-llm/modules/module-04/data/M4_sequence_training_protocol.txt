@@ -1,0 +1,11 @@
+seeds: 5, 17, 29
+profile: smoke
+iterations: 40
+group_size: 8
+learning_rate: 0.005
+ppo_epochs: 3
+policy: TinyAutoregressivePolicy (embedding + GRU + linear head)
+prompts: 3 classes
+max_response_tokens: 4
+reward: deterministic verifier, maximum 1.2
+evaluation_samples_per_prompt_per_iteration: 24

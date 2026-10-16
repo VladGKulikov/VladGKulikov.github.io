@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "kind": "synthetic_teaching_example",
+  "date": "2026-10-10",
+  "tasks": 100,
+  "minimum_successes": 80,
+  "scope": "All billed attempts on the same held-out tasks; no cache, batch discount, infrastructure or human-review cost. Prices and outcomes are fictional.",
+  "candidates": [
+    {"name": "A", "input_tokens": 1000000, "output_tokens": 1000000, "input_usd_per_million": "1", "output_usd_per_million": "2", "tool_usd": "0.60", "successes": 60},
+    {"name": "B", "input_tokens": 200000, "output_tokens": 200000, "input_usd_per_million": "2", "output_usd_per_million": "10", "tool_usd": "0.40", "successes": 80}
+  ]
+}

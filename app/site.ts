@@ -1,17 +1,19 @@
 import content from "./generated/content.json";
 import config from "../SITE_CONFIG.json";
 import { quizFor } from './quizzes';
+import { practiceFor, type PracticeSection } from './practice';
 
 export type Language = "ru" | "en";
 export type CourseKey = "modern-llms" | "rl-for-llm" | "information-theory-for-ml";
 export type CourseModule = typeof content.courses[number]["modules"][number];
 export type Course = Omit<typeof content.courses[number], "language" | "course_key"> & { language: Language; course_key: CourseKey };
-export type PageRoute = { language: Language; courseKey: CourseKey | null; moduleKey: string | null; section?: 'tests'; notFound?: boolean };
+export type PageSection = 'tests' | PracticeSection;
+export type PageRoute = { language: Language; courseKey: CourseKey | null; moduleKey: string | null; section?: PageSection; notFound?: boolean };
 export const courses = content.courses as Course[];
 export const siteOrigin = config.origin;
 
-export function buildLocation(language: Language, course: string | null = null, module: string | null = null, section?: 'tests') {
-  return `${language === "ru" ? "/ru/" : "/"}${course ? `courses/${course}/${module ? `${module}/${section === 'tests' ? 'tests/' : ''}` : ""}` : ""}`;
+export function buildLocation(language: Language, course: string | null = null, module: string | null = null, section?: PageSection) {
+  return `${language === "ru" ? "/ru/" : "/"}${course ? `courses/${course}/${module ? `${module}/${section ? `${section}/` : ''}` : ""}` : ""}`;
 }
 
 export function parseUrl(url: URL): PageRoute {
@@ -32,21 +34,23 @@ export function parseUrl(url: URL): PageRoute {
     return { language: selectedLanguage, courseKey, moduleKey: moduleKey ?? course?.modules[0]?.module_key ?? null };
   }
   const course = courses.find(c => c.language === language && c.course_key === parts[1]);
-  if (parts[0] !== "courses" || parts.length > 4 || !course || parts[2] && !course.modules.some(m => m.module_key === parts[2]) || parts[3] && (parts[3] !== 'tests' || !quizFor(course?.course_key ?? null, parts[2], language))) {
+  const validSection = !parts[3] || (parts[3] === 'tests' ? Boolean(quizFor(course?.course_key ?? null,parts[2],language)) : Boolean(practiceFor(course?.course_key ?? null,parts[2],language,parts[3])));
+  if (parts[0] !== "courses" || parts.length > 4 || !course || parts[2] && !course.modules.some(m => m.module_key === parts[2]) || !validSection) {
     return { language, courseKey: null, moduleKey: null, notFound: true };
   }
-  return { language, courseKey: course.course_key, moduleKey: parts[2] ?? null, ...(parts[3] === 'tests' ? { section: 'tests' as const } : {}) };
+  return { language, courseKey: course.course_key, moduleKey: parts[2] ?? null, ...(parts[3] ? { section: parts[3] as PageSection } : {}) };
 }
 
 export function pageMetadata(route: PageRoute) {
   const course = courses.find(c => c.language === route.language && c.course_key === route.courseKey);
   const lecture = course?.modules.find(m => m.module_key === route.moduleKey);
   const ru = route.language === "ru";
+  const sectionTitle = route.section === 'tests' ? (ru ? 'тесты с проверкой ответов' : 'quizzes and answer checking') : route.section === 'exercises' ? (ru ? 'упражнения с решениями' : 'exercises and worked solutions') : route.section === 'notebooks' ? (ru ? 'ноутбуки' : 'notebooks') : '';
   const title = route.notFound ? (ru ? "Страница не найдена" : "Page not found")
-    : lecture ? `${lecture.title}${route.section === 'tests' ? ` — ${ru ? 'тесты с проверкой ответов' : 'quizzes and answer checking'}` : ''} · ${course!.title} · ${ru ? "Влад Куликов" : "Vlad Kulikov"}`
+    : lecture ? `${lecture.title}${sectionTitle ? ` — ${sectionTitle}` : ''} · ${course!.title} · ${ru ? "Влад Куликов" : "Vlad Kulikov"}`
     : course ? `${course.title} — ${ru ? "курс и оглавление" : "course and contents"} · ${ru ? "Влад Куликов" : "Vlad Kulikov"}`
     : ru ? "Открытые курсы Влада Куликова" : "Vlad Kulikov Open Courses";
-  const description = lecture && route.section === 'tests' ? (ru ? `${lecture.title}. Тестовые вопросы курса «${course!.title}»: проверка ответов и авторские пояснения на русском и английском.` : `${lecture.title}. ${course!.title} quiz questions with answer checking and author explanations in English and Russian.`) : lecture ? (ru
+  const description = lecture && route.section === 'exercises' ? (ru ? `${lecture.title}. Упражнения курса «${course!.title}» с раскрываемыми ответами, подробными решениями и программными примерами.` : `${lecture.title}. ${course!.title} exercises with expandable answers, worked solutions, and code examples.`) : lecture && route.section === 'notebooks' ? (ru ? `${lecture.title}. Ноутбуки курса «${course!.title}»: пояснения, исходный код, оригинальные файлы для скачивания.` : `${lecture.title}. ${course!.title} notebooks: explanations, source code, and original files to download.`) : lecture && route.section === 'tests' ? (ru ? `${lecture.title}. Тестовые вопросы курса «${course!.title}»: проверка ответов и авторские пояснения на русском и английском.` : `${lecture.title}. ${course!.title} quiz questions with answer checking and author explanations in English and Russian.`) : lecture ? (ru
     ? `${lecture.title}. ${course!.title}: открытая лекция Влада Куликова с математическими формулами и иллюстрациями.`
     : `${lecture.title}. ${course!.title}: an open lecture by Vlad Kulikov with mathematical formulas and illustrations.`)
     : course ? course.description

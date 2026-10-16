@@ -1,0 +1,49 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-07",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. Approximation threshold",
+      "prompt": "For $a=-1$, solve for the step at which replacing the exact ZOH input coefficient with $\\Delta$ creates ten-percent relative error.",
+      "answer": "*Solution.*\n\nFor $\\dot h=ah+Bx$, exact ZOH discretization gives input coefficient $(e^{a\\Delta}-1)B/a$. With $a=-1$ and $B=1$, this is $1-e^{-\\Delta}$, whereas the small-step approximation uses $\\Delta$. Hence relative error against the exact coefficient is\n\n$$\n\\frac{\\Delta}{1-e^{-\\Delta}}-1=0.1\n\\quad\\Rightarrow\\quad\n\\Delta\\approx0.193747558.\n$$\n\nSubstitution gives $\\Delta/(1-e^{-\\Delta})\\approx1.1$. The small-$\\Delta$ expansion starts with error $\\Delta/2$, so a root near 0.2 is also a useful magnitude check.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. Complete recurrent cache",
+      "prompt": "For 32 layers, $d_{inner}=8192$, $d_{state}=16$, $d_{conv}=4$, and bf16, compute the two state components and the crossover against 128 KiB/token.",
+      "answer": "*Solution.* One layer's SSM state has $d_{inner}d_{state}$ bf16 elements:\n\n$$8192\\cdot16\\cdot2=262144\\ \\text{bytes}=0.25\\ \\text{MiB}.$$\n\nAcross 32 layers this is 8 MiB. Convolution state uses $d_{inner}d_{conv}$ elements: $8192\\cdot4\\cdot2=65536$ bytes per layer, or 2 MiB total. Complete recurrent cache is **10 MiB** and does not grow with sequence length. At 128 KiB/token, KV reaches it at $10\\text{ MiB}/128\\text{ KiB}=\\mathbf{80}$ tokens and exceeds it afterward.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. Mamba-2-like cache",
+      "prompt": "Set $d_{state}=128$ and convolution channels to $8192+2\\cdot128$. Find the complete cache and the first integer token beyond crossover.",
+      "answer": "*Solution.* The SSM component is\n\n$$32\\cdot8192\\cdot128\\cdot2=64\\ \\text{MiB}.$$\n\nConvolution has $8192+2\\cdot128=8448$ channels, so its state uses $32\\cdot8448\\cdot4\\cdot2=2.0625$ MiB. Total is **66.0625 MiB**. Dividing by 0.125 MiB of KV per token gives 528.5: KV is still smaller at 528 tokens and first becomes strictly larger at **529**.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4 [project]",
+      "prompt": "Compare sequential and chunked scans at a sequence length not divisible by the chunk size. The partial final chunk must agree with the reference recurrence.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 8](/downloads/modern-llms/project_demos/en/module_08_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5 [project]",
+      "prompt": "Compare additive, delta, and gated-delta memory on a synthetic task. Use identical keys, values, and state dimensions to compare interference, rewriting, and forgetting. Report current-key error separately from error over all previously written keys.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 8](/downloads/modern-llms/project_demos/en/module_08_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

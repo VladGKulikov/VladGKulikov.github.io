@@ -1,0 +1,26 @@
+{
+  "checked_on": "2026-10-11",
+  "scope": "Primary papers and developer pages; mutable pages are dated observations, not immutable revisions.",
+  "sources": [
+    "https://arxiv.org/abs/2107.03006",
+    "https://arxiv.org/abs/2205.14217",
+    "https://arxiv.org/abs/2310.16834",
+    "https://arxiv.org/abs/2406.07524",
+    "https://arxiv.org/abs/2502.09992",
+    "https://arxiv.org/abs/2503.09573",
+    "https://arxiv.org/abs/2506.19935",
+    "https://arxiv.org/abs/2507.15857",
+    "https://arxiv.org/abs/2509.01025",
+    "https://arxiv.org/abs/2512.15745",
+    "https://arxiv.org/abs/2601.07347",
+    "https://arxiv.org/abs/2602.08676",
+    "https://arxiv.org/abs/2604.20796",
+    "https://arxiv.org/abs/2606.25331",
+    "https://deepmind.google/models/gemini-diffusion/",
+    "https://deepmind.google/models/gemma/diffusiongemma/",
+    "https://huggingface.co/google/diffusiongemma-26B-A4B-it",
+    "https://seed.bytedance.com/en/public_papers/seed-diffusion-a-large-scale-diffusion-language-model-with-high-speed-inference",
+    "https://vllm-project.github.io/2026/06/10/diffusion-gemma",
+    "https://www.inceptionlabs.ai/blog/introducing-mercury-2"
+  ]
+}

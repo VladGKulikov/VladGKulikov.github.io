@@ -1477,6 +1477,47 @@ a {
 .quiz-explanation > :last-child { margin-bottom: 0; }
 .quiz-prompt, .quiz-explanation, .quiz-option-text { overflow-wrap: anywhere; }
 .quiz-static-options { list-style: none; padding-left: 0 !important; }
+/* Practice stays in the existing reader; long code, tables and math scroll locally. */
+.practice-intro { font-size: 14px; line-height: 1.65; margin-bottom: 32px; overflow-wrap: anywhere; }
+.practice-intro p { margin-bottom: 12px; }
+.practice-bundle { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); text-underline-offset: 4px; }
+.practice-note, .notebook-download small { font-family: Inter, ui-sans-serif, sans-serif; font-size: 13px; color: var(--muted); line-height: 1.65; }
+.practice-card { min-width: 0; scroll-margin-top: 100px; margin: 40px 0; overflow-wrap: anywhere; }
+.practice-card > .markdown-h2 { font-size: 26px; }
+.practice-card:first-child > .markdown-h2 { border-top: 0; padding-top: 0; }
+.practice-answer, .notebook-preview { min-width: 0; margin: 20px 0; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent-soft) 20%, var(--paper-light)); padding: 8px 16px; }
+.practice-answer > summary, .notebook-preview > summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-family: Inter, ui-sans-serif, sans-serif; font-size: 14px; line-height: 1.65; }
+.practice-answer[open] > summary, .notebook-preview[open] > summary { margin-bottom: 14px; }
+.practice-answer-body > :last-child, .notebook-cell > :last-child { margin-bottom: 0; }
+.notebook-download { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 14px; }
+.notebook-download a { display: inline-flex; align-items: center; min-height: 44px; }
+.notebook-download small { overflow-wrap: anywhere; min-width: 0; }
+.notebook-cell { min-width: 0; margin: 24px 0; }
+.code-block { min-width: 0; max-width: 100%; margin: 24px 0; border: 1px solid #35404a; background: #18212a; color: #e0e8ef; border-radius: 3px; overflow: hidden; }
+.code-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; padding: 6px 12px; background: #222e39; border-bottom: 1px solid #35404a; font: 12px/1.6 Inter, ui-sans-serif, sans-serif; }
+.code-file-label { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; min-width: 0; overflow-wrap: anywhere; }
+.code-language { font-weight: 700; letter-spacing: .04em; color: #8dd5d0; }
+.code-file-actions { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.code-file-actions button, .code-file-actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 0; background: transparent; border: 0; color: #e0e8ef; font: inherit; cursor: pointer; text-underline-offset: 4px; }
+.code-file-actions button:hover, .code-file-actions a:hover { color: #8dd5d0; }
+.code-scroll { overflow-x: auto; max-width: 100%; overscroll-behavior-x: contain; }
+.code-line-layout { display: flex; width: max-content; min-width: 100%; font: 13px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.code-line-numbers { flex: 0 0 auto; padding: 14px 10px; border-right: 1px solid #35404a; color: #90a0b0; text-align: right; user-select: none; }
+.code-line-numbers span { display: block; }
+.lecture-prose .code-block pre { flex: 1; padding: 14px; margin: 0; border: 0; border-radius: 0; background: transparent; color: inherit; overflow: visible; font: inherit; line-height: inherit; white-space: pre; }
+.lecture-prose .code-block pre code { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; white-space: pre; }
+.code-token-comment { color: #a1b0bd; }
+.code-token-string { color: #badc9e; }
+.code-token-number { color: #f3c18e; }
+.code-token-keyword { color: #d7b0f5; }
+.code-token-builtin { color: #8ed5ec; }
+.lecture-prose .code-copy-status { padding: 8px 12px; margin: 0; font: 13px/1.6 Inter, ui-sans-serif, sans-serif; }
+@media (max-width: 600px) {
+  .practice-card > .markdown-h2 { font-size: 24px; }
+  .practice-answer, .notebook-preview { padding: 6px 10px; }
+  .code-header { padding-inline: 10px; }
+  .code-line-layout { font-size: 12px; }
+}
 @media (max-width: 600px) {
   .quiz-question .markdown-h2 { font-size: 24px; }
   .quiz-option { padding: 12px 10px; gap: 8px; }

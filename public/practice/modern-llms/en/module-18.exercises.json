@@ -1,0 +1,70 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-18",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "Exercise 1. The correct softmax axis",
+      "prompt": "`scores` has shape `[B, h, T_q, T_k] = [2, 4, 3, 5]`.\n\n\n1. What is the shape of `weights`?\n\n2. Which sum must equal one?\n\n3. What does `softmax(dim=-2)` do?",
+      "answer": "**Solution.** The shape remains `[2,4,3,5]`. For each fixed `(batch, head, query)`, the sum across the final key axis is one. `dim=-2` normalizes the three query positions for each key. The code runs but no longer implements attention.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "Exercise 2. Dot-product scaling",
+      "prompt": "Let $d_k=64$ and assume independent, zero-mean, unit-variance coordinates. Estimate the variance of $q^\\top k$ before and after scaling.",
+      "answer": "**Solution.** Under the stated assumptions, the variance is 64 before scaling. Dividing by $\\sqrt{64}=8$ divides variance by $8^2$, leaving 1. The notebook samples 50,000 pairs with seed 18, prints the empirical variances, and checks an 8% tolerance around these theoretical values.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "Exercise 3. Attention by hand",
+      "prompt": "Using the matrices in §4.5, reconstruct the second causal output row.",
+      "answer": "**Solution.** The available logits are `[0,0.707]`, giving softmax weights `[0.330238,0.669762]`. Therefore\n\n$$\nZ_2\\approx0.330238[1,0]+0.669762[0,2]\n\\approx[0.330238,1.339523].\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "Exercise 4. LayerNorm",
+      "prompt": "Normalize $x=[1,2,3,4]$ with $\\gamma=1$, $\\beta=0$, and $\\varepsilon=0$.",
+      "answer": "**Solution.** $\\mu=2.5$, $\\sigma^2=1.25$, and standard deviation $\\sqrt{1.25}\\approx1.1180$. Thus\n\n$$\n[-1.3416,-0.4472,0.4472,1.3416].\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-05",
+      "title": "Exercise 5. Layer parameters",
+      "prompt": "For $d_{model}=512$ and $d_{ff}=2048$, count MHA and FFN weights without biases.",
+      "answer": "**Solution.** MHA: $4\\cdot512^2=1\\,048\\,576$. FFN: $2\\cdot512\\cdot2048=2\\,097\\,152$. The total is $3\\,145\\,728$, and the FFN owns $2/3$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-06",
+      "title": "Exercise 6 [project]. Catch future leakage",
+      "prompt": "Implement a decoder block once with a causal mask and once without it. Create two sequences that share their first three positions but differ at the fourth. Compare logits at the first three positions.",
+      "answer": "**Expected result.** With masking, the logits agree up to floating-point tolerance. Without masking, at least some earlier logits differ. The module notebook includes a reproducible test.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-07",
+      "title": "Exercise 7 [project]. Draw the block from memory",
+      "prompt": "On a blank page, reconstruct:\n\n\n1. one complete encoder layer;\n\n2. one complete original decoder layer;\n\n3. a modern pre-norm decoder-only block.\n\nLabel every arrow with a tensor shape, then compare your result with VIZ 02 and VIZ 08.",
+      "answer": "**Readiness criterion.** You included a separate `Add & Norm` after every original sublayer, sent decoder queries and encoder keys/values into cross-attention, and preserved $d_{model}$ along the residual stream.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-08",
+      "title": "Exercise 8 [project]. A tiny language model",
+      "prompt": "Wrap one `DecoderBlock` with token and positional embeddings, a final norm, and a vocabulary head. Overfit the model on a short periodic sequence. Check that:\n\n- loss decreases;\n- generated continuation follows the pattern;\n- the causal-invariance test passes;\n- removing the causal mask exposes the next target token, even if the loss on this simple period does not decrease further.",
+      "answer": "**Boundary of the result.** A single preceding token determines the next item of this period. Success does not show that attention is necessary or that the model uses long contexts. This experiment checks training and generation on a simple task, without a separate generalization test.",
+      "answerKind": "guidance"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

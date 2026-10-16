@@ -1,0 +1,172 @@
+{
+  "oss120": {
+    "active_parameters": 5132849472,
+    "attention": 955802880,
+    "dense_ffn": 0,
+    "extra_active": 0,
+    "extra_total": 0,
+    "norms": 210240,
+    "routed_and_shared_experts_active": 3584424960,
+    "routed_and_shared_experts_total": 114701598720,
+    "router": 13275648,
+    "sinks": 2304,
+    "total_parameters": 116829156672,
+    "vocab_active": 579133440,
+    "vocab_total": 1158266880
+  },
+  "oss20": {
+    "active_parameters": 3608307264,
+    "attention": 637201920,
+    "dense_ffn": 0,
+    "extra_active": 0,
+    "extra_total": 0,
+    "norms": 141120,
+    "routed_and_shared_experts_active": 2389616640,
+    "routed_and_shared_experts_total": 19116933120,
+    "router": 2212608,
+    "sinks": 1536,
+    "total_parameters": 20914757184,
+    "vocab_active": 579133440,
+    "vocab_total": 1158266880
+  },
+  "deepseek_v3_reconstruction": {
+    "active_parameters": 36625618432,
+    "attention": 11413547008,
+    "dense_ffn": 1189085184,
+    "extra_active": 0,
+    "extra_total": 0,
+    "norms": 881664,
+    "routed_and_shared_experts_active": 22988980224,
+    "routed_and_shared_experts_total": 656463101952,
+    "router": 106445312,
+    "sinks": 0,
+    "total_parameters": 671026419200,
+    "vocab_active": 926679040,
+    "vocab_total": 1853358080
+  },
+  "deepseek_v3_reported": {
+    "main_total": 671000000000,
+    "active": 37000000000,
+    "hf_package_total_with_mtp": 685000000000
+  },
+  "router": {
+    "bias": [
+      0.0,
+      0.0,
+      0.0,
+      0.35,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "boundary_update": {
+      "one_step": {
+        "e0": 0.7497747834990175,
+        "e6": 0.7296995026250039
+      },
+      "two_steps": {
+        "e0": 0.7310247834990176,
+        "e6": 0.7484495026250039
+      }
+    },
+    "gates": [
+      0.2694994612569363,
+      0.25980636470427615,
+      0.24657595902244958,
+      0.224118215016338
+    ],
+    "gates_with_bias": [
+      0.18368780089939873,
+      0.28354280527375636,
+      0.27334461127547466,
+      0.2594247825513703
+    ],
+    "logits": [
+      1.2,
+      -0.3,
+      2.1,
+      0.4,
+      1.7,
+      -1.0,
+      0.9,
+      2.5
+    ],
+    "scores": [
+      0.7685247834990175,
+      0.425557483188341,
+      0.8909031788043871,
+      0.598687660112452,
+      0.8455347349164652,
+      0.2689414213699951,
+      0.7109495026250039,
+      0.9241418199787566
+    ],
+    "selected": [
+      7,
+      2,
+      4,
+      0
+    ],
+    "selected_with_bias": [
+      3,
+      7,
+      2,
+      4
+    ]
+  },
+  "combinations": {
+    "C128_4": 10668000,
+    "C256_8_unconstrained_upper_bound": 409663695276000,
+    "C8_2": 28
+  },
+  "balance_cv": {
+    "before": 0.6505852027323183,
+    "sign_after": 0.03931118956596903,
+    "proportional_after": 0.01932878458289989
+  },
+  "latent_moe": {
+    "kimi_k3_hidden": 7168,
+    "kimi_k3_latent": 3584,
+    "payload_reduction": 2.0,
+    "routed_experts": 896,
+    "selected_experts": 16,
+    "shared_experts": 2
+  },
+  "qwen35_config": {
+    "hidden_size": 2048,
+    "layers": 40,
+    "mtp_layers": 1,
+    "routed_experts": 256,
+    "routed_intermediate": 512,
+    "selected_experts": 8,
+    "shared_experts": 1,
+    "shared_intermediate": 512
+  },
+  "active_expert_law": {
+    "E128_k4_N16": {
+      "simulation": 0.39857421875,
+      "theory": 0.3982896965679277
+    },
+    "E128_k4_N64": {
+      "simulation": 0.869296875,
+      "theory": 0.868915967521525
+    },
+    "E256_k8_N16": {
+      "simulation": 0.39908203125,
+      "theory": 0.3982896965679277
+    },
+    "E256_k8_N64": {
+      "simulation": 0.86845703125,
+      "theory": 0.868915967521525
+    },
+    "E896_k16_N16": {
+      "simulation": 0.2504827008928572,
+      "theory": 0.2504603703415571
+    },
+    "E896_k16_N64": {
+      "simulation": 0.6853069196428571,
+      "theory": 0.6843699099436731
+    }
+  }
+}

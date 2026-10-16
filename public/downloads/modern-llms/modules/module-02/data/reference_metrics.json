@@ -1,0 +1,144 @@
+{
+  "schema_version": 2,
+  "corpus": {
+    "source": "UD PUD 2.15",
+    "manifest_sha256": "76410304a75995d04728593d48852d78cb6fb2d8485988b7ee154cca3ea1ed09",
+    "train_file": "m2_train_ru.txt",
+    "train_sha256": "a6b3e38f3553c3fb1c917cc1727b8334a5c2734696e545ff20e9fb773a08d1b9",
+    "train_bytes": 180112,
+    "train_characters": 99006,
+    "eval_file": "m2_eval_en.txt",
+    "eval_sha256": "36b29e9c1c56cafa2d653c3ce6d6e5cccbd07d83cda4bb24d15b2c71a7c53dfb",
+    "eval_bytes": 18168,
+    "eval_characters": 18117,
+    "holdout_ru_file": "m2_eval_ru.txt",
+    "holdout_ru_sha256": "089b5ee460516511fd695d0abdf7d0675329543c9065a193af8b9881725616e7",
+    "holdout_ru_bytes": 33654,
+    "holdout_ru_characters": 18513
+  },
+  "model": {
+    "file": "bbpe_ru_4096.json",
+    "sha256": "333abcfd91dcb03d6270e44ec171a36f856eeed4fdf0d5f1f099819822fa34cd",
+    "version": "bbpe-course-1",
+    "base_tokens": 256,
+    "merges": 4096,
+    "vocab_size": 4352
+  },
+  "samples": {
+    "ru": "Внимание — это всё, что вам нужно.",
+    "en": "Attention is all you need."
+  },
+  "curve": {
+    "0": [
+      1.0,
+      1.0,
+      61,
+      26
+    ],
+    "64": [
+      2.236,
+      1.009,
+      35,
+      26
+    ],
+    "256": [
+      3.231,
+      1.011,
+      19,
+      26
+    ],
+    "1024": [
+      4.531,
+      1.047,
+      15,
+      26
+    ],
+    "4096": [
+      6.535,
+      1.317,
+      13,
+      22
+    ]
+  },
+  "holdout_ru_curve": {
+    "0": 1.0,
+    "64": 2.244,
+    "256": 3.213,
+    "1024": 4.36,
+    "4096": 5.542
+  },
+  "corpus_token_counts": {
+    "0": {
+      "ru_train": 180112,
+      "ru_eval": 33654,
+      "en_eval": 18168
+    },
+    "64": {
+      "ru_train": 80545,
+      "ru_eval": 14994,
+      "en_eval": 18005
+    },
+    "256": {
+      "ru_train": 55751,
+      "ru_eval": 10474,
+      "en_eval": 17963
+    },
+    "1024": {
+      "ru_train": 39754,
+      "ru_eval": 7719,
+      "en_eval": 17346
+    },
+    "4096": {
+      "ru_train": 27560,
+      "ru_eval": 6073,
+      "en_eval": 13793
+    }
+  },
+  "aligned_eval_token_counts": {
+    "ru": 6079,
+    "en": 13789
+  },
+  "greeting_ids": [
+    943,
+    370,
+    301
+  ],
+  "spacing": {
+    "one two": {
+      "bytes": 7,
+      "tokens": 6,
+      "bytes_per_token": 1.1666666666666667
+    },
+    "one  two": {
+      "bytes": 8,
+      "tokens": 7,
+      "bytes_per_token": 1.1428571428571428
+    }
+  },
+  "fertility": {
+    "RU проза": [
+      16,
+      7,
+      2.29,
+      6.94
+    ],
+    "EN prose": [
+      44,
+      8,
+      5.5,
+      1.18
+    ],
+    "Python": [
+      63,
+      13,
+      4.85,
+      1.08
+    ],
+    "Числа": [
+      29,
+      6,
+      4.83,
+      1.03
+    ]
+  }
+}

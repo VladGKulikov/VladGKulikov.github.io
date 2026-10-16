@@ -1,0 +1,90 @@
+{
+  "as_of": "2026-10-11",
+  "scope": "Developer-reported rounded counts, rechecked 11 October 2026. Total/active conventions differ across architectures. This is not a speed or quality ranking. DeepSeek-V4.1-Flash has separate backbone/Engram and prefill/decode counts and is described in the lecture rather than collapsed into one pair.",
+  "rows": [
+    {
+      "total_B": 21,
+      "active_B": 3.6,
+      "model": "gpt-oss-20b",
+      "source": "https://huggingface.co/openai/gpt-oss-20b",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 117,
+      "active_B": 5.1,
+      "model": "gpt-oss-120b",
+      "source": "https://huggingface.co/openai/gpt-oss-120b",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 1600,
+      "active_B": 49,
+      "model": "DeepSeek V4 Pro",
+      "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 975,
+      "active_B": 41,
+      "model": "Inkling",
+      "source": "https://thinkingmachines.ai/model-card/inkling/",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 2800,
+      "active_B": 104,
+      "model": "Kimi K3",
+      "source": "https://github.com/MoonshotAI/Kimi-K3",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 120,
+      "active_B": 12,
+      "model": "Nemotron 3 Super",
+      "source": "https://research.nvidia.com/labs/nemotron/Nemotron-3-Super/",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 550,
+      "active_B": 55,
+      "model": "Nemotron 3 Ultra",
+      "source": "https://research.nvidia.com/labs/nemotron/Nemotron-3-Ultra/",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 109,
+      "active_B": 17,
+      "model": "Llama 4 Scout",
+      "source": "https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 400,
+      "active_B": 17,
+      "model": "Llama 4 Maverick",
+      "source": "https://huggingface.co/meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "total_B": 25.2,
+      "active_B": 3.8,
+      "model": "DiffusionGemma",
+      "source": "https://huggingface.co/google/diffusiongemma-26B-A4B-it",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "model": "Qwen3.8-2.4T-A95B",
+      "total_B": 2400,
+      "active_B": 95,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+      "verified_on": "2026-10-11"
+    },
+    {
+      "model": "GLM-5.3-Flash",
+      "total_B": 320,
+      "active_B": 18,
+      "source": "https://huggingface.co/zai-org/GLM-5.3-Flash",
+      "verified_on": "2026-10-11"
+    }
+  ]
+}

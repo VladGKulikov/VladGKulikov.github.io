@@ -1,0 +1,130 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-12",
+  "language": "ru",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Модуль 12. Практикум: память, очереди, несвежесть и восстановление",
+      "format": "ipynb",
+      "filename": "module-12-rl-infrastructure.ru.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-12-rl-infrastructure.ru.ipynb",
+      "bytes": 27090,
+      "sha256": "113de4d71c9c56f6849110ccb9644df2119b873327657b8c70bb875ab80cc4dd",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Модуль 12. Практикум: память, очереди, несвежесть и восстановление\n\nЭтот ноутбук превращает инфраструктурные понятия лекции в один воспроизводимый CPU-контур. Мы не имитируем конкретный кластер такт за тактом: вместо этого строим дискретно-событийную модель, в которой роллауты имеют разную длину, очередь ограничена, тренер собирает пакеты по числу токенов, новые версии весов публикуются с задержкой, а слишком старые записи отбрасываются по явному контракту. Отдельный аварийный сценарий показывает, почему контрольная точка шире файла весов.\n\nЧисленные результаты принадлежат синтетической среде курса. Они объясняют механизмы и не являются сравнительным тестом TRL, verl, OpenRLHF, NeMo RL или другого стека."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Воспроизводимый профиль\n\nПроверочный профиль выполняется на CPU. Полный профиль увеличивает виртуальное время эксперимента, но использует ту же детерминированную модель событий."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nimport os\nimport random\nimport sys\nimport time\nfrom pathlib import Path\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\nfrom IPython.display import display\n\n\ndef find_repo_root(start: Path) -> Path:\n    \"\"\"Find the course root regardless of the notebook working directory.\"\"\"\n    start = start.resolve()\n    for candidate in (start, *start.parents):\n        if (candidate / \"modules/module-12/module_12_reference.py\").is_file():\n            return candidate\n    raise FileNotFoundError(\"Could not locate the RL for LLM repository root\")\n\n\nROOT = find_repo_root(Path.cwd())\nMODULE_DIR = ROOT / \"modules/module-12\"\nif str(MODULE_DIR) not in sys.path:\n    sys.path.insert(0, str(MODULE_DIR))\n\nfrom module_12_reference import (\n    BYTES_PER_GIB,\n    checkpoint_cadence,\n    completion_token_mask,\n    effective_sample_size,\n    human_bytes,\n    ideal_sharded_memory,\n    kv_cache_bytes,\n    model_state_bytes,\n    optimal_checkpoint_interval,\n    peak_memory,\n    pipeline_report,\n    rollout_contract_errors,\n    straggler_report,\n    synchronization_schedule,\n    synchronization_transfer_time,\n)\nfrom module_12_pipeline_sim import (\n    PipelineConfig,\n    checkpoint_as_dict,\n    make_checkpoint,\n    recovery_drill,\n    result_row,\n    simulate_pipeline,\n)\n\nPROFILE = os.getenv(\"RL_LLM_PROFILE\", \"smoke\").strip().lower()\nRUN_REAL_MODEL = False\nif PROFILE not in {\"smoke\", \"full\", \"real-model\"}:\n    raise ValueError(\"RL_LLM_PROFILE must be smoke, full, or real-model\")\n\nDURATION = 240.0 if PROFILE == \"full\" else 120.0\nSEED = 12016\nnp.random.seed(SEED)\nrandom.seed(SEED)\n\n\nprint(f\"Корень курса: {ROOT}\")\nprint(f\"Профиль: {PROFILE}; виртуальная длительность={DURATION:.0f} c; seed={SEED}\")"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Бухгалтерия памяти\n\nСначала считаем логическое состояние модели и полезный объём KV-кэша. Эти числа ещё не включают активации, временные сборки, фрагментацию и библиотечные накладные расходы."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "profiles = {\n    \"7B / 12-byte full-training profile\": model_state_bytes(\n        7_000_000_000,\n        parameter_bytes=2,\n        gradient_bytes=2,\n        optimizer_state_bytes=8,\n        master_parameter_bytes=0,\n    ),\n    \"7B / 16-byte full-training profile\": model_state_bytes(\n        7_000_000_000,\n        parameter_bytes=2,\n        gradient_bytes=2,\n        optimizer_state_bytes=8,\n        master_parameter_bytes=4,\n    ),\n    \"7B base + 1% trainable adapters\": model_state_bytes(\n        7_070_000_000,\n        trainable_parameters=70_000_000,\n        parameter_bytes=2,\n        gradient_bytes=2,\n        optimizer_state_bytes=8,\n        master_parameter_bytes=4,\n    ),\n}\n\nmemory_rows = []\nfor name, profile in profiles.items():\n    memory_rows.append({\n        \"profile\": name,\n        \"logical bytes\": profile.total_bytes,\n        \"GiB\": profile.total_bytes / BYTES_PER_GIB,\n        \"human\": human_bytes(profile.total_bytes),\n    })\n\ndisplay(pd.DataFrame(memory_rows))\n\nkv_16_gib = kv_cache_bytes(\n    num_sequences=64,\n    tokens_per_sequence=4096,\n    num_layers=32,\n    num_kv_heads=4,\n    head_dim=128,\n    element_bytes=2,\n)\nprint(\"KV-cache teaching configuration:\", human_bytes(kv_16_gib))\nassert kv_16_gib == 16 * BYTES_PER_GIB\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Пик по фазам, перекрытие и медленные роллауты\n\nСовместное размещение требует считать максимум по фазам, а не сумму всех потенциальных компонентов. Затем сопоставим последовательный цикл, идеальное перекрытие и потери от одного медленного участника."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "phase_report = peak_memory({\n    \"rollout\": [14 * BYTES_PER_GIB, kv_16_gib, 2 * BYTES_PER_GIB],\n    \"training\": [14 * BYTES_PER_GIB, 8 * BYTES_PER_GIB, 28 * BYTES_PER_GIB],\n    \"weight publication\": [14 * BYTES_PER_GIB, 14 * BYTES_PER_GIB, 2 * BYTES_PER_GIB],\n})\nprint(\"Peak phase:\", phase_report.phase, human_bytes(phase_report.peak_bytes))\ndisplay(pd.DataFrame([\n    {\"phase\": name, \"GiB\": value / BYTES_PER_GIB}\n    for name, value in phase_report.phase_totals.items()\n]))\n\npipe = pipeline_report(rollout_seconds=60.0, train_seconds=20.0, batches=10)\nstragglers = straggler_report([3, 3, 4, 4, 5, 5, 6, 18])\nprint(\"Two-stage pipeline:\", pipe)\nprint(\"Synchronous straggler group:\", stragglers)\nassert np.isclose(pipe.sequential_total, 800.0)\nassert np.isclose(pipe.pipeline_total, 620.0)\nassert np.isclose(stragglers.utilization, 1 / 3)\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. Последовательный и ограниченно-асинхронный контуры\n\nТеперь запускается полноценная синтетическая система: несколько сборщиков роллаутов, очередь в токенах, тренер, публикация весов и правило максимальной задержки политики."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "profile_configs = {\n    \"sequential\": PipelineConfig(\n        mode=\"sequential\",\n        duration_seconds=DURATION,\n        seed=SEED,\n    ),\n    \"bounded async / sync every update\": PipelineConfig(\n        mode=\"bounded_async\",\n        duration_seconds=DURATION,\n        max_queue_tokens=7000,\n        max_policy_lag=2,\n        sync_every_updates=1,\n        seed=SEED,\n    ),\n    \"deeper async / sync every 3 updates\": PipelineConfig(\n        mode=\"bounded_async\",\n        duration_seconds=DURATION,\n        max_queue_tokens=7000,\n        max_policy_lag=6,\n        sync_every_updates=3,\n        seed=SEED,\n    ),\n}\nresults = {name: simulate_pipeline(cfg) for name, cfg in profile_configs.items()}\nsummary = pd.DataFrame([\n    {\"profile\": name, **result_row(result)}\n    for name, result in results.items()\n])\ndisplay(summary)\n\n\n\n\n# Profile rankings are observations, not invariants under parameter changes.\nassert all(np.isfinite(r.trained_tokens_per_second) and r.trained_tokens_per_second >= 0 for r in results.values())\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. Очередь и обратное давление\n\nОграничение приёма новых роллаутов не обязано мгновенно обнулить очередь: уже начатые запросы ещё завершатся. Поэтому глубина может кратко перейти порог, но новые задания больше не выдаются."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "fig, ax = plt.subplots(figsize=(9.5, 4.8))\nfor name, result in results.items():\n    if result.config.mode != \"bounded_async\":\n        continue\n    x = [row[\"time\"] for row in result.timeline]\n    y = [row[\"queue_tokens\"] for row in result.timeline]\n    ax.plot(x, y, label=name)\nax.axhline(7000, linestyle=\"--\", linewidth=1.5, label=\"new-rollout admission threshold\")\nax.set_xlabel(\"time, s\")\nax.set_ylabel(\"tokens in queue\")\nax.set_title(\"A bounded queue converts overload into observable backpressure\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n\nqueue_table = pd.DataFrame([\n    {\n        \"profile\": name,\n        \"maximum observed queue, tokens\": result.max_queue_tokens_observed,\n        \"backpressure, s\": result.backpressure_seconds,\n        \"discarded rollouts\": result.discarded_rollouts,\n    }\n    for name, result in results.items()\n])\ndisplay(queue_table)\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. Несвежесть и концентрация весов\n\nСкорость без статистической диагностики недостаточна. В учебной модели более глубокое перекрытие обычно увеличивает задержку и ухудшает нормированный ESS; конкретная связь здесь задана симулятором, а не считается универсальным законом."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "batch_rows = []\nfor name, result in results.items():\n    for batch in result.batches:\n        batch_rows.append({\n            \"profile\": name,\n            \"update\": batch.update,\n            \"mean lag\": batch.mean_lag,\n            \"max lag\": batch.max_lag,\n            \"normalized ESS\": batch.normalized_ess,\n        })\nbatch_df = pd.DataFrame(batch_rows)\ndisplay(batch_df.groupby(\"profile\").agg(\n    updates=(\"update\", \"count\"),\n    mean_lag=(\"mean lag\", \"mean\"),\n    p95_lag=(\"mean lag\", lambda x: x.quantile(0.95)),\n    mean_nESS=(\"normalized ESS\", \"mean\"),\n    min_nESS=(\"normalized ESS\", \"min\"),\n))\n\nfig, ax = plt.subplots(figsize=(8.6, 4.6))\nfor name, part in batch_df.groupby(\"profile\"):\n    if name == \"sequential\":\n        continue\n    ax.scatter(part[\"mean lag\"], part[\"normalized ESS\"], s=20, alpha=0.65, label=name)\nax.set_xlabel(\"mean policy lag in a batch, versions\")\nax.set_ylabel(\"normalized ESS\")\nax.set_ylim(0, 1.03)\nax.set_title(\"The simulator exposes a speed–freshness trade-off, not a theorem\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. Контракт роллаута\n\nПроверим две записи до того, как они попадут в обновление. В реальной системе такой валидатор должен стоять на границе очереди или сборщика пакетов."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "good_record = {\n    \"sample_id\": \"run12-p003-r01\",\n    \"prompt_id\": \"p003\",\n    \"policy_version\": 17,\n    \"prompt_tokens\": [101, 42, 17],\n    \"response_tokens\": [314, 159, 2],\n    \"behavior_logprobs\": [-0.31, -1.07, -0.22],\n    \"decoding\": {\"temperature\": 0.8, \"top_p\": 1.0},\n    \"reward\": {\"correctness\": 1.0, \"format\": 0.0},\n    \"stop_reason\": \"eos\",\n    \"verifier_version\": \"arith-v4\",\n}\nbroken_record = dict(good_record)\nbroken_record.pop(\"behavior_logprobs\")\nbroken_record[\"policy_version\"] = -1\n\nprint(\"Valid record errors:\", rollout_contract_errors(good_record))\nprint(\"Broken record errors:\", rollout_contract_errors(broken_record))\nassert rollout_contract_errors(good_record) == []\nassert rollout_contract_errors(broken_record)\n"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 8. Синхронизация весов\n\nЦена публикации зависит от объёма полезной нагрузки, пропускной способности, эффективности транспорта и постоянных издержек. Более редкая синхронизация экономит время, но увеличивает задержку политики."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "full_bf16_payload = 7_000_000_000 * 2\nadapter_payload = 70_000_000 * 2\nrows = []\nfor name, payload in ((\"full 7B bf16 weights\", full_bf16_payload), (\"1% bf16 adapter\", adapter_payload)):\n    rows.append({\n        \"payload\": name,\n        \"GiB\": payload / BYTES_PER_GIB,\n        \"transfer over 25 GB/s at 80% efficiency, s\": synchronization_transfer_time(\n            payload,\n            25.0,\n            setup_seconds=0.15,\n            efficiency=0.80,\n        ),\n    })\ndisplay(pd.DataFrame(rows))\n\ncadences = []\nfor every in (1, 2, 4, 8):\n    schedule = synchronization_schedule(sync_every=every, updates=16)\n    cadences.append({\n        \"sync every K updates\": every,\n        \"synchronizations\": schedule.synchronization_count,\n        \"mean lag\": schedule.mean_lag,\n        \"max lag\": schedule.max_lag,\n    })\ndisplay(pd.DataFrame(cadences))\n"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 9. Контрольная точка и аварийное восстановление\n\nСначала оценим учебный интервал контрольных точек, затем сохраним не только счётчики, но и состояние генератора случайных чисел, курсор данных и версии компонентов."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "checkpoint_seconds = 180.0\nmtbf_seconds = 10 * 3600.0\ninterval = optimal_checkpoint_interval(checkpoint_seconds, mtbf_seconds)\ncadence = checkpoint_cadence(\n    interval,\n    checkpoint_seconds=checkpoint_seconds,\n    mtbf_seconds=mtbf_seconds,\n)\nprint(\"First-order Young interval, seconds:\", interval)\nprint(\"Checkpoint overhead model:\", cadence)\n\nrng = np.random.default_rng(SEED)\n_ = rng.integers(0, 10_000, size=8)\nmanifest = make_checkpoint(\n    optimizer_step=3,\n    current_version=3,\n    published_version=3,\n    dataset_cursor=8,\n    rng=rng,\n)\ndisplay(pd.DataFrame([checkpoint_as_dict(manifest)]).drop(columns=[\"rng_state\"]))\n\ndrill = recovery_drill(seed=SEED, before=8, after=8)\nprint(\"Uninterrupted:\", drill.uninterrupted)\nprint(\"Correct resume:\", drill.resumed, \"match=\", drill.exact_match)\nprint(\"Weights-only resume:\", drill.broken_resume, \"match=\", drill.broken_match)\nassert drill.exact_match and not drill.broken_match\n"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 10. Необязательная ветка с открытой моделью\n\nПо умолчанию эта ветка выключена. Она измеряет генерацию и teacher-forced forward на тех же фиксированных последовательностях. Перед включением подготовьте проверенное окружение и задайте `RL_LLM_MODEL_REVISION` — commit SHA модели и токенизатора. Загрузка и прогревочный forward не входят в замеры. Записываются левое дополнение, шаблон диалога, dtype, версии библиотек, seed и фактические длины до первого EOS включительно. Второй таймер измеряет только forward, без обратного прохода и оптимизатора; один локальный пакет не является бенчмарком фреймворка или кластера."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "if not RUN_REAL_MODEL:\n    print(\"Optional real-model branch disabled; review the environment and set RUN_REAL_MODEL=True.\")\nelse:\n    import hashlib\n    import importlib.metadata\n    import re\n    import torch\n    from transformers import AutoModelForCausalLM, AutoTokenizer\n\n    model_id = \"Qwen/Qwen3-0.6B\"\n    revision = os.environ.get(\"RL_LLM_MODEL_REVISION\", \"\")\n    if not re.fullmatch(r\"[0-9a-f]{40}\", revision):\n        raise ValueError(\"Set RL_LLM_MODEL_REVISION to the reviewed model's immutable 40-character commit SHA\")\n    device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n    dtype = (torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16) if device.type == \"cuda\" else torch.float32\n    tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision, padding_side=\"left\")\n    if tokenizer.pad_token_id is None:\n        tokenizer.pad_token = tokenizer.eos_token\n    model = AutoModelForCausalLM.from_pretrained(model_id, revision=revision, torch_dtype=dtype).to(device)\n    model.eval()\n    prompts = [\n        \"Explain why an unbounded rollout queue is dangerous.\",\n        \"Give one invariant for atomic rollout weight publication.\",\n        \"Distinguish policy lag from training-inference mismatch.\",\n    ]\n    formatted = [tokenizer.apply_chat_template(\n        [{\"role\": \"user\", \"content\": prompt}], tokenize=False,\n        add_generation_prompt=True, enable_thinking=False,\n    ) for prompt in prompts]\n    encoded = tokenizer(formatted, add_special_tokens=False, return_tensors=\"pt\", padding=True).to(device)\n    generation_config = dict(max_new_tokens=64, do_sample=True, temperature=0.8,\n                             top_p=1.0, top_k=0, pad_token_id=tokenizer.pad_token_id)\n\n    def synchronize():\n        if device.type == \"cuda\":\n            torch.cuda.synchronize()\n\n    # Download/loading and this one warm-up forward are outside both timings.\n    with torch.inference_mode():\n        model(**encoded, use_cache=False)\n    torch.manual_seed(SEED)\n    synchronize()\n    started = time.perf_counter()\n    with torch.inference_mode():\n        generated = model.generate(**encoded, **generation_config)\n    synchronize()\n    generation_seconds = time.perf_counter() - started\n    prompt_width = encoded[\"input_ids\"].shape[1]\n    suffix = generated[:, prompt_width:]\n    eos_ids = model.generation_config.eos_token_id\n    eos_ids = [] if eos_ids is None else ([eos_ids] if isinstance(eos_ids, int) else eos_ids)\n    suffix_mask = completion_token_mask(suffix.cpu().numpy(), eos_ids)\n    lengths = suffix_mask.sum(axis=1).tolist()\n    attention_mask = torch.cat((encoded[\"attention_mask\"], torch.as_tensor(\n        suffix_mask, dtype=encoded[\"attention_mask\"].dtype, device=device)), dim=1)\n    position_ids = attention_mask.long().cumsum(-1) - 1\n    position_ids.masked_fill_(attention_mask == 0, 0)\n    # Teacher forcing scores the fixed generated sequences, with prompt PAD and\n    # suffix PAD masked. Explicit positions preserve left-padding semantics.\n    synchronize()\n    started = time.perf_counter()\n    with torch.inference_mode():\n        scored = model(input_ids=generated, attention_mask=attention_mask,\n                       position_ids=position_ids, use_cache=False)\n    synchronize()\n    forward_seconds = time.perf_counter() - started\n    assert scored.logits.shape[:2] == generated.shape\n    print({\n        \"model\": model_id, \"revision\": revision, \"dtype\": str(dtype), \"seed\": SEED,\n        \"device\": str(device), \"padding_side\": tokenizer.padding_side,\n        \"template_sha256\": hashlib.sha256(tokenizer.chat_template.encode()).hexdigest(),\n        \"enable_thinking\": False, \"generation_config\": generation_config,\n        \"versions\": {name: importlib.metadata.version(name) for name in (\"torch\", \"transformers\")},\n        \"generation_seconds\": generation_seconds, \"teacher_forced_forward_seconds\": forward_seconds,\n        \"new_tokens_including_eos\": lengths, \"active_generated_tokens\": sum(lengths),\n        \"generated_tokens_per_second\": sum(lengths) / generation_seconds,\n        \"active_forward_tokens\": int(attention_mask.sum()),\n        \"forward_tokens_per_second\": int(attention_mask.sum()) / forward_seconds,\n    })\n    print(\"One local batch; no backward pass or optimizer. This is not a cluster benchmark.\")\n"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

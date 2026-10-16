@@ -1,0 +1,270 @@
+{
+  "break_even": {
+    "break_even_generated_tokens": 2123682119443.3926,
+    "extra_inference_flops_per_token_for_large_model": 123940000000.0,
+    "large_model_parameters": 70000000000.0,
+    "large_training_flops": 4.59490838116186e+23,
+    "large_training_tokens": 1094025805038.538,
+    "small_training_flops": 7.227e+23,
+    "target_loss": 1.9483096526156487,
+    "training_flops_saved_by_large_model": 2.6320916188381408e+23
+  },
+  "data_mixture": {
+    "allocations": [
+      {
+        "allocated_tokens": 8250000000000.001,
+        "effective_epochs": 1.3750000000000002,
+        "name": "web",
+        "normalized_weight": 0.55,
+        "unique_tokens": 6000000000000.0
+      },
+      {
+        "allocated_tokens": 3000000000000.0,
+        "effective_epochs": 3.0,
+        "name": "code",
+        "normalized_weight": 0.2,
+        "unique_tokens": 1000000000000.0
+      },
+      {
+        "allocated_tokens": 2250000000000.0,
+        "effective_epochs": 5.625,
+        "name": "math",
+        "normalized_weight": 0.15,
+        "unique_tokens": 400000000000.0
+      },
+      {
+        "allocated_tokens": 1500000000000.0,
+        "effective_epochs": 2.5,
+        "name": "books",
+        "normalized_weight": 0.1,
+        "unique_tokens": 600000000000.0
+      }
+    ],
+    "slices": [
+      {
+        "name": "web",
+        "sampling_weight": 0.55,
+        "unique_tokens": 6000000000000.0
+      },
+      {
+        "name": "code",
+        "sampling_weight": 0.2,
+        "unique_tokens": 1000000000000.0
+      },
+      {
+        "name": "math",
+        "sampling_weight": 0.15,
+        "unique_tokens": 400000000000.0
+      },
+      {
+        "name": "books",
+        "sampling_weight": 0.1,
+        "unique_tokens": 600000000000.0
+      }
+    ],
+    "total_training_tokens": 15000000000000.0
+  },
+  "muon": {
+    "after_cubic_tail": {
+      "condition_number": 1.0010334534088043,
+      "maximum_singular_value": 0.9999999999999993,
+      "minimum_singular_value": 0.9989676135145276,
+      "orthogonality_error_frobenius": 0.004944701975528774
+    },
+    "after_quintic": {
+      "condition_number": 1.6612800631385443,
+      "maximum_singular_value": 1.132919267754335,
+      "minimum_singular_value": 0.6819556153668558,
+      "orthogonality_error_frobenius": 2.164423918684206
+    },
+    "before": {
+      "condition_number": 5.12321315773202,
+      "maximum_singular_value": 13.807749133977339,
+      "minimum_singular_value": 2.695134617449696,
+      "orthogonality_error_frobenius": 438.60544001408556
+    },
+    "cubic_steps": 3,
+    "quintic_steps": 5,
+    "seed": 7,
+    "shape": [
+      64,
+      32
+    ],
+    "wide_matches_transpose": true,
+    "wide_shape": [
+      32,
+      64
+    ]
+  },
+  "optimal_allocations": [
+    {
+      "compute_flops": 7.23e+23,
+      "model_parameters": 35669778435.426346,
+      "predicted_loss": 1.922490503187668,
+      "tokens_per_parameter": 94.70790361664052,
+      "training_tokens": 3378209938089.281
+    },
+    {
+      "compute_flops": 2.6e+24,
+      "model_parameters": 63580317550.129486,
+      "predicted_loss": 1.881010676151493,
+      "tokens_per_parameter": 107.19553898543344,
+      "training_tokens": 6815526408651.144
+    },
+    {
+      "compute_flops": 1e+25,
+      "model_parameters": 116822979225.12761,
+      "predicted_loss": 1.8453201291884438,
+      "tokens_per_parameter": 122.12151819239831,
+      "training_tokens": 14266599582731.592
+    },
+    {
+      "compute_flops": 1e+26,
+      "model_parameters": 330476955191.908,
+      "predicted_loss": 1.7990634812441677,
+      "tokens_per_parameter": 152.60416548167666,
+      "training_tokens": 50432159957986.57
+    }
+  ],
+  "pipeline": {
+    "minimum_microbatches_for_5pct": 134,
+    "rows": [
+      {
+        "bubble_fraction": 0.1794871794871795,
+        "microbatches": 32,
+        "stages": 8
+      },
+      {
+        "bubble_fraction": 0.05185185185185185,
+        "microbatches": 128,
+        "stages": 8
+      }
+    ]
+  },
+  "qk_clip": {
+    "clipped_view_after_regrowth": [
+      59.89500000000002,
+      100.0,
+      100.0,
+      100.0
+    ],
+    "corrected_max_logits": [
+      45.0,
+      100.00000000000001,
+      100.00000000000001,
+      80.0
+    ],
+    "gamma": [
+      1.0,
+      0.8333333333333334,
+      0.38461538461538464,
+      1.0
+    ],
+    "key_scale": [
+      1.0,
+      0.9128709291752769,
+      0.6201736729460423,
+      1.0
+    ],
+    "max_logits": [
+      45.0,
+      120.0,
+      260.0,
+      80.0
+    ],
+    "query_scale": [
+      1.0,
+      0.9128709291752769,
+      0.6201736729460423,
+      1.0
+    ],
+    "reapplied_corrected_max_logits": [
+      59.89500000000002,
+      100.0,
+      100.0,
+      99.99999999999999
+    ],
+    "regrown_after_three_10pct_steps": [
+      59.89500000000002,
+      133.10000000000005,
+      133.10000000000005,
+      106.48000000000003
+    ],
+    "split": 0.5,
+    "threshold": 100.0
+  },
+  "scaling_law": {
+    "compute_multiplier": 6.0,
+    "data_coefficient": 410.7,
+    "data_exponent": 0.28,
+    "irreducible_loss": 1.69,
+    "model_coefficient": 406.4,
+    "model_exponent": 0.34
+  },
+  "schema_version": 1,
+  "small_model_scenario": {
+    "loss_gap_to_same_budget_optimum": 0.025804333208937935,
+    "model_parameters": 8030000000.0,
+    "predicted_loss": 1.9483096526156487,
+    "same_budget_optimum": {
+      "compute_flops": 7.227e+23,
+      "model_parameters": 35663093470.54878,
+      "predicted_loss": 1.9225053194067108,
+      "tokens_per_parameter": 94.70409988264016,
+      "training_tokens": 3377441166158.784
+    },
+    "tokens_per_parameter": 1867.9950186799501,
+    "training_flops": 7.227e+23,
+    "training_tokens": 15000000000000.0
+  },
+  "training_run": {
+    "accelerator_count": 2048,
+    "effective_cluster_flops_per_second": 8.6016e+17,
+    "estimated_days": 9.72445048983135,
+    "estimated_seconds": 840192.5223214286,
+    "model_flop_utilization": 0.42,
+    "model_parameters": 8030000000.0,
+    "peak_flops_per_accelerator": 1000000000000000.0,
+    "total_training_flops": 7.227e+23,
+    "training_tokens": 15000000000000.0,
+    "training_tokens_per_second": 17853051.05853051
+  },
+  "training_state_memory": {
+    "parameter_count": 7000000000,
+    "policy": {
+      "first_moment_bytes": 4,
+      "gradient_bytes": 2,
+      "master_weight_bytes": 4,
+      "model_weight_bytes": 2,
+      "second_moment_bytes": 4,
+      "total_bytes_per_parameter": 16
+    },
+    "rows": [
+      {
+        "bytes_per_rank": 112000000000.0,
+        "decimal_gb_per_rank": 112.0,
+        "gib_per_rank": 104.3081283569336,
+        "zero_stage": 0
+      },
+      {
+        "bytes_per_rank": 29312500000.0,
+        "decimal_gb_per_rank": 29.3125,
+        "gib_per_rank": 27.299392968416214,
+        "zero_stage": 1
+      },
+      {
+        "bytes_per_rank": 15531250000.0,
+        "decimal_gb_per_rank": 15.53125,
+        "gib_per_rank": 14.46460373699665,
+        "zero_stage": 2
+      },
+      {
+        "bytes_per_rank": 1750000000.0,
+        "decimal_gb_per_rank": 1.75,
+        "gib_per_rank": 1.6298145055770874,
+        "zero_stage": 3
+      }
+    ],
+    "world_size": 64
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-06",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. Complete gpt-oss-120b count",
+      "prompt": "Starting from the component table, calculate total and active parameters. How many parameters were omitted by a total excluding linear-layer biases 116,789,050,944?",
+      "answer": "*Solution.* Summing every passport row—both vocabulary matrices, biased attention, the full expert bank, routers, norms, and learned sinks—gives 116,829,156,672. Therefore\n\n$$116{,}829{,}156{,}672-116{,}789{,}050{,}944=40{,}105{,}728.$$\n\nThis baseline keeps normalization scales and attention sinks; the difference isolates linear-layer biases. The declared active count is 5,132,849,472: it charges the shared token path and four selected experts per MoE layer, includes one full output-vocabulary projection, and does not charge an indexed input embedding lookup as though every row were multiplied. This convention is necessary to reproduce the number.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. Read the real Qwen3.5-35B-A3B config",
+      "prompt": "Record hidden size, layer count, routed/shared experts, top-k, expert width, and MTP. Explain why $k/E$ times 35B cannot recover 3B active.",
+      "answer": "*Solution.* The config gives hidden width 2048, 40 layers, 256 routed plus one shared expert, top-8, expert width 512, and one MTP layer. Multiplying all 35B parameters by $8/256$ incorrectly treats the whole model as the routed bank. Only routed experts receive that factor. The accounting structure is\n\n$$P_{active}=P_{shared\\ path}+P_{shared\\ expert}+\\frac{k}{E}P_{routed\\ bank},$$\n\nAttention/DeltaNet, the output head, router, norms, and shared expert do not receive the $k/E$ factor. Add MTP separately only when the selected execution path runs it, and state the input-embedding convention.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. A selection boundary",
+      "prompt": "Expert 0 and expert 6 have clean scores 0.768525 and 0.710950. Each step lowers expert 0's bias by 0.01875 and raises expert 6's by the same amount. Check one and two steps.",
+      "answer": "*Solution.* After $t$ steps the biased scores are $s_0(t)=0.768525-0.01875t$ and $s_6(t)=0.710950+0.01875t$. One step gives 0.749775 versus 0.729700, so expert 0 remains ahead. Equality occurs at\n\n$$t=\\frac{0.768525-0.710950}{2\\cdot0.01875}=1.5353,$$\n\nso the first integer step beyond the crossing is step 2: 0.731025 versus 0.748450. This constructed example shows a boundary crossing under two fixed opposing increments. Both a sign controller and a proportional controller can produce those increments for suitable loads; the calculation does not reproduce the full balancing simulation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4. Batch union for Kimi K3",
+      "prompt": "Compute the expected touched fraction for $E=896$, $k=16$ at $N=16$ and $N=64$ under independent uniform routing.",
+      "answer": "*Solution.* A particular expert is missed by one token with probability $1-k/E$. Under independent routing it is missed by all $N$ tokens with probability $(1-k/E)^N$, so the expected touched fraction is\n\n$$1-(1-k/E)^N.$$\n\nSubstitution gives $1-(1-16/896)^{16}=0.25046$ and $1-(1-16/896)^{64}=0.68437$. Trained routing may differ because expert choices are skewed and correlated.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5. LatentMoE payload",
+      "prompt": "With hidden width 7168 and latent width 3584, by what factor does the idealized routed representation shrink?",
+      "answer": "*Solution.* Idealized one-way dispatch sends $Tkd b$ bytes. With $T=2048$, $k=16$, and bf16,\n\n$$2048\\cdot16\\cdot7168\\cdot2=448\\ \\text{MiB}$$\n\nin hidden space and **224 MiB** in latent space. The reduction is therefore $7168/3584=\\mathbf{2\\times}$. Counting a return/combine path doubles both values to 896 and 448 MiB without changing the ratio. Metadata, route indices, projections, padding, and network protocol are additional costs.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-06",
+      "title": "E6 [project]",
+      "prompt": "Collect routing logs from an open MoE across several domains. Plot frequency and co-activation, then add interventions before assigning semantic labels.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 7](/downloads/modern-llms/project_demos/en/module_07_project_demo.ipynb), sections “Demo 1” and “Demo 2” as starting points for this module’s projects. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

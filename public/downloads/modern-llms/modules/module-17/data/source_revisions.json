@@ -1,0 +1,58 @@
+{
+  "checked": "2026-10-11",
+  "sources": [
+    {
+      "url": "https://arxiv.org/abs/2506.05176v3",
+      "scope": "Qwen3 Embedding sizes and release license"
+    },
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B",
+      "scope": "query prompt, pooling, normalization; not executed"
+    },
+    {
+      "url": "https://arxiv.org/abs/2409.04701v3",
+      "scope": "late chunking: contextualize before pooling"
+    },
+    {
+      "url": "https://arxiv.org/abs/2407.01449v6",
+      "scope": "ColPali page representations and author evaluations"
+    },
+    {
+      "url": "https://arxiv.org/abs/2205.13147",
+      "scope": "nested dimensions require training"
+    },
+    {
+      "url": "https://arxiv.org/abs/2004.12832",
+      "scope": "ColBERT token MaxSim"
+    },
+    {
+      "url": "https://arxiv.org/abs/1603.09320",
+      "scope": "HNSW navigation"
+    },
+    {
+      "url": "https://arxiv.org/abs/2005.11401",
+      "scope": "retrieval and generation"
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/contextual-retrieval",
+      "scope": "35/49/67 percent relative reductions, company protocol"
+    },
+    {
+      "url": "https://arxiv.org/abs/2502.13595",
+      "scope": "MMTEB scope"
+    },
+    {
+      "url": "https://arxiv.org/abs/2407.16833",
+      "scope": "Self-Route findings are protocol-specific"
+    },
+    {
+      "url": "https://arxiv.org/html/2005.11401v4",
+      "scope": "Sections 2.1: latent-document marginalization in RAG-Sequence and RAG-Token, distinguished from context concatenation."
+    },
+    {
+      "url": "https://arxiv.org/abs/2302.12173",
+      "scope": "Retrieved external data can contain indirect instructions; retrieval rank supplies no authority."
+    }
+  ],
+  "limits": "No external model inference or leaderboard reproduction."
+}

@@ -1,0 +1,105 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-01",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Module 1 · Minimal RL Mechanics",
+      "format": "ipynb",
+      "filename": "module-01-rl-basics.en.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-01-rl-basics.en.ipynb",
+      "bytes": 18985,
+      "sha256": "96fe11bb5daa25a8f1bfe97bd3cf4470f06b082474ef101e59f5d16a72e45274",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Module 1 · Minimal RL Mechanics\n\nThis notebook is the hands-on companion to Module 1. It does not attempt to reproduce a large RLHF pipeline. Its purpose is more basic and more important: to make the first course objects executable — policy as a distribution, numerically stable softmax, entropy, trajectories, returns, and Monte Carlo evaluation.\n\n**Profile:** Tier A — CPU, NumPy, Matplotlib.  \n**Reproducibility:** fixed seeds and deterministic helper functions.  \n**Expected runtime:** under one minute on an ordinary CPU.  \n**Link to the lecture:** the figures in §1.4 are built by the module figure generator; this notebook exposes the same mechanics in editable form.\n\nThe notebook is self-contained. The companion **Modern LLMs** course exposes the same next-token distribution inside a complete Transformer, but no knowledge of that course is required here."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 0. Environment setup\n\nUncomment the installation line in Colab. Skip it in a local environment where `numpy` and `matplotlib` are already installed."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "# Uncomment the installation line when needed in Colab.\n# %pip -q install numpy matplotlib\nfrom __future__ import annotations\n\nfrom dataclasses import dataclass\nfrom pathlib import Path\nfrom typing import Iterable\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nOUTPUT_DIR = Path(\"outputs/module-01/en\")\nOUTPUT_DIR.mkdir(parents=True, exist_ok=True)\n\nnp.set_printoptions(precision=6, suppress=True)\nSEED = 7\nrng = np.random.default_rng(SEED)\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 1. Return: accumulated future reward\n\nFor a finite trajectory we use\n\n$$G_0 = r_1 + \\gamma r_2 + \\gamma^2 r_3 + \\cdots.$$\n\nThe implementation is deliberately short, but it validates its inputs. In RL, an indexing error or an unnoticed `nan` can look like “unstable training” even when the bug is in trajectory accounting."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "def discounted_return(rewards: list[float], gamma: float = 1.0) -> float:\n    \"\"\"Compute G_0 by backward recursion for a non-empty finite sequence.\"\"\"\n    reward_array = np.asarray(rewards, dtype=float)\n    if reward_array.ndim != 1 or reward_array.size == 0:\n        raise ValueError(\"rewards must be a non-empty 1D sequence\")\n    if not np.isfinite(reward_array).all():\n        raise ValueError(\"rewards must be finite\")\n    if not np.isfinite(gamma) or not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must be finite and lie in [0, 1]\")\n    total = 0.0\n    for reward in reward_array[::-1]:\n        total = float(reward) + gamma * total\n    return float(total)\n\n\nassert discounted_return([0, 0, 1], gamma=1.0) == 1.0\nassert np.isclose(discounted_return([1, 1, 1], gamma=0.9), 1 + 0.9 + 0.81)\n\ndiscounted_return([0, 0, 0, 1], gamma=0.95)\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. Stable softmax and entropy\n\nFor an LLM, the next-token policy is a probability distribution. Softmax should be evaluated stably: subtract the maximum scaled logit before exponentiation. Entropy measures the spread of that distribution; it is not, by itself, a measure of answer quality."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "def softmax_with_temperature(logits: np.ndarray, temperature: float = 1.0) -> np.ndarray:\n    \"\"\"Numerically stable softmax(logits / temperature).\"\"\"\n    logits = np.asarray(logits, dtype=float)\n    if logits.ndim != 1 or logits.size == 0:\n        raise ValueError(\"logits must be a non-empty one-dimensional array\")\n    if not np.all(np.isfinite(logits)):\n        raise ValueError(\"logits must be finite\")\n    if not np.isfinite(temperature) or temperature <= 0:\n        raise ValueError(\"temperature must be positive and finite\")\n    scaled = logits / float(temperature)\n    scaled = scaled - np.max(scaled)\n    weights = np.exp(scaled)\n    return weights / np.sum(weights)\n\n\ndef categorical_entropy(probs: np.ndarray) -> float:\n    \"\"\"Entropy in nats for a categorical distribution.\"\"\"\n    probs = np.asarray(probs, dtype=float)\n    if probs.ndim != 1 or probs.size == 0:\n        raise ValueError(\"probs must be a non-empty one-dimensional array\")\n    if np.any(probs < 0) or not np.all(np.isfinite(probs)):\n        raise ValueError(\"probs must be finite and non-negative\")\n    if not np.isclose(probs.sum(), 1.0, atol=1e-8):\n        raise ValueError(\"probs must sum to 1\")\n    positive = probs > 0\n    return float(-np.sum(probs[positive] * np.log(probs[positive])))\n\n\nlogits = np.array([2.0, 1.0, 0.0, -1.0])\nfor temperature in [0.25, 0.5, 1.0, 2.0, 4.0]:\n    probs = softmax_with_temperature(logits, temperature)\n    print(f\"T={temperature:>4}: probabilities={probs}, H={categorical_entropy(probs):.4f}\")\n\n# An implementation without max subtraction would overflow on this example.\np = softmax_with_temperature(np.array([1000.0, 999.0, 998.0]), temperature=1.0)\nassert np.all(np.isfinite(p)) and np.isclose(p.sum(), 1.0)\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. The temperature curve\n\nFor fixed finite logits, with no `top-k`, `top-p`, or other filtering, the entropy of a softmax policy is non-decreasing in temperature. The next plot is not an external benchmark; it is a numerical check of the formula for one fixed logit vector."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "temperatures = np.geomspace(0.1, 12.0, 400)\nentropies = np.array([\n    categorical_entropy(softmax_with_temperature(logits, t))\n    for t in temperatures\n])\n\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nax.plot(temperatures, entropies, linewidth=2)\nax.axhline(np.log(len(logits)), linestyle=\"--\", linewidth=1.2,\n           label=\"maximum entropy ln K\")\nax.set_xscale(\"log\")\nax.set_xlabel(\"temperature T\")\nax.set_ylabel(\"entropy H(pi_T), nats\")\nax.set_title(\"Entropy of a pure softmax policy for fixed logits\")\nax.legend()\nfig.tight_layout()\nfig.savefig(OUTPUT_DIR / \"temperature_entropy.png\", dpi=160)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. The corridor environment\n\nWe now build a small environment. It is not a toy for its own sake: the corridor makes states, actions, terminal states, rewards, trajectories, and stopping rules visible. Later modules replace the five cells with tokens, complete responses, candidate groups, and tool-using environments, but the trajectory bookkeeping remains the same."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "@dataclass(frozen=True)\nclass CorridorConfig:\n    n_states: int = 5\n    start: int = 2\n    left_terminal: int = 0\n    right_terminal: int = 4\n    max_steps: int = 20\n\n\ndef corridor_step(\n    state: int,\n    action: int,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> tuple[int, float, bool]:\n    \"\"\"Execute one transition in the five-cell corridor.\"\"\"\n    if action not in (0, 1):\n        raise ValueError(\"action must be 0 (left) or 1 (right)\")\n    if state in (cfg.left_terminal, cfg.right_terminal):\n        return state, 0.0, True\n    next_state = state - 1 if action == 0 else state + 1\n    done = next_state in (cfg.left_terminal, cfg.right_terminal)\n    reward = 1.0 if next_state == cfg.right_terminal else 0.0\n    return next_state, reward, done\n\n\ndef random_policy(_: int, rng: np.random.Generator) -> int:\n    \"\"\"Select left or right with equal probability.\"\"\"\n    return int(rng.integers(0, 2))\n\n\ndef run_episode(\n    rng: np.random.Generator,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> dict:\n    \"\"\"Collect one trajectory, including its stopping rule and return.\"\"\"\n    state = cfg.start\n    states = [state]\n    actions: list[int] = []\n    rewards: list[float] = []\n    done = False\n    for _ in range(cfg.max_steps):\n        action = random_policy(state, rng)\n        next_state, reward, done = corridor_step(state, action, cfg)\n        actions.append(action)\n        rewards.append(reward)\n        states.append(next_state)\n        state = next_state\n        if done:\n            break\n    return {\n        \"states\": states,\n        \"actions\": actions,\n        \"rewards\": rewards,\n        \"done\": done,\n        \"return\": discounted_return(rewards, gamma=1.0),\n    }\n\n\nfor i in range(5):\n    episode = run_episode(np.random.default_rng(SEED + i))\n    print(\n        f\"episode {i}: states={episode['states']}, \"\n        f\"actions={episode['actions']}, return={episode['return']}\"\n    )\n"
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "def plot_corridor_episode(\n    episode: dict,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> None:\n    \"\"\"Display the cells and the first transitions of one trajectory.\"\"\"\n    fig, ax = plt.subplots(figsize=(8.8, 2.4))\n    ax.set_xlim(-0.5, cfg.n_states - 0.5)\n    ax.set_ylim(-0.35, 1.2)\n    ax.axis(\"off\")\n\n    for state in range(cfg.n_states):\n        if state == cfg.left_terminal:\n            face, edge, label = \"#F8E2D2\", \"#D55E00\", \"terminal\\n0\"\n        elif state == cfg.right_terminal:\n            face, edge, label = \"#FFF0C8\", \"#E69F00\", \"terminal\\n+1\"\n        elif state == cfg.start:\n            face, edge, label = \"#D9EDF8\", \"#0072B2\", \"start\\n2\"\n        else:\n            face, edge, label = \"#E6F4EF\", \"#009E73\", str(state)\n        box = plt.Rectangle(\n            (state - 0.42, 0.22), 0.84, 0.52,\n            facecolor=face, edgecolor=edge, linewidth=2,\n        )\n        ax.add_patch(box)\n        ax.text(state, 0.48, label, ha=\"center\", va=\"center\", fontsize=11)\n\n    states = episode[\"states\"]\n    for t, (start, end) in enumerate(zip(states[:-1], states[1:])):\n        y = 0.96 + 0.04 * (t % 2)\n        ax.annotate(\n            \"\", xy=(end, y), xytext=(start, y),\n            arrowprops={\"arrowstyle\": \"->\", \"linewidth\": 1.6},\n        )\n    ax.set_title(\n        f\"sample episode: return={episode['return']}, \"\n        f\"steps={len(episode['actions'])}\"\n    )\n    fig.tight_layout()\n    fig.savefig(OUTPUT_DIR / \"corridor_episode.png\", dpi=160)\n    plt.show()\n\n\nplot_corridor_episode(run_episode(np.random.default_rng(SEED)))\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Exact value and Monte Carlo estimation\n\nWithout a length cap, the probability of eventually reaching the right terminal from the center is $0.5$. The code, however, truncates the episode at `max_steps=20`, so the experiment must be compared with the finite protocol:\n\n$$V_{20}^{\\pi}(2)=\\Pr(T_4\\le 20)=\\frac{1023}{2048}.$$\n\nMonte Carlo evaluation estimates this expectation by averaging independent episodes. A finite estimate may lie above or below the exact value; its noise shrinks on the order of $1/\\sqrt{N}$."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "def exact_corridor_value(max_steps: int = 20) -> float:\n    \"\"\"Compute the exact probability of reaching the right terminal within a horizon.\"\"\"\n    if not isinstance(max_steps, int) or isinstance(max_steps, bool) or max_steps <= 0:\n        raise ValueError(\"max_steps must be a positive integer\")\n    values = np.zeros(5, dtype=float)\n    values[4] = 1.0\n    for _ in range(max_steps):\n        updated = values.copy()\n        for state in (1, 2, 3):\n            updated[state] = 0.5 * values[state - 1] + 0.5 * values[state + 1]\n        updated[0] = 0.0\n        updated[4] = 1.0\n        values = updated\n    return float(values[2])\n\n\ndef monte_carlo_value(\n    n_episodes: int,\n    seed: int = SEED,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> tuple[float, np.ndarray]:\n    \"\"\"Estimate the value by averaging returns from independent episodes.\"\"\"\n    if not isinstance(n_episodes, int) or isinstance(n_episodes, bool) or n_episodes <= 0:\n        raise ValueError(\"n_episodes must be a positive integer\")\n    local_rng = np.random.default_rng(seed)\n    returns = np.array(\n        [run_episode(local_rng, cfg)[\"return\"] for _ in range(n_episodes)],\n        dtype=float,\n    )\n    return float(returns.mean()), returns\n\n\nestimate_1000, returns_1000 = monte_carlo_value(1000, seed=SEED)\nexact = exact_corridor_value(20)\nprint(f\"Monte Carlo estimate at N=1000: {estimate_1000:.3f}\")\nprint(f\"Exact value at horizon 20: {exact:.12f}\")\nprint(f\"Approximate standard error: {np.sqrt(exact * (1 - exact) / 1000):.4f}\")\n\n# The Monte Carlo estimate changes with SEED; test its domain, not one draw.\nassert np.isfinite(estimate_1000) and 0.0 <= estimate_1000 <= 1.0\nassert np.isclose(exact, 1023 / 2048)\n"
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "n = 5000\n_, returns = monte_carlo_value(n, seed=SEED)\nns = np.arange(1, n + 1)\nrunning = np.cumsum(returns) / ns\nexact = exact_corridor_value(20)\nstandard_error = np.sqrt(exact * (1 - exact) / ns)\n\nfig, ax = plt.subplots(figsize=(8.8, 4.8))\nax.fill_between(\n    ns,\n    exact - 2 * standard_error,\n    exact + 2 * standard_error,\n    alpha=0.35,\n    label=\"approximate ±2 standard errors\",\n)\nax.plot(ns, running, linewidth=1.5, label=\"running Monte Carlo estimate\")\nax.axhline(exact, linestyle=\"--\", linewidth=1.8,\n           label=\"exact finite-horizon value\")\nax.set_xscale(\"log\")\nax.set_ylim(0.42, 0.58)\nax.set_xlabel(\"number of episodes N\")\nax.set_ylabel(\"value estimate\")\nax.set_title(\"Monte Carlo evaluation of the corridor policy\")\nax.legend()\nfig.tight_layout()\nfig.savefig(OUTPUT_DIR / \"corridor_mc_convergence.png\", dpi=160)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 6. Key takeaways from the notebook\n\n- A policy is a probability distribution, not the single action sampled from it.\n- Softmax must be computed with numerical stability in mind.\n- Entropy describes probability spread; it does not replace quality evaluation.\n- A trajectory has exact bookkeeping: states, actions, rewards, a stopping rule, and a return.\n- Monte Carlo estimates are random and must be compared with the exact protocol actually implemented.\n- The code and plots use `seed=7`. This makes the particular run reproducible, but it does not remove the statistical randomness of the method.\n\nIn Module 2, the corridor becomes a small MDP with Bellman equations. In Modules 6–9, the same ideas return at the level of token log-probabilities, KL, DPO, PPO, GRPO, and RLVR."
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

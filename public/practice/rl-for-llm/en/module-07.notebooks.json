@@ -1,0 +1,95 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-07",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Module 7 practice: reward models, calibration, and proxy overoptimization",
+      "format": "ipynb",
+      "filename": "module-07-reward-models.en.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-07-reward-models.en.ipynb",
+      "bytes": 17567,
+      "sha256": "4128ebec11b54267720b4f650b4b45eb8e32ef0d118cc7303c1b7a6928b4898e",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Module 7 practice: reward models, calibration, and proxy overoptimization\n\nThis notebook has two deliberately separate routes.\n\n\n1. **Offline synthetic route** — runs on CPU with NumPy and PyTorch, trains a tiny pairwise scorer, checks prompt-level splitting, evaluates ranking and calibration, and reproduces the toy overoptimization curve.\n\n2. **Real-model route** — an optional accelerator-backed plan using TRL, LoRA, `Qwen/Qwen3-0.6B`, and `trl-lib/ultrafeedback_binarized`.\n\nThe canonical notebook is stored unexecuted. Set `RUN_REAL_MODEL=True` only in a Colab runtime after reviewing the resource and provenance notes. The real branch was **not executed for the course release**."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## Resource and provenance contract\n\n- **Smoke mode:** 512–1,000 preference pairs, `max_length=512`, one short epoch or a limited number of steps.\n- **Full learning mode:** 10k–50k pairs, `max_length=1024`, and explicit evaluation/calibration slices. Feasibility depends on actual lengths, precision, hardware, and library revisions; measure memory rather than assuming a particular free runtime.\n- The UltraFeedback Binarized pairs are **synthetic AI feedback**: candidate completions were scored by GPT-4; they are not direct human preference labels.\n- Save the tokenizer/chat template, model revision, dataset revision, truncation counts, and the scalar `score` head together with the LoRA adapters.\n- A successful smoke run validates the data path. It is not evidence that the trained RM is robust under policy optimization."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nfrom dataclasses import dataclass\nimport math\nimport random\n\nimport numpy as np\nimport torch\n\nSEED = 7\nRUN_REAL_MODEL = False\nSMOKE_MODE = True\n\nrandom.seed(SEED)\nnp.random.seed(SEED)\ntorch.manual_seed(SEED)\n\nprint({\"torch\": torch.__version__, \"device\": \"cuda\" if torch.cuda.is_available() else \"cpu\"})"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 1. Synthetic prompt-level preference data\n\nThe tiny model below learns one scalar from interpretable response features. Each prompt has several candidates; all pairs from one prompt stay in one split. This is intentionally smaller than a language RM so that the statistical contract is visible."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "@dataclass(frozen=True)\nclass PairBatch:\n    chosen: torch.Tensor\n    rejected: torch.Tensor\n    prompt_ids: list[str]\n    first: torch.Tensor\n    second: torch.Tensor\n    first_preferred: torch.Tensor\n\n\ndef make_synthetic_pairs(n_prompts: int = 800, pairs_per_prompt: int = 2, seed: int = SEED):\n    rng = np.random.default_rng(seed)\n    true_w = np.array([1.5, 0.8, -0.9, 0.4], dtype=np.float32)\n    rows = []\n    for prompt_index in range(n_prompts):\n        prompt_id = f\"p{prompt_index:05d}\"\n        prompt_shift = rng.normal(0.0, 0.5)\n        for _ in range(pairs_per_prompt):\n            a = rng.normal(size=4).astype(np.float32)\n            b = rng.normal(size=4).astype(np.float32)\n            utility_a = float(a @ true_w + prompt_shift + rng.normal(0.0, 0.35))\n            utility_b = float(b @ true_w + prompt_shift + rng.normal(0.0, 0.35))\n            chosen, rejected = (a, b) if utility_a >= utility_b else (b, a)\n            rows.append((prompt_id, chosen, rejected, a, b, float(utility_a >= utility_b)))\n    return rows\n\n\ndef split_by_prompt(rows, eval_fraction: float = 0.2, seed: int = SEED):\n    prompt_ids = sorted({row[0] for row in rows})\n    rng = np.random.default_rng(seed)\n    rng.shuffle(prompt_ids)\n    cut = int(round(len(prompt_ids) * (1.0 - eval_fraction)))\n    train_ids = set(prompt_ids[:cut])\n    eval_ids = set(prompt_ids[cut:])\n    assert train_ids.isdisjoint(eval_ids)\n\n    def pack(selected_ids):\n        chosen = np.stack([row[1] for row in rows if row[0] in selected_ids])\n        rejected = np.stack([row[2] for row in rows if row[0] in selected_ids])\n        ids = [row[0] for row in rows if row[0] in selected_ids]\n        first = np.stack([row[3] for row in rows if row[0] in selected_ids])\n        second = np.stack([row[4] for row in rows if row[0] in selected_ids])\n        labels = [row[5] for row in rows if row[0] in selected_ids]\n        return PairBatch(torch.tensor(chosen), torch.tensor(rejected), ids,\n                         torch.tensor(first), torch.tensor(second), torch.tensor(labels))\n\n    return pack(train_ids), pack(eval_ids)\n\n\nrows = make_synthetic_pairs()\ntrain_batch, eval_batch = split_by_prompt(rows)\nprint({\"train_pairs\": len(train_batch.prompt_ids), \"eval_pairs\": len(eval_batch.prompt_ids)})"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. Pairwise training\n\nFor scores $r^+$ and $r^-$, the stable Bradley–Terry loss is\n\n$$\n\\operatorname{softplus}[-(r^+-r^-)].\n$$\n\nThe model below has no language representation; it isolates the pairwise objective and score-centering convention."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "class TinyRewardModel(torch.nn.Module):\n    def __init__(self, n_features: int = 4):\n        super().__init__()\n        self.score = torch.nn.Linear(n_features, 1)\n\n    def forward(self, features: torch.Tensor) -> torch.Tensor:\n        return self.score(features).squeeze(-1)\n\n\ndef pair_metrics(model: TinyRewardModel, batch: PairBatch) -> dict[str, float]:\n    model.eval()\n    with torch.no_grad():\n        delta = model(batch.chosen) - model(batch.rejected)\n        probability = torch.sigmoid(delta)\n        target = torch.ones_like(probability)\n        loss = torch.nn.functional.binary_cross_entropy(probability, target)\n        brier = torch.mean((probability - target) ** 2)\n        return {\n            \"accuracy\": float((delta > 0).float().mean()),\n            \"log_loss\": float(loss),\n            \"brier\": float(brier),\n            \"mean_margin\": float(delta.mean()),\n        }\n\n\nmodel = TinyRewardModel()\noptimizer = torch.optim.AdamW(model.parameters(), lr=0.03, weight_decay=1e-3)\nsteps = 120 if SMOKE_MODE else 600\nbatch_size = 256\nrng = np.random.default_rng(SEED)\n\nfor step in range(steps):\n    index = torch.tensor(rng.integers(0, len(train_batch.prompt_ids), size=batch_size))\n    chosen_score = model(train_batch.chosen[index])\n    rejected_score = model(train_batch.rejected[index])\n    loss = torch.nn.functional.softplus(-(chosen_score - rejected_score)).mean()\n    # Optional gauge convention: discourage a drifting common score origin.\n    center = 0.5 * (chosen_score.mean() + rejected_score.mean())\n    total_loss = loss + 1e-2 * center.square()\n    optimizer.zero_grad(set_to_none=True)\n    total_loss.backward()\n    optimizer.step()\n\nprint(\"train\", pair_metrics(model, train_batch))\nprint(\"eval \", pair_metrics(model, eval_batch))"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Reliability bins\n\nCalibration is evaluated on predicted pairwise probabilities, not on raw scores. Keep the original A/B order chosen before observing the preference and use the corresponding binary label. Sorting every pair into chosen/rejected would condition on the outcome and make every target one; those bins do not estimate calibration of P(A preferred to B). BT log loss and Brier score are unchanged by a consistent swap of probability and label. Equal-width ECE is only one summary and depends on the binning rule."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "def reliability_bins(probability: np.ndarray, label: np.ndarray, n_bins: int = 10):\n    probability = np.asarray(probability, dtype=np.float64).reshape(-1)\n    label = np.asarray(label, dtype=np.float64).reshape(-1)\n    if probability.shape != label.shape or probability.size == 0:\n        raise ValueError(\"aligned non-empty arrays required\")\n    indices = np.minimum((probability * n_bins).astype(int), n_bins - 1)\n    bins = []\n    for bin_id in range(n_bins):\n        mask = indices == bin_id\n        if np.any(mask):\n            bins.append({\n                \"bin\": bin_id,\n                \"count\": int(mask.sum()),\n                \"confidence\": float(probability[mask].mean()),\n                \"frequency\": float(label[mask].mean()),\n            })\n    return bins\n\n\nwith torch.no_grad():\n    eval_delta = model(eval_batch.first) - model(eval_batch.second)\n    eval_probability = torch.sigmoid(eval_delta).numpy()\nlabels = eval_batch.first_preferred.numpy()\nbins = reliability_bins(eval_probability, labels, n_bins=5)\nece = sum(item[\"count\"] / len(labels) * abs(item[\"confidence\"] - item[\"frequency\"]) for item in bins)\nprint({\"ece_5_bins\": ece, \"bins\": bins})"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Proxy overoptimization\n\nThe next cell reproduces the module's teaching mechanism. It is not a language-model experiment and does not reproduce a published scaling law."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "def toy_overoptimization(pool_sizes=(1, 2, 4, 8, 16, 32, 64, 128, 256, 512), trials=4000, seed=7):\n    rng = np.random.default_rng(seed)\n    proxy_means = []\n    target_means = []\n    for pool_size in pool_sizes:\n        useful = rng.normal(size=(trials, pool_size))\n        nuisance = rng.normal(size=(trials, pool_size))\n        proxy = useful + nuisance\n        target = useful - np.maximum(nuisance - 1.0, 0.0) ** 2\n        selected = np.argmax(proxy, axis=1)\n        rows = np.arange(trials)\n        proxy_means.append(proxy[rows, selected].mean())\n        target_means.append(target[rows, selected].mean())\n    return np.asarray(proxy_means), np.asarray(target_means)\n\n\npool_sizes = np.array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])\nproxy, target = toy_overoptimization(pool_sizes)\n# Finite Monte Carlo estimates need not be monotone for every seed/budget.\nassert np.isfinite(proxy).all() and np.isfinite(target).all()\nprint({\"best_target_pool\": int(pool_sizes[np.argmax(target)]), \"final_proxy\": proxy[-1], \"final_target\": target[-1]})"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Optional real-model route with an accelerator\n\nThe following command is an unpinned installation example. Resolve and test compatible releases in a fresh accelerator-enabled runtime, then restart the runtime if the installer requests it:\n\n```text\npip install -U transformers datasets accelerate peft trl\n```\n\nThe code follows the current TRL `RewardTrainer` interface at the factual snapshot. Library APIs can change. Pin the working environment in a released run. The `score` head is included in `modules_to_save` because it is newly initialized for sequence classification."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "if RUN_REAL_MODEL:\n    import torch\n    from datasets import load_dataset\n    from peft import LoraConfig, TaskType\n    from trl import RewardConfig, RewardTrainer\n\n    MODEL_ID = \"Qwen/Qwen3-0.6B\"\n    DATASET_ID = \"trl-lib/ultrafeedback_binarized\"\n    TRAIN_PAIRS = 512 if SMOKE_MODE else 10_000\n    EVAL_PAIRS = 256 if SMOKE_MODE else 2_000\n    MAX_LENGTH = 512 if SMOKE_MODE else 1024\n\n    dataset = load_dataset(DATASET_ID)\n    train_dataset = dataset[\"train\"].select(range(min(TRAIN_PAIRS, len(dataset[\"train\"]))))\n    eval_split_name = \"test\" if \"test\" in dataset else next(name for name in dataset if name != \"train\")\n    eval_dataset = dataset[eval_split_name].select(range(min(EVAL_PAIRS, len(dataset[eval_split_name]))))\n\n    peft_config = LoraConfig(\n        task_type=TaskType.SEQ_CLS,\n        r=16,\n        lora_alpha=32,\n        lora_dropout=0.05,\n        target_modules=[\"q_proj\", \"v_proj\"],\n        modules_to_save=[\"score\"],\n    )\n\n    args = RewardConfig(\n        output_dir=\"module-07-rm-smoke\" if SMOKE_MODE else \"module-07-rm-full\",\n        max_length=MAX_LENGTH,\n        learning_rate=1e-4,\n        per_device_train_batch_size=2,\n        per_device_eval_batch_size=2,\n        gradient_accumulation_steps=8,\n        max_steps=40 if SMOKE_MODE else -1,\n        num_train_epochs=1.0,\n        eval_strategy=\"steps\",\n        eval_steps=20 if SMOKE_MODE else 200,\n        save_strategy=\"no\" if SMOKE_MODE else \"steps\",\n        logging_steps=5,\n        fp16=True,\n        gradient_checkpointing=True,\n        center_rewards_coefficient=1e-2,\n        report_to=\"none\",\n        seed=SEED,\n    )\n\n    trainer = RewardTrainer(\n        model=MODEL_ID,\n        args=args,\n        train_dataset=train_dataset,\n        eval_dataset=eval_dataset,\n        peft_config=peft_config,\n    )\n    trainer.train()\n    metrics = trainer.evaluate()\n    print(metrics)\nelse:\n    print(\"Real-model branch skipped. Set RUN_REAL_MODEL=True in a reviewed Colab runtime.\")"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## Publication checklist\n\nBefore publishing measured results from the real branch:\n\n- pin model, dataset, tokenizer, TRL, Transformers, PEFT, Accelerate, and PyTorch revisions;\n- report the number of pairs retained, filtered, and truncated;\n- split by prompt and add generator/domain slices;\n- report pair accuracy, log loss, Brier score, and a calibration plot;\n- save LoRA adapters **and** the scalar score head;\n- state the T4 type, wall-clock time, peak allocated memory, and random seeds;\n- do not present UltraFeedback Binarized as direct human preference data;\n- evaluate fresh responses from a policy that was not used to construct the training pairs."
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

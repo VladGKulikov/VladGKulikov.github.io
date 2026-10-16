@@ -1,0 +1,81 @@
+{
+  "checked": "2026-10-11",
+  "policy": "Dated source checks; URLs are not claimed to be immutable snapshots. Arithmetic examples use local frozen inputs.",
+  "sources": [
+    {
+      "title": "OpenAI prompt caching",
+      "url": "https://developers.openai.com/api/docs/guides/prompt-caching",
+      "scope": "Model-dependent writes, reads, minimum length, and lifetime"
+    },
+    {
+      "title": "vLLM disaggregated prefill",
+      "url": "https://docs.vllm.ai/en/stable/features/disagg_prefill/",
+      "scope": "Documentation labels feature experimental"
+    },
+    {
+      "title": "LMCache",
+      "url": "https://docs.lmcache.ai/",
+      "scope": "Storage/transfer and non-prefix reuse with selective recomputation"
+    },
+    {
+      "title": "Mooncake FAST25",
+      "url": "https://www.usenix.org/conference/fast25/presentation/qin",
+      "scope": "Author-reported trace results and deployment scale"
+    },
+    {
+      "title": "Dynamo1",
+      "url": "https://developer.nvidia.com/blog/nvidia-dynamo-1-production-ready/",
+      "scope": "Vendor-reported InferenceX configuration, not universal speedup"
+    },
+    {
+      "title": "CMX",
+      "url": "https://developer.nvidia.com/blog/introducing-nvidia-bluefield-4-powered-inference-context-memory-storage-platform-for-the-next-frontier-of-ai/",
+      "scope": "Vendor context-storage comparison"
+    },
+    {
+      "title": "KimiK3",
+      "url": "https://www.kimi.ai/blog/kimi-k3",
+      "scope": "API workload hit-rate statement"
+    },
+    {
+      "title": "vLLM K3",
+      "url": "https://vllm.ai/blog/2026-07-27-k3",
+      "scope": "MLA and KDA checkpoint/cache layout"
+    },
+    {
+      "title": "vLLM V4",
+      "url": "https://vllm.ai/blog/2026-04-24-deepseek-v4",
+      "scope": "9.62 GiB bf16 supported-layout estimate at source-defined 1M"
+    },
+    {
+      "title": "PagedAttention",
+      "url": "https://arxiv.org/abs/2309.06180",
+      "scope": "Block allocation and COW"
+    },
+    {
+      "title": "KIVI",
+      "url": "https://arxiv.org/abs/2402.02750",
+      "scope": "Asymmetric KV quantization"
+    },
+    {
+      "title": "TurboQuant",
+      "url": "https://arxiv.org/abs/2504.19874",
+      "scope": "Vector quantization"
+    },
+    {
+      "title": "Google TurboQuant",
+      "url": "https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/",
+      "scope": "8x attention-logit operation vs32bit keys"
+    },
+    {
+      "title": "Reasoning compression",
+      "url": "https://arxiv.org/abs/2512.12008",
+      "scope": "Long decode quality and reasoning cost"
+    },
+    {
+      "title": "Structural protection",
+      "url": "https://arxiv.org/abs/2605.18053",
+      "scope": "Boundary retention under shared global budgets"
+    }
+  ]
+}

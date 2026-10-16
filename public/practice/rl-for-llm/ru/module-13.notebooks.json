@@ -1,0 +1,130 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-13",
+  "language": "ru",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Модуль 13. Практикум: статистика, аудит оценивателя и пакет доказательств",
+      "format": "ipynb",
+      "filename": "module-13-evaluation-safety.ru.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-13-evaluation-safety.ru.ipynb",
+      "bytes": 19559,
+      "sha256": "1a9b2cd45bf40c343415c1d122115de07c04a8fb91d2210971a80f702581d0d7",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Модуль 13. Практикум: статистика, аудит оценивателя и пакет доказательств\n\nЭтот ноутбук строит не одну красивую таблицу, а проверяемый контур оценивания. Основной маршрут работает на CPU и не требует сети. Он сохраняет сырые артефакты, сравнивает системы попарно, разделяет pass@k и выбор ответа, различает два аудита судьи и связывает safety-метрики с воротами выпуска. Все численные результаты относятся к синтетической среде курса, а не к реальной LLM."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Воспроизводимый профиль и импорты"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nimport json\nimport math\nimport sys\nimport tempfile\nfrom pathlib import Path\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\nfrom IPython.display import display\n\n\ndef find_repo_root(start: Path) -> Path:\n    start = start.resolve()\n    for candidate in (start, *start.parents):\n        if (candidate / \"modules/module-13/module_13_reference.py\").is_file():\n            return candidate\n    raise FileNotFoundError(\"Could not locate the RL for LLM repository root\")\n\n\nROOT = find_repo_root(Path.cwd())\nMODULE_DIR = ROOT / \"modules/module-13\"\nif str(MODULE_DIR) not in sys.path:\n    sys.path.insert(0, str(MODULE_DIR))\n\nfrom module_13_reference import (\n    contamination_report,\n    exact_mcnemar_pvalue,\n    hierarchical_bootstrap_interval,\n    independent_trial_success,\n    judge_swap_audit,\n    ngram_containment,\n    ngram_jaccard,\n    paired_bootstrap_interval,\n    pass_at_k_unbiased,\n    position_audit,\n    release_decision,\n    reward_pressure_experiment,\n    safety_rates,\n    selection_success,\n    validate_measurement_passport,\n    wilson_interval,\n    worst_case_binomial_sample_size,\n)\nfrom module_13_evaluation_harness import (\n    build_synthetic_dataset,\n    default_systems,\n    evaluate_system,\n    run_course_experiment,\n)\n\nSEED = 13\nPROFILE = \"smoke\"  # change to \"full\" for more bootstrap replicates\nBOOTSTRAP_REPLICATES = 4_000 if PROFILE == \"smoke\" else 20_000\nOUTPUT_DIR = Path(tempfile.mkdtemp(prefix=\"rlm13-evidence-\"))\n\nnp.set_printoptions(precision=4, suppress=True)\nprint(\"repository:\", ROOT)\nprint(\"profile:\", PROFILE)\nprint(\"temporary evidence directory:\", OUTPUT_DIR)"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Доля без ложной точности\n\nИнтервал Уилсона остаётся информативным на границе, а планирование размера набора заставляет назвать желаемое разрешение до запуска."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "examples = [(62, 100), (0, 20), (100, 100)]\nrows = []\nfor k, n in examples:\n    interval = wilson_interval(k, n)\n    rows.append({\n        \"successes\": k,\n        \"total\": n,\n        \"estimate\": interval.estimate,\n        \"low\": interval.low,\n        \"high\": interval.high,\n    })\ndisplay(pd.DataFrame(rows))\n\nfor margin in (0.05, 0.03, 0.01):\n    print(f\"worst-case n for ±{margin:.0%}:\", worst_case_binomial_sample_size(margin))\n\nassert 0.15 < wilson_interval(0, 20).high < 0.17\nassert worst_case_binomial_sample_size(0.03) == 1068"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Полный контур dataset → solver → scorer → report → passport\n\nЗапуск создаёт версионированный набор, сырые записи двух систем, сводку, аудиты и паспорт с хэшами."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "experiment = run_course_experiment(OUTPUT_DIR, seed=SEED, n_tasks=240)\nsummary_table = pd.DataFrame([\n    {\n        \"system\": \"baseline\",\n        \"accuracy\": experiment[\"baseline\"][\"accuracy\"],\n        \"wilson_low\": experiment[\"baseline\"][\"accuracy_low\"],\n        \"wilson_high\": experiment[\"baseline\"][\"accuracy_high\"],\n        \"technical_failure_rate\": experiment[\"baseline\"][\"technical_failure_rate\"],\n        \"mean_tokens\": experiment[\"baseline\"][\"mean_tokens\"],\n        \"estimated_cost\": experiment[\"baseline\"][\"estimated_cost\"],\n    },\n    {\n        \"system\": \"candidate\",\n        \"accuracy\": experiment[\"candidate\"][\"accuracy\"],\n        \"wilson_low\": experiment[\"candidate\"][\"accuracy_low\"],\n        \"wilson_high\": experiment[\"candidate\"][\"accuracy_high\"],\n        \"technical_failure_rate\": experiment[\"candidate\"][\"technical_failure_rate\"],\n        \"mean_tokens\": experiment[\"candidate\"][\"mean_tokens\"],\n        \"estimated_cost\": experiment[\"candidate\"][\"estimated_cost\"],\n    },\n])\ndisplay(summary_table)\n\nprint(\"paired comparison:\")\ndisplay(pd.Series(experiment[\"paired\"]))\nprint(\"evidence files:\", sorted(path.name for path in OUTPUT_DIR.iterdir()))\ndisplay(pd.Series(experiment[\"decision\"]))"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. Парное сравнение на общих задачах\n\nРазность считается по одинаковым `sample_id`; независимое перемешивание систем разрушило бы парность."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "samples = build_synthetic_dataset(n=240, seed=SEED)\nbaseline_config, candidate_config = default_systems()\nbaseline_records = evaluate_system(samples, baseline_config, seed=SEED)\ncandidate_records = evaluate_system(samples, candidate_config, seed=SEED)\n\nbaseline_scores = np.asarray([record.score.score for record in baseline_records], dtype=float)\ncandidate_scores = np.asarray([record.score.score for record in candidate_records], dtype=float)\npaired = paired_bootstrap_interval(\n    candidate_scores,\n    baseline_scores,\n    replicates=BOOTSTRAP_REPLICATES,\n    seed=SEED,\n)\n\nfig, ax = plt.subplots(figsize=(8.5, 4.6))\nax.bar([\"baseline\", \"candidate\"], [baseline_scores.mean(), candidate_scores.mean()])\nax.set_ylim(0, 1)\nax.set_ylabel(\"accuracy\")\nax.set_title(\"Paired systems on identical sample_id values\")\nfor i, value in enumerate([baseline_scores.mean(), candidate_scores.mean()]):\n    ax.text(i, value + 0.025, f\"{value:.3f}\", ha=\"center\")\nplt.show()\n\nprint(\"paired difference interval:\", paired)\nprint(\"exact McNemar p-value:\", exact_mcnemar_pvalue(\n    experiment[\"paired\"][\"candidate_only\"],\n    experiment[\"paired\"][\"baseline_only\"],\n))"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. Повторные генерации и иерархический бутстрэп\n\nВосемь ответов одного запроса разделяют его трудность. Поэтому первичным уровнем для вывода о новых запросах остаётся запрос."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "rng = np.random.default_rng(SEED)\nprompt_difficulty = rng.normal(0.0, 0.9, size=40)\n# Eight correlated completions share one prompt-level difficulty.\nnoise_a = rng.normal(0.0, 0.75, size=(40, 8))\nnoise_b = rng.normal(0.0, 0.75, size=(40, 8))\nscores_a = (prompt_difficulty[:, None] + 0.25 + noise_a > 0).astype(float)\nscores_b = (prompt_difficulty[:, None] + noise_b > 0).astype(float)\n\nnaive = paired_bootstrap_interval(\n    scores_a.ravel(), scores_b.ravel(),\n    replicates=BOOTSTRAP_REPLICATES,\n    seed=SEED,\n)\nclustered = hierarchical_bootstrap_interval(\n    scores_a, scores_b,\n    replicates=max(1_000, BOOTSTRAP_REPLICATES // 2),\n    seed=SEED,\n    resample_within_prompt=True,\n)\n\ndisplay(pd.DataFrame([\n    {\"method\": \"rows treated as independent\", \"estimate\": naive.estimate, \"low\": naive.low, \"high\": naive.high},\n    {\"method\": \"hierarchical prompt bootstrap\", \"estimate\": clustered.estimate, \"low\": clustered.low, \"high\": clustered.high},\n]))\nprint(\"The primary unit determines what population the interval describes.\")"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. pass@k и качество селектора\n\nПокрытие кандидатов и правильность реально выбранного ответа — разные свойства системы."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "ks = np.arange(1, 65)\niid_curve = np.asarray([independent_trial_success(0.05, int(k)) for k in ks])\nfinite_ks = np.arange(1, 21)\nfinite_curve = np.asarray([pass_at_k_unbiased(20, 1, int(k)) for k in finite_ks])\n\nfig, ax = plt.subplots(figsize=(9, 4.8))\nax.plot(ks, iid_curve, label=\"new IID attempts, p=0.05\")\nax.plot(finite_ks, finite_curve, label=\"finite pool n=20, c=1\")\nax.set_xlabel(\"k\")\nax.set_ylabel(\"coverage probability / estimator\")\nax.set_ylim(0, 1.03)\nax.set_title(\"Coverage is not selector accuracy\")\nax.legend()\nplt.show()\n\npool = [False, True, False]\nprint(\"successful candidate exists:\", any(pool))\nprint(\"selected index 0 is correct:\", selection_success(pool, 0))\nassert any(pool) and not selection_success(pool, 0)"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. Буквальное загрязнение и предел дешёвого фильтра\n\nСравним асимметричное покрытие с Жаккаром и увидим, что парафраз может получить нулевой буквальный балл."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "benchmark = \"calculate the exact paired difference for the shared evaluation tasks\"\nliteral_corpus = \"notes: calculate the exact paired difference for the shared evaluation tasks today\"\nparaphrase_corpus = \"estimate how two systems differ when both are run on identical examples\"\n\nrows = []\nfor label, text in [(\"literal\", literal_corpus), (\"paraphrase\", paraphrase_corpus)]:\n    rows.append({\n        \"corpus item\": label,\n        \"4-gram containment\": ngram_containment(benchmark, text, 4),\n        \"4-gram Jaccard\": ngram_jaccard(benchmark, text, 4),\n    })\ndisplay(pd.DataFrame(rows))\n\nreport = contamination_report(\n    [benchmark, \"a completely unrelated safety item\", \"a translated or paraphrased derivative\"],\n    [literal_corpus, \"other training document\"],\n    n=4,\n    threshold=0.55,\n)\nprint(json.dumps(report, indent=2, ensure_ascii=False))\nprint(\"No literal flag is not a cleanliness certificate.\")"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 8. Два разных аудита LLM-судьи\n\nКанонические A/B-метки измеряют устойчивость идентичности; сырые FIRST/SECOND — позиционное предпочтение."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "judge = experiment[\"judge\"]\nidentity = judge[\"identity\"]\nposition = judge[\"position\"]\ndisplay(pd.DataFrame([\n    {\"diagnostic\": \"candidate identity consistency\", \"value\": identity[\"consistency_rate\"]},\n    {\"diagnostic\": \"first-position rate among non-ties\", \"value\": position[\"first_position_rate_non_ties\"]},\n]))\n\n# A tiny direct example makes the label contracts visible.\nidentity_small = judge_swap_audit([\"A\", \"A\", \"B\", \"TIE\"], [\"A\", \"B\", \"B\", \"TIE\"])\nposition_small = position_audit([\"FIRST\", \"SECOND\"], [\"FIRST\", \"FIRST\"])\nprint(\"identity audit:\", identity_small)\nprint(\"position audit:\", position_small)\nassert identity_small.consistent == 3\nassert position_small.first_position_wins == 3"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 9. Давление на прокси, безопасность и ворота выпуска\n\nСильный поиск способен найти ошибку оценивателя. Safety-контур сохраняет разные знаменатели и не позволяет среднему компенсировать критическое событие."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "pressure = reward_pressure_experiment((1, 4, 16, 64, 256, 512), trials=6_000, seed=17)\npressure_df = pd.DataFrame([\n    {\"candidate_count\": n, \"proxy\": proxy, \"independent_goal\": goal}\n    for n, (proxy, goal) in pressure.items()\n])\ndisplay(pressure_df)\n\nfig, ax = plt.subplots(figsize=(9, 4.8))\nax.plot(pressure_df[\"candidate_count\"], pressure_df[\"proxy\"], marker=\"o\", label=\"proxy\")\nax.plot(pressure_df[\"candidate_count\"], pressure_df[\"independent_goal\"], marker=\"s\", label=\"independent goal\")\nax.set_xscale(\"log\", base=2)\nax.set_xlabel(\"candidate count\")\nax.set_ylabel(\"mean selected score\")\nax.set_title(\"Stronger selection pressure can expose proxy error\")\nax.legend()\nplt.show()\n\nsafety = experiment[\"safety\"][\"rates\"]\npassport_errors = validate_measurement_passport(experiment[\"passport\"])\nprint(\"ASR:\", safety[\"attack_success_rate\"])\nprint(\"benign over-refusal:\", safety[\"benign_refusal_rate\"])\nprint(\"release decision:\", experiment[\"decision\"])\nprint(\"passport validation errors:\", passport_errors)\nassert passport_errors == ()\nassert all(len(value) == 64 for value in experiment[\"passport\"][\"artifact_hashes\"].values())"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 10. Необязательная ветвь с реальной моделью\n\nВетка ниже отключена. Она предназначена только для проверки программного контракта `lm-evaluation-harness`, а не для значимого бенчмарка."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "RUN_REAL_MODEL = False\n\nif RUN_REAL_MODEL:\n    # Install the backend in a fresh environment before this branch:\n    #   pip install \"lm_eval[hf]==0.4.12\" transformers accelerate\n    # Recheck the current release rather than copying this pin indefinitely.\n    import lm_eval\n\n    real_result = lm_eval.simple_evaluate(\n        model=\"hf\",\n        model_args=\"pretrained=Qwen/Qwen3-0.6B,dtype=float32\",\n        tasks=[\"hellaswag\"],\n        num_fewshot=0,\n        batch_size=1,\n        device=\"cpu\",\n        limit=16,\n    )\n    output_path = OUTPUT_DIR / \"lm_eval_smoke.json\"\n    output_path.write_text(json.dumps(real_result, indent=2, default=str))\n    print(\"saved:\", output_path)\nelse:\n    print(\"Real-model branch skipped. The CPU evidence route above is the release-tested path.\")"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

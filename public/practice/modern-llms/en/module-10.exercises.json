@@ -1,0 +1,49 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-10",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "Exercise 1. Exact mass balance",
+      "prompt": "For $p=(0.40,0.30,0.15,0.10,0.05)$ and $q=(0.25,0.35,0.20,0.10,0.10)$, compute $\\alpha$, the residual distribution, and the final emitted distribution.",
+      "answer": "*Solution.* Accepted mass is the overlap\n\n$$\\min(p,q)=(0.25,0.30,0.15,0.10,0.05),\\qquad \\alpha=0.85.$$\n\nMissing target mass is $(p-q)_+=(0.15,0,0,0,0)$. Normalize it by rejection probability $1-\\alpha=0.15$ to get $r=(1,0,0,0,0)$. The emitted law is\n\n$$\\min(p,q)+(1-\\alpha)r=(0.40,0.30,0.15,0.10,0.05)=p.$$\n\nNormalizing this residual—rather than simply resampling from $p$—is what corrects the distribution after rejection.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "Exercise 2. Proposal-length scan",
+      "prompt": "Use $S=E/(1+\\gamma c)$ with $\\alpha=0.8$, $c=0.1$, and $\\gamma\\le9$. Then evaluate the illustrative point $\\gamma=1$, $\\alpha=0.875$, $c=0.05$.",
+      "answer": "*Solution.* Expected emitted length, counting accepted proposals plus one correction or bonus token, is\n\n$$E_\\gamma=1+\\alpha+\\cdots+\\alpha^\\gamma=\\frac{1-\\alpha^{\\gamma+1}}{1-\\alpha}.$$\n\nFor $\\alpha=0.8$, $S=E_\\gamma/(1+0.1\\gamma)$ over $\\gamma=1,\\ldots,9$ is 1.6364, 2.0333, 2.2708, 2.4011, 2.4595, **2.4696**, 2.4477, 2.4050, and 2.3490. Thus the peak is $\\gamma=6$, with $E=3.951424$: beyond it, acceptance gain no longer pays for the extra draft work.\n\nFor the MTP point, $E=1+0.875=1.875$ and the denominator is 1.05, so $S=1.78571$. These are results of the stated cost model, not universal runtime measurements.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "Exercise 3. Payload ladder",
+      "prompt": "Reproduce the bf16, FP8, NVFP4-like, MXFP4-like, and idealized W4 payloads for 8B weights at 3.35 TB/s. Apply $S=2.83790769$ to bf16 and $S=1.78571$ to the 4.5 GB row.",
+      "answer": "*Solution.* Eight billion weights occupy 16 GB in bf16, 8 GB in FP8, 4.5 GB in the NVFP4-like scenario with overhead, 4.25 GB in the MXFP4-like row, and 4 GB at ideal four-bit packing. With $Q=3.35\\cdot10^{12}/W$:\n\n| Format | Payload, GB | $Q$, tok/s |\n|---|---:|---:|\n| bf16 | 16.00 | 209.38 |\n| FP8 | 8.00 | 418.75 |\n| NVFP4-like | 4.50 | 744.44 |\n| MXFP4-like | 4.25 | 788.24 |\n| ideal W4 | 4.00 | 837.50 |\n\nApplying the scenario factors gives $209.375\\cdot2.83790769\\approx594.19$ tok/s and $\\frac{3.35\\cdot10^{12}}{4.5\\cdot10^9}\\cdot(1.875/1.05)\\approx1329.37$ tok/s. These combine a weight-stream ceiling with a fixed-relative-cost scenario; real kernels, KV traffic, and acceptance can prevent the gains from composing multiplicatively.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "Exercise 4 [project]",
+      "prompt": "Begin with Demo 1 on CPU: next-token probabilities depend on the preceding token, and one stored batch provides all target distributions for a cycle. Compare the empirical joint law of the first two tokens with its exact value, then vary the draft table and proposal length. Report target calls and emitted tokens per call, including ordinary sampling as the baseline. Explain why call count is not elapsed time. With a suitable local model, optionally measure ITL, goodput, and accepted length at three concurrency levels.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 11](/downloads/modern-llms/project_demos/en/module_11_project_demo.ipynb), section “Demo 1”. It supplies the starting experiment; the exercise asks you to vary its assumptions and explain what changes.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "Exercise 5 [project]",
+      "prompt": "In Demo 2, compare symmetric INT4 with an E2M1-like grid on one weight matrix. Report weight MSE, relative layer-output error, and ideal code-plus-scale storage. Keep the weights fixed and change one input channel’s activity. Why does weight MSE stay constant while output error changes? An optional model experiment compares two low-bit checkpoints on a fixed held-out task set and common execution path, measuring quality, memory, and throughput.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 11](/downloads/modern-llms/project_demos/en/module_11_project_demo.ipynb), section “Demo 2”. It supplies the starting experiment; the exercise asks you to vary its assumptions and explain what changes.",
+      "answerKind": "guidance"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

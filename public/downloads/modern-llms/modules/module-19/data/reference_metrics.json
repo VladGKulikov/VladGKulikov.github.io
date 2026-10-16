@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "leaderboard": {
+    "sample_size": 500,
+    "first_rate": 0.955,
+    "second_rate": 0.95,
+    "aggregate_approximation": {
+      "delta": 0.0050000000000000044,
+      "se": 0.013451765683359198,
+      "z_score": 0.3716984162298756,
+      "ci_low": -0.021365460739384022,
+      "ci_high": 0.03136546073938403,
+      "half_width": 0.026365460739384027
+    },
+    "required_tasks": {
+      "0.05": 146,
+      "0.02": 913,
+      "0.01": 3650,
+      "0.005": 14599
+    },
+    "paired_demo": {
+      "both_correct": 150,
+      "first_only": 20,
+      "second_only": 10,
+      "both_wrong": 20,
+      "total": 200,
+      "first_accuracy": 0.85,
+      "second_accuracy": 0.8,
+      "delta": 0.05,
+      "mcnemar_p": 0.09873714670538902
+    }
+  },
+  "pass_at_k": {
+    "total_samples": 20,
+    "correct_samples": 4,
+    "unbiased": {
+      "1": 0.19999999999999998,
+      "5": 0.718266253869969,
+      "10": 0.9566563467492261
+    },
+    "naive": {
+      "1": 0.19999999999999998,
+      "5": 0.67232,
+      "10": 0.8926258176
+    }
+  },
+  "judge": {
+    "pairs": 1000,
+    "position_bias": 0.15,
+    "forward_a_wins": 650,
+    "swapped_a_wins": 350,
+    "averaged_a_rate": 0.5,
+    "judges": 3,
+    "orders": 2,
+    "calls_per_pair": 6
+  },
+  "lost_in_middle": {
+    "edge": 0.95,
+    "dip": 0.35,
+    "threshold": 0.9,
+    "mean": 0.7749999999999999,
+    "working_share": 0.2467517144288497,
+    "working_tokens_of_1m": 246752
+  },
+  "golden": {
+    "expected_rate": 0.8,
+    "n_for_3pp": 683,
+    "n_for_5pp": 246,
+    "canary_hex_characters": 32,
+    "canary_guess_probability": 2.938735877055719e-39,
+    "cost": {
+      "parameter_count": 8030000000,
+      "examples": 700,
+      "prompt_tokens": 400,
+      "completion_tokens": 150,
+      "effective_flops_per_second": 495000000000000.0,
+      "total_tokens": 385000,
+      "dense_flops_floor": 6183100000000000.0,
+      "seconds_floor": 12.491111111111111
+    }
+  }
+}

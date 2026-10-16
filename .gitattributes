@@ -1,0 +1,2 @@
+# Download artifacts must retain their original bytes and published SHA-256.
+/public/downloads/** -text whitespace=cr-at-eol

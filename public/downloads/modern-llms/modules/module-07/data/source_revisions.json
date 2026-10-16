@@ -1,0 +1,59 @@
+{
+  "reviewed": "2026-10-11",
+  "sources": [
+    {
+      "file": "qwen35_config.json",
+      "url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B-Base/resolve/main/config.json",
+      "resolved_url": "https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3.5-35B-A3B-Base/0f0813072d2358973511097385626f21fcb6d422/config.json?%2FQwen%2FQwen3.5-35B-A3B-Base%2Fresolve%2Fmain%2Fconfig.json=&etag=%222fd92bfc9ee58bd0274ad207d4120c3e7458dde8%22",
+      "revision": "0f0813072d2358973511097385626f21fcb6d422",
+      "sha256": "5e4d7f74fec2f360eb9cfbfcd6ec0c4c76e684d3a11caaed259d9fd9bfbc7944",
+      "immutable_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B-Base/resolve/0f0813072d2358973511097385626f21fcb6d422/config.json"
+    },
+    {
+      "file": "glm5_config.json",
+      "url": "https://huggingface.co/zai-org/GLM-5/resolve/main/config.json",
+      "resolved_url": "https://huggingface.co/api/resolve-cache/models/zai-org/GLM-5/c183ef8c61faee82855eca1ed9bb3a9a7ce3b0b2/config.json?%2Fzai-org%2FGLM-5%2Fresolve%2Fmain%2Fconfig.json=&etag=%22a34ad26ab36785f99d45866c1e9fe145003638ef%22",
+      "revision": "c183ef8c61faee82855eca1ed9bb3a9a7ce3b0b2",
+      "sha256": "308d3ceebe7bd9c2246d20550d5b793098dd03838d1e504f8236063ae152bcae",
+      "immutable_url": "https://huggingface.co/zai-org/GLM-5/resolve/c183ef8c61faee82855eca1ed9bb3a9a7ce3b0b2/config.json"
+    },
+    {
+      "file": "deepseek_config.json",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/resolve/main/config.json",
+      "resolved_url": "https://huggingface.co/api/resolve-cache/models/deepseek-ai/DeepSeek-V3/e815299b0bcbac849fa540c768ef21845365c9eb/config.json?%2Fdeepseek-ai%2FDeepSeek-V3%2Fresolve%2Fmain%2Fconfig.json=&etag=%22aec35a75d9bd54d463287e655724a0aeffdb38ce%22",
+      "revision": "e815299b0bcbac849fa540c768ef21845365c9eb",
+      "sha256": "cbf0b95dc614de208a109bb5fd4e7eed11385e9c68411d2c17db5319443035d9",
+      "immutable_url": "https://huggingface.co/deepseek-ai/DeepSeek-V3/resolve/e815299b0bcbac849fa540c768ef21845365c9eb/config.json"
+    },
+    {
+      "file": "deepseek_model.py",
+      "url": "https://raw.githubusercontent.com/deepseek-ai/DeepSeek-V3/main/inference/model.py",
+      "resolved_url": "https://raw.githubusercontent.com/deepseek-ai/DeepSeek-V3/main/inference/model.py",
+      "revision": null,
+      "sha256": "fdb7995bc234badbf0011b5af8cf391be94343abc51305428cb9a04452116f02"
+    },
+    {
+      "file": "qwen35_model.py",
+      "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3_5_moe/modeling_qwen3_5_moe.py",
+      "resolved_url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3_5_moe/modeling_qwen3_5_moe.py",
+      "revision": null,
+      "sha256": "5185df44da25af2756efeef3fb4174e9c242f528a71ff157bcc3dd2ce5c22e71"
+    }
+  ],
+  "primary_pages": [
+    "https://arxiv.org/pdf/2202.08906v2",
+    "https://arxiv.org/html/2412.19437v2",
+    "https://arxiv.org/abs/2408.15664",
+    "https://arxiv.org/abs/2401.06066",
+    "https://github.com/MoonshotAI/Kimi-K3",
+    "https://research.nvidia.com/labs/nemotron/LatentMoE/",
+    "https://research.nvidia.com/labs/nemotron/Nemotron-3-Ultra/",
+    "https://arxiv.org/abs/2606.17952",
+    "https://arxiv.org/abs/2412.14711"
+  ],
+  "limits": "Configs are copied for offline field checks; model weights are not loaded. Code cache is excluded from release; SHA-256 identifies the reviewed bytes. Main-branch URLs are retrieval provenance, not immutable versions.",
+  "gpt_oss": {
+    "commit": "7b583341fe16729127f6d5b94a7b09ccae97e1a1",
+    "model_sha256": "319ba3c6e4d827eb3115fe4838942af448376b513c02cea4b6b471bf6c21a346"
+  }
+}

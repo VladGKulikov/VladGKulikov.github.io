@@ -1,0 +1,175 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-08",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "Four roles and physical implementation",
+      "prompt": "A report says that RLHF always requires four full LLM copies in memory. Separate logical roles from physical copies, state what each role computes and whether it updates, give four memory-saving implementations, and explain which RLHF costs remain.",
+      "answer": "The updated policy generates responses, the frozen reference anchors KL, the reward model scores responses, and the critic estimates future return. These are roles, not four mandatory independent full copies. Sharing a policy/value backbone, LoRA, quantizing frozen models, caching reference log-probabilities, CPU offload, process separation, and smaller reward/value models can reduce memory. Fresh generation, forward passes, rollout storage, value estimation, and policy backpropagation remain.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "KL constraint and KL penalty",
+      "prompt": "Compare constrained reward maximization with $D_{\\mathrm{KL}}\\le\\delta$ to penalized reward maximization with coefficient $\\beta$. Why are they related, yet $\\beta$ does not predetermine realized neural-training KL? What does KL regularization guarantee, and what does it not guarantee about reward correctness or retained capabilities?",
+      "answer": "The penalty is a Lagrangian form of the constraint. In ideal convex optimization an active constraint corresponds to a multiplier. Neural optimization is finite, stochastic, and non-convex, so selected $\\beta$ does not predetermine realized KL. KL prices movement and preserves support; it does not validate the reward model or preserve every capability.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Sampled ratio and exact KL",
+      "prompt": "A sampled token has log-ratio $-0.7$, and an engineer calls it negative KL. Correct the statement. Distinguish one sampled log-ratio, its current-policy expectation, exact categorical KL, and a sequence sum. Explain why response masks and the actual decoding policy belong to the contract.",
+      "answer": "The value $-0.7$ is one sampled log-ratio and may be negative. Its expectation under the current policy is forward KL and is non-negative. Exact categorical KL sums over the vocabulary; a sampled sequence sum follows one response and may also be negative. Masks define policy actions, and the actual decoding distribution defines the correct probability after temperature and truncation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Assumptions behind DPO",
+      "prompt": "List the assumptions connecting the KL-regularized optimum, implicit reward, and DPO loss: same-prompt pairs, Bradley–Terry, fixed reference, support, pair quality, and the distinction between optimizing a loss and proving that preferences are correct.",
+      "answer": "The derivation uses same-prompt pairs, Bradley–Terry likelihood, the exact KL-regularized optimum, a fixed reference, compatible support, and consistent preprocessing. Labels must represent the intended rubric. If Bradley–Terry is misspecified, DPO remains a valid pairwise loss, but exact implicit-reward recovery becomes only an approximation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "DPO and classical offline RL",
+      "prompt": "Compare DPO with classical offline RL by data unit, transitions, explicit Q-functions, Bellman bootstrapping, reference policy, and weak-coverage risk. State a more precise relationship.",
+      "answer": "DPO consumes prompt–completion pairs and uses no explicit Q-function, Bellman target, or bootstrapping. Classical offline RL typically consumes transitions or trajectories. Both face coverage risk, but offline RL may amplify value errors through bootstrapping while DPO may exploit limited pairs, length, style, or unlabelled alternatives. DPO is related fixed-data policy optimization, not literally classical value-based offline RL.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Margin growth without winner-probability growth",
+      "prompt": "Does a growing DPO margin imply a growing chosen-completion probability? Explain using a third unlabelled completion and list at least four diagnostics that must accompany the loss.",
+      "answer": "No. Both paired probabilities can fall while the rejected one falls faster and a third completion absorbs mass. Monitor chosen/rejected log-probabilities, separate reference ratios, margin, KL, lengths, gradient weights, and fresh-generation quality.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Auditing data, length, and templates",
+      "prompt": "Chosen responses are longer, truncation differs by label, and reference log-probabilities were cached before a chat-template change. List independent faults, required metadata, and why dividing by length is not a universal repair.",
+      "answer": "The faults are a length shortcut, asymmetric truncation, and stale reference log-probabilities. Preserve raw text, token IDs, masks, pre/post-truncation lengths, stop reason, tokenizer/template/checkpoint versions, decoding settings, provenance, and preprocessing version. Dividing by length changes the objective and does not repair stale caches, truncation, or bad labels.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Choose a method from the data contract",
+      "prompt": "Choose DPO, IPO, SimPO, KTO, ORPO, PPO/RLOO, or RLVR for: high-quality pairs with a reference; unpaired desirable/undesirable labels; a one-stage reference-free run; runaway margins after quality plateaus; verifiable reward with fresh current-policy samples; and strongly differing lengths with explicit length normalization. Name one key assumption and one required metric for each.",
+      "answer": "Use DPO for good pairs with a reference; KTO for unpaired binary labels; ORPO for a one-stage SFT-plus-pair objective; IPO/cDPO/early stopping for runaway margins or label noise; RLVR with an online update for verifiable fresh rewards; and SimPO when explicit length-normalized scoring is desired. Each still requires independent quality and method-specific diagnostics.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A9",
+      "title": "Scalarization or an explicit constraint",
+      "prompt": "A team combines utility and risk into $R-\\alpha C$ and claims that choosing $\\alpha$ removes the need for a separate safety constraint.\n\n\n1. Compare fixed scalarization with $\\max\\mathbb E[R]$ subject to $\\mathbb E[C]\\le d$.\n\n2. Explain the role of the dual variable $\\lambda$ and how adapting it differs from fixing $\\alpha$ in advance.\n\n3. Why should reward and cost models be trained, logged, and validated separately?\n\n4. Why does an average-cost constraint fail to guarantee safety on every prompt?\n\n5. Name at least three additional mechanisms for critical actions and explain why Module 13 still needs an independent release gate.",
+      "answer": "A fixed sum $R-\\alpha C$ commits to one price of risk. If the cost scale or violation rate changes, the objective does not require the policy to return to a declared budget. A constrained objective states $\\mathbb E[C]\\le d$, while projected dual ascent adapts the price of violation:\n\n$$\n\\lambda\\leftarrow[\\lambda+\\eta_\\lambda(\\widehat{\\mathbb E}[C]-d)]_+.\n$$\n\nThe multiplier rises above budget and falls when the constraint has slack. Reward and cost signals may use different data, features, failure modes, and thresholds, so they should remain separately auditable.\n\nAn average constraint still permits rare severe violations. Critical actions need hard filters or safe action sets, isolated tools, refusal or abort paths, and scenario-level checks. Module 13's release gate remains an independent layer.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Exact KL-regularized optimum",
+      "prompt": "For $\\pi_{\\mathrm{ref}}=(0.5,0.3,0.2)$, $r=(0,1,-0.5)$, and $\\beta=1$, compute unnormalized weights, $\\pi^*$, expected reward, KL, and regularized value. Compare with the reference.",
+      "answer": "The weights are $(0.500000,0.815485,0.121306)$ and\n\n$$\n\\pi^*\\approx(0.347998,0.567574,0.084429).\n$$\n\nExpected reward is $0.525359$, KL is $0.162947$, and the regularized value is $0.362412$. The reference value is $0.2$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Reward shifts and reference support",
+      "prompt": "Prove that a common reward shift leaves $\\pi^*(y)\\propto\\pi_{\\mathrm{ref}}(y)e^{r(y)/\\beta}$ unchanged and that zero reference support remains zero for finite reward. Interpret both properties.",
+      "answer": "A common shift multiplies all unnormalized weights by $e^{c/\\beta}$, which cancels in normalization. Zero reference mass gives zero tilted mass for finite reward. These express reward-offset non-identifiability and the forward-KL support restriction.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "From implicit reward to DPO",
+      "prompt": "Substitute $r(x,y)=\\beta\\log(\\pi^*/\\pi_{\\mathrm{ref}})+\\beta\\log Z(x)$ into Bradley–Terry, show cancellation of $\\log Z(x)$, and derive the DPO logit and $-\\log\\sigma(z)$ loss.",
+      "answer": "The two $\\beta\\log Z(x)$ terms cancel inside the Bradley–Terry reward difference, yielding the reference-corrected pair logit. The observed-choice negative log-likelihood is\n\n$$\n-\\log\\sigma(z)=\\operatorname{softplus}(-z).\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "DPO loss and gradient weight",
+      "prompt": "For policy log-probabilities $-2.0,-3.0$, reference log-probabilities $-2.2,-2.4$, and $\\beta=0.5$, compute two log-ratios, margin, logit, loss, and $\\beta\\sigma(-z)$. What happens at a large positive margin?",
+      "answer": "The chosen log-ratio is $0.2$, the rejected log-ratio $-0.6$, so $h=0.8$ and $z=0.4$. The loss is $0.513015$ and $\\beta\\sigma(-z)=0.200656$. The weight approaches zero for a large positive margin.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "Finite targets in cDPO and IPO",
+      "prompt": "Compute cDPO at $z=2$, $\\varepsilon=0.1$. For IPO with $\\tau=0.25$, find the target and losses at margins $1,2,4$. Explain the finite optimum.",
+      "answer": "At $z=2$, the cDPO loss is $0.326928$. With $\\tau=0.25$, the IPO target is $2$, and losses at $1,2,4$ are $1,0,4$. IPO penalizes both under- and overshooting a finite target.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Exact likelihood displacement",
+      "prompt": "For logits $(-t,-3t,4t)$, prove the chosen–rejected log-margin is $2t$, compute probabilities at $t=0,0.5,1$, explain falling chosen probability, and propose an alert.",
+      "answer": "Softmax normalization cancels, giving $\\log p_1-\\log p_2=2t$.\n\n| $t$ | $p_1$ | $p_2$ | $p_3$ |\n|---:|---:|---:|---:|\n| 0 | 0.333333 | 0.333333 | 0.333333 |\n| 0.5 | 0.073799 | 0.027149 | 0.899052 |\n| 1 | 0.006687 | 0.000905 | 0.992408 |\n\nThe third logit captures mass while the chosen logit declines more slowly than the rejected. Alert on growing margin with falling chosen log-probability, then check semantic quality independently.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B7",
+      "title": "Two actions and a cost budget",
+      "prompt": "The safe action has reward $0.6$ and cost $0$; the risky action has reward $1.0$ and cost $1$. The policy chooses the risky action with probability $q$.\n\n\n1. Write $\\mathbb E[R]$ and $\\mathbb E[C]$.\n\n2. Find $q^*$ under $\\mathbb E[C]\\le0.25$ and compute expected reward.\n\n3. For\n\n$$\n\\mathcal L(q,\\lambda)=0.6+0.4q-\\lambda(q-0.25),\n$$\n\nwhich $q\\in[0,1]$ maximizes the Lagrangian for $\\lambda<0.4$, $\\lambda>0.4$, and $\\lambda=0.4$?\n\n4. Take one dual step from $\\lambda=0.2$ with estimated cost $0.6$, limit $0.25$, and step size $0.5$.\n\n5. Explain why an average budget and a hard prohibition on the risky action express different requirements.",
+      "answer": "The mixture gives\n\n$$\n\\mathbb E[C]=q,\n\\qquad\n\\mathbb E[R]=0.6+0.4q.\n$$\n\nReward increases with $q$ and the constraint requires $q\\le0.25$, so $q^*=0.25$ and expected reward is $0.7$.\n\nAlso\n\n$$\n\\mathcal L(q,\\lambda)=0.6+0.25\\lambda+(0.4-\\lambda)q.\n$$\n\nThus $q=1$ for $\\lambda<0.4$, $q=0$ for $\\lambda>0.4$, and every $q\\in[0,1]$ is optimal at $\\lambda=0.4$. One dual step is\n\n$$\n[0.2+0.5(0.6-0.25)]_+=0.375.\n$$\n\nAn average budget permits the risky action at a limited frequency; a hard prohibition requires zero probability in the relevant states.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Optimal policy and reward–KL frontier",
+      "prompt": "Implement a stable function that preserves reference support and validates $\\beta>0$:\n\n```python\nimport numpy as np\n\n\ndef optimal_kl_policy(reference: np.ndarray, rewards: np.ndarray, beta: float) -> np.ndarray:\n    \"\"\"Return argmax E_pi[r] - beta * KL(pi || reference).\"\"\"\n    ...\n```\n\nSweep beta and tabulate reward and KL.\n\nOpen checks:\n\n```python\np = optimal_kl_policy([1/3, 1/3, 1/3], [1.0, 0.0, -1.0], 1.0)\nnp.testing.assert_allclose(p, [0.66524096, 0.24472847, 0.09003057], rtol=1e-7)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef optimal_kl_policy(reference, rewards, beta):\n    reference = np.asarray(reference, dtype=np.float64)\n    rewards = np.asarray(rewards, dtype=np.float64)\n    if reference.ndim != 1 or rewards.shape != reference.shape or beta <= 0:\n        raise ValueError(\"invalid inputs\")\n    if np.any(reference < 0) or not np.isclose(reference.sum(), 1.0):\n        raise ValueError(\"reference must be a distribution\")\n    support = reference > 0\n    logits = np.full_like(reference, -np.inf)\n    logits[support] = np.log(reference[support]) + rewards[support] / beta\n    maximum = np.max(logits[support])\n    weights = np.zeros_like(reference)\n    weights[support] = np.exp(logits[support] - maximum)\n    return weights / weights.sum()\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Token-level KL shaping",
+      "prompt": "Implement response-masked token rewards with terminal reward on the last active token:\n\n```python\nimport numpy as np\n\n\ndef shape_token_rewards(policy_logprobs, reference_logprobs, terminal_reward, beta, mask):\n    ...\n```\n\nVerify the sequence identity and reject an empty mask.\n\nOpen checks:\n\n```python\npolicy = np.array([-0.5, -0.7])\nreference = np.array([-0.4, -0.9])\nshaped = shape_token_rewards(policy, reference, terminal_reward=1.0, beta=0.5, mask=np.ones_like(policy))\nassert shaped.shape == (2,)\nassert abs(float(shaped[0]) - (-0.5 * (-0.5 - -0.4))) < 1e-12\nassert abs(float(shaped.sum()) - (1.0 - 0.5 * float((policy - reference).sum()))) < 1e-12\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef shape_token_rewards(p, q, terminal_reward, beta, mask):\n    p, q, mask = [np.asarray(x, dtype=np.float64) for x in (p, q, mask)]\n    if p.ndim != 1 or q.shape != p.shape or mask.shape != p.shape:\n        raise ValueError(\"aligned vectors required\")\n    if np.any((mask != 0) & (mask != 1)) or mask.sum() == 0:\n        raise ValueError(\"non-empty binary mask required\")\n    out = -beta * (p - q) * mask\n    out[np.flatnonzero(mask)[-1]] += terminal_reward\n    return out\n```\n\nCheck:\n\n```python\nout = shape_token_rewards([-0.2, -1.0, -2.0], [-0.2, -1.3, -1.8], 1.5, 0.2, [0, 1, 1])\nassert np.isclose(out.sum(), 1.5 - 0.2 * (0.3 - 0.2))\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Batch DPO diagnostics",
+      "prompt": "Implement mean loss, pair accuracy, margin, chosen/rejected log-probabilities, implicit rewards, and gradient weight:\n\n```python\nimport numpy as np\n\n\ndef summarize_pairs(pc, pr, rc, rr, beta) -> dict[str, float]:\n    ...\n```\n\nTest a case where pair accuracy rises while chosen probability falls.\n\nOpen checks:\n\n```python\nreport = summarize_pairs([-2.0, -1.0], [-3.0, -1.5], [-2.5, -1.2], [-2.6, -1.4], 0.1)\nassert abs(report[\"pair_accuracy\"] - 1.0) < 1e-12\nassert abs(report[\"mean_margin\"] - 0.6) < 1e-12\nassert abs(report[\"mean_chosen_logp\"] - (-1.5)) < 1e-12\nassert abs(report[\"mean_loss\"] - 0.6637095) < 1e-6\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef softplus(x):\n    x = np.asarray(x, dtype=np.float64)\n    return np.maximum(x, 0.0) + np.log1p(np.exp(-np.abs(x)))\n\n\ndef summarize_pairs(pc, pr, rc, rr, beta):\n    pc, pr, rc, rr = [np.asarray(x, dtype=np.float64) for x in (pc, pr, rc, rr)]\n    margin = (pc - rc) - (pr - rr)\n    z = beta * margin\n    return {\n        \"mean_loss\": float(np.mean(softplus(-z))),\n        \"pair_accuracy\": float(np.mean(margin > 0)),\n        \"mean_margin\": float(np.mean(margin)),\n        \"mean_chosen_logp\": float(np.mean(pc)),\n        \"mean_rejected_logp\": float(np.mean(pr)),\n        \"mean_gradient_weight\": float(np.mean(beta / (1.0 + np.exp(z)))),\n    }\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "cDPO and IPO",
+      "prompt": "Implement vectorized cDPO and IPO:\n\n```python\nimport numpy as np\n\n\ndef conservative_dpo_loss(margin, beta, label_smoothing):\n    ...\n\n\ndef ipo_loss(margin, tau):\n    ...\n```\n\nCheck the zero-smoothing reduction and IPO minimum.\n\nOpen checks:\n\n```python\nmargins = np.array([-1.0, 0.0, 2.0])\nbeta = 0.3\nconservative = conservative_dpo_loss(margins, beta, label_smoothing=0.0)\nordinary_dpo = np.logaddexp(0.0, -beta * margins)\nnp.testing.assert_allclose(conservative, ordinary_dpo)\nassert abs(float(ipo_loss(np.array([2.0]), tau=0.25)[0])) < 1e-12\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef softplus(x):\n    x = np.asarray(x, dtype=np.float64)\n    return np.maximum(x, 0.0) + np.log1p(np.exp(-np.abs(x)))\n\n\ndef conservative_dpo_loss(margin, beta, label_smoothing):\n    eps = float(label_smoothing)\n    if beta <= 0 or not 0 <= eps < 0.5:\n        raise ValueError(\"invalid beta or label_smoothing\")\n    z = beta * np.asarray(margin, dtype=np.float64)\n    return (1.0 - eps) * softplus(-z) + eps * softplus(z)\n\n\ndef ipo_loss(margin, tau):\n    if tau <= 0:\n        raise ValueError(\"tau must be positive\")\n    return (np.asarray(margin, dtype=np.float64) - 1 / (2 * tau)) ** 2\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "SimPO and ORPO",
+      "prompt": "Implement length-normalized SimPO scoring and loss, stable log-odds from `logp`, and ORPO total loss:\n\n```python\n\ndef simpo_reward(sequence_logp: float, length: int, beta: float) -> float:\n    ...\n\n\ndef orpo_total_loss(chosen_mean_nll, chosen_logp, rejected_logp, lam) -> float:\n    ...\n```\n\nExplain why equal numerical hyperparameters do not imply equal update semantics.\n\nOpen checks:\n\n```python\nassert abs(simpo_reward(-4.0, 2, 1.0) - (-2.0)) < 1e-12\nassert abs(simpo_reward(-4.0, 4, 1.0) - (-1.0)) < 1e-12\nassert abs(simpo_reward(-4.0, 2, 2.0) - (-4.0)) < 1e-12\n```",
+      "answer": "```python\nimport math\n\n\ndef simpo_reward(sequence_logp, length, beta):\n    if length <= 0 or beta <= 0:\n        raise ValueError(\"positive inputs required\")\n    return beta * sequence_logp / length\n\n\ndef log_odds_from_logprob(logp):\n    p = math.exp(logp)\n    return logp - math.log1p(-p)\n\n\ndef orpo_total_loss(chosen_mean_nll, chosen_logp, rejected_logp, lam):\n    odds_gap = log_odds_from_logprob(chosen_logp) - log_odds_from_logprob(rejected_logp)\n    return chosen_mean_nll + lam * math.log1p(math.exp(-odds_gap))\n```",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Likelihood-displacement experiment",
+      "prompt": "Implement the three-logit curve:\n\n```python\nimport numpy as np\n\n\ndef likelihood_displacement_curve(ts: np.ndarray) -> dict[str, np.ndarray]:\n    \"\"\"Softmax probabilities for logits [-t, -3t, 4t].\"\"\"\n    ...\n```\n\nPlot all probabilities and pair margin, and trigger an alert when margin grows while chosen log-probability falls. Explain why this is only a diagnostic.\n\nOpen checks:\n\n```python\nts = np.array([0.0, 0.2, 1.0, 3.0])\ncurve = likelihood_displacement_curve(ts)\nnp.testing.assert_allclose(\n    np.log(curve[\"chosen\"]) - np.log(curve[\"rejected\"]),\n    2.0 * ts,\n    atol=1e-12,\n)\nassert displacement_alert(curve)\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef likelihood_displacement_curve(ts):\n    ts = np.asarray(ts, dtype=np.float64)\n    logits = np.stack([-ts, -3 * ts, 4 * ts], axis=1)\n    logits -= logits.max(axis=1, keepdims=True)\n    p = np.exp(logits); p /= p.sum(axis=1, keepdims=True)\n    return {\"t\": ts, \"chosen\": p[:, 0], \"rejected\": p[:, 1], \"other\": p[:, 2], \"log_margin\": 2 * ts}\n\n\ndef displacement_alert(curve):\n    return bool(np.all(np.diff(curve[\"log_margin\"]) > 0) and np.mean(np.diff(np.log(curve[\"chosen\"]))) < 0)\n```\n\nThe alert detects probability geometry, not semantic quality, so independent generation evaluation is still required.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C7",
+      "title": "Constrained objective and dual update",
+      "prompt": "Implement:\n\n```python\nimport numpy as np\n\n\ndef dual_ascent_step(multipliers, expected_costs, limits, step_size):\n    \"\"\"Return projected dual ascent: [lambda + eta * (cost - limit)]_+.\"\"\"\n    ...\n\n\ndef two_action_constrained_optimum(\n    safe_reward,\n    risky_reward,\n    safe_cost,\n    risky_cost,\n    cost_limit,\n):\n    \"\"\"Optimal risky-action probability for a two-action linear mixture.\"\"\"\n    ...\n```\n\nVerify $q^*=0.25$, reject an infeasible budget, and show that a multiplier rises under violation and falls otherwise. Explain why a numerically correct dual update does not validate the learned cost model.\n\nOpen checks:\n\n```python\nupdated = dual_ascent_step([0.2, 0.1], [0.6, 0.0], [0.25, 0.2], 0.5)\nnp.testing.assert_allclose(updated, [0.375, 0.0])\n```",
+      "answer": "```python\nimport numpy as np\n\n\ndef dual_ascent_step(multipliers, expected_costs, limits, step_size):\n    lam = np.asarray(multipliers, dtype=np.float64)\n    costs = np.asarray(expected_costs, dtype=np.float64)\n    bounds = np.asarray(limits, dtype=np.float64)\n    if lam.shape != costs.shape or lam.shape != bounds.shape:\n        raise ValueError(\"all arrays must have the same shape\")\n    if np.any(lam < 0) or not np.all(np.isfinite(lam)):\n        raise ValueError(\"multipliers must be finite and non-negative\")\n    if step_size <= 0 or not np.isfinite(step_size):\n        raise ValueError(\"step_size must be finite and positive\")\n    return np.maximum(0.0, lam + step_size * (costs - bounds))\n\n\ndef two_action_constrained_optimum(\n    safe_reward,\n    risky_reward,\n    safe_cost,\n    risky_cost,\n    cost_limit,\n):\n    values = np.asarray(\n        [safe_reward, risky_reward, safe_cost, risky_cost, cost_limit],\n        dtype=np.float64,\n    )\n    if not np.all(np.isfinite(values)):\n        raise ValueError(\"all inputs must be finite\")\n    if risky_cost <= safe_cost:\n        raise ValueError(\"the teaching contract requires risky_cost > safe_cost\")\n    if cost_limit < safe_cost:\n        raise ValueError(\"the cost budget is infeasible even for the safe action\")\n    q_max = np.clip(\n        (cost_limit - safe_cost) / (risky_cost - safe_cost),\n        0.0,\n        1.0,\n    )\n    return float(q_max if risky_reward > safe_reward else 0.0)\n```\n\nThe teaching example returns $0.25$. The multiplier rises under violation and decreases, with projection at zero, when the constraint has slack. Correct code validates the update algebra, not the semantics or coverage of the cost model.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

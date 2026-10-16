@@ -1,0 +1,274 @@
+{
+  "baseline_estimator": {
+    "bernoulli_p": 0.3,
+    "full_group_mean_expected": 0.18375,
+    "group_size": 8,
+    "true_gradient": 0.21
+  },
+  "bt": {
+    "deltas": [
+      0.5,
+      1.0,
+      2.0,
+      4.0
+    ],
+    "inverse_margin": 1.0986122886681098,
+    "inverse_win_rate": 0.75,
+    "probabilities": [
+      0.6224593312018546,
+      0.7310585786300049,
+      0.8807970779778824,
+      0.9820137900379085
+    ]
+  },
+  "dpo": {
+    "batch": {
+      "accuracy": [
+        true,
+        true,
+        false
+      ],
+      "beta": 0.1,
+      "completion_mask": [
+        [
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "loss": [
+        0.6117553388706229,
+        0.6611752126141188,
+        0.7709570477895321
+      ],
+      "margin": [
+        0.16999999999999993,
+        0.06500000000000004,
+        -0.15000000000000002
+      ],
+      "mean_loss": 0.681295866424758,
+      "sequence_logps": {
+        "policy_chosen": [
+          -12.0,
+          -12.0,
+          -10.5
+        ],
+        "policy_rejected": [
+          -11.5,
+          -11.5,
+          -11.0
+        ],
+        "reference_chosen": [
+          -13.0,
+          -12.8,
+          -10.0
+        ],
+        "reference_rejected": [
+          -10.8,
+          -11.65,
+          -12.0
+        ]
+      },
+      "token_logps": {
+        "policy_chosen": [
+          [
+            -2.0,
+            -3.0,
+            -3.5,
+            -3.5,
+            99.0
+          ],
+          [
+            -3.0,
+            -3.0,
+            -3.0,
+            -3.0,
+            99.0
+          ],
+          [
+            -2.0,
+            -2.5,
+            -3.0,
+            -3.0,
+            99.0
+          ]
+        ],
+        "policy_rejected": [
+          [
+            -2.0,
+            -2.5,
+            -3.0,
+            -4.0,
+            99.0
+          ],
+          [
+            -2.5,
+            -2.5,
+            -3.0,
+            -3.5,
+            99.0
+          ],
+          [
+            -2.0,
+            -2.5,
+            -3.0,
+            -3.5,
+            99.0
+          ]
+        ],
+        "reference_chosen": [
+          [
+            -2.5,
+            -3.0,
+            -3.5,
+            -4.0,
+            99.0
+          ],
+          [
+            -3.2,
+            -3.2,
+            -3.2,
+            -3.2,
+            99.0
+          ],
+          [
+            -2.0,
+            -2.5,
+            -2.5,
+            -3.0,
+            99.0
+          ]
+        ],
+        "reference_rejected": [
+          [
+            -1.8,
+            -2.2,
+            -3.0,
+            -3.8,
+            99.0
+          ],
+          [
+            -2.5,
+            -2.65,
+            -3.0,
+            -3.5,
+            99.0
+          ],
+          [
+            -2.5,
+            -3.0,
+            -3.0,
+            -3.5,
+            99.0
+          ]
+        ]
+      },
+      "weight": [
+        0.45760205922564906,
+        0.4837557189379275,
+        0.5374298453437495
+      ]
+    },
+    "scalar_cases": {
+      "pair_II_beta_01": {
+        "beta": 0.1,
+        "loss": 0.6611752126141188,
+        "margin": 0.06500000000000004,
+        "policy_chosen": -12.0,
+        "policy_rejected": -11.5,
+        "reference_chosen": -12.8,
+        "reference_rejected": -11.65,
+        "weight": 0.4837557189379275
+      },
+      "pair_I_beta_01": {
+        "beta": 0.1,
+        "loss": 0.6117553388706229,
+        "margin": 0.16999999999999993,
+        "policy_chosen": -12.0,
+        "policy_rejected": -11.5,
+        "reference_chosen": -13.0,
+        "reference_rejected": -10.8,
+        "weight": 0.45760205922564906
+      },
+      "pair_I_beta_05": {
+        "beta": 0.5,
+        "loss": 0.35586506844219595,
+        "margin": 0.8499999999999996,
+        "policy_chosen": -12.0,
+        "policy_rejected": -11.5,
+        "reference_chosen": -13.0,
+        "reference_rejected": -10.8,
+        "weight": 0.2994328575260271
+      }
+    }
+  },
+  "grpo": {
+    "advantages": [
+      1.2909944487358056,
+      -0.7745966692414834,
+      -0.7745966692414834,
+      1.2909944487358056,
+      -0.7745966692414834,
+      -0.7745966692414834,
+      1.2909944487358056,
+      -0.7745966692414834
+    ],
+    "degenerate_probability": 0.05771361999999997,
+    "group_size": 8,
+    "mean": 0.375,
+    "pass_probability": 0.3,
+    "rewards": [
+      1.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    "std": 0.4841229182759271
+  },
+  "memory": {
+    "bytes_per_parameter": {
+      "frozen_bf16": 2,
+      "train": 16
+    },
+    "dpo_grpo_gib": 134.61336493492126,
+    "frozen_gib": 14.957040548324585,
+    "n_params": 8030000000.0,
+    "ppo_gib": 269.22672986984253,
+    "ratio": 2.0,
+    "train_gib": 119.65632438659668
+  },
+  "rollout": {
+    "accelerator_flops": 990000000000000.0,
+    "accelerators": 8,
+    "completion_tokens": 4000,
+    "decode_tokens_per_second_per_accelerator": 209.4,
+    "generated_tokens": 8192000,
+    "generation_minutes": 81.50270614453994,
+    "generations_per_prompt": 8,
+    "mfu": 0.4,
+    "prompts": 256,
+    "ratio": 39.25108921772578,
+    "training_minutes": 2.0764444444444448
+  },
+  "schema_version": 2
+}

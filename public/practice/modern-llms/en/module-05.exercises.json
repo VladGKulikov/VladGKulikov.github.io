@@ -1,0 +1,63 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-05",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. Exact block accounting",
+      "prompt": "Compute the matrix-only and full counts for the Llama-3.1-8B block.",
+      "answer": "*Solution.* In GQA, $Q$ and $O$ are $d\\times d$, while K/V width is one quarter of $d$. The two K/V matrices therefore contribute $2d(d/4)=0.5d^2$, giving\n\n$$P_{attn}=2d^2+0.5d^2=2.5d^2.$$\n\nSwiGLU has gate, up, and down projections. With $d_{ff}=3.5d$, their count is $3dd_{ff}=10.5d^2$. Thus\n\n$$P_{matrix}=13d^2=13\\cdot4096^2=218{,}103{,}808.$$\n\nTwo RMSNorm scales add $2d=8192$, yielding **218,112,000**. Biases are excluded by this architecture contract.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. Epsilon and gain",
+      "prompt": "Compare the RMSNorm multipliers at input RMS $10^{-3}$ for $\\epsilon=10^{-6}$ and $10^{-5}$.",
+      "answer": "*Solution.* RMSNorm divides by $\\sqrt{\\operatorname{RMS}(x)^2+\\epsilon}$. Here the signal-square term is $10^{-6}$, so\n\n$$g_{10^{-6}}=1/\\sqrt{2\\cdot10^{-6}}\\approx707.1,$$\n$$g_{10^{-5}}=1/\\sqrt{11\\cdot10^{-6}}\\approx301.5.$$\n\nThe larger epsilon more than halves the gain because it dominates this small signal. Epsilon must therefore reflect reduction precision and expected activation scale, not dtype machine epsilon alone.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. The negative gpt-oss branch",
+      "prompt": "Explain why the up-branch clip still changes the $z=-9$ case.",
+      "answer": "*Solution.* Use $g=\\min(z,7)$, $u=\\operatorname{clip}(z,-7,7)$, and $y=g\\sigma(1.702g)(u+1)$:\n\n| $z$ | $g$ | $u$ | $y$ |\n|---:|---:|---:|---:|\n| -9 | -9 | -7 | 0.000012019 |\n| -2 | -2 | -2 | 0.064341377 |\n| 0 | 0 | 0 | 0 |\n| 2 | 2 | 2 | 5.806975869 |\n| 7 | 7 | 7 | 55.999625026 |\n| 9 | 7 | 7 | 55.999625026 |\n\nAt $z=-9$, the gate is not lower-clipped and its sigmoid nearly suppresses it, but the up branch is still changed to $-7$ and enters as $u+1=-6$. The output is small because of the gate, not because the clip is irrelevant. At 7 and 9, both used branches are identical, so the outputs match.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4 [project]",
+      "prompt": "Compare RMSNorm, DyT, and DyISRU on one small language model with matched seeds, optimizer, data order, and a learning-rate sweep. Do not extrapolate one run to 100B scale.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 6](/downloads/modern-llms/project_demos/en/module_06_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5 [project]",
+      "prompt": "Compare Q/K score distributions for two open models with different stabilization mechanisms. Record the exact code path; do not merge L2 normalization, Q/K RMSNorm, and logit soft-capping into one label.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 6](/downloads/modern-llms/project_demos/en/module_06_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-06",
+      "title": "E6. Scaling and reduction axes",
+      "prompt": "Why does fixed positive epsilon break exact scale invariance? How does changing one head affect per-head and whole-projection RMSNorm?",
+      "answer": "*Solution.* For a positive scale $c$, factor it out of the denominator:\n\n$$\n\\frac{cx}{\\sqrt{c^2\\operatorname{mean}(x^2)+\\epsilon}}\n=\\frac{x}{\\sqrt{\\operatorname{mean}(x^2)+\\epsilon/c^2}}.\n$$\n\nKeeping $\\epsilon>0$ fixed therefore changes the normalization. With a single value $x=10^{-3}$, $\\epsilon=10^{-6}$, and unit learned scale, the output is $1/\\sqrt2\\approx0.7071$. Doubling the input gives $2/\\sqrt5\\approx0.8944$. The stabilizer is comparable to the squared signal, so the difference is substantial.\n\nWhen RMS is reduced over all heads together, scaling one head changes the shared denominator and hence the untouched heads too. Separate head-wise reductions keep their denominators independent. Predict which heads will change before comparing the two notebook calculations.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-07",
+      "title": "E7. Doubly stochastic does not mean identity",
+      "prompt": "Verify the example in §12. Does satisfying both sum constraints imply $AX=X$?",
+      "answer": "*Solution.* Each row and column of the matrix in §12 sums to $0.75+0.25=1$. Its first output is $0.75\\cdot2+0.25\\cdot6=3$; its second is $0.25\\cdot2+0.75\\cdot6=5$. Thus $AX=(3,5)^\\top\\ne X$.\n\nNonnegative entries and unit row sums make each output a convex combination, bounded between 2 and 6. The output range can shrink: here it is 3 to 5. Unit column sums additionally preserve the sum across streams: $3+5=2+6$. Neither property preserves each stream separately. After a finite number of Sinkhorn–Knopp iterations, check both sum residuals before treating these properties as exact.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

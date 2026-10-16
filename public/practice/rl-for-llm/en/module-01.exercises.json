@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-01",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "Agent, environment, state, action, and reward",
+      "prompt": "Consider two episodes.\n\n- In a corridor, an agent occupies a cell, chooses left or right, and receives $+1$ for reaching the right terminal.\n- A language model sees a prompt and the generated prefix, selects the next token, and a verifier scores the completed response.\n\nMatch each object to the concept.\n\n| Object | Concept |\n|---|---|\n| A. A cell index or the pair “prompt + prefix” | 1. Policy |\n| B. A rule for choosing a direction or a next-token distribution | 2. Environment |\n| C. One concrete move or one concrete token | 3. State |\n| D. Corridor dynamics, or external tools and generation constraints | 4. Reward |\n| E. $+1$ for a terminal, or the final response score | 5. Action |\n\nWrite the answer as `A-?, B-?, C-?, D-?, E-?`.",
+      "answer": "**Answer:** `A-3, B-1, C-5, D-2, E-4`.\n\n- A **state** describes the current situation: a cell, or a prompt plus prefix.\n- A **policy** specifies the choice rule: a direction rule or a token distribution.\n- An **action** is one choice that was actually taken.\n- The **environment** determines transitions and external consequences.\n- A **reward** is scalar feedback after a transition or episode.\n\nThe key boundary is between a policy and an action: a distribution is not the same object as one sample from it.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "A policy is not the selected action",
+      "prompt": "Choose the **single** most accurate statement.\n\n\n1. $\\pi_\\theta(a\\mid s)$ is the action already selected, while $a$ is the probability of that action.\n\n2. $\\pi_\\theta(\\cdot\\mid s)$ is a distribution over actions, $a$ is one selection from it, and reward evaluates a consequence.\n\n3. Policy and reward are two names for the same scalar function.\n\n4. A stochastic policy must assign equal probability to every action.",
+      "answer": "**Answer: 2.**\n\n$\\pi_\\theta(\\cdot\\mid s)$ denotes the full probability distribution over available actions. A concrete $a$ is selected from that distribution. Reward then evaluates a consequence; it is neither the action nor its probability.\n\nOption 4 is false because stochastic does not mean uniform. A policy may assign probabilities $0.9$ and $0.1$ to two actions.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "The exact sense in which an LLM is a policy",
+      "prompt": "For the token-level abstraction, match notation to meaning.\n\n| Notation | Meaning |\n|---|---|\n| A. $s_t$ | 1. Transformer weights |\n| B. $a_t$ | 2. Prompt plus the generated prefix |\n| C. $\\pi_\\theta(\\cdot\\mid s_t)$ | 3. The next selected token |\n| D. $\\theta$ | 4. The full next-token probability distribution |\n\nWrite the answer as `A-?, B-?, C-?, D-?`.\n\nThen explain in one sentence why this exact correspondence does **not** imply that every pretrained LLM was trained with RL.",
+      "answer": "**Answer:** `A-2, B-3, C-4, D-1`.\n\nIn the token-level formulation,\n\n$$\ns_t=(x,y_{<t}),\n\\qquad\na_t=y_t,\n\\qquad\n\\pi_\\theta(\\cdot\\mid s_t)=\\operatorname{softmax}(z_\\theta(s_t)).\n$$\n\nThis is an exact correspondence at the level of the mathematical action-selection model. It does not determine how the weights $\\theta$ were obtained: next-token pretraining, supervised learning, and RL can all produce a model that defines a token distribution.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Reward and return",
+      "prompt": "Choose **two** correct statements. Here, **return** is the accumulated discounted sum of future rewards.\n\n\n1. Reward $r_{t+1}$ belongs to one transition, while $G_t$ aggregates future rewards from time $t$ onward.\n\n2. Return is always equal to the final reward of an episode.\n\n3. When $\\gamma=0$, return $G_t$ includes only the immediate reward $r_{t+1}$.\n\n4. When $\\gamma=1$, every finite episode has the same return.",
+      "answer": "**Answers: 1 and 3.**\n\nReward $r_{t+1}$ is local to one transition. Return\n\n$$\nG_t=r_{t+1}+\\gamma r_{t+2}+\\gamma^2r_{t+3}+\\cdots\n$$\n\naggregates future rewards. When $\\gamma=0$, only the immediate term $r_{t+1}$ remains.\n\nOption 2 is true only in special tasks with a single nonzero terminal reward and $\\gamma=1$. Option 4 is false: when $\\gamma=1$, return is the ordinary sum of rewards, and different episodes can have different sums.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "What creates the feedback loop in online RL",
+      "prompt": "Choose the **single** most accurate statement.\n\n\n1. RL does not use gradient descent.\n\n2. RL never uses demonstrations or labeled data.\n\n3. During online collection, the policy affects the distribution of the next experience, while reward usually does not reveal the outcomes of all actions that were not selected.\n\n4. Every scalar loss is a reward, so every optimization problem is RL.",
+      "answer": "**Answer: 3.**\n\nDuring online collection, the current policy participates in creating the next dataset. After an update, action frequencies, visited states, and observed outcomes change. Reward normally reports the result of the selected action or trajectory, not a full set of counterfactual outcomes for every alternative.\n\nThe other options are false: RL can use gradient descent and demonstrations, and scalar-valued loss alone does not create a decision-making problem.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Separate stages of an LLM pipeline",
+      "prompt": "The four names below are:\n\n- **supervised fine-tuning** (SFT), learning from demonstrations;\n- **direct preference optimization** (DPO);\n- **reinforcement learning from human feedback** (RLHF), implemented here with **proximal policy optimization** (PPO); below, PPO-RLHF;\n- **Best-of-N** selection.\n\nMatch each operation to its description.\n\n| Operation | Description |\n|---|---|\n| A. SFT | 1. Generate candidates, select the best one, and leave parameters unchanged |\n| B. DPO on fixed pairs | 2. Score fresh rollouts with a reward model, then update the policy and critic |\n| C. PPO-RLHF | 3. Maximize demonstration likelihood |\n| D. Best-of-N | 4. Optimize a pairwise loss relative to a reference policy |\n\nWrite the answer as `A-?, B-?, C-?, D-?`.",
+      "answer": "**Answer:** `A-3, B-4, C-2, D-1`.\n\n- **Supervised fine-tuning** (SFT) maximizes demonstration likelihood.\n- **Direct preference optimization** (DPO) uses fixed pairs and a pairwise loss relative to a reference policy.\n- **Reinforcement learning from human feedback** (RLHF), implemented here with **proximal policy optimization** (PPO), collects rollouts and updates the policy; a typical PPO-RLHF system also uses a reward model and critic.\n- **Best-of-N** selects a candidate at inference time and does not by itself change parameters.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Choose the abstraction level",
+      "prompt": "For each task, select the most natural **primary** model.\n\n\n1. One prompt, one complete response, and one terminal reward-model score; the derivation does not inspect token-level credit assignment.\n\n2. The derivation needs $\\log\\pi_\\theta(y\\mid x)=\\sum_t\\log\\pi_\\theta(y_t\\mid x,y_{<t})$ and token-level Kullback–Leibler divergence.\n\n3. An agent calls a browser, the website state is only partly observed, and calls have different durations.\n\nOptions:\n\n- contextual bandit;\n- finite token-level **Markov decision process** (MDP);\n- agentic **partially observable Markov decision process** (POMDP) or **semi-Markov decision process** (semi-MDP).",
+      "answer": "1. **Contextual bandit.** The complete response is collapsed into one action followed by one terminal reward.\n\n2. **Finite token-level Markov decision process** (MDP). The state is the full prefix and the action is the next token.\n\n3. **Partially observable Markov decision process** (POMDP) or **semi-Markov decision process** (semi-MDP). External state is hidden and macro-actions can have unequal duration.\n\nNo abstraction is permanently “the true one.” The appropriate choice depends on which mechanism must be explicit in a particular derivation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Why DPO is not simply classical offline RL",
+      "prompt": "Choose **two** correct statements.\n\n\n1. DPO uses fixed preference pairs and is therefore offline in the ordinary engineering sense.\n\n2. DPO necessarily trains a value function through Bellman backups.\n\n3. A typical DPO problem does not contain transition tuples and extrapolation error in the same form as classical offline RL.\n\n4. DPO is performed only at inference time and does not update parameters.",
+      "answer": "**Answers: 1 and 3.**\n\nDPO uses fixed data, so *offline* is appropriate as an engineering description of data access. A typical DPO problem, however, is not built from transitions $(s,a,r,s')$, does not perform Bellman backups, and does not reproduce the classical value-extrapolation problem in the same form as offline RL.\n\nA concise accurate description is: DPO is direct offline preference optimization derived from a Kullback–Leibler-regularized human-feedback formulation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A9",
+      "title": "What near/on-policy means for proximal policy optimization",
+      "prompt": "Choose the **single** most accurate description of **proximal policy optimization** (PPO).\n\n\n1. Every sample is used exactly once.\n\n2. A policy snapshot generates a batch, which may then be reused for several minibatch epochs while a surrogate objective uses clipped probability ratios without a hard bound on the actual ratios; acceptable policy lag is part of the protocol.\n\n3. Data may be arbitrarily stale because clipping completely removes off-policy bias.\n\n4. On-policy means only that no replay buffer exists.",
+      "answer": "**Answer: 2.**\n\nIn PPO, a snapshot $\\pi_{\\text{old}}$ usually generates the rollouts. One batch may then be processed for several minibatch epochs. The ratio\n\n$$\nr_t(\\theta)=\n\\frac{\\pi_\\theta(a_t\\mid s_t)}{\\pi_{\\text{old}}(a_t\\mid s_t)}\n$$\n\nenters a clipped surrogate objective. Clipping removes the incentive for some further ratio changes but does not enforce a hard bound on actual ratios or KL. This is a near/on-policy protocol, not a promise that every sample is used once. Clipping reduces the risk of an excessively large step, but it does not turn arbitrarily stale data into strictly on-policy data.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A10",
+      "title": "Verifiable rewards and group-relative optimization: regime versus algorithm",
+      "prompt": "The two terms are:\n\n- **reinforcement learning with verifiable rewards** (RLVR);\n- **group relative policy optimization** (GRPO).\n\nChoose the **single** correct statement.\n\n\n1. RLVR is a particular clipping formula, while GRPO is a dataset type.\n\n2. RLVR describes a regime in which reward can be checked automatically; GRPO is an algorithm family for updating the policy and may use that reward.\n\n3. By definition, GRPO has no baseline.\n\n4. Every RLVR experiment must use canonical GRPO.",
+      "answer": "**Answer: 2.**\n\n**Reinforcement learning with verifiable rewards** (RLVR) describes the source of feedback: correctness can be checked by code, tests, an exact-answer rule, or another automatic procedure.\n\n**Group relative policy optimization** (GRPO) describes a way to form relative advantages from a group of rollouts and update the policy. GRPO is often used in RLVR, but the terms are not identical: one reward regime allows multiple algorithms, and GRPO can consume other scalar feedback.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A11",
+      "title": "Find the component with no policy training",
+      "prompt": "A system generates 32 responses from a frozen LLM, scores them with a rule-based verifier, and returns the best one. What operation is this?\n\n\n1. PPO\n\n2. GRPO\n\n3. Best-of-N / inference-time selection\n\n4. Offline RL\n\nIn one additional sentence, explain what must change for a **training** loop to appear.",
+      "answer": "**Answer: 3 — Best-of-N / inference-time selection.**\n\nThe model parameters are frozen, so the system performs candidate search and selection rather than policy training. A training loop appears when the scores or selected responses are used to change $\\theta$, for example through a supervised update, preference optimization, or a policy-gradient update on collected rollouts.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A12",
+      "title": "Two boundaries: temperature softmax and Kullback–Leibler divergence",
+      "prompt": "Choose **two** correct statements.\n\n\n1. For a fixed finite logit vector and pure softmax, entropy is non-decreasing in temperature $T$.\n\n2. This automatically proves entropy monotonicity for every combination of top-$p$, top-$k$, penalties, and hidden transformations in an **application programming interface** (API).\n\n3. **Kullback–Leibler divergence** (KL) can limit drift from a reference policy, but it does not itself validate the reward model or proxy objective.\n\n4. Small KL divergence guarantees high true reward.",
+      "answer": "**Answers: 1 and 3.**\n\nFor a pure temperature policy with fixed logits,\n\n$$\n\\pi_i(T)\\propto e^{z_i/T},\n\\qquad\n\\frac{dH}{dT}=\n\\frac{\\operatorname{Var}_{\\pi_T}(z)}{T^3}\\ge 0.\n$$\n\nThis statement does not automatically extend to a complete decoding pipeline with top-$p$, top-$k$, penalties, or hidden transformations.\n\n**Kullback–Leibler divergence** (KL) measures distributional change relative to a reference policy. It can constrain drift, but it does not prove that the reward model measures the intended property or that a proxy objective matches the true objective.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Return",
+      "prompt": "For rewards $[1,0,0,10]$ and $\\gamma=0.9$, compute $G_0$.",
+      "answer": "$$\n\\begin{aligned}\nG_0\n&=1+0.9\\cdot0+0.9^2\\cdot0+0.9^3\\cdot10\\\\\n&=1+7.29\\\\\n&=8.29.\n\\end{aligned}\n$$\n\nA backward-recursion check gives\n\n$$\nG_3=10,\n\\quad G_2=9,\n\\quad G_1=8.1,\n\\quad G_0=8.29.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Where the parameter enters the trajectory distribution",
+      "prompt": "For a finite MDP,\n\n$$\np_\\theta(\\tau)\n=\n\\rho_0(s_0)\n\\prod_{t=0}^{T-1}\n\\pi_\\theta(a_t\\mid s_t)\nP(s_{t+1}\\mid s_t,a_t)\nP_R(r_{t+1}\\mid s_t,a_t,s_{t+1}).\n$$\n\nIdentify which factor depends on $\\theta$ in a standard model-free formulation, explain why an update changes the distribution of subsequently collected trajectories, and state what is assumed about $P$ and $P_R$.",
+      "answer": "In a standard model-free formulation, the factors that depend on $\\theta$ are\n\n$$\n\\pi_\\theta(a_t\\mid s_t).\n$$\n\nThe initial distribution $\\rho_0$, environment dynamics $P$, and reward rule $P_R$ are treated as fixed with respect to the policy parameters. Updating $\\theta$ changes action probabilities, which changes subsequent transitions, visited states, and therefore the entire distribution $p_\\theta(\\tau)$. If the environment or reward model is updated at the same time, its parameters must be written separately; that is a broader nonstationary system.\n\nFor an LLM, the same statement means that an updated model generates a different response distribution; in an agentic system, different actions can also lead to different external states.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "Exact corridor baseline",
+      "prompt": "For the symmetric corridor in the main text:\n\n- start at $s=2$;\n- terminal states are $0$ and $4$;\n- the random policy chooses left or right with probability $1/2$;\n- reward is $1$ only upon reaching $4$;\n- the cutoff is 20 actions.\n\nWhat is the exact value of $V_{20}^{\\pi}(2)$? Give a fraction or a decimal.",
+      "answer": "Over two steps from the center, four equally likely outcomes exist:\n\n- `left, left` — absorption at 0;\n- `right, right` — absorption at 4;\n- `left, right` and `right, left` — return to 2.\n\nThe probability of surviving one two-step block is $1/2$. Avoiding both terminals for 20 actions requires surviving ten blocks:\n\n$$\nP(\\text{timeout})=\n\\left(\\frac12\\right)^{10}\n=\n\\frac1{1024}.\n$$\n\nBy symmetry, the probabilities of terminating on the left and right are equal. Hence\n\n$$\nV_{20}^{\\pi}(2)\n=\n\\frac{1-P(\\text{timeout})}{2}\n=\n\\frac{1-1/1024}{2}\n=\n\\frac{1023}{2048}\n=\n0.49951171875.\n$$\n\nThe value $0.5$ belongs to the version without a time limit. It is useful intuition but not the exact baseline for the executed protocol.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "Probability of a complete response",
+      "prompt": "Suppose a completed three-token response has conditional probabilities\n\n$$\n0.5,\\qquad 0.2,\\qquad 0.1.\n$$\n\n\n1. Compute $\\pi_\\theta(y\\mid x)$.\n\n2. Compute the natural logarithm of the response probability.\n\n3. Show that it equals the sum of the three token log-probabilities.\n\n4. In one sentence, explain why one final reward creates a credit-assignment problem across these tokens.",
+      "answer": "The autoregressive probability of the complete response is the product of the conditional probabilities:\n\n$$\n\\pi_\\theta(y\\mid x)\n=0.5\\cdot0.2\\cdot0.1\n=0.01.\n$$\n\nIts natural logarithm is\n\n$$\n\\ln0.01\n\\approx -4.605170.\n$$\n\nSeparately,\n\n$$\n\\ln0.5+\\ln0.2+\\ln0.1\n\\approx\n-0.693147-1.609438-2.302585\n=\n-4.605170.\n$$\n\nTherefore,\n\n$$\n\\log\\pi_\\theta(y\\mid x)\n=\n\\sum_t\\log\\pi_\\theta(y_t\\mid x,y_{<t}).\n$$\n\nOne final reward evaluates the whole response but does not identify which of the three token choices was useful or harmful. That is the credit-assignment problem.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Discounted return",
+      "prompt": "Implement:\n\n```python\ndef discounted_return(rewards: list[float], gamma: float) -> float:\n    \"\"\"Return G_0 for a non-empty finite reward sequence.\"\"\"\n    ...\n```\n\nRequirements:\n\n- $0\\le\\gamma\\le1$;\n- `rewards` is a non-empty, finite, one-dimensional sequence;\n- use the backward recurrence $G_t=r_{t+1}+\\gamma G_{t+1}$;\n- invalid input must raise `ValueError`.\n\nOpen checks:\n\n```python\nassert abs(discounted_return([1, 0, 0, 10], 0.9) - 8.29) < 1e-12\nassert discounted_return([1, 1, 1], 1.0) == 3.0\nassert discounted_return([5, 100], 0.0) == 5.0\n```\n\nHidden checks include negative rewards, a one-element sequence, length 1000, `nan`, an empty list, and $\\gamma$ outside $[0,1]$.",
+      "answer": "```python\nfrom __future__ import annotations\n\nimport math\nimport numpy as np\n\n\ndef discounted_return(rewards: list[float], gamma: float) -> float:\n    values = np.asarray(rewards, dtype=np.float64)\n    if values.ndim != 1 or values.size == 0:\n        raise ValueError(\"rewards must be a non-empty 1D sequence\")\n    if not np.isfinite(values).all():\n        raise ValueError(\"rewards must be finite\")\n    if not math.isfinite(gamma) or not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must lie in [0, 1]\")\n\n    result = 0.0\n    for reward in values[::-1]:\n        result = float(reward) + gamma * result\n    return float(result)\n```\n\nThe backward recurrence avoids explicitly computing powers and makes one pass: $O(T)$ time and $O(1)$ additional memory.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Numerically stable temperature softmax",
+      "prompt": "Implement:\n\n```python\ndef softmax_with_temperature(\n    logits: np.ndarray,\n    temperature: float,\n) -> np.ndarray:\n    ...\n```\n\nRequirements:\n\n- input is a non-empty, finite, one-dimensional array;\n- `temperature` is finite and strictly positive;\n- computation remains stable for logits around 1000;\n- output is finite, non-negative, and sums to 1;\n- adding one constant to every logit leaves the answer unchanged.\n\nOpen checks:\n\n```python\np = softmax_with_temperature(np.array([2.0, 1.0, 0.0]), 1.0)\nassert np.isfinite(p).all()\nassert abs(float(p.sum()) - 1.0) < 1e-14\n\nq = softmax_with_temperature(np.array([1002.0, 1001.0, 1000.0]), 1.0)\nassert np.allclose(p, q, atol=2e-14, rtol=0)\n```",
+      "answer": "```python\nimport math\nimport numpy as np\n\n\ndef softmax_with_temperature(\n    logits: np.ndarray,\n    temperature: float,\n) -> np.ndarray:\n    z = np.asarray(logits, dtype=np.float64)\n    if z.ndim != 1 or z.size == 0:\n        raise ValueError(\"logits must be a non-empty 1D array\")\n    if not np.isfinite(z).all():\n        raise ValueError(\"logits must be finite\")\n    if not math.isfinite(temperature) or temperature <= 0.0:\n        raise ValueError(\"temperature must be finite and positive\")\n\n    scaled = z / temperature\n    scaled -= scaled.max()\n    weights = np.exp(scaled)\n    return weights / weights.sum()\n```\n\nSubtracting the maximum uses softmax shift invariance and prevents overflow. The common multiplicative factor cancels between numerator and denominator, so probabilities are unchanged.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Policy entropy and the temperature curve",
+      "prompt": "Implement:\n\n```python\ndef categorical_entropy(probabilities: np.ndarray) -> float:\n    ...\n\n\ndef policy_entropy(logits: np.ndarray, temperature: float) -> float:\n    ...\n```\n\nRequirements:\n\n- entropy is measured in nats;\n- zero probabilities use the convention $0\\ln0=0$;\n- negative probabilities and sums different from 1 are rejected;\n- for `logits=[2,1,0,-1]`, values from the main-text grid are reproduced within $10^{-6}$;\n- on `np.geomspace(0.1, 10, 100)`, entropy is non-decreasing up to numerical tolerance $10^{-12}$.\n\nOptional output: save `temperature_entropy_student.png` and state in the caption that monotonicity applies to pure softmax.\n\nOpen checks:\n\n```python\np = softmax_with_temperature(np.array([2.0, 1.0, 0.0]), 1.0)\nassert abs(categorical_entropy(p) - 0.8323956) < 1e-6\nassert abs(categorical_entropy([0.25, 0.25, 0.25, 0.25]) - np.log(4)) < 1e-12\nassert abs(categorical_entropy([1.0, 0.0, 0.0])) < 1e-12\n```",
+      "answer": "```python\nimport math\nimport numpy as np\n\ndef softmax_with_temperature(logits: np.ndarray, temperature: float) -> np.ndarray:\n    z = np.asarray(logits, dtype=np.float64)\n    if z.ndim != 1 or z.size == 0 or not np.isfinite(z).all():\n        raise ValueError(\"logits must be a non-empty finite 1D array\")\n    if not math.isfinite(temperature) or temperature <= 0.0:\n        raise ValueError(\"temperature must be finite and positive\")\n    scaled = z / temperature\n    shifted = scaled - np.max(scaled)\n    weights = np.exp(shifted)\n    return weights / weights.sum()\n\n\ndef categorical_entropy(probabilities: np.ndarray) -> float:\n    p = np.asarray(probabilities, dtype=np.float64)\n    if p.ndim != 1 or p.size == 0 or not np.isfinite(p).all():\n        raise ValueError(\"probabilities must be a non-empty finite 1D array\")\n    if np.any(p < 0.0):\n        raise ValueError(\"probabilities must be non-negative\")\n    if not math.isclose(float(p.sum()), 1.0, rel_tol=1e-10, abs_tol=1e-12):\n        raise ValueError(\"probabilities must sum to 1\")\n\n    positive = p > 0.0\n    return float(-np.sum(p[positive] * np.log(p[positive])))\n\n\ndef policy_entropy(logits: np.ndarray, temperature: float) -> float:\n    return categorical_entropy(softmax_with_temperature(logits, temperature))\n```\n\nTo reproduce the table:\n\n```python\nlogits = np.array([2.0, 1.0, 0.0, -1.0])\nfor temperature in [0.25, 0.5, 1.0, 2.0, 4.0, 10.0]:\n    print(temperature, f\"{policy_entropy(logits, temperature):.6f}\")\n```\n\nThe output is `0.093113, 0.455429, 0.947537, 1.245050, 1.348243, 1.380071`.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "Monte Carlo evaluation of the corridor",
+      "prompt": "Implement:\n\n```python\ndef run_corridor_episode(\n    rng: np.random.Generator,\n    *,\n    max_steps: int = 20,\n) -> float:\n    ...\n\n\ndef estimate_corridor_value(\n    n_episodes: int,\n    *,\n    seed: int = 7,\n    max_steps: int = 20,\n) -> float:\n    ...\n```\n\nProtocol:\n\n- states `0,1,2,3,4`, starting at `2`;\n- action `0` means left, action `1` means right;\n- `rng.integers(0, 2)` selects the action;\n- terminal `0` returns `0.0`, terminal `4` returns `1.0`;\n- timeout returns `0.0`;\n- create exactly one `np.random.default_rng(seed)` for the whole experiment.\n\nOpen checks:\n\n```python\nassert abs(estimate_corridor_value(1000, seed=7, max_steps=20) - 0.494) < 1e-15\n\nestimate = estimate_corridor_value(20_000, seed=23, max_steps=20)\nassert abs(estimate - 0.49951171875) < 0.02\n```\n\nExplain why comparison with `0.5` is useful intuition, while the exact baseline for this run is `1023/2048`.",
+      "answer": "```python\nimport numpy as np\n\n\ndef run_corridor_episode(\n    rng: np.random.Generator,\n    *,\n    max_steps: int = 20,\n) -> float:\n    if not isinstance(max_steps, int) or isinstance(max_steps, bool) or max_steps <= 0:\n        raise ValueError(\"max_steps must be a positive integer\")\n\n    state = 2\n    for _ in range(max_steps):\n        action = int(rng.integers(0, 2))\n        state += -1 if action == 0 else 1\n        if state == 0:\n            return 0.0\n        if state == 4:\n            return 1.0\n    return 0.0\n\n\ndef estimate_corridor_value(\n    n_episodes: int,\n    *,\n    seed: int = 7,\n    max_steps: int = 20,\n) -> float:\n    if not isinstance(n_episodes, int) or isinstance(n_episodes, bool) or n_episodes <= 0:\n        raise ValueError(\"n_episodes must be a positive integer\")\n\n    rng = np.random.default_rng(seed)\n    returns = [run_corridor_episode(rng, max_steps=max_steps) for _ in range(n_episodes)]\n    return float(np.mean(returns))\n```\n\nVerified values:\n\n```text\nN=1000,  seed=7,  max_steps=20 -> 0.494\nN=20000, seed=23, max_steps=20 -> 0.4933\nexact finite-horizon value       -> 0.49951171875\n```\n\nWithout a step limit, corridor symmetry gives probability `0.5` for the right terminal. With a 20-step limit, some trajectories reach neither boundary and receive reward `0.0`. To survive each pair of steps, the process must return from state `1` or `3` to state `2`, which happens with probability `1/2`. The probability of remaining nonterminal through ten such pairs is therefore $2^{-10}=1/1024$. Symmetry splits the remaining probability equally between the left and right terminals, so the exact probability of the right terminal is\n\n$$\n\\frac{1-2^{-10}}{2}=\\frac{1023}{2048}=0.49951171875.\n$$\n\nA random estimate need not match the exact value in every run. It should behave according to Bernoulli variance, with typical error decreasing approximately as $1/\\sqrt{N}$.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

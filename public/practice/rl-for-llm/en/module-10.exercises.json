@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-10",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "Four compute budgets",
+      "prompt": "A system generates one answer for easy prompts and eight for hard prompts. Each answer may contain up to 2,000 tokens, and the two best prefixes receive additional branching.\n\nAssign each design element to parallel, sequential, search-based, or adaptive compute. Explain why “eight attempts” does not specify total cost.",
+      "answer": "- **Adaptive:** easy prompts receive one candidate and difficult prompts receive eight.\n- **Parallel:** eight candidates are generated for a difficult prompt.\n- **Sequential:** each candidate may use up to 2,000 tokens.\n- **Search:** the two most promising prefixes are expanded further.\n\n“Eight attempts” describes only one width parameter. It does not report candidate length, evaluator calls, expanded nodes, batching, latency, or monetary cost. A reproducible comparison should at least record generated tokens, generator passes, verifier calls, latency, and cost.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "Coverage and deployed accuracy",
+      "prompt": "A prompt set has pass@32 equal to 0.98, while the answer selected from 32 candidates is correct only 61% of the time.\n\nWhat does this say about the generator and ranker? Why is 0.98 not system accuracy?",
+      "answer": "`pass@32 = 0.98` says that at least one correct candidate is present in 98% of 32-candidate sets under the stated generator and correctness test. An output accuracy of 0.61 says that the ranker often fails to select the available correct candidate.\n\nThe generator has high coverage at this budget, while selection is a major bottleneck. The useful follow-up is conditional selection accuracy on sets that contain a correct candidate, together with comparisons against exact verification, voting, and simpler ranking rules. Calling 0.98 “system accuracy” would be wrong because the user receives one selected output, not the entire set.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Repeated attempts and conditional independence",
+      "prompt": "The formula $1-(1-p)^N$ predicts a large coverage gain, but twenty samples repeat nearly the same wrong template.\n\nDoes this observation alone establish a failure of conditional independence? Give alternative explanations and name two diversity diagnostics that should accompany pass@N.",
+      "answer": "No. Independent samples from a low-entropy distribution can repeat the same error. A small prompt-specific success probability, an inaccurate estimate of p, or pooling prompts with different p can also explain the discrepancy. Reused prefixes or search branches are possible dependence mechanisms, but must be established from the sampling protocol. Compare empirical coverage across repeated groups with the per-prompt iid prediction and its uncertainty.\n\nUseful diagnostics include the number of unique canonical answers, pairwise semantic similarity, answer-cluster entropy, the mass of the largest cluster, and the gap between the empirical pass@N curve and the iid prediction from pass@1. No single diversity metric is sufficient because paraphrases can preserve the same error.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "When self-consistency hurts",
+      "prompt": "The correct canonical answer has probability 0.32. One systematic error has probability 0.44, and the remaining mass is spread over rare answers.\n\nWhat happens to voting as sample count grows? Can pass@N still approach one?",
+      "answer": "The wrong answer with probability 0.44 is the unique mode. As the number of iid samples grows, empirical frequencies converge to their probabilities, so plurality voting selects the systematic error with probability tending to one. Voting accuracy therefore tends to zero.\n\nAt the same time,\n\n$$\n1-(1-0.32)^N\\to1,\n$$\n\nso pass@N for the correct answer tends to one. Candidate coverage and aggregation quality are different objects.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "Scope of the binary-verifier limit",
+      "prompt": "In the teaching model, the system samples uniformly among candidates accepted by a binary verifier, so large-$N$ accuracy approaches verifier precision.\n\nWhy does this limit not apply to a continuous score followed by an argmax?",
+      "answer": "The teaching protocol has binary acceptance and uniform sampling among accepted candidates. With many samples, the probability of no accepted candidate vanishes, so success approaches the fraction of correct candidates among accepted ones.\n\nA continuous scorer followed by an argmax is an extreme-value problem. Its behavior depends on the joint tails of true quality and score error. Increasing $N$ can select increasingly positive evaluator errors. The binary-uniform limit does not apply.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Proxy up, quality down",
+      "prompt": "Increasing BoN from 32 to 512 raises reward-model score but lowers independent human evaluation.\n\nGive two plausible explanations and three protocol changes that help distinguish real improvement from proxy overoptimization.",
+      "answer": "Possible explanations include proxy overoptimization, distribution shift in the winners, length/style shortcuts, and sampling noise in the independent evaluation.\n\nA better protocol uses a held-out prompt set and independent evaluator, plots proxy and target curves on the same $N$ grid with uncertainty, audits length and style, performs blinded human review, defines stopping by the independent metric, and refreshes evaluator data with candidates from the new policy or search distribution.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "What a PRM label estimates",
+      "prompt": "For each prefix, ten continuations from the current policy are sampled and their final success fraction becomes the label. The continuation policy is later changed.\n\nIs the old label a timeless “true state value”? What did it estimate, and why can it become stale?",
+      "answer": "The label estimates success under a particular continuation policy, decoding rule, horizon, and verifier:\n\n$$\n\\widehat V(s)=\\frac1M\\sum_{j=1}^{M}\\mathbf 1\\{\\text{continuation }j\\text{ succeeds}\\}.\n$$\n\nIt is not an eternal property of the prefix. Once the continuation policy changes, the distribution of futures and therefore the value can change. Store the policy version, decoding parameters, sample count, verifier, and labeling date.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "Complex search versus a simple baseline",
+      "prompt": "PRM-guided MCTS improves pass@1 but uses four times more tokens and twenty times more evaluator calls than repeated sampling. What comparisons are required before claiming that MCTS is better?",
+      "answer": "Compare at equal generated-token budgets, generator passes, evaluator calls, latency or monetary cost, and context limits. Report pass@1, coverage, selected-answer quality, failures, tokens, latency, and cost. Strong baselines include repeated sampling, BoN, self-consistency, and sequential revision. “MCTS is better” is undefined without a resource constraint and target metric.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "pass@N by hand",
+      "prompt": "A single attempt succeeds with probability $p=0.35$, and attempts are conditionally independent.\n\n\n1. Compute pass@6.\n\n2. Compute the gain of the sixth attempt over five attempts.\n\n3. State what these numbers do not imply without a selector.",
+      "answer": "$$\n\\operatorname{pass@}6=1-0.65^6=0.924581109375.\n$$\n\nThe sixth sample adds\n\n$$\n0.35\\cdot0.65^5=0.040610171875.\n$$\n\nThese are coverage values. They do not specify the probability that a selector returns the successful candidate.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Finite-sample pass@k",
+      "prompt": "A prompt has $n=100$ generated candidates, of which $c=7$ pass an exact verifier. Compute\n\n$$\n1-\\frac{\\binom{n-c}{k}}{\\binom{n}{k}}\n$$\n\nfor $k=10$. Report four decimal places.",
+      "answer": "$$\n1-\\frac{\\binom{93}{10}}{\\binom{100}{10}}\n\\approx0.5332595857,\n$$\n\nhence\n\n$$\n\\boxed{0.5333}.\n$$\n\nThe estimator corresponds to selecting ten elements without replacement from the already generated set of one hundred.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "A binary verifier with two fallback protocols",
+      "prompt": "A candidate is correct with probability $p=0.25$. The verifier has TPR $\\alpha=0.8$ and FPR $\\beta=0.05$. If any candidate is accepted, one accepted candidate is selected uniformly.\n\nFor $N=6$, compute:\n\n\n1. the acceptance probability $q$;\n\n2. correctness among accepted candidates $\\rho_{\\mathrm{acc}}$;\n\n3. correctness among rejected candidates $\\rho_{\\mathrm{rej}}$;\n\n4. final success when an empty accepted set falls back to the **same rejected pool**;\n\n5. final success when it instead draws a **fresh unverified** candidate;\n\n6. the limit as $N\\to\\infty$.\n\nExplain why the two fallback rules cannot share the same term.",
+      "answer": "The acceptance probability is\n\n$$\nq=p\\alpha+(1-p)\\beta\n=0.25\\cdot0.8+0.75\\cdot0.05\n=0.2375.\n$$\n\nCorrectness among accepted candidates is\n\n$$\n\\rho_{\\mathrm{acc}}\n=\\frac{p\\alpha}{q}\n=\\frac{0.2}{0.2375}\n\\approx0.8421053.\n$$\n\nCorrectness conditional on rejection is\n\n$$\n\\rho_{\\mathrm{rej}}\n=\\frac{p(1-\\alpha)}{1-q}\n=\\frac{0.05}{0.7625}\n\\approx0.0655738.\n$$\n\nThe no-accept probability is\n\n$$\nP_0=(1-q)^6=0.7625^6\\approx0.1965346.\n$$\n\nFallback to the rejected pool gives\n\n$$\nS_6^{\\mathrm{rej}}\n=(1-P_0)\\rho_{\\mathrm{acc}}+P_0\\rho_{\\mathrm{rej}}\n\\approx0.6894899.\n$$\n\nA fresh unverified fallback gives\n\n$$\nS_6^{\\mathrm{fresh}}\n=(1-P_0)\\rho_{\\mathrm{acc}}+P_0p\n\\approx0.7257361.\n$$\n\nFor $q>0$, both converge to\n\n$$\n\\boxed{S_\\infty=\\rho_{\\mathrm{acc}}\\approx0.8421053}.\n$$\n\nObserving rejection changes the conditional correctness probability. The term $p$ is valid for a fresh independent draw, not for a candidate already known to have been rejected.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "Voting limits",
+      "prompt": "Compare\n\n$$\np^{(1)}=(0.34,0.33,0.20,0.13)\n$$\n\nand\n\n$$\np^{(2)}=(0.30,0.40,0.30).\n$$\n\nThe first answer is correct in both cases. What is the limiting plurality-vote accuracy under independent sampling and no asymptotic tie?",
+      "answer": "For $(0.34,0.33,0.20,0.13)$, the correct answer is the unique mode, so plurality accuracy tends to one, although convergence is slow because the gap is only 0.01.\n\nFor $(0.30,0.40,0.30)$, a wrong answer is the unique mode, so plurality accuracy tends to zero.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "Four PRM aggregations",
+      "prompt": "Step scores are\n\n$$\n(0.9,0.7,0.8).\n$$\n\nCompute the minimum, mean, product, and last score. What happens to the product if ten additional steps with score 0.9 are appended?",
+      "answer": "For $(0.9,0.7,0.8)$:\n\n$$\n\\min=0.7,\\qquad \\text{mean}=0.8,\\qquad \\text{product}=0.504,\\qquad \\text{last}=0.8.\n$$\n\nAdding ten scores of 0.9 gives\n\n$$\n0.504\\cdot0.9^{10}\\approx0.1757339338.\n$$\n\nThe product introduces a length effect unless the scores have a compatible conditional-probability semantics.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Adaptive allocation and break-even",
+      "prompt": "Part 1. Three prompts have independent single-attempt success probabilities\n\n$$\np=(0.1,0.3,0.6).\n$$\n\nThe total budget is nine, with at least one attempt per prompt. Repeatedly assign the next sample to the largest $p_i(1-p_i)^{n_i}$. Find the allocation and mean coverage.\n\nPart 2. Additional training costs 5,000 units and reduces per-query cost from 0.08 to 0.03. Find the cost-only break-even query count.",
+      "answer": "Greedy marginal allocation from the initial $(1,1,1)$ yields\n\n$$\n(n_1,n_2,n_3)=(2,4,3).\n$$\n\nThe mean coverage is\n\n$$\n\\frac{(1-0.9^2)+(1-0.7^4)+(1-0.4^3)}{3}\n=0.6286333333.\n$$\n\nFor costs,\n\n$$\n5000+0.03Q=0.08Q,\n$$\n\nso\n\n$$\nQ=100000.\n$$\n\nThis is a monetary break-even calculation only.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "pass@N curves",
+      "prompt": "Implement numerically stable `pass_at_n` and `aggregate_pass_curve`. Handle $p=0$, $p=1$, empty input, and invalid probabilities.\n\n```python\nfrom __future__ import annotations\n\nfrom collections.abc import Iterable, Sequence\nimport numpy as np\n\n\ndef pass_at_n(p: float, n: int) -> float:\n    raise NotImplementedError\n\n\ndef aggregate_pass_curve(ps: Sequence[float], budgets: Iterable[int]) -> np.ndarray:\n    raise NotImplementedError\n```\n\nChecks:\n\n```python\nassert abs(pass_at_n(0.5, 4) - 0.9375) < 1e-12\ncurve = aggregate_pass_curve([0.5, 0.2, 0.05, 0.9], [1, 2, 4])\nassert np.allclose(curve, [0.4125, 0.549375, 0.6783234375])\n```",
+      "answer": "```python\nfrom __future__ import annotations\n\nfrom collections.abc import Iterable, Sequence\nimport math\nimport numpy as np\n\n\ndef pass_at_n(p: float, n: int) -> float:\n    p = float(p)\n    if not math.isfinite(p) or not 0.0 <= p <= 1.0:\n        raise ValueError(\"p must lie in [0, 1]\")\n    if isinstance(n, bool) or int(n) != n or int(n) <= 0:\n        raise ValueError(\"n must be a positive integer\")\n    n = int(n)\n    if p == 0.0:\n        return 0.0\n    if p == 1.0:\n        return 1.0\n    return float(-np.expm1(n * np.log1p(-p)))\n\n\ndef aggregate_pass_curve(ps: Sequence[float], budgets: Iterable[int]) -> np.ndarray:\n    probabilities = np.asarray(ps, dtype=np.float64)\n    budgets = list(budgets)\n    if probabilities.ndim != 1 or probabilities.size == 0:\n        raise ValueError(\"ps must be non-empty\")\n    if not np.isfinite(probabilities).all() or np.any((probabilities < 0) | (probabilities > 1)):\n        raise ValueError(\"every probability must lie in [0, 1]\")\n    if not budgets:\n        raise ValueError(\"budgets must be non-empty\")\n    return np.asarray(\n        [np.mean([pass_at_n(float(p), int(n)) for p in probabilities]) for n in budgets],\n        dtype=np.float64,\n    )\n```\n\n`log1p` and `expm1` improve numerical behavior for small $p$ and large $N$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Plurality voting with neutral tie-breaking",
+      "prompt": "Implement a plurality-voting simulation. If several categories tie for the largest count, select uniformly among the tied categories. `correct_index` identifies the correct category.\n\n```python\nfrom __future__ import annotations\nfrom collections.abc import Sequence\nimport numpy as np\n\n\ndef plurality_accuracy_mc(\n    probabilities: Sequence[float],\n    k: int,\n    *,\n    correct_index: int = 0,\n    trials: int = 100_000,\n    seed: int = 10,\n) -> float:\n    raise NotImplementedError\n```\n\nThe following checks allow Monte Carlo error:\n\n```python\nassert abs(plurality_accuracy_mc([0.4, 0.15, 0.15, 0.15, 0.15], 16) - 0.7942) < 0.01\nassert abs(plurality_accuracy_mc([0.3, 0.45, 0.25], 64) - 0.0771) < 0.01\n```\n\nWhy is plain `np.argmax` not a neutral tie rule?",
+      "answer": "```python\nfrom __future__ import annotations\nfrom collections.abc import Sequence\nimport numpy as np\n\n\ndef plurality_accuracy_mc(\n    probabilities: Sequence[float],\n    k: int,\n    *,\n    correct_index: int = 0,\n    trials: int = 100_000,\n    seed: int = 10,\n) -> float:\n    p = np.asarray(probabilities, dtype=np.float64)\n    if p.ndim != 1 or p.size < 2:\n        raise ValueError(\"at least two categories are required\")\n    if not np.isfinite(p).all() or np.any(p < 0) or not np.isclose(p.sum(), 1.0):\n        raise ValueError(\"probabilities must form a distribution\")\n    if isinstance(k, bool) or int(k) != k or int(k) <= 0:\n        raise ValueError(\"k must be a positive integer\")\n    if isinstance(trials, bool) or int(trials) != trials or int(trials) <= 0:\n        raise ValueError(\"trials must be a positive integer\")\n    if not 0 <= int(correct_index) < p.size:\n        raise ValueError(\"correct_index is out of range\")\n\n    rng = np.random.default_rng(seed)\n    counts = rng.multinomial(int(k), p, size=int(trials))\n    correct = 0\n    for row in counts:\n        winners = np.flatnonzero(row == row.max())\n        selected = int(rng.choice(winners))\n        correct += selected == int(correct_index)\n    return correct / int(trials)\n```\n\n`np.argmax` returns the first maximal index. If the correct answer is stored at index 0, every tie artificially raises accuracy; under another index it lowers accuracy. That is an array-layout artifact, not a voting protocol.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Finite N with an explicit fallback rule",
+      "prompt": "Implement the binary-verifier formula with `fallback_mode` equal to `\"rejected_pool\"` or `\"fresh_unverified\"`. Return $q$, correctness among accepted and rejected candidates, the no-accept probability, and final success.\n\n```python\nfrom __future__ import annotations\n\n\ndef binary_verifier_success(\n    n: int,\n    p_correct: float,\n    true_positive_rate: float,\n    false_positive_rate: float,\n    *,\n    fallback_mode: str = \"rejected_pool\",\n) -> dict[str, float]:\n    raise NotImplementedError\n```\n\nFor `(8, 0.2, 0.9, 0.1)`:\n\n```python\nr = binary_verifier_success(8, 0.2, 0.9, 0.1, fallback_mode=\"rejected_pool\")\nassert abs(r[\"q\"] - 0.26) < 1e-12\nassert abs(r[\"accepted_precision\"] - 9/13) < 1e-12\nassert abs(r[\"rejected_precision\"] - 0.02/0.74) < 1e-12\nassert abs(r[\"success\"] - 0.632486004809728) < 1e-12\n```\n\nProtected tests should cover boundary probabilities and an invalid mode.",
+      "answer": "```python\nfrom __future__ import annotations\nimport math\n\n\ndef binary_verifier_success(\n    n: int,\n    p_correct: float,\n    true_positive_rate: float,\n    false_positive_rate: float,\n    *,\n    fallback_mode: str = \"rejected_pool\",\n) -> dict[str, float]:\n    if isinstance(n, bool) or int(n) != n or int(n) <= 0:\n        raise ValueError(\"n must be a positive integer\")\n    values = [float(p_correct), float(true_positive_rate), float(false_positive_rate)]\n    if any((not math.isfinite(v)) or not 0.0 <= v <= 1.0 for v in values):\n        raise ValueError(\"probabilities must lie in [0, 1]\")\n    if fallback_mode not in {\"rejected_pool\", \"fresh_unverified\"}:\n        raise ValueError(\"unknown fallback mode\")\n\n    p, tpr, fpr = values\n    q = p * tpr + (1.0 - p) * fpr\n    accepted_precision = p if q == 0.0 else p * tpr / q\n    rejected_precision = p if q == 1.0 else p * (1.0 - tpr) / (1.0 - q)\n    no_accept = (1.0 - q) ** int(n)\n    fallback = rejected_precision if fallback_mode == \"rejected_pool\" else p\n    success = (1.0 - no_accept) * accepted_precision + no_accept * fallback\n    return {\n        \"q\": q,\n        \"accepted_precision\": accepted_precision,\n        \"rejected_precision\": rejected_precision,\n        \"no_accept\": no_accept,\n        \"fallback_success\": fallback,\n        \"success\": success,\n    }\n```\n\nWhen `q == 1`, the conditional distribution of rejected candidates is undefined, but the fallback event has zero probability. The returned convention cannot affect `success`.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "Process-score aggregation",
+      "prompt": "Implement `min`, `mean`, `product`, `last`, and `log_product`. Validate non-empty input and the range $[0,1]$.\n\n```python\nfrom __future__ import annotations\n\nfrom collections.abc import Sequence\n\n\ndef process_score(step_scores: Sequence[float], method: str) -> float:\n    raise NotImplementedError\n```\n\nFor `[0.95, 0.95, 0.30, 0.95]`, the product is `0.2572125`.\n\nOpen checks:\n\n```python\nassert abs(process_score([0.95, 0.95, 0.30, 0.95], \"mean\") - 0.7875) < 1e-12\nassert abs(process_score([0.95, 0.95, 0.30, 0.95], \"product\") - 0.2572125) < 1e-12\n```",
+      "answer": "```python\nfrom __future__ import annotations\n\nfrom collections.abc import Sequence\nimport numpy as np\n\n\ndef process_score(step_scores: Sequence[float], method: str) -> float:\n    values = np.asarray(step_scores, dtype=np.float64)\n    if values.ndim != 1 or values.size == 0:\n        raise ValueError(\"step_scores must be non-empty\")\n    if not np.isfinite(values).all() or np.any((values < 0) | (values > 1)):\n        raise ValueError(\"step scores must lie in [0, 1]\")\n    method = method.lower()\n    if method == \"min\":\n        return float(values.min())\n    if method == \"mean\":\n        return float(values.mean())\n    if method == \"product\":\n        return float(values.prod())\n    if method == \"last\":\n        return float(values[-1])\n    if method == \"log_product\":\n        if np.any(values == 0):\n            return float(\"-inf\")\n        return float(np.log(values).sum())\n    raise ValueError(\"unknown aggregation method\")\n```\n\nLog products avoid numerical underflow but do not make an unjustified probabilistic interpretation valid.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "Proxy overoptimization under BoN",
+      "prompt": "Reproduce\n\n$$\n\\text{proxy}=g+h,\n$$\n\n$$\n\\text{goal}=g-\\max(h-1,0)^2,\n$$\n\nwith independent standard-normal $g$ and $h$. For each budget, select the candidate with maximum proxy.\n\n```python\nfrom __future__ import annotations\n\nfrom collections.abc import Sequence\nimport numpy as np\n\n\ndef proxy_overoptimization_curve(\n    budgets: Sequence[int],\n    *,\n    trials: int = 10_000,\n    seed: int = 202_610,\n) -> tuple[np.ndarray, np.ndarray]:\n    raise NotImplementedError\n```\n\nPlot both curves on `[1,2,4,8,16,32,64,128,256,512]`. Compare the selected proxy score with the independent goal: locate the observed peak and check across several seeds whether larger budgets degrade the goal. Either nested prefixes of one shared candidate pool or a fresh independent pool for each budget is acceptable; document your choice. The exact peak depends on the finite sample and random-number layout and is not a grading condition.\n\nOpen checks:\n\n```python\nbudgets = [1, 2, 4, 8, 16, 32, 64]\nproxy, goal = proxy_overoptimization_curve(budgets, trials=2000, seed=1)\nassert proxy.shape == goal.shape == (len(budgets),)\nassert np.isfinite(proxy).all() and np.isfinite(goal).all()\nagain = proxy_overoptimization_curve(budgets, trials=2000, seed=1)\nassert np.array_equal(proxy, again[0]) and np.array_equal(goal, again[1])\nother = proxy_overoptimization_curve(budgets, trials=2000, seed=2)\nassert not np.array_equal(proxy, other[0])\nassert not np.array_equal(goal, other[1])\n```",
+      "answer": "```python\nfrom __future__ import annotations\n\nfrom collections.abc import Sequence\nimport numpy as np\n\n\ndef proxy_overoptimization_curve(\n    budgets: Sequence[int],\n    *,\n    trials: int = 10_000,\n    seed: int = 202_610,\n) -> tuple[np.ndarray, np.ndarray]:\n    budgets = np.asarray(budgets, dtype=np.int64)\n    if budgets.ndim != 1 or budgets.size == 0 or np.any(budgets <= 0):\n        raise ValueError(\"budgets must be positive integers\")\n    rng = np.random.default_rng(seed)\n    maximum = int(budgets.max())\n    useful = rng.normal(size=(trials, maximum))\n    spurious = rng.normal(size=(trials, maximum))\n    proxy = useful + spurious\n    goal = useful - np.maximum(spurious - 1.0, 0.0) ** 2\n    rows = np.arange(trials)\n    proxy_means, goal_means = [], []\n    for n in budgets:\n        selected = np.argmax(proxy[:, : int(n)], axis=1)\n        proxy_means.append(proxy[rows, selected].mean())\n        goal_means.append(goal[rows, selected].mean())\n    return np.asarray(proxy_means), np.asarray(goal_means)\n```\n\nThis reference uses a shared candidate pool, so the selected proxy maximum is nondecreasing as the prefix grows in every trial. With independent pools, monotonicity holds in expectation; individual sample means can fluctuate. Under this reference protocol (`trials=10000`, `seed=202610`, and the stated grid), the observed goal peaks at $N=32$; another valid sampling layout can have a different peak. The open checks cover shape, finiteness, reproducibility, and use of the seed. Also verify the goal formula and candidate selection on a few hand-calculated pools; these checks alone do not establish algorithmic correctness.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Greedy budget allocation",
+      "prompt": "Allocate each next sample to the largest marginal gain\n\n$$\np_i(1-p_i)^{n_i}.\n$$\n\n```python\nfrom __future__ import annotations\n\nfrom collections.abc import Sequence\nimport numpy as np\n\n\ndef allocate_budget_greedy(\n    ps: Sequence[float],\n    total_samples: int,\n    *,\n    minimum_per_prompt: int = 1,\n) -> np.ndarray:\n    raise NotImplementedError\n```\n\nCheck:\n\n```python\nallocation = allocate_budget_greedy([0.02, 0.08, 0.2, 0.5], 16)\nassert np.array_equal(allocation, [1, 5, 6, 4])\n```\n\nExplain why greedy optimality belongs to the stated independent concave curves, not to an arbitrary real LLM system.",
+      "answer": "```python\nfrom __future__ import annotations\n\nfrom collections.abc import Sequence\nimport numpy as np\n\n\ndef allocate_budget_greedy(\n    ps: Sequence[float],\n    total_samples: int,\n    *,\n    minimum_per_prompt: int = 1,\n) -> np.ndarray:\n    p = np.asarray(ps, dtype=np.float64)\n    if p.ndim != 1 or p.size == 0:\n        raise ValueError(\"ps must be non-empty\")\n    if not np.isfinite(p).all() or np.any((p < 0) | (p > 1)):\n        raise ValueError(\"probabilities must lie in [0, 1]\")\n    minimum = int(minimum_per_prompt)\n    if minimum < 0 or minimum != minimum_per_prompt:\n        raise ValueError(\"minimum_per_prompt must be a non-negative integer\")\n    if total_samples < minimum * p.size:\n        raise ValueError(\"budget is smaller than the required minimum\")\n    allocation = np.full(p.size, minimum, dtype=np.int64)\n    for _ in range(int(total_samples) - minimum * p.size):\n        gains = p * np.power(1.0 - p, allocation)\n        allocation[int(np.argmax(gains))] += 1\n    return allocation\n```\n\nThe greedy result is optimal for the stated independent curves with diminishing discrete marginal gains. Real LLM systems may violate every one of those assumptions.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

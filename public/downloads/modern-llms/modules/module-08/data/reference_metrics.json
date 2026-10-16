@@ -1,0 +1,261 @@
+{
+  "affine_scan": {
+    "chunk_size": 16,
+    "max_abs_difference": 8.881784197001252e-16,
+    "output_checksum": 2.5500288962870172,
+    "seed": 11,
+    "sequence_length": 53,
+    "state_width": 6
+  },
+  "decode_flops": {
+    "attention_core_flops": [
+      16777216,
+      536870912,
+      17179869184
+    ],
+    "inner_width": 8192,
+    "model_width": 4096,
+    "positions": [
+      1024,
+      32768,
+      1048576
+    ],
+    "ratios": [
+      25.6,
+      819.2,
+      26214.4
+    ],
+    "scope": "leading-order attention matmuls versus diagonal state update plus readout, with prepared coefficients; not end-to-end latency",
+    "ssm_core_flops": [
+      655360,
+      655360,
+      655360
+    ],
+    "state_width": 16
+  },
+  "delta": {
+    "additive_retrieval": [
+      4.0,
+      6.0
+    ],
+    "full_retrieval": [
+      3.0,
+      4.0
+    ],
+    "gated_half_retrieval": [
+      1.9000000000000001,
+      2.8
+    ],
+    "half_retrieval": [
+      2.0,
+      3.0
+    ]
+  },
+  "linear_attention": {
+    "chunk_size": 16,
+    "key_width": 8,
+    "max_abs_difference": 2.1316282072803006e-14,
+    "output_checksum": 111.6891373299517,
+    "seed": 19,
+    "sequence_length": 50,
+    "value_width": 6
+  },
+  "memory": {
+    "full_attention_256k_bytes": 34359738368,
+    "hybrid_256k": {
+      "attention_layers": 4,
+      "conv_bytes": 1835008,
+      "kv_bytes": 4294967296,
+      "recurrent_bytes": 9175040,
+      "ssm_bytes": 7340032,
+      "ssm_layers": 28,
+      "total_bytes": 4304142336
+    },
+    "kv_bytes_per_token_full_attention": 131072,
+    "mamba1": {
+      "conv_bytes": 2097152,
+      "crossover_first_integer_token": 80,
+      "crossover_tokens_exact": 80.0,
+      "first_strictly_larger_token": 81,
+      "ssm_bytes": 8388608,
+      "total_bytes": 10485760
+    },
+    "mamba2_like": {
+      "conv_bytes": 2162688,
+      "crossover_first_integer_token": 529,
+      "crossover_tokens_exact": 528.5,
+      "first_strictly_larger_token": 529,
+      "ssm_bytes": 67108864,
+      "total_bytes": 69271552
+    }
+  },
+  "recall": {
+    "expected_additive_mse": [
+      0.09375,
+      0.21875,
+      0.46875,
+      0.96875,
+      1.96875,
+      3.96875
+    ],
+    "key_width": 32,
+    "mse": [
+      0.13978625740853395,
+      0.21200348269044997,
+      0.5995392976261167,
+      0.9892555844637765,
+      1.8757385532834472,
+      4.141977097591836
+    ],
+    "paired_softmax_mse": [
+      3.7460446307862835e-10,
+      4.0983742994017256e-12,
+      9.826283934707642e-10,
+      1.7655760849531266e-09,
+      1.1566029996764256e-09,
+      1.0724543396718937e-08
+    ],
+    "seed": 7,
+    "softmax_inverse_temperature": 20.0,
+    "softmax_mse_at_128": 1.648958588765511e-08,
+    "softmax_seed": 107,
+    "stored_pairs": [
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "value_width": 32
+  },
+  "schema_version": 2,
+  "zoh": {
+    "approximate_outputs": [
+      0.2,
+      -1.9496785275591946,
+      1.0528816219675536
+    ],
+    "approximate_states": [
+      [
+        0.1,
+        0.1
+      ],
+      [
+        -0.9632120558828557,
+        -0.9864664716763387
+      ],
+      [
+        0.4157823563022096,
+        0.637099265665344
+      ]
+    ],
+    "continuous_a": [
+      -1.0,
+      -2.0
+    ],
+    "continuous_b": [
+      [
+        1.0
+      ],
+      [
+        1.0
+      ]
+    ],
+    "deltas": [
+      0.1,
+      1.0,
+      0.5
+    ],
+    "exact_input_matrices": [
+      [
+        [
+          0.09516258196404043
+        ],
+        [
+          0.09063462346100906
+        ]
+      ],
+      [
+        [
+          0.6321205588285577
+        ],
+        [
+          0.43233235838169365
+        ]
+      ],
+      [
+        [
+          0.39346934028736663
+        ],
+        [
+          0.31606027941427883
+        ]
+      ]
+    ],
+    "exact_outputs": [
+      0.1857972054250495,
+      -1.0171784972997493,
+      0.9023586277858214
+    ],
+    "exact_states": [
+      [
+        0.09516258196404043,
+        0.09063462346100906
+      ],
+      [
+        -0.5971122013551949,
+        -0.42006629594455425
+      ],
+      [
+        0.42477182316430406,
+        0.47758680462151737
+      ]
+    ],
+    "inputs": [
+      [
+        1.0
+      ],
+      [
+        -1.0
+      ],
+      [
+        2.0
+      ]
+    ],
+    "output_c": [
+      [
+        1.0,
+        1.0
+      ]
+    ],
+    "relative_input_error_first_mode": [
+      0.05083319447750502,
+      0.5819767068693265,
+      0.270747041268399
+    ],
+    "ten_percent_relative_error_root_a_minus_1": 0.1937475579949906,
+    "transitions": [
+      [
+        0.9048374180359595,
+        0.8187307530779818
+      ],
+      [
+        0.36787944117144233,
+        0.1353352832366127
+      ],
+      [
+        0.6065306597126334,
+        0.36787944117144233
+      ]
+    ],
+    "zero_mode_input_matrix": [
+      [
+        0.25
+      ],
+      [
+        0.22119921692859512
+      ]
+    ]
+  }
+}

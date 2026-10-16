@@ -1,0 +1,105 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-01",
+  "language": "ru",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Модуль 1 · Минимальная механика RL",
+      "format": "ipynb",
+      "filename": "module-01-rl-basics.ru.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-01-rl-basics.ru.ipynb",
+      "bytes": 23075,
+      "sha256": "3bdf141d78266776c3b073b7bab4b8ccff400df3f821faf156fa7c329d993a71",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Модуль 1 · Минимальная механика RL\n\nЭтот ноутбук — практический спутник Модуля 1. Он не пытается воспроизвести большой конвейер RLHF. Его задача проще и важнее: сделать исполняемыми первые объекты курса — политику как распределение, численно устойчивый softmax, энтропию, траекторию, накопленную награду и оценивание методом Монте-Карло.\n\n**Профиль:** A — CPU, NumPy, Matplotlib.  \n**Воспроизводимость:** фиксированные seed и детерминированные вспомогательные функции.  \n**Ожидаемое время:** менее одной минуты на обычном CPU.  \n**Связь с лекцией:** рисунки §1.4 строятся отдельным генератором модуля; здесь та же механика дана в редактируемой форме.\n\nНоутбук самодостаточен: знакомство с другими курсами серии полезно, но не требуется. В курсе **Modern LLMs** ту же идею распределения следующего токена можно увидеть внутри полного Transformer; здесь она рассматривается как политика RL."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 0. Подготовка среды\n\nВ Colab можно раскомментировать строку установки. В локальной среде с установленными `numpy` и `matplotlib` её следует пропустить."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "# При необходимости раскомментируйте установку в Colab.\n# %pip -q install numpy matplotlib\nfrom __future__ import annotations\n\nfrom dataclasses import dataclass\nfrom pathlib import Path\nfrom typing import Iterable\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nOUTPUT_DIR = Path(\"outputs/module-01/ru\")\nOUTPUT_DIR.mkdir(parents=True, exist_ok=True)\n\nnp.set_printoptions(precision=6, suppress=True)\nSEED = 7\nrng = np.random.default_rng(SEED)\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 1. Накопленная награда: сумма будущих наград\n\nДля конечной траектории используем\n\n$$G_0 = r_1 + \\gamma r_2 + \\gamma^2 r_3 + \\cdots.$$\n\nКод намеренно короткий, но проверяет входы. В RL ошибка индекса или незамеченный `nan` легко маскируется под «нестабильное обучение», хотя причина лежит в самой бухгалтерии траектории."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "def discounted_return(rewards: list[float], gamma: float = 1.0) -> float:\n    \"\"\"Вычислить G_0 обратной рекурсией для непустой конечной последовательности.\"\"\"\n    reward_array = np.asarray(rewards, dtype=float)\n    if reward_array.ndim != 1 or reward_array.size == 0:\n        raise ValueError(\"rewards must be a non-empty 1D sequence\")\n    if not np.isfinite(reward_array).all():\n        raise ValueError(\"rewards must be finite\")\n    if not np.isfinite(gamma) or not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must be finite and lie in [0, 1]\")\n    total = 0.0\n    for reward in reward_array[::-1]:\n        total = float(reward) + gamma * total\n    return float(total)\n\n\nassert discounted_return([0, 0, 1], gamma=1.0) == 1.0\nassert np.isclose(discounted_return([1, 1, 1], gamma=0.9), 1 + 0.9 + 0.81)\n\ndiscounted_return([0, 0, 0, 1], gamma=0.95)\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. Устойчивый softmax и энтропия\n\nДля LLM политика следующего токена задаётся распределением вероятностей. Softmax нужно считать в устойчивой форме: сначала вычесть максимум масштабированных логитов, затем экспоненцировать. Энтропия измеряет ширину распределения, но сама по себе не является мерой качества ответа."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "def softmax_with_temperature(logits: np.ndarray, temperature: float = 1.0) -> np.ndarray:\n    \"\"\"Численно устойчивый softmax(logits / temperature).\"\"\"\n    logits = np.asarray(logits, dtype=float)\n    if logits.ndim != 1 or logits.size == 0:\n        raise ValueError(\"logits должен быть непустым одномерным массивом\")\n    if not np.all(np.isfinite(logits)):\n        raise ValueError(\"все логиты должны быть конечными\")\n    if not np.isfinite(temperature) or temperature <= 0:\n        raise ValueError(\"temperature должна быть конечной и положительной\")\n    scaled = logits / float(temperature)\n    scaled = scaled - np.max(scaled)\n    weights = np.exp(scaled)\n    return weights / np.sum(weights)\n\n\ndef categorical_entropy(probs: np.ndarray) -> float:\n    \"\"\"Энтропия категориального распределения в натах.\"\"\"\n    probs = np.asarray(probs, dtype=float)\n    if probs.ndim != 1 or probs.size == 0:\n        raise ValueError(\"probs должен быть непустым одномерным массивом\")\n    if np.any(probs < 0) or not np.all(np.isfinite(probs)):\n        raise ValueError(\"вероятности должны быть конечными и неотрицательными\")\n    if not np.isclose(probs.sum(), 1.0, atol=1e-8):\n        raise ValueError(\"вероятности должны суммироваться в единицу\")\n    positive = probs > 0\n    return float(-np.sum(probs[positive] * np.log(probs[positive])))\n\n\nlogits = np.array([2.0, 1.0, 0.0, -1.0])\nfor temperature in [0.25, 0.5, 1.0, 2.0, 4.0]:\n    probs = softmax_with_temperature(logits, temperature)\n    print(f\"T={temperature:>4}: вероятности={probs}, H={categorical_entropy(probs):.4f}\")\n\n# Реализация без вычитания максимума переполнилась бы на этом примере.\np = softmax_with_temperature(np.array([1000.0, 999.0, 998.0]), temperature=1.0)\nassert np.all(np.isfinite(p)) and np.isclose(p.sum(), 1.0)\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Температурная кривая\n\nДля фиксированных конечных логитов, если не применять `top-k`, `top-p` и другие фильтры, энтропия softmax-политики не убывает с температурой. График ниже — не внешний benchmark, а численная проверка формулы на одном фиксированном векторе логитов."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "temperatures = np.geomspace(0.1, 12.0, 400)\nentropies = np.array([\n    categorical_entropy(softmax_with_temperature(logits, t))\n    for t in temperatures\n])\n\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nax.plot(temperatures, entropies, linewidth=2)\nax.axhline(np.log(len(logits)), linestyle=\"--\", linewidth=1.2,\n           label=\"максимальная энтропия ln K\")\nax.set_xscale(\"log\")\nax.set_xlabel(\"температура T\")\nax.set_ylabel(\"энтропия H(pi_T), наты\")\nax.set_title(\"Энтропия чистой softmax-политики при фиксированных логитах\")\nax.legend()\nfig.tight_layout()\nfig.savefig(OUTPUT_DIR / \"temperature_entropy.png\", dpi=160)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Среда-коридор\n\nТеперь построим маленькую среду. Она нужна не «ради игрушки»: в коридоре можно буквально увидеть состояние, действие, терминал, награду, траекторию и правило остановки. В следующих модулях вместо пяти клеток появятся токены, полные ответы, группы кандидатов и среды с инструментами, но бухгалтерия траектории останется той же."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "@dataclass(frozen=True)\nclass CorridorConfig:\n    n_states: int = 5\n    start: int = 2\n    left_terminal: int = 0\n    right_terminal: int = 4\n    max_steps: int = 20\n\n\ndef corridor_step(\n    state: int,\n    action: int,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> tuple[int, float, bool]:\n    \"\"\"Выполнить один переход в пяти-клеточном коридоре.\"\"\"\n    if action not in (0, 1):\n        raise ValueError(\"action должен быть 0 (влево) или 1 (вправо)\")\n    if state in (cfg.left_terminal, cfg.right_terminal):\n        return state, 0.0, True\n    next_state = state - 1 if action == 0 else state + 1\n    done = next_state in (cfg.left_terminal, cfg.right_terminal)\n    reward = 1.0 if next_state == cfg.right_terminal else 0.0\n    return next_state, reward, done\n\n\ndef random_policy(_: int, rng: np.random.Generator) -> int:\n    \"\"\"Равновероятно выбрать шаг влево или вправо.\"\"\"\n    return int(rng.integers(0, 2))\n\n\ndef run_episode(\n    rng: np.random.Generator,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> dict:\n    \"\"\"Собрать одну траекторию вместе с правилом остановки и накопленной наградой.\"\"\"\n    state = cfg.start\n    states = [state]\n    actions: list[int] = []\n    rewards: list[float] = []\n    done = False\n    for _ in range(cfg.max_steps):\n        action = random_policy(state, rng)\n        next_state, reward, done = corridor_step(state, action, cfg)\n        actions.append(action)\n        rewards.append(reward)\n        states.append(next_state)\n        state = next_state\n        if done:\n            break\n    return {\n        \"states\": states,\n        \"actions\": actions,\n        \"rewards\": rewards,\n        \"done\": done,\n        \"return\": discounted_return(rewards, gamma=1.0),\n    }\n\n\nfor i in range(5):\n    episode = run_episode(np.random.default_rng(SEED + i))\n    print(\n        f\"эпизод {i}: состояния={episode['states']}, \"\n        f\"действия={episode['actions']}, накопленная награда={episode['return']}\"\n    )\n"
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "def plot_corridor_episode(\n    episode: dict,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> None:\n    \"\"\"Показать клетки среды и первые переходы одной траектории.\"\"\"\n    fig, ax = plt.subplots(figsize=(8.8, 2.4))\n    ax.set_xlim(-0.5, cfg.n_states - 0.5)\n    ax.set_ylim(-0.35, 1.2)\n    ax.axis(\"off\")\n\n    for state in range(cfg.n_states):\n        if state == cfg.left_terminal:\n            face, edge, label = \"#F8E2D2\", \"#D55E00\", \"терминал\\n0\"\n        elif state == cfg.right_terminal:\n            face, edge, label = \"#FFF0C8\", \"#E69F00\", \"терминал\\n+1\"\n        elif state == cfg.start:\n            face, edge, label = \"#D9EDF8\", \"#0072B2\", \"старт\\n2\"\n        else:\n            face, edge, label = \"#E6F4EF\", \"#009E73\", str(state)\n        box = plt.Rectangle(\n            (state - 0.42, 0.22), 0.84, 0.52,\n            facecolor=face, edgecolor=edge, linewidth=2,\n        )\n        ax.add_patch(box)\n        ax.text(state, 0.48, label, ha=\"center\", va=\"center\", fontsize=11)\n\n    states = episode[\"states\"]\n    for t, (start, end) in enumerate(zip(states[:-1], states[1:])):\n        y = 0.96 + 0.04 * (t % 2)\n        ax.annotate(\n            \"\", xy=(end, y), xytext=(start, y),\n            arrowprops={\"arrowstyle\": \"->\", \"linewidth\": 1.6},\n        )\n    ax.set_title(\n        f\"пример эпизода: накопленная награда={episode['return']}, \"\n        f\"шагов={len(episode['actions'])}\"\n    )\n    fig.tight_layout()\n    fig.savefig(OUTPUT_DIR / \"corridor_episode.png\", dpi=160)\n    plt.show()\n\n\nplot_corridor_episode(run_episode(np.random.default_rng(SEED)))\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Точное значение и оценка Монте-Карло\n\nБез ограничения длины вероятность когда-нибудь дойти из центра до правого терминала равна $0.5$. Но код обрывает эпизод после `max_steps=20`, поэтому сравнивать эксперимент нужно с конечным протоколом:\n\n$$V_{20}^{\\pi}(2)=\\Pr(T_4\\le 20)=\\frac{1023}{2048}.$$\n\nМетод Монте-Карло оценивает это ожидание средним по независимым эпизодам. Отдельная оценка может оказаться выше или ниже точного значения; её шум убывает в масштабе $1/\\sqrt{N}$."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "def exact_corridor_value(max_steps: int = 20) -> float:\n    \"\"\"Точно вычислить вероятность достичь правого терминала за заданный горизонт.\"\"\"\n    if not isinstance(max_steps, int) or isinstance(max_steps, bool) or max_steps <= 0:\n        raise ValueError(\"max_steps должен быть положительным целым числом\")\n    values = np.zeros(5, dtype=float)\n    values[4] = 1.0\n    for _ in range(max_steps):\n        updated = values.copy()\n        for state in (1, 2, 3):\n            updated[state] = 0.5 * values[state - 1] + 0.5 * values[state + 1]\n        updated[0] = 0.0\n        updated[4] = 1.0\n        values = updated\n    return float(values[2])\n\n\ndef monte_carlo_value(\n    n_episodes: int,\n    seed: int = SEED,\n    cfg: CorridorConfig = CorridorConfig(),\n) -> tuple[float, np.ndarray]:\n    \"\"\"Оценить ценность средним накопленных наград по независимым эпизодам.\"\"\"\n    if not isinstance(n_episodes, int) or isinstance(n_episodes, bool) or n_episodes <= 0:\n        raise ValueError(\"n_episodes должен быть положительным целым числом\")\n    local_rng = np.random.default_rng(seed)\n    returns = np.array(\n        [run_episode(local_rng, cfg)[\"return\"] for _ in range(n_episodes)],\n        dtype=float,\n    )\n    return float(returns.mean()), returns\n\n\nestimate_1000, returns_1000 = monte_carlo_value(1000, seed=SEED)\nexact = exact_corridor_value(20)\nprint(f\"Оценка Монте-Карло при N=1000: {estimate_1000:.3f}\")\nprint(f\"Точная ценность при горизонте 20: {exact:.12f}\")\nprint(f\"Приближённая стандартная ошибка: {np.sqrt(exact * (1 - exact) / 1000):.4f}\")\n\n# The Monte Carlo estimate changes with SEED; test its domain, not one draw.\nassert np.isfinite(estimate_1000) and 0.0 <= estimate_1000 <= 1.0\nassert np.isclose(exact, 1023 / 2048)\n"
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "n = 5000\n_, returns = monte_carlo_value(n, seed=SEED)\nns = np.arange(1, n + 1)\nrunning = np.cumsum(returns) / ns\nexact = exact_corridor_value(20)\nstandard_error = np.sqrt(exact * (1 - exact) / ns)\n\nfig, ax = plt.subplots(figsize=(8.8, 4.8))\nax.fill_between(\n    ns,\n    exact - 2 * standard_error,\n    exact + 2 * standard_error,\n    alpha=0.35,\n    label=\"приближённый интервал ±2 стандартные ошибки\",\n)\nax.plot(ns, running, linewidth=1.5, label=\"текущая оценка Монте-Карло\")\nax.axhline(exact, linestyle=\"--\", linewidth=1.8,\n           label=\"точная ценность при горизонте 20\")\nax.set_xscale(\"log\")\nax.set_ylim(0.42, 0.58)\nax.set_xlabel(\"число эпизодов N\")\nax.set_ylabel(\"оценка ценности\")\nax.set_title(\"Оценивание случайной политики в коридоре методом Монте-Карло\")\nax.legend()\nfig.tight_layout()\nfig.savefig(OUTPUT_DIR / \"corridor_mc_convergence.png\", dpi=160)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 6. Ключевые выводы практикума\n\n- Политика — распределение вероятностей, а не одно выбранное действие.\n- Softmax следует считать численно устойчиво.\n- Энтропия описывает разброс вероятностей, но не заменяет оценку качества.\n- У траектории есть точная бухгалтерия: состояния, действия, награды, правило остановки и накопленная награда.\n- Оценка Монте-Карло случайна; сравнивать её нужно с точной версией протокола, которая действительно реализована.\n- Код и рисунки используют фиксированный `seed=7`; это обеспечивает воспроизводимость конкретного прогона, но не устраняет статистическую случайность самого метода.\n\nВ Модуле 2 коридор станет маленьким MDP с уравнениями Беллмана. В Модулях 6–9 те же идеи вернутся на уровне токеновых log-probabilities, KL, DPO, PPO, GRPO и RLVR."
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

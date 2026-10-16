@@ -1,0 +1,130 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-09",
+  "language": "ru",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Модуль 9. RLVR и GRPO: проверяемые награды, групповые оценки и устойчивость",
+      "format": "ipynb",
+      "filename": "module-09-rlvr-grpo.ru.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-09-rlvr-grpo.ru.ipynb",
+      "bytes": 21812,
+      "sha256": "e3b301a1b232cbf4851bb7c14fd4576f3573a217e4d0233461da04958d8b47a9",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Модуль 9. RLVR и GRPO: проверяемые награды, групповые оценки и устойчивость\n\nЭтот ноутбук соединяет формулы модуля с двумя уровнями практики. Основной маршрут полностью выполняется на CPU и заканчивается настоящим авторегрессионным RLVR-обновлением небольшой GRU-политики. Факультативная ветвь с Qwen3 и TRL сохранена как инженерный шаблон, но выключена и не использовалась для выпускных чисел.\n\nЦель практикума — не получить красивую единственную кривую награды, а научиться проверять весь контракт: верификатор, поведенческое распределение, роли политик, редукцию функции потерь, свежую генерацию, энтропию, покрытие и перенос."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 0. Воспроизводимая настройка\n\n`PROFILE=\"smoke\"` выполняет весь обязательный маршрут. `PROFILE=\"full\"` увеличивает бюджет CPU-эксперимента. Код автоматически находит корень распакованного курса."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nINFO_X = 'вероятность успеха одного ответа p'\nINFO_Y = 'вероятность информативной группы'\nFINITE_REWARD = 'ожидаемая награда'\nFINITE_ENTROPY = 'энтропия'\nFINITE_X = 'шаг точного обновления'\nBEFORE_TRAIN = 'до RL, train'\nAFTER_TRAIN = 'после RL, train'\nBEFORE_HELDOUT = 'до RL, held-out'\nAFTER_HELDOUT = 'после RL, held-out'\nHIST_ACCURACY = 'точность свежей генерации'\nHIST_ENTROPY = 'энтропия'\nHIST_INFO = 'доля информативных групп'\nHIST_X = 'обновление'\nRATIO_MIN = 'минимальное отношение'\nRATIO_MEAN = 'среднее отношение'\nRATIO_MAX = 'максимальное отношение'\nCOVERAGE_BEFORE = 'до RL'\nCOVERAGE_AFTER = 'после RL'\nCOVERAGE_Y = 'доля правильных ответов'\nREAL_MODEL_SKIPPED = 'Реальная ветвь выключена. Установите RUN_REAL_MODEL=True только в подготовленной GPU-среде.'\n\n\nfrom pathlib import Path\nimport sys\nimport json\nfrom dataclasses import asdict\n\nimport numpy as np\nimport pandas as pd\nimport matplotlib.pyplot as plt\nimport torch\nfrom IPython.display import display\n\n_candidates = [Path.cwd(), Path.cwd().parent, Path.cwd().parent.parent]\nROOT = next((p for p in _candidates if (p / \"modules\" / \"module-09\").exists()), None)\nif ROOT is None:\n    raise FileNotFoundError(\"Could not locate the RL for LLM repository root\")\nMODULE_DIR = ROOT / \"modules\" / \"module-09\"\nsys.path.insert(0, str(MODULE_DIR))\n\nfrom module_9_reference import (\n    categorical_entropy,\n    clip_activity,\n    clipped_surrogate_terms,\n    dapo_token_weights,\n    expected_draws_for_informative_groups,\n    flatten_token_weights,\n    group_relative_advantages,\n    informative_group_probability,\n    original_grpo_token_weights,\n    dr_grpo_token_weights,\n    pass_at_k_independent,\n    response_contributions,\n    synthetic_mode_training,\n    verify_numeric_answer,\n)\nfrom module_9_training import (\n    GRPOConfig,\n    arithmetic_prompts,\n    collect_rollouts,\n    run_toy_grpo_experiment,\n)\n\nPROFILE = \"smoke\"  # \"full\" uses a larger CPU budget\nRUN_REAL_MODEL = False\nSMOKE_MODE = True\nSEED = 9\nnp.random.seed(SEED)\ntorch.manual_seed(SEED)\nprint({\"root\": str(ROOT), \"profile\": PROFILE, \"real_model\": RUN_REAL_MODEL})"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 1. Проверяющая система до обучения\n\nПрежде чем оптимизировать политику, проверяем положительные, отрицательные и состязательные случаи. Здесь хорошо видна граница учебного числового парсера: он воспроизводим, но не является общим доказчиком математической эквивалентности."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "cases = [\n    (r\"Final: \\\\boxed{3/7}\", \"0.428571\", 1),\n    (\"The reference number 42 is mentioned, but the answer is 41\", \"42\", 0),\n    (r\"First \\\\boxed{2}, then corrected: \\\\boxed{3}\", \"3\", 1),\n    (\"No numerical answer\", \"5\", 0),\n    (\"1/0\", \"0\", 0),\n]\nrows = []\nfor text, reference, expected in cases:\n    observed = verify_numeric_answer(text, reference)\n    rows.append({\"text\": text, \"reference\": reference, \"observed\": observed, \"expected\": expected})\nverifier_table = pd.DataFrame(rows)\ndisplay(verifier_table)\nassert verifier_table[\"observed\"].tolist() == verifier_table[\"expected\"].tolist()"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. Когда группа действительно информативна\n\nДля бинарной награды группа даёт центрированный сигнал только при наличии и успеха, и неудачи. График показывает, почему увеличение $G$ помогает в средней полосе сложности, но не отменяет редкость успеха при $p\\approx0$ и редкость ошибки при $p\\approx1$."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "p_grid = np.linspace(0.001, 0.999, 400)\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nfor group_size in (2, 4, 8, 16):\n    values = [informative_group_probability(float(p), group_size) for p in p_grid]\n    ax.plot(p_grid, values, label=f\"G={group_size}\")\nax.set_xlabel(INFO_X)\nax.set_ylabel(INFO_Y)\nax.set_ylim(0, 1.02)\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()\n\nexamples = pd.DataFrame({\n    \"p\": [0.01, 0.10, 0.50, 0.90, 0.99],\n})\nexamples[\"P_info, G=8\"] = examples[\"p\"].map(lambda p: informative_group_probability(p, 8))\nexamples[\"draws for 100 informative prompts\"] = examples[\"p\"].map(\n    lambda p: expected_draws_for_informative_groups(100, p, 8)\n)\ndisplay(examples.round(4))"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Групповые преимущества и клиппирование\n\nСначала вычисляем центрирование и нормировку, затем применяем PPO-подобный клип. Важно видеть знак преимущества: верхняя и нижняя ветви работают несимметрично."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "rewards = np.array([1.0, 1.0, 0.0, 0.0])\nadvantages = group_relative_advantages(rewards, scale=True)\nraw_advantages = group_relative_advantages(rewards, scale=False)\nratios = np.array([1.35, 0.85, 1.10, 0.70])\nterms = clipped_surrogate_terms(ratios, advantages, eps_low=0.2, eps_high=0.2)\nactivity = clip_activity(ratios, advantages, eps_low=0.2, eps_high=0.2)\ndisplay(pd.DataFrame({\n    \"reward\": rewards,\n    \"centered\": raw_advantages,\n    \"standardized\": advantages,\n    \"ratio\": ratios,\n    \"surrogate\": terms,\n    \"clip_active\": activity,\n}))\nassert abs(float(advantages.sum())) < 1e-10"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Одинаковые токеновые члены, разные редукции\n\nИсходная GRPO, Dr. GRPO и DAPO по-разному делят вес между ответами и токенами. Таблица изолирует только геометрию знаменателя и не претендует на сравнение качества методов."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "reward_vector = np.array([1.0, 0.0, 1.0])\nlengths = [2, 5, 8]\nweights = {\n    \"original_grpo\": original_grpo_token_weights(reward_vector, lengths),\n    \"dr_grpo\": dr_grpo_token_weights(reward_vector, lengths, fixed_length=8),\n    \"dapo\": dapo_token_weights(reward_vector, lengths),\n}\nsummary = []\nfor name, token_weights in weights.items():\n    contributions = response_contributions(token_weights)\n    summary.append({\n        \"reduction\": name,\n        \"response_1\": contributions[0],\n        \"response_2\": contributions[1],\n        \"response_3\": contributions[2],\n        \"absolute_token_weight_sum\": np.abs(flatten_token_weights(token_weights)).sum(),\n    })\ndisplay(pd.DataFrame(summary).round(4))"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Точная конечная политика: награда может расти вместе с сужением\n\nВ маленьком категориальном примере градиент вычисляется точно. Он показывает простую возможность: pass@1 и ожидаемая награда растут, а энтропия и запас альтернатив уменьшаются."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "finite_rows = []\nfor step in range(61):\n    state = synthetic_mode_training(beta_entropy=0.0, learning_rate=0.18, steps=step)\n    finite_rows.append({\n        \"step\": step,\n        \"expected_reward\": state[\"expected_reward\"],\n        \"entropy\": categorical_entropy(state[\"probabilities\"]),\n        \"pass_at_4\": pass_at_k_independent(state[\"successful_mass\"], 4),\n    })\nfinite_table = pd.DataFrame(finite_rows)\ndisplay(finite_table.iloc[[0, 9, 19, 39, 60]].round(4))\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nax.plot(finite_table[\"step\"], finite_table[\"expected_reward\"], label=FINITE_REWARD)\nax.plot(finite_table[\"step\"], finite_table[\"entropy\"], label=FINITE_ENTROPY)\nax.plot(finite_table[\"step\"], finite_table[\"pass_at_4\"], label=\"pass@4\")\nax.set_xlabel(FINITE_X)\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 6. Полный авторегрессионный RLVR/GRPO-контур\n\nТеперь запускается небольшая каузальная языковая модель. Старая политика собирает группы, проверяющая система возвращает разложенную награду, текущая политика обновляется, а база остаётся отдельным KL-якорем. Результат оценивается новой генерацией на обучающих и удержанных запросах."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "experiment = run_toy_grpo_experiment(profile=PROFILE, seed=SEED, loss_type=\"dapo\")\nmetrics = pd.DataFrame({\n    BEFORE_TRAIN: experiment[\"before_train\"],\n    AFTER_TRAIN: experiment[\"after_train\"],\n    BEFORE_HELDOUT: experiment[\"before_heldout\"],\n    AFTER_HELDOUT: experiment[\"after_heldout\"],\n}).T\nselected_columns = [\"accuracy\", \"mean_reward\", \"mean_length\", \"entropy\", \"teacher_forced_kl\", \"pass_at_4\"]\ndisplay(metrics[selected_columns].round(4))\nprint(asdict(experiment[\"config\"]))"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 7. Что происходило внутри обновлений\n\nНи одна кривая не достаточна сама по себе. Сопоставляем точность, энтропию, долю информативных групп и распределение отношений вероятностей."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "history = pd.DataFrame(experiment[\"history\"])\ndisplay(history.round(4))\nfig, ax = plt.subplots(figsize=(9.2, 5.0))\nax.plot(history[\"update\"], history[\"eval_accuracy\"], marker=\"o\", label=HIST_ACCURACY)\nax.plot(history[\"update\"], history[\"eval_entropy\"], marker=\"o\", label=HIST_ENTROPY)\nax.plot(history[\"update\"], history[\"informative_fraction\"], marker=\"o\", label=HIST_INFO)\nax.set_xlabel(HIST_X)\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()\n\nfig, ax = plt.subplots(figsize=(9.2, 4.8))\nax.plot(history[\"update\"], history[\"ratio_min\"], label=RATIO_MIN)\nax.plot(history[\"update\"], history[\"ratio_mean\"], label=RATIO_MEAN)\nax.plot(history[\"update\"], history[\"ratio_max\"], label=RATIO_MAX)\nax.axhline(1.0, linewidth=1.0, linestyle=\"--\")\nax.set_xlabel(HIST_X)\nax.grid(True, alpha=0.25)\nax.legend()\nplt.show()"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 8. Средняя точность скрывает покрытие\n\nПосле RL средняя обучающая точность выше, но успех сосредоточился на нескольких запросах. Затем извлекаем одну свежую группу и проверяем, что журнал содержит ответ, награду, причину проверки, длину и версию генератора."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "coverage = pd.DataFrame({\n    \"before\": experiment[\"before_train_by_prompt\"],\n    \"after\": experiment[\"after_train_by_prompt\"],\n}).sort_index()\ndisplay(coverage)\nfig, ax = plt.subplots(figsize=(10.5, 4.8))\nx = np.arange(len(coverage))\nwidth = 0.38\nax.bar(x - width / 2, coverage[\"before\"], width, label=COVERAGE_BEFORE)\nax.bar(x + width / 2, coverage[\"after\"], width, label=COVERAGE_AFTER)\nax.set_xticks(x, coverage.index, rotation=45, ha=\"right\")\nax.set_ylabel(COVERAGE_Y)\nax.set_ylim(0, 1.05)\nax.legend()\nfig.tight_layout()\nplt.show()\n\ninspect_config = GRPOConfig(group_size=4, prompt_batch=2, updates=1, update_epochs=1, loss_type=\"dapo\")\ngenerator = torch.Generator().manual_seed(SEED + 777)\ngroups, discarded = collect_rollouts(\n    experiment[\"policy\"], experiment[\"vocab\"], experiment[\"prompts\"], inspect_config,\n    generator=generator, generator_version=\"notebook-inspection\",\n)\nfirst_group = groups[0]\ndisplay(pd.DataFrame([{\n    \"prompt_id\": row.prompt_id,\n    \"response\": \" \".join(row.response_tokens),\n    \"reward\": row.reward,\n    \"accuracy\": row.accuracy,\n    \"status\": row.verifier_status,\n    \"length\": len(row.response_tokens),\n    \"terminated\": row.terminated,\n} for row in first_group]))\nprint({\"discarded_fraction\": discarded, \"generator_version\": first_group[0].generator_version})"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 9. Необязательная ветвь Qwen3-0.6B + TRL\n\nВетка фиксирует снимок зависимостей и явно задаёт неоднозначные параметры `GRPOConfig`. Она требует сети и подходящего ускорителя. Выпускной контур её не запускал, поэтому ноутбук не заявляет измерений времени, памяти или качества для Qwen3.\n\n```text\ntrl==1.9.2\ntransformers==5.14.1\ndatasets==5.0.1\npeft==0.20.0\naccelerate==1.14.0\nbitsandbytes==0.50.0\n```"
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "SOFTWARE_SNAPSHOT = {\n    \"trl\": \"1.9.2\",\n    \"transformers\": \"5.14.1\",\n    \"datasets\": \"5.0.1\",\n    \"peft\": \"0.20.0\",\n    \"accelerate\": \"1.14.0\",\n    \"bitsandbytes\": \"0.50.0\",\n    \"model\": \"Qwen/Qwen3-0.6B\",\n}\nprint(SOFTWARE_SNAPSHOT)\n\nif RUN_REAL_MODEL:\n    from datasets import load_dataset\n    from peft import LoraConfig\n    from trl import GRPOConfig as TRLGRPOConfig, GRPOTrainer\n    from trl.rewards import accuracy_reward\n\n    train_dataset = load_dataset(\"trl-lib/DeepMath-103K\", split=\"train[:128]\")\n    training_args = TRLGRPOConfig(\n        output_dir=\"module-09-qwen3-grpo\",\n        learning_rate=5e-6,\n        per_device_train_batch_size=2,\n        gradient_accumulation_steps=4,\n        max_completion_length=192,\n        num_generations=4,\n        num_iterations=1,\n        loss_type=\"dapo\",\n        scale_rewards=\"group\",\n        importance_sampling_level=\"token\",\n        epsilon=0.2,\n        epsilon_high=0.28,\n        beta=0.0,\n        mask_truncated_completions=True,\n        max_steps=2 if SMOKE_MODE else 80,\n        logging_steps=1,\n        report_to=\"none\",\n    )\n    peft_config = LoraConfig(r=8, lora_alpha=16, lora_dropout=0.05, task_type=\"CAUSAL_LM\")\n    trainer = GRPOTrainer(\n        model=SOFTWARE_SNAPSHOT[\"model\"],\n        reward_funcs=accuracy_reward,\n        args=training_args,\n        train_dataset=train_dataset,\n        peft_config=peft_config,\n    )\n    trainer.train()\nelse:\n    print(REAL_MODEL_SKIPPED)"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

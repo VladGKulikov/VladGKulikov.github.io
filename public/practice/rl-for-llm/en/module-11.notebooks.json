@@ -1,0 +1,130 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-11",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Module 11 Lab: Agent Environments, Turn-Level Credit, and Long Trajectories",
+      "format": "ipynb",
+      "filename": "module-11-agentic-rl.en.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-11-agentic-rl.en.ipynb",
+      "bytes": 24360,
+      "sha256": "1a56995d20f8d8d24a74bdee1bd32912e0aae67451d59e86c90eca11966d1038",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Module 11 Lab: Agent Environments, Turn-Level Credit, and Long Trajectories\n\nThis notebook connects the lecture’s accounting identities to a small but complete partially observed environment. The agent must inspect a room, retain a one-turn clue, choose a key, open the correct door, and finish the task. The computational route uses a recurrent actor–critic, behavior log-probabilities, policy versions, true terminals, and collector truncations.\n\nThe results belong only to the course’s synthetic environment. They are not an LLM benchmark or a claim about the universal performance of a contemporary Agentic RL method."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Reproducible profiles\n\nThe `smoke` profile runs on CPU and exercises the full pipeline. The `full` profile increases the number of seeds, updates, and evaluation episodes. The optional open-model branch is disabled by default."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nimport os\nimport random\nimport sys\nfrom pathlib import Path\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\nimport torch\nfrom IPython.display import display\n\n\ndef find_repo_root(start: Path) -> Path:\n    \"\"\"Locate the course root independently of the notebook working directory.\"\"\"\n    start = start.resolve()\n    for candidate in (start, *start.parents):\n        if (candidate / \"modules/module-11/module_11_reference.py\").is_file():\n            return candidate\n    raise FileNotFoundError(\"Could not locate the RL for LLM repository root\")\n\n\nROOT = find_repo_root(Path.cwd())\nMODULE_DIR = ROOT / \"modules/module-11\"\nif str(MODULE_DIR) not in sys.path:\n    sys.path.insert(0, str(MODULE_DIR))\n\nfrom module_11_reference import (\n    collector_target,\n    discounted_return,\n    discounted_td_sum,\n    informative_group_probability,\n    macro_action_logprob,\n    potential_shaping,\n    semantic_action_probability,\n    semi_markov_return,\n    shaped_return_identity,\n    td_residuals,\n    trajectory_mask_report,\n    turn_probability_ratio,\n    validate_rollout_record,\n)\nfrom module_11_agentic_training import (\n    ACTIONS,\n    KeyDoorAgentEnv,\n    RecurrentActorCritic,\n    collect_episode,\n    evaluate_policy,\n    rollout_contract_from_transitions,\n    train_actor_critic,\n)\n\nPROFILE = os.getenv(\"RL_LLM_PROFILE\", \"smoke\").strip().lower()\nRUN_REAL_MODEL = False\nif PROFILE not in {\"smoke\", \"full\", \"real-model\"}:\n    raise ValueError(\"RL_LLM_PROFILE must be smoke, full, or real-model\")\n\nif PROFILE == \"full\":\n    SEEDS = (1, 2, 3, 4, 5)\n    UPDATES = 30\n    EPISODES_PER_UPDATE = 48\n    EVALUATION_EPISODES = 100\nelse:\n    SEEDS = (1, 2, 3)\n    UPDATES = 8\n    EPISODES_PER_UPDATE = 16\n    EVALUATION_EPISODES = 20\n\nnp.random.seed(0)\nrandom.seed(0)\ntorch.manual_seed(0)\ntorch.set_num_threads(1)\n\nprint(f\"Course root: {ROOT}\")\nprint(f\"Profile: {PROFILE}; seeds={SEEDS}; updates={UPDATES}; episodes/update={EPISODES_PER_UPDATE}\")\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. The environment is a contract, not scenery\n\nThe environment keeps the target door color hidden. The `clue_red` or `clue_blue` observation appears only after `inspect`; the recurrent policy must then retain that clue. The base reward is issued only after successful completion, while the potential term provides a controlled learning signal."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "env = KeyDoorAgentEnv(seed=0)\nobservation, reset_info = env.reset(target=\"red\")\nrows = []\nfor action in (\"inspect\", \"pickup_red\", \"open_red\", \"finish\"):\n    next_observation, base_reward, terminated, truncated, info = env.step(action, gamma=0.99)\n    rows.append({\n        \"observation\": observation,\n        \"action\": action,\n        \"next observation\": next_observation,\n        \"base reward\": base_reward,\n        \"potential before\": info[\"potential_before\"],\n        \"potential after\": info[\"potential_after\"],\n        \"shaped reward\": info[\"shaped_reward\"],\n        \"terminated\": terminated,\n        \"truncated\": truncated,\n    })\n    observation = next_observation\n\ntrace_df = pd.DataFrame(rows)\ndisplay(trace_df)\nprint(\"Sum of base rewards:\", trace_df[\"base reward\"].sum())\nprint(\"Discounted return of shaped rewards:\", discounted_return(trace_df[\"shaped reward\"], 0.99))\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. A policy mask must follow token provenance\n\nTool outputs can be much longer than model turns. Averaging a policy loss over the entire transcript lets environment tokens dilute the policy gradient. In a simple chat template, the `assistant` role is a useful approximation; once a controller inserts or rewrites content, explicit provenance is required."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "segments = [\n    (\"system\", 44),\n    (\"user\", 63),\n    (\"assistant\", 18),\n    (\"tool\", 162),\n    (\"assistant\", 21),\n]\nreport = trajectory_mask_report(segments)\nmask_table = pd.DataFrame(segments, columns=[\"role\", \"token count\"])\nmask_table[\"included in policy loss\"] = mask_table[\"role\"].eq(\"assistant\")\ndisplay(mask_table)\nprint(report)\nprint(\n    f\"If the loss is incorrectly averaged over all {report.total_tokens} tokens, \"\n    f\"the signal from {report.policy_tokens} policy tokens is diluted by a factor of {report.dilution_factor:.2f}.\"\n)\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. True termination versus collector truncation\n\nThe visible end of a rollout buffer can represent two different mathematical situations. A true terminal has no continuation under the task definition. An external collector cut leaves the process unfinished, so the critic target normally retains a bootstrap value from the final observation."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "gamma = 0.9\nboundary_table = pd.DataFrame([\n    {\n        \"case\": \"true terminal\",\n        \"reward\": 0.0,\n        \"V(next)\": 0.7,\n        \"target\": collector_target(0.0, 0.7, gamma=gamma, terminated=True),\n    },\n    {\n        \"case\": \"external collector truncation\",\n        \"reward\": 0.0,\n        \"V(next)\": 0.7,\n        \"target\": collector_target(0.0, 0.7, gamma=gamma, terminated=False),\n    },\n])\ndisplay(boundary_table)\n\ncollector_env = KeyDoorAgentEnv(task_horizon=6, collector_limit=2, seed=0)\ncollector_env.reset(target=\"blue\")\ncollector_env.step(\"inspect\")\nfinal_observation, reward, terminated, truncated, info = collector_env.step(\"pickup_blue\")\nprint({\n    \"observation\": final_observation,\n    \"reward\": reward,\n    \"terminated\": terminated,\n    \"truncated\": truncated,\n    \"stop_reason\": info[\"stop_reason\"],\n})\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. From tokens to turns and semi-Markov actions\n\nThe log-probability of the sampled action string is the sum of its token log-probabilities. Several strings may nevertheless parse to one semantic action. Tool operations also have different durations, which produces semi-Markov discounting when elapsed time is part of the objective."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "behavior_logprobs = [-0.42, -0.31, -0.27]\ncurrent_logprobs = [-0.35, -0.26, -0.24]\n\nstring_probabilities = {\n    '{\"name\":\"inspect\"}': 0.25,\n    '{\"name\": \"inspect\"}': 0.15,\n    '{\"name\":\"pickup_red\"}': 0.60,\n}\nparser = {\n    '{\"name\":\"inspect\"}': \"inspect\",\n    '{\"name\": \"inspect\"}': \"inspect\",\n    '{\"name\":\"pickup_red\"}': \"pickup_red\",\n}\n\nmacro_table = pd.DataFrame([\n    {\"quantity\": \"log P(generated string)\", \"value\": macro_action_logprob(behavior_logprobs)},\n    {\"quantity\": \"turn-level current/behavior ratio\", \"value\": turn_probability_ratio(current_logprobs, behavior_logprobs)},\n    {\"quantity\": \"P(semantic action inspect)\", \"value\": semantic_action_probability(string_probabilities, parser, \"inspect\")},\n    {\"quantity\": \"semi-MDP return with durations 2 and 3\", \"value\": semi_markov_return([0.0, 1.0], [2, 3], 0.9)},\n])\ndisplay(macro_table)\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. TD telescoping and potential-based shaping\n\nTurn-level TD residuals must remain consistent with the trajectory return and the final boundary value. Potential-based shaping redistributes reward across transitions; under the stated assumptions, it changes the return only by a predictable boundary term."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "gamma = 0.9\nrewards = [0.0, 0.0, 1.0]\nvalues = [0.4, 0.5, 0.6, 0.0]\ndeltas = td_residuals(rewards, values, gamma, terminated=[False, False, True])\nleft = discounted_td_sum(deltas, gamma)\nright = discounted_return(rewards, gamma) - values[0] + gamma**len(rewards) * values[-1]\n\npotentials = [0.0, 0.25, 0.55, 0.0]\nshaped = potential_shaping(rewards, potentials, gamma)\noriginal_return, shaped_return, predicted_return = shaped_return_identity(rewards, potentials, gamma)\n\ndisplay(pd.DataFrame({\n    \"t\": range(len(rewards)),\n    \"r_t\": rewards,\n    \"V_t\": values[:-1],\n    \"V_next\": values[1:],\n    \"delta_t\": deltas,\n    \"Phi_t\": potentials[:-1],\n    \"Phi_next\": potentials[1:],\n    \"r_shaped\": shaped,\n}))\nprint(f\"Telescoping check: {left:.6f} = {right:.6f}\")\nprint(f\"Original return={original_return:.6f}; shaped return={shaped_return:.6f}; identity={predicted_return:.6f}\")\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. When a relative group contains any signal\n\nWith a binary verifier, a group supports relative normalization only when it contains both successes and failures. Extremely easy and extremely hard prompts create homogeneous groups; a larger learning rate cannot manufacture missing variation."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "probabilities = np.linspace(0.001, 0.999, 500)\ngroup_sizes = (4, 8, 16)\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nfor group_size in group_sizes:\n    values = [informative_group_probability(p, group_size) for p in probabilities]\n    ax.plot(probabilities, values, label=f\"G={group_size}\")\nax.set_xlabel(\"Single-rollout success probability p\")\nax.set_ylabel(\"Probability of a mixed group\")\nax.set_title(\"A group is informative only when it contains successes and failures\")\nax.legend()\nax.grid(alpha=0.25)\nplt.show()\n\ncheck_ps = (0.005, 0.05, 0.5, 0.95, 0.995)\ngroup_df = pd.DataFrame([\n    {\"p\": p, **{f\"G={g}\": informative_group_probability(p, g) for g in group_sizes}}\n    for p in check_ps\n])\ndisplay(group_df)\n"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 8. A recurrent actor–critic in a partially observed environment\n\nWe train the same architecture with a sparse terminal reward and with potential-based shaping. The plot reports the median and full range across several seeds rather than a single favorable run. This is a local diagnostic of the environment, not a universal superiority claim for shaping."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "records = []\nmodels = {}\nfor reward_mode in (\"sparse\", \"potential\"):\n    for seed in SEEDS:\n        model, curve = train_actor_critic(\n            seed=seed,\n            reward_mode=reward_mode,\n            updates=UPDATES,\n            episodes_per_update=EPISODES_PER_UPDATE,\n            evaluation_interval=max(1, UPDATES // 5),\n            evaluation_episodes=EVALUATION_EPISODES,\n        )\n        final_metrics = evaluate_policy(model, episodes=EVALUATION_EPISODES, seed=50_000 + seed)\n        models[(reward_mode, seed)] = (model, final_metrics)\n        for row in curve:\n            records.append({\"reward_mode\": reward_mode, \"seed\": seed, **row})\n\ncurve_df = pd.DataFrame(records)\nsummary_df = (\n    curve_df.groupby([\"reward_mode\", \"update\"], as_index=False)[\"success_rate\"]\n    .agg(median=\"median\", low=\"min\", high=\"max\")\n)\ndisplay(summary_df)\n\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nfor reward_mode, label in ((\"sparse\", \"Sparse terminal reward\"), (\"potential\", \"Potential-based shaping\")):\n    part = summary_df[summary_df[\"reward_mode\"] == reward_mode].sort_values(\"update\")\n    x = part[\"update\"].to_numpy(dtype=float)\n    median = part[\"median\"].to_numpy(dtype=float)\n    low = part[\"low\"].to_numpy(dtype=float)\n    high = part[\"high\"].to_numpy(dtype=float)\n    ax.plot(x, median, marker=\"o\", label=label)\n    ax.fill_between(x, low, high, alpha=0.18)\nax.set_xlabel(\"Policy update (-1 is the pre-training evaluation)\")\nax.set_ylabel(\"Greedy episode success rate\")\nax.set_ylim(-0.03, 1.03)\nax.set_title(\"Synthetic KeyDoorAgentEnv CPU experiment\")\nax.grid(alpha=0.25)\nax.legend()\nplt.show()\n\nbest_key, (best_model, best_metrics) = max(models.items(), key=lambda item: item[1][1][\"success_rate\"])\nprint(\"Best configuration for the next diagnostic:\", best_key, best_metrics)\n"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 9. The rollout log as a reproducible object\n\nText and a final reward are not enough. Training also needs actions, observations, a policy mask, behavior log-probabilities, policy versions, and a stop reason. The next cell builds a valid record from a fresh rollout and then deliberately breaks it."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "rollout_env = KeyDoorAgentEnv(seed=123)\ntransitions, _, rollout_report = collect_episode(\n    best_model,\n    rollout_env,\n    reward_mode=\"potential\",\n    greedy=True,\n    target=\"red\",\n    policy_version=\"m11-notebook-policy\",\n)\ntrace = pd.DataFrame([\n    {\n        \"turn\": index,\n        \"observation\": transition.observation,\n        \"action\": transition.action,\n        \"next_observation\": transition.next_observation,\n        \"behavior_logprob\": transition.behavior_logprob,\n        \"base_reward\": transition.base_reward,\n        \"shaped_reward\": transition.shaped_reward,\n        \"terminated\": transition.terminated,\n        \"truncated\": transition.truncated,\n    }\n    for index, transition in enumerate(transitions)\n])\ndisplay(trace)\nprint(\"Rollout report:\", rollout_report)\n\ncontract = rollout_contract_from_transitions(\n    transitions,\n    task_id=\"m11-keydoor-red\",\n    environment_version=\"1.0\",\n    policy_version=\"m11-notebook-policy\",\n)\nprint(\"Violations in the valid contract:\", validate_rollout_record(contract))\n\nbroken_contract = dict(contract)\nbroken_contract[\"policy_versions\"] = {}\nprint(\"Violations after removing the policy version:\", validate_rollout_record(broken_contract))\n"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 10. Optional branch: a stateful TRL environment\n\nAs of the factual snapshot, TRL’s official interface accepts an `environment_factory` in `GRPOTrainer` and constructs a separate environment instance for each completion. The API is experimental and mutable, so a real run must pin the resolved library versions and re-check the documentation. This branch was not executed in the release gate."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "if not RUN_REAL_MODEL:\n    print(\n        \"The optional branch is disabled. To run it, create an isolated environment, \"\n        \"pin the resolved trl/transformers/datasets versions, and set RUN_REAL_MODEL = True.\"\n    )\nelse:\n    from datasets import Dataset\n    from trl import GRPOConfig, GRPOTrainer\n\n    class TextKeyDoorEnv:\n        \"\"\"A minimal stateful environment for TRL’s official environment_factory contract.\"\"\"\n\n        def __init__(self):\n            self.target = \"red\"\n            self.inspected = False\n            self.carrying = None\n            self.opened = None\n            self.reward = 0.0\n\n        def reset(self, target: str, **kwargs) -> str:\n            self.target = target\n            self.inspected = False\n            self.carrying = None\n            self.opened = None\n            self.reward = 0.0\n            return \"You are in a room with two locked doors. Inspect before choosing a key.\"\n\n        def inspect(self) -> str:\n            \"\"\"Reveal the target color.\n\n            Returns:\n                A textual clue naming the required color.\n            \"\"\"\n            self.inspected = True\n            return f\"The target door is {self.target}.\"\n\n        def pickup(self, color: str) -> str:\n            \"\"\"Pick up one key.\n\n            Args:\n                color: Either ``red`` or ``blue``.\n\n            Returns:\n                The resulting environment observation.\n            \"\"\"\n            if not self.inspected or color not in {\"red\", \"blue\"}:\n                return \"The pickup failed.\"\n            self.carrying = color\n            return f\"You are carrying the {color} key.\"\n\n        def open_door(self, color: str) -> str:\n            \"\"\"Try to open one door with the carried key.\n\n            Args:\n                color: Either ``red`` or ``blue``.\n\n            Returns:\n                The resulting environment observation.\n            \"\"\"\n            if self.carrying != color:\n                return \"The door did not open.\"\n            self.opened = color\n            return f\"The {color} door is open.\"\n\n        def finish(self) -> str:\n            \"\"\"Finish the episode and store the task reward.\n\n            Returns:\n                A textual terminal observation.\n            \"\"\"\n            self.reward = float(self.opened == self.target)\n            return \"success\" if self.reward == 1.0 else \"failure\"\n\n        def get_reward(self) -> float:\n            return self.reward\n\n    dataset = Dataset.from_dict({\n        \"prompt\": [\n            [{\"role\": \"user\", \"content\": \"Inspect the room, choose the correct key, open the target door, and finish.\"}],\n            [{\"role\": \"user\", \"content\": \"Use the tools to open the required door and finish.\"}],\n        ],\n        \"target\": [\"red\", \"blue\"],\n    })\n\n    trainer = GRPOTrainer(\n        model=\"Qwen/Qwen3-0.6B\",\n        args=GRPOConfig(\n            num_generations=4,\n            max_steps=20,\n            max_completion_length=1024,\n            chat_template_kwargs={\"enable_thinking\": False},\n            output_dir=\"m11-agentic-grpo-output\",\n        ),\n        train_dataset=dataset,\n        environment_factory=TextKeyDoorEnv,\n    )\n    print(\"The trainer was constructed. trainer.train() is intentionally not called automatically.\")\n"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

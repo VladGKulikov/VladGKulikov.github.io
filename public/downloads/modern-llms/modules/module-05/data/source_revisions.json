@@ -1,0 +1,18 @@
+{
+  "gpt_oss": {
+    "repo": "openai/gpt-oss",
+    "revision": "7b583341fe16729127f6d5b94a7b09ccae97e1a1",
+    "date": "2026-07-24T18:56:00Z"
+  },
+  "gpt_oss_config": {
+    "repo": "openai/gpt-oss-120b",
+    "revision": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
+    "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/config.json",
+    "sha256": "063aaa98e012cac330d58d18471700f0b0eb90bb15c58fb227809d45090f3e65"
+  },
+  "gpt_oss_model.py": {
+    "url": "https://raw.githubusercontent.com/openai/gpt-oss/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py",
+    "sha256": "319ba3c6e4d827eb3115fe4838942af448376b513c02cea4b6b471bf6c21a346"
+  },
+  "checked_on": "2026-10-10"
+}

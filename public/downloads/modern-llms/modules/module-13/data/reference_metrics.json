@@ -1,0 +1,193 @@
+{
+  "best_of_n": {
+    "coverage": {
+      "1": 0.30000000000000004,
+      "16": 0.9966767069430399,
+      "2": 0.51,
+      "4": 0.7599,
+      "8": 0.94235199
+    },
+    "pass_probability": 0.3
+  },
+  "compute": {
+    "accelerator_flops": 990000000000000.0,
+    "average_sft_tokens": 1200,
+    "mfu": 0.4,
+    "n_params": 8030000000.0,
+    "pretrain_flops": 7.227e+23,
+    "pretrain_tokens": 15000000000000.0,
+    "ratio": 20833.333333333336,
+    "sft_epochs": 3,
+    "sft_examples": 200000,
+    "sft_flops": 3.46896e+19,
+    "sft_hours": 24.333333333333332,
+    "sft_tokens": 240000000
+  },
+  "lora": {
+    "d_kv": 1024,
+    "d_model": 4096,
+    "four_bit_payload_gib": 3.7392601370811462,
+    "fraction": 0.001697570112079701,
+    "full_training_states_gib": 119.65632438659668,
+    "layers": 32,
+    "lora_adapter_bf16_mib": 26.0,
+    "lora_training_states_mib": 208.0,
+    "params": 13631488,
+    "per_layer": 425984,
+    "qlora_parameter_floor_gib": 3.9423851370811462,
+    "rank": 16,
+    "state_saving": 589.0772892878606
+  },
+  "packing": {
+    "bins": [
+      {
+        "indices": [
+          7,
+          10,
+          18
+        ],
+        "lengths": [
+          1347,
+          626,
+          72
+        ],
+        "used": 2045
+      },
+      {
+        "indices": [
+          15,
+          11,
+          1,
+          3
+        ],
+        "lengths": [
+          754,
+          556,
+          527,
+          180
+        ],
+        "used": 2017
+      },
+      {
+        "indices": [
+          23,
+          12,
+          6,
+          0,
+          8
+        ],
+        "lengths": [
+          514,
+          443,
+          425,
+          403,
+          259
+        ],
+        "used": 2044
+      },
+      {
+        "indices": [
+          14,
+          21,
+          2,
+          4,
+          17,
+          9,
+          13,
+          20
+        ],
+        "lengths": [
+          392,
+          326,
+          315,
+          267,
+          267,
+          230,
+          174,
+          76
+        ],
+        "used": 2047
+      },
+      {
+        "indices": [
+          5,
+          22,
+          19,
+          16
+        ],
+        "lengths": [
+          165,
+          128,
+          126,
+          120
+        ],
+        "used": 539
+      }
+    ],
+    "ffd_utilization": 0.848828125,
+    "forward_reduction": 4.8,
+    "lengths": [
+      403,
+      527,
+      315,
+      180,
+      267,
+      165,
+      425,
+      1347,
+      259,
+      230,
+      626,
+      556,
+      443,
+      174,
+      392,
+      754,
+      120,
+      267,
+      72,
+      126,
+      76,
+      326,
+      128,
+      514
+    ],
+    "max_length": 2048,
+    "n_ffd": 5,
+    "n_naive": 24,
+    "naive_utilization": 0.17683919270833334
+  },
+  "s1": {
+    "accelerators": 8,
+    "flops": 1.728e+18,
+    "minutes": 9.090909090909092,
+    "n_params": 32000000000.0,
+    "tokens": 9000000,
+    "tokens_per_trace": 9000,
+    "traces": 1000
+  },
+  "schema_version": 3,
+  "template": {
+    "content_lengths": {
+      "assistant": 20,
+      "system": 12,
+      "user": 8
+    },
+    "per_message_overhead": 5,
+    "special_ids": {
+      "bos": 1,
+      "end_header": 3,
+      "eot": 4,
+      "newline": 5,
+      "pad": 0,
+      "role_assistant": 8,
+      "role_system": 6,
+      "role_tool": 9,
+      "role_user": 7,
+      "start_header": 2
+    },
+    "total_tokens": 56,
+    "trainable_fraction": 0.375,
+    "trainable_tokens": 21
+  }
+}

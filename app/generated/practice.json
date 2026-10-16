@@ -1,0 +1,1604 @@
+{
+  "modules": [
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-01",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-01.exercises.json",
+      "hash": "46efddbc8b9ebb15e5ae5fc078b658d10a02254b9e622e6c93af31a8b61f885d",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-01",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-01.notebooks.json",
+      "hash": "d65e91503f986a09301aab5c32959af12ae19535af9408ca0095d55f34d606d6",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-02.exercises.json",
+      "hash": "cf42584870d7ecfafdb99d38b0df51f6eba8de6d8081db5e98e900426b3acb78",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-02.notebooks.json",
+      "hash": "1f6d1faf9e81cb438beb446c9f8c195499f47df8f9a7a0ed1cfcfb25ff263079",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-18",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-18.exercises.json",
+      "hash": "6ebe6d249c2dafbb86b6cfe2f41a45ad4e42bb8b726583899564d723a89282d2",
+      "revision": "f54cd4c256af7aff",
+      "count": 8
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-18",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-18.notebooks.json",
+      "hash": "4b4dab96a401eb94a059489a2170dee0df2249a6798da486985a533b341890bc",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-03.exercises.json",
+      "hash": "9da93d6f5cbe41c99149cb662b562d8717e92abf5bdc87fd21dc8cc8a14594ce",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-03.notebooks.json",
+      "hash": "5fddcef8f9d15df460434da6c6247440f0770b8ea1f788106803eefd0e3aa067",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-04.exercises.json",
+      "hash": "474fe02ca6ac52735138ae5e0b5144d29c3a698383313b30e4dd3fc8423a0363",
+      "revision": "d80f6348b622830f",
+      "count": 7
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-04.notebooks.json",
+      "hash": "e321946dc4f3281d9cb2e4a63ac03a66ea24bfaa03845ca77c848954478c49b9",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-05.exercises.json",
+      "hash": "7d8460c4580fe3446a821b57dcf8203f60da1a348e834450f54bc27690d9186c",
+      "revision": "d80f6348b622830f",
+      "count": 7
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-05.notebooks.json",
+      "hash": "a73cb01d6f9152717ebd95dcb63334f8ddd713daa0fd7035a515cab1554c7283",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-06.exercises.json",
+      "hash": "c4e422d0bd5462a93d4c84160aa654a7d80985affc2ee0f41f5c1a2bc16ad588",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-06.notebooks.json",
+      "hash": "fa74c6f1fa59d0422536840e9f9282ec837f6700b0ef6020948c50130f2b057b",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-07.exercises.json",
+      "hash": "695e8dcd596dff7fa56616ecaea504495fc3fafaa52db220b0ea475b827dddee",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-07.notebooks.json",
+      "hash": "0264a5cfce2b0277cc80befd2d67ac30a8630a5116356ea2e3e17a9e858af81a",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-08.exercises.json",
+      "hash": "0ac30434d5d2c3671010cf3afa29c0e5a4a1b0059b236a6a4eea5d21b0de6f6b",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-08.notebooks.json",
+      "hash": "15d38ab1bbbc50432eee08e3169caaa0ca5c77814ea19ca8880c017575cf5424",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-09.exercises.json",
+      "hash": "1188a0b041f1cfbafc53d6c680483fbb2cbafd3926a98fad3c12ac168a1b07a5",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-09.notebooks.json",
+      "hash": "ae30656a86e27773603c74b9f66ba6647f8fb1cdcc7dea19c83cd2f52e2d5783",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-10.exercises.json",
+      "hash": "2a524875d852629f48544474d4f24574e4d7d9b80cf2f32e8051b0eeb1eae01c",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-10.notebooks.json",
+      "hash": "dfd6cc4cbef1d0f58973275c194219d6f998ef8a127fd1c0b0dd23ecdcdfaf86",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07b",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-07b.exercises.json",
+      "hash": "5590eea0d547a4f9d0b671d55e64746d67380c91df3d3b142509e50b15a92c28",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07b",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-07b.notebooks.json",
+      "hash": "e4c84009fbe2d9cb5f75566297e75fc3573b73b2e91d0f885ca3f32a5ba5a325",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-11.exercises.json",
+      "hash": "3600ad3ff3268630118525a60c4fe44bbdfcfeacc9c4b05310517088c958d06e",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-11.notebooks.json",
+      "hash": "0f163257612c0888aaff79983b332cea7db318b3dc7c82b9ed332caff729acbb",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-12.exercises.json",
+      "hash": "88548221922a7b7f8f818d6a3375f73d057498202e78f2c2f4260849e15ba9c9",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-12.notebooks.json",
+      "hash": "c9d68e4aa016c8a77c6a32d344de60d65a7e8ef2000920f6d57e57835510145d",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-13.exercises.json",
+      "hash": "02707b84a7f9fbe70150a41702bcadc3952c60e91f649e696d77e7de3b655d7d",
+      "revision": "f54cd4c256af7aff",
+      "count": 8
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-13.notebooks.json",
+      "hash": "24b224f0106ea1cfdaa8215030529d335f2c5b71ed6534544d53e9b77172f6c7",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-14",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-14.exercises.json",
+      "hash": "e73aa1d916aa5070b0113576e067bc7e5d8fcd90000e3169d2cd94c988705879",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-14",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-14.notebooks.json",
+      "hash": "c68a839509041b37c5fa62f5348c7a8a3d24742af6fb228c3ba8833681d1287f",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-15",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-15.exercises.json",
+      "hash": "e5125537c98f245303b4a25c7282e007c81ce6e2c323edc39ea45c1d7875965b",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-15",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-15.notebooks.json",
+      "hash": "28f0a0bcc152f37cd18f7841030975af113e0337e161c24677c4a2f97dc46076",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-16",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-16.exercises.json",
+      "hash": "a9a33a4828e20312a854b6441e1d2558c17a3c8f2bcbd1e626a421ac6400ee97",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-16",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-16.notebooks.json",
+      "hash": "d5462a7f6c8b62f5211152533c27451c80696e1ce22ec5304e495233d6ba396c",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-17",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-17.exercises.json",
+      "hash": "9cf4fc1cd74203e5848253251bcef8b920d5f847a65cae3d9e6f9a6e617eebff",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-17",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-17.notebooks.json",
+      "hash": "1b7bc774f5c785b37b194667856d841fc20e8d161bbd273579a9eae41402fc27",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-20",
+      "language": "ru",
+      "section": "exercises",
+      "file": "modern-llms/ru/module-20.exercises.json",
+      "hash": "9eabb7561f2dd10433936ac5b31fd3f554f23fa1f311cf5315b81d40d0120501",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-20",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "modern-llms/ru/module-20.notebooks.json",
+      "hash": "af8add2064517abb524ac26f9198b55498a7b5b9501f5835f920e1a6756c5806",
+      "revision": "13eb35371e1be6be",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-01",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-01.exercises.json",
+      "hash": "f05372fa60b08c9f5350dc7e8b60ccb7f56f1ba9b5f98e1f43b8860e69da7f59",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-01",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-01.notebooks.json",
+      "hash": "0d2390a2c0634a6ddb4da9e3a1df0e31ebc189d022808a957a443dc47cd8626d",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-02",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-02.exercises.json",
+      "hash": "6bb4d8ee087600e9912f41d3fcac15307e715343c7956960dc1c04e512ff26ce",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-02",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-02.notebooks.json",
+      "hash": "4e7edbccef235b1e29a6ceeab72f0f8a8dc8c4bbca11a1f80ce0b4b8b0a44089",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-18",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-18.exercises.json",
+      "hash": "ff2826e3c60a90f7646225959e927164704d1f684e960ea22feb4101d1466e0e",
+      "revision": "f54cd4c256af7aff",
+      "count": 8
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-18",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-18.notebooks.json",
+      "hash": "17ed73f4f85e85b9ad511b12d0d257419ff864b45e661c1adbbc66780ea0e206",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-03",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-03.exercises.json",
+      "hash": "338037f5e44ee02dc5ea2d1ddda12ced0d24066cbd184d1a7760b8fc4adba6b3",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-03",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-03.notebooks.json",
+      "hash": "77b035bcc05d264acee94a3514f3b1df4723519e6dcee247486a742ddcabc3d5",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-04",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-04.exercises.json",
+      "hash": "a0438cd0466f7fe19fe9f98dad3d123ba7089b1914bcedbc172e9bb6602ced81",
+      "revision": "d80f6348b622830f",
+      "count": 7
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-04",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-04.notebooks.json",
+      "hash": "cbfe1578ed42d019e53e405a9444a405ca610b0aefcf7908efd21b1704b40996",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-05",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-05.exercises.json",
+      "hash": "dc0036636ff84dbd2c6d1873663123997e523247c347d77b515834409800790b",
+      "revision": "d80f6348b622830f",
+      "count": 7
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-05",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-05.notebooks.json",
+      "hash": "fe936f1ec6c147cb78dc581ff7e4fe3baeb93915c284c232f7c0ab768e4f5729",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-06",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-06.exercises.json",
+      "hash": "3bafd9a5cf374495d93eaf149fd9c1031a7ba10cd409d90c859ca0a0b1e2598b",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-06",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-06.notebooks.json",
+      "hash": "c5137451ff9e6be2040b7aa8ef114933c583d783f4ce6db3523c8cfd3793b569",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-07.exercises.json",
+      "hash": "e03a759c03012fd656ac51a89d5475724831ab61b661df652197ad6434123359",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-07.notebooks.json",
+      "hash": "fe26c7114f28dc008e4df614c1e7657f81b8c68a6fe972b9fa4d4021b8443789",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-08",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-08.exercises.json",
+      "hash": "50889d852e15f10f5b79eed52fe86a61836d773442d3ed9b74a6e7d607e38956",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-08",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-08.notebooks.json",
+      "hash": "6c3a344ef71ac571276b9bd517d640554e5097ec797086b709609aee611d978e",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-09",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-09.exercises.json",
+      "hash": "8e4f20b832ecdace5b6d065455784d2a9240a7ea7606767081669c634a9ca93f",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-09",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-09.notebooks.json",
+      "hash": "edc4467215e0cd8de501ecf0a2dcaf69cd8cb41f4e2cb95c81bf4ef191560832",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-10",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-10.exercises.json",
+      "hash": "25bd1edd7186f29344c9b7811ebb5c7aabdfafbe51a81e42ed741a86f987f849",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-10",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-10.notebooks.json",
+      "hash": "992a4fc220a209706b0362d70c92ad5d4f5ee8fb9301447e948d4d069ad5d872",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07b",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-07b.exercises.json",
+      "hash": "1d9d437132d16c87b379f6fe17d7c861819fe09c27e05213da680aa521cd2046",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-07b",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-07b.notebooks.json",
+      "hash": "7cbe61f998c1d931776f2f8057c3feed1fb4a17b527070078390d27b1fa4d6b8",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-11",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-11.exercises.json",
+      "hash": "26b59b8df6c5c01b5690854d3ad19ac7eccb454cd7f4862b59efad10ec8ce8b4",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-11",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-11.notebooks.json",
+      "hash": "00be6ca7c25fa3731f910fc66656f8d11953a0f70ea1e4c61682d652f9162369",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-12",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-12.exercises.json",
+      "hash": "1e9d36a7efc653aa6ca6542ac5a39abb2d8b0f52a4137f40b1630f1eeee95c2b",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-12",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-12.notebooks.json",
+      "hash": "a179d13d6e00cc492f02ab4da0f9da178dad7dc6a820e90dbd73457832a25e82",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-13",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-13.exercises.json",
+      "hash": "cfc8491b46dead63ba5ba2194f317ae85a2264125063395022a87139f960f6a7",
+      "revision": "f54cd4c256af7aff",
+      "count": 8
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-13",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-13.notebooks.json",
+      "hash": "ab2fede8ba527febb33993a702fd4f798f551c44b40fbfbab2098c9e69e7c952",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-14",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-14.exercises.json",
+      "hash": "dcfa92842d1feb758d13b8a10f41a672e6777fe7b09efb395637b2a96f2ca104",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-14",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-14.notebooks.json",
+      "hash": "19c37c58a9ded294191307513c8bbab6b012f05111a055c011e6751c6818117c",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-15",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-15.exercises.json",
+      "hash": "9cf2f227135fb12218815f9573621b58f156c53a69efb293677345892163a33b",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-15",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-15.notebooks.json",
+      "hash": "769185ba9f59cd162671af246ed97a084d8a9b3b4d22e1fb07297a13c639f424",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-16",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-16.exercises.json",
+      "hash": "065666e4e111742da3a335cb52f9526e9143867781e4f20ec880a1928a22089b",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-16",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-16.notebooks.json",
+      "hash": "c040c5014b6e99648fc06a3ccc472ac8c21e0adc9861cb928237f33ec46e1b75",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-17",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-17.exercises.json",
+      "hash": "d967eccc6e02393f7b6f6693717c948714cead0ec833ab2e7d53eeca322aebf2",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-17",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-17.notebooks.json",
+      "hash": "99bb60c22162fd52381d0cb804c90903d1ba15f5b2cf1766780719560dab38df",
+      "revision": "b3b65c518c3534aa",
+      "count": 2
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-20",
+      "language": "en",
+      "section": "exercises",
+      "file": "modern-llms/en/module-20.exercises.json",
+      "hash": "bebeba0f47b9519e6217225c93d6f3412d56eb94787087dd580a4766dff94430",
+      "revision": "cf5534e0b67f49e0",
+      "count": 6
+    },
+    {
+      "courseKey": "modern-llms",
+      "moduleKey": "module-20",
+      "language": "en",
+      "section": "notebooks",
+      "file": "modern-llms/en/module-20.notebooks.json",
+      "hash": "f82f427ba4fef9027c6288b3f5acb956f06ca7471166c986ba140e64c3791a30",
+      "revision": "13eb35371e1be6be",
+      "count": 5
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-01",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-01.exercises.json",
+      "hash": "48d7593c0b4345732eee3bebd29acea8232f82f755b497c707e27bc0e006a8b7",
+      "revision": "73c1f5a5d1103115",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-01",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-01.notebooks.json",
+      "hash": "7e408d9c19893dffed5514e4fcb8eb757e086f48343169d68948f540eb08ba61",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-02.exercises.json",
+      "hash": "04da3788998caf3d02fdf1a78df932d74081dd4adc98ab762bc9f8ae04a80eea",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-02.notebooks.json",
+      "hash": "33d48279d421cabb2344b6a5b6c4f222ff27e6bcb048b7faaeae835c6bd4d30f",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-03.exercises.json",
+      "hash": "19309f0c702862ec0cb8c14eebb2aff8a1f6a5ae7c8ed74233353d9e00dc356f",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-03.notebooks.json",
+      "hash": "51b85b130528c30201218665dd5d18cc2de84d0a07d60e4b0ddba01c3f81ee40",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-04.exercises.json",
+      "hash": "784cf4952ddc7bb834473e9febd6884123b3bf311653c9fcf6362da9d8e260b7",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-04.notebooks.json",
+      "hash": "d0d43aa7d48f95807341f17138b185f9ef8f24042d46dfa00884298405059328",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-05.exercises.json",
+      "hash": "24ab5ec8047072d49f92641fb4d727c8d1a6bb5b1b124b299781b055e191a5fe",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-05.notebooks.json",
+      "hash": "476041313ee6c7c135d3188853b1a8d3a9d00e19d0b070f1dd78ac9055b381c2",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-06.exercises.json",
+      "hash": "f00fc23807b665d4544786202f35ea912189844ea610fd7d34c99ab370e41e69",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-06.notebooks.json",
+      "hash": "72b85371b29b05f5db778b83c1158913597d4be540356b07fa3b29fa5b00eac6",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-07.exercises.json",
+      "hash": "daf52f51e7c6ca9091e094cbac501905a3f2c77af0fedf920cfdbc2ab9ede5f4",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-07.notebooks.json",
+      "hash": "a9979df1e0c3a641f564fee5703b1a2ad834f02f67f0eaa9d1ed13b71b8ea38a",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-08.exercises.json",
+      "hash": "977b0a3f60ab944314277b9f72d3e7d9481851fe6740dd95e12a2b4d0da23d10",
+      "revision": "066ff81a4021f18d",
+      "count": 23
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-08.notebooks.json",
+      "hash": "8d133b99314fbce114f6e22ef4aeaecfd6ec85a13c4aa150317e3f68df7cc08d",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-09.exercises.json",
+      "hash": "e2fed42b26abaed6295c9fb18e927f1b7070c12d9eec812eec44ba8431000c33",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-09.notebooks.json",
+      "hash": "c7ba15a89f546d28a15b0d25492f1dbbd7dad2eb02925ea80add4dea68cc652d",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-10.exercises.json",
+      "hash": "99b2ed2e0e474dc8723d258fd58c536febedb48ec43c06d63877dcf5beda54a6",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-10.notebooks.json",
+      "hash": "2cf759c47762bb79cb8f2886584b367cdb6fd255c86c9e45d14bec87a76fcbb6",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-11.exercises.json",
+      "hash": "0dd0bb692edc9d388b883cccc30311f00305a167adc0ef4d839480dc467610e9",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-11.notebooks.json",
+      "hash": "81442dfebb07acb67585f1b83530184da2a93e3406f326933c265c26788aa29a",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-12.exercises.json",
+      "hash": "1689ab6fbd0856147ba03d658abd284c4a18bf63ff1731d187410ac8f5e088b3",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-12.notebooks.json",
+      "hash": "361149d736259531b420c901eb4a338e80218ccdf66ed0779658cc81166703aa",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "section": "exercises",
+      "file": "rl-for-llm/ru/module-13.exercises.json",
+      "hash": "b13ce8183c154c9623ad6bae7c3a2c7e1f6abda00c071d35e44287188022d4c6",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "section": "notebooks",
+      "file": "rl-for-llm/ru/module-13.notebooks.json",
+      "hash": "04f843f183846a03d465f7fcd1cd491d3e8d35f32970281727cd0138c1f36af3",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-01",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-01.exercises.json",
+      "hash": "326472ce28307610235903c85487dfa1f4901b1755af67f9dd5d01cdaa5e869e",
+      "revision": "73c1f5a5d1103115",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-01",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-01.notebooks.json",
+      "hash": "2602b2641429d49587ea093642ebb6290931f10b9d129c01e7c2db8958ecec28",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-02",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-02.exercises.json",
+      "hash": "f06332c960b5586dd4a422dcb7b9c397a0e688ceca5ad7b2dfac650eb0cc2ef0",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-02",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-02.notebooks.json",
+      "hash": "d1a7e78c060d4c546197748624d36eae23544c51abd87f2c52becdd52be1be78",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-03",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-03.exercises.json",
+      "hash": "860231127f7c526fb086ce4118169b0149fd7706ebca4f5457e13acc6cb6c180",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-03",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-03.notebooks.json",
+      "hash": "97d3e07683042697e09f35eefef7d2c075252b49c35eedd3f99ec8e0fcc40e05",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-04",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-04.exercises.json",
+      "hash": "8eca1dfb5a33be6ef2b101b4e9564c7817bdd9b9a9ca1728442981d1c18fe2c4",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-04",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-04.notebooks.json",
+      "hash": "2bef60137f89aa0c8c12bfbc7d764b1533d74c28d09b107f945e6eeb70cbff4f",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-05",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-05.exercises.json",
+      "hash": "7470e4244a98ce466372f6d9bfd111a3c215c13ce2708f92819e871dbbe6969e",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-05",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-05.notebooks.json",
+      "hash": "2b0df18ed6c73a623d784e8120962cd672423e9d959b22cd8c81a75fb2f1e7da",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-06",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-06.exercises.json",
+      "hash": "be1634adc4e2e1e1363c0ad9611d0d62d3e01e476b4aa7abf7aec0cba9a24761",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-06",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-06.notebooks.json",
+      "hash": "b30bc2437fc18a08104139e763e6b4d2bd9f845926321baf8f7a6dd34c848f5c",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-07",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-07.exercises.json",
+      "hash": "37756e5274078a364f26e94494092c7b9d07c5f3041321cfe1119ea7882a147c",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-07",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-07.notebooks.json",
+      "hash": "dca67c00fff5f0e2e57a78737e1bcbd61b3cec33b7c94f8efc8ab93ae2ef200b",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-08",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-08.exercises.json",
+      "hash": "86ac64ed059609f74f821a396bc4863e451c33e94f5b9bd93e39e3d40d7fbbcc",
+      "revision": "066ff81a4021f18d",
+      "count": 23
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-08",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-08.notebooks.json",
+      "hash": "46f994d8553b51ec66e972f252c04a600423c993441e46b238536237125ed02b",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-09",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-09.exercises.json",
+      "hash": "464fb35b4871cc779c88aa550ecfbc4403f516ffe5fe94abc6546dc3aa0cbb93",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-09",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-09.notebooks.json",
+      "hash": "4e601d133faa57a4ef312068acb3b54f152d563fc7009d86870b4af6339a3112",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-10",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-10.exercises.json",
+      "hash": "cf9335eaff75c46308a03000a5a06c8e8bdee1e2d6de95d7313e02a2dd24eb4b",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-10",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-10.notebooks.json",
+      "hash": "57da44e9b3e8944e8dd6a28d9e4f3c9e5626f2d9aca42f0744b2b39e731d7080",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-11",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-11.exercises.json",
+      "hash": "bbd1505706f48f9c02630e17e529756bd7a5f31136ac02e1e19e9730e1b45038",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-11",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-11.notebooks.json",
+      "hash": "fd0de7ae8f5cfd72ed56240ba89e7c9d44086a324563bc90ba19a56bf6f2dd3d",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-12",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-12.exercises.json",
+      "hash": "14d012cb2beea17f47353a6e2320505ec79254c4f1b41e6f6bf2b4cd68625ad5",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-12",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-12.notebooks.json",
+      "hash": "76b4106abc6f6e113f72e249c39bca3a9ce3dbbb2b171795c14b58e6af6e664b",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-13",
+      "language": "en",
+      "section": "exercises",
+      "file": "rl-for-llm/en/module-13.exercises.json",
+      "hash": "c017e3d6dfc4b9754a4c305a23cc63057b67377931db2e217381b454c23efaf5",
+      "revision": "1bea24445a41d627",
+      "count": 20
+    },
+    {
+      "courseKey": "rl-for-llm",
+      "moduleKey": "module-13",
+      "language": "en",
+      "section": "notebooks",
+      "file": "rl-for-llm/en/module-13.notebooks.json",
+      "hash": "4a037f91671cb2e246d3924eb2ffa99fa645ea6bd5b5ce7f6db8ff4a6c20b993",
+      "revision": "747354f83eb6b671",
+      "count": 1
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-02",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-02.exercises.json",
+      "hash": "4894122ca115f6d87309727a862bc942d46b570b141ede5a34f8185c47175761",
+      "revision": "d4d04046182d48a2",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-03",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-03.exercises.json",
+      "hash": "a957300aa91c8c7cfb55e6ae3bd13bc252a790864e6a0c4b864e35eb8ab6116b",
+      "revision": "d4d04046182d48a2",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-04",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-04.exercises.json",
+      "hash": "dece107b3dc018a511058bb85ee3285d09f692aa0732f5851bcfec996c950c64",
+      "revision": "d4d04046182d48a2",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-05",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-05.exercises.json",
+      "hash": "2d57ae818c9d77ab064b77de0f6f7a4b865172a74ed271a3b71a68db59f21732",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-06",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-06.exercises.json",
+      "hash": "d99f0c19a845b0e4cb6c249d710539abc0b3d3eb0ae9d3af1c9f1014a1d67c19",
+      "revision": "78a8837c6780f907",
+      "count": 6
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-07",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-07.exercises.json",
+      "hash": "84da3ba532ac7a63ecfc3b07c438d1e7043dcfcc8df9434963f022f66cea6cfb",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-08",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-08.exercises.json",
+      "hash": "d0c6a75693fe7912e5f11ab0db2e29b27aaf7cf4af98bd5ba4bb975b14794a85",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-09",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-09.exercises.json",
+      "hash": "00cb5ea5c4c139bc02d8ccc0d285761cbc0344e1dbd2a08359ad9db29b0f8bee",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-10",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-10.exercises.json",
+      "hash": "a0c109d7bba1a4bcfcb0b2663b9b428c6d415a16792c9181220d2fda5b748c08",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-11",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-11.exercises.json",
+      "hash": "0e9daf16c41fcaef00fb00ed4a9a853e3dc683e5be14870525f8bceb11e18473",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-12",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-12.exercises.json",
+      "hash": "0d275013f6d9d7ed0f051175690cd08128f16a3a843069f41843da83786fb887",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-13",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-13.exercises.json",
+      "hash": "7d77b42913f0e48727c319a6db62a3f41c90f1293510b9e0711bcee66aacc38f",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-14",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-14.exercises.json",
+      "hash": "eff2216fecaf9ffefe575a711cdb4a083876b5333640699646dc67f3bfcb934a",
+      "revision": "d80f6348b622830f",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-15",
+      "language": "ru",
+      "section": "exercises",
+      "file": "information-theory-for-ml/ru/module-15.exercises.json",
+      "hash": "44a38b6de1c9e15af424fe7fd8b8943e5d7d4e572b3e72a05922899622fb599c",
+      "revision": "10412cf7f7fdb65b",
+      "count": 8
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-02",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-02.exercises.json",
+      "hash": "65567b1f53540a1d2e83cf6802d6df85724d86c5c16dd01e11bd99d77b9fa037",
+      "revision": "d4d04046182d48a2",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-03",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-03.exercises.json",
+      "hash": "8cdc5503b8f98e46ef8bf6fd5d02b7711fa3581f019a6365b3a5c5682171aa40",
+      "revision": "d4d04046182d48a2",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-04",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-04.exercises.json",
+      "hash": "8b2804ab265d3110b00ce2f757958beaf8b82d08368b20b5d98b54bb387d14f8",
+      "revision": "d4d04046182d48a2",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-05",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-05.exercises.json",
+      "hash": "12ed02c9e75593c458e064fba5defaccc6908e27774c47a50d2f6a0654164343",
+      "revision": "3a246cf1f943262c",
+      "count": 5
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-06",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-06.exercises.json",
+      "hash": "e234d52c6d34db5969e6e7bf7f6efd4e2289c57891164f7eda470931bbb9140e",
+      "revision": "78a8837c6780f907",
+      "count": 6
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-07",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-07.exercises.json",
+      "hash": "e0a223b67080a0e6b99c823c55ae3764f0e3448a3c991ea4c9da3f9b1bfa84be",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-08",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-08.exercises.json",
+      "hash": "5e77811c58f156695cd1579a595e88d8cc6ce56c8839acf23de8ca1a2b516ab2",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-09",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-09.exercises.json",
+      "hash": "da60b4d641801ca1406f00c4d497f27dd31750d51d0a897ed7f1d7b0d7ecf221",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-10",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-10.exercises.json",
+      "hash": "f18629ddee52f53e9765c811a8fbe9b11b41e55a34ba6804b0cff6dee50df8ed",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-11",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-11.exercises.json",
+      "hash": "a6108c375904dcd482ffb1e7b8ab1b3802c8cfff886b7a5de1fa9626206ae5dd",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-12",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-12.exercises.json",
+      "hash": "47fd79d8bd5bceb934691f1327fb81ad15fb5a5c0d9a41059e188846ffaaebaa",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-13",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-13.exercises.json",
+      "hash": "0584affeb94bfc73ddbd97049edb81ac89d23cc89aaa45b99ddabd95acd72895",
+      "revision": "ee77a546890f536a",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-14",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-14.exercises.json",
+      "hash": "7d4faf14a33bf074d39ad05a7601db194cd083df4015351d090d6ba94e647745",
+      "revision": "d80f6348b622830f",
+      "count": 7
+    },
+    {
+      "courseKey": "information-theory-for-ml",
+      "moduleKey": "module-15",
+      "language": "en",
+      "section": "exercises",
+      "file": "information-theory-for-ml/en/module-15.exercises.json",
+      "hash": "c4b23666f867300ebf7af1f7fc79d26c5f8eb02bef8a5587323801139ed57943",
+      "revision": "10412cf7f7fdb65b",
+      "count": 8
+    }
+  ]
+}

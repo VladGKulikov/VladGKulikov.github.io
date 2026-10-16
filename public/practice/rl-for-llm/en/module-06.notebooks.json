@@ -1,0 +1,125 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-06",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Module 6. Token probabilities, KL, and a reproducible rollout contract",
+      "format": "ipynb",
+      "filename": "module-06-logprobs-kl.en.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-06-logprobs-kl.en.ipynb",
+      "bytes": 20345,
+      "sha256": "1eab5429cdc97d762569accc543f8dfd7730c5c284d20e3d6e8cc3ee56e1d320",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Module 6. Token probabilities, KL, and a reproducible rollout contract\n\nThis notebook assembles the module's mathematical details into one reproducible workflow. The default path needs neither network access nor a GPU: it checks causal shifting, response masks, exact KL, k1/k2/k3 behavior, the actual decoding policy, and stopping semantics. The final **optional** branch uses a real open model; it is disabled by default and is not presented as an executed course result."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nfrom pathlib import Path\nimport os\nimport sys\nimport math\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n\ndef find_repo_root(start: Path) -> Path:\n    for candidate in (start, *start.parents):\n        if (candidate / \"modules/module-06/module_6_reference.py\").is_file():\n            return candidate\n    raise FileNotFoundError(\"Could not find the RL for LLM repository root\")\n\n\nREPO_ROOT = find_repo_root(Path.cwd().resolve())\nMODULE_DIR = REPO_ROOT / \"modules/module-06\"\nsys.path.insert(0, str(MODULE_DIR))\n\nfrom module_6_reference import (\n    behavior_logprob,\n    causal_response_logprobs,\n    classify_stop_event,\n    decoding_distribution_with_order,\n    exact_kl_from_logits,\n    kl_estimator_moments,\n    masked_sequence_metrics,\n    sequence_logprob_ratio,\n    stable_log_softmax,\n    validate_rollout_batch,\n)\n\nPROFILE = os.getenv(\"RL_LLM_M6_PROFILE\", \"smoke\").strip().lower()\nif PROFILE not in {\"smoke\", \"full\", \"real-model\"}:\n    raise ValueError(\"RL_LLM_M6_PROFILE must be smoke, full, or real-model\")\nRUN_REAL_MODEL = os.getenv(\"RL_LLM_M6_RUN_REAL_MODEL\", \"0\") == \"1\" or PROFILE == \"real-model\"\nSEED = 20260805\nRNG = np.random.default_rng(SEED)\nN_MONTE_CARLO = 20_000 if PROFILE == \"smoke\" else 250_000\nprint({\"profile\": PROFILE, \"run_real_model\": RUN_REAL_MODEL, \"repo\": str(REPO_ROOT)})\n"
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Stable token log-probabilities\n\nDirectly evaluating `exp(logits)` overflows for large values. Subtracting the maximum leaves softmax unchanged while making the computation stable. We then verify normalization and gather the log-probabilities of selected tokens."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "large_logits = np.array([[1000.0, 999.0, 997.0], [-1000.0, -1001.0, -1002.0]])\nlog_probs = stable_log_softmax(large_logits, axis=-1)\nprobs = np.exp(log_probs)\nnp.testing.assert_allclose(probs.sum(axis=-1), 1.0, atol=1e-12)\nassert np.all(np.isfinite(log_probs))\nselected_ids = np.array([0, 2])\nselected = log_probs[np.arange(2), selected_ids]\nprint(\"selected log-probabilities:\", selected)\nprint(\"row sums:\", probs.sum(axis=-1))\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Causal shift, response mask, and PPL\n\nLogits at position $t$ predict token $t+1$. The response mask must shift with the target. We construct a small batch in which prompt tokens are excluded from the objective and response tokens are included."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "B, L, V = 2, 7, 9\ninput_ids = np.array([\n    [0, 1, 2, 4, 5, 6, 8],\n    [0, 3, 2, 7, 1, 8, 8],\n], dtype=np.int64)\nresponse_mask = np.array([\n    [0, 0, 0, 1, 1, 1, 1],\n    [0, 0, 0, 1, 1, 1, 0],\n], dtype=bool)\nmodel_logits = RNG.normal(0.0, 1.2, size=(B, L, V))\n# Make the realized response tokens plausible but not deterministic.\nfor b in range(B):\n    for t in range(L - 1):\n        model_logits[b, t, input_ids[b, t + 1]] += 1.5\n\nselected_lp, shifted_mask = causal_response_logprobs(model_logits, input_ids, response_mask)\nmetrics = masked_sequence_metrics(selected_lp, shifted_mask)\nprint(\"selected shape:\", selected_lp.shape)\nprint(\"shifted masks:\\n\", shifted_mask.astype(int))\nprint(\"token counts:\", metrics.token_count)\nprint(\"sum log-probabilities:\", np.round(metrics.sum_logprob, 4))\nprint(\"perplexities:\", np.round(metrics.perplexity, 4))\n\nfig, ax = plt.subplots(figsize=(9.0, 3.6))\nfor b in range(B):\n    ax.plot(np.arange(L - 1), selected_lp[b], marker=\"o\", label=f\"sequence {b}\")\n    inactive = ~shifted_mask[b]\n    ax.scatter(np.arange(L - 1)[inactive], selected_lp[b][inactive], marker=\"x\", s=65)\nax.set_xlabel(\"shifted token position\")\nax.set_ylabel(\"selected log-probability\")\nax.set_title(\"Causal alignment: circles are scored positions; crosses are masked\")\nax.grid(True)\nax.legend()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Exact KL and sample formulas\n\nOn a finite space we can compute both means and exact second moments. We compare nearby distributions with a case containing a rare large $p/q$ ratio. This makes clear why non-negative k3 samples do not guarantee low variance."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "near_q = np.array([0.40, 0.30, 0.20, 0.10])\nnear_p = np.array([0.35, 0.30, 0.22, 0.13])\ntail_q = np.array([0.999, 0.001])\ntail_p = np.array([0.9, 0.1])\n\nnear = kl_estimator_moments(near_p, near_q)\ntail = kl_estimator_moments(tail_p, tail_q)\nprint(\"near-policy moments:\", {k: round(v, 6) for k, v in near.items()})\nprint(\"heavy-ratio-tail moments:\", {k: round(v, 6) for k, v in tail.items()})\n\n# Cross-check the near-policy exact value through logits.\nnear_exact_from_logits = float(exact_kl_from_logits(np.log(near_q), np.log(near_p)))\nassert abs(near_exact_from_logits - near[\"exact_kl\"]) < 1e-12\n\nlabels = [\"k1\", \"k2\", \"k3\"]\nx = np.arange(3)\nwidth = 0.34\nfig, ax = plt.subplots(figsize=(8.5, 4.6))\nax.bar(x - width / 2, [near[f\"{k}_std\"] for k in labels], width, label=\"near policies\")\nax.bar(x + width / 2, [tail[f\"{k}_std\"] for k in labels], width, label=\"rare large p/q\")\nax.set_yscale(\"log\")\nax.set_xticks(x, labels)\nax.set_ylabel(\"exact standard deviation\")\nax.set_title(\"Estimator variance depends on the ratio tail\")\nax.grid(True, axis=\"y\", which=\"both\")\nax.legend()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. Monte Carlo: what a finite log reveals\n\nExact moments provide a reference, but a real log is finite. We sample from $q$ and observe how the means of k1, k2, and k3 approach their expectations. k2 is treated as a local formula, not as a universally unbiased KL estimator."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "def estimator_samples(p: np.ndarray, q: np.ndarray, n: int, rng: np.random.Generator):\n    ids = rng.choice(len(q), size=n, p=q)\n    log_r = np.log(p[ids]) - np.log(q[ids])\n    return {\n        \"k1\": -log_r,\n        \"k2\": 0.5 * log_r**2,\n        \"k3\": (p[ids] / q[ids] - 1.0) - log_r,\n    }\n\nsamples = estimator_samples(tail_p, tail_q, N_MONTE_CARLO, RNG)\ncheckpoints = np.unique(np.geomspace(20, N_MONTE_CARLO, 90).astype(int))\nfig, ax = plt.subplots(figsize=(9.0, 4.6))\nfor name, values in samples.items():\n    running = np.cumsum(values)[checkpoints - 1] / checkpoints\n    ax.plot(checkpoints, running, label=name)\nax.axhline(tail[\"exact_kl\"], linestyle=\"--\", linewidth=1.4, label=\"exact KL\")\nax.set_xscale(\"log\")\nax.set_xlabel(\"number of behavior samples\")\nax.set_ylabel(\"running sample mean\")\nax.set_title(\"Finite-sample behavior under a rare ratio tail\")\nax.grid(True)\nax.legend()\nplt.show()\nprint(\"final means:\", {name: float(np.mean(values)) for name, values in samples.items()})\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. The behavior policy is the full decoding pipeline\n\nIdentical model weights do not imply identical action distributions when temperature, truncation, or processor order changes. In a concrete example, reordering top-k and top-p changes the support itself."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "order_logits = np.array([1.720, 3.523, 1.987])\norder_a = decoding_distribution_with_order(\n    order_logits, temperature=1.7, top_k=2, top_p=0.7,\n    order=(\"temperature\", \"top_k\", \"top_p\"),\n)\norder_b = decoding_distribution_with_order(\n    order_logits, temperature=1.7, top_k=2, top_p=0.7,\n    order=(\"temperature\", \"top_p\", \"top_k\"),\n)\nprint(\"temperature → top-k → top-p:\", np.round(order_a, 6))\nprint(\"temperature → top-p → top-k:\", np.round(order_b, 6))\nassert np.count_nonzero(order_a) == 1 and np.count_nonzero(order_b) == 2\n\nchosen = 2\nprint(\"chosen token logprob under A:\", behavior_logprob(order_a, chosen))\nprint(\"chosen token logprob under B:\", behavior_logprob(order_b, chosen))\nratio = sequence_logprob_ratio(\n    np.log(np.array([0.55, 0.42, 0.61])),\n    np.log(np.array([0.50, 0.45, 0.30])),\n)\nprint(\"sequence probability ratio:\", ratio)\n\nfig, ax = plt.subplots(figsize=(7.8, 4.0))\npositions = np.arange(len(order_logits))\nax.bar(positions - 0.18, order_a, 0.36, label=\"T→k→p\")\nax.bar(positions + 0.18, order_b, 0.36, label=\"T→p→k\")\nax.set_xticks(positions, [f\"token {i}\" for i in positions])\nax.set_ylabel(\"behavior probability\")\nax.set_title(\"Processor order can change support\")\nax.legend(); ax.grid(True, axis=\"y\")\nplt.show()\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. Stop reason and rollout-batch validation\n\n`stop_reason` records the engine event. Boolean flags encode task-specific semantics. An unknown reason must not be silently converted into a terminal event, while a true terminal event may legitimately coincide with an external boundary."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "stop_examples = [\n    classify_stop_event(\"eos\", terminal_reasons=(\"eos\",), truncation_reasons=(\"length\", \"timeout\")),\n    classify_stop_event(\"length\", terminal_reasons=(\"eos\",), truncation_reasons=(\"length\", \"timeout\")),\n    classify_stop_event(\"success_and_timeout\", terminal_reasons=(\"success_and_timeout\",), truncation_reasons=(\"success_and_timeout\",)),\n    classify_stop_event(\"server_cancelled\", terminal_reasons=(\"eos\",), truncation_reasons=(\"length\", \"timeout\")),\n]\nfor item in stop_examples:\n    print(item)\n\nbatch = {\n    \"response_ids\": np.array([[5, 6, 2], [7, 8, 0], [4, 2, 0]]),\n    \"response_mask\": np.array([[1, 1, 1], [1, 1, 0], [1, 1, 0]]),\n    \"old_logprobs\": np.array([[-0.2, -0.4, -0.1], [-0.3, -0.5, np.nan], [-0.6, -0.2, np.nan]]),\n    \"ref_logprobs\": np.array([[-0.25, -0.45, -0.12], [-0.35, -0.55, np.nan], [-0.5, -0.3, np.nan]]),\n    \"sequence_rewards\": np.array([1.0, 0.2, 1.0]),\n    \"terminated\": np.array([True, False, True]),\n    \"truncated\": np.array([False, True, True]),\n    \"stop_reason\": np.array([\"eos\", \"length\", \"success_and_timeout\"], dtype=object),\n}\nsummary = validate_rollout_batch(batch)\nprint(summary)\nassert summary.batch_size == 3 and summary.active_tokens == 7\nassert summary.terminated_sequences == 2 and summary.truncated_sequences == 2\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. Optional real-model branch\n\nThe branch below uses `Qwen/Qwen3-0.6B` with Transformers. It runs only when `RL_LLM_M6_RUN_REAL_MODEL=1` or the `real-model` profile is selected. The code compares transition scores from `generate()` with teacher forcing. With a direct Transformers call, the stop reason is partly **inferred** from tokens and length; that is not equivalent to an explicit reason field from a production engine."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "def teacher_forced_generated_logprobs(model, sequences, prompt_length: int):\n    import torch\n    with torch.no_grad():\n        logits = model(sequences).logits[:, :-1, :]\n        log_probs = torch.log_softmax(logits.float(), dim=-1)\n        targets = sequences[:, 1:]\n        selected = log_probs.gather(-1, targets.unsqueeze(-1)).squeeze(-1)\n    # generated token at absolute position prompt_length is predicted by logits prompt_length-1\n    return selected[:, prompt_length - 1:]\n\n\ndef inferred_transformers_stop_reason(generated_ids, eos_ids, max_new_tokens: int):\n    eos_set = {int(x) for x in eos_ids}\n    if generated_ids and int(generated_ids[-1]) in eos_set:\n        return {\"stop_reason\": \"eos_inferred\", \"terminated\": True, \"truncated\": False, \"inferred\": True}\n    if len(generated_ids) >= max_new_tokens:\n        return {\"stop_reason\": \"length_inferred\", \"terminated\": False, \"truncated\": True, \"inferred\": True}\n    return {\"stop_reason\": \"unknown_inferred\", \"terminated\": False, \"truncated\": False, \"inferred\": True}\n\nprint(\"Real-model helpers are defined; no model has been downloaded or executed yet.\")\n"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "### Running the real model\n\nWhen the branch is disabled, the cell exits without importing Transformers. The complete default notebook can therefore be executed and validated offline."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "REAL_MODEL_RESULT = None\nif RUN_REAL_MODEL:\n    import torch\n    from transformers import AutoModelForCausalLM, AutoTokenizer\n\n    model_id = \"Qwen/Qwen3-0.6B\"\n    tokenizer = AutoTokenizer.from_pretrained(model_id)\n    model = AutoModelForCausalLM.from_pretrained(\n        model_id,\n        torch_dtype=\"auto\",\n        device_map=\"auto\",\n    )\n    prompt = \"Explain in one sentence why a sampled token log-ratio may be negative while KL is non-negative.\"\n    encoded = tokenizer(prompt, return_tensors=\"pt\").to(model.device)\n    max_new_tokens = 32\n    with torch.no_grad():\n        generated = model.generate(\n            **encoded,\n            max_new_tokens=max_new_tokens,\n            do_sample=True,\n            temperature=0.8,\n            top_p=0.9,\n            return_dict_in_generate=True,\n            output_scores=True,\n        )\n    transition = model.compute_transition_scores(\n        generated.sequences,\n        generated.scores,\n        getattr(generated, \"beam_indices\", None),\n        normalize_logits=True,\n    )\n    prompt_length = encoded[\"input_ids\"].shape[1]\n    teacher = teacher_forced_generated_logprobs(model, generated.sequences, prompt_length)\n    generated_count = transition.shape[1]\n    teacher = teacher[:, :generated_count]\n    max_delta = float(torch.max(torch.abs(transition.float() - teacher.float())).cpu())\n    new_ids = generated.sequences[0, prompt_length:].tolist()\n    eos_ids = tokenizer.eos_token_id\n    eos_ids = [eos_ids] if isinstance(eos_ids, int) else list(eos_ids or [])\n    stop = inferred_transformers_stop_reason(new_ids, eos_ids, max_new_tokens)\n    REAL_MODEL_RESULT = {\n        \"model_id\": model_id,\n        \"generated_tokens\": len(new_ids),\n        \"max_transition_teacher_delta\": max_delta,\n        **stop,\n        \"text\": tokenizer.decode(generated.sequences[0], skip_special_tokens=True),\n    }\n    print(REAL_MODEL_RESULT)\nelse:\n    print(\"Optional real-model branch skipped. Set RL_LLM_M6_RUN_REAL_MODEL=1 to run it explicitly.\")\n"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 8. Checks and conclusions\n\nThe default path must pass independently of the optional branch. The final statements describe synthetic computations in this notebook and are not presented as an external benchmark."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "assert np.allclose(np.exp(log_probs).sum(axis=-1), 1.0)\nassert np.isclose(near[\"k1_mean\"], near[\"exact_kl\"], atol=1e-14)\nassert np.isclose(near[\"k3_mean\"], near[\"exact_kl\"], atol=1e-14)\nassert tail[\"k3_std\"] > 10 * tail[\"k1_std\"]\nassert np.count_nonzero(order_a) != np.count_nonzero(order_b)\nassert stop_examples[-1].terminated is False and stop_examples[-1].truncated is False\n\nCOURSE_RESULT = {\n    \"synthetic_only\": not RUN_REAL_MODEL,\n    \"causal_batch_perplexity\": np.asarray(metrics.perplexity).round(6).tolist(),\n    \"near_exact_kl\": near[\"exact_kl\"],\n    \"heavy_tail_exact_kl\": tail[\"exact_kl\"],\n    \"heavy_tail_k3_std\": tail[\"k3_std\"],\n    \"rollout_active_tokens\": summary.active_tokens,\n    \"real_model_result\": REAL_MODEL_RESULT,\n}\nprint(COURSE_RESULT)\n"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

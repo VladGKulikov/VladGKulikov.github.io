@@ -1,0 +1,125 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-05",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "Module 5 lab — imitation, DQN, and learning from fixed data",
+      "format": "ipynb",
+      "filename": "module-05-imitation-offline-rl.en.ipynb",
+      "download": "/downloads/rl-for-llm/notebooks/module-05-imitation-offline-rl.en.ipynb",
+      "bytes": 22151,
+      "sha256": "3a467217183788b9cb1e9223191ee090f4fffcea9157c5838e60c85c208a7943",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Module 5 lab — imitation, DQN, and learning from fixed data\n\nThis notebook connects the lecture equations to one continuing KeyDoorGrid world and a small token-level pipeline. It contains complete collection, training, evaluation, and diagnostic loops rather than isolated formulas. Numerical results reused in the lecture are identified as course-generated artifacts, not external benchmarks.\n\nThe default `smoke` profile executes reduced CPU versions of every path and loads pinned full-profile artifacts for stable plots. Set `RL_LLM_M5_PROFILE=full` before starting the kernel to rebuild the longer runs."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "from __future__ import annotations\n\nfrom pathlib import Path\nimport os\nimport sys\nimport time\nimport warnings\n\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n\ndef find_course_root() -> Path:\n    candidates = [Path.cwd(), *Path.cwd().parents]\n    for candidate in candidates:\n        if (candidate / \"modules/module-05/module_5_training.py\").is_file():\n            return candidate\n    raise FileNotFoundError(\"Could not locate the RL for LLM course root\")\n\nROOT = find_course_root()\nMODULE = ROOT / \"modules/module-05\"\nDATA = MODULE / \"data\"\nsys.path.insert(0, str(MODULE))\n\nfrom module_5_reference import (\n    behavior_support_mask,\n    cql_discrete_penalty,\n    double_dqn_targets,\n    dqn_targets,\n    expectile_loss,\n    fqe_targets,\n    iql_advantage_weights,\n    return_to_go,\n)\nfrom module_5_training import (\n    ACTION_NAMES,\n    KeyDoorGrid,\n    collect_offline_dataset,\n    dagger_experiment,\n    evaluate_decision_transformer,\n    offline_experiment,\n    train_decision_transformer,\n    train_online_dqn,\n)\nfrom module_5_language import language_offline_experiment, token_text, PROMPTS\n\nPROFILE = os.environ.get(\"RL_LLM_M5_PROFILE\", \"smoke\").strip().lower()\nif PROFILE not in {\"smoke\", \"full\"}:\n    raise ValueError(\"RL_LLM_M5_PROFILE must be 'smoke' or 'full'\")\n\n# Full mode regenerates the numerical experiments. Smoke mode executes smaller\n# end-to-end loops and loads pinned full-profile artifacts for stable figures.\nprint({\"course_root\": str(ROOT), \"profile\": PROFILE, \"numpy\": np.__version__})\n\n\nLABELS = {\n    \"grid_title\": \"KeyDoorGrid: key, door, goal, traps, and two stopping semantics\",\n    \"grid_x\": \"column\",\n    \"grid_y\": \"row\",\n    \"dagger_x\": \"data-aggregation round\",\n    \"success\": \"successful-episode fraction\",\n    \"dagger_title\": \"Pinned run: BC followed by DAgger rounds\",\n    \"episode\": \"training episode\",\n    \"rolling_success\": \"rolling success fraction\",\n    \"dqn_title\": \"DQN and Double DQN: one pinned seed, window 15\",\n    \"count\": \"transition count\",\n    \"log_title\": \"Action composition of the fixed log\",\n    \"mean_return\": \"mean return\",\n    \"offline_title\": \"One log, several protection mechanisms\",\n    \"fqe_warning\": \"FQE is another learned model; calibration does not follow from the method name.\",\n    \"identity\": \"achieved = requested\",\n    \"requested_return\": \"requested return-to-go\",\n    \"achieved_return\": \"observed mean return\",\n    \"dt_title\": \"A Decision Transformer condition is a request, not a guarantee\",\n    \"exact_match\": \"exact-answer fraction\",\n    \"language_title\": \"Synthetic token-level offline pipeline\",\n    \"summary_heading\": \"Lab takeaways\",\n    \"summary_bc\": \"BC is stable on demonstration-distributed states; DAgger shows how to label states induced by the learner.\",\n    \"summary_dqn\": \"Replay and a target network stabilize online Q-learning, while Double DQN separates selection from evaluation.\",\n    \"summary_offline\": \"A fixed log turns coverage into an identifiability constraint; pessimism and FQE must themselves be validated.\",\n    \"summary_dt\": \"Decision Transformer trains as conditional sequence modeling, but return-to-go is not a performance promise.\",\n    \"summary_llm\": \"Token-level Q/V learning is possible, yet the reduced ILQL-like implementation is not an LLM-scale reproduction.\",\n}"
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Begin with environment and transition contracts\n\nKeyDoorGrid is small without being a three-state toy: collecting the key changes door accessibility, traps are true terminals, and the time limit is an external truncation. The same environment can therefore test bootstrap masks while supporting imitation, online DQN, and offline RL."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "env = KeyDoorGrid(seed=5)\nobs, info = env.reset(start=(6, 0), seed=5)\nprint(\"observation_dim=\", env.observation_dim, \"action_dim=\", env.action_dim)\nprint(\"initial_state=\", info[\"state\"])\n\n# A compact vector drawing keeps the environment readable without requiring\n# image or environment packages.\nfig, ax = plt.subplots(figsize=(10, 5.5))\nax.set_xlim(0, env.width)\nax.set_ylim(env.height, 0)\nax.set_aspect(\"equal\")\nax.set_xticks(np.arange(env.width + 1))\nax.set_yticks(np.arange(env.height + 1))\nax.grid(True, linewidth=0.8)\nfor r, c in env.wall_positions:\n    ax.add_patch(plt.Rectangle((c, r), 1, 1, alpha=0.65))\nfor r, c in env.trap_positions:\n    ax.text(c + 0.5, r + 0.5, \"×\", ha=\"center\", va=\"center\", fontsize=22)\nkr, kc = env.key_position\nax.text(kc + 0.5, kr + 0.5, \"K\", ha=\"center\", va=\"center\", fontsize=18, fontweight=\"bold\")\ndr, dc = env.door_position\nax.text(dc + 0.5, dr + 0.5, \"D\", ha=\"center\", va=\"center\", fontsize=18, fontweight=\"bold\")\ngr, gc = env.goal_position\nax.text(gc + 0.5, gr + 0.5, \"G\", ha=\"center\", va=\"center\", fontsize=18, fontweight=\"bold\")\nfor r, c in env.start_positions:\n    ax.plot(c + 0.5, r + 0.5, \".\", markersize=6)\nax.set_title(LABELS[\"grid_title\"])\nax.set_xlabel(LABELS[\"grid_x\"])\nax.set_ylabel(LABELS[\"grid_y\"])\nplt.show()\n\n# Exact local mechanisms used later inside the neural loops.\nr = np.array([0.2, -1.0])\nterminal = np.array([0.0, 1.0])\nnext_q = np.array([[1.1, 1.6], [10.0, 20.0]])\nprint(\"DQN targets:\", dqn_targets(r, terminal, next_q, gamma=0.95))\nprint(\"CQL term:\", cql_discrete_penalty(np.array([2.0, 0.0, -1.0]), 0))\nprint(\"return-to-go:\", return_to_go([1.0, 0.0, -0.5, 2.0]))\n"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Behavioral cloning and DAgger\n\nThe first policy sees only a few expert trajectories. DAgger then asks the expert to label states induced by that learned policy. The plot uses the pinned full protocol, while the current profile executes an actual training loop separately."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "start = time.perf_counter()\nif PROFILE == \"full\":\n    dagger_run = dagger_experiment(\n        seed=17, expert_episodes=4, rounds=3,\n        learner_episodes_per_round=8, epochs=12,\n        evaluation_episodes=24,\n    )\nelse:\n    dagger_run = dagger_experiment(\n        seed=17, expert_episodes=4, rounds=2,\n        learner_episodes_per_round=6, epochs=6,\n        evaluation_episodes=12,\n    )\nprint(f\"DAgger wall time: {time.perf_counter() - start:.2f}s\")\nfor row in dagger_run[\"records\"]:\n    print(row)\n\npinned = np.load(DATA / \"M5_dagger_curve.npz\")\nfig, ax = plt.subplots(figsize=(8.5, 4.8))\nax.plot(pinned[\"rounds\"], pinned[\"success_rate\"], marker=\"o\")\nax.set_ylim(-0.03, 1.05)\nax.set_xticks(pinned[\"rounds\"])\nax.set_xlabel(LABELS[\"dagger_x\"])\nax.set_ylabel(LABELS[\"success\"])\nax.set_title(LABELS[\"dagger_title\"])\nax.grid(True, alpha=0.3)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. DQN and Double DQN\n\nBoth implementations use replay, a target network, $\\varepsilon$-greedy collection, and separate termination/truncation flags. Sparse reward motivates an explicit replay warm-start with noisy expert-guided trajectories. That is a documented course engineering choice, not a hidden property of vanilla DQN."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "episodes = 130 if PROFILE == \"full\" else 35\neval_episodes = 24 if PROFILE == \"full\" else 12\nstart = time.perf_counter()\ndqn_run = train_online_dqn(seed=5, episodes=episodes, double=False, evaluation_episodes=eval_episodes)\ndouble_run = train_online_dqn(seed=5, episodes=episodes, double=True, evaluation_episodes=eval_episodes)\nprint(f\"DQN pair wall time: {time.perf_counter() - start:.2f}s\")\nprint(\"DQN evaluation:\", dqn_run[\"evaluation\"])\nprint(\"Double DQN evaluation:\", double_run[\"evaluation\"])\n\npinned = np.load(DATA / \"M5_online_dqn_curve.npz\")\nwindow = 15\n\ndef moving_mean(x, window):\n    x = np.asarray(x, dtype=float)\n    if len(x) < window:\n        return x\n    return np.convolve(x, np.ones(window) / window, mode=\"valid\")\n\nfig, ax = plt.subplots(figsize=(9, 4.8))\nax.plot(np.arange(window, len(pinned[\"dqn_success\"]) + 1), moving_mean(pinned[\"dqn_success\"], window), label=\"DQN\")\nax.plot(np.arange(window, len(pinned[\"double_success\"]) + 1), moving_mean(pinned[\"double_success\"], window), label=\"Double DQN\")\nax.set_ylim(-0.03, 1.05)\nax.set_xlabel(LABELS[\"episode\"])\nax.set_ylabel(LABELS[\"rolling_success\"])\nax.set_title(LABELS[\"dqn_title\"])\nax.legend()\nax.grid(True, alpha=0.3)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. Inspect the fixed log before choosing an algorithm\n\nAction counts and reward composition usually reveal more than an algorithm label. The support mask below illustrates one explicit contract: an action is eligible when its behavior probability is not too small relative to the most likely action."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "episodes_log, transitions_log = collect_offline_dataset(\n    seed=41,\n    episodes=80 if PROFILE == \"full\" else 30,\n    profile=\"mixed\",\n)\nactions = np.asarray([t.action for t in transitions_log], dtype=int)\ncounts = np.bincount(actions, minlength=4)\nprobabilities = counts / counts.sum()\nmask = behavior_support_mask(probabilities, threshold_ratio=0.35)\nprint(\"action counts:\", dict(zip(ACTION_NAMES, counts.tolist())))\nprint(\"behavior probabilities:\", dict(zip(ACTION_NAMES, probabilities.round(4).tolist())))\nprint(\"support mask (relative threshold 0.35):\", dict(zip(ACTION_NAMES, mask.tolist())))\nprint(\"dataset return mean:\", float(np.mean([ep.return_ for ep in episodes_log])))\n\nfig, ax = plt.subplots(figsize=(8, 4.5))\nax.bar(ACTION_NAMES, counts)\nax.set_ylabel(LABELS[\"count\"])\nax.set_title(LABELS[\"log_title\"])\nax.grid(True, axis=\"y\", alpha=0.3)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. One log, several ways to distrust extrapolation\n\nNaive offline DQN, action restriction, CQL, and IQL protect different objects. Equal outcomes do not make the methods identical, and one favorable seed is not a global ranking."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "start = time.perf_counter()\nif PROFILE == \"full\":\n    offline_run = offline_experiment(seed=41, dataset_episodes=80, train_epochs=16, evaluation_episodes=24)\nelse:\n    offline_run = offline_experiment(seed=41, dataset_episodes=30, train_epochs=5, evaluation_episodes=12)\nprint(f\"offline-method wall time: {time.perf_counter() - start:.2f}s\")\nfor name, metrics in offline_run[\"results\"].items():\n    print(f\"{name:>18s}: {metrics}\")\n\npinned = np.load(DATA / \"M5_offline_method_results.npz\", allow_pickle=True)\nnames = [str(x) for x in pinned[\"method_names\"]]\nreturns = pinned[\"mean_return\"]\nsuccess = pinned[\"success_rate\"]\nfig, ax = plt.subplots(figsize=(9, 4.8))\npositions = np.arange(len(names))\nax.bar(positions, returns)\nax.axhline(0.0, linewidth=1)\nax.set_xticks(positions, names, rotation=15, ha=\"right\")\nax.set_ylabel(LABELS[\"mean_return\"])\nax.set_title(LABELS[\"offline_title\"])\nfor x, y, s in zip(positions, returns, success):\n    ax.text(x, y + (0.08 if y >= 0 else -0.12), f\"success={s:.2f}\", ha=\"center\", va=\"bottom\" if y >= 0 else \"top\", fontsize=8)\nax.grid(True, axis=\"y\", alpha=0.3)\nplt.tight_layout()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. FQE is also a model that requires validation\n\nFQE replaces a maximizing continuation with an expectation under a fixed evaluation policy. That changes improvement into evaluation, but it does not remove approximation or coverage error."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "pinned = np.load(DATA / \"M5_offline_method_results.npz\", allow_pickle=True)\nfqe_names = [str(x) for x in pinned[\"fqe_names\"]]\nfqe_values = pinned[\"fqe_values\"]\ntrue_by_name = dict(zip([str(x) for x in pinned[\"method_names\"]], pinned[\"mean_return\"]))\nfor name, value in zip(fqe_names, fqe_values):\n    print(f\"{name}: FQE={float(value): .4f}; direct simulator={float(true_by_name[name]): .4f}\")\n\n# A one-step target shows that evaluation averages under the fixed target policy;\n# it does not maximize as Q-learning does.\npolicy_probs = np.array([[0.25, 0.75]])\nnext_values = np.array([[2.0, 4.0]])\nprint(\"one-step FQE target:\", fqe_targets([-0.1], [False], next_values, policy_probs, gamma=0.9))\nprint(LABELS[\"fqe_warning\"])\n"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. Decision Transformer: a return condition inside a causal sequence\n\nA compact causal transformer is trained on fixed trajectories. The curve compares achieved return across initial return-to-go requests; the diagonal is a reference, not a theorem the model is expected to satisfy."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "if PROFILE == \"full\":\n    dt_episodes, _ = collect_offline_dataset(seed=41, episodes=120, profile=\"mixed\")\n    dt_epochs, context_steps, eval_eps = 12, 16, 6\nelse:\n    dt_episodes, _ = collect_offline_dataset(seed=41, episodes=40, profile=\"mixed\")\n    dt_epochs, context_steps, eval_eps = 4, 12, 4\n\nstart = time.perf_counter()\nwith warnings.catch_warnings():\n    warnings.filterwarnings(\"ignore\", message=\"enable_nested_tensor\")\n    dt_model, dt_loss = train_decision_transformer(\n        dt_episodes,\n        seed=61,\n        state_dim=KeyDoorGrid().observation_dim,\n        action_dim=KeyDoorGrid().action_dim,\n        context_steps=context_steps,\n        epochs=dt_epochs,\n        batch_size=96 if PROFILE == \"full\" else 64,\n    )\nsmoke_dt_eval = evaluate_decision_transformer(\n    KeyDoorGrid(seed=41), dt_model, target_return=0.7,\n    episodes=eval_eps, seed=2000, context_steps=context_steps,\n)\nprint(f\"DT wall time: {time.perf_counter() - start:.2f}s\")\nprint(\"current-profile evaluation:\", smoke_dt_eval)\n\npinned = np.load(DATA / \"M5_decision_transformer_results.npz\")\nfig, ax = plt.subplots(figsize=(8, 4.7))\nax.plot(pinned[\"target_return\"], pinned[\"mean_return\"], marker=\"o\")\nax.plot(pinned[\"target_return\"], pinned[\"target_return\"], linestyle=\"--\", label=LABELS[\"identity\"])\nax.set_xlabel(LABELS[\"requested_return\"])\nax.set_ylabel(LABELS[\"achieved_return\"])\nax.set_title(LABELS[\"dt_title\"])\nax.legend()\nax.grid(True, alpha=0.3)\nplt.show()\n"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 8. An ILQL-like token pipeline\n\nThe last environment is linguistic: a prefix is a state, the next token is an action, and reward arrives after the response ends. We train a behavior policy, token-level $Q/V$ estimates, and an advantage-weighted policy. The mechanics are real, but the vocabulary and model are deliberately small and do not reproduce full-scale ILQL."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "start = time.perf_counter()\nif PROFILE == \"full\":\n    language_run = language_offline_experiment(seed=71, episodes_per_prompt=45, bc_epochs=12, iql_epochs=20)\nelse:\n    language_run = language_offline_experiment(seed=71, episodes_per_prompt=20, bc_epochs=5, iql_epochs=8)\nprint(f\"language offline-RL wall time: {time.perf_counter() - start:.2f}s\")\nprint(\"current-profile dataset:\", language_run[\"dataset\"])\nfor name, row in language_run[\"evaluation\"].items():\n    print(\"\\n\", name, {\"mean_reward\": row[\"mean_reward\"], \"exact_match\": row[\"exact_match\"]})\n    for prompt, seq, reward in zip(PROMPTS, row[\"sequences\"], row[\"rewards\"]):\n        print(\"  \", prompt, \"->\", token_text(seq), \"reward=\", reward)\n\npinned = np.load(DATA / \"M5_language_ilql_results.npz\", allow_pickle=True)\nfig, ax = plt.subplots(figsize=(8.8, 4.8))\nnames = [str(x) for x in pinned[\"method_names\"]]\npositions = np.arange(len(names))\nax.bar(positions, pinned[\"exact_match\"])\nax.set_xticks(positions, names, rotation=12, ha=\"right\")\nax.set_ylim(0, 1.08)\nax.set_ylabel(LABELS[\"exact_match\"])\nax.set_title(LABELS[\"language_title\"])\nax.grid(True, axis=\"y\", alpha=0.3)\nplt.tight_layout()\nplt.show()\n"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 9. What this notebook establishes\n\nThe important result is seeing where the statistical regime changes. Demonstrations, fresh interaction, and an immutable log support different claims. The final cell prints the interpretation boundaries stored with the experiment protocol."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "protocol = __import__(\"json\").loads((DATA / \"M5_experiment_protocol.json\").read_text(encoding=\"utf-8\"))\nprint(LABELS[\"summary_heading\"])\nprint(\"-\", LABELS[\"summary_bc\"])\nprint(\"-\", LABELS[\"summary_dqn\"])\nprint(\"-\", LABELS[\"summary_offline\"])\nprint(\"-\", LABELS[\"summary_dt\"])\nprint(\"-\", LABELS[\"summary_llm\"])\nprint(\"\\nartifact scope:\", protocol[\"artifact_scope\"])\n"
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

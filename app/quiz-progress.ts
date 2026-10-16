@@ -29,7 +29,7 @@ export function writeQuizProgress(key: string, value: QuizProgress) {
 export function subscribeQuizProgress(listener: () => void) {
   listeners.add(listener);
   const onStorage = (event: StorageEvent) => {
-    if (event.key?.startsWith('course-quiz:')) cache.delete(event.key);
+    if (event.key?.startsWith('course-quiz:') || event.key?.startsWith('course-practice:')) cache.delete(event.key);
     else if (event.key === null) cache.clear();
     listener();
   };

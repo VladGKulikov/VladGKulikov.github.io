@@ -1,0 +1,63 @@
+{
+  "checked": "2026-10-11",
+  "landscape_cutoff": "2026-10-10",
+  "scope": "Definitions and versioned protocols, not a current leaderboard. OSWorld osworld-v2.1 release dated 2026-09-16. HLE-Verified is an independent audit, not a permanent certification.",
+  "sources": [
+    {
+      "name": "HLE",
+      "url": "https://arxiv.org/abs/2501.14249"
+    },
+    {
+      "name": "HLE-Verified v4",
+      "url": "https://arxiv.org/abs/2602.13964v4"
+    },
+    {
+      "name": "HumanEval estimator",
+      "url": "https://github.com/openai/human-eval/blob/master/human_eval/evaluation.py"
+    },
+    {
+      "name": "HumanEval paper",
+      "url": "https://arxiv.org/abs/2107.03374v2"
+    },
+    {
+      "name": "McNemar exact",
+      "url": "https://www.statsmodels.org/stable/generated/statsmodels.stats.contingency_tables.mcnemar.html"
+    },
+    {
+      "name": "ARC-AGI-3",
+      "url": "https://arcprize.org/arc-agi/3"
+    },
+    {
+      "name": "MASK v3",
+      "url": "https://arxiv.org/html/2503.03750v3"
+    },
+    {
+      "name": "VHELM v2",
+      "url": "https://arxiv.org/abs/2410.07112v2"
+    },
+    {
+      "name": "NoCha v3",
+      "url": "https://arxiv.org/abs/2406.16264v3"
+    },
+    {
+      "name": "tau-bench",
+      "url": "https://arxiv.org/abs/2406.12045"
+    },
+    {
+      "name": "OSWorld versions",
+      "url": "https://github.com/xlang-ai/OSWorld-V2"
+    },
+    {
+      "name": "Arena naming",
+      "url": "https://arena.ai/blog/lmarena-is-now-arena"
+    },
+    {
+      "name": "Confidence calibration",
+      "url": "https://proceedings.mlr.press/v70/guo17a.html"
+    },
+    {
+      "name": "Selective prediction",
+      "url": "https://arxiv.org/abs/1705.08500"
+    }
+  ]
+}

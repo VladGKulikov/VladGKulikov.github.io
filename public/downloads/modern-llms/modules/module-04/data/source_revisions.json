@@ -1,0 +1,39 @@
+{
+  "gpt_oss": {
+    "repo": "openai/gpt-oss",
+    "revision": "7b583341fe16729127f6d5b94a7b09ccae97e1a1",
+    "date": "2026-07-24T18:56:00Z"
+  },
+  "transformers": {
+    "repo": "huggingface/transformers",
+    "revision": "536ecc007387a50e77603bb5d92100e9b07514cc",
+    "date": "2026-10-09T17:01:40Z"
+  },
+  "gpt_oss_config": {
+    "repo": "openai/gpt-oss-120b",
+    "revision": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
+    "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/config.json",
+    "sha256": "063aaa98e012cac330d58d18471700f0b0eb90bb15c58fb227809d45090f3e65"
+  },
+  "gpt_oss_model.py": {
+    "url": "https://raw.githubusercontent.com/openai/gpt-oss/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py",
+    "sha256": "319ba3c6e4d827eb3115fe4838942af448376b513c02cea4b6b471bf6c21a346"
+  },
+  "modeling_rope_utils.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/modeling_rope_utils.py",
+    "sha256": "6a0727073e080e163d0287e15fc1acb90035e9a9df9cb19a13b632a40abfac24"
+  },
+  "configuration_gpt_oss.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gpt_oss/configuration_gpt_oss.py",
+    "sha256": "03653073a3b61edbb80255280f566ce523eefd97fe1597cef4fa8ca5f2c09cb9"
+  },
+  "modeling_llama4.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/llama4/modeling_llama4.py",
+    "sha256": "4dca7a5d89ad1f62cc5300d0a945302223a0f9209688417d981b969b2c17cd76"
+  },
+  "modeling_qwen3_vl.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/transformers/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3_vl/modeling_qwen3_vl.py",
+    "sha256": "5a2c0c29c0230003dbf68bc9dadf9f54adcfaf4b07803cedca142929201108e2"
+  },
+  "checked_on": "2026-10-10"
+}

@@ -1,0 +1,105 @@
+{
+  "infonce": {
+    "batch_size": 4,
+    "negative_similarity": 0.2,
+    "positive_similarity": 0.8,
+    "tau_0_1": {
+      "image_to_text": 0.00740874388428169,
+      "symmetric": 0.00740874388428169,
+      "text_to_image": 0.00740874388428169
+    },
+    "tau_0_1_probability": 0.9926186332070156,
+    "tau_0_5": {
+      "image_to_text": 0.6437377084206329,
+      "symmetric": 0.6437377084206329,
+      "text_to_image": 0.6437377084206329
+    },
+    "uniform_floor": 1.3862943611198906
+  },
+  "kv": {
+    "device_budget_gib": 80.0,
+    "per_image": {
+      "llava336": {
+        "available_gib": 65.0,
+        "capacity_upper_bound": 924,
+        "kv_bytes": 75497472,
+        "kv_mib": 72.0,
+        "visual_tokens": 576
+      },
+      "next672": {
+        "available_gib": 65.0,
+        "capacity_upper_bound": 184,
+        "kv_bytes": 377487360,
+        "kv_mib": 360.0,
+        "visual_tokens": 2880
+      },
+      "qwen1008_merged": {
+        "available_gib": 65.0,
+        "capacity_upper_bound": 410,
+        "kv_bytes": 169869312,
+        "kv_mib": 162.0,
+        "visual_tokens": 1296
+      }
+    },
+    "spec": {
+      "bytes_per_element": 2,
+      "bytes_per_token": 131072,
+      "head_dim": 128,
+      "kib_per_token": 128.0,
+      "n_kv_heads": 8,
+      "n_layers": 32
+    },
+    "weights_gib": 15.0
+  },
+  "patches": {
+    "llava336": 576,
+    "next672": 2880,
+    "qwen1008": 5184,
+    "qwen1008_merged": 1296,
+    "rectangular_56x28": 8,
+    "rectangular_56x28_merged": 2
+  },
+  "projector": {
+    "hidden_dim": 4096,
+    "llm_dim": 4096,
+    "parameter_count": 20979712,
+    "vision_dim": 1024
+  },
+  "schema_version": 1,
+  "training_floor": {
+    "flops_multiplier": 6.0,
+    "mfu": 0.4,
+    "n_parameters": 7000000000.0,
+    "peak_flops_per_second": 990000000000000.0,
+    "stage1_hours": 9.863636363636365,
+    "stage1_tokens": 334800000,
+    "stage2_hours": 19.59175084175084,
+    "stage2_tokens": 665000000,
+    "total_hours": 29.455387205387204
+  },
+  "video": {
+    "source_frames": 7200,
+    "with_merger_2x2": {
+      "full_prompt_kv_gib": 31.25,
+      "full_prompt_tokens": 256000,
+      "max_frames": 1750,
+      "sample_interval_seconds": 4.114285714285714,
+      "selected_frames": 1750,
+      "total_frames": 7200,
+      "used_visual_tokens": 252000,
+      "visual_budget_tokens": 252000,
+      "visual_kv_gib": 30.76171875
+    },
+    "without_merger": {
+      "full_prompt_kv_gib": 31.21484375,
+      "full_prompt_tokens": 255712,
+      "max_frames": 437,
+      "sample_interval_seconds": 16.475972540045767,
+      "selected_frames": 437,
+      "total_frames": 7200,
+      "used_visual_tokens": 251712,
+      "visual_budget_tokens": 252000,
+      "visual_kv_gib": 30.7265625
+    }
+  }
+}

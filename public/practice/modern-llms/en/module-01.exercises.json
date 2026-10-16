@@ -1,0 +1,56 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-01",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. Passport arithmetic",
+      "prompt": "For 1.6T/49B, 550B/55B, and 117B/5.1B, compute idealized BF16 payload, raw four-bit payload, weight GFLOP/token, and total/active ratio.",
+      "answer": "*Solution.*\n\nFor a model with $P_{total}$ total and $P_{active}$ active parameters, use\n\n$$\nM_{BF16}=2P_{total}\\ \\text{bytes},\\qquad\nM_{4bit}=0.5P_{total}\\ \\text{bytes},\\qquad\nC_{token}\\approx2P_{active}\\ \\text{FLOP},\\qquad\nr=\\frac{P_{total}}{P_{active}}.\n$$\n\nFor example, 1.6T/49B gives $2\\cdot1.6\\cdot10^{12}=3.20$ TB, $0.5\\cdot1.6\\cdot10^{12}=0.80$ TB, $2\\cdot49=98$ GFLOP/token, and $1600/49=32.65$.\n\n| Passport | BF16, TB | raw 4-bit, TB | GFLOP/token | total/active |\n|---|---:|---:|---:|---:|\n| 1.6T / 49B | 3.20 | 0.80 | 98 | 32.65× |\n| 550B / 55B | 1.10 | 0.275 | 110 | 10× |\n| 117B / 5.1B | 0.234 | 0.0585 | 10.2 | 22.94× |\n\nThese are lower payload and weight-matmul estimates. A real checkpoint includes scales and heterogeneous tensors; a runtime adds state and buffers.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. Classify attention",
+      "prompt": "Use the definitions and validated function in §17 to classify `(Q=8, KV=8)`, `(Q=8, KV=1)`, and `(Q=8, KV=2)`. Check that `(Q=8, KV=3)` is rejected. Why is `kv_lora_rank` tested before the head ratio?",
+      "answer": "*Solution.* The cases are MHA, MQA, and GQA with four query heads per KV head. The `8/3` case is invalid because the KV-head count must divide the query-head count. Under the supported configuration conventions, `kv_lora_rank` identifies MLA's compressed representation and needs a separate interpretation. This is a classifier for those conventions, not for every possible architecture.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3 [project]. Two passports for one product",
+      "prompt": "Choose an API model or open-weight checkpoint. Fill the six model axes, then the system passport: tools, secrets, egress, shared memory, sandbox, monitoring, and evaluation protocol. Label each field as primary-source evidence, your own measurement, or unknown.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 1](/downloads/modern-llms/project_demos/en/module_01_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4 [project]. Release wave",
+      "prompt": "Four to six weeks later, repeat the dated snapshot in §§13–15. Do not merely add names: record the source, artefact status, and passport fields that actually changed. The exercise builds a procedure for updating knowledge rather than dependence on a news stream.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 1](/downloads/modern-llms/project_demos/en/module_01_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5. Cost of an accepted task",
+      "prompt": "Keep B's total spend at 2.80 USD, but reduce its accepted count to 40 out of 100. Which system now has the lower cost per accepted task? Does either meet the 80-out-of-100 requirement?",
+      "answer": "*Solution.* B costs $2.80/40=0.070$ USD per accepted task, compared with A's $3.60/60=0.060$ USD. A is cheaper by this measure, but **neither** system meets the quality threshold. With zero accepted tasks, the ratio is undefined, not zero.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-06",
+      "title": "E6. An answer and its evidence",
+      "prompt": "Using documents A and B in Section 12, evaluate “30 days, A”, “7 days, A”, and “30 days, B”. Check the retention period and source support separately. Does the existence of the cited document establish that the answer is acceptable?",
+      "answer": "*Solution.* The first response passes both checks. The second gives the wrong period: A specifies 30 days. The third gives the correct number but cites a rule about temporary exports, so its evidence does not support the experiment-log claim. An accessible citation establishes that a source exists, not that it entails the answer. The notebook checks these cases against an explicit reference; this bounded test is not a general verifier for free-form text.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "courseKey": "rl-for-llm",
+  "moduleKey": "module-04",
+  "language": "ru",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "A1",
+      "title": "Что именно даёт тождество логарифмической производной",
+      "prompt": "Сначала выберите все верные утверждения о формуле\n\n$$\n\\nabla_\\theta \\mathbb{E}_{X\\sim p_\\theta}[f(X)]\n=\n\\mathbb{E}[f(X)\\nabla_\\theta\\log p_\\theta(X)].\n$$\n\n\n1. Она делает дискретный случайный выбор дифференцируемым.\n\n2. Она позволяет оценивать градиент по выборкам, не дифференцируя $f$.\n\n3. Она устраняет дисперсию Монте-Карло.\n\n4. Она допускает недифференцируемую награду, если вероятность выбранного исхода дифференцируема по $\\theta$.\n\n5. Она всегда применима без условий регулярности.\n\nЗатем рассмотрите $f_\\theta(X)$, которое зависит от $\\theta$ напрямую. Какой член нужно добавить и что он означает?",
+      "answer": "Верны пункты **2** и **4**.\n\n- **2.** Тождество переносит производную на $\\log p_\\theta(X)$, поэтому $f(X)$ достаточно вычислить для выбранного исхода; её производная не нужна.\n- **4.** Награда может быть результатом программы или человеческой оценки. Требуется дифференцируемость логарифма вероятности выбранного исхода по параметрам политики.\n\nПункт 1 неверен: дискретный случайный выбор не становится дифференцируемым — строится другой оцениватель градиента. Пункт 3 неверен: Монте-Карло остаётся стохастическим и часто высокодисперсионным. Пункт 5 неверен: перенос производной под сумму или интеграл требует условий регулярности.\n\nПри прямой зависимости $f_\\theta$ правило произведения даёт\n\n$$\n\\nabla_\\theta\\mathbb{E}[f_\\theta(X)]\n=\n\\mathbb{E}\\left[\nf_\\theta(X)\\nabla_\\theta\\log p_\\theta(X)\n+\n\\nabla_\\theta f_\\theta(X)\n\\right].\n$$\n\nПервый член учитывает изменение распределения исходов, второй — изменение самой величины при фиксированном исходе. В классическом REINFORCE награда среды не зависит от параметров политики напрямую. Для дифференцируемого KL-штрафа или другого параметрического регуляризатора прямой член нужно либо сохранить, либо сознательно остановить его градиент и тем самым определить другую вычислительную цель.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A2",
+      "title": "Когда динамика среды исчезает из производной",
+      "prompt": "Для каждого сценария укажите, исчезает ли соответствующая часть среды из явной производной $\\nabla_\\theta\\log p_\\theta(\\tau)$, и объясните почему.\n\n\n1. Фиксированный недифференцируемый симулятор не зависит от $\\theta$.\n\n2. Параметр $\\theta$ одновременно управляет политикой и вероятностями переходов.\n\n3. Замороженная модель награды не зависит от $\\theta$, но определяет скалярную награду.\n\n4. Известная дифференцируемая модель мира используется в другом оценивателе, где градиент проводят через переходы.\n\nОтдельно поясните, почему «исчезает из производной» не означает «не влияет на обучение».",
+      "answer": "1. **Да.** Фиксированный симулятор входит в $p_\\theta(\\tau)$, но его логарифм не зависит от $\\theta$, поэтому производная равна нулю.\n\n2. **Нет.** Если переходы параметризованы тем же $\\theta$, появляется дополнительный член $\\nabla_\\theta\\log P_\\theta(s'\\mid s,a)$.\n\n3. **Да, из явной производной.** Замороженная модель награды не требует дифференцирования, но её выход умножает градиент логарифма вероятности и определяет направление обучения.\n\n4. **Нет в выбранном оценивателе.** Если мы сознательно проводим градиент через дифференцируемую модель мира, используются производные переходов. Это уже не чистый оцениватель с логарифмической производной по действиям.\n\nСреда остаётся в распределении траекторий. Она определяет, какие состояния и награды увидит политика. Поэтому «производная перехода равна нулю» не означает «переход не влияет на градиентную оценку через данные».",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A3",
+      "title": "Каузальность и две договорённости о дисконтировании",
+      "prompt": "Объясните, почему награды до действия $a_t$ можно удалить из множителя при градиенте логарифма вероятности. Затем сравните:\n\n$$\nG_t=\\sum_{k=t}^{T-1}\\gamma^{k-t}r_{k+1}\n$$\n\nи вес $\\gamma^tG_t$.\n\nВ каком выводе появляется внешний $\\gamma^t$? Почему запись без него всё же часто корректна при другой договорённости?",
+      "answer": "Условно на истории до $a_t$ прошлые награды уже фиксированы. Их вклад имеет вид\n\n$$\nC\\,\\mathbb{E}_{a_t\\sim\\pi}[\\nabla\\log\\pi(a_t\\mid s_t)]=0.\n$$\n\nПоэтому остаются только награды, на которые действие могло повлиять, — накопленная награда от текущего шага.\n\nЕсли цель буквально равна\n\n$$\n\\mathbb{E}\\left[\\sum_t\\gamma^t r_{t+1}\\right],\n$$\n\nто после перегруппировки наград множитель при градиенте логарифма вероятности равен $\\gamma^tG_t$. Запись только с $G_t$ часто использует дисконтированное распределение посещений состояний или иную нормировку цели. Она не является алгебраически той же строкой без изменения договорённости. При конечном горизонте удаление внешнего множителя меняет относительный вес ранних и поздних решений и потому может изменить направление градиента, а не только его длину.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A4",
+      "title": "Допустимые и недопустимые опорные уровни",
+      "prompt": "Какие из следующих величин можно вычесть из $Q(s,a)$ без дополнительной поправки, сохранив ожидаемый градиент? Предположите, что состояние $s$ уже зафиксировано.\n\n\n1. Константа $7$.\n\n2. $V_\\phi(s)$.\n\n3. Средняя награда независимых ответов на тот же запрос, не включающая текущий ответ.\n\n4. $Q_\\psi(s,a)$, зависящая от текущего действия.\n\n5. Среднее той же группы, включающее текущую награду.\n\nРазделите ответы на три категории: «точно допустимо», «не допустимо без поправки», «даёт известный масштаб при конечном размере группы, но не буквальную несмещённость».",
+      "answer": "**Точно допустимы:** 1, 2, 3.\n\n- Константа и функция состояния не зависят от текущего действия.\n- Среднее независимых других ответов условно не зависит от текущего ответа.\n\n**Не допустимо без поправки:** 4. $Q_\\psi(s,a)$ зависит от действия, поэтому доказательство через нулевое ожидание градиента логарифма вероятности не работает.\n\n**Известный масштаб при конечном размере группы:** 5. Общее среднее включает текущую награду. При условно независимой группе оно масштабирует ожидаемый градиент на $(G-1)/G$, а не сохраняет его буквально.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A5",
+      "title": "Общее среднее и исключение текущего ответа",
+      "prompt": "Пусть $G$ условно независимых ответов на один запрос имеют награды $R_i$.\n\n\n1. Почему $\\bar R$ не является независимым от текущего ответа опорным уровнем?\n\n2. Каков ожидаемый масштаб градиента при преимуществах $R_i-\\bar R$?\n\n3. Почему среднее с исключением текущего ответа восстанавливает правильное ожидание?\n\n4. Как связаны $R_i-\\bar R$ и $R_i-\\bar R_{-i}$?\n\n5. Что происходит, если все награды равны?",
+      "answer": "1. $\\bar R$ содержит $R_i/G$, а $R_i$ зависит от текущего ответа $Y_i$.\n\n2. Ожидаемый масштаб равен $(G-1)/G$ от исходного градиента.\n\n3. Среднее остальных ответов условно независимо от $Y_i$, поэтому его произведение с градиентом логарифма вероятности имеет нулевое ожидание.\n\n4. Алгебраически\n\n$$\nR_i-\\bar R_{-i}\n=\n\\frac{G}{G-1}(R_i-\\bar R).\n$$\n\n\n5. Оба типа преимуществ равны нулю. Внутригруппового сигнала для ранжирования ответов нет.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A6",
+      "title": "Бутстрэппинг и граница обратной рекурсии GAE",
+      "prompt": "Разберите два случая.\n\n**Случай I.** Агент достиг ограничения времени, но не терминального состояния. Среда возвращает финальное наблюдение и затем выполняет `reset()`.\n\n**Случай II.** Сборщик заполнил фиксированный буфер роллаутов. Эпизод не завершился, среда не сбрасывается, но следующего преимущества в текущем массиве уже нет.\n\nДля каждого случая ответьте:\n\n\n1. Нужно ли использовать $V(s_{t+1})$ в TD-ошибке?\n\n2. Нужно ли переносить обратную рекурсию на следующий элемент текущего массива?\n\n3. Какие значения имеют `terminated` и `trace_cut`?\n\n4. Почему один флаг `done` недостаточен?",
+      "answer": "**Случай I — техническое усечение с последующим `reset()`.**\n\n\n1. **Да.** Продолжение в математической задаче существует, поэтому используется ценность последнего наблюдения до сброса.\n\n2. **Нет.** Следующий элемент после `reset()` принадлежит другому эпизоду.\n\n3. `terminated=False`, `trace_cut=True`.\n\n**Случай II — граница локального буфера.**\n\n\n1. **Да.** Среда продолжает тот же эпизод, поэтому следующий прогноз нужен для бутстрэппинга.\n\n2. **Нет внутри данного массива**, если следующий фрагмент не присоединён к вычислению GAE. Потоковая реализация могла бы перенести накопитель между фрагментами.\n\n3. `terminated=False`, `trace_cut=True` для последней записи локального массива.\n\nОдин `done` смешивает два вопроса: существует ли ценность продолжения и имеется ли следующее преимущество в текущей обратной рекурсии. Если занулять бутстрэппинг при каждом `done`, цели около временных ограничений и границ буфера смещаются: при положительной ценности продолжения цели занижаются, при отрицательной — завышаются.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A7",
+      "title": "Четыре области клиппированной цели PPO",
+      "prompt": "Для $\\varepsilon=0.2$ заполните таблицу. Укажите, активна ли клиппированная ветвь, и вычислите пессимистический член $\\min(rA,\\operatorname{clip}(r)A)$.\n\n| $r$ | $A$ | Клиппирование меняет цель? | Пессимистический член |\n|---:|---:|---|---:|\n| 1.4 | 2 | ? | ? |\n| 0.6 | 2 | ? | ? |\n| 1.4 | -2 | ? | ? |\n| 0.6 | -2 | ? | ? |\n\nПосле таблицы объясните, почему `ratio_outside_fraction` может равняться 1, а `active_clip_fraction` — 0.5.",
+      "answer": "При $\\varepsilon=0.2$ интервал равен $[0.8,1.2]$.\n\n| $r$ | $A$ | Клиппирование меняет цель? | Пессимистический член |\n|---:|---:|---|---:|\n| 1.4 | 2 | да | $1.2\\cdot2=2.4$ |\n| 0.6 | 2 | нет | $0.6\\cdot2=1.2$ |\n| 1.4 | -2 | нет | $1.4\\cdot(-2)=-2.8$ |\n| 0.6 | -2 | да | $0.8\\cdot(-2)=-1.6$ |\n\nВсе четыре отношения находятся вне интервала, поэтому `ratio_outside_fraction=1`. Клиппирование создаёт пессимистический минимум только в первой и четвёртой строках, поэтому `active_clip_fraction=2/4=0.5`.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "A8",
+      "title": "RLOO, GRPO и распределение вклада между токенами",
+      "prompt": "Сформулируйте:\n\n\n1. одну общую идею RLOO и GRPO;\n\n2. два существенных различия между их базовыми формулировками;\n\n3. почему один коэффициент уровня полного ответа, применённый ко всем токенам, даёт корректный градиент награды за полный ответ;\n\n4. почему тот же приём не решает задачу распределения вклада между токенами.",
+      "answer": "1. Общая идея — несколько ответов на один запрос и относительная оценка внутри группы без обязательного отдельного критика.\n\n2. Базовый RLOO использует среднее с исключением текущего ответа и цель REINFORCE; канонический GRPO использует PPO-подобные отношения и клиппирование, обычно нормирует групповой сигнал и добавляет регуляризацию относительно базовой политики.\n\n3. Логарифм вероятности ответа равен сумме логарифмов вероятностей токенов. Поэтому один коэффициент ответа, умноженный на эту сумму, задаёт градиент логарифма вероятности полной последовательности.\n\n4. Коэффициент одинаков для всех токенов и не сообщает, какой локальный выбор вызвал награду. Он оптимизирует цель, заданную на уровне полного ответа, но не локализует причинный вклад.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B1",
+      "title": "Градиент логарифма softmax",
+      "prompt": "Для логитов\n\n$$\nz=(1,2,3)\n$$\n\nи выбранного действия $a=2$ вычислите\n\n$$\n\\nabla_z\\log\\pi(a)=e_a-\\operatorname{softmax}(z).\n$$\n\nДайте ответ с точностью не хуже $10^{-6}$ и проверьте, что сумма компонент равна нулю.",
+      "answer": "Сначала\n\n$$\n\\operatorname{softmax}(1,2,3)\n\\approx\n(0.09003057,0.24472847,0.66524096).\n$$\n\nДля действия 2:\n\n$$\ne_2-\\pi\n\\approx\n(-0.09003057,-0.24472847,0.33475904).\n$$\n\nСумма компонент с учётом округления равна нулю.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B2",
+      "title": "Награда от текущего шага и внешний дисконт",
+      "prompt": "Для наград\n\n$$\n(r_1,r_2,r_3)=(1,2,3)\n$$\n\nи $\\gamma=0.5$ вычислите:\n\n\n1. вектор $G_t$;\n\n2. вектор $\\gamma^tG_t$ для $t=0,1,2$.\n\nПоясните, какую цель представляет второй вектор.",
+      "answer": "Обратная рекурсия:\n\n$$\nG_2=3,\n$$\n\n$$\nG_1=2+0.5\\cdot3=3.5,\n$$\n\n$$\nG_0=1+0.5\\cdot3.5=2.75.\n$$\n\nИтак,\n\n$$\nG=(2.75,3.5,3).\n$$\n\nВнешний дисконт:\n\n$$\n\\gamma^tG_t=(2.75,1.75,0.75).\n$$\n\nВторой вектор соответствует прямому градиенту буквальной цели с весами $\\gamma^t$ для наград от начала эпизода.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B3",
+      "title": "Ценность и оптимальный скалярный опорный уровень",
+      "prompt": "Политика имеет логиты $(2,0)$, а значения действий равны $(1,4)$.\n\n\n1. Вычислите вероятности действий.\n\n2. Вычислите $V^\\pi=\\sum_a\\pi(a)Q(a)$.\n\n3. Для каждого действия найдите $\\|\\nabla_z\\log\\pi(a)\\|^2$.\n\n4. Вычислите\n\n$$\nb^*\n=\n\\frac{\\sum_a\\pi(a)Q(a)\\|\\nabla\\log\\pi(a)\\|^2}\n{\\sum_a\\pi(a)\\|\\nabla\\log\\pi(a)\\|^2}.\n$$\n\nПочему $V^\\pi$ и $b^*$ различаются?",
+      "answer": "Вероятности:\n\n$$\n\\pi\n=\n\\operatorname{softmax}(2,0)\n\\approx\n(0.88079708,0.11920292).\n$$\n\nЦенность:\n\n$$\nV^\\pi\n=0.88079708\\cdot1+0.11920292\\cdot4\n\\approx1.35760877.\n$$\n\nГрадиенты логарифмических вероятностей:\n\n$$\ng_0=(1-p_0,-p_1)=(0.11920292,-0.11920292),\n$$\n\n$$\ng_1=(-p_0,1-p_1)=(-0.88079708,0.88079708).\n$$\n\nИх квадраты норм:\n\n$$\n\\|g_0\\|^2\\approx0.02841867,\n\\qquad\n\\|g_1\\|^2\\approx1.55160699.\n$$\n\nПосле подстановки:\n\n$$\nb^*\\approx3.64239123.\n$$\n\nРазличие возникает потому, что $b^*$ взвешивает значения действий квадратом нормы градиента логарифма вероятности. Редкое действие 1 имеет значительно больший градиентный вектор и поэтому получает больший вес, чем в обычном $V^\\pi$.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B4",
+      "title": "Групповые преимущества",
+      "prompt": "Для наград\n\n$$\nR=(1,3,8,2)\n$$\n\nвычислите:\n\n\n1. общее среднее;\n\n2. центрированные преимущества $R_i-\\bar R$;\n\n3. опорные уровни с исключением текущего элемента;\n\n4. RLOO-преимущества;\n\n5. коэффициент пропорциональности между двумя векторами преимуществ;\n\n6. ожидаемый масштаб оценивателя с общим средним для группы размера 4.",
+      "answer": "Общее среднее:\n\n$$\n\\bar R=\\frac{1+3+8+2}{4}=3.5.\n$$\n\nЦентрированные преимущества:\n\n$$\nR-\\bar R=(-2.5,-0.5,4.5,-1.5).\n$$\n\nОпорные уровни с исключением текущего элемента:\n\n$$\n\\left(\\frac{13}{3},\\frac{11}{3},2,4\\right)\n\\approx(4.333333,3.666667,2,4).\n$$\n\nRLOO-преимущества:\n\n$$\n\\left(-\\frac{10}{3},-\\frac{2}{3},6,-2\\right)\n\\approx(-3.333333,-0.666667,6,-2).\n$$\n\nОни равны $4/3$ от центрированных преимуществ. Ожидаемый масштаб оценки с общим средним равен\n\n$$\n\\frac{G-1}{G}=\\frac{3}{4}.\n$$",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B5",
+      "title": "GAE при техническом усечении",
+      "prompt": "Даны два независимых перехода в массиве. Первый завершает эпизод из-за ограничения времени; второй относится к другому эпизоду:\n\n$$\nr=(1,100),\\quad\nV=(2,0),\\quad\nV_{\\text{next}}=(10,0).\n$$\n\nМаски:\n\n$$\n\\mathrm{terminated}=(0,1),\\qquad\n\\mathrm{episode\\_end}=(1,1).\n$$\n\nПри $\\gamma=0.9$ и $\\lambda=1$ вычислите TD-ошибки и GAE-преимущества. Объясните, почему награда 100 не входит в преимущество первого перехода.",
+      "answer": "Первый переход усечён, но не терминален:\n\n$$\n\\delta_0\n=1+0.9\\cdot10-2=8.\n$$\n\nВторой переход терминален:\n\n$$\n\\delta_1\n=100+0-0=100.\n$$\n\nПоскольку `episode_end[0]=1`, рекурсия не переносит $\\delta_1$ назад:\n\n$$\nA_0=8,\n\\qquad\nA_1=100.\n$$\n\nНаграда 100 относится к другому эпизоду после `reset()`. Она соседняя только в массиве, но не в траектории.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "B6",
+      "title": "Члены PPO и выборочная диагностика KL",
+      "prompt": "Пусть\n\n$$\nr=(1.5,0.5,1.5,0.5),\n\\qquad\nA=(2,2,-2,-2),\n\\qquad\n\\varepsilon=0.2.\n$$\n\nВычислите:\n\n\n1. неклиппированные члены $rA$;\n\n2. клиппированные члены;\n\n3. пессимистические члены;\n\n4. среднюю цель PPO;\n\n5. долю отношений вне интервала;\n\n6. долю примеров, где клиппирование изменяет цель;\n\n7. выборочную диагностику\n\n$$\n\\widehat D\n=\n\\frac{1}{N}\\sum_i[(r_i-1)-\\log r_i].\n$$",
+      "answer": "Неклиппированные члены:\n\n$$\nrA=(3,1,-3,-1).\n$$\n\nКлиппированные отношения равны $(1.2,0.8,1.2,0.8)$, поэтому соответствующие члены:\n\n$$\n(2.4,1.6,-2.4,-1.6).\n$$\n\nПокомпонентный минимум:\n\n$$\n(2.4,1,-3,-1.6).\n$$\n\nСредняя цель:\n\n$$\n\\frac{2.4+1-3-1.6}{4}=-0.3.\n$$\n\nВсе отношения вне интервала, поэтому `ratio_outside_fraction=1`. Клиппирование меняет минимум в двух из четырёх случаев, поэтому `active_clip_fraction=0.5`.\n\nДля двух значений $r=1.5$ вклад равен $0.5-\\log 1.5\\approx0.094535$, а для двух значений $r=0.5$ — $-0.5-\\log0.5\\approx0.193147$. Поэтому\n\n$$\n\\widehat D\n\\approx\n\\frac{2\\cdot0.094535+2\\cdot0.193147}{4}\n=\n0.143841.\n$$\n\nЭто неотрицательная выборочная диагностика. Она совпадает с обратной KL в математическом ожидании по старой политике при требуемом совпадении носителей, но один конечный пакет не превращает её в точное KL-ограничение.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C1",
+      "title": "Устойчивый softmax и градиент логарифма вероятности",
+      "prompt": "Реализуйте:\n\n```python\nimport numpy as np\n\ndef stable_softmax(logits: np.ndarray) -> np.ndarray:\n    ...\n\ndef grad_log_softmax(logits: np.ndarray, action: int) -> np.ndarray:\n    ...\n```\n\nТребования:\n\n- вход — одномерный массив;\n- вычисление устойчиво для `[1000, 999]`;\n- сумма градиента равна нулю с абсолютной погрешностью не более $10^{-12}$;\n- некорректный индекс действия вызывает `ValueError`.\n\nОткрытые проверки:\n\n```python\nnp.testing.assert_allclose(stable_softmax([1000.0, 999.0]), [0.7310585786, 0.2689414214], rtol=2e-10)\n```",
+      "answer": "```python\nimport numpy as np\n\ndef stable_softmax(logits: np.ndarray) -> np.ndarray:\n    z = np.asarray(logits, dtype=float)\n    if z.ndim != 1:\n        raise ValueError(\"logits must be one-dimensional\")\n    shifted = z - np.max(z)\n    exp_z = np.exp(shifted)\n    return exp_z / np.sum(exp_z)\n\ndef grad_log_softmax(logits: np.ndarray, action: int) -> np.ndarray:\n    p = stable_softmax(logits)\n    if not 0 <= action < len(p):\n        raise ValueError(\"action is out of range\")\n    result = -p\n    result[action] += 1.0\n    return result\n```\n\nВычитание максимума не меняет softmax, но предотвращает переполнение экспоненты.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C2",
+      "title": "Накопленная награда от текущего шага и две договорённости о дисконтировании",
+      "prompt": "Реализуйте:\n\n```python\ndef reward_to_go(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    ...\n\ndef discounted_score_weights(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    ...\n```\n\nПервый результат содержит $G_t$, второй — $\\gamma^tG_t$. Алгоритм должен работать за $O(T)$ времени и не использовать вложенные циклы.\n\nОткрытые проверки:\n\n```python\nnp.testing.assert_allclose(reward_to_go([1.0, 2.0, 3.0], 0.5), [2.75, 3.5, 3.0])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef reward_to_go(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    if r.ndim != 1:\n        raise ValueError(\"rewards must be one-dimensional\")\n    if not 0.0 <= gamma <= 1.0:\n        raise ValueError(\"gamma must lie in [0, 1]\")\n    result = np.empty_like(r)\n    running = 0.0\n    for t in range(len(r) - 1, -1, -1):\n        running = r[t] + gamma * running\n        result[t] = running\n    return result\n\ndef discounted_score_weights(rewards: np.ndarray, gamma: float) -> np.ndarray:\n    g = reward_to_go(rewards, gamma)\n    return (gamma ** np.arange(len(g), dtype=float)) * g\n```\n\nОдин обратный проход даёт сложность $O(T)$ и постоянную дополнительную память помимо результата.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C3",
+      "title": "Среднее, исключение текущего элемента и внутригрупповая нормировка",
+      "prompt": "Реализуйте:\n\n```python\ndef leave_one_out_baselines(rewards: np.ndarray) -> np.ndarray:\n    ...\n\ndef group_mean_advantages(rewards: np.ndarray) -> np.ndarray:\n    ...\n\ndef group_zscore_advantages(rewards: np.ndarray, eps: float = 1e-8) -> np.ndarray:\n    ...\n```\n\nДля группы из одного элемента `leave_one_out_baselines` должна вызывать `ValueError`. При одинаковых наградах стандартизованные преимущества должны быть нулевыми, а не `NaN`.\n\nОткрытые проверки:\n\n```python\nnp.testing.assert_allclose(leave_one_out_baselines([1.0, 3.0, 8.0, 2.0]), [13/3, 11/3, 2.0, 4.0])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef leave_one_out_baselines(rewards: np.ndarray) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    if r.ndim != 1 or len(r) < 2:\n        raise ValueError(\"at least two rewards are required\")\n    return (np.sum(r) - r) / (len(r) - 1)\n\ndef group_mean_advantages(rewards: np.ndarray) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    if r.ndim != 1 or len(r) == 0:\n        raise ValueError(\"rewards must be a non-empty vector\")\n    return r - np.mean(r)\n\ndef group_zscore_advantages(rewards: np.ndarray, eps: float = 1e-8) -> np.ndarray:\n    centered = group_mean_advantages(rewards)\n    scale = float(np.sqrt(np.mean(centered ** 2)))\n    if scale < eps:\n        return np.zeros_like(centered)\n    return centered / scale\n```\n\nИспользована «популяционная» внутригрупповая дисперсия с делением на $G$, что соответствует распространённой нормировке преимуществ.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C4",
+      "title": "GAE с раздельными масками бутстрэппинга и рекурсии",
+      "prompt": "Реализуйте обратную рекурсию:\n\n```python\ndef gae_advantages(\n    rewards: np.ndarray,\n    values: np.ndarray,\n    next_values: np.ndarray,\n    terminated: np.ndarray,\n    trace_cuts: np.ndarray,\n    gamma: float,\n    gae_lambda: float,\n) -> np.ndarray:\n    ...\n```\n\n`terminated` отключает бутстрэппинг в TD-ошибке. `trace_cuts` отключает перенос рекурсии на следующий элемент текущего массива. Последний элемент фиксированного роллаут-буфера может иметь `terminated=False`, `trace_cuts=True`.\n\nОткрытые проверки:\n\n```python\nrewards = np.array([1.0, 2.0])\nvalues = np.array([0.5, 0.7])\nnext_values = np.array([0.7, 0.0])\nterm = np.array([False, True])\ncuts = np.array([False, True])\nresult = gae_advantages(rewards, values, next_values, term, cuts, gamma=0.9, gae_lambda=0.8)\ndelta1 = 2.0 - 0.7\ndelta0 = 1.0 + 0.9 * 0.7 - 0.5\nnp.testing.assert_allclose(result, [delta0 + 0.9 * 0.8 * delta1, delta1])\n\n# Нетерминальная граница буфера: бутстрэппинг есть, утечки из следующей строки нет.\nresult = gae_advantages(\n    np.array([1.0, 100.0]), np.array([2.0, 0.0]), np.array([10.0, 0.0]),\n    np.array([False, True]), np.array([True, True]), 0.9, 1.0,\n)\nnp.testing.assert_allclose(result, [8.0, 100.0])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef gae_advantages(\n    rewards: np.ndarray,\n    values: np.ndarray,\n    next_values: np.ndarray,\n    terminated: np.ndarray,\n    trace_cuts: np.ndarray,\n    gamma: float,\n    gae_lambda: float,\n) -> np.ndarray:\n    r = np.asarray(rewards, dtype=float)\n    v = np.asarray(values, dtype=float)\n    nv = np.asarray(next_values, dtype=float)\n    term = np.asarray(terminated, dtype=bool)\n    cuts = np.asarray(trace_cuts, dtype=bool)\n    if not (r.shape == v.shape == nv.shape == term.shape == cuts.shape) or r.ndim != 1:\n        raise ValueError(\"all inputs must be aligned one-dimensional arrays\")\n    if not (0.0 <= gamma <= 1.0 and 0.0 <= gae_lambda <= 1.0):\n        raise ValueError(\"gamma and gae_lambda must lie in [0, 1]\")\n\n    deltas = r + gamma * (~term).astype(float) * nv - v\n    result = np.empty_like(deltas)\n    running = 0.0\n    for t in range(len(r) - 1, -1, -1):\n        running = deltas[t] + gamma * gae_lambda * (not cuts[t]) * running\n        result[t] = running\n    return result\n```\n\nКлючевой момент — две маски отвечают на разные вопросы. При усечении или локальной границе буфера `terminated=False`, поэтому следующий прогноз используется; `trace_cuts=True`, поэтому текущая пакетная рекурсия останавливается.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C5",
+      "title": "Клиппированные члены и диагностика PPO",
+      "prompt": "Реализуйте:\n\n```python\ndef ppo_clipped_terms(ratio, advantage, clip_epsilon=0.2):\n    ...\n\ndef ppo_diagnostics(new_log_prob, old_log_prob, advantage, clip_epsilon=0.2):\n    ...\n```\n\nДиагностика должна возвращать:\n\n- `ratio_outside_fraction`;\n- `active_clip_fraction`;\n- `approx_kl_nonnegative = mean((ratio - 1) - log_ratio)`;\n- `mean_log_ratio`.\n\nОтношения должны вычисляться из разности логарифмических вероятностей.\n\nОткрытые проверки:\n\n```python\nratio = np.array([0.75, 1.00, 1.30, 1.10])\nadvantage = np.array([1.0, 1.0, 1.0, -1.0])\nunclipped, clipped, pessimistic = ppo_clipped_terms(ratio, advantage, 0.2)\nassert np.allclose(unclipped, [0.75, 1.0, 1.3, -1.1])\nassert np.allclose(clipped, [0.8, 1.0, 1.2, -1.1])\nassert np.allclose(pessimistic, [0.75, 1.0, 1.2, -1.1])\n```",
+      "answer": "```python\nfrom dataclasses import dataclass\nimport numpy as np\n\n@dataclass(frozen=True)\nclass PPODiagnostics:\n    ratio_outside_fraction: float\n    active_clip_fraction: float\n    approx_kl_nonnegative: float\n    mean_log_ratio: float\n\ndef ppo_clipped_terms(ratio, advantage, clip_epsilon=0.2):\n    r = np.asarray(ratio, dtype=float)\n    a = np.asarray(advantage, dtype=float)\n    if r.shape != a.shape or np.any(r <= 0):\n        raise ValueError(\"positive aligned ratios are required\")\n    unclipped = r * a\n    clipped = np.clip(r, 1 - clip_epsilon, 1 + clip_epsilon) * a\n    pessimistic = np.minimum(unclipped, clipped)\n    return unclipped, clipped, pessimistic\n\ndef ppo_diagnostics(new_log_prob, old_log_prob, advantage, clip_epsilon=0.2):\n    log_ratio = np.asarray(new_log_prob, dtype=float) - np.asarray(old_log_prob, dtype=float)\n    ratio = np.exp(log_ratio)\n    a = np.asarray(advantage, dtype=float)\n    unclipped, _, pessimistic = ppo_clipped_terms(ratio, a, clip_epsilon)\n    outside = np.mean((ratio < 1 - clip_epsilon) | (ratio > 1 + clip_epsilon))\n    active = np.mean(pessimistic < unclipped - 1e-15)\n    approx_kl = np.mean((ratio - 1) - log_ratio)\n    return PPODiagnostics(float(outside), float(active), float(approx_kl), float(np.mean(log_ratio)))\n```\n\n`active_clip_fraction` проверяет не положение отношения само по себе, а изменение пессимистического минимума.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "C6",
+      "title": "Маска ответа, вероятность последовательности и токеновые преимущества",
+      "prompt": "Реализуйте три функции:\n\n```python\ndef response_token_mask(input_ids, prompt_lengths, pad_token_id, eos_token_id):\n    ...\n\ndef sequence_log_probability(token_log_probs, mask=None):\n    ...\n\ndef broadcast_sequence_advantages(sequence_advantages, token_mask):\n    ...\n```\n\nПервая функция возвращает маску формы `[batch, T-1]`, согласованную с метками `input_ids[:, 1:]`: токены запроса и `PAD` исключаются, первый сгенерированный `EOS` включается, позиции после него исключаются. Вторая суммирует логарифмические вероятности токенов ответа. Третья распространяет одно преимущество полного ответа на ненулевые позиции маски.\n\nОткрытая проверка:\n\n```python\nids = np.array([\n    [1, 10, 11, 20, 21, 2, 0],\n    [1, 12, 30, 2, 99, 0, 0],\n])\nmask = response_token_mask(ids, np.array([3, 2]), pad_token_id=0, eos_token_id=2)\nnp.testing.assert_array_equal(mask, [\n    [0, 0, 1, 1, 1, 0],\n    [0, 1, 1, 0, 0, 0],\n])\n```",
+      "answer": "```python\nimport numpy as np\n\ndef response_token_mask(input_ids, prompt_lengths, pad_token_id, eos_token_id):\n    ids = np.asarray(input_ids)\n    lengths = np.asarray(prompt_lengths, dtype=int)\n    if ids.ndim != 2 or lengths.shape != (ids.shape[0],):\n        raise ValueError(\"input_ids must be [B, T] and prompt_lengths [B]\")\n    mask = np.zeros((ids.shape[0], ids.shape[1] - 1), dtype=float)\n    for b in range(ids.shape[0]):\n        active = True\n        for pos in range(1, ids.shape[1]):\n            token = int(ids[b, pos])\n            if pos < lengths[b] or token == pad_token_id or not active:\n                continue\n            mask[b, pos - 1] = 1.0\n            if token == eos_token_id:\n                active = False\n    return mask\n\ndef sequence_log_probability(token_log_probs, mask=None):\n    lp = np.asarray(token_log_probs, dtype=float)\n    if mask is None:\n        return np.sum(lp, axis=-1)\n    m = np.asarray(mask, dtype=float)\n    if m.shape != lp.shape:\n        raise ValueError(\"mask must match token_log_probs\")\n    return np.sum(lp * m, axis=-1)\n\ndef broadcast_sequence_advantages(sequence_advantages, token_mask):\n    a = np.asarray(sequence_advantages, dtype=float)\n    m = np.asarray(token_mask, dtype=float)\n    if a.ndim != 1 or m.ndim != 2 or m.shape[0] != a.shape[0]:\n        raise ValueError(\"advantages must be [B] and token_mask [B, T]\")\n    return a[:, None] * m\n```\n\nВозвращаемая маска сдвинута относительно исходных токенов, потому что логиты позиции $k$ оценивают метку позиции $k+1$. Сгенерированный `EOS` является действием политики и включается; запрос, `PAD` и хвост после `EOS` не входят в функцию потерь. Одинаковое преимущество на ненулевых позициях реализует градиент полного ответа, но не превращается в локальное объяснение вклада токенов.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/rl-for-llm/course-materials.zip",
+    "bytes": 391271,
+    "sha256": "6479f3c3cc4aa3be35cb6316c5be98cd996951380d7072dde6bf913fd4bef144"
+  }
+}

@@ -1,0 +1,813 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-20",
+  "language": "en",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "M20. The complete LLM: a worked computation",
+      "format": "ipynb",
+      "filename": "module_20.ipynb",
+      "download": "/downloads/modern-llms/modules/module-20/en/module_20.ipynb",
+      "bytes": 33599,
+      "sha256": "ec7a93078caafa7d682981a2807fef7fb40ca8c6d2091600646b3f25bce33546",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# M20. The complete LLM: a worked computation\n\nFollow tokens through probabilities, derivatives, weight updates, and generation. This synthetic 50-parameter fixture is designed for inspectable arithmetic, not language competence. Code and data are embedded. No GPU, API, external files, or downloaded weights are required; installation runs only for missing libraries.\n\nFirst pass: steps 1–3, 6–8, and 10–11. Second pass: add derivatives and optimization in steps 4–5, then routing in step 9. Execute the steps of your chosen route in order before experimenting. Reference checks use the original matrices. Separate experiment cells let you change temperature and top-k in step 8, or inputs and targets in step 11; their results need not match the original reference values."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib.util\nimport subprocess\nimport sys\nmissing = [name for name in (\"numpy\", \"torch\", \"matplotlib\") if importlib.util.find_spec(name) is None]\nif missing:\n    subprocess.check_call([sys.executable, \"-m\", \"pip\", \"install\", *missing],\n                          creationflags=getattr(subprocess, \"CREATE_NO_WINDOW\", 0))\nimport numpy as np\nimport torch\nimport matplotlib\nfrom IPython import get_ipython\nipython = get_ipython()\nif ipython is not None and getattr(ipython, \"kernel\", None) is not None:\n    ipython.run_line_magic(\"matplotlib\", \"inline\")\nimport matplotlib.pyplot as plt\ntorch.set_num_threads(1)\ntorch.manual_seed(20)\nnp.set_printoptions(precision=6, suppress=True)\nprint(\"NumPy\", np.__version__, \"PyTorch\", torch.__version__, \"device: CPU\")"
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Define the complete path\n\nThe next cell defines functions; it does not train a model. `forward` returns both outputs and intermediate values. As in the lecture, rows are positions and linear matrices use input-by-output orientation. The separately written `torch_forward` uses float64. Finite differences will run through NumPy without consulting the PyTorch graph."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "\"\"\"M20: one complete pre-norm decoder block, with inspectable intermediates.\n\nRows are token representations; linear weights have shape [input, output].\nThis synthetic fixture illustrates arithmetic, not language competence.\n\"\"\"\nimport numpy as np\n\nEPS = 1e-6\nINPUT = np.array([0, 1, 2], dtype=np.int64)\nTARGET = np.array([1, 2, 3], dtype=np.int64)\nTOKENS = (\"BOS\", \"A\", \"B\", \"EOS\")\n\n\ndef fixture():\n    \"\"\"Return fresh arrays: vocabulary 4, width 2, one head, FFN width 2.\"\"\"\n    return {\n        \"E\": np.array([[1., 0.], [0., 1.], [1., 1.], [-1., 0.]]),\n        \"Q\": .5 * np.eye(2), \"K\": .5 * np.eye(2),\n        \"V\": np.diag([.5, 1.]), \"O\": .25 * np.eye(2),\n        \"gate\": np.array([[.5, -.25], [.25, .5]]),\n        \"up\": np.array([[1., .5], [-.5, 1.]]),\n        \"down\": .25 * np.eye(2),\n        \"na\": np.ones(2), \"nf\": np.ones(2), \"nout\": np.ones(2),\n        \"U\": np.array([[0., .5, -.5, .25], [0., -.25, .5, -.5]]),\n    }\n\n\ndef rms(x, gain):\n    return x / np.sqrt(np.mean(x * x, axis=-1, keepdims=True) + EPS) * gain\n\n\ndef softmax(x):\n    e = np.exp(x - np.max(x, axis=-1, keepdims=True))\n    return e / e.sum(axis=-1, keepdims=True)\n\n\ndef silu(x):\n    return x / (1 + np.exp(-x))\n\n\ndef rope(x, positions):\n    \"\"\"[heads, time, even head_dim]; pair first and second halves.\"\"\"\n    dh = x.shape[-1]\n    if dh % 2:\n        raise ValueError(\"RoPE requires an even head dimension\")\n    angle = np.asarray(positions)[:, None] * 10000. ** (-np.arange(0, dh, 2) / dh)\n    angle = np.concatenate([angle, angle], axis=-1)\n    rotated = np.concatenate([-x[..., dh // 2:], x[..., :dh // 2]], axis=-1)\n    return x * np.cos(angle) + rotated * np.sin(angle)\n\n\ndef forward(w, ids, hq=1, hkv=1, cache=None):\n    \"\"\"A single layer; cache contains already rotated K and unrotated V.\n\n    Cache is valid only for these weights and this uninterrupted prefix.\n    Tied embeddings are selected by omitting U from w.\n    \"\"\"\n    ids = np.asarray(ids, dtype=np.int64)\n    if ids.ndim != 1 or len(ids) == 0:\n        raise ValueError(\"ids must be a nonempty one-dimensional sequence\")\n    if np.any(ids < 0) or np.any(ids >= len(w[\"E\"])):\n        raise ValueError(\"token id outside the vocabulary\")\n    h = w[\"E\"][ids]\n    t, d = h.shape\n    if hq < 1 or hkv < 1 or hq % hkv or d % hq:\n        raise ValueError(\"head counts must divide the query count and model width\")\n    dh = d // hq\n    offset = 0 if cache is None else cache[0].shape[1]\n    positions = np.arange(offset, offset + t)\n    x = rms(h, w[\"na\"])\n    q = rope((x @ w[\"Q\"]).reshape(t, hq, dh).transpose(1, 0, 2), positions)\n    k = rope((x @ w[\"K\"]).reshape(t, hkv, dh).transpose(1, 0, 2), positions)\n    v = (x @ w[\"V\"]).reshape(t, hkv, dh).transpose(1, 0, 2)\n    if cache is not None:\n        k = np.concatenate([cache[0], k], axis=1)\n        v = np.concatenate([cache[1], v], axis=1)\n    kr, vr = (np.repeat(a, hq // hkv, axis=0) for a in (k, v))\n    scores = q @ kr.transpose(0, 2, 1) / np.sqrt(dh)\n    mask = np.arange(k.shape[1])[None, :] <= positions[:, None]\n    a = softmax(np.where(mask[None], scores, -np.inf))\n    mixed = (a @ vr).transpose(1, 0, 2).reshape(t, d)\n    z = h + mixed @ w[\"O\"]\n    n = rms(z, w[\"nf\"])\n    gate, up = n @ w[\"gate\"], n @ w[\"up\"]\n    f = (silu(gate) * up) @ w[\"down\"]\n    h1 = z + f\n    final = rms(h1, w[\"nout\"])\n    logits = final @ (w[\"U\"] if \"U\" in w else w[\"E\"].T)\n    return dict(H0=h, X=x, Q=q, K=k, V=v, scores=scores, A=a,\n                mixed=mixed, Z=z, N=n, gate=gate, up=up, F=f, H1=h1,\n                final=final, logits=logits, probabilities=softmax(logits), cache=(k, v))\n\n\ndef cross_entropy(logits, targets, mask=None):\n    \"\"\"Mean over explicitly selected targets; never mean over padding.\"\"\"\n    targets = np.asarray(targets, dtype=np.int64)\n    if logits.ndim != 2 or targets.shape != (len(logits),):\n        raise ValueError(\"one target is required for every logit row\")\n    selected = np.ones(len(targets), dtype=bool) if mask is None else np.asarray(mask, dtype=bool)\n    if selected.shape != targets.shape or not selected.any():\n        raise ValueError(\"the target mask must select at least one row\")\n    if np.any(targets[selected] < 0) or np.any(targets[selected] >= logits.shape[1]):\n        raise ValueError(\"selected target outside the vocabulary\")\n    x = logits[selected]\n    m = x.max(axis=-1)\n    return np.mean(m + np.log(np.exp(x - m[:, None]).sum(axis=-1))\n                   - x[np.arange(len(x)), targets[selected]])\n\n\ndef finite_gradients(w, ids=INPUT, targets=TARGET, step=1e-5):\n    \"\"\"Central differences for every scalar; restore each weight after use.\"\"\"\n    result = {}\n    for name, value in w.items():\n        g = np.empty_like(value)\n        for index in np.ndindex(value.shape):\n            old = value[index]\n            try:\n                value[index] = old + step\n                plus = cross_entropy(forward(w, ids)[\"logits\"], targets)\n                value[index] = old - step\n                minus = cross_entropy(forward(w, ids)[\"logits\"], targets)\n            finally:\n                value[index] = old\n            g[index] = (plus - minus) / (2 * step)\n        result[name] = g\n    return result\n\n\ndef adamw_first_step(w, grads, lr=.01, decay=.1, clip=1., eps=1e-8):\n    \"\"\"Zero initial moments, bias correction: m_hat=g, v_hat=g^2.\n\n    Only matrices receive weight decay. Clipping precedes moment updates.\n    The first bias-corrected step is independent of beta1 and beta2.\n    \"\"\"\n    norm = np.sqrt(sum(np.sum(g * g) for g in grads.values()))\n    scale = min(1., clip / max(norm, 1e-300))\n    updated = {}\n    for name, value in w.items():\n        g = grads[name] * scale\n        wd = decay if value.ndim == 2 else 0.\n        updated[name] = (1 - lr * wd) * value - lr * g / (np.abs(g) + eps)\n    return updated, float(norm), float(scale)\n\n\ndef torch_forward(w, ids, hq=1, hkv=1):\n    \"\"\"Independent float64 autograd path; PyTorch is imported only when used.\"\"\"\n    import torch\n    import torch.nn.functional as F\n    ids = torch.as_tensor(ids, dtype=torch.long)\n    h = w[\"E\"][ids]\n    t, d = h.shape\n    dh = d // hq\n    def norm(a, gain):\n        return a * torch.rsqrt(a.square().mean(-1, keepdim=True) + EPS) * gain\n    def rotate(a):\n        freq = 10000. ** (-torch.arange(0, dh, 2, dtype=h.dtype) / dh)\n        angle = torch.arange(t, dtype=h.dtype)[:, None] * freq\n        angle = torch.cat([angle, angle], dim=-1)\n        return a * angle.cos() + torch.cat([-a[..., dh//2:], a[..., :dh//2]], -1) * angle.sin()\n    n = norm(h, w[\"na\"])\n    q = rotate((n @ w[\"Q\"]).view(t, hq, dh).transpose(0, 1))\n    k = rotate((n @ w[\"K\"]).view(t, hkv, dh).transpose(0, 1))\n    v = (n @ w[\"V\"]).view(t, hkv, dh).transpose(0, 1)\n    k, v = [a.repeat_interleave(hq // hkv, dim=0) for a in (k, v)]\n    scores = q @ k.transpose(-2, -1) / dh ** .5\n    scores = scores.masked_fill(torch.ones(t, t, dtype=torch.bool).triu(1), -torch.inf)\n    mixed = (scores.softmax(-1) @ v).transpose(0, 1).reshape(t, d)\n    z = h + mixed @ w[\"O\"]\n    n = norm(z, w[\"nf\"])\n    h1 = z + (F.silu(n @ w[\"gate\"]) * (n @ w[\"up\"])) @ w[\"down\"]\n    return norm(h1, w[\"nout\"]) @ (w[\"U\"] if \"U\" in w else w[\"E\"].T)\n\n\ndef autograd_gradients(w, ids=INPUT, targets=TARGET):\n    import torch\n    params = {k: torch.tensor(v, dtype=torch.float64, requires_grad=True) for k, v in w.items()}\n    logits = torch_forward(params, ids)\n    loss = torch.nn.functional.cross_entropy(logits, torch.tensor(targets, dtype=torch.long))\n    loss.backward()\n    return {k: v.grad.detach().numpy().copy() for k, v in params.items()}\n\n\ndef sampling_distribution(logits, temperature=1., top_k=None):\n    \"\"\"One row; stable token-index tie rule. Distribution q, not base p.\"\"\"\n    if temperature <= 0 or np.asarray(logits).ndim != 1:\n        raise ValueError(\"use a positive temperature and one logit row\")\n    z = np.asarray(logits) / temperature\n    if top_k is not None:\n        if not isinstance(top_k, int) or not 1 <= top_k <= len(z):\n            raise ValueError(\"top_k must be an integer in [1, vocabulary_size]\")\n        keep = np.argsort(-z, kind=\"stable\")[:top_k]\n        z = np.where(np.isin(np.arange(len(z)), keep), z, -np.inf)\n    return softmax(z)\n\n\ndef moe_weights(logits, selection_bias, k=2, eps=1e-9):\n    \"\"\"MiniLLM's sigmoid routing: bias changes selection, not mixture weights.\"\"\"\n    p = 1 / (1 + np.exp(-np.asarray(logits)))\n    selected = np.argsort(-(p + selection_bias), kind=\"stable\")[:k]\n    return selected, p[selected] / (p[selected].sum() + eps)\n\n\ndef architecture_examples():\n    \"\"\"Small exact SSM recurrence and a two-step discrete reverse chain.\"\"\"\n    state, states = 0., []\n    for u in (1., 0., -1.):\n        state = .5 * state + u\n        states.append(state)\n    # Four binary sequences: 00, 01, 10, 11. At s=2 both positions are masked.\n    first = np.array([.6*.3, .6*.7, .4*.3, .4*.7])\n    # At the next refinement each bit is independently kept with probability .8.\n    bits = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])\n    distance = (bits[:, None, :] != bits[None, :, :]).sum(-1)\n    kernel = .8 ** (2-distance) * .2 ** distance\n    return {\"ssm_states\": states, \"diffusion_first\": first.tolist(),\n            \"diffusion_kernel\": kernel.tolist(), \"diffusion_final\": (first @ kernel).tolist()}\n\n\ndef reference_metrics():\n    w = fixture()\n    trace = forward(w, INPUT)\n    grads = autograd_gradients(w)\n    changed, norm, scale = adamw_first_step(w, grads)\n    out = {k: v.tolist() for k, v in trace.items() if isinstance(v, np.ndarray)}\n    out.update(parameter_count=sum(v.size for v in w.values()),\n               loss=float(cross_entropy(trace[\"logits\"], TARGET)),\n               target_losses=(-np.log(trace[\"probabilities\"][np.arange(3), TARGET])).tolist(),\n               gradient_norm=norm, clip_scale=scale,\n               gradients={k: v.tolist() for k, v in grads.items()},\n               loss_after_step=float(cross_entropy(forward(changed, INPUT)[\"logits\"], TARGET)),\n               probabilities_after_step=forward(changed, INPUT)[\"probabilities\"].tolist(),\n               q_temperature_half_top2=sampling_distribution(trace[\"logits\"][-1], .5, 2).tolist(),\n               architecture_examples=architecture_examples())\n    return out"
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "baseline = fixture()\ntrace = forward(baseline, INPUT)\nassert sum(v.size for v in baseline.values()) == 50\nfor name in (\"H0\", \"X\", \"Q\", \"K\", \"V\", \"A\", \"Z\", \"N\", \"gate\", \"up\", \"F\", \"H1\", \"final\"):\n    print(name, trace[name].shape, \"\\n\", trace[name])"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Attention, logits, and probabilities\n\nEvery attention row sums to one, with zeros above the diagonal. The final query mixes three value rows; the first query can read only its own. The output probabilities use the order BOS, A, B, EOS."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "np.testing.assert_allclose(trace[\"A\"].sum(-1), 1.)\nassert np.all(np.triu(trace[\"A\"][0], 1) == 0)\nprint(\"logits\\n\", trace[\"logits\"])\nprint(\"p\\n\", trace[\"probabilities\"])\nfig, ax = plt.subplots(figsize=(6, 4))\nax.imshow(trace[\"A\"][0], vmin=0, vmax=1, cmap=\"Blues\")\nfor i in range(3):\n    for j in range(3):\n        ax.text(j, i, f\"{trace['A'][0,i,j]:.3f}\", ha=\"center\", va=\"center\",\n                color=\"white\" if trace[\"A\"][0,i,j] > .6 else \"#2E3440\")\nax.set(xticks=range(3), yticks=range(3), xlabel=\"Key position\", ylabel=\"Query position\", title=\"Causal attention\")\nfig.tight_layout()\nplt.show()"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Target shift and loss selection\n\nInputs `[BOS, A, B]` predict `[A, B, EOS]`. First average all three losses, then select only the last target. This changes the learning objective while leaving logits intact. A loss mask does not remove context tokens. Selecting no targets should raise a clear error rather than produce NaN."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "loss_before = cross_entropy(trace[\"logits\"], TARGET)\nloss_eos = cross_entropy(trace[\"logits\"], TARGET, [False, False, True])\nnp.testing.assert_allclose(loss_before, 1.1093739242148548, atol=1e-10)\nnp.testing.assert_allclose(loss_eos, 1.6955297196508368, atol=1e-10)\nprint(\"all targets:\", loss_before, \"EOS only:\", loss_eos)\ntry:\n    cross_entropy(trace[\"logits\"], TARGET, [False]*3)\nexcept ValueError as error:\n    print(type(error).__name__, str(error))\nelse:\n    raise AssertionError(\"empty target mask was accepted\")"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. Check every derivative\n\nPerturbing a parameter in both directions provides an independent estimate of its derivative. Check all 50 scalars, then remove the independent U and check the tied model's 42 parameters. This also checks accumulation through E's two roles. An excessively small finite-difference step can amplify roundoff; we use $10^{-5}$."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "gradients = autograd_gradients(baseline)\nfinite = finite_gradients(baseline)\nmax_error = max(np.max(np.abs(gradients[k] - finite[k])) for k in baseline)\nassert max_error < 2e-8\nprint(\"50 parameters; max gradient error:\", max_error)\ntied = fixture()\ndel tied[\"U\"]\ntied_auto, tied_fd = autograd_gradients(tied), finite_gradients(tied)\ntied_error = max(np.max(np.abs(tied_auto[k] - tied_fd[k])) for k in tied)\nassert tied_error < 2e-8\nprint(\"42 tied parameters; max gradient error:\", tied_error)\nlogit_gradient = trace[\"probabilities\"].copy()\nlogit_gradient[np.arange(len(TARGET)), TARGET] -= 1\nlogit_gradient /= len(TARGET)\nnp.testing.assert_allclose(logit_gradient.sum(-1), 0., atol=1e-15)\nprint(\"gradient of loss w.r.t. logits:\\n\", logit_gradient)"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. One AdamW update\n\nStart from zero moments. Matrices receive decay 0.1; normalization gains receive none. The global gradient norm is below the threshold of 1. Compare the first-step formula with an actual optimizer, checking every updated array. The resulting loss is measured on the original training sequence, not on unseen data."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "updated, gradient_norm, clip_scale = adamw_first_step(baseline, gradients)\nparams = {k: torch.tensor(v, dtype=torch.float64, requires_grad=True) for k, v in baseline.items()}\noptimizer = torch.optim.AdamW([\n    {\"params\": [p for p in params.values() if p.ndim == 2], \"weight_decay\": .1},\n    {\"params\": [p for p in params.values() if p.ndim == 1], \"weight_decay\": 0.}],\n    lr=.01, betas=(.9, .95), eps=1e-8)\nloss_torch = torch.nn.functional.cross_entropy(torch_forward(params, INPUT), torch.tensor(TARGET))\noptimizer.zero_grad()\nloss_torch.backward()\nfor p in params.values():\n    p.grad.mul_(clip_scale)\noptimizer.step()\nfor k, p in params.items():\n    np.testing.assert_allclose(p.detach().numpy(), updated[k], atol=1e-10)\nloss_after = cross_entropy(forward(updated, INPUT)[\"logits\"], TARGET)\nnp.testing.assert_allclose(loss_after, 1.0848315484318878, atol=1e-10)\nprint(\"gradient norm:\", gradient_norm, \"scale:\", clip_scale)\nprint(\"loss:\", loss_before, \"->\", loss_after)"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. Repeated updates retain optimizer state\n\nA fresh optimizer now takes 80 consecutive steps. This deliberately overfits one sequence; it tests a training loop, not language understanding. These settings differ from the single-step experiment: the learning rate is 0.03 and weight decay is disabled."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "training_params = {k: torch.tensor(v, dtype=torch.float64, requires_grad=True) for k, v in fixture().items()}\ntraining_optimizer = torch.optim.AdamW(list(training_params.values()), lr=.03, weight_decay=0.)\ntraining_losses = []\nfor step in range(80):\n    training_optimizer.zero_grad()\n    loss = torch.nn.functional.cross_entropy(torch_forward(training_params, INPUT), torch.tensor(TARGET))\n    training_losses.append(loss.item())\n    loss.backward()\n    torch.nn.utils.clip_grad_norm_(list(training_params.values()), 1.)\n    training_optimizer.step()\nwith torch.no_grad():\n    final_training_loss = torch.nn.functional.cross_entropy(torch_forward(training_params, INPUT), torch.tensor(TARGET)).item()\ntraining_losses.append(final_training_loss)\nassert np.isfinite(training_losses).all() and final_training_loss < training_losses[0]\nfig, ax = plt.subplots(figsize=(8, 4))\nax.plot(training_losses, color=\"#5E81AC\")\nax.set(xlabel=\"Training step\", ylabel=\"Mean loss, nats\", title=\"Fitting one sequence\")\nfig.tight_layout()\nplt.show()\nprint(\"training loss:\", training_losses[0], \"->\", final_training_loss)"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. Causality and cached execution\n\nChange the final input and check that earlier logits stay fixed. Then process the original prefix one token at a time, carrying K/V between calls, and check a two-token suffix as well. This cache belongs to the baseline weights; it would be stale after training. The final negative control shows why resetting the RoPE position changes attention scores."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "changed_input = forward(baseline, [0, 1, 3])\nnp.testing.assert_allclose(changed_input[\"logits\"][:2], trace[\"logits\"][:2])\ncache, cached_logits = None, []\nfor token in INPUT:\n    current = forward(baseline, [token], cache=cache)\n    cached_logits.append(current[\"logits\"])\n    cache = current[\"cache\"]\nnp.testing.assert_allclose(np.concatenate(cached_logits), trace[\"logits\"], atol=1e-12)\nprefix = forward(baseline, INPUT[:1])\nsuffix = forward(baseline, INPUT[1:], cache=prefix[\"cache\"])\nnp.testing.assert_allclose(suffix[\"logits\"], trace[\"logits\"][1:], atol=1e-12)\nwrong_q = rope((trace[\"X\"][2:] @ baseline[\"Q\"])[None], [0])\nwrong_scores = wrong_q @ trace[\"K\"].transpose(0, 2, 1) / np.sqrt(2)\noffset_error = np.max(np.abs(wrong_scores[0, 0] - trace[\"scores\"][0, 2]))\nassert offset_error > .1\nprint(\"cache scalars:\", sum(a.size for a in cache), \"wrong-offset score difference:\", offset_error)"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 8. A decoding distribution and a short generation\n\nFirst reproduce top-2 at temperature 0.5 for the original model. Then generate greedily from the briefly trained weights. These are distinct experiments: the first matches the lecture table; the second uses the learned checkpoint. A length limit guarantees that the loop ends even if EOS never appears."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "q = sampling_distribution(trace[\"logits\"][-1], temperature=.5, top_k=2)\nnp.testing.assert_allclose(q, [0., .5631163013756344, .4368836986243656, 0.])\nprint(\"p:\", trace[\"probabilities\"][-1], \"q:\", q)\ntrained = {k: p.detach().numpy().copy() for k, p in training_params.items()}\ngenerated = [0]\ngeneration_cache = None\nfor _ in range(12):\n    output = forward(trained, [generated[-1]], cache=generation_cache)\n    generation_cache = output[\"cache\"]\n    next_token = int(np.argmax(output[\"logits\"][-1]))\n    generated.append(next_token)\n    if next_token == 3:\n        break\nprint(\" \".join(TOKENS[i] for i in generated))"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "### Your experiment: temperature and top-k\n\nUse the original weights and the final prefix `[BOS, A, B]` again. The next cell reads its logits from `trace`, which the short training run did not modify. Set `experiment_temperature` to a positive finite number. For `experiment_top_k`, choose an integer from 1 to 4, or `None` to retain the full vocabulary. The checks require valid probabilities summing to one; they do not require the reference distribution from the earlier cell.\n\nCompare temperatures 0.5, 1.0, and 2.0 with top-2. How does the balance between A and B change? Then try temperature 1.0 with `None`: the selection distribution should match the base model distribution. Explain why top-2 still assigns EOS zero selection probability while its model probability remains positive. Only the selection rule changes in this experiment; weights and logits stay fixed."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "experiment_temperature = 1.0\nexperiment_top_k = 2\nif not np.isfinite(experiment_temperature) or experiment_temperature <= 0:\n    raise ValueError(\"Temperature must be positive and finite\")\nexperiment_q = sampling_distribution(\n    trace[\"logits\"][-1], temperature=experiment_temperature, top_k=experiment_top_k)\nassert np.isfinite(experiment_q).all() and (experiment_q >= 0).all()\nnp.testing.assert_allclose(experiment_q.sum(), 1., rtol=1e-12, atol=1e-12)\nprint(\"Temperature:\", experiment_temperature, \"top-k:\", experiment_top_k)\nprint(\"Token   model p    selection q\")\nfor token, model_p, selection_q in zip(TOKENS, trace[\"probabilities\"][-1], experiment_q):\n    print(f\"{token:<5}   {model_p:.6f}   {selection_q:.6f}\")"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 9. MoE routing separates selection from weighting\n\nBalancing offsets affect expert selection; mixture weights use the original sigmoid scores. This cell reproduces the router calculation in Section 15, not a second trained MoE. A complete sublayer multiplies these weights by the corresponding expert outputs and adds any shared experts."
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "selected, routing_weights = moe_weights([0., 1., -1.], np.array([0., -.5, .5]), k=2)\nassert selected.tolist() == [2, 0]\nnp.testing.assert_allclose(routing_weights, [.3497554090542189, .6502445909457811])\nprint(\"selected:\", selected, \"weights:\", routing_weights)"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "## 10. State recurrence and hidden refinement paths\n\nThe scalar SSM carries a state across input positions. The second calculation sums paths through a two-step reverse chain over complete binary strings. Its transitions are hand-specified, not learned by a diffusion denoiser. Check the probability of 00 with a scalar sum, then explain what a time step means in each experiment."
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "examples = architecture_examples()\nnp.testing.assert_allclose(examples[\"ssm_states\"], [1., .5, -.75])\nkernel = np.array(examples[\"diffusion_kernel\"])\nfirst = np.array(examples[\"diffusion_first\"])\nnp.testing.assert_allclose(kernel.sum(-1), 1.)\nfinal = first @ kernel\nnp.testing.assert_allclose(final, [.2128, .3472, .1672, .2728])\nmanual_00 = .18*.64 + .42*.16 + .12*.16 + .28*.04\nnp.testing.assert_allclose(manual_00, final[0])\nprint(\"SSM:\", examples[\"ssm_states\"])\nprint(\"reverse chain:\", first, \"->\", final, \"sum:\", final.sum())"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "## 11. Your experiment: change an input or a target\n\nUse a nonempty input with IDs from 0 to 3 and one target per input position. For sequence `[0, 2, 1, 3]`, use inputs `[0, 2, 1]` and targets `[2, 1, 3]`. You may also test different targets for the same input. Results here are recomputed rather than compared with the lecture's fixed loss.\n\nBefore running, predict which rows will change, whether EOS will become more likely, and how loss will move. Explain any difference between your prediction and the output. Do not reuse a cache from another input."
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "experiment_ids = np.array([0, 2, 1], dtype=np.int64)\nexperiment_targets = np.array([2, 1, 3], dtype=np.int64)\nexperiment_weights = fixture()\nexperiment_trace = forward(experiment_weights, experiment_ids)\nexperiment_loss = cross_entropy(experiment_trace[\"logits\"], experiment_targets)\nexperiment_gradients = autograd_gradients(experiment_weights, experiment_ids, experiment_targets)\nprint(\"inputs:\", experiment_ids, \"targets:\", experiment_targets)\nprint(\"p:\\n\", experiment_trace[\"probabilities\"])\nprint(\"loss:\", experiment_loss)\nprint(\"gradient norm:\", np.sqrt(sum(np.sum(g*g) for g in experiment_gradients.values())))"
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "### What these checks establish\n\nWe followed lookup through loss and a parameter update, checked every derivative, and tested tied weights, causality, and cache equivalence. We also separated token selection from prediction and reproduced arithmetic for two alternative constructions. This scale validates computational mechanisms; language quality requires data and a separate evaluation such as the one developed in Module 19."
+        }
+      ]
+    },
+    {
+      "id": "capstone-01",
+      "kind": "capstone",
+      "title": "Capstone · Notebook 1. Pretraining",
+      "format": "ipynb",
+      "filename": "01_pretrain.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/en/01_pretrain.ipynb",
+      "bytes": 43392,
+      "sha256": "9c8bc258b0800aa722f02e254c98ce9c4e929a73aa44f757b9aac52c79e87b84",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Capstone · Notebook 1. Pretraining\n\n*Modern LLMs course · capstone · edition 2026.10.3*\n\n> **What happens here.** We walk the whole road from raw documents to a trained\n> course reference language model: the corpus cleaning pipeline (M9), byte-level\n> BPE from scratch (M2), sharding the token stream, the 20× Chinchilla-style reference budget\n> arithmetic (M9), and the run itself with Muon and a WSD schedule (M9).\n>\n> **Assumed background.** Modules 2–9. Module 1 helps but is not required — at\n> the end we read our own model with the same passport approach it teaches.\n>\n> **The Colab contract.** The mandatory path runs on CPU and needs no network:\n> by default the corpus is synthetic and generated right here. Downloading real\n> data is a separate cell behind a flag that is off. No number in this notebook\n> depends on a network call.\n\n**Profiles.** `SMOKE` (the default) is a short end-to-end mechanism check.\n`FULL` uses profile M and the 20× Chinchilla-style reference budget. Runtime is\nhardware- and software-dependent: `auto` selects BF16 on capable GPUs, FP16 with\ngradient scaling on older CUDA devices such as T4, and FP32 on CPU.\n\nOn a first pass, run the cells in order and connect the code to the explanations. On a second, change one setting, retain the results, and state which claim the comparison can test."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Environment"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"project package: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm is already importable\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Upload the Capstone ZIP package from the Stepik lesson. The directory structure will be restored automatically.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"project archive: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm was not found. Download the language-specific Capstone ZIP package from the Stepik lesson and either extract it in full or upload the ZIP to the current Colab session.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport os, torch, numpy as np, hashlib\nprint(\"torch\", torch.__version__, \"| CUDA:\", torch.cuda.is_available())"
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "# ------------------------------------------------------------------ run profile\nPROFILE = \"SMOKE\"          # \"SMOKE\" | \"FULL\"\nUSE_REAL_CORPUS = False    # network download of real data — see §3\nSEED = 0\n\ntorch.manual_seed(SEED)\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nfrom minillm.precision import resolve_compute_dtype\nCOMPUTE_DTYPE = resolve_compute_dtype(DEVICE, \"auto\")\n\nSETTINGS = {\n    \"SMOKE\": dict(docs=8_000, vocab_size=2_048, seq_len=128,\n                  model_profile=\"S\", steps=250, micro_batch_size=8, grad_accum=1),\n    \"FULL\":  dict(docs=200_000, vocab_size=16_384, seq_len=512,\n                  model_profile=\"M\", steps=18_886, micro_batch_size=16, grad_accum=4),\n}[PROFILE]\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    SETTINGS = {**SETTINGS, \"docs\": min(SETTINGS[\"docs\"], 800),\n                \"vocab_size\": min(SETTINGS[\"vocab_size\"], 512),\n                \"steps\": min(SETTINGS[\"steps\"], 12),\n                \"micro_batch_size\": min(SETTINGS[\"micro_batch_size\"], 2),\n                \"grad_accum\": 1}\nprint(PROFILE, \"on\", DEVICE, \"with\", COMPUTE_DTYPE, \"compute ->\", SETTINGS)"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. The corpus and its cleaning funnel\n\nThe order of pipeline stages is not arbitrary — it runs cheap to expensive\n(M9). Heuristics cost a pass over a line, dedup costs hashing, a model-based\nquality classifier costs inference. So the classifier only ever sees what the\nearlier stages let through, and the pipeline's price is set by those.\n\nThe synthetic corpus below is assembled from a slot grammar in two languages and\ndeliberately spoiled: it contains duplicates, near-duplicates, documents that are\ntoo short, and symbol junk. That is the raw material a funnel needs — on clean\ndata there is nothing to demonstrate."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "import random\nfrom minillm.corpus import FilterConfig, pipeline\n\nRU_SLOTS = dict(\n    subject=[\"языковая модель\", \"трансформер\", \"механизм внимания\", \"токенизатор\",\n             \"оптимизатор\", \"нормализация\", \"остаточная связь\", \"роутер экспертов\",\n             \"кэш ключей\", \"эмбеддинг\", \"спекулятивный декод\", \"квантизация\"],\n    verb=[\"предсказывает\", \"обрабатывает\", \"сокращает\", \"ускоряет\", \"стабилизирует\",\n          \"ограничивает\", \"восстанавливает\", \"перераспределяет\", \"измеряет\"],\n    obj=[\"следующий токен\", \"длинный контекст\", \"стоимость шага\", \"объём памяти\",\n         \"масштаб активаций\", \"разброс градиентов\", \"поток данных\", \"качество ответа\",\n         \"нагрузку экспертов\", \"пропускную способность\"],\n    tail=[\"на длинных последовательностях\", \"при обучении в низкой точности\",\n          \"без потери качества\", \"за счёт дополнительной матрицы\",\n          \"ценой роста числа параметров\", \"в фазе декодирования\",\n          \"по сравнению с базовой схемой\", \"при неизменном бюджете вычислений\"],\n)\nEN_SLOTS = dict(\n    subject=[\"a language model\", \"the transformer\", \"the attention mechanism\",\n             \"the tokenizer\", \"the optimizer\", \"normalization\", \"the residual stream\",\n             \"the expert router\", \"the key cache\", \"the embedding table\",\n             \"speculative decoding\", \"quantization\"],\n    verb=[\"predicts\", \"processes\", \"reduces\", \"accelerates\", \"stabilizes\", \"bounds\",\n          \"restores\", \"redistributes\", \"measures\"],\n    obj=[\"the next token\", \"a long context\", \"the cost per step\", \"the memory footprint\",\n         \"the scale of activations\", \"the spread of gradients\", \"the data stream\",\n         \"the quality of the answer\", \"the load across experts\", \"the throughput\"],\n    tail=[\"on long sequences\", \"when training in low precision\", \"without losing quality\",\n          \"at the price of one more matrix\", \"at the cost of more parameters\",\n          \"during the decode phase\", \"compared with the baseline scheme\",\n          \"under an unchanged compute budget\"],\n)\n\n\ndef sentence(rng: random.Random, slots: dict) -> str:\n    parts = [rng.choice(slots[\"subject\"]), rng.choice(slots[\"verb\"]),\n             rng.choice(slots[\"obj\"]), rng.choice(slots[\"tail\"])]\n    return \" \".join(parts).capitalize() + \".\"\n\n\ndef synthetic_corpus(n_docs: int, seed: int = 0) -> list[str]:\n    \"\"\"A bilingual corpus from a slot grammar, with junk mixed in on purpose.\n\n    This is no pretraining corpus: one grammar, a narrow lexicon. Its job is to\n    give the pipeline and the tokenizer reproducible, unambiguously licence-clean\n    material where every mechanism is visible. The slots supply combinatorial\n    variety — without it near-dup dedup would rightly collapse the whole corpus.\n    \"\"\"\n    rng = random.Random(seed)\n    docs = []\n    for i in range(n_docs):\n        slots = RU_SLOTS if i % 2 else EN_SLOTS\n        docs.append(\" \".join(sentence(rng, slots) for _ in range(rng.randint(3, 6))))\n    # Junk for the funnel: exact copies, near-copies, short and symbol-only.\n    docs += docs[:n_docs // 20]                                   # exact duplicates\n    docs += [d + \" Addendum.\" for d in docs[:n_docs // 40]]       # near-duplicates\n    docs += [\"ok\"] * (n_docs // 40)                               # too short\n    docs += [\"!@#$%^&*()\" * 8] * (n_docs // 40)                   # symbol junk\n    rng.shuffle(docs)\n    return docs\n\nraw_docs = synthetic_corpus(SETTINGS[\"docs\"], seed=SEED)\nprint(f\"raw documents: {len(raw_docs):,}\")"
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "clean_docs, report = pipeline(raw_docs, FilterConfig(min_chars=60),\n                              near_dup_threshold=0.85)\nprint(report)\nprint(f\"\\nresult: {len(clean_docs):,} documents, \"\n      f\"{sum(len(d) for d in clean_docs):,} characters\")\n\n# Split documents BEFORE tokenizer training: validation contributes neither\n# vocabulary entries nor BPE merges. Global cleaning happened before the split,\n# so exact and near duplicates cannot straddle train and validation.\nsplit_rng = random.Random(SEED + 17)\nsplit_rng.shuffle(clean_docs)\nvalid_count = max(1, round(0.05 * len(clean_docs)))\nvalid_docs = clean_docs[:valid_count]\ntrain_docs = clean_docs[valid_count:]\nprint(f\"document split: train={len(train_docs):,}, valid={len(valid_docs):,}\")"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "Read the funnel as a record of selection. A high rejection rate could reflect dirty input, an overly strict threshold, or both. Inspect retained and rejected examples near each threshold, then compare languages and document types. Here the corruptions were inserted deliberately, so the rejection reasons can be checked against the generator rather than judged from the survival rate alone."
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Real data (optional)\n\nThe mandatory path needs no real data and takes no published number from it.\nThe cell below is enabled by the `USE_REAL_CORPUS` flag from §1.\n\nOptions whose licences we verified:\n\n| Corpus | Licence | Note |\n|---|---|---|\n| `HuggingFaceFW/fineweb-2`, subset `rus_Cyrl` | ODC-By 1.0 | attribution required; CommonCrawl terms of use also apply |\n| `roneneldan/TinyStories` | CDLA-Sharing-1.0 | synthetic stories with a narrow lexicon; share-alike covers derived **datasets**, not a trained model |\n\nModel size alone does not determine coherence. TinyStories offers a narrower task than broad web text; outcomes also depend on training budget, coverage, and evaluation. Compare held-out loss and actual continuations under a recorded protocol. The optional data path is an extension, not a required download."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "if USE_REAL_CORPUS:\n    subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-q\", \"datasets\"], check=True)\n    from datasets import load_dataset\n\n    DATA_REVISIONS = {\n        \"fineweb2\": \"v2.1.1\",\n        \"tinystories\": \"f54c09fd23315a6f9c86f9dc80f725de7d8f9c64\",\n    }\n    train_target = SETTINGS[\"docs\"] // 2\n    eval_target = max(100, SETTINGS[\"docs\"] // 40)\n\n    ru_train = load_dataset(\"HuggingFaceFW/fineweb-2\", name=\"rus_Cyrl\",\n                            split=\"train\", streaming=True,\n                            revision=DATA_REVISIONS[\"fineweb2\"])\n    ru_eval = load_dataset(\"HuggingFaceFW/fineweb-2\", name=\"rus_Cyrl\",\n                           split=\"test\", streaming=True,\n                           revision=DATA_REVISIONS[\"fineweb2\"])\n    en_train = load_dataset(\"roneneldan/TinyStories\", split=\"train\", streaming=True,\n                            revision=DATA_REVISIONS[\"tinystories\"])\n    en_eval = load_dataset(\"roneneldan/TinyStories\", split=\"validation\", streaming=True,\n                           revision=DATA_REVISIONS[\"tinystories\"])\n\n    def take_text(dataset, limit):\n        rows = []\n        for row in dataset:\n            rows.append(row[\"text\"])\n            if len(rows) >= limit:\n                break\n        return rows\n\n    raw_train = take_text(ru_train, train_target) + take_text(en_train, train_target)\n    raw_valid = take_text(ru_eval, eval_target) + take_text(en_eval, eval_target)\n    train_docs, train_report = pipeline(raw_train, FilterConfig(), near_dup_threshold=0.85)\n    valid_docs, valid_report = pipeline(raw_valid, FilterConfig(), near_dup_threshold=0.85)\n    train_fingerprints = {hashlib.sha256(d.encode(\"utf-8\")).digest() for d in train_docs}\n    valid_docs = [d for d in valid_docs\n                  if hashlib.sha256(d.encode(\"utf-8\")).digest() not in train_fingerprints]\n    print(\"train:\", train_report)\n    print(\"validation:\", valid_report)\n    print(\"revisions:\", DATA_REVISIONS)\n    print(\"\\nAttribution: FineWeb2 (ODC-By 1.0 + Common Crawl Terms), \"\n          \"TinyStories (CDLA-Sharing-1.0). This is technical documentation, not legal advice.\")\nelse:\n    DATA_REVISIONS = {\"synthetic\": f\"generator-v1-seed-{SEED}\"}\n    print(\"USE_REAL_CORPUS = False — using the synthetic document-level split\")"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. A byte-level BPE tokenizer\n\nThe initial alphabet consists of all 256 byte values, so valid UTF-8 text can be encoded without an unknown token. Ordinary Russian letters occupy two bytes before merging, but this does not describe every character in Unicode's Cyrillic blocks. BPE merges can join bytes within a character or span several characters.\n\nRussian data volume matters, as do its diversity, vocabulary size, and preprocessing. We measure tokens per character and bytes per token on separate Russian and English probes. Read these as compression properties of this tokenizer on these examples, not as a direct measure of the language model's eventual quality."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "import time\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.data import ByteTokenizer\nfrom minillm.chat import CHAT_SPECIALS\n\n# The chat control tokens are reserved in the vocabulary right away, even though\n# pretraining does not need them. The reason is exactly the one behind the 1,075\n# reserved identifiers in o200k_harmony (M2): adding them later means changing\n# vocab_size and rebuilding the embeddings. Notebook 2 picks up this very\n# checkpoint and expects to find `<|eot_id|>` inside it.\ntrain_text = \"\\n\".join(train_docs)\nt0 = time.time()\ntokenizer = BBPETokenizer.train(train_text, vocab_size=SETTINGS[\"vocab_size\"],\n                                specials=[\"<|bos|>\", \"<|eos|>\"] + CHAT_SPECIALS)\nprint(f\"trained in {time.time() - t0:.1f} s: vocabulary {tokenizer.vocab_size}, \"\n      f\"{len(tokenizer.merges)} merges\")\nif tokenizer.vocab_size < SETTINGS[\"vocab_size\"]:\n    print('Available merge pairs ran out before the requested vocabulary size.')\n\nsample = \"The tokenizer predicts nothing; it only decides the price.\"\nassert tokenizer.decode(tokenizer.encode(sample)) == sample, \"round trip is broken\"\nprint(\"round trip:\", repr(tokenizer.decode(tokenizer.encode(sample))))"
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "probe_rng = random.Random(123)\nru_probe = \" \".join(sentence(probe_rng, RU_SLOTS) for _ in range(40))\nen_probe = \" \".join(sentence(probe_rng, EN_SLOTS) for _ in range(40))\nplain = ByteTokenizer()\n\nrows = []\nfor name, probe in ((\"RU\", ru_probe), (\"EN\", en_probe)):\n    trained = tokenizer.fertility(probe)\n    baseline = len(plain.encode(probe)) / len(probe)\n    rows.append((name, trained[\"tokens_per_char\"], baseline,\n                 trained[\"bytes_per_token\"]))\n\nprint(f\"{'lang':<5} {'BBPE tok/char':>14} {'byte-level tok/char':>21} {'bytes/token':>12}\")\nfor name, trained, baseline, bpt in rows:\n    print(f\"{name:<5} {trained:>14.3f} {baseline:>21.3f} {bpt:>12.2f}\")\nprint(\"\\nByte-level costs about two tokens per Cyrillic character — that is the \"\n      \"price of having no merges for a language (M2).\")"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Sharding the token stream\n\nWrite the tokens into `.bin` shards and retain their checksums in `index.json`. Data volume, not the model profile alone, determines whether the corpus fits in memory. Small inputs let us inspect the reading order and integrity checks before scaling up. In particular, crossing a shard boundary must not discard the next-token transition."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "from minillm.data import ShardStream, TokenStream, write_shards\n\nEOS = tokenizer.specials[\"<|eos|>\"]\n\ndef encode_documents(documents):\n    stream = []\n    for doc in documents:\n        stream.extend(tokenizer.encode(doc))\n        stream.append(EOS)\n    return stream\n\ntrain_token_ids = encode_documents(train_docs)\nvalid_token_ids = encode_documents(valid_docs)\nprint(f\"train tokens: {len(train_token_ids):,}; validation tokens: {len(valid_token_ids):,}\")\n\nshard_dir = Path(\"data_shards\")\nindex = write_shards(train_token_ids, shard_dir / \"train\", shard_tokens=250_000)\nwrite_shards(valid_token_ids, shard_dir / \"valid\", shard_tokens=250_000)\n\ntrain_stream = ShardStream(shard_dir / \"train\", seq_len=SETTINGS[\"seq_len\"], verify=True)\nvalid_stream = ShardStream(shard_dir / \"valid\", seq_len=SETTINGS[\"seq_len\"], verify=True)\nprint(f\"train: {len(index['shards'])} shards, {index['total_tokens']:,} tokens, \"\n      f\"{len(train_stream):,} windows, checksum {train_stream.checksum()}\")\nprint(f\"validation: {len(valid_stream):,} windows — document-separated before tokenizer training\")"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 6. Model config and budget\n\nBefore launching anything, three quantities the course insists on computing\nbefore the run rather than after the OOM:\n\n\n1. **parameters** — by the formula of M6, checked against the actual\n   `model.parameters()`;\n\n2. **KV cache per token** — `2·L·H_kv·d_head·sizeof(dtype)` (M5);\n\n3. **the 20× Chinchilla-style reference budget** — 20 tokens per parameter (M9), and how many\n   steps that is."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "from minillm.config import MiniLLMConfig, kv_bytes_per_token\nfrom minillm.model import MiniLLM, MoELayer\nfrom minillm.train import TrainConfig, memory_report\n\ncfg = MiniLLMConfig.profile(\n    SETTINGS[\"model_profile\"],\n    vocab_size=tokenizer.vocab_size,\n    max_position_embeddings=max(SETTINGS[\"seq_len\"], 256),\n)\nmodel = MiniLLM(cfg).to(DEVICE)\n\nanalytic = cfg.parameter_report()\nassert analytic[\"total\"] == model.num_parameters(), \"formula and code disagree\"\nprint(f\"parameters: {analytic['total']:,} (formula == actual)\")\nfor key in (\"embeddings\", \"attention\", \"ffn\", \"norms\"):\n    print(f\"  {key:<12} {analytic[key]:>12,}  ({analytic[key] / analytic['total']:.1%})\")\nprint(f\"  the block costs {analytic['block_over_d2']}·d²\")\nreference_cache_bpt = kv_bytes_per_token(cfg, dtype_bytes=2)\nruntime_cache_bpt = kv_bytes_per_token(cfg, dtype_bytes={\"fp32\": 4, \"bf16\": 2, \"fp16\": 2}[COMPUTE_DTYPE])\nprint(f\"\\nKV cache, BF16/FP16 reference: {reference_cache_bpt} bytes/token \"\n      f\"→ {reference_cache_bpt * SETTINGS['seq_len'] / 1024:.1f} KiB per window\")\nprint(f\"KV cache at the current compute dtype ({COMPUTE_DTYPE}): {runtime_cache_bpt} bytes/token\")\nprint(\"persistent training memory:\", memory_report(cfg, \"adamw\"))"
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "tcfg = TrainConfig(\n    steps=SETTINGS[\"steps\"],\n    seq_len=SETTINGS[\"seq_len\"],\n    micro_batch_size=SETTINGS[\"micro_batch_size\"],\n    grad_accum=SETTINGS[\"grad_accum\"],\n    optimizer=\"muon\",\n    compute_dtype=\"auto\",\n    gradient_checkpointing=DEVICE.startswith(\"cuda\"),\n    seed=SEED,\n    device=DEVICE,\n    log_every=max(1, SETTINGS[\"steps\"] // 10),\n    out_dir=\"runs/pretrain\",\n)\n\nchinchilla_tokens = 20 * analytic[\"total\"]\nplanned_tokens = tcfg.steps * tcfg.tokens_per_step\nprint(f\"planned next-token targets per step: {tcfg.tokens_per_step:,}\")\nprint(f\"planned:         {planned_tokens:,} supervised targets over {tcfg.steps:,} steps\")\nprint(f\"reference 20×: {chinchilla_tokens:,} tokens \"\n      f\"→ {chinchilla_tokens / tcfg.tokens_per_step:,.0f} steps\")\nprint(f\"share of budget: {planned_tokens / chinchilla_tokens:.1%}\")\nprint(f\"epochs over the corpus: {planned_tokens / len(train_token_ids):.2f}\")"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "The planned budget counts next-token targets: a `seq_len+1` window supplies `seq_len` targets. Runtime logs distinguish input positions (`tokens`, including the first context position and PAD) from supervised targets after shifting (`supervised_tokens`). Throughput, `tokens_per_s`, uses input positions. Training and validation loss average over supervised targets; gradient accumulation uses one denominator for the whole effective batch.\n\nThe budget fraction compares planned tokens with the $20P$ reference. It describes experiment size rather than diagnosing whether training is sufficient. The appropriate budget depends on the data and objective. `SMOKE` checks the pipeline with a short run; `FULL` sets a longer teaching schedule.\n\nEpoch count records data reuse. Repeated exposure to a small corpus can encourage memorization, but there is no universal four-epoch boundary. Inspect both training and held-out curves, and remember that shared synthetic templates limit the diversity of both splits."
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 7. The run\n\nThe optimizer is a hybrid: Muon on two-dimensional matrices, AdamW on embeddings,\nnorms and the router (M9). The schedule is WSD — warmup, a plateau, a decay\n(M9). The plateau is what lets a run be interrupted at any point and finished\nwith a decay tail, without retuning the schedule for a new length."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "from minillm.train import train, save_checkpoint\n\nstate = train(model, train_stream, tcfg, eval_stream=valid_stream)\nprint(f\"\\ndone: {state.step} steps, \"\n      f\"{state.tokens:,} input positions, {state.supervised_tokens:,} targets, \"\n      f\"final loss {state.history[-1]['loss']:.4f}\")"
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "import matplotlib.pyplot as plt\n\nsteps = [h[\"step\"] for h in state.history]\nfig, axes = plt.subplots(1, 3, figsize=(15, 4))\n\naxes[0].plot(steps, [h[\"loss\"] for h in state.history], label=\"train\", color=\"#5E81AC\")\nif \"eval_loss\" in state.history[0]:\n    axes[0].plot(steps, [h[\"eval_loss\"] for h in state.history], label=\"valid\",\n                 color=\"#BF616A\")\naxes[0].axhline(np.log(cfg.vocab_size), ls=\"--\", lw=1, color=\"#4C566A\",\n                label=\"ln(V) — a uniform model\")\naxes[0].set_xlabel(\"step\"); axes[0].set_ylabel(\"cross-entropy\"); axes[0].legend()\naxes[0].set_title(\"loss\")\n\naxes[1].plot(steps, [h[\"lr_scale\"] for h in state.history], color=\"#A3BE8C\")\naxes[1].set_xlabel(\"step\"); axes[1].set_ylabel(\"lr multiplier\")\naxes[1].set_title(\"WSD schedule\")\n\naxes[2].plot(steps, [h[\"tokens_per_s\"] for h in state.history], color=\"#D08770\")\naxes[2].set_xlabel(\"step\"); axes[2].set_ylabel(\"input positions/s\")\naxes[2].set_title(\"throughput\")\n\nfor ax in axes:\n    ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nbpc = state.history[-1][\"loss\"] / np.log(2)\nprint(f\"final cross-entropy {state.history[-1]['loss']:.4f} nats \"\n      f\"= {bpc:.4f} bits per token\")\nprint('The curve describes this budget and corpus; a plateau alone does not identify the limiting cause.')"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "### 7.1. A sparse twin: total and active parameters\n\nReplace the dense FFN with experts while keeping vocabulary, depth, attention, and positions fixed. Expert width targets a similar active-parameter budget, not exact equality. The standard S and S-MoE profiles have 6,327,552 and 6,593,792 active parameters respectively; the table below recomputes the counts for this run's vocabulary.\n\nSimilar counts do not promise equal token latency. Routing, matrix shapes, and output combination also cost work. KV geometry does remain identical when attention is unchanged. Begin by verifying those distinct statements numerically."
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "dense_cfg = cfg\nmoe_cfg = MiniLLMConfig(**{**MiniLLMConfig.twin(SETTINGS[\"model_profile\"]).to_dict(),\n                           \"vocab_size\": tokenizer.vocab_size,\n                           \"max_position_embeddings\": cfg.max_position_embeddings})\nmoe_model = MiniLLM(moe_cfg).to(DEVICE)\n\nrows = [(\"dense\", dense_cfg, model), (\"MoE\", moe_cfg, moe_model)]\nprint(f\"{'variant':<8} {'total':>14} {'active':>12} {'sparsity':>9} \"\n      f\"{'KV B/tok':>9} {'FLOP/tok':>12}\")\nfor name, c, m in rows:\n    assert c.parameter_report()[\"total\"] == m.num_parameters(), \"formula diverged\"\n    total, active = c.parameter_report()[\"total\"], c.active_parameters()\n    print(f\"{name:<8} {total:>14,} {active:>12,} {total / active:>8.2f}× \"\n          f\"{kv_bytes_per_token(c):>9,} {c.flops_per_token():>12,}\")\n\nprint(f\"\\n{moe_cfg.num_local_experts} experts, top-{moe_cfg.num_experts_per_tok}, \"\n      f\"{moe_cfg.num_shared_experts} shared, first layer dense: \"\n      f\"{not moe_cfg.moe_layer(0)}\")\nprint(f\"MoE active relative to dense: \"\n      f\"×{moe_cfg.active_parameters() / dense_cfg.active_parameters():.3f}\")\nprint(f\"KV cache matches to the byte: \"\n      f\"{kv_bytes_per_token(dense_cfg) == kv_bytes_per_token(moe_cfg)} — \"\n      f\"attention untouched, so the comparison is clean\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "The table separates bank capacity from the work of selected experts. Train both models for the same step and token budget, then compare loss, throughput, and assignments. Neither an MoE quality gain nor equal hardware cost is assumed in advance."
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "moe_state = train(moe_model, train_stream, tcfg, eval_stream=valid_stream)\n\ndense_last, moe_last = state.history[-1], moe_state.history[-1]\nprint(f\"\\n{'variant':<8} {'train':>9} {'valid':>9} {'input/s':>9}\")\nfor name, h in ((\"dense\", dense_last), (\"MoE\", moe_last)):\n    print(f\"{name:<8} {h['loss']:>9.4f} {h.get('eval_loss', float('nan')):>9.4f} \"\n          f\"{h['tokens_per_s']:>9.0f}\")\n\nmoe_layer = next(l.ffn for l in moe_model.layers if isinstance(l.ffn, MoELayer))\nload = moe_layer.expert_load\nprint(f\"\\nexpert load at the last measurement: min {load.min():.3f}, \"\n      f\"max {load.max():.3f}, std {load.std():.3f}\")\nprint(f\"a perfectly even load would be \"\n      f\"{moe_cfg.num_experts_per_tok / moe_cfg.num_local_experts:.3f} per expert\")\nprint(f\"aux-loss-free bias: max|b| = {moe_layer.expert_bias.abs().max():.4f}\")"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "**Interpreting the comparison.** Uniform routing would give each of $E$ experts an average fraction $k/E$ of tokens. Actual assignments may be uneven, and fewer tokens do not automatically mean fewer optimizer steps. Inspect the load table to see how much data each expert receives.\n\nOne short run compares two particular configurations. Parameter counts alone cannot explain a loss gap. Notebook 4 isolates a balancing-rate change and measures dropped assignments, providing additional evidence about routing without assuming its effect on quality."
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "## 8. Inspecting the trained model\n\nGenerate continuations with greedy decoding and sampling. Prefill processes prompt positions; decode continues using the KV cache. Module 10 explains when compute or memory traffic becomes limiting, but those conditions cannot be assumed for this small CPU run. Record the measured times and inspect the text, separating a working generation path from useful language quality."
+        },
+        {
+          "id": "code-015",
+          "type": "code",
+          "source": "from minillm.generate import SamplingConfig, generate\n\nfor temperature, top_p in ((0.0, 1.0), (0.8, 0.9)):\n    prompt = tokenizer.encode(\"a language model\")\n    out, stats = generate(model, prompt, 80,\n                          SamplingConfig(temperature=temperature, top_p=top_p, seed=SEED),\n                          stop_tokens={EOS})\n    label = \"greedy\" if temperature == 0 else f\"T={temperature}, top_p={top_p}\"\n    print(f\"--- {label}\\n{tokenizer.decode(out)!r}\\n\")\nprint(\"stats of the last run:\", stats.as_dict())"
+        },
+        {
+          "id": "markdown-015",
+          "type": "markdown",
+          "source": "## 9. A passport for our own model\n\nThe course opened by teaching us to read someone else's `config.json`. Now the\nmodel is ours — and the same passport approach reads it with no changes at all.\nThat is the ring closing: the arithmetic of modules 1, 5 and 6 applied to a file\nwe just wrote ourselves."
+        },
+        {
+          "id": "code-016",
+          "type": "code",
+          "source": "run_dir = Path(\"runs/pretrain/final\")\nsave_checkpoint(run_dir, model, state.optimizer, tcfg, state)\ntokenizer.save(run_dir / \"tokenizer.json\")\nprint(\"saved:\", sorted(p.name for p in run_dir.iterdir()))"
+        },
+        {
+          "id": "code-017",
+          "type": "code",
+          "source": "import json\n\ndef read_passport(path: Path) -> None:\n    \"\"\"A model passport from config.json — the same move as in module 1.\"\"\"\n    c = json.loads((path / \"config.json\").read_text(encoding=\"utf-8\"))\n    heads, kv = c[\"num_attention_heads\"], c[\"num_key_value_heads\"]\n    attention = \"MHA\" if heads == kv else (\"MQA\" if kv == 1 else f\"GQA {heads}/{kv}\")\n    ffn_ratio = c[\"intermediate_size\"] / c[\"hidden_size\"]\n    cache_bytes = {\"fp32\": 4, \"bf16\": 2, \"fp16\": 2}[stats.cache_dtype]\n    kv_bytes = 2 * c[\"num_hidden_layers\"] * kv * c[\"head_dim\"] * cache_bytes\n\n    print(\"Axis I   · size      :\", f\"d={c['hidden_size']}, L={c['num_hidden_layers']}, \"\n          f\"V={c['vocab_size']}, embeddings \"\n          f\"{'tied' if c['tie_word_embeddings'] else 'untied'}\")\n    print(\"Axis II  · context   :\", f\"{c['max_position_embeddings']} tokens, \"\n          f\"RoPE base {c['rope_theta']:g}, scaling \"\n          f\"{c['rope_scaling'] or 'none'}\")\n    print(\"Axis III · attention :\", attention,\n          f\"· head_dim {c['head_dim']} · sinks {'yes' if c['attention_sinks'] else 'no'}\"\n          f\" · window {c['sliding_window'] or 'none'}\")\n    print(\"Axis IV  · block     :\", f\"{c['norm_placement']}-norm, {c['hidden_act']}, \"\n          f\"d_ffn/d = {ffn_ratio:.2f}\"\n          + (f\", clamp {c['swiglu_limit']}\" if c[\"swiglu_limit\"] else \"\"))\n    print(\"Axis V   · sparsity  :\", \"dense\" if not c[\"num_local_experts\"]\n          else f\"MoE, {c['num_local_experts']} experts, top-{c['num_experts_per_tok']}\")\n    print(\"Derived              :\", f\"KV cache {kv_bytes} B/token in measured {stats.cache_dtype}, \"\n          f\"{kv_bytes * c['max_position_embeddings'] / 1024 ** 2:.1f} MiB at full context\")\n\nread_passport(run_dir)"
+        },
+        {
+          "id": "markdown-016",
+          "type": "markdown",
+          "source": "## 10. Summary and what comes next\n\nWe walked the road the course took apart across the course modules: raw documents\n→ cleaning funnel → our own BPE → shards → the course reference model → a run with Muon\nand WSD → generation → a passport. Every number was computed here; none was taken\nfrom the lectures on faith.\n\nThe passport computes the training budget relative to the $20P$ reference.\nThat ratio depends on the profile and step count; it is not a quality score.\nThe synthetic corpus lets us trace learning and check the handoffs between\nstages. Architecture comparisons require a controlled experiment such as those\nin Notebook 4. Claims about natural language need suitable data and response\nevaluation in addition to a successful training run.\n\n**Next:**\n\n- notebook 2 — post-training: chat template, loss masking over assistant spans,\n  packing and DPO;\n- notebook 3 — inference: prefix caching, speculative decoding with a small\n  draft model, and quantization;\n- notebook 4 — ablations: the course's claims checked by number, plus an honest\n  account of where this scale runs out.\n\n**Data attribution.** The synthetic corpus of §2 is generated by this notebook's\nown code. With `USE_REAL_CORPUS` enabled, the licences of the respective datasets\napply: FineWeb-2 under ODC-By 1.0 plus the CommonCrawl terms of use, TinyStories\nunder CDLA-Sharing-1.0."
+        }
+      ]
+    },
+    {
+      "id": "capstone-02",
+      "kind": "capstone",
+      "title": "Capstone · Notebook 2. Post-training: SFT and DPO",
+      "format": "ipynb",
+      "filename": "02_posttrain.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/en/02_posttrain.ipynb",
+      "bytes": 32017,
+      "sha256": "2ea84bc72ed9c1b174626754668cafed6227c244856ae6b2b1d523dd20fd016f",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Capstone · Notebook 2. Post-training: SFT and DPO\n\n*Modern LLMs course · capstone · edition 2026.10.3*\n\n> **What happens here.** The base model from notebook 1 can continue text but\n> cannot hold a conversation. We teach it the format — chat template, loss\n> masking over assistant replies, packing (M13) — and then shift its preferences\n> with DPO (M14).\n>\n> **The central experiment is §5.** We deliberately leave the closing\n> `<|eot_id|>` out of the trainable part of the mask and watch what happens.\n> We measure the changed training objective and both branches’ behavior.\n>\n> **The Colab contract.** The notebook is self-contained: if no checkpoint from\n> notebook 1 is nearby, it trains a small base model itself. No network required.\n\nA useful working distinction is that SFT demonstrates desired behaviour while\npreference or reinforcement learning supplies a different training signal. At this scale we verify the mechanics, not frontier-level answer quality.\n\nOn a first pass, run the cells in order and connect the code to the explanations. On a second, change one setting, retain the results, and state which claim the comparison can test."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Environment and the base model"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"project package: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm is already importable\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Upload the Capstone ZIP package from the Stepik lesson. The directory structure will be restored automatically.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"project archive: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm was not found. Download the language-specific Capstone ZIP package from the Stepik lesson and either extract it in full or upload the ZIP to the current Colab session.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport os, torch, numpy as np, random\n\n# Run profile. SMOKE is sized for CPU and finishes in minutes; FULL only makes\n# sense on a GPU and produces noticeably more coherent answers.\nPROFILE = \"SMOKE\"\nBUDGET = {\n    \"SMOKE\": dict(base_steps=250, sft_steps=200, sft_batch=4, seq_len=192,\n                  dpo_steps=100, dpo_batch=4, hidden=128, layers=3, dialogues=800),\n    \"FULL\":  dict(base_steps=2000, sft_steps=1500, sft_batch=8, seq_len=256,\n                  dpo_steps=600, dpo_batch=8, hidden=384, layers=6, dialogues=6000),\n}[PROFILE]\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    BUDGET = {**BUDGET, \"base_steps\": min(BUDGET[\"base_steps\"], 10),\n              \"sft_steps\": min(BUDGET[\"sft_steps\"], 12),\n              \"dpo_steps\": min(BUDGET[\"dpo_steps\"], 8),\n              \"dialogues\": min(BUDGET[\"dialogues\"], 80),\n              \"sft_batch\": min(BUDGET[\"sft_batch\"], 2),\n              \"dpo_batch\": min(BUDGET[\"dpo_batch\"], 2)}\nSEED = 0\ntorch.manual_seed(SEED)\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nprint(\"torch\", torch.__version__, \"| device:\", DEVICE)"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "The base model. If a checkpoint from notebook 1 sits nearby we load it; otherwise\nwe train a small base model right here. The second path is faster and sufficient\nfor every conclusion in this notebook: what interests us is **what the mask\nteaches**, not absolute quality."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "from minillm.chat import CHAT_SPECIALS\nfrom minillm.config import MiniLLMConfig\nfrom minillm.data import TokenStream\nfrom minillm.model import MiniLLM\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.train import TrainConfig, train\n\nEN_SLOTS = dict(\n    subject=[\"the language model\", \"the transformer\", \"the attention mechanism\",\n             \"the tokenizer\", \"the optimizer\", \"normalization\", \"the residual stream\",\n             \"the expert router\"],\n    verb=[\"predicts\", \"processes\", \"reduces\", \"accelerates\", \"stabilizes\"],\n    obj=[\"the next token\", \"a long context\", \"the cost per step\", \"the memory footprint\",\n         \"the scale of activations\", \"the load across experts\"],\n)\n\ndef sentence(rng, slots):\n    return \" \".join([rng.choice(slots[\"subject\"]), rng.choice(slots[\"verb\"]),\n                     rng.choice(slots[\"obj\"])]).capitalize() + \".\"\n\nrng = random.Random(SEED)\nbase_text = \"\\n\".join(\" \".join(sentence(rng, EN_SLOTS) for _ in range(4))\n                      for _ in range(4000))\n\ndef usable_checkpoint(path: Path):\n    \"\"\"A checkpoint is usable only if its vocabulary knows the chat control tokens.\n\n    A vocabulary without `<|eot_id|>` would crash the notebook on the very first\n    loss mask, and with an unhelpful KeyError at that. Notebook 1 reserves those\n    identifiers up front, but a checkpoint may have been built by an older\n    version — so we check explicitly.\n    \"\"\"\n    if not (path / \"config.json\").exists():\n        return None, None, \"no notebook-1 checkpoint nearby\"\n    tok = BBPETokenizer.load(path / \"tokenizer.json\")\n    missing = [s for s in CHAT_SPECIALS if s not in tok.specials]\n    if missing:\n        return None, None, f\"the checkpoint vocabulary lacks {missing}\"\n    from minillm.train import load_checkpoint\n    model, _, _, _ = load_checkpoint(path, device=DEVICE)\n    return model, tok, None\n\nCHECKPOINT = Path(\"runs/pretrain/final\")\nbase_model, tokenizer, reason = usable_checkpoint(CHECKPOINT)\nif base_model is not None:\n    print(\"loaded the checkpoint from notebook 1:\", base_model.num_parameters(), \"parameters\")\nelse:\n    print(f\"training a base model ourselves: {reason}\")\n    tokenizer = BBPETokenizer.train(base_text, vocab_size=1024, specials=CHAT_SPECIALS)\n    cfg = MiniLLMConfig.profile(\"S\", vocab_size=tokenizer.vocab_size,\n                                hidden_size=BUDGET[\"hidden\"],\n                                num_hidden_layers=BUDGET[\"layers\"],\n                                num_attention_heads=4, num_key_value_heads=2,\n                                head_dim=32, max_position_embeddings=BUDGET[\"seq_len\"])\n    base_model = MiniLLM(cfg).to(DEVICE)\n    stream = TokenStream.from_text(base_text, tokenizer, seq_len=128)\n    print(f\"parameters: {base_model.num_parameters():,}\")\n    train(base_model, stream, TrainConfig(steps=BUDGET[\"base_steps\"], seq_len=128,\n                                          micro_batch_size=8, optimizer=\"muon\",\n                                          seed=SEED, device=DEVICE, log_every=125))\nprint(\"vocabulary:\", tokenizer.vocab_size)"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. The instruction dataset\n\nThe dialogue generator reuses the pretraining slot grammar, reducing changes in vocabulary and topic. That does not establish that SFT learns format alone. Random slot combinations are teaching fixtures and may be factually nonsensical. For the EOT experiment, both branches receive the same dialogues, isolating the mask change rather than assigning every SFT effect to formatting."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "from minillm.chat import ChatTemplate, Message, SFTDataset\n\nQUESTIONS = [\n    (\"What does {s} do?\", \"{s} {v} {o}.\"),\n    (\"What is {s} used for?\", \"{s} {v} {o}. That is its main role here.\"),\n    (\"How does {s} affect the model?\", \"{s} {v} {o}, changing the model behaviour.\"),\n]\n\ndef make_dialogues(n: int, seed: int = 0) -> list[list[Message]]:\n    rng = random.Random(seed)\n    out = []\n    for _ in range(n):\n        question, answer = rng.choice(QUESTIONS)\n        s = rng.choice(EN_SLOTS[\"subject\"])\n        v, o = rng.choice(EN_SLOTS[\"verb\"]), rng.choice(EN_SLOTS[\"obj\"])\n        out.append([\n            Message(\"system\", \"Answer briefly and directly.\"),\n            Message(\"user\", question.format(s=s)),\n            Message(\"assistant\", answer.format(s=s.capitalize(), v=v, o=o)),\n        ])\n    return out\n\ntemplate = ChatTemplate()\ndialogues = make_dialogues(BUDGET[\"dialogues\"], seed=SEED)\nprint(template.render(dialogues[0], add_generation_prompt=False))"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. The mask: what exactly the model learns\n\nThe rule of M13: train on assistant replies **and the closing `<|eot_id|>`**;\ndo not train on the system prompt, the user turns or the role headers — those are\nwritten by the runtime."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "EOT_ID = tokenizer.specials[\"<|eot_id|>\"]\nPAD_ID = tokenizer.specials[\"<|begin_of_text|>\"]\n\nids, mask = template.encode_with_mask(dialogues[0], tokenizer)\nprint(f\"tokens: {len(ids)}, trainable: {sum(mask)} \"\n      f\"({template.trainable_fraction(mask):.1%})\\n\")\n\nprint(f\"{'token':<22} {'id':>6}  train\")\nfor token_id, flag in list(zip(ids, mask)):\n    piece = tokenizer.decode([token_id]).replace(\"\\n\", \"\\\\n\")\n    print(f\"{piece!r:<22} {token_id:>6}  {'YES' if flag else '—'}\")"
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "dataset, stats = SFTDataset.from_dialogues(dialogues, tokenizer, template,\n                                           seq_len=BUDGET[\"seq_len\"], pad_id=PAD_ID)\nprint(\"packing:\", stats)\nprint(f\"\\nwithout packing this would need {stats['dialogues']} rows of \"\n      f\"{BUDGET['seq_len']} tokens,\")\nprint(f\"with packing — {stats['bins']}: a ×{stats['packing_ratio']} saving, \"\n      f\"padding {stats['padding_fraction']:.1%}\")"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "Packing here is a correctness feature as well as an efficiency feature. The\ndataset returns `segment_ids` beside `ids` and `labels`; the model builds a\nblock-diagonal causal mask and resets RoPE positions inside every dialogue.\nChanging one packed example therefore cannot alter the logits of its neighbour.\n`<|eot_id|>` marks the protocol boundary, but it would not provide this isolation\nby itself."
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 4. SFT\n\nWe train the same model with the same loop — only the source of batches changes:\ninstead of a token stream it now yields `(ids, labels, segment_ids)`. The −100\nlabels disable direct loss, while segment IDs build a block-diagonal causal mask\nand reset positions inside every independently packed dialogue.\n\n\nSFT and validation use a mean over supervised targets after the causal shift. With gradient accumulation, each microbatch contributes in proportion to its target count. Repartitioning the same examples therefore preserves the chosen loss objective."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "import copy\n\nsft_model = copy.deepcopy(base_model)\nsft_cfg = TrainConfig(steps=BUDGET[\"sft_steps\"], seq_len=BUDGET[\"seq_len\"],\n                      micro_batch_size=BUDGET[\"sft_batch\"], optimizer=\"muon\",\n                      seed=SEED, device=DEVICE, log_every=BUDGET[\"sft_steps\"] // 4,\n                      out_dir=\"runs/sft\")\nsft_state = train(sft_model, dataset, sft_cfg)"
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "from minillm.generate import SamplingConfig, generate\n\ndef ask(model, question: str, max_new_tokens: int = 60, temperature: float = 0.0) -> tuple[str, int]:\n    ids, _ = template.encode_with_mask(\n        [Message(\"system\", \"Answer briefly and directly.\"),\n         Message(\"user\", question)], tokenizer, add_generation_prompt=True)\n    out, stats = generate(model, ids, max_new_tokens,\n                          SamplingConfig(temperature=temperature, seed=SEED),\n                          stop_tokens={EOT_ID})\n    answer = tokenizer.decode(out[len(ids):])\n    return answer, stats.generated_tokens\n\nquestion = \"What does the tokenizer do?\"\nfor label, model in ((\"before SFT\", base_model), (\"after SFT\", sft_model)):\n    answer, n = ask(model, question)\n    print(f\"--- {label} ({n} tokens)\\n{answer!r}\\n\")"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 5. The central experiment: the forgotten `<|eot_id|>`\n\nWe repeat SFT with exactly one change: `train_eot=False`. The data are the same,\nthe sequences are the same — **one position of the mask** differs per dialogue."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "broken_dataset, _ = SFTDataset.from_dialogues(dialogues, tokenizer, template,\n                                              seq_len=BUDGET[\"seq_len\"], pad_id=PAD_ID,\n                                              train_eot=False)\na_ids, a_mask = template.encode_with_mask(dialogues[0], tokenizer, train_eot=True)\nb_ids, b_mask = template.encode_with_mask(dialogues[0], tokenizer, train_eot=False)\ndiff = [i for i, (x, y) in enumerate(zip(a_mask, b_mask)) if x != y]\nprint(f\"sequences identical: {a_ids == b_ids}\")\nprint(f\"masks differ at positions {diff} — that is {tokenizer.decode([a_ids[diff[0]]])!r}\")\n\nbroken_model = copy.deepcopy(base_model)\ntrain(broken_model, broken_dataset,\n      TrainConfig(steps=BUDGET[\"sft_steps\"], seq_len=BUDGET[\"seq_len\"],\n                  micro_batch_size=BUDGET[\"sft_batch\"], optimizer=\"muon\", seed=SEED,\n                  device=DEVICE, log_every=BUDGET[\"sft_steps\"], out_dir=\"runs/sft_broken\"))"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "eot_rows = []\n\nprint(f\"{'model':<16} {'p(<|eot_id|>) after reply':>28} {'reply length':>14}\")\nfor label, model in ((\"mask correct\", sft_model), (\"EOT forgotten\", broken_model)):\n    ids, _ = template.encode_with_mask(dialogues[0], tokenizer)\n    prefix = ids[:len(ids) - 1]        # everything but the closing EOT\n    with torch.no_grad():\n        logits, _ = model(torch.tensor([prefix], device=DEVICE))\n        p_eot = torch.softmax(logits[0, -1].float(), dim=-1)[EOT_ID].item()\n    _, generated = ask(model, \"What does the tokenizer do?\", max_new_tokens=120)\n    eot_rows.append(dict(label=label, probability=p_eot, generated_tokens=generated))\n    print(f\"{label:<16} {p_eot:>28.4f} {generated:>14}\")\n\nanswer, n = ask(broken_model, \"What does the tokenizer do?\", max_new_tokens=120)\nprint(f\"\\nreply from the model with the forgotten EOT ({n} tokens):\\n{answer!r}\")\n\n# Use one correct mask for both models; the generator is a diagnostic fixture.\nfrom minillm.train import evaluate\ncheck_dialogues = make_dialogues(32, seed=SEED + 991)\ncheck_dataset, _ = SFTDataset.from_dialogues(check_dialogues, tokenizer, template,\n    seq_len=BUDGET[\"seq_len\"], pad_id=PAD_ID, train_eot=True)\nshared_scores = {name: evaluate(model, check_dataset, sft_cfg, batches=4)\n                 for name, model in ((\"correct_mask\", sft_model), (\"omitted_eot\", broken_model))}\nassert sum(a_mask) == sum(b_mask) + len(diff)\nprint(\"EOT supervised positions:\", sum(a_mask), \"vs\", sum(b_mask))\nprint(\"Shared correct-mask evaluation:\", shared_scores)"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "Removing EOT changes both the summed loss and the number of supervised positions in its denominator. The training losses now refer to different objectives and need not agree. Validation using the same faulty mask can conceal the missing stopping target.\n\nScore both models on one shared dataset with EOT supervision restored, then inspect EOT probability after a specified answer and the length of greedy generation. A token probability and an observed failure to stop are related but distinct measurements. A short run may produce only a weak contrast; report its actual size rather than assuming a dramatic failure."
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 6. Preference pairs\n\nThese pairs are authored by a template: there is no model generation or human annotation in `build_pairs`. The chosen answer fills a `QUESTIONS` template with slot values; the rejected answer appends two identical filler sentences. Both terminate with EOT.\n\nThe construction makes a preference for brevity inspectable. It lets us observe a DPO update, but it does not represent the diversity of human preferences. Studying policy-generated data would require a separate generation stage with a fixed model revision and independently assessed candidates."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "from minillm.preference import (DPOConfig, PreferencePair, freeze_reference, train_dpo)\n\nFILLER = \" This matters and should be considered when working with the model.\"\n\ndef build_pairs(n: int, seed: int = 0) -> list[PreferencePair]:\n    rng = random.Random(seed)\n    pairs = []\n    for _ in range(n):\n        question, answer = rng.choice(QUESTIONS)\n        s = rng.choice(EN_SLOTS[\"subject\"])\n        v, o = rng.choice(EN_SLOTS[\"verb\"]), rng.choice(EN_SLOTS[\"obj\"])\n        prompt_ids, _ = template.encode_with_mask(\n            [Message(\"user\", question.format(s=s))], tokenizer,\n            add_generation_prompt=True)\n        short = answer.format(s=s.capitalize(), v=v, o=o)\n        verbose = short + FILLER * 2\n        pairs.append(PreferencePair(\n            prompt_ids=prompt_ids,\n            chosen_ids=tokenizer.encode(short) + [EOT_ID],\n            rejected_ids=tokenizer.encode(verbose) + [EOT_ID],\n        ))\n    return pairs\n\npairs = build_pairs(192, seed=SEED)\nprint(f\"pairs: {len(pairs)}\")\nprint(\"chosen  :\", tokenizer.decode(pairs[0].chosen_ids)[:90])\nprint(\"rejected:\", tokenizer.decode(pairs[0].rejected_ids)[:90])"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 7. DPO\n\nA frozen SFT copy supplies reference probabilities. DPO compares changes in the two responses' log probabilities relative to that reference. After training, inference needs only the updated policy.\n\n`margin` is the mean implicit-reward difference; `accuracy` counts pairs with a positive difference. A zero margin is not counted as success here. Read both alongside loss and individual responses. Neither 0.5 accuracy nor a rapid rise to 1.0 identifies a cause on its own: easy pairs, tie handling, limited learning, leakage, and overfitting require different checks."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "policy = copy.deepcopy(sft_model)\nreference = freeze_reference(sft_model)\ndpo_state = train_dpo(policy, pairs,\n                      DPOConfig(beta=0.1, lr=1e-4, steps=BUDGET[\"dpo_steps\"],\n                                batch_size=BUDGET[\"dpo_batch\"], seed=SEED,\n                                device=DEVICE, log_every=BUDGET[\"dpo_steps\"] // 8),\n                      pad_id=PAD_ID, reference=reference)"
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "import matplotlib.pyplot as plt\n\nsteps = [h[\"step\"] for h in dpo_state.history]\nfig, axes = plt.subplots(1, 3, figsize=(15, 4))\naxes[0].plot(steps, [h[\"loss\"] for h in dpo_state.history], color=\"#5E81AC\")\naxes[0].axhline(np.log(2), ls=\"--\", lw=1, color=\"#4C566A\", label=\"ln 2 — the start\")\naxes[0].set_title(\"DPO loss\"); axes[0].legend()\naxes[1].plot(steps, [h[\"margin\"] for h in dpo_state.history], color=\"#A3BE8C\")\naxes[1].axhline(0, ls=\"--\", lw=1, color=\"#4C566A\")\naxes[1].set_title(\"margin: difference of implicit rewards\")\naxes[2].plot(steps, [h[\"chosen_reward\"] for h in dpo_state.history],\n             label=\"chosen\", color=\"#A3BE8C\")\naxes[2].plot(steps, [h[\"rejected_reward\"] for h in dpo_state.history],\n             label=\"rejected\", color=\"#BF616A\")\naxes[2].set_title(\"implicit rewards\"); axes[2].legend()\nfor ax in axes:\n    ax.set_xlabel(\"step\"); ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nlast = dpo_state.history[-1]\nprint(f\"margin {dpo_state.history[0]['margin']:+.3f} → {last['margin']:+.3f}, \"\n      f\"accuracy {last['accuracy']:.2f}\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "The third plot exposes the two terms behind the margin. DPO can increase their difference without increasing the chosen response's absolute probability. Implicit reward is not a direct utility measurement either. Downward movement in both terms warrants investigation, but does not by itself demonstrate degraded answers.\n\nLength and repeated filler make these pairs easy to distinguish. Check how quickly this run separates them, then reduce the filler while keeping other settings fixed. Claims about quality require held-out pairs and content checks in addition to the training curves."
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "question = \"What is the optimizer used for?\"\nfor label, model in ((\"after SFT\", sft_model), (\"after DPO\", policy)):\n    answer, n = ask(model, question, max_new_tokens=80, temperature=0.7)\n    print(f\"--- {label} ({n} tokens)\\n{answer!r}\\n\")\nprint('Two responses are illustrations. Compare several fixed prompts and save outcomes before inferring a behavioral change.')"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "## 8. Saving\n\nAfter DPO we save an **inference artifact**: weights, `config.json`, the\ntokenizer, and JSON stage provenance. This is deliberately not a resumable\ncheckpoint. The DPO weights no longer correspond to the SFT optimizer moments,\nand presenting those stale moments as resumable state would be a silent error.\nThe full resumable pretraining checkpoint remains in `runs/pretrain/final`."
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "from minillm.train import save_model_artifact\n\nout_dir = Path(\"runs/posttrain/final\")\nsave_model_artifact(out_dir, policy, {\n    \"stage\": \"dpo\",\n    \"sft_steps\": sft_state.step,\n    \"dpo_steps\": dpo_state.step,\n    \"note\": \"inference artifact; DPO optimizer state is intentionally not stored\",\n})\ntokenizer.save(out_dir / \"tokenizer.json\")\nprint(\"saved:\", sorted(p.name for p in out_dir.iterdir()))\n\nimport json\nmetrics = {\"seed\": SEED, \"budget\": BUDGET, \"eot\": eot_rows,\n           \"shared_mask_scores\": shared_scores, \"dpo_history\": dpo_state.history}\n(out_dir / \"teaching_metrics.json\").write_text(\n    json.dumps(metrics, ensure_ascii=False, indent=2, allow_nan=False), encoding=\"utf-8\")"
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "## 9. What the experiment establishes\n\nThe chat template, supervision mask, and packing rules define the SFT task. The EOT experiment changes the mask and compares both branches under a shared scoring rule. DPO uses explicit template preferences; the margin describes those particular pairs.\n\nSFT can teach content as well as format. Preference learning changes behavior according to a signal whose quality must also be examined. The measurements here describe synthetic dialogues and authored pairs. Real-world answer utility and the effects of a separate RL stage require their own experiments and evaluation criteria.\n\nRetain the actual loss, margin, EOT probabilities, and response lengths with their training budget. They describe this run on this corpus. Continue with inference in Notebook 3 and controlled architecture and training comparisons in Notebook 4."
+        }
+      ]
+    },
+    {
+      "id": "capstone-03",
+      "kind": "capstone",
+      "title": "Capstone · Notebook 3. Inference",
+      "format": "ipynb",
+      "filename": "03_inference.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/en/03_inference.ipynb",
+      "bytes": 30427,
+      "sha256": "bf153c34fee7eff412d3e39c62840062cb81b5353a7ecf3769cfd80ce832b97f",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Capstone · Notebook 3. Inference\n\n*Modern LLMs course · final practical project*\n\nInvestigate the trained model in use: time prefill and decode separately, account for KV memory, and check prefix reuse. Then compare approximate weight formats and run speculative decoding. Modules 10 and 11 provide the mechanisms and assumptions against which to read these experiments.\n\nKeep geometric identities, distribution changes, and measured runtime distinct. Quantization is assessed on a broad synthetic vocabulary with several metrics. A harder corpus does not guarantee visible damage, and a low loss does not guarantee its absence.\n\nNo network is needed. The notebook uses CPU or an available GPU; runtime depends on the device and budget. Follow the cells in order on a first pass. On a second pass, change one setting and explain which measurement should respond."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Environment"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"project package: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm is already importable\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Upload the Capstone ZIP package from the Stepik lesson. The directory structure will be restored automatically.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"project archive: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm was not found. Download the language-specific Capstone ZIP package from the Stepik lesson and either extract it in full or upload the ZIP to the current Colab session.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport copy, math, os, random, time\nimport torch, numpy as np\nimport matplotlib.pyplot as plt\n\nSEED = 0\ntorch.manual_seed(SEED)\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nfrom minillm.precision import autocast_context, model_parameter_dtype, resolve_compute_dtype\nCOMPUTE_DTYPE = resolve_compute_dtype(DEVICE, \"auto\")\nprint(\"torch\", torch.__version__, \"| device:\", DEVICE, \"| compute:\", COMPUTE_DTYPE)"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "### 1.1. Loading the result of Notebook 2\n\nWhen the notebooks share a workspace, load `runs/posttrain/final` and generate with the saved policy. If the artifact is absent, the cell reports that fact. Subsequent comparisons use a separately trained model and common inputs, keeping post-training changes out of the quantization experiment."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "from minillm.chat import ChatTemplate, Message\nfrom minillm.generate import SamplingConfig, generate\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.train import load_model_artifact\n\nPOSTTRAIN_ARTIFACT = Path(\"runs/posttrain/final\")\nif (POSTTRAIN_ARTIFACT / \"model.pt\").exists():\n    handoff_model, handoff_meta = load_model_artifact(POSTTRAIN_ARTIFACT, DEVICE)\n    handoff_tokenizer = BBPETokenizer.load(POSTTRAIN_ARTIFACT / \"tokenizer.json\")\n    handoff_template = ChatTemplate()\n    handoff_ids, _ = handoff_template.encode_with_mask(\n        [Message(\"system\", \"Answer briefly and directly.\"),\n         Message(\"user\", \"What does a tokenizer do?\")],\n        handoff_tokenizer, add_generation_prompt=True)\n    handoff_out, handoff_stats = generate(\n        handoff_model, handoff_ids, 40, SamplingConfig(temperature=0.0),\n        stop_tokens={handoff_tokenizer.specials[\"<|eot_id|>\"]})\n    print(\"post-training handoff:\", handoff_meta)\n    print(\"reply:\", repr(handoff_tokenizer.decode(handoff_out[len(handoff_ids):])))\n    print(\"KV bytes:\", handoff_stats.kv_bytes)\nelse:\n    print(\"post-training artifact not found — continuing via the self-contained route\")"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. A controlled evaluation corpus\n\nConstruct a pseudo-language from random words with unequal frequencies. The generating rule is shared while individual sequences differ. This provides controlled comparison inputs; it does not make memorization of a finite training set impossible.\n\nSeparate evaluation data before fitting either the tokenizer or the model. Scores on that split describe prediction changes in this synthetic task. Translation, coding, and answer usefulness require their own evaluations."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "from minillm.tokenizer import BBPETokenizer\nfrom minillm.data import TokenStream\n\ndef high_entropy_corpus(n_lines: int = 12_000, lexicon: int = 600,\n                        seed: int = 0) -> str:\n    \"\"\"A pseudo-language: large lexicon, Zipfian frequencies.\n\n    Unequal frequencies define a controlled prediction task. Loss is measured\n    per BPE token, so the entropy of the word distribution is not a direct\n    reference value for this metric.\n    \"\"\"\n    rng = random.Random(seed)\n    alphabet = \"abcdefghijklmnopqrstuvwxyz\"\n    words = [\"\".join(rng.choice(alphabet) for _ in range(rng.randint(3, 8)))\n             for _ in range(lexicon)]\n    weights = [1.0 / (i + 1) ** 0.9 for i in range(lexicon)]   # Zipfian tail\n    lines = []\n    for _ in range(n_lines):\n        k = rng.randint(6, 14)\n        lines.append(\" \".join(rng.choices(words, weights=weights, k=k)) + \".\\n\")\n    return \"\".join(lines)\n\ncorpus = high_entropy_corpus(n_lines=8_000, seed=SEED)\nlines = corpus.splitlines(keepends=True)\ncut = int(len(lines) * 0.9)\ntrain_text, eval_text = \"\".join(lines[:cut]), \"\".join(lines[cut:])\ntokenizer = BBPETokenizer.train(train_text, vocab_size=1024, specials=[\"<|eos|>\"])\nstream = TokenStream.from_text(train_text, tokenizer, seq_len=128)\neval_stream = TokenStream.from_text(eval_text, tokenizer, seq_len=128)\nprint(f\"corpus {len(corpus):,} characters · vocabulary {tokenizer.vocab_size} · \"\n      f\"{len(stream):,} windows · sha {stream.checksum()}\")\nprint(f\"uniform-model reference loss: ln(V) = \"\n      f\"{math.log(tokenizer.vocab_size):.3f}\")"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Two models: target and draft\n\nSpeculative decoding needs two models sharing a vocabulary: a large one whose\ndistribution we are obliged to preserve, and a small one that proposes candidates\ncheaply. We train both on the same data — that makes the draft resemble the\ntarget, and the acceptance rate depends directly on that resemblance (M11)."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "from minillm.config import MiniLLMConfig\nfrom minillm.model import MiniLLM\nfrom minillm.train import TrainConfig, evaluate, train\n\ndef build(hidden: int, layers: int, heads: int, kv: int) -> MiniLLM:\n    cfg = MiniLLMConfig.profile(\"S\", vocab_size=tokenizer.vocab_size,\n                                hidden_size=hidden, num_hidden_layers=layers,\n                                num_attention_heads=heads, num_key_value_heads=kv,\n                                head_dim=hidden // heads, max_position_embeddings=256)\n    return MiniLLM(cfg).to(DEVICE)\n\n# This budget targets CPU execution. Longer training is a separate experiment;\n# remeasure both loss and sensitivity to quantization afterwards.\nmodels = {}\nfor name, (hidden, layers, heads, kv, steps) in {\n    \"target\": (192, 4, 6, 2, 250),\n    \"draft\":  (96, 2, 4, 2, 250),\n}.items():\n    if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n        steps = 12\n    torch.manual_seed(SEED)\n    model = build(hidden, layers, heads, kv)\n    print(f\"--- {name}: {model.num_parameters():,} parameters\")\n    train(model, stream, TrainConfig(steps=steps, seq_len=128, micro_batch_size=8,\n                                     optimizer=\"muon\", seed=SEED, device=DEVICE, compute_dtype=\"auto\",\n                                     log_every=steps // 2))\n    models[name] = model\n\ntarget, draft = models[\"target\"], models[\"draft\"]\neval_cfg = TrainConfig(seq_len=128, micro_batch_size=8, device=DEVICE, compute_dtype=\"auto\")\nbase_loss = evaluate(target, eval_stream, eval_cfg, batches=(2 if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\" else 16))\nBASELINE_COMPUTE = resolve_compute_dtype(DEVICE, \"auto\")\nBASELINE_PARAMETER = model_parameter_dtype(target)\nBASELINE_LABEL = f\"{BASELINE_PARAMETER}/{BASELINE_COMPUTE}\"\nBASELINE_STORAGE_BITS = 32.0 if BASELINE_PARAMETER == \"fp32\" else 16.0\nprint(\"target eval loss:\", base_loss, \"uniform reference:\", math.log(tokenizer.vocab_size))"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Prefill and decode: what timing can tell us\n\nPrefill processes prompt positions together, while decode reuses earlier keys and values. Weight traffic can limit dense decoding at small batch sizes; longer prefill often makes better use of arithmetic hardware. Module 10 derives the relevant conditions through arithmetic intensity.\n\nSmall matrices, Python overhead, and cache operations also affect this implementation. A latency-versus-length curve cannot by itself identify a hardware bottleneck. Record the device, precision, and lengths, then compare measured phases; diagnosing the limiting resource would require profiling."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "from minillm.generate import SamplingConfig, generate\n\nrows = []\nfor prompt_len in (16, 32, 64, 128):\n    prompt = tokenizer.encode(corpus[:4000])[:prompt_len]\n    _, stats = generate(target, prompt, 32, SamplingConfig(temperature=0.0))\n    rows.append((prompt_len, stats.prefill_seconds * 1000,\n                 stats.decode_seconds / stats.generated_tokens * 1000,\n                 stats.kv_bytes / 1024))\n\nprint(f\"{'prompt':>7} {'prefill, ms':>12} {'ms/token decode':>17} {'KV cache, KiB':>15}\")\nfor prompt_len, prefill_ms, decode_ms, kv_kib in rows:\n    print(f\"{prompt_len:>7} {prefill_ms:>12.2f} {decode_ms:>17.2f} {kv_kib:>15.1f}\")\n\nprint('Compare measured phases; diagnosing a bottleneck needs repeated measurements and profiling.')"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. The KV cache: arithmetic and three attention schemes\n\nThe formula from M5: `2 · L · H_kv · d_head · sizeof(dtype)` bytes per token.\nIt is not quoted here but checked against the memory actually allocated."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "from minillm.config import gqa_variants, kv_bytes_per_token\n\nvariants = gqa_variants(target.cfg)\nruntime_bytes = 4 if BASELINE_COMPUTE == \"fp32\" else 2\nprint(f\"{'scheme':>6} {'H_kv':>5} {('bytes/token ' + BASELINE_COMPUTE):>20} {'at 128K context':>20}\")\nfor name, cfg in variants.items():\n    per_token = kv_bytes_per_token(cfg, dtype_bytes=runtime_bytes)\n    print(f\"{name:>6} {cfg.num_key_value_heads:>5} {per_token:>20,} \"\n          f\"{per_token * 131072 / 1024 ** 3:>18.2f} GiB\")\n\n# Checking the formula against the actual cache allocation.\nprompt = tokenizer.encode(corpus[:2000])[:48]\ncache = target.new_cache()\nwith torch.no_grad():\n    with autocast_context(DEVICE, BASELINE_COMPUTE):\n        target(torch.tensor([prompt], device=DEVICE), cache=cache)\nactual_bytes = cache.nbytes() // (len(prompt) * 2 * target.cfg.num_hidden_layers * target.cfg.kv_dim)\nexpected = kv_bytes_per_token(target.cfg, dtype_bytes=actual_bytes) * len(prompt)\nprint(f\"\\nactual cache dtype: {str(cache.dtype()).replace('torch.', '')}\")\nprint(f\"actual {cache.nbytes():,} B == formula {expected:,} B: {cache.nbytes() == expected}\")\n\nassert cache.nbytes() == expected"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "### Prefix caching\n\nCompute a repeated system prefix once and retain its K/V. Clone that cache for each request so one request's suffix cannot enter another's context. The experiment uses greedy decoding with unchanged weights, positions, and masks.\n\nCheck token agreement in this run. Logit equivalence is numerical, with a tolerance; rounding can reverse almost tied candidates. Sampling would additionally require aligned randomness. Equal output distributions do not imply identical individual sequences."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "system_prompt = tokenizer.encode(corpus[:1200])[:96]\nquestions = [tokenizer.encode(corpus[5000 + 500 * i:5000 + 500 * i + 200])[:16]\n             for i in range(4)]\n\nwarm = target.new_cache()\nif DEVICE.startswith(\"cuda\"):\n    torch.cuda.synchronize()\nt0 = time.perf_counter()\nwith torch.no_grad():\n    with autocast_context(DEVICE, BASELINE_COMPUTE):\n        target(torch.tensor([system_prompt], device=DEVICE), cache=warm)\nif DEVICE.startswith(\"cuda\"):\n    torch.cuda.synchronize()\nwarmup_ms = (time.perf_counter() - t0) * 1000\n\ncold_total = hot_total = 0.0\nidentical = True\nfor tail in questions:\n    cold, cold_stats = generate(target, system_prompt + tail, 16,\n                                SamplingConfig(temperature=0.0))\n    hot, hot_stats = generate(target, system_prompt + tail, 16,\n                              SamplingConfig(temperature=0.0), cache=warm.clone())\n    identical &= cold == hot\n    cold_total += cold_stats.prefill_seconds\n    hot_total += hot_stats.prefill_seconds\n\nprint(f\"results identical: {identical}\")\nprint(f\"prefill without cache: {cold_total * 1000:6.1f} ms over {len(questions)} requests\")\nprint(f\"prefill with cache:    {hot_total * 1000:6.1f} ms (+{warmup_ms:.1f} ms warmup, once)\")\nprint(f\"saving over {len(questions)} requests: \"\n      f\"×{cold_total / max(hot_total, 1e-9):.1f} on the prefill phase\")"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 6. Quantization and three kinds of change\n\nStart with storage accounting: a full group of $g$ four-bit weights and an eight-bit scale costs $(4g+8)/g$ bits per weight, or 4.25 at $g=32$ and 4.50 at $g=16$. The implementation report also accounts for partial groups and metadata. Its MXFP4/NVFP4 paths are teaching approximations.\n\nLoss scores target-token probabilities; KL measures distributional change relative to the original model; top-1 agreement counts unchanged most-likely tokens. Their sensitivity depends on the inputs and errors. A top-1 change does not directly measure whether a user notices a difference, so the intended task needs a separate check."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "from minillm.generate import quantize_model\n\nprobe = eval_stream.batch(torch.arange(16)).to(DEVICE)\nwith torch.no_grad():\n    with autocast_context(DEVICE, BASELINE_COMPUTE):\n        reference_logits, _ = target(probe)\nreference_probs = torch.softmax(reference_logits.float(), dim=-1)\nreference_top1 = reference_logits.argmax(-1)\n\nprint(f\"{'format':>7} {'eff bits/wt':>11} {'compr.':>8} {'loss':>8} {'Δloss':>8} \"\n      f\"{'KL, nats':>9} {'top-1 agree':>12}\")\nprint(f\"{BASELINE_LABEL:>7} {BASELINE_STORAGE_BITS:>11.2f} {'×1.00':>8} {base_loss:>8.4f} {0.0:>8.4f} \"\n      f\"{0.0:>9.5f} {1.0:>11.1%}\")\n\nquant_rows = []\nfor method in (\"int8\", \"nvfp4\", \"mxfp4\"):\n    clone = copy.deepcopy(target)\n    report = quantize_model(clone, method)\n    loss = evaluate(clone, eval_stream, eval_cfg, batches=(2 if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\" else 16))\n    with torch.no_grad():\n        with autocast_context(DEVICE, BASELINE_COMPUTE):\n            logits, _ = clone(probe)\n    probs = torch.softmax(logits.float(), dim=-1)\n    kl = torch.sum(reference_probs * (torch.log(reference_probs + 1e-12)\n                                      - torch.log(probs + 1e-12)), dim=-1).mean().item()\n    agreement = (logits.argmax(-1) == reference_top1).float().mean().item()\n    quant_rows.append((method, report, loss, kl, agreement))\n    print(f\"{method:>7} {report['effective_bits_per_weight']:>11.2f} \"\n          f\"{'×' + format(report['compression_vs_runtime_fp32'], '.2f'):>8} {loss:>8.4f} \"\n          f\"{loss - base_loss:>+8.4f} {kl:>9.5f} {agreement:>11.1%}\")"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "fig, axes = plt.subplots(1, 3, figsize=(15, 4))\nnames = [BASELINE_LABEL] + [r[0] for r in quant_rows]\ncolors = [\"#4C566A\", \"#A3BE8C\", \"#EBCB8B\", \"#BF616A\"]\n\naxes[0].bar(names, [base_loss] + [r[2] for r in quant_rows], color=colors)\naxes[0].set_ylim(min([base_loss] + [r[2] for r in quant_rows]) * 0.98, max([base_loss] + [r[2] for r in quant_rows]) * 1.02)\naxes[0].set_title(\"loss (note the clipped axis!)\"); axes[0].set_ylabel(\"nats\")\n\naxes[1].bar(names, [0.0] + [r[3] for r in quant_rows], color=colors)\naxes[1].set_title(\"KL(baseline ‖ fake quant)\"); axes[1].set_ylabel(\"nats\")\n\naxes[2].bar(names, [1.0] + [r[4] for r in quant_rows], color=colors)\naxes[2].set_ylim(0, 1.05); axes[2].set_title(\"top-1 agreement with baseline\")\n\nfor ax in axes:\n    ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "Compare all three plots and notice where the loss axis begins. Similar loss bars can coexist with meaningful distributional change. A format ordering in this run is not a universal ranking: weights, grouping, scales, and the task all matter.\n\nThis is fake quantization: rounded weights are returned to a working floating-point format. It studies representation error without implementing packed arithmetic. The timings therefore establish no four-bit inference speedup; that requires a compatible storage format and execution kernels."
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 7. Speculative decoding\n\nThe draft proposes `k` tokens in a row and the target verifies them in **one**\npass. The acceptance rule `min(1, p/q)`, with a fallback draw from the normalized\nresidual `max(0, p−q)`, preserves the target's distribution exactly (M11) —\nthe speedup is free in quality terms.\n\nThe key metric is not the acceptance rate itself but **how many tokens come out\nper pass of the large model**. Without speculation it equals one by definition."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "from minillm.generate import speculative_generate\n\nprompt = tokenizer.encode(corpus[:2000])[:32]\nprint(f\"{'k':>3} {'accept':>8} {'tokens/target pass':>21} {'draft passes':>14}\")\nlookahead_rows = []\nfor k in (1, 2, 4, 8):\n    _, stats = speculative_generate(target, draft, prompt, 48, lookahead=k,\n                                    sampling=SamplingConfig(temperature=1.0, seed=SEED))\n    lookahead_rows.append((k, stats.acceptance_rate, stats.tokens_per_target_forward,\n                           stats.draft_decode_forwards))\n    print(f\"{k:>3} {stats.acceptance_rate:>7.1%} \"\n          f\"{stats.tokens_per_target_forward:>21.2f} {stats.draft_decode_forwards:>14}\")"
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "# A draft equal to the target: the min(1, p/q) rule must accept everything.\n_, twin = speculative_generate(target, copy.deepcopy(target), prompt, 32, lookahead=4,\n                               sampling=SamplingConfig(temperature=1.0, seed=SEED))\nprint(f\"draft == target: acceptance {twin.acceptance_rate:.1%}, \"\n      f\"{twin.tokens_per_target_forward:.2f} tokens per pass\")\n\nfig, axes = plt.subplots(1, 2, figsize=(11, 4))\nks = [r[0] for r in lookahead_rows]\naxes[0].plot(ks, [r[1] for r in lookahead_rows], \"o-\", color=\"#5E81AC\")\naxes[0].set_xlabel(\"draft depth k\"); axes[0].set_ylabel(\"acceptance rate\")\naxes[0].set_title(\"observed acceptance\")\naxes[1].plot(ks, [r[2] for r in lookahead_rows], \"o-\", color=\"#A3BE8C\")\naxes[1].axhline(1.0, ls=\"--\", lw=1, color=\"#4C566A\", label=\"no speculation\")\naxes[1].set_xlabel(\"draft depth k\")\naxes[1].set_ylabel(\"tokens per target pass\")\naxes[1].set_title(\"observed yield per verification\"); axes[1].legend()\nfor ax in axes:\n    ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nimport json\ninference_record = {\"seed\": SEED, \"device\": DEVICE,\n    \"compute_dtype\": BASELINE_COMPUTE, \"parameter_dtype\": BASELINE_PARAMETER,\n    \"evaluation_sha\": eval_stream.checksum(), \"base_loss\": base_loss,\n    \"quantization\": [dict(method=r[0], report=r[1], loss=r[2], kl=r[3], top1=r[4]) for r in quant_rows],\n    \"speculative\": [dict(k=r[0], acceptance=r[1], tokens_per_verification=r[2], draft_decode_passes=r[3]) for r in lookahead_rows],\n    \"identical_draft_acceptance\": twin.acceptance_rate,\n    \"prefix_greedy_identical\": identical}\nPath(\"runs/inference\").mkdir(parents=True, exist_ok=True)\nPath(\"runs/inference/measurements.json\").write_text(\n    json.dumps(inference_record, ensure_ascii=False, indent=2, allow_nan=False), encoding=\"utf-8\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "Acceptance rate and tokens per verification pass describe different aspects of the run. Under a constant acceptance probability, longer drafts increase expected emitted tokens with diminishing returns. Real probabilities can depend on position and history. Neither falling acceptance nor a monotone measured yield curve is guaranteed by the algorithm.\n\nAccepted tokens still cost proposal and verification work. Compare the avoided target passes with both models' costs, keeping prefill separate from verification. Module 11 derives the break-even condition under explicit assumptions. This batch-one experiment does not measure server throughput or its workload dependence."
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "## 8. Results and their scope\n\nKV size is checked against geometry and actual dtype. Prefix reuse tests previously computed states; quantization compares several kinds of prediction change. Speculation records acceptance and token yield alongside draft work.\n\nThe saved report describes particular weights, inputs, and hardware. A small timing sample does not diagnose the bottleneck; fake quantization does not test a packed kernel's speed; pseudo-language does not replace target tasks. Repeat warmed-up timing runs and report variability. Assess quality with held-out items and error analysis.\n\nNotebook 4 connects architecture changes to controlled experiments and builds its final table from the measurements of its own run."
+        }
+      ]
+    },
+    {
+      "id": "capstone-04",
+      "kind": "capstone",
+      "title": "Capstone · Notebook 4. Ablations: from a hypothesis to a measurement",
+      "format": "ipynb",
+      "filename": "04_ablations.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/en/04_ablations.ipynb",
+      "bytes": 42432,
+      "sha256": "2b3938d48e864944e26147d048ac50fac8c235688c0f6513c060f28a0afdb9de",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Capstone · Notebook 4. Ablations: from a hypothesis to a measurement\n\n*Modern LLMs course · final practical project*\n\nThe nineteen modules introduced mechanisms together with their assumptions. Here we ask narrower experimental questions: how normalization changes activation scale, how much KV memory GQA saves, what changes when experts replace an FFN, and how a model handles dependency lengths absent from training.\n\nFor each comparison, state the factor, controls, and measurement in advance. One conceptual change can require several coordinated config fields. A shared seed makes initialization reproducible, but cannot make every initial tensor identical across different architectures.\n\nOn a first pass, run the cells and interpret each table. On a second, select an experiment and repeat it across seeds to test a hypothesis. The final report is assembled from this run's results. Fast validation checks execution; it does not substitute for sufficient training."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Common setup"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"project package: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm is already importable\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Upload the Capstone ZIP package from the Stepik lesson. The directory structure will be restored automatically.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"project archive: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm was not found. Download the language-specific Capstone ZIP package from the Stepik lesson and either extract it in full or upload the ZIP to the current Colab session.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport math, os, random\nimport torch, numpy as np\nimport matplotlib.pyplot as plt\n\nSEED = 0\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nSTEPS = 60 if DEVICE == \"cpu\" else 600\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    STEPS = 5     # on a GPU the contrasts are sharper\nprint(\"device:\", DEVICE, \"| steps per run:\", STEPS)"
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "from minillm.config import MiniLLMConfig, kv_bytes_per_token\nfrom minillm.data import TokenStream\nfrom minillm.model import MiniLLM, RMSNorm\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.train import TrainConfig, evaluate, train\n\ndef high_entropy_corpus(n_lines=8_000, lexicon=600, seed=0) -> str:\n    \"\"\"The same pseudo-language as notebook 3: a Zipfian lexicon leaves models\n    the headroom in which architectural variants are distinguishable.\"\"\"\n    rng = random.Random(seed)\n    alphabet = \"abcdefghijklmnopqrstuvwxyz\"\n    words = [\"\".join(rng.choice(alphabet) for _ in range(rng.randint(3, 8)))\n             for _ in range(lexicon)]\n    weights = [1.0 / (i + 1) ** 0.9 for i in range(lexicon)]\n    return \"\".join(\" \".join(rng.choices(words, weights=weights, k=rng.randint(6, 14)))\n                   + \".\\n\" for _ in range(n_lines))\n\ncorpus = high_entropy_corpus(seed=SEED)\nlines = corpus.splitlines(keepends=True)\na, b = int(len(lines) * .8), int(len(lines) * .9)\ntrain_text, valid_text, test_text = map(\"\".join, (lines[:a], lines[a:b], lines[b:]))\ntokenizer = BBPETokenizer.train(train_text, vocab_size=1024, specials=[\"<|eos|>\"])\ntrain_stream = TokenStream.from_text(train_text, tokenizer, 128)\nvalid_stream = TokenStream.from_text(valid_text, tokenizer, 128)\ntest_stream = TokenStream.from_text(test_text, tokenizer, 128)\nCEILING = math.log(tokenizer.vocab_size)\nprint(f\"vocabulary {tokenizer.vocab_size} · train {len(train_stream):,} windows · \"\n      f\"valid {len(valid_stream):,} windows · uniform reference ln(V) = {CEILING:.3f}\")"
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "BASE = dict(vocab_size=tokenizer.vocab_size, hidden_size=128, num_hidden_layers=3,\n            num_attention_heads=4, num_key_value_heads=2, head_dim=32,\n            max_position_embeddings=256)\n\ndef run(label: str, steps: int = None, **overrides):\n    \"\"\"One ablation run: fixed seed, fixed data, fixed schedule.\"\"\"\n    cfg = MiniLLMConfig.profile(\"S\", **{**BASE, **overrides})\n    torch.manual_seed(SEED)\n    model = MiniLLM(cfg).to(DEVICE)\n    tcfg = TrainConfig(steps=steps or STEPS, seq_len=128, micro_batch_size=8,\n                       optimizer=\"muon\", seed=SEED, device=DEVICE, compute_dtype=\"auto\", log_every=10_000)\n    train(model, train_stream, tcfg)\n    loss = evaluate(model, valid_stream, tcfg, batches=8)\n    total = cfg.parameter_report()[\"total\"]\n    print(f\"  {label:<26} parameters {total:>9,} · active \"\n          f\"{cfg.active_parameters():>9,} · valid loss {loss:.4f}\")\n    return dict(label=label, cfg=cfg, model=model, loss=loss, params=total,\n                active=cfg.active_parameters())"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Norm placement (Module 6)\n\nCompare pre-norm, post-norm, Peri-LN, OLMo2-style normalization, and a no-norm control. These normalize different parts of the computation graph; sharing a scale-related purpose does not make them equivalent.\n\nStart with a separate residual chain $h\\leftarrow h+\\tanh(h)W$, using random matrix entries with variance $1/d$. This is a nonlinear illustration rather than the lecture's exact linear recurrence. Trace RMS over 36 layers. The bounded tanh changes growth behavior, so exponential growth is not assumed."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "torch.manual_seed(1)\nd, layers = 256, 36\nh0 = torch.randn(1, d)\nweights = [torch.randn(d, d) / math.sqrt(d) for _ in range(layers)]\nnorm = RMSNorm(d, 1e-6)\n\ntraces = {}\nwith torch.no_grad():\n    for mode in (\"none\", \"pre\", \"post\"):\n        h, trace = h0.clone(), []\n        for W in weights:\n            if mode == \"none\":\n                h = h + torch.tanh(h) @ W\n            elif mode == \"pre\":\n                h = h + torch.tanh(norm(h)) @ W\n            else:\n                h = norm(h + torch.tanh(h) @ W)\n            trace.append(h.pow(2).mean().sqrt().item())\n        traces[mode] = trace\n\nplt.figure(figsize=(7, 4))\nfor mode, color in ((\"none\", \"#BF616A\"), (\"pre\", \"#5E81AC\"), (\"post\", \"#A3BE8C\")):\n    plt.plot(range(1, layers + 1), traces[mode], label=mode, color=color)\nplt.yscale(\"log\"); plt.xlabel(\"layer\"); plt.ylabel(\"stream rms\")\nplt.title(\"Nonlinear residual chain: 36 layers\")\nplt.legend(); plt.gca().spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nfor mode, trace in traces.items():\n    print(f\"{mode:>5}: layer 1 = {trace[0]:8.3f} → layer 36 = {trace[-1]:10.3f}\")"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "Read the first and last RMS values for each branch. Normalizing after the addition keeps RMS near one, subject to epsilon; the other branches can accumulate updates. The plot determines the size of that growth.\n\nNext ask the question in a trained three-layer MiniLLM. Its initialization and sublayer function differ from the illustrative chain, so the earlier numbers are not predictions for the model. Compare loss and layerwise RMS under a shared budget and optimizer configuration."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "def stream_rms(model: MiniLLM) -> list[float]:\n    ids = valid_stream.batch(torch.arange(4)).to(DEVICE)\n    values = []\n    with torch.no_grad():\n        x = model.embed_tokens(ids)\n        cos, sin = model.rope(torch.arange(ids.shape[1], device=DEVICE))\n        for layer in model.layers:\n            x = layer(x, cos, sin)\n            values.append(x.float().pow(2).mean().sqrt().item())\n    return values\n\nprint(\"norm placement ablation:\")\nnorm_runs = [run(f\"norm_placement={p}\", norm_placement=p)\n             for p in (\"pre\", \"post\", \"peri\", \"olmo2\", \"none\")]\n\nprint(\"\\nresidual stream rms by layer of the trained models:\")\nfor r in norm_runs:\n    r[\"rms\"] = stream_rms(r[\"model\"])\n    print(f\"  {r['label']:<26} \" +\n          \" → \".join(f\"{v:.2f}\" for v in r[\"rms\"]))"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "Loss and residual RMS answer different questions. If a variant has higher loss, inspect its activation and gradient scales before diagnosing an exploding stream. Conversely, modest growth across three layers does not refute a depth-related problem.\n\nPeri-LN normalizes both sides of a sublayer; the OLMo2-style graph normalizes its output before addition. Changing the update scale can change the appropriate learning rate. A shared rate is a useful control, not a complete tuning protocol. This table compares configurations; comparing methods requires per-method tuning and repeated runs."
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 3. MHA / GQA / MQA (M5)\n\nHere scale is not in the way: the cache saving is a property of geometry rather\nthan of training, and it computes exactly. The open question is different — what\nthe model loses in quality."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "print(\"attention ablation:\")\nattn_runs = []\nfor name, kv in ((\"MHA (H_kv=4)\", 4), (\"GQA (H_kv=2)\", 2), (\"MQA (H_kv=1)\", 1)):\n    r = run(name, num_key_value_heads=kv)\n    r[\"kv_per_token\"] = kv_bytes_per_token(r[\"cfg\"])\n    attn_runs.append(r)\n\nprint(f\"\\n{'scheme':<14} {'KV, B/token':>12} {'× vs MHA':>9} {'valid loss':>11} {'Δloss':>8}\")\nmha = attn_runs[0]\nfor r in attn_runs:\n    print(f\"{r['label']:<14} {r['kv_per_token']:>12,} \"\n          f\"{mha['kv_per_token'] / r['kv_per_token']:>8.1f}× \"\n          f\"{r['loss']:>11.4f} {r['loss'] - mha['loss']:>+8.4f}\")"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "With length, layer count, and dtype fixed, KV storage changes by `H/H_kv`. This follows from configuration geometry independently of training quality. The loss difference is empirical: read its sign and magnitude from this run.\n\nA small gap does not establish that reducing KV heads is always free, and a large gap does not rank attention schemes for every budget. Projection counts and optimization trajectories also change. Broader conclusions need repeated runs and suitable tuning."
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 4. Activations within the GLU family (Module 6)\n\nCompare SwiGLU, GeGLU, and ReGLU. Each uses two input matrices and an output matrix; the gate activation changes. Equal widths give equal parameter counts, which the assertion verifies.\n\nThe $d_{ff}\\approx8d/3$ rule matches a three-matrix GLU budget to a conventional two-matrix FFN of width $4d$. We round the width for this implementation and do not implement the two-matrix control. The experiment therefore compares GLU activations, not the value of gating itself."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "d = BASE[\"hidden_size\"]\ngated_ff = round(8 * d / 3 / 64) * 64          # the 2/3 rule, aligned to 64\nprint(f\"all variants: 3 · {d} · {gated_ff} = {3 * d * gated_ff:,} FFN parameters\\n\")\n\nprint(\"ablation of φ inside the GLU family:\")\nffn_runs = [run(f\"{name} (3 matrices)\", hidden_act=act, intermediate_size=gated_ff)\n            for name, act in ((\"SwiGLU\", \"swiglu\"), (\"GeGLU\", \"geglu\"),\n                              (\"ReGLU\", \"relu\"))]\n\nassert len({r[\"params\"] for r in ffn_runs}) == 1, \"budgets must match\"\nbest = min(ffn_runs, key=lambda r: r[\"loss\"])\nspread = max(r[\"loss\"] for r in ffn_runs) - min(r[\"loss\"] for r in ffn_runs)\nprint(f\"\\nbudgets match to the parameter: {ffn_runs[0]['params']:,}\")\nprint(f\"best on this run — {best['label']}, loss spread {spread:.4f}\")"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "Check parameter equality and the observed loss spread. The code names the lowest-loss variant in this run, but one seed cannot estimate between-run variability. Repeat under several seeds with the same protocol and evaluation inputs before calling the difference stable.\n\nHere `hidden_act=\"relu\"` selects ReGLU: ReLU does not remove the second input matrix. Configuration names must be read alongside the computation graph. An ungated FFN remains outside this comparison."
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 5. Dense and MoE at similar active budgets (Module 7)\n\nKeep vocabulary, attention, depth, and positions fixed while replacing the dense FFN with experts. Rounding expert width to a multiple of 64 can leave different active counts. The table reports that ratio alongside total parameters and loss; KV geometry stays shared.\n\nBoth branches receive twice the step budget of the other experiments. This matches processed tokens, not wall time or every FLOP. Routing and combining expert outputs add work. We observe this particular model pair, then investigate router load separately."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "from minillm.model import MoELayer\n\nMOE_STEPS = STEPS * 2\nEXPERTS, TOPK, SHARED = 8, 2, 1\nexpert_ff = max(64, round(gated_ff / (TOPK + SHARED) / 64) * 64)\n\nprint(\"sparsity ablation (step budget doubled):\")\ndense = run(\"dense\", steps=MOE_STEPS, intermediate_size=gated_ff)\nmoe = run(f\"MoE {EXPERTS} experts, top-{TOPK}\", steps=MOE_STEPS,\n          intermediate_size=gated_ff, num_local_experts=EXPERTS,\n          num_experts_per_tok=TOPK, num_shared_experts=SHARED,\n          moe_intermediate_size=expert_ff, first_k_dense_replace=1)\n\nparity = moe[\"active\"] / dense[\"active\"]\nsparsity = moe[\"params\"] / moe[\"active\"]\nprint(f\"\\n{'variant':<26} {'total':>12} {'active':>11} {'valid loss':>11}\")\nfor r in (dense, moe):\n    print(f\"{r['label']:<26} {r['params']:>12,} {r['active']:>11,} {r['loss']:>11.4f}\")\nprint(f\"\\nMoE active relative to dense: ×{parity:.3f} — active counts; runtime is measured separately\")\nprint(f\"capacity: total ×{moe['params'] / dense['params']:.2f}, \"\n      f\"sparsity ×{sparsity:.2f}\")\nprint(f\"KV cache matches to the byte: \"\n      f\"{kv_bytes_per_token(dense['cfg']) == kv_bytes_per_token(moe['cfg'])}\")"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "# What about expert load? This is the first thing to look at in an MoE.\ndef load_table(result, title):\n    layers = [l.ffn for l in result[\"model\"].layers if isinstance(l.ffn, MoELayer)]\n    print(title)\n    print(f\"{'layer':>5} {'min':>7} {'max':>7} {'std':>7}  {'max|bias|':>9}\")\n    for i, layer in enumerate(layers, start=1):\n        load = layer.expert_load\n        print(f\"{i:>5} {load.min():>7.3f} {load.max():>7.3f} {load.std():>7.3f}\"\n              f\"  {layer.expert_bias.abs().max():>9.4f}\")\n    return max(float(l.expert_load.std()) for l in layers)\n\nideal = TOPK / EXPERTS\nprint(f\"a perfectly even load would be {ideal:.3f} per expert\\n\")\nstd_default = load_table(moe, \"default bias step (router_bias_speed = 1e-3):\")"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "Inspect minimum, maximum, and standard deviation of load. This is a snapshot of the last measured batch, not a training-wide average. Concentrated assignments can signal imbalance; one snapshot cannot establish persistent collapse.\n\nIncrease the balancing-bias update rate from $10^{-3}$ to $5\\cdot10^{-2}$ with other settings fixed. Compare both load and loss. A narrower load distribution need not improve predictions, because routing also has to learn which experts are useful."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "moe_fast = run(f\"MoE, balance ×50\", steps=MOE_STEPS, intermediate_size=gated_ff,\n               num_local_experts=EXPERTS, num_experts_per_tok=TOPK,\n               num_shared_experts=SHARED, moe_intermediate_size=expert_ff,\n               first_k_dense_replace=1, router_bias_speed=5e-2)\nprint()\nstd_fast = load_table(moe_fast, \"accelerated bias (router_bias_speed = 5e-2):\")\nprint(f\"\\nmaximum load spread: {std_default:.3f} → {std_fast:.3f}\")\nprint(f\"valid loss: {moe['loss']:.4f} → {moe_fast['loss']:.4f} \"\n      f\"(dense {dense['loss']:.4f})\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "### Expert capacity: how much is lost silently\n\nAn expert's buffer is finite and the router does not know it. `capacity_factor`\nsets the headroom above a perfectly even load; whatever does not fit is dropped.\nThe run below is forward-only on the trained model — training is left alone."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "probe = valid_stream.batch(torch.arange(8)).to(DEVICE)\nprint(f\"{'capacity_factor':>16} {'ceiling':>9} {'dropped':>11}\")\ncapacity_rows = []\nfor factor in (None, 2.0, 1.5, 1.25, 1.0, 0.75):\n    cfg_c = MiniLLMConfig(**{**moe[\"cfg\"].to_dict(), \"capacity_factor\": factor})\n    probe_model = MiniLLM(cfg_c).to(DEVICE)\n    probe_model.load_state_dict(moe[\"model\"].state_dict())\n    with torch.no_grad():\n        probe_model(probe)\n    layer = next(l.ffn for l in probe_model.layers if isinstance(l.ffn, MoELayer))\n    cap = cfg_c.expert_capacity(probe.numel())\n    capacity_rows.append(dict(factor=factor, capacity=cap, dropped=float(layer.dropped_fraction)))\n    print(f\"{str(factor):>16} {str(cap):>9} {layer.dropped_fraction.item():>10.1%}\")"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "Total and active counts and KV equality follow from the configs; loss and load come from the experiment. Keep those kinds of evidence separate. If faster balancing narrows load spread without closing the dense-model gap, imbalance has not thereby been ruled out as a contributing cause. The intervention may be incomplete and may change optimization in other ways.\n\nUniform top-2 routing among eight experts would assign a quarter of tokens to each on average. That is a conditional expectation, not a guaranteed load or a count of optimizer steps. A short budget limits the experiment without automatically explaining every outcome.\n\nThe capacity table measures dropped assignments for fixed weights. A limit based on balanced load can overflow under unequal assignments. Dropping an assignment does not remove the whole token: residual paths, attention, and other experts remain. Evaluating its quality cost would require scoring each capacity setting; this table measures dropping itself."
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "## 6. RoPE beyond training lengths (Module 4)\n\nA long-range test needs a task containing a long-range dependency. Train a separate model on a random sequence repeated twice. Targets in the second half can be recovered from the first, with half-length controlling dependency distance. Successful copying does not identify a particular induction head; that would require evidence about internal computations.\n\nTraining distances range from 12 to 48, and evaluation distances from 48 to 128. First measure accuracy at distance 32. If the model has not learned the in-range task, low out-of-range accuracy cannot confidently diagnose failed extrapolation. Uniform guessing gives $1/64=0.015625$. Fast validation uses only ten training steps and checks execution.\n\n\nSequence length varies across batches, so the budget is measured from actual input positions and supervised targets. The training config's `seq_len` does not control this generator. The next cell records both counts for each RoPE setting."
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "from minillm.probes import RepeatTask, chance_level, repeat_accuracy\nfrom minillm.model import RotaryEmbedding\n\nPROBE_V = 64\nprobe = RepeatTask(vocab_size=PROBE_V, train_range=(12, 48), seed=SEED)\nPROBE_BASE = dict(vocab_size=PROBE_V, hidden_size=128, num_hidden_layers=2,\n                  num_attention_heads=4, num_key_value_heads=2, head_dim=32,\n                  max_position_embeddings=512)\nPROBE_STEPS = 1200 if DEVICE == \"cpu\" else 3000\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    PROBE_STEPS = 10\n\nprobe_budgets = {}\n\ndef train_probe(theta: float) -> MiniLLM:\n    cfg = MiniLLMConfig.profile(\"S\", **{**PROBE_BASE, \"rope_theta\": theta})\n    torch.manual_seed(SEED)\n    model = MiniLLM(cfg).to(DEVICE)\n    probe_state = train(model, probe, TrainConfig(steps=PROBE_STEPS, seq_len=64,\n                                    micro_batch_size=16, optimizer=\"muon\",\n                                    seed=SEED, device=DEVICE, log_every=10_000))\n    probe_budgets[str(theta)] = {\n        \"input_positions\": probe_state.tokens,\n        \"supervised_targets\": probe_state.supervised_tokens,\n    }\n    return model\n\nprobe_models = {theta: train_probe(theta) for theta in (10_000.0, 500_000.0)}\nprint(f\"chance level: {chance_level(probe):.4f}\")\nprint(\"measured RoPE budgets:\", probe_budgets)\nprobe_in_range = {str(theta): repeat_accuracy(model, probe, 32, device=DEVICE)\n                  for theta, model in probe_models.items()}\nfor theta, accuracy in probe_in_range.items():\n    print(\"rope_theta:\", theta, \"in-range accuracy at 32:\", accuracy)"
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "LENGTHS = (48, 64, 80, 96, 128)\nrope_rows = {f\"base {theta:g}\": [repeat_accuracy(m, probe, n, device=DEVICE)\n                                 for n in LENGTHS]\n             for theta, m in probe_models.items()}\n\n# YaRN on top of an already trained model: RoPE has no parameters, so swapping\n# the frequency table is enough — the weights stay as they are. That is the\n# \"stretching without fine-tuning\" of M4. The pretraining window is 96 tokens\n# (two halves of 48).\nfor factor in (2.0, 4.0):\n    model = probe_models[10_000.0]\n    saved = model.rope\n    yarn_cfg = MiniLLMConfig.profile(\"S\", **{**PROBE_BASE, \"rope_theta\": 10_000.0,\n        \"rope_scaling\": {\"rope_type\": \"yarn\", \"factor\": factor,\n                         \"original_max_position_embeddings\": 96}})\n    model.rope = RotaryEmbedding(yarn_cfg).to(DEVICE)\n    rope_rows[f\"10000 + YaRN ×{factor:g}\"] = [\n        repeat_accuracy(model, probe, n, device=DEVICE) for n in LENGTHS]\n    model.rope = saved\n\nprint(f\"{'variant':<22}\" + \" \".join(f\"{n:>8}\" for n in LENGTHS))\nprint(\"-\" * 64)\nfor name, values in rope_rows.items():\n    print(f\"{name:<22}\" + \" \".join(f\"{v:>8.3f}\" for v in values))\nprint(\"\\ntraining used distances 12–48; everything right of 48 is extrapolation\")"
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "plt.figure(figsize=(7.5, 4.5))\npalette = (\"#BF616A\", \"#D08770\", \"#5E81AC\", \"#A3BE8C\")\nfor (name, values), color in zip(rope_rows.items(), palette):\n    plt.plot(LENGTHS, values, \"o-\", label=name, color=color)\nplt.axvline(48, ls=\"--\", lw=1, color=\"#4C566A\")\nplt.text(49, 0.5, \"training boundary\", rotation=90, va=\"center\",\n         fontsize=9, color=\"#4C566A\")\nplt.axhline(chance_level(probe), ls=\":\", lw=1, color=\"#4C566A\")\nplt.text(120, chance_level(probe) + 0.03, \"chance level\",\n         ha=\"right\", fontsize=9, color=\"#4C566A\")\nplt.xlabel(\"dependency distance (half length)\")\nplt.ylabel(\"share of correctly restored tokens\")\nplt.title('Accuracy across dependency distances')\nplt.legend(); plt.ylim(-0.03, 1.05)\nplt.gca().spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()"
+        },
+        {
+          "id": "markdown-015",
+          "type": "markdown",
+          "source": "Read the graph in two stages. Compare the two RoPE bases inside and beyond the training range. Then compare the original 10,000-base model with YaRN while holding learned weights fixed. The package's YaRN implementation defines the intervention, including any attention scaling specified by that mechanism.\n\nAny long-range gain or short-range loss belongs to this training run and factor. Neither failure of ordinary RoPE nor recovery under YaRN is guaranteed. Retain every point, including in-range accuracy. Selecting a factor from these results turns them into development evidence and requires a fresh test."
+        },
+        {
+          "id": "markdown-016",
+          "type": "markdown",
+          "source": "## 7. Muon and AdamW: selection and held-out evaluation\n\nTwo default settings do not characterize the full potential of two optimizers. Search two learning rates for each under a common budget. Select on validation loss, then score the selected model on a separate test split kept out of selection.\n\nThe split precedes tokenizer training. All partitions share the synthetic generator, so test performance concerns new synthetic lines, not natural language. Repeating across seeds and widening the grid are separate follow-up experiments."
+        },
+        {
+          "id": "code-015",
+          "type": "code",
+          "source": "def run_optimizer(optimizer: str, lr: float):\n    cfg = MiniLLMConfig.profile(\"S\", **BASE)\n    torch.manual_seed(SEED)\n    model = MiniLLM(cfg).to(DEVICE)\n    tcfg = TrainConfig(steps=STEPS, seq_len=128, micro_batch_size=8,\n                       optimizer=optimizer, lr=lr if optimizer == \"adamw\" else 3e-3,\n                       muon_lr=lr if optimizer == \"muon\" else 0.02,\n                       seed=SEED, device=DEVICE, log_every=10_000)\n    train(model, train_stream, tcfg)\n    return dict(model=model, config=tcfg, valid_loss=evaluate(model, valid_stream, tcfg, batches=8))\n\ngrid = {\n    \"adamw\": [3e-3, 1e-2],\n    \"muon\":  [2e-2, 6e-2],\n}\noptimizer_report = {}\nfor optimizer, lrs in grid.items():\n    runs = {lr: run_optimizer(optimizer, lr) for lr in lrs}\n    chosen_lr, selected = min(runs.items(), key=lambda kv: kv[1][\"valid_loss\"])\n    test_loss = evaluate(selected[\"model\"], test_stream, selected[\"config\"], batches=8)\n    optimizer_report[optimizer] = dict(selected_lr=chosen_lr,\n        validation_grid={str(lr): r[\"valid_loss\"] for lr,r in runs.items()},\n        selected_valid_loss=selected[\"valid_loss\"], selected_test_loss=test_loss)\n    print(optimizer, optimizer_report[optimizer])"
+        },
+        {
+          "id": "markdown-017",
+          "type": "markdown",
+          "source": "Compare selected learning rates, validation loss, and test loss. The test score did not participate in selection, making it a separate check of that choice. Two grid points do not guarantee good tuning; other optimizer coefficients remain fixed.\n\nThe run prints its horizon: 60 CPU steps or 600 GPU steps by default, reduced to 5 in fast validation. A short horizon can favor a quick starter without predicting long-run performance. One seed cannot establish a robust advantage; repeat the selection-and-test procedure to assess it."
+        },
+        {
+          "id": "markdown-018",
+          "type": "markdown",
+          "source": "## 8. From measurements to a saved report\n\nWrite the settings and numerical results to JSON, reload the file, and construct the summary from that saved record. The table can then be inspected independently of the training cells. Label geometry-derived quantities as calculations and loss, RMS, load, and accuracy as observations.\n\nSome course questions are not tested here, such as packed-quantization speed or RL quality. Those receive neither invented values nor reproduction verdicts. Fast-mode reports explicitly identify their role as execution checks."
+        },
+        {
+          "id": "code-016",
+          "type": "code",
+          "source": "CAPSTONE_LANGUAGE = 'en'\n\"\"\"Embedded into both ablation notebooks; reads only this run's measurements.\"\"\"\nimport json\nfrom pathlib import Path\n\nablation_record = {\n    \"schema\": 2,\n    \"language\": CAPSTONE_LANGUAGE,\n    \"mode\": \"fast_execution_check\" if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\" else \"teaching_experiment\",\n    \"seed\": SEED, \"device\": DEVICE, \"torch\": torch.__version__,\n    \"steps\": STEPS, \"moe_steps\": MOE_STEPS, \"probe_steps\": PROBE_STEPS,\n    \"data\": {\"train_sha\": train_stream.checksum(), \"valid_sha\": valid_stream.checksum(),\n             \"test_sha\": test_stream.checksum()},\n    \"chain_rms\": traces,\n    \"norm\": [{\"label\": r[\"label\"], \"valid_loss\": r[\"loss\"], \"rms\": r[\"rms\"]} for r in norm_runs],\n    \"attention\": [{\"label\": r[\"label\"], \"valid_loss\": r[\"loss\"],\n                   \"calculated_kv_bytes_per_token_bf16\": r[\"kv_per_token\"]} for r in attn_runs],\n    \"glu\": [{\"label\": r[\"label\"], \"valid_loss\": r[\"loss\"], \"parameters\": r[\"params\"]} for r in ffn_runs],\n    \"moe\": {\"dense_total\": dense[\"params\"], \"moe_total\": moe[\"params\"],\n            \"dense_active\": dense[\"active\"], \"moe_active\": moe[\"active\"],\n            \"active_ratio\": parity, \"dense_loss\": dense[\"loss\"], \"moe_loss\": moe[\"loss\"],\n            \"faster_balance_loss\": moe_fast[\"loss\"],\n            \"last_batch_load_std\": std_default, \"faster_balance_load_std\": std_fast},\n    \"capacity\": capacity_rows,\n    \"rope\": {\"distances\": list(LENGTHS), \"accuracy\": rope_rows,\n             \"training_budgets\": probe_budgets,\n             \"in_range_32\": probe_in_range, \"chance\": chance_level(probe)},\n    \"optimizers\": optimizer_report,\n    \"not_tested\": [\"ungated FFN\", \"packed quantization speed\", \"RL answer quality\",\n                   \"scaling-law optimum\", \"QK-norm ablation\",\n                   \"speculative distribution test in this notebook\", \"EOT ablation in this notebook\"],\n}\nreport_dir = Path(\"runs/ablations\")\nreport_dir.mkdir(parents=True, exist_ok=True)\nreport_path = report_dir / \"measurements.json\"\nreport_path.write_text(json.dumps(ablation_record, ensure_ascii=False, indent=2, allow_nan=False), encoding=\"utf-8\")\nsaved = json.loads(report_path.read_text(encoding=\"utf-8\"))\nassert saved == ablation_record\nru = CAPSTONE_LANGUAGE == \"ru\"\nmode_ru = {\"fast_execution_check\": \"быстрая проверка исполнения\", \"teaching_experiment\": \"учебный эксперимент\"}\nprint(\"Режим:\" if ru else \"Mode:\", mode_ru[saved[\"mode\"]] if ru else saved[\"mode\"])\nprint(\"Измерения сохранены:\" if ru else \"Measurements saved:\", report_path)\nlabels_ru = {\"chain_rms\": \"RMS остаточной цепочки\", \"norm\": \"Нормализация\",\n             \"attention\": \"Внимание\", \"glu\": \"Варианты GLU\", \"moe\": \"Эксперты\",\n             \"capacity\": \"Ограничение нагрузки\", \"rope\": \"Позиции\", \"optimizers\": \"Оптимизаторы\"}\nfor key in (\"chain_rms\", \"norm\", \"attention\", \"glu\", \"moe\", \"capacity\", \"rope\", \"optimizers\"):\n    print(\"\\n\" + (labels_ru[key] if ru else key))\n    print(json.dumps(saved[key], ensure_ascii=False, indent=2))\nprint(\"\\nЗдесь не проверялось:\" if ru else \"\\nNot tested here:\")\nnot_tested_ru = {\"ungated FFN\": \"FFN без гейта\",\n    \"packed quantization speed\": \"скорость упакованной квантизации\",\n    \"RL answer quality\": \"качество ответов после RL\",\n    \"scaling-law optimum\": \"оптимум закона масштабирования\",\n    \"QK-norm ablation\": \"абляция QK-нормировки\",\n    \"speculative distribution test in this notebook\": \"распределение спекулятивного семплирования в этой тетради\",\n    \"EOT ablation in this notebook\": \"абляция EOT в этой тетради\"}\nfor item in saved[\"not_tested\"]:\n    print(\"-\", not_tested_ru[item] if ru else item)"
+        },
+        {
+          "id": "markdown-019",
+          "type": "markdown",
+          "source": "## 9. Continuing the investigation\n\nChoose one observation and pose a follow-up that could change your interpretation. Does the normalization loss gap survive per-mode learning-rate tuning? Does the MoE comparison change with the data distribution? Has the repetition task been learned before extrapolation is judged?\n\nRetain the control, budget, data, and selection rule. Show variability when outcomes depend on the seed, and leave unmeasured quantities absent. A small or missing effect in one run limits that run's conclusion without dismissing the mechanism everywhere.\n\nThe project closes the course by connecting formulas, executable code, and evidence. Your report should let another reader distinguish measurements from config-derived calculations and identify the stronger claim that still needs a test."
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

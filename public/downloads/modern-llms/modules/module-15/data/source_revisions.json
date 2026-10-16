@@ -1,0 +1,30 @@
+{
+  "checked": "2026-10-11",
+  "urls": [
+    "https://ai.google.dev/gemini-api/docs/thinking",
+    "https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/",
+    "https://arxiv.org/abs/2305.20050",
+    "https://arxiv.org/abs/2407.21787",
+    "https://arxiv.org/abs/2408.03314",
+    "https://arxiv.org/abs/2408.15240",
+    "https://arxiv.org/abs/2501.12948",
+    "https://arxiv.org/abs/2501.19393",
+    "https://arxiv.org/abs/2505.02387",
+    "https://arxiv.org/abs/2505.17813",
+    "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+    "https://openai.com/index/learning-to-reason-with-llms/",
+    "https://platform.claude.com/docs/en/build-with-claude/thinking",
+    "https://platform.kimi.ai/docs/guide/kimi-k3-quickstart",
+    "https://thinkingmachines.ai/news/introducing-inkling/"
+  ],
+  "scope": "Primary publications and official model-specific API contracts; live documentation is not an immutable revision.",
+  "rechecks": [
+    "OpenAI GPT-6.1 Sol model page: medium default, low/medium/high/xhigh/max; none/minimal unsupported.",
+    "Claude Opus 5.5: adaptive thinking; manual budget and disabled rejected.",
+    "Gemini 3.8 Flash Interactions API: generation_config.thinking_level; medium default.",
+    "R1 starts from pretrained V3-Base; distillation updates student weights.",
+    "s1 v3 uses Qwen2.5-32B-Instruct and 1000 examples; budget forcing reported AIME24 50 to 57.",
+    "Overthinking paper is Hassid et al., v2 2026-02-03; correlation does not establish a causal length effect."
+  ],
+  "data": "Synthetic probabilities and polynomial grammar are course-owned; no downloaded corpus or API access required."
+}

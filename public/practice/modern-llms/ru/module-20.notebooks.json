@@ -1,0 +1,813 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-20",
+  "language": "ru",
+  "section": "notebooks",
+  "items": [
+    {
+      "id": "main",
+      "kind": "main",
+      "title": "М20. LLM целиком: сквозной расчёт",
+      "format": "ipynb",
+      "filename": "module_20.ipynb",
+      "download": "/downloads/modern-llms/modules/module-20/ru/module_20.ipynb",
+      "bytes": 38468,
+      "sha256": "ab2a5eaa18dd0f598ccbdc17ec66579bf2cec159b9454c76fc41687759ea1fee",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# М20. LLM целиком: сквозной расчёт\n\nОт токенов до вероятностей, производных, обновления весов и генерации. Это искусственный пример с 50 параметрами, а не языковая модель, обученная на корпусе. Все данные и код находятся внутри тетради. GPU, API, внешние файлы и загрузка весов не нужны; установка требуется только для отсутствующих библиотек.\n\nПервый проход: шаги 1–3, 6–8 и 10–11. Второй: добавьте производные и оптимизатор в шагах 4–5, маршрутизацию в шаге 9. Выполняйте шаги выбранного маршрута по порядку. Числа лекции относятся к исходным матрицам. Для своих опытов меняйте температуру и top-k в отдельной ячейке шага 8, а входы и цели — в шаге 11: там результаты пересчитываются без требования совпасть с исходным эталоном."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib.util\nimport subprocess\nimport sys\nmissing = [name for name in (\"numpy\", \"torch\", \"matplotlib\") if importlib.util.find_spec(name) is None]\nif missing:\n    subprocess.check_call([sys.executable, \"-m\", \"pip\", \"install\", *missing],\n                          creationflags=getattr(subprocess, \"CREATE_NO_WINDOW\", 0))\nimport numpy as np\nimport torch\nimport matplotlib\nfrom IPython import get_ipython\nipython = get_ipython()\nif ipython is not None and getattr(ipython, \"kernel\", None) is not None:\n    ipython.run_line_magic(\"matplotlib\", \"inline\")\nimport matplotlib.pyplot as plt\ntorch.set_num_threads(1)\ntorch.manual_seed(20)\nnp.set_printoptions(precision=6, suppress=True)\nprint(\"NumPy\", np.__version__, \"PyTorch\", torch.__version__, \"device: CPU\")"
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Полный вычислительный путь\n\nСледующая ячейка определяет функции, но ещё не обучает модель. `forward` возвращает и выход, и промежуточные значения. Формы матриц соответствуют лекции: строки — позиции, линейные веса хранятся как «вход × выход». `torch_forward` написана отдельно и использует float64. Численная производная будет вычисляться через NumPy, без графа PyTorch."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "\"\"\"M20: one complete pre-norm decoder block, with inspectable intermediates.\n\nRows are token representations; linear weights have shape [input, output].\nThis synthetic fixture illustrates arithmetic, not language competence.\n\"\"\"\nimport numpy as np\n\nEPS = 1e-6\nINPUT = np.array([0, 1, 2], dtype=np.int64)\nTARGET = np.array([1, 2, 3], dtype=np.int64)\nTOKENS = (\"BOS\", \"A\", \"B\", \"EOS\")\n\n\ndef fixture():\n    \"\"\"Return fresh arrays: vocabulary 4, width 2, one head, FFN width 2.\"\"\"\n    return {\n        \"E\": np.array([[1., 0.], [0., 1.], [1., 1.], [-1., 0.]]),\n        \"Q\": .5 * np.eye(2), \"K\": .5 * np.eye(2),\n        \"V\": np.diag([.5, 1.]), \"O\": .25 * np.eye(2),\n        \"gate\": np.array([[.5, -.25], [.25, .5]]),\n        \"up\": np.array([[1., .5], [-.5, 1.]]),\n        \"down\": .25 * np.eye(2),\n        \"na\": np.ones(2), \"nf\": np.ones(2), \"nout\": np.ones(2),\n        \"U\": np.array([[0., .5, -.5, .25], [0., -.25, .5, -.5]]),\n    }\n\n\ndef rms(x, gain):\n    return x / np.sqrt(np.mean(x * x, axis=-1, keepdims=True) + EPS) * gain\n\n\ndef softmax(x):\n    e = np.exp(x - np.max(x, axis=-1, keepdims=True))\n    return e / e.sum(axis=-1, keepdims=True)\n\n\ndef silu(x):\n    return x / (1 + np.exp(-x))\n\n\ndef rope(x, positions):\n    \"\"\"[heads, time, even head_dim]; pair first and second halves.\"\"\"\n    dh = x.shape[-1]\n    if dh % 2:\n        raise ValueError(\"RoPE requires an even head dimension\")\n    angle = np.asarray(positions)[:, None] * 10000. ** (-np.arange(0, dh, 2) / dh)\n    angle = np.concatenate([angle, angle], axis=-1)\n    rotated = np.concatenate([-x[..., dh // 2:], x[..., :dh // 2]], axis=-1)\n    return x * np.cos(angle) + rotated * np.sin(angle)\n\n\ndef forward(w, ids, hq=1, hkv=1, cache=None):\n    \"\"\"A single layer; cache contains already rotated K and unrotated V.\n\n    Cache is valid only for these weights and this uninterrupted prefix.\n    Tied embeddings are selected by omitting U from w.\n    \"\"\"\n    ids = np.asarray(ids, dtype=np.int64)\n    if ids.ndim != 1 or len(ids) == 0:\n        raise ValueError(\"ids must be a nonempty one-dimensional sequence\")\n    if np.any(ids < 0) or np.any(ids >= len(w[\"E\"])):\n        raise ValueError(\"token id outside the vocabulary\")\n    h = w[\"E\"][ids]\n    t, d = h.shape\n    if hq < 1 or hkv < 1 or hq % hkv or d % hq:\n        raise ValueError(\"head counts must divide the query count and model width\")\n    dh = d // hq\n    offset = 0 if cache is None else cache[0].shape[1]\n    positions = np.arange(offset, offset + t)\n    x = rms(h, w[\"na\"])\n    q = rope((x @ w[\"Q\"]).reshape(t, hq, dh).transpose(1, 0, 2), positions)\n    k = rope((x @ w[\"K\"]).reshape(t, hkv, dh).transpose(1, 0, 2), positions)\n    v = (x @ w[\"V\"]).reshape(t, hkv, dh).transpose(1, 0, 2)\n    if cache is not None:\n        k = np.concatenate([cache[0], k], axis=1)\n        v = np.concatenate([cache[1], v], axis=1)\n    kr, vr = (np.repeat(a, hq // hkv, axis=0) for a in (k, v))\n    scores = q @ kr.transpose(0, 2, 1) / np.sqrt(dh)\n    mask = np.arange(k.shape[1])[None, :] <= positions[:, None]\n    a = softmax(np.where(mask[None], scores, -np.inf))\n    mixed = (a @ vr).transpose(1, 0, 2).reshape(t, d)\n    z = h + mixed @ w[\"O\"]\n    n = rms(z, w[\"nf\"])\n    gate, up = n @ w[\"gate\"], n @ w[\"up\"]\n    f = (silu(gate) * up) @ w[\"down\"]\n    h1 = z + f\n    final = rms(h1, w[\"nout\"])\n    logits = final @ (w[\"U\"] if \"U\" in w else w[\"E\"].T)\n    return dict(H0=h, X=x, Q=q, K=k, V=v, scores=scores, A=a,\n                mixed=mixed, Z=z, N=n, gate=gate, up=up, F=f, H1=h1,\n                final=final, logits=logits, probabilities=softmax(logits), cache=(k, v))\n\n\ndef cross_entropy(logits, targets, mask=None):\n    \"\"\"Mean over explicitly selected targets; never mean over padding.\"\"\"\n    targets = np.asarray(targets, dtype=np.int64)\n    if logits.ndim != 2 or targets.shape != (len(logits),):\n        raise ValueError(\"one target is required for every logit row\")\n    selected = np.ones(len(targets), dtype=bool) if mask is None else np.asarray(mask, dtype=bool)\n    if selected.shape != targets.shape or not selected.any():\n        raise ValueError(\"the target mask must select at least one row\")\n    if np.any(targets[selected] < 0) or np.any(targets[selected] >= logits.shape[1]):\n        raise ValueError(\"selected target outside the vocabulary\")\n    x = logits[selected]\n    m = x.max(axis=-1)\n    return np.mean(m + np.log(np.exp(x - m[:, None]).sum(axis=-1))\n                   - x[np.arange(len(x)), targets[selected]])\n\n\ndef finite_gradients(w, ids=INPUT, targets=TARGET, step=1e-5):\n    \"\"\"Central differences for every scalar; restore each weight after use.\"\"\"\n    result = {}\n    for name, value in w.items():\n        g = np.empty_like(value)\n        for index in np.ndindex(value.shape):\n            old = value[index]\n            try:\n                value[index] = old + step\n                plus = cross_entropy(forward(w, ids)[\"logits\"], targets)\n                value[index] = old - step\n                minus = cross_entropy(forward(w, ids)[\"logits\"], targets)\n            finally:\n                value[index] = old\n            g[index] = (plus - minus) / (2 * step)\n        result[name] = g\n    return result\n\n\ndef adamw_first_step(w, grads, lr=.01, decay=.1, clip=1., eps=1e-8):\n    \"\"\"Zero initial moments, bias correction: m_hat=g, v_hat=g^2.\n\n    Only matrices receive weight decay. Clipping precedes moment updates.\n    The first bias-corrected step is independent of beta1 and beta2.\n    \"\"\"\n    norm = np.sqrt(sum(np.sum(g * g) for g in grads.values()))\n    scale = min(1., clip / max(norm, 1e-300))\n    updated = {}\n    for name, value in w.items():\n        g = grads[name] * scale\n        wd = decay if value.ndim == 2 else 0.\n        updated[name] = (1 - lr * wd) * value - lr * g / (np.abs(g) + eps)\n    return updated, float(norm), float(scale)\n\n\ndef torch_forward(w, ids, hq=1, hkv=1):\n    \"\"\"Independent float64 autograd path; PyTorch is imported only when used.\"\"\"\n    import torch\n    import torch.nn.functional as F\n    ids = torch.as_tensor(ids, dtype=torch.long)\n    h = w[\"E\"][ids]\n    t, d = h.shape\n    dh = d // hq\n    def norm(a, gain):\n        return a * torch.rsqrt(a.square().mean(-1, keepdim=True) + EPS) * gain\n    def rotate(a):\n        freq = 10000. ** (-torch.arange(0, dh, 2, dtype=h.dtype) / dh)\n        angle = torch.arange(t, dtype=h.dtype)[:, None] * freq\n        angle = torch.cat([angle, angle], dim=-1)\n        return a * angle.cos() + torch.cat([-a[..., dh//2:], a[..., :dh//2]], -1) * angle.sin()\n    n = norm(h, w[\"na\"])\n    q = rotate((n @ w[\"Q\"]).view(t, hq, dh).transpose(0, 1))\n    k = rotate((n @ w[\"K\"]).view(t, hkv, dh).transpose(0, 1))\n    v = (n @ w[\"V\"]).view(t, hkv, dh).transpose(0, 1)\n    k, v = [a.repeat_interleave(hq // hkv, dim=0) for a in (k, v)]\n    scores = q @ k.transpose(-2, -1) / dh ** .5\n    scores = scores.masked_fill(torch.ones(t, t, dtype=torch.bool).triu(1), -torch.inf)\n    mixed = (scores.softmax(-1) @ v).transpose(0, 1).reshape(t, d)\n    z = h + mixed @ w[\"O\"]\n    n = norm(z, w[\"nf\"])\n    h1 = z + (F.silu(n @ w[\"gate\"]) * (n @ w[\"up\"])) @ w[\"down\"]\n    return norm(h1, w[\"nout\"]) @ (w[\"U\"] if \"U\" in w else w[\"E\"].T)\n\n\ndef autograd_gradients(w, ids=INPUT, targets=TARGET):\n    import torch\n    params = {k: torch.tensor(v, dtype=torch.float64, requires_grad=True) for k, v in w.items()}\n    logits = torch_forward(params, ids)\n    loss = torch.nn.functional.cross_entropy(logits, torch.tensor(targets, dtype=torch.long))\n    loss.backward()\n    return {k: v.grad.detach().numpy().copy() for k, v in params.items()}\n\n\ndef sampling_distribution(logits, temperature=1., top_k=None):\n    \"\"\"One row; stable token-index tie rule. Distribution q, not base p.\"\"\"\n    if temperature <= 0 or np.asarray(logits).ndim != 1:\n        raise ValueError(\"use a positive temperature and one logit row\")\n    z = np.asarray(logits) / temperature\n    if top_k is not None:\n        if not isinstance(top_k, int) or not 1 <= top_k <= len(z):\n            raise ValueError(\"top_k must be an integer in [1, vocabulary_size]\")\n        keep = np.argsort(-z, kind=\"stable\")[:top_k]\n        z = np.where(np.isin(np.arange(len(z)), keep), z, -np.inf)\n    return softmax(z)\n\n\ndef moe_weights(logits, selection_bias, k=2, eps=1e-9):\n    \"\"\"MiniLLM's sigmoid routing: bias changes selection, not mixture weights.\"\"\"\n    p = 1 / (1 + np.exp(-np.asarray(logits)))\n    selected = np.argsort(-(p + selection_bias), kind=\"stable\")[:k]\n    return selected, p[selected] / (p[selected].sum() + eps)\n\n\ndef architecture_examples():\n    \"\"\"Small exact SSM recurrence and a two-step discrete reverse chain.\"\"\"\n    state, states = 0., []\n    for u in (1., 0., -1.):\n        state = .5 * state + u\n        states.append(state)\n    # Four binary sequences: 00, 01, 10, 11. At s=2 both positions are masked.\n    first = np.array([.6*.3, .6*.7, .4*.3, .4*.7])\n    # At the next refinement each bit is independently kept with probability .8.\n    bits = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])\n    distance = (bits[:, None, :] != bits[None, :, :]).sum(-1)\n    kernel = .8 ** (2-distance) * .2 ** distance\n    return {\"ssm_states\": states, \"diffusion_first\": first.tolist(),\n            \"diffusion_kernel\": kernel.tolist(), \"diffusion_final\": (first @ kernel).tolist()}\n\n\ndef reference_metrics():\n    w = fixture()\n    trace = forward(w, INPUT)\n    grads = autograd_gradients(w)\n    changed, norm, scale = adamw_first_step(w, grads)\n    out = {k: v.tolist() for k, v in trace.items() if isinstance(v, np.ndarray)}\n    out.update(parameter_count=sum(v.size for v in w.values()),\n               loss=float(cross_entropy(trace[\"logits\"], TARGET)),\n               target_losses=(-np.log(trace[\"probabilities\"][np.arange(3), TARGET])).tolist(),\n               gradient_norm=norm, clip_scale=scale,\n               gradients={k: v.tolist() for k, v in grads.items()},\n               loss_after_step=float(cross_entropy(forward(changed, INPUT)[\"logits\"], TARGET)),\n               probabilities_after_step=forward(changed, INPUT)[\"probabilities\"].tolist(),\n               q_temperature_half_top2=sampling_distribution(trace[\"logits\"][-1], .5, 2).tolist(),\n               architecture_examples=architecture_examples())\n    return out"
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "baseline = fixture()\ntrace = forward(baseline, INPUT)\nassert sum(v.size for v in baseline.values()) == 50\nfor name in (\"H0\", \"X\", \"Q\", \"K\", \"V\", \"A\", \"Z\", \"N\", \"gate\", \"up\", \"F\", \"H1\", \"final\"):\n    print(name, trace[name].shape, \"\\n\", trace[name])"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Внимание, логиты и вероятности\n\nВ каждой строке внимания сумма равна 1. Правее диагонали должны стоять нули. Проследите последнюю строку: смешиваются три значения, но первая строка использует только своё. Вероятности ниже относятся к BOS, A, B, EOS именно в таком порядке."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "np.testing.assert_allclose(trace[\"A\"].sum(-1), 1.)\nassert np.all(np.triu(trace[\"A\"][0], 1) == 0)\nprint(\"logits\\n\", trace[\"logits\"])\nprint(\"p\\n\", trace[\"probabilities\"])\nfig, ax = plt.subplots(figsize=(6, 4))\nax.imshow(trace[\"A\"][0], vmin=0, vmax=1, cmap=\"Blues\")\nfor i in range(3):\n    for j in range(3):\n        ax.text(j, i, f\"{trace['A'][0,i,j]:.3f}\", ha=\"center\", va=\"center\",\n                color=\"white\" if trace[\"A\"][0,i,j] > .6 else \"#2E3440\")\nax.set(xticks=range(3), yticks=range(3), xlabel=\"Позиция ключа\", ylabel=\"Позиция запроса\", title=\"Причинное внимание\")\nfig.tight_layout()\nplt.show()"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 3. Сдвиг целей и маска потери\n\nВходы `[BOS, A, B]` предсказывают `[A, B, EOS]`. Сначала усредним все три потери, затем выберем только последнюю. Это меняет цель обучения, сохраняя logits. Маска не убирает токены из контекста. Пустой набор целей должен дать понятную ошибку, а не NaN."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "loss_before = cross_entropy(trace[\"logits\"], TARGET)\nloss_eos = cross_entropy(trace[\"logits\"], TARGET, [False, False, True])\nnp.testing.assert_allclose(loss_before, 1.1093739242148548, atol=1e-10)\nnp.testing.assert_allclose(loss_eos, 1.6955297196508368, atol=1e-10)\nprint(\"all targets:\", loss_before, \"EOS only:\", loss_eos)\ntry:\n    cross_entropy(trace[\"logits\"], TARGET, [False]*3)\nexcept ValueError as error:\n    print(type(error).__name__, str(error))\nelse:\n    raise AssertionError(\"empty target mask was accepted\")"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 4. Проверим все производные\n\nИзменение одного параметра на маленькое положительное и отрицательное число даёт независимую оценку его производной. Проверим все 50 скаляров; потом уберём независимую U и повторим для 42 параметров связанного варианта. Это также проверяет суммирование градиентов двух ролей E. Слишком маленький шаг конечной разности может усилить ошибку округления; мы используем $10^{-5}$."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "gradients = autograd_gradients(baseline)\nfinite = finite_gradients(baseline)\nmax_error = max(np.max(np.abs(gradients[k] - finite[k])) for k in baseline)\nassert max_error < 2e-8\nprint(\"50 parameters; max gradient error:\", max_error)\ntied = fixture()\ndel tied[\"U\"]\ntied_auto, tied_fd = autograd_gradients(tied), finite_gradients(tied)\ntied_error = max(np.max(np.abs(tied_auto[k] - tied_fd[k])) for k in tied)\nassert tied_error < 2e-8\nprint(\"42 tied parameters; max gradient error:\", tied_error)\nlogit_gradient = trace[\"probabilities\"].copy()\nlogit_gradient[np.arange(len(TARGET)), TARGET] -= 1\nlogit_gradient /= len(TARGET)\nnp.testing.assert_allclose(logit_gradient.sum(-1), 0., atol=1e-15)\nprint(\"gradient of loss w.r.t. logits:\\n\", logit_gradient)"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 5. Один шаг AdamW\n\nНачальные моменты нулевые. Матрицы получают decay 0.1, gains нормализации — 0. Норма всего градиента меньше порога 1. Сравним формулу первого шага с настоящим оптимизатором, включая каждую обновлённую матрицу. Результат после шага относится к прежнему обучающему примеру, а не к качеству на новых данных."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "updated, gradient_norm, clip_scale = adamw_first_step(baseline, gradients)\nparams = {k: torch.tensor(v, dtype=torch.float64, requires_grad=True) for k, v in baseline.items()}\noptimizer = torch.optim.AdamW([\n    {\"params\": [p for p in params.values() if p.ndim == 2], \"weight_decay\": .1},\n    {\"params\": [p for p in params.values() if p.ndim == 1], \"weight_decay\": 0.}],\n    lr=.01, betas=(.9, .95), eps=1e-8)\nloss_torch = torch.nn.functional.cross_entropy(torch_forward(params, INPUT), torch.tensor(TARGET))\noptimizer.zero_grad()\nloss_torch.backward()\nfor p in params.values():\n    p.grad.mul_(clip_scale)\noptimizer.step()\nfor k, p in params.items():\n    np.testing.assert_allclose(p.detach().numpy(), updated[k], atol=1e-10)\nloss_after = cross_entropy(forward(updated, INPUT)[\"logits\"], TARGET)\nnp.testing.assert_allclose(loss_after, 1.0848315484318878, atol=1e-10)\nprint(\"gradient norm:\", gradient_norm, \"scale:\", clip_scale)\nprint(\"loss:\", loss_before, \"->\", loss_after)"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 6. Несколько шагов: состояние оптимизатора сохраняется\n\nЗдесь создаётся новый оптимизатор, после чего 80 шагов выполняются последовательно. Это намеренное переобучение на одной строке. Мы проверяем работоспособность обучения, а не способность понимать язык. Отличайте эту кривую от предыдущего одиночного шага: здесь скорость обучения равна 0.03, а weight decay отключён."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "training_params = {k: torch.tensor(v, dtype=torch.float64, requires_grad=True) for k, v in fixture().items()}\ntraining_optimizer = torch.optim.AdamW(list(training_params.values()), lr=.03, weight_decay=0.)\ntraining_losses = []\nfor step in range(80):\n    training_optimizer.zero_grad()\n    loss = torch.nn.functional.cross_entropy(torch_forward(training_params, INPUT), torch.tensor(TARGET))\n    training_losses.append(loss.item())\n    loss.backward()\n    torch.nn.utils.clip_grad_norm_(list(training_params.values()), 1.)\n    training_optimizer.step()\nwith torch.no_grad():\n    final_training_loss = torch.nn.functional.cross_entropy(torch_forward(training_params, INPUT), torch.tensor(TARGET)).item()\ntraining_losses.append(final_training_loss)\nassert np.isfinite(training_losses).all() and final_training_loss < training_losses[0]\nfig, ax = plt.subplots(figsize=(8, 4))\nax.plot(training_losses, color=\"#5E81AC\")\nax.set(xlabel=\"Шаг обучения\", ylabel=\"Средняя потеря, нат\", title=\"Обучение на одной последовательности\")\nfig.tight_layout()\nplt.show()\nprint(\"training loss:\", training_losses[0], \"->\", final_training_loss)"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 7. Причинность и кэш\n\nИзменим последний вход: более ранние logits должны сохраниться. Затем вычислим исходный префикс по одному токену, передавая K/V между вызовами. Отдельно проверим два новых токена за один вызов. Весам baseline этот кэш соответствует; после обучения он уже непригоден. Если забыть абсолютную позицию RoPE, изменятся оценки внимания — последняя проверка специально показывает этот контрпример."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "changed_input = forward(baseline, [0, 1, 3])\nnp.testing.assert_allclose(changed_input[\"logits\"][:2], trace[\"logits\"][:2])\ncache, cached_logits = None, []\nfor token in INPUT:\n    current = forward(baseline, [token], cache=cache)\n    cached_logits.append(current[\"logits\"])\n    cache = current[\"cache\"]\nnp.testing.assert_allclose(np.concatenate(cached_logits), trace[\"logits\"], atol=1e-12)\nprefix = forward(baseline, INPUT[:1])\nsuffix = forward(baseline, INPUT[1:], cache=prefix[\"cache\"])\nnp.testing.assert_allclose(suffix[\"logits\"], trace[\"logits\"][1:], atol=1e-12)\nwrong_q = rope((trace[\"X\"][2:] @ baseline[\"Q\"])[None], [0])\nwrong_scores = wrong_q @ trace[\"K\"].transpose(0, 2, 1) / np.sqrt(2)\noffset_error = np.max(np.abs(wrong_scores[0, 0] - trace[\"scores\"][0, 2]))\nassert offset_error > .1\nprint(\"cache scalars:\", sum(a.size for a in cache), \"wrong-offset score difference:\", offset_error)"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 8. Распределение декодера и короткая генерация\n\nСначала повторим top-2 и температуру 0.5 для исходной модели. Затем сгенерируем ответ моделью после короткого обучения, жадно выбирая токены. Это две разные проверки: первая относится к таблице лекции, вторая — к полученному чекпойнту. Максимум длины обеспечивает остановку даже при отсутствии EOS."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "q = sampling_distribution(trace[\"logits\"][-1], temperature=.5, top_k=2)\nnp.testing.assert_allclose(q, [0., .5631163013756344, .4368836986243656, 0.])\nprint(\"p:\", trace[\"probabilities\"][-1], \"q:\", q)\ntrained = {k: p.detach().numpy().copy() for k, p in training_params.items()}\ngenerated = [0]\ngeneration_cache = None\nfor _ in range(12):\n    output = forward(trained, [generated[-1]], cache=generation_cache)\n    generation_cache = output[\"cache\"]\n    next_token = int(np.argmax(output[\"logits\"][-1]))\n    generated.append(next_token)\n    if next_token == 3:\n        break\nprint(\" \".join(TOKENS[i] for i in generated))"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "### Ваш опыт: температура и top-k\n\nВернёмся к исходным весам и последнему префиксу `[BOS, A, B]`. Следующая ячейка берёт его логиты из `trace`: короткое обучение выше их не меняло. Задайте `experiment_temperature` положительным конечным числом; `experiment_top_k` может быть целым числом от 1 до 4 или `None`, если нужно оставить весь словарь. Здесь проверяются допустимость вероятностей и сумма 1, поэтому новая температура не обязана давать прежние числа.\n\nСначала сравните температуры 0.5, 1.0 и 2.0 при top-2. Как меняется соотношение A и B? Затем установите температуру 1.0 и `None`: распределение выбора должно совпасть с исходным распределением модели. Объясните, почему при top-2 у EOS по-прежнему нулевая вероятность выбора, хотя его вероятность в модели положительна. В этом опыте меняется правило выбора, а веса и логиты остаются фиксированными."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "experiment_temperature = 1.0\nexperiment_top_k = 2\nif not np.isfinite(experiment_temperature) or experiment_temperature <= 0:\n    raise ValueError(\"Температура должна быть положительным конечным числом\")\nexperiment_q = sampling_distribution(\n    trace[\"logits\"][-1], temperature=experiment_temperature, top_k=experiment_top_k)\nassert np.isfinite(experiment_q).all() and (experiment_q >= 0).all()\nnp.testing.assert_allclose(experiment_q.sum(), 1., rtol=1e-12, atol=1e-12)\nprint(\"Температура:\", experiment_temperature, \"top-k:\", experiment_top_k)\nprint(\"Токен   p модели   q выбора\")\nfor token, model_p, selection_q in zip(TOKENS, trace[\"probabilities\"][-1], experiment_q):\n    print(f\"{token:<5}   {model_p:.6f}   {selection_q:.6f}\")"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 9. Маршрутизация MoE: выбор и вес — разные операции\n\nБалансировочная поправка выбирает экспертов, но вес смеси вычисляется из исходных sigmoid-оценок. Ячейка воспроизводит только маршрутизацию из §15; это не второй обученный MoE. Чтобы получить полный подслой, нужно умножить каждый вес на выход соответствующего эксперта и добавить общих экспертов."
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "selected, routing_weights = moe_weights([0., 1., -1.], np.array([0., -.5, .5]), k=2)\nassert selected.tolist() == [2, 0]\nnp.testing.assert_allclose(routing_weights, [.3497554090542189, .6502445909457811])\nprint(\"selected:\", selected, \"weights:\", routing_weights)"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "## 10. SSM и сумма скрытых траекторий\n\nСкалярная SSM переносит состояние между входными позициями. Вторая задача суммирует пути двухшаговой обратной цепи над целыми бинарными строками. Её переходы заданы вручную, а не получены обучением диффузионной модели. Проверьте вероятность 00 скалярной суммой, затем объясните различие индексов времени в двух опытах."
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "examples = architecture_examples()\nnp.testing.assert_allclose(examples[\"ssm_states\"], [1., .5, -.75])\nkernel = np.array(examples[\"diffusion_kernel\"])\nfirst = np.array(examples[\"diffusion_first\"])\nnp.testing.assert_allclose(kernel.sum(-1), 1.)\nfinal = first @ kernel\nnp.testing.assert_allclose(final, [.2128, .3472, .1672, .2728])\nmanual_00 = .18*.64 + .42*.16 + .12*.16 + .28*.04\nnp.testing.assert_allclose(manual_00, final[0])\nprint(\"SSM:\", examples[\"ssm_states\"])\nprint(\"reverse chain:\", first, \"->\", final, \"sum:\", final.sum())"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "## 11. Ваш опыт: изменяем вход или цель\n\nМожно менять длину непустого входа и идентификаторы от 0 до 3; число целей должно совпадать с числом входных позиций. Для последовательности `[0, 2, 1, 3]` задайте вход `[0, 2, 1]`, цели `[2, 1, 3]`. Цели могут проверять и альтернативное продолжение того же входа. Результаты здесь пересчитываются, а не сравниваются с фиксированной потерей лекции.\n\nДо запуска предскажите: какие строки изменятся, будет ли EOS более вероятен, как изменится потеря? После запуска объясните расхождение с прогнозом. Не переиспользуйте кэш от другого входа."
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "experiment_ids = np.array([0, 2, 1], dtype=np.int64)\nexperiment_targets = np.array([2, 1, 3], dtype=np.int64)\nexperiment_weights = fixture()\nexperiment_trace = forward(experiment_weights, experiment_ids)\nexperiment_loss = cross_entropy(experiment_trace[\"logits\"], experiment_targets)\nexperiment_gradients = autograd_gradients(experiment_weights, experiment_ids, experiment_targets)\nprint(\"inputs:\", experiment_ids, \"targets:\", experiment_targets)\nprint(\"p:\\n\", experiment_trace[\"probabilities\"])\nprint(\"loss:\", experiment_loss)\nprint(\"gradient norm:\", np.sqrt(sum(np.sum(g*g) for g in experiment_gradients.values())))"
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "### Что удалось проверить\n\nМы прошли весь путь от lookup до потери и обновления, проверили все производные, связанный выход, причинность и эквивалентность кэша. Также отделили выбор токена от предсказания и повторили арифметику двух альтернативных конструкций. На этом масштабе проверяется вычислительный механизм; качество языка требует данных и отдельной оценки, как в М19."
+        }
+      ]
+    },
+    {
+      "id": "capstone-01",
+      "kind": "capstone",
+      "title": "Капстоун · ноутбук 1. Претрейн",
+      "format": "ipynb",
+      "filename": "01_pretrain.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/ru/01_pretrain.ipynb",
+      "bytes": 53115,
+      "sha256": "e68af3e6b57f5de18f81a4308ee7ef1c6f911df1c62deae1fcb57a28d3e304aa",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Капстоун · ноутбук 1. Претрейн\n\n*Курс «Modern LLMs» · капстоун · редакция 2026.10.3*\n\n> **Что здесь происходит.** Мы проходим весь путь от сырых документов до\n> обученной языковой модели — reference stack курса: конвейер очистки корпуса (M9),\n> byte-level BPE с нуля (M2), шардирование потока токенов, расчёт бюджета по\n> Шиншилле (M9) и сам забег с Muon и WSD-расписанием (M9).\n>\n> **Что нужно знать заранее.** Модули 2, 4, 5, 6, 7, 8, 9. Полезно, но не обязательно —\n> модуль 1: в конце мы прочитаем собственную модель тем же паспортным скриптом.\n>\n> **Контракт Colab.** Обязательный путь работает на CPU и не требует сети:\n> по умолчанию используется синтетический корпус, сгенерированный прямо здесь.\n> Загрузка настоящих данных — отдельная ячейка с флагом, выключенным по\n> умолчанию. Ни одно число из этого ноутбука не зависит от сети.\n\n**Профили.** `SMOKE` (по умолчанию) — короткая проверка всего механизма.\n`FULL` использует профиль M и 20× Chinchilla-style reference budget. Его реальное\nвремя зависит от ускорителя и программного стека: режим `auto` выбирает BF16 на\nподдерживаемых GPU, FP16 с gradient scaling на старых CUDA-ускорителях вроде T4\nи FP32 на CPU.\n\nПри первом проходе выполняйте ячейки по порядку и сопоставляйте код с пояснениями. Во втором измените один параметр, сохраните результаты и объясните, какое утверждение опыт позволяет проверить."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Окружение\n\nПакет `minillm` — это код капстоуна: `config`, `model`, `tokenizer`, `corpus`,\n`data`, `train`, `generate`. Ноутбук ничего не переопределяет, он только\nсобирает конвейер из готовых частей и показывает числа."
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"пакет проекта: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm уже доступен\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Загрузите ZIP-пакет Capstone из урока Stepik. Структура каталогов будет восстановлена автоматически.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"архив проекта: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm не найден. Скачайте языковой ZIP-пакет Capstone из урока Stepik и либо распакуйте его целиком, либо загрузите ZIP в текущую сессию Colab.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport os, torch, numpy as np, hashlib\nprint(\"torch\", torch.__version__, \"| CUDA:\", torch.cuda.is_available())"
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "# ---------------------------------------------------------------- профиль забега\nPROFILE = \"SMOKE\"          # \"SMOKE\" | \"FULL\"\nUSE_REAL_CORPUS = False    # сетевая загрузка настоящих данных — см. §3\nSEED = 0\n\ntorch.manual_seed(SEED)\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nfrom minillm.precision import resolve_compute_dtype\nCOMPUTE_DTYPE = resolve_compute_dtype(DEVICE, \"auto\")\n\nSETTINGS = {\n    \"SMOKE\": dict(docs=8_000, vocab_size=2_048, seq_len=128,\n                  model_profile=\"S\", steps=250, micro_batch_size=8, grad_accum=1),\n    \"FULL\":  dict(docs=200_000, vocab_size=16_384, seq_len=512,\n                  model_profile=\"M\", steps=18_886, micro_batch_size=16, grad_accum=4),\n}[PROFILE]\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    SETTINGS = {**SETTINGS, \"docs\": min(SETTINGS[\"docs\"], 800),\n                \"vocab_size\": min(SETTINGS[\"vocab_size\"], 512),\n                \"steps\": min(SETTINGS[\"steps\"], 12),\n                \"micro_batch_size\": min(SETTINGS[\"micro_batch_size\"], 2),\n                \"grad_accum\": 1}\nprint(PROFILE, \"на\", DEVICE, \"с вычислениями\", COMPUTE_DTYPE, \"->\", SETTINGS)"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Корпус: воронка очистки\n\nПорядок стадий в конвейере не произволен — от дешёвых к дорогим (M9).\nЭвристики стоят проход по строке, дедуп — хеширование, модельный классификатор\nкачества — инференс. Поэтому классификатор видит только то, что пережило\nпервые ступени, и стоимость конвейера определяется ими.\n\nСинтетический корпус ниже собран из шаблонов на двух языках и намеренно\nиспорчен: в нём есть дубликаты, почти-дубликаты, слишком короткие документы и\nсимвольный мусор. Это и есть материал для воронки — на чистых данных\nконвейер нечему научить."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "import random\nfrom minillm.corpus import FilterConfig, pipeline\n\nRU_SLOTS = dict(\n    subject=[\"языковая модель\", \"трансформер\", \"механизм внимания\", \"токенизатор\",\n             \"оптимизатор\", \"нормализация\", \"остаточная связь\", \"роутер экспертов\",\n             \"кэш ключей\", \"эмбеддинг\", \"спекулятивный декод\", \"квантизация\"],\n    verb=[\"предсказывает\", \"обрабатывает\", \"сокращает\", \"ускоряет\", \"стабилизирует\",\n          \"ограничивает\", \"восстанавливает\", \"перераспределяет\", \"измеряет\"],\n    obj=[\"следующий токен\", \"длинный контекст\", \"стоимость шага\", \"объём памяти\",\n         \"масштаб активаций\", \"разброс градиентов\", \"поток данных\", \"качество ответа\",\n         \"нагрузку экспертов\", \"пропускную способность\"],\n    tail=[\"на длинных последовательностях\", \"при обучении в низкой точности\",\n          \"без потери качества\", \"за счёт дополнительной матрицы\",\n          \"ценой роста числа параметров\", \"в фазе декодирования\",\n          \"по сравнению с базовой схемой\", \"при неизменном бюджете вычислений\"],\n)\nEN_SLOTS = dict(\n    subject=[\"a language model\", \"the transformer\", \"the attention mechanism\",\n             \"the tokenizer\", \"the optimizer\", \"normalization\", \"the residual stream\",\n             \"the expert router\", \"the key cache\", \"the embedding table\",\n             \"speculative decoding\", \"quantization\"],\n    verb=[\"predicts\", \"processes\", \"reduces\", \"accelerates\", \"stabilizes\", \"bounds\",\n          \"restores\", \"redistributes\", \"measures\"],\n    obj=[\"the next token\", \"a long context\", \"the cost per step\", \"the memory footprint\",\n         \"the scale of activations\", \"the spread of gradients\", \"the data stream\",\n         \"the quality of the answer\", \"the load across experts\", \"the throughput\"],\n    tail=[\"on long sequences\", \"when training in low precision\", \"without losing quality\",\n          \"at the price of one more matrix\", \"at the cost of more parameters\",\n          \"during the decode phase\", \"compared with the baseline scheme\",\n          \"under an unchanged compute budget\"],\n)\n\n\ndef sentence(rng: random.Random, slots: dict) -> str:\n    parts = [rng.choice(slots[\"subject\"]), rng.choice(slots[\"verb\"]),\n             rng.choice(slots[\"obj\"]), rng.choice(slots[\"tail\"])]\n    return \" \".join(parts).capitalize() + \".\"\n\n\ndef synthetic_corpus(n_docs: int, seed: int = 0) -> list[str]:\n    \"\"\"Двуязычный корпус со слотовой грамматикой и намеренно внесённым мусором.\n\n    Никакой это не претрейн-корпус: грамматика одна, словарь узкий. Задача —\n    дать конвейеру и токенизатору воспроизводимый, заведомо лицензионно чистый\n    материал, на котором виден каждый механизм. Слоты дают комбинаторное\n    разнообразие, иначе near-dup дедуп справедливо схлопнул бы весь корпус.\n    \"\"\"\n    rng = random.Random(seed)\n    docs = []\n    for i in range(n_docs):\n        slots = RU_SLOTS if i % 2 else EN_SLOTS\n        docs.append(\" \".join(sentence(rng, slots) for _ in range(rng.randint(3, 6))))\n    # Мусор для воронки: точные копии, почти-копии, короткие и символьные.\n    docs += docs[:n_docs // 20]                                   # точные дубли\n    docs += [d + \" Дополнение.\" for d in docs[:n_docs // 40]]     # почти-дубли\n    docs += [\"ок\"] * (n_docs // 40)                               # короткие\n    docs += [\"!@#$%^&*()\" * 8] * (n_docs // 40)                   # символьный мусор\n    rng.shuffle(docs)\n    return docs\n\nraw_docs = synthetic_corpus(SETTINGS[\"docs\"], seed=SEED)\nprint(f\"сырых документов: {len(raw_docs):,}\")"
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "clean_docs, report = pipeline(raw_docs, FilterConfig(min_chars=60),\n                              near_dup_threshold=0.85)\nprint(report)\nprint(f\"\\nитог: {len(clean_docs):,} документов, \"\n      f\"{sum(len(d) for d in clean_docs):,} символов\")\n\n# Разделяем ДО обучения tokenizer: validation не участвует ни в словаре,\n# ни в merge table. Глобальная очистка выполнена до split, поэтому точные и\n# near-дубли не расходятся между train и validation.\nsplit_rng = random.Random(SEED + 17)\nsplit_rng.shuffle(clean_docs)\nvalid_count = max(1, round(0.05 * len(clean_docs)))\nvalid_docs = clean_docs[:valid_count]\ntrain_docs = clean_docs[valid_count:]\nprint(f\"document split: train={len(train_docs):,}, valid={len(valid_docs):,}\")"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "Воронка показывает, какие документы остались и почему были отброшены остальные. Большая доля отказов сама по себе не доказывает ни качество фильтра, ни ошибку порога. Возьмите примеры по обе стороны границы и отдельно сравните языки и типы документов: один порог может хорошо удалять мусор и одновременно терять полезные короткие тексты. В нашем корпусе причины внесены намеренно, поэтому их можно сопоставить с отчётом."
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Настоящие данные (опционально)\n\nОбязательный путь ноутбука настоящих данных **не требует** и ни одного\nопубликованного числа из них не берёт. Ячейка ниже включается флагом\n`USE_REAL_CORPUS` из §1.\n\nПроверенные варианты с допустимыми лицензиями:\n\n| Корпус | Лицензия | Заметка |\n|---|---|---|\n| `HuggingFaceFW/fineweb-2`, подмножество `rus_Cyrl` | ODC-By 1.0 | атрибуция обязательна; действуют также условия использования CommonCrawl |\n| `roneneldan/TinyStories` | CDLA-Sharing-1.0 | синтетические рассказы с узким словарём; share-alike распространяется на производные **датасеты**, не на обученную модель |\n\nРазмер модели сам по себе не определяет связность текста. TinyStories задаёт более узкую задачу, чем широкий веб-корпус; результат зависит также от бюджета обучения, покрытия данных и способа оценки. Сравнивайте отложенный loss и реальные продолжения по зафиксированному протоколу. Внешний корпус остаётся необязательным расширением."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "if USE_REAL_CORPUS:\n    subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", \"-q\", \"datasets\"], check=True)\n    from datasets import load_dataset\n\n    DATA_REVISIONS = {\n        \"fineweb2\": \"v2.1.1\",\n        \"tinystories\": \"f54c09fd23315a6f9c86f9dc80f725de7d8f9c64\",\n    }\n    train_target = SETTINGS[\"docs\"] // 2\n    eval_target = max(100, SETTINGS[\"docs\"] // 40)\n\n    ru_train = load_dataset(\"HuggingFaceFW/fineweb-2\", name=\"rus_Cyrl\",\n                            split=\"train\", streaming=True,\n                            revision=DATA_REVISIONS[\"fineweb2\"])\n    ru_eval = load_dataset(\"HuggingFaceFW/fineweb-2\", name=\"rus_Cyrl\",\n                           split=\"test\", streaming=True,\n                           revision=DATA_REVISIONS[\"fineweb2\"])\n    en_train = load_dataset(\"roneneldan/TinyStories\", split=\"train\", streaming=True,\n                            revision=DATA_REVISIONS[\"tinystories\"])\n    en_eval = load_dataset(\"roneneldan/TinyStories\", split=\"validation\", streaming=True,\n                           revision=DATA_REVISIONS[\"tinystories\"])\n\n    def take_text(dataset, limit):\n        rows = []\n        for row in dataset:\n            rows.append(row[\"text\"])\n            if len(rows) >= limit:\n                break\n        return rows\n\n    raw_train = take_text(ru_train, train_target) + take_text(en_train, train_target)\n    raw_valid = take_text(ru_eval, eval_target) + take_text(en_eval, eval_target)\n    train_docs, train_report = pipeline(raw_train, FilterConfig(), near_dup_threshold=0.85)\n    valid_docs, valid_report = pipeline(raw_valid, FilterConfig(), near_dup_threshold=0.85)\n    # Защита от точной утечки между источниками/splits после нормализации.\n    train_fingerprints = {hashlib.sha256(d.encode(\"utf-8\")).digest() for d in train_docs}\n    valid_docs = [d for d in valid_docs\n                  if hashlib.sha256(d.encode(\"utf-8\")).digest() not in train_fingerprints]\n    print(\"train:\", train_report)\n    print(\"valid:\", valid_report)\n    print(\"revisions:\", DATA_REVISIONS)\n    print(\"\\nАтрибуция: FineWeb2 (ODC-By 1.0 + Common Crawl Terms), \"\n          \"TinyStories (CDLA-Sharing-1.0). Это техническое описание, не юридическая консультация.\")\nelse:\n    DATA_REVISIONS = {\"synthetic\": f\"generator-v1-seed-{SEED}\"}\n    print(\"USE_REAL_CORPUS = False — используем document-level split синтетического корпуса\")"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Токенизатор: byte-level BPE с нуля\n\nБазовый алфавит содержит 256 байтов. Поэтому любой корректно закодированный текст UTF-8 можно представить без неизвестного токена, но начальная длина зависит от байтового представления. Буквы обычного русского алфавита занимают по два байта; это не правило для всех символов кириллических блоков Unicode. Слияния BPE могут объединять байты внутри символа и между символами.\n\nКоличество и разнообразие русского текста влияют на выученные слияния вместе с размером словаря и правилами подготовки данных. Мы измерим число токенов на символ и байтов на токен на отдельных RU/EN-примерах. Эти показатели характеризуют данный словарь и данные; сами по себе они не измеряют качество будущей языковой модели."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "import time\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.data import ByteTokenizer\nfrom minillm.chat import CHAT_SPECIALS\n\n# Управляющие токены чата резервируются в словаре СРАЗУ, хотя претрейну они не\n# нужны. Причина ровно та же, по которой в o200k_harmony лежат 1 075\n# зарезервированных идентификаторов (M2): добавить их потом — значит менять\n# vocab_size и пересобирать эмбеддинги. Ноутбук 2 берёт этот же чекпойнт и\n# рассчитывает найти в нём `<|eot_id|>`.\ntrain_text = \"\\n\".join(train_docs)\nt0 = time.time()\ntokenizer = BBPETokenizer.train(train_text, vocab_size=SETTINGS[\"vocab_size\"],\n                                specials=[\"<|bos|>\", \"<|eos|>\"] + CHAT_SPECIALS)\nprint(f\"обучено за {time.time() - t0:.1f} с: словарь {tokenizer.vocab_size}, \"\n      f\"merge'ей {len(tokenizer.merges)}\")\nif tokenizer.vocab_size < SETTINGS[\"vocab_size\"]:\n    print('Доступные пары для слияний закончились до заданного размера словаря.')\n\nsample = \"Языковая модель предсказывает следующий токен.\"\nassert tokenizer.decode(tokenizer.encode(sample)) == sample, \"round-trip сломан\"\nprint(\"round-trip:\", repr(tokenizer.decode(tokenizer.encode(sample))))"
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "probe_rng = random.Random(123)\nru_probe = \" \".join(sentence(probe_rng, RU_SLOTS) for _ in range(40))\nen_probe = \" \".join(sentence(probe_rng, EN_SLOTS) for _ in range(40))\nplain = ByteTokenizer()\n\nrows = []\nfor name, probe in ((\"RU\", ru_probe), (\"EN\", en_probe)):\n    trained = tokenizer.fertility(probe)\n    baseline = len(plain.encode(probe)) / len(probe)\n    rows.append((name, trained[\"tokens_per_char\"], baseline,\n                 trained[\"bytes_per_token\"]))\n\nprint(f\"{'язык':<5} {'BBPE tok/char':>14} {'byte-level tok/char':>21} {'bytes/token':>12}\")\nfor name, trained, baseline, bpt in rows:\n    print(f\"{name:<5} {trained:>14.3f} {baseline:>21.3f} {bpt:>12.2f}\")\nprint(\"\\nbyte-level для кириллицы даёт ~2 токена на символ — это и есть цена \"\n      \"отсутствия merge'ей для языка (M2).\")"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. Шардирование потока\n\nРазобьём поток токенов на файлы `.bin` — шарды — и сохраним контрольные суммы в `index.json`. Необходимая память определяется объёмом данных, а не только размером модели. Здесь данные невелики, зато можно проверить тот же порядок чтения и контроль целостности, который потребуется при большем корпусе. Граница шарда не должна терять переход к следующему токену."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "from minillm.data import ShardStream, TokenStream, write_shards\n\nEOS = tokenizer.specials[\"<|eos|>\"]\n\ndef encode_documents(documents):\n    stream = []\n    for doc in documents:\n        stream.extend(tokenizer.encode(doc))\n        stream.append(EOS)\n    return stream\n\ntrain_token_ids = encode_documents(train_docs)\nvalid_token_ids = encode_documents(valid_docs)\nprint(f\"train tokens: {len(train_token_ids):,}; valid tokens: {len(valid_token_ids):,}\")\n\nshard_dir = Path(\"data_shards\")\nindex = write_shards(train_token_ids, shard_dir / \"train\", shard_tokens=250_000)\nwrite_shards(valid_token_ids, shard_dir / \"valid\", shard_tokens=250_000)\n\ntrain_stream = ShardStream(shard_dir / \"train\", seq_len=SETTINGS[\"seq_len\"], verify=True)\nvalid_stream = ShardStream(shard_dir / \"valid\", seq_len=SETTINGS[\"seq_len\"], verify=True)\nprint(f\"train: {len(index['shards'])} шардов, {index['total_tokens']:,} токенов, \"\n      f\"{len(train_stream):,} окон, checksum {train_stream.checksum()}\")\nprint(f\"valid: {len(valid_stream):,} окон — документно отделён до tokenizer training\")"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 6. Конфиг модели и бюджет\n\nПрежде чем запускать забег, посчитаем три вещи, которые курс учит считать до\nзапуска, а не после OOM:\n\n\n1. **параметры** — по формуле M6 и сверка с фактическим `model.parameters()`;\n\n2. **KV-кэш на токен** — `2·L·H_kv·d_head·sizeof(dtype)` (M5);\n\n3. **20× Chinchilla-style reference budget** — 20 токенов на параметр (M9), и сколько это шагов."
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "from minillm.config import MiniLLMConfig, kv_bytes_per_token\nfrom minillm.model import MiniLLM, MoELayer\nfrom minillm.train import TrainConfig, memory_report\n\ncfg = MiniLLMConfig.profile(\n    SETTINGS[\"model_profile\"],\n    vocab_size=tokenizer.vocab_size,\n    max_position_embeddings=max(SETTINGS[\"seq_len\"], 256),\n)\nmodel = MiniLLM(cfg).to(DEVICE)\n\nanalytic = cfg.parameter_report()\nassert analytic[\"total\"] == model.num_parameters(), \"формула и код разошлись\"\nprint(f\"параметров: {analytic['total']:,} (формула == факт)\")\nfor key in (\"embeddings\", \"attention\", \"ffn\", \"norms\"):\n    print(f\"  {key:<12} {analytic[key]:>12,}  ({analytic[key] / analytic['total']:.1%})\")\nprint(f\"  блок стоит {analytic['block_over_d2']}·d²\")\nreference_cache_bpt = kv_bytes_per_token(cfg, dtype_bytes=2)\nruntime_cache_bpt = kv_bytes_per_token(cfg, dtype_bytes={\"fp32\": 4, \"bf16\": 2, \"fp16\": 2}[COMPUTE_DTYPE])\nprint(f\"\\nKV-кэш, BF16/FP16 reference: {reference_cache_bpt} байт/токен \"\n      f\"→ {reference_cache_bpt * SETTINGS['seq_len'] / 1024:.1f} KiB на окно\")\nprint(f\"KV-кэш при текущем compute dtype ({COMPUTE_DTYPE}): {runtime_cache_bpt} байт/токен\")\nprint(\"постоянная память обучения:\", memory_report(cfg, \"adamw\"))"
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "tcfg = TrainConfig(\n    steps=SETTINGS[\"steps\"],\n    seq_len=SETTINGS[\"seq_len\"],\n    micro_batch_size=SETTINGS[\"micro_batch_size\"],\n    grad_accum=SETTINGS[\"grad_accum\"],\n    optimizer=\"muon\",\n    compute_dtype=\"auto\",\n    gradient_checkpointing=DEVICE.startswith(\"cuda\"),\n    seed=SEED,\n    device=DEVICE,\n    log_every=max(1, SETTINGS[\"steps\"] // 10),\n    out_dir=\"runs/pretrain\",\n)\n\nchinchilla_tokens = 20 * analytic[\"total\"]\nplanned_tokens = tcfg.steps * tcfg.tokens_per_step\nprint(f\"плановых next-token целей за шаг: {tcfg.tokens_per_step:,}\")\nprint(f\"запланировано:  {planned_tokens:,} обучаемых целей за {tcfg.steps:,} шагов\")\nprint(f\"reference 20×: {chinchilla_tokens:,} токенов \"\n      f\"→ {chinchilla_tokens / tcfg.tokens_per_step:,.0f} шагов\")\nprint(f\"доля бюджета:   {planned_tokens / chinchilla_tokens:.1%}\")\nprint(f\"эпох по корпусу: {planned_tokens / len(train_token_ids):.2f}\")"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "Плановый бюджет считает next-token цели: у каждого окна длиной `seq_len+1` их `seq_len`. Журнал отдельно измеряет фактические входные позиции (`tokens`, включая первую позицию окна и PAD) и обучаемые цели после сдвига (`supervised_tokens`). Скорость `tokens_per_s` относится к входным позициям. Loss обучения и проверки — среднее по всем обучаемым целям выбранных батчей; при накоплении градиентов знаменатель общий для эффективного батча.\n\nСтрока «доля бюджета» сравнивает запланированные токены с ориентиром $20P$. Это полезная шкала размера опыта, но не тест достаточности обучения: оптимальный бюджет зависит от данных и цели. В `SMOKE` короткий запуск проверяет связность конвейера; `FULL` задаёт более длинный учебный план.\n\nЧисло проходов по корпусу показывает степень повторного использования данных. Повторение небольшого набора повышает риск запоминания, но универсального порога в четыре эпохи нет. Сопоставляйте кривые обучения и отложенной проверки и помните, что синтетические шаблоны ограничивают разнообразие обеих частей."
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 7. Забег\n\nОптимизатор — гибрид: Muon на двумерных матрицах, AdamW на эмбеддингах, нормах\nи роутере (M9). Расписание — WSD: разогрев, полка, спад (M9). Полка\nпозволяет прервать забег в любой момент и добить спад, не переобучая расписание\nпод новую длину."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "from minillm.train import train, save_checkpoint\n\nstate = train(model, train_stream, tcfg, eval_stream=valid_stream)\nprint(f\"\\nготово: {state.step} шагов, \"\n      f\"{state.tokens:,} входных позиций, {state.supervised_tokens:,} целей, \"\n      f\"финальный лосс {state.history[-1]['loss']:.4f}\")"
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "import matplotlib.pyplot as plt\n\nsteps = [h[\"step\"] for h in state.history]\nfig, axes = plt.subplots(1, 3, figsize=(15, 4))\n\naxes[0].plot(steps, [h[\"loss\"] for h in state.history], label=\"train\", color=\"#5E81AC\")\nif \"eval_loss\" in state.history[0]:\n    axes[0].plot(steps, [h[\"eval_loss\"] for h in state.history], label=\"valid\",\n                 color=\"#BF616A\")\naxes[0].axhline(np.log(cfg.vocab_size), ls=\"--\", lw=1, color=\"#4C566A\",\n                label=\"ln(V) — равномерная модель\")\naxes[0].set_xlabel(\"шаг\"); axes[0].set_ylabel(\"кросс-энтропия\"); axes[0].legend()\naxes[0].set_title(\"лосс\")\n\naxes[1].plot(steps, [h[\"lr_scale\"] for h in state.history], color=\"#A3BE8C\")\naxes[1].set_xlabel(\"шаг\"); axes[1].set_ylabel(\"множитель lr\")\naxes[1].set_title(\"WSD-расписание\")\n\naxes[2].plot(steps, [h[\"tokens_per_s\"] for h in state.history], color=\"#D08770\")\naxes[2].set_xlabel(\"шаг\"); axes[2].set_ylabel(\"входных позиций/с\")\naxes[2].set_title(\"пропускная способность\")\n\nfor ax in axes:\n    ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nbpc = state.history[-1][\"loss\"] / np.log(2)\nprint(f\"финальная кросс-энтропия {state.history[-1]['loss']:.4f} нат \"\n      f\"= {bpc:.4f} бит на токен\")\nprint('Кривая относится к данному бюджету и корпусу; её плато само по себе не определяет причину ограничения.')"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "### 7.1. Разрежённый близнец: общие и активные параметры\n\nТеперь заменим плотный FFN банком экспертов, сохранив словарь, глубину, внимание и позиции. Ширина эксперта выбрана так, чтобы число активных параметров было близко к плотной модели. Сравним точные числа: например, у стандартных S и S-MoE это 6 327 552 и 6 593 792. В текущем запуске словарь может быть другим, и таблица пересчитает паспорт.\n\nБлизкие активные бюджеты не означают одинакового времени на токен. Маршрутизация, размеры матриц и объединение результатов тоже требуют работы. Геометрия KV-кэша при неизменном внимании совпадает точно; сначала проверим именно эти расчётные свойства."
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "dense_cfg = cfg\nmoe_cfg = MiniLLMConfig(**{**MiniLLMConfig.twin(SETTINGS[\"model_profile\"]).to_dict(),\n                           \"vocab_size\": tokenizer.vocab_size,\n                           \"max_position_embeddings\": cfg.max_position_embeddings})\nmoe_model = MiniLLM(moe_cfg).to(DEVICE)\n\nrows = [(\"dense\", dense_cfg, model), (\"MoE\", moe_cfg, moe_model)]\nprint(f\"{'вариант':<8} {'total':>14} {'active':>12} {'разреж.':>8} \"\n      f\"{'KV Б/ток':>9} {'FLOP/ток':>12}\")\nfor name, c, m in rows:\n    assert c.parameter_report()[\"total\"] == m.num_parameters(), \"формула разошлась с моделью\"\n    total, active = c.parameter_report()[\"total\"], c.active_parameters()\n    print(f\"{name:<8} {total:>14,} {active:>12,} {total / active:>7.2f}× \"\n          f\"{kv_bytes_per_token(c):>9,} {c.flops_per_token():>12,}\")\n\nprint(f\"\\nэкспертов {moe_cfg.num_local_experts}, top-{moe_cfg.num_experts_per_tok}, \"\n      f\"shared {moe_cfg.num_shared_experts}, первый слой плотный: \"\n      f\"{not moe_cfg.moe_layer(0)}\")\nprint(f\"активных у MoE к плотному: \"\n      f\"×{moe_cfg.active_parameters() / dense_cfg.active_parameters():.3f}\")\nprint(f\"KV-кэш совпадает до байта: \"\n      f\"{kv_bytes_per_token(dense_cfg) == kv_bytes_per_token(moe_cfg)} — \"\n      f\"внимание не трогали, сравнение чистое\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "Таблица отделяет ёмкость банка от работы выбранных экспертов. Теперь обучим обе модели на одинаковом числе шагов и токенов. Сопоставим loss, скорость и распределение назначений, не предполагая заранее ни выигрыша MoE, ни равной аппаратной стоимости."
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "moe_state = train(moe_model, train_stream, tcfg, eval_stream=valid_stream)\n\ndense_last, moe_last = state.history[-1], moe_state.history[-1]\nprint(f\"\\n{'вариант':<8} {'train':>9} {'valid':>9} {'позиций/с':>9}\")\nfor name, h in ((\"dense\", dense_last), (\"MoE\", moe_last)):\n    print(f\"{name:<8} {h['loss']:>9.4f} {h.get('eval_loss', float('nan')):>9.4f} \"\n          f\"{h['tokens_per_s']:>9.0f}\")\n\nmoe_layer = next(l.ffn for l in moe_model.layers if isinstance(l.ffn, MoELayer))\nload = moe_layer.expert_load\nprint(f\"\\nнагрузка экспертов последнего замера: min {load.min():.3f}, \"\n      f\"max {load.max():.3f}, std {load.std():.3f}\")\nprint(f\"идеально равномерная была бы \"\n      f\"{moe_cfg.num_experts_per_tok / moe_cfg.num_local_experts:.3f} на эксперта\")\nprint(f\"смещений aux-loss-free: max|b| = {moe_layer.expert_bias.abs().max():.4f}\")"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "**Как читать сравнение.** При равномерной маршрутизации каждый из $E$ экспертов получает в среднем долю $k/E$ токенов. Реальная нагрузка может быть неравномерной; меньше токенов не означает автоматически меньше шагов оптимизатора. Таблица нагрузки помогает понять, сколько данных фактически использовалось каждым экспертом.\n\nОдин короткий запуск показывает поведение двух заданных конфигураций. Причину разницы в loss нельзя вывести только из числа параметров. В ноутбуке 4 вернёмся к этому вопросу с отдельным изменением скорости балансировки и измерением отброшенных назначений."
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "## 8. Что выучила модель\n\nСгенерируем продолжения с жадным выбором и с выборкой. Prefill обрабатывает позиции промпта, decode продолжает последовательность с KV-кэшем. М10 объясняет, при каких условиях первая фаза ограничена вычислениями, а вторая — передачей данных; это не безусловные свойства малого CPU-запуска. Здесь сохраняем фактические времена и читаем продолжения, отделяя работоспособность механизма от качества языка."
+        },
+        {
+          "id": "code-015",
+          "type": "code",
+          "source": "from minillm.generate import SamplingConfig, generate\n\nfor temperature, top_p in ((0.0, 1.0), (0.8, 0.9)):\n    prompt = tokenizer.encode(\"Языковая модель\")\n    out, stats = generate(model, prompt, 80,\n                          SamplingConfig(temperature=temperature, top_p=top_p, seed=SEED),\n                          stop_tokens={EOS})\n    label = \"жадно\" if temperature == 0 else f\"T={temperature}, top_p={top_p}\"\n    print(f\"--- {label}\\n{tokenizer.decode(out)!r}\\n\")\nprint(\"статистика последнего запуска:\", stats.as_dict())"
+        },
+        {
+          "id": "markdown-015",
+          "type": "markdown",
+          "source": "## 9. Паспорт собственной модели\n\nКурс начался с того, что мы учились читать `config.json` чужой модели. Теперь\nмодель наша — и тот же паспортный подход читает её без единой правки. Это и есть\nзамыкание кольца: арифметика модулей 1, 5 и 6 применяется к файлу, который мы\nтолько что написали сами."
+        },
+        {
+          "id": "code-016",
+          "type": "code",
+          "source": "run_dir = Path(\"runs/pretrain/final\")\nsave_checkpoint(run_dir, model, state.optimizer, tcfg, state)\ntokenizer.save(run_dir / \"tokenizer.json\")\nprint(\"сохранено:\", sorted(p.name for p in run_dir.iterdir()))"
+        },
+        {
+          "id": "code-017",
+          "type": "code",
+          "source": "import json\n\ndef read_passport(path: Path) -> None:\n    \"\"\"Паспорт модели по config.json — тот же приём, что в модуле 1.\"\"\"\n    c = json.loads((path / \"config.json\").read_text(encoding=\"utf-8\"))\n    heads, kv = c[\"num_attention_heads\"], c[\"num_key_value_heads\"]\n    attention = \"MHA\" if heads == kv else (\"MQA\" if kv == 1 else f\"GQA {heads}/{kv}\")\n    ffn_ratio = c[\"intermediate_size\"] / c[\"hidden_size\"]\n    cache_bytes = {\"fp32\": 4, \"bf16\": 2, \"fp16\": 2}[stats.cache_dtype]\n    kv_bytes = 2 * c[\"num_hidden_layers\"] * kv * c[\"head_dim\"] * cache_bytes\n\n    print(\"Ось I  · размер     :\", f\"d={c['hidden_size']}, L={c['num_hidden_layers']}, \"\n          f\"V={c['vocab_size']}, эмбеддинги \"\n          f\"{'связаны' if c['tie_word_embeddings'] else 'раздельны'}\")\n    print(\"Ось II · контекст    :\", f\"{c['max_position_embeddings']} токенов, \"\n          f\"RoPE base {c['rope_theta']:g}, растяжка \"\n          f\"{c['rope_scaling'] or 'нет'}\")\n    print(\"Ось III· внимание    :\", attention,\n          f\"· head_dim {c['head_dim']} · sinks {'да' if c['attention_sinks'] else 'нет'}\"\n          f\" · окно {c['sliding_window'] or 'нет'}\")\n    print(\"Ось IV · блок        :\", f\"норма {c['norm_placement']}, {c['hidden_act']}, \"\n          f\"d_ffn/d = {ffn_ratio:.2f}\"\n          + (f\", кламп {c['swiglu_limit']}\" if c[\"swiglu_limit\"] else \"\"))\n    print(\"Ось V  · разреженность:\", \"dense\" if not c[\"num_local_experts\"]\n          else f\"MoE {c['num_local_experts']} экспертов, top-{c['num_experts_per_tok']}\")\n    print(\"Производные          :\", f\"KV-кэш {kv_bytes} Б/токен в измеренном {stats.cache_dtype}, \"\n          f\"{kv_bytes * c['max_position_embeddings'] / 1024 ** 2:.1f} МиБ на полный контекст\")\n\nread_passport(run_dir)"
+        },
+        {
+          "id": "markdown-016",
+          "type": "markdown",
+          "source": "## 10. Итог и что дальше\n\nМы прошли путь, который курс разбирал по частям: сырые\nдокументы → воронка очистки → собственный BPE → шарды → учебная reference-модель курса →\nзабег с Muon и WSD → генерация → паспорт. Все числа посчитаны здесь, ни одно не\nвзято из лекции на веру.\n\nДолю выбранного бюджета относительно ориентира $20P$ мы вычислили в паспорте.\nОна зависит от профиля и числа шагов, а сам ориентир не оценивает качество модели.\nСинтетический корпус позволяет проследить обучение и проверить связи между\nэтапами. Для сравнения архитектур нужен контролируемый опыт из ноутбука 4;\nдля вывода о естественном языке — соответствующий корпус и оценка ответов.\n\n**Дальше:**\n\n- ноутбук 2 — посттрейн: chat-шаблон, маскирование лосса по assistant-спанам,\n  packing и DPO;\n- ноутбук 3 — инференс: префиксный кэш, спекулятивное декодирование с небольшой\n  моделью-черновиком, квантизация;\n- ноутбук 4 — абляции: проверка утверждений курса числом и честный раздел о\n  границах масштаба.\n\n**Атрибуция данных.** Синтетический корпус §2 сгенерирован кодом этого ноутбука.\nПри включённом `USE_REAL_CORPUS` действуют лицензии соответствующих датасетов:\nFineWeb-2 — ODC-By 1.0 плюс условия использования CommonCrawl, TinyStories —\nCDLA-Sharing-1.0."
+        }
+      ]
+    },
+    {
+      "id": "capstone-02",
+      "kind": "capstone",
+      "title": "Капстоун · ноутбук 2. Посттрейн: SFT и DPO",
+      "format": "ipynb",
+      "filename": "02_posttrain.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/ru/02_posttrain.ipynb",
+      "bytes": 38486,
+      "sha256": "d007a64a3fcaec21b28656147254257b624209450059471223ea2ae3ecf2708d",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Капстоун · ноутбук 2. Посттрейн: SFT и DPO\n\n*Курс «Modern LLMs» · капстоун · редакция 2026.10.3*\n\n> **Что здесь происходит.** Базовая модель из ноутбука 1 умеет продолжать текст,\n> но не умеет вести диалог. Мы научим её формату — chat-шаблон, маскирование\n> лосса по ответам ассистента, упаковка (M13) — а затем сдвинем предпочтения\n> через DPO (M14).\n>\n> **Главный эксперимент — §5.** Мы намеренно забудем включить закрывающий\n> `<|eot_id|>` в обучаемую часть маски и посмотрим, что получится. Измерим\n> изменение цели обучения и поведение обеих ветвей.\n>\n> **Контракт Colab.** Ноутбук самодостаточен: если чекпойнта ноутбука 1 рядом\n> нет, он обучит маленькую базовую модель сам. Сети не требуется.\n\nРабочее различие курса: SFT показывает желательное поведение, а обучение по предпочтениям\nи RL используют другой обучающий сигнал. На нашем\nмасштабе проверяется механика и формат, а не frontier-качество ответа.\n\nПри первом проходе выполняйте ячейки по порядку и сопоставляйте код с пояснениями. Во втором измените один параметр, сохраните результаты и объясните, какое утверждение опыт позволяет проверить."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Окружение и базовая модель"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"пакет проекта: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm уже доступен\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Загрузите ZIP-пакет Capstone из урока Stepik. Структура каталогов будет восстановлена автоматически.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"архив проекта: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm не найден. Скачайте языковой ZIP-пакет Capstone из урока Stepik и либо распакуйте его целиком, либо загрузите ZIP в текущую сессию Colab.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport os, torch, numpy as np, random\n\n# Профиль забега. SMOKE рассчитан на CPU и укладывается в минуты; FULL имеет\n# смысл только на GPU и даёт заметно более связные ответы.\nPROFILE = \"SMOKE\"\nBUDGET = {\n    \"SMOKE\": dict(base_steps=250, sft_steps=200, sft_batch=4, seq_len=192,\n                  dpo_steps=100, dpo_batch=4, hidden=128, layers=3, dialogues=800),\n    \"FULL\":  dict(base_steps=2000, sft_steps=1500, sft_batch=8, seq_len=256,\n                  dpo_steps=600, dpo_batch=8, hidden=384, layers=6, dialogues=6000),\n}[PROFILE]\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    BUDGET = {**BUDGET, \"base_steps\": min(BUDGET[\"base_steps\"], 10),\n              \"sft_steps\": min(BUDGET[\"sft_steps\"], 12),\n              \"dpo_steps\": min(BUDGET[\"dpo_steps\"], 8),\n              \"dialogues\": min(BUDGET[\"dialogues\"], 80),\n              \"sft_batch\": min(BUDGET[\"sft_batch\"], 2),\n              \"dpo_batch\": min(BUDGET[\"dpo_batch\"], 2)}\nSEED = 0\ntorch.manual_seed(SEED)\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nprint(\"torch\", torch.__version__, \"| устройство:\", DEVICE)"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "Базовая модель. Если рядом лежит чекпойнт ноутбука 1 — берём его; иначе учим\nмаленькую базовую модель здесь же. Второй путь быстрее и достаточен для всех\nвыводов ноутбука: нас интересует, **чему учит маска**, а не абсолютное качество."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "from minillm.chat import CHAT_SPECIALS\nfrom minillm.config import MiniLLMConfig\nfrom minillm.data import TokenStream\nfrom minillm.model import MiniLLM\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.train import TrainConfig, train\n\nRU_SLOTS = dict(\n    subject=[\"языковая модель\", \"трансформер\", \"механизм внимания\", \"токенизатор\",\n             \"оптимизатор\", \"нормализация\", \"остаточная связь\", \"роутер экспертов\"],\n    verb=[\"предсказывает\", \"обрабатывает\", \"сокращает\", \"ускоряет\", \"стабилизирует\"],\n    obj=[\"следующий токен\", \"длинный контекст\", \"стоимость шага\", \"объём памяти\",\n         \"масштаб активаций\", \"нагрузку экспертов\"],\n)\n\ndef sentence(rng, slots):\n    return \" \".join([rng.choice(slots[\"subject\"]), rng.choice(slots[\"verb\"]),\n                     rng.choice(slots[\"obj\"])]).capitalize() + \".\"\n\nrng = random.Random(SEED)\nbase_text = \"\\n\".join(\" \".join(sentence(rng, RU_SLOTS) for _ in range(4))\n                      for _ in range(4000))\n\ndef usable_checkpoint(path: Path):\n    \"\"\"Чекпойнт годится, только если его словарь знает управляющие токены чата.\n\n    Словарь без `<|eot_id|>` уронил бы ноутбук на первой же маске лосса, причём\n    с невнятным KeyError. Ноутбук 1 резервирует эти идентификаторы заранее, но\n    чекпойнт мог быть собран старой версией — поэтому проверяем явно.\n    \"\"\"\n    if not (path / \"config.json\").exists():\n        return None, None, \"чекпойнта ноутбука 1 рядом нет\"\n    tok = BBPETokenizer.load(path / \"tokenizer.json\")\n    missing = [s for s in CHAT_SPECIALS if s not in tok.specials]\n    if missing:\n        return None, None, f\"в словаре чекпойнта нет токенов {missing}\"\n    from minillm.train import load_checkpoint\n    model, _, _, _ = load_checkpoint(path, device=DEVICE)\n    return model, tok, None\n\nCHECKPOINT = Path(\"runs/pretrain/final\")\nbase_model, tokenizer, reason = usable_checkpoint(CHECKPOINT)\nif base_model is not None:\n    print(\"загружен чекпойнт ноутбука 1:\", base_model.num_parameters(), \"параметров\")\nelse:\n    print(f\"учим базовую модель сами: {reason}\")\n    tokenizer = BBPETokenizer.train(base_text, vocab_size=1024, specials=CHAT_SPECIALS)\n    cfg = MiniLLMConfig.profile(\"S\", vocab_size=tokenizer.vocab_size,\n                                hidden_size=BUDGET[\"hidden\"],\n                                num_hidden_layers=BUDGET[\"layers\"],\n                                num_attention_heads=4, num_key_value_heads=2,\n                                head_dim=32, max_position_embeddings=BUDGET[\"seq_len\"])\n    base_model = MiniLLM(cfg).to(DEVICE)\n    stream = TokenStream.from_text(base_text, tokenizer, seq_len=128)\n    print(f\"параметров: {base_model.num_parameters():,}\")\n    train(base_model, stream, TrainConfig(steps=BUDGET[\"base_steps\"], seq_len=128,\n                                          micro_batch_size=8, optimizer=\"muon\",\n                                          seed=SEED, device=DEVICE, log_every=125))\nprint(\"словарь:\", tokenizer.vocab_size)"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. Набор инструкций\n\nДиалоги используют ту же слотовую грамматику, что и претрейн-корпус. Это уменьшает различие лексики и тем между стадиями, но не доказывает, что SFT учит только формату. Случайные сочетания слов здесь служат учебными данными и могут быть содержательно неверными. В опыте с EOT обе ветви получают одинаковые диалоги: так мы изолируем изменение маски, а не приписываем все эффекты SFT одной причине."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "from minillm.chat import ChatTemplate, Message, SFTDataset\n\n# Формулировки подобраны так, чтобы согласование работало для подлежащих\n# любого рода: «языковая модель», «трансформер», «остаточная связь».\nQUESTIONS = [\n    (\"Что делает {s}?\", \"{s} {v} {o}.\"),\n    (\"Для чего служит {s}?\", \"{s} {v} {o}. Это и есть основная функция.\"),\n    (\"Как влияет {s} на модель?\", \"{s} {v} {o} и тем самым меняет поведение модели.\"),\n]\n\ndef make_dialogues(n: int, seed: int = 0) -> list[list[Message]]:\n    rng = random.Random(seed)\n    out = []\n    for _ in range(n):\n        question, answer = rng.choice(QUESTIONS)\n        s = rng.choice(RU_SLOTS[\"subject\"])\n        v, o = rng.choice(RU_SLOTS[\"verb\"]), rng.choice(RU_SLOTS[\"obj\"])\n        out.append([\n            Message(\"system\", \"Ты отвечаешь кратко и по делу.\"),\n            Message(\"user\", question.format(s=s)),\n            Message(\"assistant\", answer.format(s=s.capitalize(), v=v, o=o)),\n        ])\n    return out\n\ntemplate = ChatTemplate()\ndialogues = make_dialogues(BUDGET[\"dialogues\"], seed=SEED)\nprint(template.render(dialogues[0], add_generation_prompt=False))"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Маска: чему именно учится модель\n\nПравило M13: учим ответы ассистента и **закрывающий `<|eot_id|>`**; не учим\nсистемный промпт, реплики пользователя и заголовки ролей — их пишет рантайм."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "EOT_ID = tokenizer.specials[\"<|eot_id|>\"]\nPAD_ID = tokenizer.specials[\"<|begin_of_text|>\"]\n\nids, mask = template.encode_with_mask(dialogues[0], tokenizer)\nprint(f\"токенов: {len(ids)}, обучаемых: {sum(mask)} \"\n      f\"({template.trainable_fraction(mask):.1%})\\n\")\n\nprint(f\"{'токен':<22} {'id':>6}  учим\")\nfor token_id, flag in list(zip(ids, mask)):\n    piece = tokenizer.decode([token_id]).replace(\"\\n\", \"\\\\n\")\n    print(f\"{piece!r:<22} {token_id:>6}  {'ДА' if flag else '—'}\")"
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "dataset, stats = SFTDataset.from_dialogues(dialogues, tokenizer, template,\n                                           seq_len=BUDGET[\"seq_len\"], pad_id=PAD_ID)\nprint(\"упаковка:\", stats)\nprint(f\"\\nбез упаковки понадобилось бы {stats['dialogues']} строк по \"\n      f\"{BUDGET['seq_len']} токенов,\")\nprint(f\"с упаковкой — {stats['bins']}: экономия ×{stats['packing_ratio']}, \"\n      f\"padding {stats['padding_fraction']:.1%}\")"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "Упаковка здесь корректностная, а не только экономическая. Вместе с `ids` и\n`labels` набор данных возвращает `segment_ids`; модель строит блочно-диагональную\ncausal mask и сбрасывает RoPE-позиции внутри каждого диалога. Поэтому изменение\nодного packed-примера не может повлиять на logits соседнего примера. `<|eot_id|>`\nобозначает границу протокола, но сам по себе такой изоляции не обеспечил бы."
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 4. SFT\n\nОбучаем ту же модель тем же циклом — меняется только источник батчей: вместо потока токенов приходит тройка `(ids, labels, segment_ids)`: −100\nвыключает прямой loss, а segment IDs изолируют независимые диалоги в attention.\n\n\nПотеря SFT и проверочная потеря усредняются по обучаемым целям после причинного сдвига. При накоплении градиентов каждый микробатч получает вес, пропорциональный числу таких целей, чтобы изменение разбиения не меняло выбранную функцию потерь."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "import copy\n\nsft_model = copy.deepcopy(base_model)\nsft_cfg = TrainConfig(steps=BUDGET[\"sft_steps\"], seq_len=BUDGET[\"seq_len\"],\n                      micro_batch_size=BUDGET[\"sft_batch\"], optimizer=\"muon\",\n                      seed=SEED, device=DEVICE, log_every=BUDGET[\"sft_steps\"] // 4,\n                      out_dir=\"runs/sft\")\nsft_state = train(sft_model, dataset, sft_cfg)"
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "from minillm.generate import SamplingConfig, generate\n\ndef ask(model, question: str, max_new_tokens: int = 60, temperature: float = 0.0) -> tuple[str, int]:\n    ids, _ = template.encode_with_mask(\n        [Message(\"system\", \"Ты отвечаешь кратко и по делу.\"),\n         Message(\"user\", question)], tokenizer, add_generation_prompt=True)\n    out, stats = generate(model, ids, max_new_tokens,\n                          SamplingConfig(temperature=temperature, seed=SEED),\n                          stop_tokens={EOT_ID})\n    answer = tokenizer.decode(out[len(ids):])\n    return answer, stats.generated_tokens\n\nquestion = \"Что делает токенизатор?\"\nfor label, model in ((\"до SFT\", base_model), (\"после SFT\", sft_model)):\n    answer, n = ask(model, question)\n    print(f\"--- {label} ({n} токенов)\\n{answer!r}\\n\")"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 5. Главный эксперимент: забытый `<|eot_id|>`\n\nПовторяем SFT ровно с одним изменением: `train_eot=False`. Данные те же,\nпоследовательности те же — отличается **одна позиция маски** на каждый диалог."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "broken_dataset, _ = SFTDataset.from_dialogues(dialogues, tokenizer, template,\n                                              seq_len=BUDGET[\"seq_len\"], pad_id=PAD_ID,\n                                              train_eot=False)\na_ids, a_mask = template.encode_with_mask(dialogues[0], tokenizer, train_eot=True)\nb_ids, b_mask = template.encode_with_mask(dialogues[0], tokenizer, train_eot=False)\ndiff = [i for i, (x, y) in enumerate(zip(a_mask, b_mask)) if x != y]\nprint(f\"последовательности идентичны: {a_ids == b_ids}\")\nprint(f\"маски различаются в позициях {diff} — это {tokenizer.decode([a_ids[diff[0]]])!r}\")\n\nbroken_model = copy.deepcopy(base_model)\ntrain(broken_model, broken_dataset,\n      TrainConfig(steps=BUDGET[\"sft_steps\"], seq_len=BUDGET[\"seq_len\"],\n                  micro_batch_size=BUDGET[\"sft_batch\"], optimizer=\"muon\", seed=SEED,\n                  device=DEVICE, log_every=BUDGET[\"sft_steps\"], out_dir=\"runs/sft_broken\"))"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "eot_rows = []\n\nprint(f\"{'модель':<16} {'p(<|eot_id|>) после ответа':>28} {'длина ответа':>14}\")\nfor label, model in ((\"маска верная\", sft_model), (\"EOT забыт\", broken_model)):\n    ids, _ = template.encode_with_mask(dialogues[0], tokenizer)\n    prefix = ids[:len(ids) - 1]        # всё, кроме закрывающего EOT\n    with torch.no_grad():\n        logits, _ = model(torch.tensor([prefix], device=DEVICE))\n        p_eot = torch.softmax(logits[0, -1].float(), dim=-1)[EOT_ID].item()\n    _, generated = ask(model, \"Что делает токенизатор?\", max_new_tokens=120)\n    eot_rows.append(dict(label=label, probability=p_eot, generated_tokens=generated))\n    print(f\"{label:<16} {p_eot:>28.4f} {generated:>14}\")\n\nanswer, n = ask(broken_model, \"Что делает токенизатор?\", max_new_tokens=120)\nprint(f\"\\nответ модели с забытым EOT ({n} токенов):\\n{answer!r}\")\n\n# Use one correct mask for both models; the generator is a diagnostic fixture.\nfrom minillm.train import evaluate\ncheck_dialogues = make_dialogues(32, seed=SEED + 991)\ncheck_dataset, _ = SFTDataset.from_dialogues(check_dialogues, tokenizer, template,\n    seq_len=BUDGET[\"seq_len\"], pad_id=PAD_ID, train_eot=True)\nshared_scores = {name: evaluate(model, check_dataset, sft_cfg, batches=4)\n                 for name, model in ((\"correct_mask\", sft_model), (\"omitted_eot\", broken_model))}\nassert sum(a_mask) == sum(b_mask) + len(diff)\nprint(\"EOT supervised positions:\", sum(a_mask), \"vs\", sum(b_mask))\nprint(\"Shared correct-mask evaluation:\", shared_scores)"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "Исключение EOT меняет и сумму потерь, и число обучаемых позиций в знаменателе среднего. Поэтому обучающие loss двух ветвей относятся к разным целям и не обязаны совпадать. Проверка с той же ошибочной маской может скрыть отсутствие обучения завершению ответа.\n\nОбе модели оцениваются на одном наборе с корректной маской, включающей EOT. Отдельно смотрим вероятность EOT после заданного ответа и фактическую длину жадной генерации. Низкая вероятность одного токена и незавершившаяся генерация — связанные, но разные наблюдения. Короткий режим может ещё не дать резкого контраста; таблица должна показать его фактическую величину."
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 6. Пары предпочтений\n\nПары здесь строит авторский шаблон, без генерации моделью и без человеческой разметки. `chosen` содержит краткий ответ из `QUESTIONS` с подстановкой слов, а `rejected` добавляет два одинаковых предложения-заполнителя. Оба ответа завершаются EOT.\n\nТакая конструкция задаёт прозрачное предпочтение краткости. Она позволяет наблюдать направление обновления DPO, но не моделирует разнообразие реальных предпочтений. Чтобы изучать сбор ответов политики, потребуется отдельный опыт с генерацией, фиксированной версией модели и независимой оценкой кандидатов."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "from minillm.preference import (DPOConfig, PreferencePair, freeze_reference, train_dpo)\n\nFILLER = \" Это важно и нужно учитывать при работе с моделью.\"\n\ndef build_pairs(n: int, seed: int = 0) -> list[PreferencePair]:\n    rng = random.Random(seed)\n    pairs = []\n    for _ in range(n):\n        question, answer = rng.choice(QUESTIONS)\n        s = rng.choice(RU_SLOTS[\"subject\"])\n        v, o = rng.choice(RU_SLOTS[\"verb\"]), rng.choice(RU_SLOTS[\"obj\"])\n        prompt_ids, _ = template.encode_with_mask(\n            [Message(\"user\", question.format(s=s))], tokenizer,\n            add_generation_prompt=True)\n        short = answer.format(s=s.capitalize(), v=v, o=o)\n        verbose = short + FILLER * 2\n        pairs.append(PreferencePair(\n            prompt_ids=prompt_ids,\n            chosen_ids=tokenizer.encode(short) + [EOT_ID],\n            rejected_ids=tokenizer.encode(verbose) + [EOT_ID],\n        ))\n    return pairs\n\npairs = build_pairs(192, seed=SEED)\nprint(f\"пар: {len(pairs)}\")\nprint(\"chosen  :\", tokenizer.decode(pairs[0].chosen_ids)[:90])\nprint(\"rejected:\", tokenizer.decode(pairs[0].rejected_ids)[:90])"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 7. DPO\n\nЗамороженная копия SFT-модели задаёт референсные вероятности. DPO сравнивает изменения логарифмов вероятностей двух ответов относительно этой копии. После обучения для инференса нужна только обновлённая политика.\n\n`margin` — средняя разность неявных наград, `accuracy` — доля пар, в которых она положительна. Ровно нулевая разность здесь не считается успехом. Эти показатели полезно читать вместе с loss и отдельными ответами. Ни значение 0,5, ни быстрое достижение 1,0 сами по себе не устанавливают причину: возможны лёгкие пары, особенности ничьих, слабое обучение, утечка или переобучение."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "policy = copy.deepcopy(sft_model)\nreference = freeze_reference(sft_model)\ndpo_state = train_dpo(policy, pairs,\n                      DPOConfig(beta=0.1, lr=1e-4, steps=BUDGET[\"dpo_steps\"],\n                                batch_size=BUDGET[\"dpo_batch\"], seed=SEED,\n                                device=DEVICE, log_every=BUDGET[\"dpo_steps\"] // 8),\n                      pad_id=PAD_ID, reference=reference)"
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "import matplotlib.pyplot as plt\n\nsteps = [h[\"step\"] for h in dpo_state.history]\nfig, axes = plt.subplots(1, 3, figsize=(15, 4))\naxes[0].plot(steps, [h[\"loss\"] for h in dpo_state.history], color=\"#5E81AC\")\naxes[0].axhline(np.log(2), ls=\"--\", lw=1, color=\"#4C566A\", label=\"ln 2 — старт\")\naxes[0].set_title(\"DPO-лосс\"); axes[0].legend()\naxes[1].plot(steps, [h[\"margin\"] for h in dpo_state.history], color=\"#A3BE8C\")\naxes[1].axhline(0, ls=\"--\", lw=1, color=\"#4C566A\")\naxes[1].set_title(\"margin: разность неявных наград\")\naxes[2].plot(steps, [h[\"chosen_reward\"] for h in dpo_state.history],\n             label=\"chosen\", color=\"#A3BE8C\")\naxes[2].plot(steps, [h[\"rejected_reward\"] for h in dpo_state.history],\n             label=\"rejected\", color=\"#BF616A\")\naxes[2].set_title(\"неявные награды\"); axes[2].legend()\nfor ax in axes:\n    ax.set_xlabel(\"шаг\"); ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nlast = dpo_state.history[-1]\nprint(f\"margin {dpo_state.history[0]['margin']:+.3f} → {last['margin']:+.3f}, \"\n      f\"accuracy {last['accuracy']:.2f}\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "Третий график показывает два слагаемых разности. DPO может увеличивать разрыв, не увеличивая абсолютную вероятность предпочтённого ответа; неявная награда тоже не является прямой оценкой полезности. Дрейф обоих значений вниз требует анализа, но сам по себе не доказывает деградацию текста.\n\nВ наших парах длина и повтор заполнителя дают простой отличительный признак. Проверьте, насколько быстро их разделяет текущий запуск. Затем уменьшите число повторов и сравните динамику, сохранив остальные условия. Чтобы судить о качестве, добавьте отложенные пары и проверку содержания; красивый график обучения не заменяет эти измерения."
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "question = \"Для чего служит оптимизатор?\"\nfor label, model in ((\"после SFT\", sft_model), (\"после DPO\", policy)):\n    answer, n = ask(model, question, max_new_tokens=80, temperature=0.7)\n    print(f\"--- {label} ({n} токенов)\\n{answer!r}\\n\")\nprint('Два ответа — иллюстрация. Для вывода об изменении поведения сравните несколько фиксированных запросов и сохраните исходы.')"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "## 8. Сохранение\n\nПосле DPO сохраняем **inference-артефакт**: веса, `config.json`, словарь и JSON\nс происхождением стадий. Это не resumable checkpoint — DPO-веса уже не\nсоответствуют состояниям SFT-оптимизатора, а выдавать старые моменты за пригодные\nдля продолжения обучения было бы тихой ошибкой. Полный resumable checkpoint\nпретрейна остаётся в `runs/pretrain/final`."
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "from minillm.train import save_model_artifact\n\nout_dir = Path(\"runs/posttrain/final\")\nsave_model_artifact(out_dir, policy, {\n    \"stage\": \"dpo\",\n    \"sft_steps\": sft_state.step,\n    \"dpo_steps\": dpo_state.step,\n    \"note\": \"inference artifact; DPO optimizer state is intentionally not stored\",\n})\ntokenizer.save(out_dir / \"tokenizer.json\")\nprint(\"сохранено:\", sorted(p.name for p in out_dir.iterdir()))\n\nimport json\nmetrics = {\"seed\": SEED, \"budget\": BUDGET, \"eot\": eot_rows,\n           \"shared_mask_scores\": shared_scores, \"dpo_history\": dpo_state.history}\n(out_dir / \"teaching_metrics.json\").write_text(\n    json.dumps(metrics, ensure_ascii=False, indent=2, allow_nan=False), encoding=\"utf-8\")"
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "## 9. Итог и границы\n\nМы проследили, как шаблон диалога, маска целей и упаковка определяют задачу SFT. Опыт с EOT сравнивает две маски и проверяет результат по общему правилу. DPO использует заданные шаблонные предпочтения; направление margin описывает именно эти пары.\n\nSFT способен обучать и формату, и содержанию. Обучение по предпочтениям меняет поведение в соответствии с сигналом, качество которого тоже нужно проверять. Здесь измерения относятся к синтетическим диалогам и заданным парам. Полезность реальных ответов и результаты отдельного RL-обучения потребуют собственных экспериментов и критериев оценки.\n\nСохраните реальные значения loss, margin, вероятности EOT и длины ответов вместе с бюджетом. Они относятся к этому запуску и этому корпусу. Далее ноутбук 3 проверяет инференс, а ноутбук 4 — контролируемые изменения архитектуры и обучения."
+        }
+      ]
+    },
+    {
+      "id": "capstone-03",
+      "kind": "capstone",
+      "title": "Капстоун · ноутбук 3. Инференс",
+      "format": "ipynb",
+      "filename": "03_inference.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/ru/03_inference.ipynb",
+      "bytes": 37070,
+      "sha256": "b127207f6453d5a933996810d847625d4dad2c78440e1c9849edbaabeeeb56f8",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Капстоун · ноутбук 3. Инференс\n\n*Курс «Modern LLMs» · итоговый практикум*\n\nТеперь исследуем работу обученной модели: отдельно измерим prefill и decode, посчитаем память KV-кэша и проверим повторное использование префикса. Затем сравним приближённые форматы весов и выполним спекулятивное декодирование. М10 и М11 дают формулы и условия, с которыми мы сопоставим опыт.\n\nЧитаем три вида результатов отдельно: геометрические равенства, изменения распределения ответов и времена данного запуска. Для квантизации используем синтетический корпус с широким словарём и несколько метрик. Его сложность не гарантирует заметной деградации, а малый loss не гарантирует её отсутствия.\n\nСеть не нужна. Ноутбук использует CPU или доступный GPU; длительность зависит от устройства и бюджета. Первый проход выполняет все ячейки по порядку. Во втором измените одну настройку и объясните, какое измерение должно на неё отреагировать."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Окружение"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"пакет проекта: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm уже доступен\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Загрузите ZIP-пакет Capstone из урока Stepik. Структура каталогов будет восстановлена автоматически.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"архив проекта: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm не найден. Скачайте языковой ZIP-пакет Capstone из урока Stepik и либо распакуйте его целиком, либо загрузите ZIP в текущую сессию Colab.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport copy, math, os, random, time\nimport torch, numpy as np\nimport matplotlib.pyplot as plt\n\nSEED = 0\ntorch.manual_seed(SEED)\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nfrom minillm.precision import autocast_context, model_parameter_dtype, resolve_compute_dtype\nCOMPUTE_DTYPE = resolve_compute_dtype(DEVICE, \"auto\")\nprint(\"torch\", torch.__version__, \"| устройство:\", DEVICE, \"| вычисления:\", COMPUTE_DTYPE)"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "### 1.1. Передача модели из ноутбука 2\n\nПри последовательном запуске в одном каталоге откроем `runs/posttrain/final` и выполним генерацию сохранённой моделью. Если артефакта нет, ячейка сообщит об этом. Дальнейшие сравнения используют отдельную модель и общий набор входов: так постобучение не становится скрытой переменной опыта с квантизацией."
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "from minillm.chat import ChatTemplate, Message\nfrom minillm.generate import SamplingConfig, generate\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.train import load_model_artifact\n\nPOSTTRAIN_ARTIFACT = Path(\"runs/posttrain/final\")\nif (POSTTRAIN_ARTIFACT / \"model.pt\").exists():\n    handoff_model, handoff_meta = load_model_artifact(POSTTRAIN_ARTIFACT, DEVICE)\n    handoff_tokenizer = BBPETokenizer.load(POSTTRAIN_ARTIFACT / \"tokenizer.json\")\n    handoff_template = ChatTemplate()\n    handoff_ids, _ = handoff_template.encode_with_mask(\n        [Message(\"system\", \"Ты отвечаешь кратко и по делу.\"),\n         Message(\"user\", \"Что делает токенизатор?\")],\n        handoff_tokenizer, add_generation_prompt=True)\n    handoff_out, handoff_stats = generate(\n        handoff_model, handoff_ids, 40, SamplingConfig(temperature=0.0),\n        stop_tokens={handoff_tokenizer.specials[\"<|eot_id|>\"]})\n    print(\"post-training handoff:\", handoff_meta)\n    print(\"ответ:\", repr(handoff_tokenizer.decode(handoff_out[len(handoff_ids):])))\n    print(\"KV bytes:\", handoff_stats.kv_bytes)\nelse:\n    print(\"post-training артефакт не найден — self-contained маршрут продолжается\")"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "## 2. Корпус для сравнений\n\nСоберём псевдоязык из случайных слов с неравномерными частотами. Общий закон генерации известен, но конкретные последовательности различаются. Это позволяет сравнить модели на контролируемых входах; оно не исключает запоминания конечного обучающего набора.\n\nДанные для проверки отделим до обучения токенизатора и модели. Метрики на них показывают изменение предсказаний в данной синтетической задаче. Для выводов о переводе, коде или полезности ответов понадобятся соответствующие задачи."
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "from minillm.tokenizer import BBPETokenizer\nfrom minillm.data import TokenStream\n\ndef high_entropy_corpus(n_lines: int = 12_000, lexicon: int = 600,\n                        seed: int = 0) -> str:\n    \"\"\"Псевдоязык: большой лексикон, зипфовское распределение частот.\n\n    Неравномерные частоты задают контролируемую задачу предсказания.\n    Loss измеряется на BPE-токен, поэтому энтропия распределения слов\n    не является готовым эталоном для этой величины.\n    \"\"\"\n    rng = random.Random(seed)\n    alphabet = \"абвгдеиклмнопрстуфхцчшы\"\n    words = [\"\".join(rng.choice(alphabet) for _ in range(rng.randint(3, 8)))\n             for _ in range(lexicon)]\n    weights = [1.0 / (i + 1) ** 0.9 for i in range(lexicon)]   # зипфовский хвост\n    lines = []\n    for _ in range(n_lines):\n        k = rng.randint(6, 14)\n        lines.append(\" \".join(rng.choices(words, weights=weights, k=k)) + \".\\n\")\n    return \"\".join(lines)\n\ncorpus = high_entropy_corpus(n_lines=8_000, seed=SEED)\nlines = corpus.splitlines(keepends=True)\ncut = int(len(lines) * 0.9)\ntrain_text, eval_text = \"\".join(lines[:cut]), \"\".join(lines[cut:])\ntokenizer = BBPETokenizer.train(train_text, vocab_size=1024, specials=[\"<|eos|>\"])\nstream = TokenStream.from_text(train_text, tokenizer, seq_len=128)\neval_stream = TokenStream.from_text(eval_text, tokenizer, seq_len=128)\nprint(f\"корпус {len(corpus):,} символов · словарь {tokenizer.vocab_size} · \"\n      f\"{len(stream):,} окон · sha {stream.checksum()}\")\nprint(f\"loss равномерной модели: ln(V) = \"\n      f\"{math.log(tokenizer.vocab_size):.3f}\")"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "## 3. Две модели: target и черновик\n\nСпекулятивному декоду нужны две модели одного словаря: большая, чьё\nраспределение мы обязаны сохранить, и маленькая, которая дёшево предлагает\nкандидатов. Обучаем обе на одних данных — так черновик оказывается похож на\ntarget, а от похожести напрямую зависит доля приёма (M11)."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "from minillm.config import MiniLLMConfig\nfrom minillm.model import MiniLLM\nfrom minillm.train import TrainConfig, evaluate, train\n\ndef build(hidden: int, layers: int, heads: int, kv: int) -> MiniLLM:\n    cfg = MiniLLMConfig.profile(\"S\", vocab_size=tokenizer.vocab_size,\n                                hidden_size=hidden, num_hidden_layers=layers,\n                                num_attention_heads=heads, num_key_value_heads=kv,\n                                head_dim=hidden // heads, max_position_embeddings=256)\n    return MiniLLM(cfg).to(DEVICE)\n\n# Бюджет рассчитан на CPU. Увеличение числа шагов — отдельный опыт:\n# после него заново измеряются loss и чувствительность к квантизации.\nmodels = {}\nfor name, (hidden, layers, heads, kv, steps) in {\n    \"target\": (192, 4, 6, 2, 250),\n    \"draft\":  (96, 2, 4, 2, 250),\n}.items():\n    if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n        steps = 12\n    torch.manual_seed(SEED)\n    model = build(hidden, layers, heads, kv)\n    print(f\"--- {name}: {model.num_parameters():,} параметров\")\n    train(model, stream, TrainConfig(steps=steps, seq_len=128, micro_batch_size=8,\n                                     optimizer=\"muon\", seed=SEED, device=DEVICE, compute_dtype=\"auto\",\n                                     log_every=steps // 2))\n    models[name] = model\n\ntarget, draft = models[\"target\"], models[\"draft\"]\neval_cfg = TrainConfig(seq_len=128, micro_batch_size=8, device=DEVICE, compute_dtype=\"auto\")\nbase_loss = evaluate(target, eval_stream, eval_cfg, batches=(2 if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\" else 16))\nBASELINE_COMPUTE = resolve_compute_dtype(DEVICE, \"auto\")\nBASELINE_PARAMETER = model_parameter_dtype(target)\nBASELINE_LABEL = f\"{BASELINE_PARAMETER}/{BASELINE_COMPUTE}\"\nBASELINE_STORAGE_BITS = 32.0 if BASELINE_PARAMETER == \"fp32\" else 16.0\nprint(\"target eval loss:\", base_loss, \"uniform reference:\", math.log(tokenizer.vocab_size))"
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 4. Prefill и decode: что измеряет время\n\nPrefill обрабатывает позиции промпта совместно; при decode кэш позволяет не пересчитывать прежние K/V. В плотной модели с малым батчем чтение весов может ограничивать скорость decode, тогда как длинный prefill часто лучше использует вычислительные блоки. М10 выводит условия через арифметическую интенсивность.\n\nВ этой реализации малые матрицы, накладные расходы Python и работа кэша тоже влияют на время. Зависимость задержки от длины сама по себе не доказывает аппаратное узкое место. Зафиксируем устройство, типы и длины, затем сравним измеренные фазы; для диагноза потребовался бы профилировщик."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "from minillm.generate import SamplingConfig, generate\n\nrows = []\nfor prompt_len in (16, 32, 64, 128):\n    prompt = tokenizer.encode(corpus[:4000])[:prompt_len]\n    _, stats = generate(target, prompt, 32, SamplingConfig(temperature=0.0))\n    rows.append((prompt_len, stats.prefill_seconds * 1000,\n                 stats.decode_seconds / stats.generated_tokens * 1000,\n                 stats.kv_bytes / 1024))\n\nprint(f\"{'промпт':>7} {'prefill, мс':>12} {'мс/токен decode':>17} {'KV-кэш, KiB':>13}\")\nfor prompt_len, prefill_ms, decode_ms, kv_kib in rows:\n    print(f\"{prompt_len:>7} {prefill_ms:>12.2f} {decode_ms:>17.2f} {kv_kib:>13.1f}\")\n\nprint('Сравните измеренные фазы; для определения узкого места нужны повторности и профилирование.')"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "## 5. KV-кэш: арифметика и три варианта внимания\n\nФормула из M5: `2 · L · H_kv · d_head · sizeof(dtype)` байт на токен. Здесь\nона не цитируется, а сверяется с фактически выделенной памятью."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "from minillm.config import gqa_variants, kv_bytes_per_token\n\nvariants = gqa_variants(target.cfg)\nruntime_bytes = 4 if BASELINE_COMPUTE == \"fp32\" else 2\nprint(f\"{'схема':>6} {'H_kv':>5} {('байт/токен ' + BASELINE_COMPUTE):>20} {'на 128K контекста':>20}\")\nfor name, cfg in variants.items():\n    per_token = kv_bytes_per_token(cfg, dtype_bytes=runtime_bytes)\n    print(f\"{name:>6} {cfg.num_key_value_heads:>5} {per_token:>20,} \"\n          f\"{per_token * 131072 / 1024 ** 3:>18.2f} ГиБ\")\n\n# Сверка формулы с фактом на нашей модели.\nprompt = tokenizer.encode(corpus[:2000])[:48]\ncache = target.new_cache()\nwith torch.no_grad():\n    with autocast_context(DEVICE, BASELINE_COMPUTE):\n        target(torch.tensor([prompt], device=DEVICE), cache=cache)\nactual_bytes = cache.nbytes() // (len(prompt) * 2 * target.cfg.num_hidden_layers * target.cfg.kv_dim)\nexpected = kv_bytes_per_token(target.cfg, dtype_bytes=actual_bytes) * len(prompt)\nprint(f\"\\nфактический dtype кэша: {str(cache.dtype()).replace('torch.', '')}\")\nprint(f\"факт {cache.nbytes():,} Б == формула {expected:,} Б: {cache.nbytes() == expected}\")\n\nassert cache.nbytes() == expected"
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "### Префиксный кэш\n\nПовторяющийся системный префикс можно вычислить один раз и сохранить его K/V. Для каждого запроса берём отдельную копию кэша: хвост одного запроса не должен попасть в другой. В опыте используется жадный выбор, а позиции, маска и веса остаются прежними.\n\nПроверяем совпадение полученных токенов в текущем запуске. Эквивалентность логитов понимается с численным допуском: почти равные лидеры могут поменяться местами при округлении. При выборке потребовалось бы согласовать ещё и случайность; одинаковое распределение не гарантирует одинаковую отдельную последовательность."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "system_prompt = tokenizer.encode(corpus[:1200])[:96]\nquestions = [tokenizer.encode(corpus[5000 + 500 * i:5000 + 500 * i + 200])[:16]\n             for i in range(4)]\n\nwarm = target.new_cache()\nif DEVICE.startswith(\"cuda\"):\n    torch.cuda.synchronize()\nt0 = time.perf_counter()\nwith torch.no_grad():\n    with autocast_context(DEVICE, BASELINE_COMPUTE):\n        target(torch.tensor([system_prompt], device=DEVICE), cache=warm)\nif DEVICE.startswith(\"cuda\"):\n    torch.cuda.synchronize()\nwarmup_ms = (time.perf_counter() - t0) * 1000\n\ncold_total = hot_total = 0.0\nidentical = True\nfor tail in questions:\n    cold, cold_stats = generate(target, system_prompt + tail, 16,\n                                SamplingConfig(temperature=0.0))\n    hot, hot_stats = generate(target, system_prompt + tail, 16,\n                              SamplingConfig(temperature=0.0), cache=warm.clone())\n    identical &= cold == hot\n    cold_total += cold_stats.prefill_seconds\n    hot_total += hot_stats.prefill_seconds\n\nprint(f\"результаты совпадают: {identical}\")\nprint(f\"prefill без кэша:  {cold_total * 1000:6.1f} мс на {len(questions)} запросов\")\nprint(f\"prefill с кэшем:   {hot_total * 1000:6.1f} мс (+{warmup_ms:.1f} мс прогрева один раз)\")\nprint(f\"экономия при {len(questions)} запросах: \"\n      f\"×{cold_total / max(hot_total, 1e-9):.1f} на фазе prefill\")"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "## 6. Квантизация и три вида расхождения\n\nСначала посчитаем хранение: для полной группы из $g$ четырёхбитных весов с восьмибитным масштабом получается $(4g+8)/g$ бит на вес — 4,25 при $g=32$ и 4,50 при $g=16$. Реальный отчёт учитывает также неполные группы и метаданные. Реализации MXFP4/NVFP4 здесь учебные приближения.\n\nLoss оценивает вероятность правильных токенов, KL — отличие всего распределения от исходной модели, top-1 agreement — совпадение наиболее вероятного токена. Метрики отвечают на разные вопросы; их чувствительность зависит от входов и ошибок. Даже заметное изменение top-1 не переводится автоматически в заметность для пользователя, поэтому конечную задачу проверяют отдельно."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "from minillm.generate import quantize_model\n\nprobe = eval_stream.batch(torch.arange(16)).to(DEVICE)\nwith torch.no_grad():\n    with autocast_context(DEVICE, BASELINE_COMPUTE):\n        reference_logits, _ = target(probe)\nreference_probs = torch.softmax(reference_logits.float(), dim=-1)\nreference_top1 = reference_logits.argmax(-1)\n\nprint(f\"{'формат':>7} {'эфф. бит/вес':>12} {'сжатие':>8} {'лосс':>8} {'Δлосс':>8} \"\n      f\"{'KL, нат':>9} {'top-1 совп.':>12}\")\nprint(f\"{BASELINE_LABEL:>7} {BASELINE_STORAGE_BITS:>12.2f} {'×1.00':>8} {base_loss:>8.4f} {0.0:>8.4f} \"\n      f\"{0.0:>9.5f} {1.0:>11.1%}\")\n\nquant_rows = []\nfor method in (\"int8\", \"nvfp4\", \"mxfp4\"):\n    clone = copy.deepcopy(target)\n    report = quantize_model(clone, method)\n    loss = evaluate(clone, eval_stream, eval_cfg, batches=(2 if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\" else 16))\n    with torch.no_grad():\n        with autocast_context(DEVICE, BASELINE_COMPUTE):\n            logits, _ = clone(probe)\n    probs = torch.softmax(logits.float(), dim=-1)\n    kl = torch.sum(reference_probs * (torch.log(reference_probs + 1e-12)\n                                      - torch.log(probs + 1e-12)), dim=-1).mean().item()\n    agreement = (logits.argmax(-1) == reference_top1).float().mean().item()\n    quant_rows.append((method, report, loss, kl, agreement))\n    print(f\"{method:>7} {report['effective_bits_per_weight']:>12.2f} \"\n          f\"{'×' + format(report['compression_vs_runtime_fp32'], '.2f'):>8} {loss:>8.4f} \"\n          f\"{loss - base_loss:>+8.4f} {kl:>9.5f} {agreement:>11.1%}\")"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "fig, axes = plt.subplots(1, 3, figsize=(15, 4))\nnames = [BASELINE_LABEL] + [r[0] for r in quant_rows]\ncolors = [\"#4C566A\", \"#A3BE8C\", \"#EBCB8B\", \"#BF616A\"]\n\naxes[0].bar(names, [base_loss] + [r[2] for r in quant_rows], color=colors)\naxes[0].set_ylim(min([base_loss] + [r[2] for r in quant_rows]) * 0.98, max([base_loss] + [r[2] for r in quant_rows]) * 1.02)\naxes[0].set_title(\"лосс (обрезанная ось!)\"); axes[0].set_ylabel(\"нат\")\n\naxes[1].bar(names, [0.0] + [r[3] for r in quant_rows], color=colors)\naxes[1].set_title(\"KL(baseline ‖ fake quant)\"); axes[1].set_ylabel(\"нат\")\n\naxes[2].bar(names, [1.0] + [r[4] for r in quant_rows], color=colors)\naxes[2].set_ylim(0, 1.05); axes[2].set_title(\"top-1 agreement с baseline\")\n\nfor ax in axes:\n    ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()"
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "Сравните все три графика и обратите внимание на начало оси loss. Близкие столбцы могут сочетаться с заметным изменением распределений. Упорядоченность форматов в одном запуске не является универсальным рейтингом: она зависит от весов, группировки, масштаба и задачи.\n\nЗдесь применяется fake quant: веса округляются и возвращаются в рабочий формат. Так проверяется ошибка представления без реализации упакованного вычислительного ядра. Полученные времена не доказывают ускорение четырёхбитного инференса; такое ускорение нужно измерять с соответствующим хранением и ядрами."
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "## 7. Спекулятивный декод\n\nЧерновик предлагает `k` токенов подряд, target проверяет их **одним** проходом.\nПравило приёма `min(1, p/q)` с добором из нормированного остатка `max(0, p−q)`\nсохраняет распределение target ровно (M11) — ускорение бесплатно по качеству.\n\nКлючевая метрика — не доля приёма сама по себе, а **сколько токенов приходится\nна один проход большой модели**. Без спекулятива она равна единице по\nопределению."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "from minillm.generate import speculative_generate\n\nprompt = tokenizer.encode(corpus[:2000])[:32]\nprint(f\"{'k':>3} {'приём':>8} {'токенов/проход target':>24} {'проходов draft':>16}\")\nlookahead_rows = []\nfor k in (1, 2, 4, 8):\n    _, stats = speculative_generate(target, draft, prompt, 48, lookahead=k,\n                                    sampling=SamplingConfig(temperature=1.0, seed=SEED))\n    lookahead_rows.append((k, stats.acceptance_rate, stats.tokens_per_target_forward,\n                           stats.draft_decode_forwards))\n    print(f\"{k:>3} {stats.acceptance_rate:>7.1%} \"\n          f\"{stats.tokens_per_target_forward:>24.2f} {stats.draft_forwards:>16}\")"
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "# Черновик, равный target: правило min(1, p/q) обязано принимать всё.\n_, twin = speculative_generate(target, copy.deepcopy(target), prompt, 32, lookahead=4,\n                               sampling=SamplingConfig(temperature=1.0, seed=SEED))\nprint(f\"черновик == target: приём {twin.acceptance_rate:.1%}, \"\n      f\"{twin.tokens_per_target_forward:.2f} токена на проход\")\n\nfig, axes = plt.subplots(1, 2, figsize=(11, 4))\nks = [r[0] for r in lookahead_rows]\naxes[0].plot(ks, [r[1] for r in lookahead_rows], \"o-\", color=\"#5E81AC\")\naxes[0].set_xlabel(\"глубина черновика k\"); axes[0].set_ylabel(\"доля приёма\")\naxes[0].set_title(\"измеренная доля принятия\")\naxes[1].plot(ks, [r[2] for r in lookahead_rows], \"o-\", color=\"#A3BE8C\")\naxes[1].axhline(1.0, ls=\"--\", lw=1, color=\"#4C566A\", label=\"без спекулятива\")\naxes[1].set_xlabel(\"глубина черновика k\")\naxes[1].set_ylabel(\"токенов на проход target\")\naxes[1].set_title(\"выдача на проверочный проход\"); axes[1].legend()\nfor ax in axes:\n    ax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nimport json\ninference_record = {\"seed\": SEED, \"device\": DEVICE,\n    \"compute_dtype\": BASELINE_COMPUTE, \"parameter_dtype\": BASELINE_PARAMETER,\n    \"evaluation_sha\": eval_stream.checksum(), \"base_loss\": base_loss,\n    \"quantization\": [dict(method=r[0], report=r[1], loss=r[2], kl=r[3], top1=r[4]) for r in quant_rows],\n    \"speculative\": [dict(k=r[0], acceptance=r[1], tokens_per_verification=r[2], draft_decode_passes=r[3]) for r in lookahead_rows],\n    \"identical_draft_acceptance\": twin.acceptance_rate,\n    \"prefix_greedy_identical\": identical}\nPath(\"runs/inference\").mkdir(parents=True, exist_ok=True)\nPath(\"runs/inference/measurements.json\").write_text(\n    json.dumps(inference_record, ensure_ascii=False, indent=2, allow_nan=False), encoding=\"utf-8\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "Доля принятия и токены на проверочный проход описывают разные стороны опыта. При постоянной вероятности принятия увеличение длины черновика повышает ожидаемое число выданных токенов с насыщением, но реальная вероятность зависит от позиции и истории. Ни обязательного падения acceptance, ни монотонности измеренной кривой из алгоритма не следует.\n\nПринятые токены тоже требуют работы: черновик их предложил, target проверил. Сопоставьте сэкономленные проходы со стоимостью обеих моделей и не смешивайте prefill с проверкой. М11 выводит условие выгодности при заданной модели стоимости. Здесь батч равен единице, а серверная пропускная способность и зависимость от нагрузки не измеряются."
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "## 8. Итог и границы\n\nРазмер KV-кэша проверяется по геометрии и фактическому типу данных. Префиксный опыт проверяет повторное использование уже вычисленных состояний, а квантизация сравнивает несколько видов изменения предсказаний. Спекулятивный опыт считает принятие и выдачу токенов отдельно от затрат черновика.\n\nСохранённый отчёт описывает конкретное устройство, веса и входы. Небольшой замер не устанавливает аппаратное узкое место; fake quant не проверяет ускорение упакованного ядра; псевдоязык не заменяет целевые задачи. Для сравнения времени повторите прогоны после прогрева и укажите разброс. Для качества используйте отложенные примеры и разбор ошибок.\n\nДалее ноутбук 4 связывает архитектурные изменения с контролируемыми опытами и строит итоговую таблицу из измерений своего запуска."
+        }
+      ]
+    },
+    {
+      "id": "capstone-04",
+      "kind": "capstone",
+      "title": "Капстоун · ноутбук 4. Абляции: от гипотезы к измерению",
+      "format": "ipynb",
+      "filename": "04_ablations.ipynb",
+      "download": "/downloads/modern-llms/capstone/notebooks/ru/04_ablations.ipynb",
+      "bytes": 53283,
+      "sha256": "a4d57033d89cf550fc576093f7c2e2b17d8613434f5f8cdb5dad89436dbe5890",
+      "cells": [
+        {
+          "id": "markdown-001",
+          "type": "markdown",
+          "source": "# Капстоун · ноутбук 4. Абляции: от гипотезы к измерению\n\n*Курс «Modern LLMs» · итоговый практикум*\n\nДевятнадцать модулей дали нам механизмы и условия их применения. Теперь выберем несколько проверяемых вопросов: как нормализация меняет масштаб активаций, сколько памяти экономит GQA, что меняется при замене FFN экспертами и как модель решает задачу за пределами обучающих длин.\n\nПеред опытом фиксируем изменяемое свойство, остальные настройки и измерение. Иногда изменение требует нескольких согласованных полей конфига: это один содержательный фактор, но не обязательно один флаг. Уравнивание seed делает сравнение воспроизводимым; оно не делает разные архитектуры одинаковыми по всем начальным тензорам.\n\nПри первом проходе запустите ячейки и объясните каждую таблицу. Во втором выберите один опыт, повторите его с несколькими seed и проверьте гипотезу. Итоговый отчёт строится из результатов текущего запуска. Быстрый режим проверяет исполнение и не заменяет достаточное обучение."
+        },
+        {
+          "id": "markdown-002",
+          "type": "markdown",
+          "source": "## 1. Общая установка"
+        },
+        {
+          "id": "code-001",
+          "type": "code",
+          "source": "import importlib\nimport sys\nimport subprocess\nimport zipfile\nfrom pathlib import Path\n\nARCHIVE_GLOB = \"modern-llms-capstone-*.zip\"\n\ndef _activate_capstone_root(candidate: Path):\n    package_init = candidate / \"minillm\" / \"__init__.py\"\n    if not package_init.exists():\n        return None\n    root = str(candidate.resolve())\n    if root not in sys.path:\n        sys.path.insert(0, root)\n    return root\n\ndef _find_capstone_root(search_root: Path):\n    direct = _activate_capstone_root(search_root)\n    if direct:\n        return direct\n    for child in sorted(search_root.glob(\"modern-llms-capstone-*\")):\n        found = _activate_capstone_root(child)\n        if found:\n            return found\n    return None\n\ndef _safe_extract(archive_path: Path, destination: Path):\n    destination = destination.resolve()\n    with zipfile.ZipFile(archive_path) as archive:\n        for member in archive.infolist():\n            member_path = Path(member.filename)\n            if member_path.is_absolute() or \"..\" in member_path.parts:\n                raise RuntimeError(f\"unsafe path in archive: {member.filename}\")\n        archive.extractall(destination)\n\ndef ensure_minillm():\n    for candidate in (Path.cwd(), *Path.cwd().parents):\n        found = _find_capstone_root(candidate)\n        if found:\n            return \"пакет проекта: \" + found\n\n    try:\n        import minillm  # noqa: F401\n        return \"minillm уже доступен\"\n    except ImportError:\n        pass\n\n    archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n    if not archives:\n        try:\n            from google.colab import files\n        except ImportError:\n            files = None\n        if files is not None:\n            print(\"Загрузите ZIP-пакет Capstone из урока Stepik. Структура каталогов будет восстановлена автоматически.\")\n            files.upload()\n            archives = sorted(Path.cwd().glob(ARCHIVE_GLOB))\n\n    if archives:\n        archive_path = archives[-1]\n        destination = Path.cwd() / \".capstone_runtime\"\n        destination.mkdir(exist_ok=True)\n        _safe_extract(archive_path, destination)\n        matches = sorted(destination.glob(\"*/minillm/__init__.py\"))\n        if len(matches) != 1:\n            raise RuntimeError(\n                f\"expected one minillm package in {archive_path.name}, \"\n                f\"found {len(matches)}\"\n            )\n        root = _activate_capstone_root(matches[0].parent.parent)\n        if root:\n            return \"архив проекта: \" + str(archive_path)\n\n    raise RuntimeError(\"minillm не найден. Скачайте языковой ZIP-пакет Capstone из урока Stepik и либо распакуйте его целиком, либо загрузите ZIP в текущую сессию Colab.\")\n\nprint(ensure_minillm())\n\nfor package in (\"torch\", \"numpy\", \"matplotlib\", \"regex\"):\n    try:\n        importlib.import_module(package)\n    except ImportError:\n        subprocess.run(\n            [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", package],\n            check=True,\n        )\n\nimport math, os, random\nimport torch, numpy as np\nimport matplotlib.pyplot as plt\n\nSEED = 0\nDEVICE = \"cuda\" if torch.cuda.is_available() else \"cpu\"\nSTEPS = 60 if DEVICE == \"cpu\" else 600\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    STEPS = 5     # на GPU разница между режимами чётче\nprint(\"устройство:\", DEVICE, \"| шагов на прогон:\", STEPS)"
+        },
+        {
+          "id": "code-002",
+          "type": "code",
+          "source": "from minillm.config import MiniLLMConfig, kv_bytes_per_token\nfrom minillm.data import TokenStream\nfrom minillm.model import MiniLLM, RMSNorm\nfrom minillm.tokenizer import BBPETokenizer\nfrom minillm.train import TrainConfig, evaluate, train\n\ndef high_entropy_corpus(n_lines=8_000, lexicon=600, seed=0) -> str:\n    \"\"\"Тот же псевдоязык, что в ноутбуке 3: зипфовский лексикон оставляет\n    моделям запас, в котором различимы архитектурные варианты.\"\"\"\n    rng = random.Random(seed)\n    alphabet = \"абвгдеиклмнопрстуфхцчшы\"\n    words = [\"\".join(rng.choice(alphabet) for _ in range(rng.randint(3, 8)))\n             for _ in range(lexicon)]\n    weights = [1.0 / (i + 1) ** 0.9 for i in range(lexicon)]\n    return \"\".join(\" \".join(rng.choices(words, weights=weights, k=rng.randint(6, 14)))\n                   + \".\\n\" for _ in range(n_lines))\n\ncorpus = high_entropy_corpus(seed=SEED)\nlines = corpus.splitlines(keepends=True)\na, b = int(len(lines) * .8), int(len(lines) * .9)\ntrain_text, valid_text, test_text = map(\"\".join, (lines[:a], lines[a:b], lines[b:]))\ntokenizer = BBPETokenizer.train(train_text, vocab_size=1024, specials=[\"<|eos|>\"])\ntrain_stream = TokenStream.from_text(train_text, tokenizer, 128)\nvalid_stream = TokenStream.from_text(valid_text, tokenizer, 128)\ntest_stream = TokenStream.from_text(test_text, tokenizer, 128)\nCEILING = math.log(tokenizer.vocab_size)\nprint(f\"словарь {tokenizer.vocab_size} · train {len(train_stream):,} окон · \"\n      f\"valid {len(valid_stream):,} окон · равномерный ориентир ln(V) = {CEILING:.3f}\")"
+        },
+        {
+          "id": "code-003",
+          "type": "code",
+          "source": "BASE = dict(vocab_size=tokenizer.vocab_size, hidden_size=128, num_hidden_layers=3,\n            num_attention_heads=4, num_key_value_heads=2, head_dim=32,\n            max_position_embeddings=256)\n\ndef run(label: str, steps: int = None, **overrides):\n    \"\"\"Один прогон абляции: фиксированный seed, данные и расписание.\"\"\"\n    cfg = MiniLLMConfig.profile(\"S\", **{**BASE, **overrides})\n    torch.manual_seed(SEED)\n    model = MiniLLM(cfg).to(DEVICE)\n    tcfg = TrainConfig(steps=steps or STEPS, seq_len=128, micro_batch_size=8,\n                       optimizer=\"muon\", seed=SEED, device=DEVICE, compute_dtype=\"auto\", log_every=10_000)\n    train(model, train_stream, tcfg)\n    loss = evaluate(model, valid_stream, tcfg, batches=8)\n    total = cfg.parameter_report()[\"total\"]\n    print(f\"  {label:<26} параметров {total:>9,} · активных \"\n          f\"{cfg.active_parameters():>9,} · valid-лосс {loss:.4f}\")\n    return dict(label=label, cfg=cfg, model=model, loss=loss, params=total,\n                active=cfg.active_parameters())"
+        },
+        {
+          "id": "markdown-003",
+          "type": "markdown",
+          "source": "## 2. Размещение нормы (М6)\n\nСопоставим pre-norm, post-norm, Peri-LN, схему OLMo2 и контроль без нормализации. Они нормируют разные участки вычислительного графа; одинаковое название масштаба активаций не делает их эквивалентными.\n\nНачнём с отдельной остаточной цепочки $h\\leftarrow h+\\tanh(h)W$ со случайными матрицами, элементы которых имеют дисперсию $1/d$. Это нелинейная иллюстрация, а не точная линейная рекурсия лекции. Проследим RMS по 36 слоям и сравним расположение нормы. Ограниченность tanh меняет характер роста, поэтому заранее обещать экспоненту нельзя."
+        },
+        {
+          "id": "code-004",
+          "type": "code",
+          "source": "torch.manual_seed(1)\nd, layers = 256, 36\nh0 = torch.randn(1, d)\nweights = [torch.randn(d, d) / math.sqrt(d) for _ in range(layers)]\nnorm = RMSNorm(d, 1e-6)\n\ntraces = {}\nwith torch.no_grad():\n    for mode in (\"none\", \"pre\", \"post\"):\n        h, trace = h0.clone(), []\n        for W in weights:\n            if mode == \"none\":\n                h = h + torch.tanh(h) @ W\n            elif mode == \"pre\":\n                h = h + torch.tanh(norm(h)) @ W\n            else:\n                h = norm(h + torch.tanh(h) @ W)\n            trace.append(h.pow(2).mean().sqrt().item())\n        traces[mode] = trace\n\nplt.figure(figsize=(7, 4))\nfor mode, color in ((\"none\", \"#BF616A\"), (\"pre\", \"#5E81AC\"), (\"post\", \"#A3BE8C\")):\n    plt.plot(range(1, layers + 1), traces[mode], label=mode, color=color)\nplt.yscale(\"log\"); plt.xlabel(\"слой\"); plt.ylabel(\"rms потока\")\nplt.title(\"Нелинейная остаточная цепочка: 36 слоёв\")\nplt.legend(); plt.gca().spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()\n\nfor mode, trace in traces.items():\n    print(f\"{mode:>5}: слой 1 = {trace[0]:8.3f} → слой 36 = {trace[-1]:10.3f}\")"
+        },
+        {
+          "id": "markdown-004",
+          "type": "markdown",
+          "source": "Сравните начальный и конечный RMS каждой ветви. Нормализация после сложения удерживает RMS около единицы с поправкой на epsilon; две другие ветви могут накапливать обновления. Масштаб наблюдаемого роста нужно читать по графику.\n\nСледующий опыт переносит вопрос на обучаемую MiniLLM с тремя слоями. Здесь меняются инициализация и форма подслоя, поэтому численный результат предыдущей цепочки не является прогнозом для модели. Сопоставим loss и профиль RMS, сохранив бюджет и настройки оптимизатора."
+        },
+        {
+          "id": "code-005",
+          "type": "code",
+          "source": "def stream_rms(model: MiniLLM) -> list[float]:\n    ids = valid_stream.batch(torch.arange(4)).to(DEVICE)\n    values = []\n    with torch.no_grad():\n        x = model.embed_tokens(ids)\n        cos, sin = model.rope(torch.arange(ids.shape[1], device=DEVICE))\n        for layer in model.layers:\n            x = layer(x, cos, sin)\n            values.append(x.float().pow(2).mean().sqrt().item())\n    return values\n\nprint(\"абляция нормы:\")\nnorm_runs = [run(f\"norm_placement={p}\", norm_placement=p)\n             for p in (\"pre\", \"post\", \"peri\", \"olmo2\", \"none\")]\n\nprint(\"\\nrms residual-потока по слоям обученных моделей:\")\nfor r in norm_runs:\n    r[\"rms\"] = stream_rms(r[\"model\"])\n    print(f\"  {r['label']:<26} \" +\n          \" → \".join(f\"{v:.2f}\" for v in r[\"rms\"]))"
+        },
+        {
+          "id": "markdown-005",
+          "type": "markdown",
+          "source": "Низкий loss и умеренный RMS отвечают на разные вопросы. Если вариант проигрывает по loss, сначала посмотрите на масштаб его активаций и градиентов: из одного ухудшения нельзя заключить, что остаточный поток «взорвался». Равным образом небольшой рост на трёх слоях не опровергает проблему на большей глубине.\n\nPeri-LN нормирует обе стороны подслоя, а схема OLMo2 — выход перед сложением. Это меняет эффективный масштаб обновления, поэтому общий learning rate полезен как контроль, но не как окончательный подбор для всех вариантов. Таблица характеризует заданные настройки. Для сравнения методов потребуется настройка каждой схемы и несколько независимых запусков."
+        },
+        {
+          "id": "markdown-006",
+          "type": "markdown",
+          "source": "## 3. MHA / GQA / MQA (M5)\n\nЗдесь масштаб не мешает: экономия KV-кэша — свойство геометрии, а не обучения,\nи считается точно. Открытый вопрос другой: что модель теряет в качестве."
+        },
+        {
+          "id": "code-006",
+          "type": "code",
+          "source": "print(\"абляция внимания:\")\nattn_runs = []\nfor name, kv in ((\"MHA (H_kv=4)\", 4), (\"GQA (H_kv=2)\", 2), (\"MQA (H_kv=1)\", 1)):\n    r = run(name, num_key_value_heads=kv)\n    r[\"kv_per_token\"] = kv_bytes_per_token(r[\"cfg\"])\n    attn_runs.append(r)\n\nprint(f\"\\n{'схема':<14} {'KV, Б/токен':>12} {'×к MHA':>8} {'valid-лосс':>11} {'Δлосс':>8}\")\nmha = attn_runs[0]\nfor r in attn_runs:\n    print(f\"{r['label']:<14} {r['kv_per_token']:>12,} \"\n          f\"{mha['kv_per_token'] / r['kv_per_token']:>7.1f}× \"\n          f\"{r['loss']:>11.4f} {r['loss'] - mha['loss']:>+8.4f}\")"
+        },
+        {
+          "id": "markdown-007",
+          "type": "markdown",
+          "source": "Отношение объёмов KV равно `H/H_kv` при общей длине, числе слоёв и типе данных. Здесь оно выводится из конфигурации и не зависит от качества обучения. Разность loss — уже эмпирическое наблюдение: сравните её знак и величину в текущем запуске.\n\nИз небольшого расхождения нельзя заключить, что сокращение числа KV-голов всегда бесплатно. Из большого — что один вариант внимания хуже при любом бюджете. Изменились также число параметров проекций и ход оптимизации; для более общего вывода нужны повторности и отдельный подбор настроек."
+        },
+        {
+          "id": "markdown-008",
+          "type": "markdown",
+          "source": "## 4. Активации внутри GLU (М6)\n\nСравним SwiGLU, GeGLU и ReGLU. Все три используют две входные матрицы и одну выходную; отличается функция в ветви гейта. При одинаковой ширине число параметров совпадает, что проверит assert.\n\nПравило $d_{ff}\\approx8d/3$ связывает бюджет трёхматричного GLU с классическим двухматричным FFN ширины $4d$. Здесь ширина дополнительно округляется, а сам двухматричный вариант не реализован. Поэтому опыт отвечает на вопрос о выборе активации внутри GLU, а не о пользе гейта вообще."
+        },
+        {
+          "id": "code-007",
+          "type": "code",
+          "source": "d = BASE[\"hidden_size\"]\ngated_ff = round(8 * d / 3 / 64) * 64          # правило 2/3, выровнено под 64\nprint(f\"все варианты: 3 · {d} · {gated_ff} = {3 * d * gated_ff:,} параметров FFN\\n\")\n\nprint(\"абляция φ внутри GLU-семейства:\")\nffn_runs = [run(f\"{name} (3 матрицы)\", hidden_act=act, intermediate_size=gated_ff)\n            for name, act in ((\"SwiGLU\", \"swiglu\"), (\"GeGLU\", \"geglu\"),\n                              (\"ReGLU\", \"relu\"))]\n\nassert len({r[\"params\"] for r in ffn_runs}) == 1, \"бюджеты обязаны совпадать\"\nbest = min(ffn_runs, key=lambda r: r[\"loss\"])\nspread = max(r[\"loss\"] for r in ffn_runs) - min(r[\"loss\"] for r in ffn_runs)\nprint(f\"\\nбюджеты совпадают до параметра: {ffn_runs[0]['params']:,}\")\nprint(f\"лучший на этом прогоне — {best['label']}, разброс по лоссу {spread:.4f}\")"
+        },
+        {
+          "id": "markdown-009",
+          "type": "markdown",
+          "source": "Проверьте совпадение бюджетов и размах loss. Код назовёт минимальный loss данного запуска, но один seed не позволяет оценить разброс между запусками. Чтобы назвать различие устойчивым, повторите сравнение с несколькими seed, сохраняя общий протокол и одинаковую проверочную выборку.\n\nПараметр `hidden_act=\"relu\"` здесь означает ReGLU: наличие ReLU не убирает вторую входную матрицу. Это пример того, зачем читать и конфигурацию, и вычислительный граф. Сравнение с обычным FFN осталось за пределами данного опыта."
+        },
+        {
+          "id": "markdown-010",
+          "type": "markdown",
+          "source": "## 5. Плотный FFN и MoE при близком активном бюджете (М7)\n\nСохраним словарь, внимание, глубину и позиции, а плотный FFN заменим экспертами. Ширина эксперта округляется до кратного 64, поэтому активные параметры могут различаться. Таблица покажет их отношение вместе с общим числом параметров и loss; KV-геометрия останется общей.\n\nОбе ветви получают удвоенный относительно остальных опытов бюджет шагов. Это уравнивает число обработанных токенов, но не время и не все FLOP. Маршрутизация и объединение ответов экспертов тоже стоят вычислений. Цель — наблюдать заданную пару моделей и отдельно исследовать нагрузку роутера."
+        },
+        {
+          "id": "code-008",
+          "type": "code",
+          "source": "from minillm.model import MoELayer\n\nMOE_STEPS = STEPS * 2\nEXPERTS, TOPK, SHARED = 8, 2, 1\nexpert_ff = max(64, round(gated_ff / (TOPK + SHARED) / 64) * 64)\n\nprint(\"абляция разреженности (бюджет шагов удвоен):\")\ndense = run(\"dense\", steps=MOE_STEPS, intermediate_size=gated_ff)\nmoe = run(f\"MoE {EXPERTS} экспертов, top-{TOPK}\", steps=MOE_STEPS,\n          intermediate_size=gated_ff, num_local_experts=EXPERTS,\n          num_experts_per_tok=TOPK, num_shared_experts=SHARED,\n          moe_intermediate_size=expert_ff, first_k_dense_replace=1)\n\nparity = moe[\"active\"] / dense[\"active\"]\nsparsity = moe[\"params\"] / moe[\"active\"]\nprint(f\"\\n{'вариант':<26} {'total':>12} {'active':>11} {'valid-лосс':>11}\")\nfor r in (dense, moe):\n    print(f\"{r['label']:<26} {r['params']:>12,} {r['active']:>11,} {r['loss']:>11.4f}\")\nprint(f\"\\nактивных у MoE к плотному: ×{parity:.3f} — активные параметры; время измеряется отдельно\")\nprint(f\"ёмкость: total ×{moe['params'] / dense['params']:.2f}, \"\n      f\"разрежённость ×{sparsity:.2f}\")\nprint(f\"KV-кэш совпадает до байта: \"\n      f\"{kv_bytes_per_token(dense['cfg']) == kv_bytes_per_token(moe['cfg'])}\")"
+        },
+        {
+          "id": "code-009",
+          "type": "code",
+          "source": "# Что с нагрузкой экспертов? Это первая вещь, которую надо смотреть у MoE.\ndef load_table(result, title):\n    layers = [l.ffn for l in result[\"model\"].layers if isinstance(l.ffn, MoELayer)]\n    print(title)\n    print(f\"{'слой':>5} {'min':>7} {'max':>7} {'std':>7}  {'max|bias|':>9}\")\n    for i, layer in enumerate(layers, start=1):\n        load = layer.expert_load\n        print(f\"{i:>5} {load.min():>7.3f} {load.max():>7.3f} {load.std():>7.3f}\"\n              f\"  {layer.expert_bias.abs().max():>9.4f}\")\n    return max(float(l.expert_load.std()) for l in layers)\n\nideal = TOPK / EXPERTS\nprint(f\"идеально равномерная нагрузка — {ideal:.3f} на эксперта\\n\")\nstd_default = load_table(moe, \"смещение по умолчанию (router_bias_speed = 1e-3):\")"
+        },
+        {
+          "id": "markdown-011",
+          "type": "markdown",
+          "source": "Посмотрите на минимум, максимум и стандартное отклонение нагрузки. Это снимок последнего измеренного батча, а не среднее по всему обучению. Сильная концентрация назначений может указывать на недостаточный баланс; один снимок не устанавливает устойчивый коллапс.\n\nТеперь увеличим скорость обновления балансирующего смещения с $10^{-3}$ до $5\\cdot10^{-2}$, сохранив остальные настройки. Сравним и нагрузку, и loss: уменьшение разброса не обязано улучшить предсказания, поскольку роутер одновременно учится выбирать полезных экспертов."
+        },
+        {
+          "id": "code-010",
+          "type": "code",
+          "source": "moe_fast = run(f\"MoE, balance ×50\", steps=MOE_STEPS, intermediate_size=gated_ff,\n               num_local_experts=EXPERTS, num_experts_per_tok=TOPK,\n               num_shared_experts=SHARED, moe_intermediate_size=expert_ff,\n               first_k_dense_replace=1, router_bias_speed=5e-2)\nprint()\nstd_fast = load_table(moe_fast, \"ускоренное смещение (router_bias_speed = 5e-2):\")\nprint(f\"\\nмаксимальный разброс нагрузки: {std_default:.3f} → {std_fast:.3f}\")\nprint(f\"valid-лосс: {moe['loss']:.4f} → {moe_fast['loss']:.4f} \"\n      f\"(dense {dense['loss']:.4f})\")"
+        },
+        {
+          "id": "markdown-012",
+          "type": "markdown",
+          "source": "### Ёмкость эксперта: сколько теряется молча\n\nБуфер эксперта конечен, а роутер об этом не знает. `capacity_factor` задаёт\nзапас над идеально равномерной нагрузкой; всё, что не влезло, отбрасывается.\nПрогон ниже — только forward на обученной модели, обучение не трогаем."
+        },
+        {
+          "id": "code-011",
+          "type": "code",
+          "source": "probe = valid_stream.batch(torch.arange(8)).to(DEVICE)\nprint(f\"{'capacity_factor':>16} {'потолок':>9} {'отброшено':>11}\")\ncapacity_rows = []\nfor factor in (None, 2.0, 1.5, 1.25, 1.0, 0.75):\n    cfg_c = MiniLLMConfig(**{**moe[\"cfg\"].to_dict(), \"capacity_factor\": factor})\n    probe_model = MiniLLM(cfg_c).to(DEVICE)\n    probe_model.load_state_dict(moe[\"model\"].state_dict())\n    with torch.no_grad():\n        probe_model(probe)\n    layer = next(l.ffn for l in probe_model.layers if isinstance(l.ffn, MoELayer))\n    cap = cfg_c.expert_capacity(probe.numel())\n    capacity_rows.append(dict(factor=factor, capacity=cap, dropped=float(layer.dropped_fraction)))\n    print(f\"{str(factor):>16} {str(cap):>9} {layer.dropped_fraction.item():>10.1%}\")"
+        },
+        {
+          "id": "markdown-013",
+          "type": "markdown",
+          "source": "Числа total/active и равенство KV следуют из конфигураций; loss и нагрузка получены в опыте. Сопоставляйте эти виды свидетельств отдельно. Если ускоренная балансировка уменьшила разброс, но разрыв с плотной моделью остался, этого недостаточно, чтобы исключить дисбаланс из причин отставания: вмешательство могло быть частичным и само изменить оптимизацию.\n\nПри равномерных назначениях top-2 из восьми даёт каждому эксперту в среднем четверть токенов. Это условное среднее, а не гарантированная нагрузка и не число шагов оптимизатора. Короткий бюджет ограничивает опыт, но не объясняет автоматически любой результат.\n\nТаблица capacity показывает долю отброшенных назначений при одной и той же модели. Предел равен запасу над равномерной нагрузкой, поэтому при неравномерном распределении возможны потери. Отбрасывание назначения не удаляет весь токен: остаются остаточная ветвь, внимание и другие эксперты. Для оценки последствий дополнительно измерьте loss под каждым ограничением; текущая таблица измеряет именно отбрасывание."
+        },
+        {
+          "id": "markdown-014",
+          "type": "markdown",
+          "source": "## 6. RoPE за пределами обучающих длин (М4)\n\nДля исследования дальней зависимости нужна задача, в которой она существует. Поэтому отдельно обучим модель на случайной последовательности, повторённой дважды. Цели во второй половине можно восстановить по первой; длина половины задаёт расстояние зависимости. Успех такого копирования не доказывает наличие конкретной induction head — для этого потребовался бы анализ внутренних вычислений.\n\nОбучающие расстояния лежат в диапазоне 12–48, проверочные — 48–128. Сначала измерим точность на расстоянии 32: если модель ещё не освоила задачу внутри диапазона, падение вне его нельзя уверенно назвать срывом экстраполяции. Равномерное случайное угадывание даёт $1/64=0{,}015625$. Быстрый режим делает лишь десять обучающих шагов и служит проверкой исполнения.\n\n\nДлина последовательности меняется от батча к батчу, поэтому бюджет считаем по фактическим входным позициям и обучаемым целям. Значение `seq_len` в конфигурации обучения не задаёт длину этого генератора. Следующий код сохраняет оба счётчика для каждого варианта RoPE."
+        },
+        {
+          "id": "code-012",
+          "type": "code",
+          "source": "from minillm.probes import RepeatTask, chance_level, repeat_accuracy\nfrom minillm.model import RotaryEmbedding\n\nPROBE_V = 64\nprobe = RepeatTask(vocab_size=PROBE_V, train_range=(12, 48), seed=SEED)\nPROBE_BASE = dict(vocab_size=PROBE_V, hidden_size=128, num_hidden_layers=2,\n                  num_attention_heads=4, num_key_value_heads=2, head_dim=32,\n                  max_position_embeddings=512)\nPROBE_STEPS = 1200 if DEVICE == \"cpu\" else 3000\nif os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\":\n    PROBE_STEPS = 10\n\nprobe_budgets = {}\n\ndef train_probe(theta: float) -> MiniLLM:\n    cfg = MiniLLMConfig.profile(\"S\", **{**PROBE_BASE, \"rope_theta\": theta})\n    torch.manual_seed(SEED)\n    model = MiniLLM(cfg).to(DEVICE)\n    probe_state = train(model, probe, TrainConfig(steps=PROBE_STEPS, seq_len=64,\n                                    micro_batch_size=16, optimizer=\"muon\",\n                                    seed=SEED, device=DEVICE, log_every=10_000))\n    probe_budgets[str(theta)] = {\n        \"input_positions\": probe_state.tokens,\n        \"supervised_targets\": probe_state.supervised_tokens,\n    }\n    return model\n\nprobe_models = {theta: train_probe(theta) for theta in (10_000.0, 500_000.0)}\nprint(f\"уровень случая: {chance_level(probe):.4f}\")\nprint(\"измеренный бюджет RoPE:\", probe_budgets)\nprobe_in_range = {str(theta): repeat_accuracy(model, probe, 32, device=DEVICE)\n                  for theta, model in probe_models.items()}\nfor theta, accuracy in probe_in_range.items():\n    print(\"rope_theta:\", theta, \"in-range accuracy at 32:\", accuracy)"
+        },
+        {
+          "id": "code-013",
+          "type": "code",
+          "source": "LENGTHS = (48, 64, 80, 96, 128)\nrope_rows = {f\"base {theta:g}\": [repeat_accuracy(m, probe, n, device=DEVICE)\n                                 for n in LENGTHS]\n             for theta, m in probe_models.items()}\n\n# YaRN поверх уже обученной модели: у RoPE нет параметров, поэтому достаточно\n# заменить таблицу частот — веса остаются те же. Это и есть «растяжка без\n# дообучения» из M4. Окно претрейна равно 96 токенам (две половины по 48).\nfor factor in (2.0, 4.0):\n    model = probe_models[10_000.0]\n    saved = model.rope\n    yarn_cfg = MiniLLMConfig.profile(\"S\", **{**PROBE_BASE, \"rope_theta\": 10_000.0,\n        \"rope_scaling\": {\"rope_type\": \"yarn\", \"factor\": factor,\n                         \"original_max_position_embeddings\": 96}})\n    model.rope = RotaryEmbedding(yarn_cfg).to(DEVICE)\n    rope_rows[f\"10000 + YaRN ×{factor:g}\"] = [\n        repeat_accuracy(model, probe, n, device=DEVICE) for n in LENGTHS]\n    model.rope = saved\n\nprint(f\"{'вариант':<22}\" + \" \".join(f\"{n:>8}\" for n in LENGTHS))\nprint(\"-\" * 64)\nfor name, values in rope_rows.items():\n    print(f\"{name:<22}\" + \" \".join(f\"{v:>8.3f}\" for v in values))\nprint(\"\\nобучение шло на расстояниях 12–48; всё правее 48 — экстраполяция\")"
+        },
+        {
+          "id": "code-014",
+          "type": "code",
+          "source": "plt.figure(figsize=(7.5, 4.5))\npalette = (\"#BF616A\", \"#D08770\", \"#5E81AC\", \"#A3BE8C\")\nfor (name, values), color in zip(rope_rows.items(), palette):\n    plt.plot(LENGTHS, values, \"o-\", label=name, color=color)\nplt.axvline(48, ls=\"--\", lw=1, color=\"#4C566A\")\nplt.text(49, 0.5, \"граница обучения\", rotation=90, va=\"center\",\n         fontsize=9, color=\"#4C566A\")\nplt.axhline(chance_level(probe), ls=\":\", lw=1, color=\"#4C566A\")\nplt.text(120, chance_level(probe) + 0.03, \"случайное угадывание\",\n         ha=\"right\", fontsize=9, color=\"#4C566A\")\nplt.xlabel(\"расстояние зависимости (длина половины)\")\nplt.ylabel(\"доля верно восстановленных токенов\")\nplt.title('Точность по расстоянию зависимости')\nplt.legend(); plt.ylim(-0.03, 1.05)\nplt.gca().spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout(); plt.show()"
+        },
+        {
+          "id": "markdown-015",
+          "type": "markdown",
+          "source": "Прочитайте график в два шага. Сначала сравните обе базы RoPE внутри обучающего диапазона и за его пределами. Затем для модели с базой 10 000 сопоставьте исходную таблицу частот с YaRN при неизменных весах. При замене RoPE используется реализация YaRN из пакета; параметры внимания, предусмотренные этим механизмом, тоже входят в вмешательство.\n\nУлучшение на большой длине и ухудшение на малой, если они наблюдаются, относятся к этому обучению и выбранному фактору. Ни полный провал обычного RoPE, ни восстановление качества YaRN заранее не гарантированы. В отчёте сохраняются все точки, включая точность внутри диапазона; выбор лучшего фактора по этим точкам уже становится настройкой и требует нового теста."
+        },
+        {
+          "id": "markdown-016",
+          "type": "markdown",
+          "source": "## 7. Muon и AdamW: подбор и независимая проверка\n\nСравнение двух значений по умолчанию показывает две настройки, а не возможности оптимизаторов в целом. Здесь для каждого перебираем две learning rate при общем бюджете. Выбираем минимум по validation, а выбранную модель оцениваем на отдельном test, который не использовался при выборе.\n\nРазделение сделано до обучения токенизатора. Все части созданы одним генератором, поэтому test проверяет перенос на новые синтетические строки, а не на естественный язык. Изменение seed и расширение сетки остаются отдельным следующим опытом."
+        },
+        {
+          "id": "code-015",
+          "type": "code",
+          "source": "def run_optimizer(optimizer: str, lr: float):\n    cfg = MiniLLMConfig.profile(\"S\", **BASE)\n    torch.manual_seed(SEED)\n    model = MiniLLM(cfg).to(DEVICE)\n    tcfg = TrainConfig(steps=STEPS, seq_len=128, micro_batch_size=8,\n                       optimizer=optimizer, lr=lr if optimizer == \"adamw\" else 3e-3,\n                       muon_lr=lr if optimizer == \"muon\" else 0.02,\n                       seed=SEED, device=DEVICE, log_every=10_000)\n    train(model, train_stream, tcfg)\n    return dict(model=model, config=tcfg, valid_loss=evaluate(model, valid_stream, tcfg, batches=8))\n\ngrid = {\n    \"adamw\": [3e-3, 1e-2],\n    \"muon\":  [2e-2, 6e-2],\n}\noptimizer_report = {}\nfor optimizer, lrs in grid.items():\n    runs = {lr: run_optimizer(optimizer, lr) for lr in lrs}\n    chosen_lr, selected = min(runs.items(), key=lambda kv: kv[1][\"valid_loss\"])\n    test_loss = evaluate(selected[\"model\"], test_stream, selected[\"config\"], batches=8)\n    optimizer_report[optimizer] = dict(selected_lr=chosen_lr,\n        validation_grid={str(lr): r[\"valid_loss\"] for lr,r in runs.items()},\n        selected_valid_loss=selected[\"valid_loss\"], selected_test_loss=test_loss)\n    print(optimizer, optimizer_report[optimizer])"
+        },
+        {
+          "id": "markdown-017",
+          "type": "markdown",
+          "source": "Сравните выбранные learning rate, validation loss и test loss. Разность на test не участвует в выборе и потому даёт более честную проверку данного решения. Две точки сетки не гарантируют нахождения лучших настроек; остальные коэффициенты оптимизаторов остаются фиксированными.\n\nЧисло шагов напечатано в начале: по умолчанию 60 на CPU или 600 на GPU, в быстром режиме — 5. Короткий горизонт может благоприятствовать быстрому старту и не предсказывает итог длинного обучения. Один seed не позволяет оценить устойчивость преимущества: для этого повторите весь цикл подбора и проверки."
+        },
+        {
+          "id": "markdown-018",
+          "type": "markdown",
+          "source": "## 8. От измерений к сохранённому отчёту\n\nСохраним настройки и численные результаты в JSON, прочитаем файл обратно и построим сводку. Так таблица связана с фактическим запуском и может быть проверена отдельно от обучающих ячеек. Расчётные величины будут помечены как расчётные, а loss, RMS, нагрузка и точность — как наблюдения.\n\nЧасть вопросов курса здесь не проверяется: например, ускорение упакованной квантизации или качество RL. Для них не будет ни выдуманного числа, ни вердикта о воспроизведении. В быстром режиме статус отчёта явно указывает на проверку исполнения."
+        },
+        {
+          "id": "code-016",
+          "type": "code",
+          "source": "CAPSTONE_LANGUAGE = 'ru'\n\"\"\"Embedded into both ablation notebooks; reads only this run's measurements.\"\"\"\nimport json\nfrom pathlib import Path\n\nablation_record = {\n    \"schema\": 2,\n    \"language\": CAPSTONE_LANGUAGE,\n    \"mode\": \"fast_execution_check\" if os.getenv(\"CAPSTONE_FAST_VALIDATION\") == \"1\" else \"teaching_experiment\",\n    \"seed\": SEED, \"device\": DEVICE, \"torch\": torch.__version__,\n    \"steps\": STEPS, \"moe_steps\": MOE_STEPS, \"probe_steps\": PROBE_STEPS,\n    \"data\": {\"train_sha\": train_stream.checksum(), \"valid_sha\": valid_stream.checksum(),\n             \"test_sha\": test_stream.checksum()},\n    \"chain_rms\": traces,\n    \"norm\": [{\"label\": r[\"label\"], \"valid_loss\": r[\"loss\"], \"rms\": r[\"rms\"]} for r in norm_runs],\n    \"attention\": [{\"label\": r[\"label\"], \"valid_loss\": r[\"loss\"],\n                   \"calculated_kv_bytes_per_token_bf16\": r[\"kv_per_token\"]} for r in attn_runs],\n    \"glu\": [{\"label\": r[\"label\"], \"valid_loss\": r[\"loss\"], \"parameters\": r[\"params\"]} for r in ffn_runs],\n    \"moe\": {\"dense_total\": dense[\"params\"], \"moe_total\": moe[\"params\"],\n            \"dense_active\": dense[\"active\"], \"moe_active\": moe[\"active\"],\n            \"active_ratio\": parity, \"dense_loss\": dense[\"loss\"], \"moe_loss\": moe[\"loss\"],\n            \"faster_balance_loss\": moe_fast[\"loss\"],\n            \"last_batch_load_std\": std_default, \"faster_balance_load_std\": std_fast},\n    \"capacity\": capacity_rows,\n    \"rope\": {\"distances\": list(LENGTHS), \"accuracy\": rope_rows,\n             \"training_budgets\": probe_budgets,\n             \"in_range_32\": probe_in_range, \"chance\": chance_level(probe)},\n    \"optimizers\": optimizer_report,\n    \"not_tested\": [\"ungated FFN\", \"packed quantization speed\", \"RL answer quality\",\n                   \"scaling-law optimum\", \"QK-norm ablation\",\n                   \"speculative distribution test in this notebook\", \"EOT ablation in this notebook\"],\n}\nreport_dir = Path(\"runs/ablations\")\nreport_dir.mkdir(parents=True, exist_ok=True)\nreport_path = report_dir / \"measurements.json\"\nreport_path.write_text(json.dumps(ablation_record, ensure_ascii=False, indent=2, allow_nan=False), encoding=\"utf-8\")\nsaved = json.loads(report_path.read_text(encoding=\"utf-8\"))\nassert saved == ablation_record\nru = CAPSTONE_LANGUAGE == \"ru\"\nmode_ru = {\"fast_execution_check\": \"быстрая проверка исполнения\", \"teaching_experiment\": \"учебный эксперимент\"}\nprint(\"Режим:\" if ru else \"Mode:\", mode_ru[saved[\"mode\"]] if ru else saved[\"mode\"])\nprint(\"Измерения сохранены:\" if ru else \"Measurements saved:\", report_path)\nlabels_ru = {\"chain_rms\": \"RMS остаточной цепочки\", \"norm\": \"Нормализация\",\n             \"attention\": \"Внимание\", \"glu\": \"Варианты GLU\", \"moe\": \"Эксперты\",\n             \"capacity\": \"Ограничение нагрузки\", \"rope\": \"Позиции\", \"optimizers\": \"Оптимизаторы\"}\nfor key in (\"chain_rms\", \"norm\", \"attention\", \"glu\", \"moe\", \"capacity\", \"rope\", \"optimizers\"):\n    print(\"\\n\" + (labels_ru[key] if ru else key))\n    print(json.dumps(saved[key], ensure_ascii=False, indent=2))\nprint(\"\\nЗдесь не проверялось:\" if ru else \"\\nNot tested here:\")\nnot_tested_ru = {\"ungated FFN\": \"FFN без гейта\",\n    \"packed quantization speed\": \"скорость упакованной квантизации\",\n    \"RL answer quality\": \"качество ответов после RL\",\n    \"scaling-law optimum\": \"оптимум закона масштабирования\",\n    \"QK-norm ablation\": \"абляция QK-нормировки\",\n    \"speculative distribution test in this notebook\": \"распределение спекулятивного семплирования в этой тетради\",\n    \"EOT ablation in this notebook\": \"абляция EOT в этой тетради\"}\nfor item in saved[\"not_tested\"]:\n    print(\"-\", not_tested_ru[item] if ru else item)"
+        },
+        {
+          "id": "markdown-019",
+          "type": "markdown",
+          "source": "## 9. Как продолжить исследование\n\nВыберите одно наблюдение из отчёта и сформулируйте следующий вопрос так, чтобы новый опыт мог изменить ваше мнение. Например, сохранится ли разность loss после подбора learning rate для каждой нормы? Изменится ли MoE при другом распределении данных? Освоена ли задача повторения до того, как вы оцениваете экстраполяцию?\n\nВ каждом случае сохраните контроль, бюджет, данные и правило выбора. Если результат зависит от seed, покажите разброс; если измерение не проводилось, оставьте его отсутствующим. Отсутствие заметного эффекта в одном опыте ограничивает вывод об этом опыте и не отменяет механизм вообще.\n\nИтоговый практикум завершает курс умением связывать формулу, код и свидетельство. Самостоятельный отчёт должен позволить другому читателю понять, что измерено, что вычислено из конфигурации и какое более сильное утверждение ещё требует проверки."
+        }
+      ]
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

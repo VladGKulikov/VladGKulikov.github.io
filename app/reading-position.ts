@@ -18,6 +18,13 @@ const blockKind = (block: HTMLElement) => block.querySelector("img") ? "IMAGE" :
 function readingSections(): ReadingSection[] {
   const prose = document.querySelector(".lecture-prose");
   if (!prose) return [];
+  if (prose.hasAttribute('data-practice')) {
+    return Array.from(prose.querySelectorAll<HTMLElement>('[data-reading-key]')).map(card => ({
+      key: card.dataset.readingKey!,
+      blocks: Array.from(card.querySelectorAll<HTMLElement>('[data-reading-block], [data-reading-container] > *')).filter(block =>
+        block.closest('[data-reading-key]') === card && block.getBoundingClientRect().height > 0),
+    })).filter(section => section.blocks.length > 0);
+  }
   if (prose.hasAttribute('data-quiz')) {
     return Array.from(prose.querySelectorAll<HTMLElement>(':scope > [data-question-id]')).map(question => ({
       key: `question:${question.dataset.questionId}`,
@@ -73,7 +80,7 @@ export function captureReadingPosition(): ReadingPosition | null {
 
 export function readingPositionAtAnchor(anchor: HTMLElement): ReadingPosition | null {
   const sections = readingSections();
-  const sectionIndex = sections.findIndex(section => section.blocks.includes(anchor) || section.key === `question:${anchor.dataset.questionId}`);
+  const sectionIndex = sections.findIndex(section => section.blocks.includes(anchor) || section.key === `question:${anchor.dataset.questionId}` || section.key === anchor.dataset.readingKey);
   if (sectionIndex < 0) return null;
   const section = sections[sectionIndex];
   const blockIndex = Math.max(0, section.blocks.indexOf(anchor));

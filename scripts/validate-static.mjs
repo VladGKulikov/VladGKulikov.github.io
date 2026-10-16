@@ -3,7 +3,7 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { parse } from "parse5";
-import { parseUrl, buildLocation } from "../build-static/pages-render.js";
+import { parseUrl, buildLocation, practiceModules } from "../build-static/pages-render.js";
 
 const origin = "https://vladkulikov.com";
 const manifest = JSON.parse(fs.readFileSync("dist-pages/route-manifest.json", "utf8"));
@@ -11,7 +11,7 @@ const catalog = JSON.parse(fs.readFileSync("app/generated/content.json", "utf8")
 const pages = new Map(manifest.map(page => [page.path, page]));
 const titles = new Set(), descriptions = new Set();
 const errors = [];
-const counts = { pages: 0, lectures: 0, quizzes: 0, links: 0, images: 0, formulas: 0 };
+const counts = { pages: 0, lectures: 0, quizzes: 0, exercises: 0, notebooks: 0, links: 0, images: 0, formulas: 0 };
 const attr = (node, name) => node.attrs?.find(a => a.name === name)?.value;
 const hasClass = (node, value) => (attr(node, "class") ?? "").split(" ").includes(value);
 function flatten(node) { return [node, ...(node.childNodes ?? []).flatMap(flatten)]; }
@@ -51,10 +51,10 @@ for (const page of manifest) {
   const initial = nodes.find(node => attr(node, "id") === "page-data");
   const props = JSON.parse(text(initial));
   if (page.moduleKey) {
-    if (page.section === 'tests') counts.quizzes++; else counts.lectures++;
+    if (page.section === 'tests') counts.quizzes++; else if (page.section) counts[page.section]++; else counts.lectures++;
     const prose = nodes.find(node => hasClass(node, "lecture-prose"));
     check(Boolean(prose) && text(prose).length > 1000, label, "Reading content missing from original HTML");
-    check(props.initialMarkdown === fs.readFileSync(path.join(page.section === 'tests' ? "public/quizzes" : "public/content", page.contentFile), "utf8"), label, "Published source changed");
+    check(props.initialMarkdown === fs.readFileSync(path.join(page.section === 'tests' ? "public/quizzes" : page.section ? "public/practice" : "public/content", page.contentFile), "utf8"), label, "Published source changed");
     let previous = 1;
     for (const node of flatten(prose).filter(node => /^h[2-6]$/.test(node.tagName))) {
       const depth = Number(node.tagName[1]);
@@ -80,13 +80,18 @@ for (const page of manifest) {
     const url = new URL(href, origin + label);
     if (url.origin !== origin) continue;
     check(!url.search, label, `Query selection remains in internal link ${href}`);
+    if (url.pathname.startsWith("/downloads/")) {
+      check(fs.existsSync(path.join("dist-pages", decodeURIComponent(url.pathname))), label, `Missing download ${href}`);
+      check(attr(node, "download") !== undefined, label, `File link missing download attribute ${href}`);
+      continue;
+    }
     if (url.pathname.endsWith(".md")) continue;
     check(pages.has(url.pathname), label, `Missing internal page ${href}`);
     if (url.hash && url.pathname === label) check(ids.includes(decodeURIComponent(url.hash.slice(1))), label, `Missing anchor ${href}`);
   }
   counts.pages++;
 }
-check(manifest.length === 202 && counts.lectures === 98 && counts.quizzes === 96, "catalog", "Expected 202 pages, 98 lectures and 96 quiz pages");
+check(manifest.length === 202 + practiceModules.length && counts.lectures === 98 && counts.quizzes === 96 && counts.exercises === 94 && counts.notebooks === 66, "catalog", "Expected 362 pages: 98 lectures, 96 quizzes, 94 exercise pages and 66 notebook pages");
 const sitemap = fs.readFileSync("dist-pages/sitemap.xml", "utf8");
 check((sitemap.match(/<loc>/g) ?? []).length === manifest.length, "sitemap", "Wrong URL count");
 for (const page of manifest) check(sitemap.includes(`<loc>${origin}${page.path}</loc>`), "sitemap", `Missing ${page.path}`);

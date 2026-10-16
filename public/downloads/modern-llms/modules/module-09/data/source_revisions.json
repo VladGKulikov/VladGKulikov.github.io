@@ -1,0 +1,17 @@
+{
+  "checked": "2026-10-11",
+  "sources": [
+    "https://raw.githubusercontent.com/KellerJordan/Muon/master/muon.py",
+    "https://arxiv.org/html/2507.20534v1",
+    "https://arxiv.org/abs/2203.15556",
+    "https://arxiv.org/abs/2406.11794",
+    "https://huggingface.co/datasets/HuggingFaceFW/fineweb-2",
+    "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B",
+    "https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Ultra-Technical-Report.pdf",
+    "https://thinkingmachines.ai/news/introducing-inkling/",
+    "https://ai.meta.com/blog/llama-4-multimodal-intelligence/",
+    "https://arxiv.org/abs/2606.19348",
+    "https://huggingface.co/blog/agent-intrusion-technical-timeline"
+  ],
+  "scope": "Primary sources reread for mechanisms and dated claims. Mutable URLs are dated readings, not immutable execution dependencies. No live source supplies reference numbers."
+}

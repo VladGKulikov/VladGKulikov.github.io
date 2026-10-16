@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "context_tokens": 131072,
+  "kv_rows": {
+    "gpt_oss_gqa_all_full_equivalent": 73728,
+    "gpt_oss_mha_hypothetical": 589824,
+    "gpt_oss_mqa_hypothetical": 9216
+  },
+  "gpt_oss_hybrid": {
+    "layers": 36,
+    "full_layers": 18,
+    "sliding_layers": 18,
+    "window": 128,
+    "per_layer_bytes_per_token": 2048,
+    "full_bytes": 4831838208,
+    "sliding_bytes": 4718592,
+    "hybrid_total_bytes": 4836556800,
+    "all_full_bytes": 9663676416
+  },
+  "online_softmax_trace": {
+    "l1": 1.3678794411714423,
+    "n1": 1.7357588823428847,
+    "alpha": 0.36787944117144233,
+    "l2": 1.5852997230319539,
+    "n2": 3.966890002140263,
+    "output": 2.502296533903012
+  },
+  "mla": {
+    "bytes_per_token": 70272,
+    "mha_equivalent_bytes_per_token": 3997696,
+    "raw_element_ratio": 56.888888888888886
+  },
+  "score_matrix": {
+    "n_4096_fp32_bytes": 67108864,
+    "n_8192_fp32_bytes": 268435456,
+    "tile_128_fp32_bytes": 65536
+  }
+}

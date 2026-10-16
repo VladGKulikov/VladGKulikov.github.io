@@ -4,15 +4,15 @@
 
 Personal website and course library: <https://vladkulikov.com/>
 
-Public bilingual lecture and quiz library for three courses:
+Public bilingual course library for three courses:
 
 - Modern LLMs
 - RL for LLM
 - Information Theory for Machine Learning
 
-The repository contains lectures, illustrations, and authored module quizzes with
-answer checking and worked answers. Exercises, project materials, and downloadable
-notebooks remain a later publication stage.
+The repository contains lectures, illustrations, module quizzes with answer
+checking, exercises with expandable worked solutions, and existing notebooks
+that can be read as text or downloaded. No code is executed on the website.
 
 ## Course editions on Stepik
 
@@ -22,23 +22,25 @@ notebooks remain a later publication stage.
 | RL for LLM | <https://stepik.org/296686> | <https://stepik.org/296688> |
 | Information Theory for ML | <https://stepik.org/295409> | <https://stepik.org/295411> |
 
-## What the complete Stepik courses add
+## Published practice
 
-The website now includes 943 authored quiz questions per language. The complete
-Stepik editions also provide the remaining practical routes:
+Counts are per language; the library is available in both RU and EN.
 
-| Course | Published website quizzes (per language) | Further practice on Stepik |
-|---|---|---|
-| Modern LLMs | 415 choice questions across 20 modules | Exercises, projects, solutions and notebooks |
-| Reinforcement Learning for LLM | 151 platform-bank questions across 13 modules; objective parts checked automatically, open/code tasks reviewed against worked answers | Core exercises, programming tasks, solutions and notebooks |
-| Information Theory for ML | 377 choice and numeric questions across 15 modules; module 16 is a reference appendix without an authored quiz | Exercises and detailed solutions |
+| Course | Quiz questions | Exercises / project tasks | Existing notebooks |
+|---|---|---|---|
+| Modern LLMs | 415 | 116 | 42 (20 main, 18 project demos, 4 MiniLLM) |
+| RL for LLM | 151 platform-bank questions | 263 core tasks | 13 |
+| Information Theory for ML | 377 | 90 | No `.ipynb`; 9 Python solutions attached to their exercises |
+
+Stepik editions provide the corresponding platform learning experience; access
+conditions are listed separately for each course.
 
 The canonical authoring repositories are maintained separately. This public repository is a generated, publication-safe copy.
 
 ## Static pages and search metadata
 
 `npm run build:pages` creates a portable `dist-pages/` directory for GitHub Pages:
-two home pages, six course overviews, 98 complete lecture pages, 96 quiz pages, and a custom
+two home pages, six course overviews, 98 complete lecture pages, 96 quiz pages, 94 exercise pages, 66 notebook pages (362 indexable pages in total), and a custom
 `404.html`. Lectures, KaTeX formulas, illustrations and ordinary navigation are
 present in the original HTML. React hydrates that same interface to provide
 module search, collapsible panels and preservation of reading position on
@@ -48,7 +50,7 @@ expandable worked answers also remain readable without JavaScript.
 
 Permanent addresses use `/courses/<course-key>/<module-key>/` in English and
 `/ru/courses/<course-key>/<module-key>/` in Russian. Course overviews omit the
-module key. Module quiz URLs append `tests/` to the lecture URL. Module keys identify subjects, not reading order: in Modern LLMs,
+module key. Module quiz URLs append `tests/`, exercise URLs `exercises/`, and notebook URLs `notebooks/` to the lecture URL. Module keys identify subjects, not reading order: in Modern LLMs,
 for example, `module-18` is the Basic Transformer lecture at reading position 3.
 Do not renumber keys when changing the catalog order. Previous query-based URLs
 are translated to permanent addresses by the browser, preserving section hashes;
@@ -118,11 +120,40 @@ reading position use the same navigation/restoration logic as lectures.
 parser, tolerance boundary, translation contract, and quiz route. It runs after
 HTML validation in `build:pages`, including the existing Pages deployment job.
 
-## Later learning materials
+## Exercises, code solutions and notebooks
 
-Later passes will add exercises with answers hidden until expanded, and existing
-notebooks/solutions as text or downloadable files. Code execution is outside that
-scope. Those additional materials have not been copied in this quiz stage.
+`python scripts/export-practice.py` reads authored exercises and solutions from
+all three canonical repositories. Modern exercises come from lecture exercise
+sections; RL uses only current `route="core"` records; Information Theory joins
+exercise prompts to the separate authored solution files, including bonus tasks.
+`PRACTICE_CONTENT_AUDIT.json` records provenance, hashes and copied artifacts.
+
+`public/practice/**` holds 160 localized pages of structured practice content;
+`app/generated/practice.json` is their route manifest. Existing module keys,
+course colours, mobile drawers and bilingual reading restoration are shared with
+the lecture and quiz reader. Answers and notebook previews use native `details`
+controls and are readable without JavaScript. Their disclosure state is stored
+locally under a language-independent module/revision key. Markdown formulas and
+tables render normally; long formulas, tables and code scroll within their blocks.
+
+Information Theory's 9 Python examples are the code part of the corresponding
+exercise solutions. They appear inside the same expandable answer with syntax
+highlighting, line numbers, Copy and Download controls. No notebook section is
+invented for this course. Two Modern LLMs project tasks (module-13 E6/E7) have no
+complete authored answer: the page says so and links the module's demos as guidance.
+
+All 110 original notebook files (55 RU/EN pairs) and the existing support files
+are copied byte-for-byte to `public/downloads/**`. Each course has a ZIP archive
+preserving the source folder hierarchy and license notices. The archive is useful
+for notebooks that import sibling modules or load course configuration/data files.
+Notebook previews show original code cells and normalized explanatory Markdown;
+they do not execute cells, load kernels, or render active notebook output. Current
+source notebooks have no saved outputs; the exporter requires review if this changes.
+
+`npm run check:practice-markup` checks all 160 practice documents for broken
+Markdown and math. `npm run check:practice` verifies routes, bilingual item/cell
+alignment, original file hashes, download integrity, code preservation and the
+Information Theory exercise/code associations; it runs in `build:pages` and CI.
 
 ## Publication edition
 
@@ -141,6 +172,7 @@ To rebuild from local canonical repositories without changing them:
 ```powershell
 python scripts/refresh-course-content.py
 python scripts/export-quizzes.py
+python scripts/export-practice.py
 npm ci
 npm run check:math
 npm run check:publication

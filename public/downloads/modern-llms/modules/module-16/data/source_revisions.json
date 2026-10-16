@@ -1,0 +1,86 @@
+{
+  "checked": "2026-10-11",
+  "sources": [
+    {
+      "name": "ViT",
+      "url": "https://arxiv.org/abs/2010.11929",
+      "scope": "Spatial patches; CLS may be additional."
+    },
+    {
+      "name": "CLIP",
+      "url": "https://arxiv.org/abs/2103.00020",
+      "scope": "Paired contrastive loss; 400M original pairs."
+    },
+    {
+      "name": "SigLIP",
+      "url": "https://arxiv.org/abs/2303.15343",
+      "scope": "Pair sigmoid loss, scale and bias, 1/N normalization."
+    },
+    {
+      "name": "SigLIP code",
+      "url": "https://github.com/google-research/big_vision/blob/main/big_vision/trainers/proj/image_text/siglip.py",
+      "scope": "Pair sum then batch mean."
+    },
+    {
+      "name": "LLaVA-1.5",
+      "url": "https://arxiv.org/html/2310.03744v2",
+      "scope": "MLP, 558K alignment, 665K instructions; 6ND scenario is ours."
+    },
+    {
+      "name": "Qwen2-VL",
+      "url": "https://arxiv.org/html/2409.12191v2",
+      "scope": "Geometry-dependent dynamic resolution; no content difficulty oracle."
+    },
+    {
+      "name": "Qwen3-VL",
+      "url": "https://arxiv.org/html/2511.21631v1",
+      "scope": "DeepStack and interleaved MRoPE."
+    },
+    {
+      "name": "Qwen3-VL processor",
+      "url": "https://github.com/QwenLM/Qwen3-VL",
+      "scope": "Patch 16 versus Qwen2.5-VL patch 14."
+    },
+    {
+      "name": "InternVL3.5",
+      "url": "https://arxiv.org/html/2508.18265v1",
+      "scope": "ViR belongs to Flash; 256/64 decoder tokens per tile."
+    },
+    {
+      "name": "InternVL-U",
+      "url": "https://arxiv.org/html/2603.09877v1",
+      "scope": "MLLM conditioning and separate MMDiT head."
+    },
+    {
+      "name": "Chameleon",
+      "url": "https://huggingface.co/docs/transformers/en/model_doc/chameleon",
+      "scope": "Paper generation is distinct from text-output released weights."
+    },
+    {
+      "name": "Qwen2.5-Omni",
+      "url": "https://arxiv.org/abs/2503.20215",
+      "scope": "Sliding-window DiT for waveform reconstruction."
+    },
+    {
+      "name": "Qwen3.5-Omni",
+      "url": "https://arxiv.org/html/2604.15804v1",
+      "scope": "Thinker/Talker; RVQ, MTP, causal ConvNet; timestamps; report/API."
+    },
+    {
+      "name": "Step-Audio 2",
+      "url": "https://arxiv.org/abs/2507.16632",
+      "scope": "Audio encoder, discrete speech output and tool use."
+    },
+    {
+      "name": "EnCodec model implementation",
+      "url": "https://github.com/facebookresearch/encodec/blob/main/encodec/model.py",
+      "scope": "Audio codes have separate codebook and temporal axes; example rates in the course are an author-defined scenario, not an EnCodec configuration."
+    },
+    {
+      "name": "EnCodec residual vector quantization",
+      "url": "https://github.com/facebookresearch/encodec/blob/main/encodec/quantization/core_vq.py",
+      "scope": "Each stage quantizes the residual, subtracts its approximation, and contributes to the reconstructed sum. Source rechecked after the audio bridge edit."
+    }
+  ],
+  "status": "Primary sources reopened after edits; alternative topologies, Flash scope, arithmetic and released interfaces checked."
+}

@@ -1,0 +1,56 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-14",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. Visual tokens and KV",
+      "prompt": "Reproduce 576 tokens for 336×336 with patch size 14, 2,880 for four local tiles plus a thumbnail, and 1,296 for 1008×1008 with a 2×2 spatial merger. At 128 KiB of KV per token, calculate memory and KV-only capacity in 65 GiB.",
+      "answer": "*Solution.* A 336×336 image with patch size 14 has $336/14=24$ positions per axis, hence $24^2=576$ tokens. Four local tiles plus one thumbnail are five such grids: $5\\cdot576=2880$. At 1008×1008 there are $72^2=5184$ patches; a 2×2 merger combines four neighboring positions, leaving $5184/4=1296$.\n\nAt 128 KiB/token, these cost 72, 360, and 162 MiB. Since 65 GiB = 66,560 MiB, KV-only capacities are $\\lfloor66560/M\\rfloor$: **924, 184, and 410** images. They exclude text, output, activations, buffers, and the vision encoder.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. InfoNCE and projector size",
+      "prompt": "For diagonal similarity 0.8, off-diagonal similarity 0.2, and $N=4$, calculate positive probability and loss at $\\tau=0.1$ and $0.5$. Then count parameters in a biased 1024→4096→4096 MLP.",
+      "answer": "*Solution.* One row contains one positive score 0.8 and three negative scores 0.2, so\n\n$$p_+=\\frac{e^{0.8/\\tau}}{e^{0.8/\\tau}+3e^{0.2/\\tau}}=\\frac1{1+3e^{-0.6/\\tau}},\\qquad L=-\\log p_+.$$\n\nAt $\\tau=0.1$, $p_+=0.992619$ and $L=0.007409$; at $\\tau=0.5$, $p_+=0.525325$ and $L=0.643738$. Equal scores give $p_+=1/4$ and $L=\\log4=1.386294$.\n\nThe first biased linear layer has $1024\\cdot4096+4096=4{,}198{,}400$ parameters; the second has $4096^2+4096=16{,}781{,}312$. Total: **20,979,712**.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. Two hours inside 256K",
+      "prompt": "With one source frame per second, a 4,000-token text reserve, and 576 or 144 tokens per retained frame, calculate retained frames, sampling interval, and KV for the full context.",
+      "answer": "*Solution.* Two hours at 1 fps contain $2\\cdot3600=7200$ source frames. After text reserve, visual budget is $256000-4000=252000$ tokens. It retains $\\lfloor252000/576\\rfloor=437$ or $\\lfloor252000/144\\rfloor=1750$ frames. The inverse sampling densities are $7200/437=16.476$ or $7200/1750=4.114$ seconds per retained frame.\n\nVisual-budget KV is $252000\\cdot128$ KiB = **30.7617 GiB**; the full 256K context is $256000\\cdot128$ KiB = **31.25 GiB**. These counts refer to post-processor positions, not raw pixels.\n\nWith both source endpoints included, the actual mean timestamp gaps are 16.5115 and 4.1161 seconds. The 437-frame configuration occupies 251,712 visual positions, or 30.7266 GiB, rather than the entire visual allocation.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4 [project]",
+      "prompt": "Compare two open VLMs on 30 DocVQA or ChartQA examples. Record actual processor token count, encoder latency, language prefill, peak memory, and answer quality. Equal source resolution does not imply equal cost. If processor controls permit it, add a comparison at similar visual-position counts. Otherwise report the actual counts and the constraint that prevents independent budget matching.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 16](/downloads/modern-llms/project_demos/en/module_16_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5 [project]",
+      "prompt": "Build a sandboxed multimodal router: image or audio input → intent classification → allowlisted mock action. Measure routing accuracy, stage-level latency, and the token cost of each media input.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 16](/downloads/modern-llms/project_demos/en/module_16_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-06",
+      "title": "E6. Audio units",
+      "prompt": "Extend the Section 15 waveform from 96,000 to 96,001 samples. How many acoustic frames and pooled positions result? Why do eight codebooks not necessarily multiply context length by eight?",
+      "answer": "*Solution.* Starting a window every 160 samples while its start remains inside the signal gives $\\lceil96001/160\\rceil=601$ frames, then $\\lceil601/4\\rceil=151$ pooled positions. The last group has one frame; dividing it by four would incorrectly attenuate its features. Codebooks encode different aspects of the same temporal frame. A decoder may serialize the codes, combine them or predict some through another module, so its interface determines the final sequence length.",
+      "answerKind": "solution"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

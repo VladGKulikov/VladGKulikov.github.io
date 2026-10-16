@@ -1,0 +1,271 @@
+{
+  "schema_version": 3,
+  "unit_policy": {
+    "binary": "KiB/MiB/GiB/TiB use powers of two",
+    "decimal": "GB/TB and bandwidth use powers of ten"
+  },
+  "kv_ladder": {
+    "70B MHA-equivalent (H=64)": {
+      "bytes_per_token": 2621440,
+      "kib_per_token": 2560.0
+    },
+    "LLaMA-3.3-70B GQA": {
+      "bytes_per_token": 327680,
+      "kib_per_token": 320.0
+    },
+    "Llama-3-8B GQA": {
+      "bytes_per_token": 131072,
+      "kib_per_token": 128.0
+    },
+    "DeepSeek-V3 MLA (latent+RoPE)": {
+      "bytes_per_token": 70272,
+      "kib_per_token": 68.625
+    }
+  },
+  "context_memory_70b_gqa": {
+    "8192": {
+      "bytes": 2684354560,
+      "decimal_gb": 2.68435456,
+      "binary_gib": 2.5
+    },
+    "32768": {
+      "bytes": 10737418240,
+      "decimal_gb": 10.73741824,
+      "binary_gib": 10.0
+    },
+    "131072": {
+      "bytes": 42949672960,
+      "decimal_gb": 42.94967296,
+      "binary_gib": 40.0
+    },
+    "1000000": {
+      "bytes": 327680000000,
+      "decimal_gb": 327.68,
+      "binary_gib": 305.17578125
+    },
+    "10000000": {
+      "bytes": 3276800000000,
+      "decimal_gb": 3276.8,
+      "binary_gib": 3051.7578125
+    }
+  },
+  "hardware": {
+    "weight_bytes": 16000000000,
+    "weight_decimal_gb": 16.0,
+    "weight_binary_gib": 14.901161193848,
+    "bandwidth_decimal_tb_per_second": 3.35,
+    "peak_decimal_tflops": 990.0,
+    "device_binary_gib": 80.0,
+    "runtime_reserve_binary_gib": 8.0
+  },
+  "roofline": {
+    "ceilings": {
+      "0": {
+        "kv_bytes": 0,
+        "aggregate_tokens_per_second": 209.375
+      },
+      "8192": {
+        "kv_bytes": 1073741824,
+        "aggregate_tokens_per_second": 196.207722626508
+      },
+      "131072": {
+        "kv_bytes": 17179869184,
+        "aggregate_tokens_per_second": 100.96483447305
+      },
+      "1000000": {
+        "kv_bytes": 131072000000,
+        "aggregate_tokens_per_second": 22.777959094865
+      }
+    },
+    "intensity_flops_per_byte_128k": 0.482220104946,
+    "intensity_including_attention_128k": 2.553339685162,
+    "ridge_to_full_intensity": 115.739550744859,
+    "ridge_flops_per_byte": 295.522388059701,
+    "ridge_to_intensity": 612.837136047761,
+    "batch_knees": {
+      "8192": 14.901161193848,
+      "32768": 3.725290298462,
+      "131072": 0.931322574615
+    },
+    "batch_32_8k": {
+      "aggregate_tokens_per_second": 2128.684609452179,
+      "ideal_without_kv_tokens_per_second": 6700.0,
+      "kv_tax_factor": 3.147483648
+    }
+  },
+  "capacity_upper_bound": {
+    "device_binary_gib": 80,
+    "runtime_reserve_binary_gib": 8,
+    "max_requests": {
+      "8192": 57,
+      "32768": 14,
+      "131072": 3,
+      "1000000": 0
+    }
+  },
+  "paged": {
+    "naive_waste_fraction": 0.9375,
+    "expected_paged_waste_fraction": 0.003648747263,
+    "exact_2048_waste_fraction": 0.0,
+    "preallocation_capacity_factor": 16.0,
+    "trace": {
+      "after_a": {
+        "sequences": {
+          "A": {
+            "length": 6,
+            "blocks": [
+              0,
+              1
+            ]
+          }
+        },
+        "allocated_blocks": 2,
+        "free_blocks": 6,
+        "physical_capacity_tokens": 8,
+        "physical_payload_tokens": 6,
+        "logical_tokens": 6,
+        "internal_waste_tokens": 2,
+        "sharing_savings_tokens": 0
+      },
+      "after_share": {
+        "sequences": {
+          "A": {
+            "length": 6,
+            "blocks": [
+              0,
+              1
+            ]
+          },
+          "B": {
+            "length": 6,
+            "blocks": [
+              0,
+              1
+            ]
+          }
+        },
+        "allocated_blocks": 2,
+        "free_blocks": 6,
+        "physical_capacity_tokens": 8,
+        "physical_payload_tokens": 6,
+        "logical_tokens": 12,
+        "internal_waste_tokens": 2,
+        "sharing_savings_tokens": 6
+      },
+      "after_b_append": {
+        "sequences": {
+          "A": {
+            "length": 6,
+            "blocks": [
+              0,
+              1
+            ]
+          },
+          "B": {
+            "length": 9,
+            "blocks": [
+              0,
+              2,
+              3
+            ]
+          }
+        },
+        "allocated_blocks": 4,
+        "free_blocks": 4,
+        "physical_capacity_tokens": 16,
+        "physical_payload_tokens": 11,
+        "logical_tokens": 15,
+        "internal_waste_tokens": 5,
+        "sharing_savings_tokens": 4
+      },
+      "after_a_release": {
+        "sequences": {
+          "B": {
+            "length": 9,
+            "blocks": [
+              0,
+              2,
+              3
+            ]
+          }
+        },
+        "allocated_blocks": 3,
+        "free_blocks": 5,
+        "physical_capacity_tokens": 12,
+        "physical_payload_tokens": 9,
+        "logical_tokens": 9,
+        "internal_waste_tokens": 3,
+        "sharing_savings_tokens": 0
+      }
+    }
+  },
+  "prefix_and_interference": {
+    "full_prefill_ms": 132.39595959596,
+    "cached_suffix_prefill_ms": 8.274747474747,
+    "arithmetic_speedup": 16.0,
+    "full_causal_prefill_ms": 150.168013664711,
+    "cached_causal_suffix_ms": 10.426705047014,
+    "causal_arithmetic_ratio": 14.402250086446,
+    "illustrative_input_cost": {
+      "baseline": 81920,
+      "cached": 21632.0,
+      "amortized_cost_factor": 3.786982248521,
+      "warm_request_cost_ratio": 0.15625
+    },
+    "decode_weight_floor_ms": 4.776119402985,
+    "monolithic_spike_ms": 137.172078998945,
+    "chunked_itl_ms": 13.050866877733
+  },
+  "compression": {
+    "base_kib_per_token": 128.0,
+    "compressed_bits_per_coordinate": 3,
+    "base_bits_per_coordinate": 16,
+    "compressed_kib_per_token": 24.0,
+    "ceiling_128k_tokens_per_second": 174.286494109339
+  },
+  "eviction": {
+    "attention_mass": [
+      0.625,
+      0.897,
+      0.776,
+      0.225,
+      0.3,
+      0.874,
+      0.005,
+      0.821,
+      0.797,
+      0.468,
+      0.303,
+      0.278,
+      0.255,
+      0.445,
+      0.505,
+      0.553
+    ],
+    "heavy_hitters": [
+      0,
+      1,
+      2,
+      5,
+      7,
+      8,
+      14,
+      15
+    ],
+    "streaming": [
+      0,
+      1,
+      2,
+      3,
+      12,
+      13,
+      14,
+      15
+    ],
+    "lost_heavy_hitters": [
+      5,
+      7,
+      8
+    ]
+  }
+}

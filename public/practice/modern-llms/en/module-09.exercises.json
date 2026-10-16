@@ -1,0 +1,49 @@
+{
+  "courseKey": "modern-llms",
+  "moduleKey": "module-09",
+  "language": "en",
+  "section": "exercises",
+  "introduction": "",
+  "items": [
+    {
+      "id": "exercise-01",
+      "title": "E1. The KV-cache ladder",
+      "prompt": "Derive the ordinary-attention KV bytes/token formula and recover the values for a 70B MHA equivalent, Llama-3.3-70B GQA, Llama-3-8B GQA, and DeepSeek-V3 MLA. For 70B GQA, compute the cache payload at 8K, 32K, 128K, and 1M tokens and find the point at which it equals 140 GB of bf16 weights.",
+      "answer": "*Solution.* For ordinary attention,\n\n$$\nb_{KV}=2L H_{kv}d_hb.\n$$\n\nSubstituting the configurations gives **2,560, 320, and 128 KiB/token**. The separate MLA calculation stores the latent and RoPE-related coordinates and gives **68.625 KiB/token**. For 70B GQA, $b_{KV}=327{,}680$ bytes, so the payload is 2.5 GiB at 8,192 tokens, 10 GiB at 32,768, 40 GiB at 131,072, and 305.176 GiB = 327.68 GB at one million. The crossing with 140 GB of weights is\n\n$$\n\\frac{140\\cdot10^9}{327{,}680}\\approx\\mathbf{427{,}246}\\ \\text{tokens}.\n$$\n\nThe reproducible table is in notebook sections **“1. Typed KV geometry and units”** and **“2. The KV/token ladder.”**",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-02",
+      "title": "E2. A decode roofline with KV traffic",
+      "prompt": "For an 8B bf16 model with $W=16$ GB, $b_{KV}=128$ KiB/token, memory bandwidth 3.35 TB/s, and peak arithmetic throughput 990 TFLOP/s, compute the batch-one bandwidth ceilings, the 128K arithmetic intensity, the batch knees, and the KV penalty at batch 32 and context 8K.",
+      "answer": "*Solution.* The aggregate ceiling is\n\n$$\nQ(B,N)=\\frac{B\\,BW}{W+B N b_{KV}}.\n$$\n\nAt batch one, $Q(0)=209.375$, $Q(8K)=196.208$, $Q(128K)=100.965$, and $Q(1M)=\\mathbf{22.778}$ tok/s. At 128K, intensity is 0.4822 FLOP/B for projections alone, or **2.55334 FLOP/B** including QK/AV while the ridge is $990/3.35=295.52$ FLOP/B, so the point lies **115.74×** below the ridge. The knees are 14.90, 3.73, and 0.93 at 8K, 32K, and 128K. At $B=32$, 8K, the ceiling is 2,128.7 tok/s rather than the zero-KV ideal of 6,700 tok/s, a **3.15×** reduction. See notebook section **“3. Decode roofline, intensity, and batch knees.”**",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-03",
+      "title": "E3. Prefix reuse and phase interference",
+      "prompt": "In the notebook scenario, compare full prefill with a cache hit that leaves a 512-token suffix, then combine the prefill and decode lower bounds and show the effect of chunking.",
+      "answer": "*Solution.* Projections give 132.396 ms for the full prompt and 8.275 ms for the suffix, a 16× ratio. Including causal attention gives **150.168 and 10.427 ms**, a **14.402** ratio. The scheduling illustration sums only the original selected bounds: $4.776+132.396=137.172$ ms versus $4.776+8.275=13.051$ ms. It is not a measured ITL prediction; later chunks additionally attend to longer histories.\n\nFor a separate input-cost calculation, assume prefix writes cost 1.25, reads cost 0.1, and suffixes are uncached. A warm request costs $7680\\cdot0.1+512=1280$ base-price token equivalents: a 6.4× reduction. Ten requests with one write cost $7680(1.25+9\\cdot0.1)+10\\cdot512=21632$ versus 81920 without caching, a **3.787×** reduction. Exclude output tokens, expiry, and additional writes. The notebook tests billing and arithmetic separately.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-04",
+      "title": "E4 [project]",
+      "prompt": "Start with Demo 1 on CPU. Compare 4096-slot reservation with 16-token pages over 500 lengths. Then trace five requests for each of 100 users, with ten shared templates in the workload. Report both request-hit fraction and reused-input fraction under shared and per-user cache scopes. Vary the length distribution or template count and explain the change. An optional engine experiment should pin arrivals, warm-up, sharing boundaries, and SLOs. Comparing shared and disaggregated prefill/decode requires suitable devices and separate KV-transfer accounting.",
+      "answer": "> **Project demo:** [English Module 10 project-demo notebook](/downloads/modern-llms/project_demos/en/module_10_project_demo.ipynb), section “Demo 1.” It provides a compact reproducible scaffold on small inputs, not the completed full-scale experiment.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-05",
+      "title": "E5 [project]",
+      "prompt": "Use Demo 2 to compare attention outputs before and after teaching quantization at 8 and 3 bits. Next, shift the query toward a previously unimportant position. Try both retention policies at 25%, 10%, and 5% budgets, stating how you round token counts. Explain why past attention alone cannot guarantee that a future answer survives.\n\n\nWith a suitable model, optionally add a fixed small subset of [LongBench](https://github.com/THUDM/LongBench), a collection of different long-context tasks, or a [needle-in-a-haystack](https://github.com/gkamradt/needle-in-a-haystack) experiment: insert a fact into a long text and ask for it. The latter measures retrieval of that fact, not long-context quality as a whole. Record text, tokenizer, length, insertion depth, seed, and answer-scoring rule. “128K” is a chosen length, not a universal benchmark version. Actual KIVI/TurboQuant comparisons additionally require their implementations and measured memory and throughput; the teaching quantizer does not implement either method.",
+      "answer": "> **Project demo:** [English Module 10 project-demo notebook](/downloads/modern-llms/project_demos/en/module_10_project_demo.ipynb), section “Demo 2.” It provides a compact reproducible scaffold on small inputs, not the completed full-scale experiment.",
+      "answerKind": "guidance"
+    }
+  ],
+  "bundle": {
+    "url": "/downloads/modern-llms/course-materials.zip",
+    "bytes": 2648858,
+    "sha256": "c74b0b95d156e41092f3cad74b4f8a1e7b7ffcbd3c434cf2cd61b2cee127139c"
+  }
+}

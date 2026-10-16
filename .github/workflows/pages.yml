@@ -26,6 +26,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check:markup
+      - run: npm run check:practice-markup
       - run: npm run check:quiz-markup
       - run: npm run check:publication
       - run: npm run build:pages
