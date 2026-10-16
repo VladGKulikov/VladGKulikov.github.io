@@ -29,9 +29,9 @@ import { captureReadingPosition, readingPositionAtAnchor, restoreReadingPosition
 import config from "../SITE_CONFIG.json";
 import { buildLocation, courses, parseUrl, updatePageMetadata, type Language, type CourseKey, type CourseModule as Module, type PageRoute, type PageSection } from "./site";
 import { trackPage } from "./analytics";
-import { quizFor, type Quiz } from './quizzes';
+import { quizFor, quizModules, type Quiz } from './quizzes';
 import { QuizReader, QuizMarkdown, questionAnchor, questionLabel } from './QuizReader';
-import { practiceFor, practiceAnchor, type Practice } from './practice';
+import { practiceFor, practiceModules, practiceAnchor, type Practice } from './practice';
 import { PracticeReader, PracticeMarkdown } from './PracticeReader';
 
 const copy = {
@@ -59,16 +59,17 @@ const copy = {
     seriesText:
       "Сейчас в серии три самостоятельных курса. Каждый можно проходить отдельно; новые курсы и открытые материалы будут добавляться.",
     start: "Читать на сайте",
-    stepik: "Полный курс на Stepik",
+    stepik: "Открыть в Stepik",
     leanpub: "PDF / EPUB бесплатно · Поддержать автора",
-    openCourseTitle: "Открытая лекционная версия",
-    openCourseText: "Лекции, тесты с проверкой, упражнения с решениями и файлы для практики",
-    completeCourseTitle: "Полный курс на Stepik",
-    completeFreeCourseTitle: "Полный курс на Stepik · Бесплатно",
-    paidPracticeText:
-      "Лекции, тесты, упражнения, решения, проекты и ноутбуки",
-    openPracticeText:
-      "Лекции, тесты, упражнения, решения, проекты и ноутбуки — всё бесплатно",
+    courseContentTitle: "Полный курс · Бесплатно",
+    courseContentText: "Лекции, тесты с проверкой, упражнения с решениями и файлы для практики",
+    quizQuestions: "Вопросы в тестах",
+    exerciseItems: "Упражнения и проекты",
+    notebookFiles: "Ноутбуки",
+    pythonFiles: "Python-примеры и файлы решений",
+    studyHere: "Учиться на сайте",
+    siteHint: "Основная площадка",
+    stepikHint: "Если вам удобнее Stepik",
     bookTitle: "PDF / EPUB",
     bookText: "Скачать бесплатно или поддержать автора на Leanpub",
     modules: "модулей",
@@ -85,9 +86,9 @@ const copy = {
     licenses: "Лицензии",
     citation: "Цитирование",
     edition: "Редакция",
-    boundaryLabel: "Лекционная версия / полный курс",
+    boundaryLabel: "Где учиться",
     boundary:
-      "На сайте доступны лекции, тесты с проверкой, упражнения с решениями и имеющиеся ноутбуки и Python-файлы. Код можно читать и скачивать. Курсы также доступны на Stepik; условия указаны отдельно для каждого курса.",
+      "Наш сайт — основная площадка курсов. Те же материалы бесплатно доступны на Stepik: выбирайте, где вам удобнее учиться. Ноутбуки и Python-файлы на сайте можно читать и скачивать.",
     allMaterials: "Все материалы",
     noResults: "Ничего не найдено",
     modulesMenu: "Список модулей",
@@ -121,16 +122,17 @@ const copy = {
     seriesText:
       "The series currently includes three independent courses. Each stands on its own; new courses and open materials will be added over time.",
     start: "Read online",
-    stepik: "Complete course on Stepik",
+    stepik: "Open in Stepik",
     leanpub: "Free PDF / EPUB · Support the author",
-    openCourseTitle: "Open Reader Edition",
-    openCourseText: "Lectures, checked quizzes, worked exercises and practice files",
-    completeCourseTitle: "Complete course on Stepik",
-    completeFreeCourseTitle: "Complete course on Stepik · Free",
-    paidPracticeText:
-      "Reader Edition plus assessments, exercises, solutions, projects, and notebooks",
-    openPracticeText:
-      "Reader Edition plus assessments, exercises, solutions, projects, and notebooks — all free",
+    courseContentTitle: "Complete course · Free",
+    courseContentText: "Lectures, checked quizzes, worked exercises and practice files",
+    quizQuestions: "Quiz questions",
+    exerciseItems: "Exercises and projects",
+    notebookFiles: "Notebooks",
+    pythonFiles: "Python examples and solution files",
+    studyHere: "Study on this site",
+    siteHint: "Main learning platform",
+    stepikHint: "If you prefer Stepik",
     bookTitle: "PDF / EPUB",
     bookText: "Download free or support the author on Leanpub",
     modules: "modules",
@@ -147,9 +149,9 @@ const copy = {
     licenses: "Licenses",
     citation: "Citation",
     edition: "Edition",
-    boundaryLabel: "Reader Edition / complete course",
+    boundaryLabel: "Where to study",
     boundary:
-      "This site includes lectures, checked quizzes, worked exercises, and existing notebooks and Python files to read or download. Courses are also available on Stepik; access terms are shown separately for each course.",
+      "This site is the main home for the courses. The same materials are available free on Stepik: choose whichever platform suits you. Notebooks and Python files can be read and downloaded here.",
     allMaterials: "All materials",
     noResults: "No modules found",
     modulesMenu: "Course modules",
@@ -182,12 +184,6 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
   },
 };
 
-const fullyOpenCourseKeys = new Set<CourseKey>([
-  "modern-llms",
-  "rl-for-llm",
-  "information-theory-for-ml",
-]);
-
 const coursePageCounts: Record<CourseKey, Record<Language, number>> = {
   "modern-llms": {
     ru: 375,
@@ -200,45 +196,6 @@ const coursePageCounts: Record<CourseKey, Record<Language, number>> = {
   "information-theory-for-ml": {
     ru: 335,
     en: 320,
-  },
-};
-
-const stepikVolumes: Record<CourseKey, Record<Language, string[]>> = {
-  "modern-llms": {
-    ru: [
-      "299 автопроверяемых вопросов",
-      "137 самопроверок · 65 упражнений",
-      "36 проектных упражнений · 40 ноутбуков",
-    ],
-    en: [
-      "299 auto-graded questions",
-      "137 self-checks · 65 exercises",
-      "36 project exercises · 40 notebooks",
-    ],
-  },
-  "rl-for-llm": {
-    ru: [
-      "109 тестов Stepik · 151 самопроверка",
-      "77 аналитических · 77 программных заданий",
-      "13 ноутбуков",
-    ],
-    en: [
-      "109 Stepik tests · 151 self-checks",
-      "77 analytical · 77 programming tasks",
-      "13 notebooks",
-    ],
-  },
-  "information-theory-for-ml": {
-    ru: [
-      "377 автопроверяемых вопросов",
-      "Все 78 упражнений с подробными решениями · бесплатно",
-      "12 упражнений с Python",
-    ],
-    en: [
-      "377 auto-graded questions",
-      "All 78 exercises with detailed solutions · free",
-      "12 Python exercises",
-    ],
   },
 };
 
@@ -753,7 +710,10 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                 .filter((course) => course.language === language)
                 .map((course) => {
                   const imageCount = course.modules.reduce((sum, module) => sum + module.image_count, 0);
-                  const isFullyOpen = fullyOpenCourseKeys.has(course.course_key);
+                  const matchesCourse = (entry: { courseKey: string; language: string }) => entry.courseKey === course.course_key && entry.language === language;
+                  const quizCount = quizModules.filter(matchesCourse).reduce((sum, entry) => sum + entry.count, 0);
+                  const exerciseCount = practiceModules.filter(entry => matchesCourse(entry) && entry.section === 'exercises').reduce((sum, entry) => sum + entry.count, 0);
+                  const notebookCount = practiceModules.filter(entry => matchesCourse(entry) && entry.section === 'notebooks').reduce((sum, entry) => sum + entry.count, 0);
                   return (
                     <article className="course-card" key={course.course_key} data-accent={course.course_key}>
                       <div className="course-card-top">
@@ -764,8 +724,8 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                       <p>{course.description}</p>
                       <div className="course-access">
                         <section className="access-panel access-panel-open">
-                          <p className="access-title">{t.openCourseTitle}</p>
-                          <p className="access-description">{t.openCourseText}</p>
+                          <p className="access-title">{t.courseContentTitle}</p>
+                          <p className="access-description">{t.courseContentText}</p>
                           <dl className="course-stats">
                             <div>
                               <dt>{course.module_count}</dt>
@@ -780,31 +740,22 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                               <dd>{t.illustrations}</dd>
                             </div>
                           </dl>
+                          <ul className="course-volume">
+                            <li>{t.quizQuestions}: <strong>{quizCount}</strong></li>
+                            <li>{t.exerciseItems}: <strong>{exerciseCount}</strong></li>
+                            <li>{notebookCount ? <>{t.notebookFiles}: <strong>{notebookCount}</strong></> : t.pythonFiles}</li>
+                          </ul>
                           <a className="course-open" href={buildLocation(language, course.course_key, course.modules[0].module_key)}>
-                            {t.start}
+                            <span>{t.studyHere}<small>{t.siteHint}</small></span>
                             <ArrowRight size={18} />
                           </a>
-                        </section>
-
-                        <section className={`access-panel access-panel-stepik ${isFullyOpen ? "is-free" : "is-paid"}`}>
-                          <p className="access-title">
-                            {isFullyOpen ? t.completeFreeCourseTitle : t.completeCourseTitle}
-                          </p>
-                          <p className="access-description">
-                            {isFullyOpen ? t.openPracticeText : t.paidPracticeText}
-                          </p>
-                          <ul className="stepik-volume">
-                            {stepikVolumes[course.course_key][language].map((item) => (
-                              <li key={item}>{item}</li>
-                            ))}
-                          </ul>
                           <a
                             className="course-stepik"
                             href={course.stepik_url}
                             target="_blank"
                             rel="noreferrer"
                           >
-                            {isFullyOpen ? t.completeFreeCourseTitle : t.completeCourseTitle}
+                            <span>{t.stepik}<small>{t.stepikHint}</small></span>
                             <ExternalLink size={15} />
                           </a>
                         </section>

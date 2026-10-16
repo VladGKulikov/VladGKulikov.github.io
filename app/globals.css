@@ -400,15 +400,6 @@ a {
   border-top: 3px solid var(--ink);
 }
 
-.access-panel-stepik {
-  border-left: 3px solid var(--card-accent);
-  background: color-mix(in srgb, var(--card-accent) 7%, var(--paper-light));
-}
-
-.access-panel-stepik.is-free {
-  background: color-mix(in srgb, var(--card-accent) 12%, var(--paper-light));
-}
-
 .access-panel-book {
   border-color: color-mix(in srgb, var(--card-accent) 60%, var(--ink));
 }
@@ -458,7 +449,7 @@ a {
   text-transform: uppercase;
 }
 
-.stepik-volume {
+.course-volume {
   display: grid;
   gap: 5px;
   min-height: 72px;
@@ -467,13 +458,13 @@ a {
   list-style: none;
 }
 
-.stepik-volume li {
+.course-volume li {
   color: var(--ink);
   font-size: 12px;
   line-height: 1.4;
 }
 
-.stepik-volume li::before {
+.course-volume li::before {
   content: "— ";
   color: var(--card-accent);
 }
@@ -498,6 +489,26 @@ a {
 
 .course-open:hover {
   background: var(--card-accent);
+}
+
+.course-open svg,
+.course-stepik svg {
+  flex-shrink: 0;
+}
+
+.course-open small,
+.course-stepik small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-transform: none;
+}
+
+.course-open + .course-stepik {
+  margin-top: 16px;
 }
 
 .course-stepik,
