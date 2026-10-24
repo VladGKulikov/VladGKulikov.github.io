@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Export reviewed, canonical course questions. Never modify course repositories.
 
-The site keeps Modern's previous_id URLs. RL's platform bank contains both
+Modern's module URLs use its current module numbers. RL's platform bank contains both
 objective quizzes and open/code tasks; the latter retain their worked answers
 for honest self-checking, without executing submitted code or keyword grading.
 """
@@ -132,7 +132,7 @@ def main():
     sys.path.insert(0, str(roots['rl-for-llm'] / 'tools'))
     from assessment_source import load_all_assessments
     manifest = json.loads((roots['modern-llms'] / 'course_manifest.json').read_text(encoding='utf8'))
-    modern_ids = {f'module-{m.get("previous_id") or m["id"]}': m['id'] for m in manifest['modules']}
+    modern_ids = {f'module-{m["id"]}': m['id'] for m in manifest['modules']}
     catalog = json.loads((ROOT / 'app/generated/content.json').read_text(encoding='utf8'))
     entries, sources = [], []
     for course in catalog['courses']:

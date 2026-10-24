@@ -1,611 +1,814 @@
-# Module 15. Reasoning Models and Test-Time Compute
+# Module 13. Supervised Fine-Tuning and Data Work
 
-> **What this module is about.** The previous modules improved a model before deployment: pretraining built the base policy, supervised fine-tuning shaped its interface, and feedback-based learning changed which outputs it prefers. This module studies a different lever. Once the weights are fixed, a system can still spend more computation on a particular request—by extending one solution path, sampling several alternatives, checking them, or routing difficult prompts to a more expensive procedure.
+*Modern LLMs · Module 13 lecture · revision October 11, 2026*
+
+> **What this module is about.** Pretraining gives a model a remarkably broad next-token predictor. It does not, by itself, specify how a conversational system should represent roles, obey a system instruction, stop a turn, emit a tool call, or expose different parts of a structured response. **Supervised fine-tuning (SFT)** supplies demonstrations of the behavior we want.
 >
-> These mechanisms are often grouped under *test-time compute*, but they buy different things. A longer trajectory deepens a single search. Parallel candidates widen the search distribution. A verifier turns candidate generation into selection. An adaptive controller decides which kind of work is worth paying for on each prompt.
+> **The route.** We follow the chain from a demonstration to the behavior it teaches. We will connect serialization, label construction, sequence packing, data curation, synthetic generation, reasoning demonstrations, tool-use traces, distillation, and LoRA. Four reproducible scenarios anchor the discussion: 21 supervised positions in a 56-token conversation; 24 examples packed into five 2,048-token containers; an explicit SFT compute estimate; and 13.63 million LoRA parameters in place of updating an entire 8.03B model.
 >
-> We will treat quality and systems cost together. The module therefore follows reasoning tokens all the way down to decode latency, FLOP, KV memory, and concurrency. Numerical serving figures are explicit teaching scenarios, not performance claims about a particular vendor or accelerator.
-
-> **Further study.** Everything required for this module is developed here. The companion course *RL for LLM* goes deeper into RLVR, GRPO, verifier-driven training, and interactive environments, especially in Modules 9–10. *Information Theory for ML* provides a broader treatment of ensembles, uncertainty, and the value of additional observations.
-
-## Reading routes
-
-**First pass.** Follow §§1–5, then read §§6–7 for the distinction between finding a correct candidate and selecting it. Continue through §§8–12 and §§15–17. The tables initially serve to show what changes as the budget grows. Use §18 to check that you can identify the generator, the verifier, and the cost of their work.
-
-**Second pass.** Derive the probabilities in §§6–7, reproduce the accounting in §§10–12, and run §13 together with the notebook in §14. Work through §19 with particular attention to tie policies, independence, and the difference between a budget cap and actual consumption.
-
-**Reference pass.** §§4 and 17 provide an API comparison checklist; §15 compares verification contracts. The API examples are dated observations, not a permanent model ranking.
-
-The prerequisites are conditional probability, the KV-cache accounting in Module 10, and the SFT/RL distinction from Modules 13–14. RLVR means reinforcement learning with verifiable rewards, such as exact-answer checks or executable tests. Here a related checking signal will also guide inference while model weights stay fixed.
+> **Prerequisites.** The tokenizer and special-token discussion from Module 2, the data and compute accounting from Module 9, and the quantization concepts from Module 11 are useful background. All definitions needed for the calculations are repeated here.
 
 ---
 
-## 1. A second scaling axis
+## 1. Why next-token prediction is not yet an assistant
 
-We need four terms before comparing policies. A **trajectory** is one sequence of intermediate actions ending in an answer. A **candidate** is the result of an attempt that can be compared with others. A **verifier** checks or scores it; a **selector** uses that evidence to choose an answer. In **best-of-N**, the system generates $N$ candidates and returns the highest-ranked one under a specified rule. “Best” refers to that rule, which may disagree with correctness.
+**Reading routes.** For a first pass, follow §§1–6, read the interpretation of the cost calculation in §7, then continue through §§8–12 and the explanations of distillation and LoRA in §§15–16. The NumPy → PyTorch checks can wait; the surrounding prose supplies the concepts. On a second pass, reproduce the numerical scenarios and work through §§13–14 with the notebook. Sections 2, 8, 16.1 and 17 also provide a reference route for papers and checkpoint files.
 
-A large language model is usually evaluated as though it had one chance: one prompt enters, one completion leaves. That convention hides an important design choice. We can also ask how well the same trained model performs when it is allowed to spend more computation on the instance in front of it.
+We return here to an autoregressive Transformer after Module 12's diffusion models. SFT names a demonstration-based training stage, not an architecture. A diffusion model can learn from demonstrations using conditional denoising, but the next-token label shift developed below is specific to the autoregressive path.
 
-There are three broad ways to spend that budget.
-
-- **Go deeper.** Continue one trajectory, revise an intermediate step, run a longer plan, or interleave reasoning with tools.
-- **Go wider.** Produce independent candidates, perhaps from one model or from several agents, and then aggregate or select.
-- **Allocate adaptively.** Give easy inputs a short path and reserve expensive search for requests that appear difficult or uncertain.
-
-All three need a decision rule. A long chain needs a stopping condition. A candidate pool needs a selector. An adaptive system needs a signal that says whether more work is likely to pay off.
-
-This is why inference-time scaling is not merely “turning up intelligence.” It is an algorithm for allocating a finite resource. Snell et al. showed that the most effective allocation varied strongly with prompt difficulty. Under their experimental setup, compute-optimal routing used test-time computation more than four times as efficiently as a simple best-of-N baseline, and a smaller model could beat a model fourteen times larger on a subset of tasks under FLOP-matched evaluation. Those are study-specific results, but the underlying lesson is general: **the allocation policy is part of the method**. [Snell et al., 2024](https://arxiv.org/abs/2408.03314)
-
-![VIZ m15/01 — the second scaling axis](assets/modern-llms/en/module-13/m15_01_timeline.svg)
-*From the first public reasoning systems to controllable and adaptive inference contracts.*
-
----
-
-## 2. From longer traces to explicit controls
-
-Chain-of-thought prompting, self-consistency, and generate-and-test workflows predate the current generation of reasoning models. The 2024–2026 shift was more specific: model training and product interfaces began to treat inference computation as a resource that could be deliberately scaled.
-
-OpenAI's September 2024 o1 announcement described performance improving along two axes: more reinforcement-learning compute during training and more time spent reasoning at test time. The public article did not disclose a full recipe, but it made inference-time scaling a first-class claim rather than a prompting trick. [OpenAI, 2024](https://openai.com/index/learning-to-reason-with-llms/)
-
-DeepSeek-R1 supplied a much more inspectable training story in January 2025. R1-Zero used large-scale reinforcement learning on verifiable signals without a preliminary supervised phase. The model developed longer solutions, self-checking behavior, and course corrections, while also suffering from readability and language-mixing problems. The full R1 pipeline then combined cold-start data, reasoning RL, rejection sampling, renewed SFT, and broader RL objectives. [DeepSeek-R1, 2025](https://arxiv.org/abs/2501.12948)
-
-By **11 October 2026**, inference controls had become a regular part of model APIs, but the contracts were not standardized:
-
-- **GPT-6.1 Sol** supports `low`, `medium` (the default), `high`, `xhigh`, and `max` effort. It does not support `none` or `minimal`.
-- **Claude Opus 5.5** uses adaptive thinking. Manual `budget_tokens` and disabling thinking are unavailable on this model; effort and the display of intermediate content remain separate controls.
-- **Gemini 3.8 Flash through the Interactions API** accepts `generation_config.thinking_level` values of `low`, `medium`, or `high`, with `medium` as the default. The field name belongs to this API surface.
-- **Kimi K3** always reasons and accepts `low`, `high`, and `max` through `reasoning_effort`; its documented default is `max`.
-- **Inkling** was trained for controllable reasoning effort according to its developer. That release claim describes this model, not a standard shared by other APIs.
-
-The labels are local to each API. A `high` setting does not imply a common token count, latency target, search algorithm, or billing rule. Documentation tells us what control surface exists; it rarely reveals the complete internal computation. [OpenAI API](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [Anthropic](https://platform.claude.com/docs/en/build-with-claude/thinking) · [Gemini API](https://ai.google.dev/gemini-api/docs/thinking) · [Kimi K3](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart) · [Inkling](https://thinkingmachines.ai/news/introducing-inkling/)
-
-The important historical change, then, is not that models began emitting intermediate text. It is that **reasoning depth, search breadth, and routing became deployable system parameters**.
-
----
-
-## 3. Three older ideas hiding inside test-time compute
-
-Modern reasoning systems recombine several classical patterns.
-
-### Anytime computation
-
-An anytime algorithm returns a usable answer early and improves it while resources remain. Search, planning, and numerical optimization all have examples. A well-designed reasoning model should exhibit the same property: extra time should be optional, and the system should be able to stop with a coherent result.
-
-A token cap alone does not create an anytime algorithm. A hard cutoff can leave an unfinished derivation or no final answer. A practical controller can retain the best verified candidate so far and return it when the budget expires. An incomplete new attempt then cannot erase an existing usable result.
-
-### Repeated stochastic search
-
-If one attempt has a non-zero chance of success, independent restarts increase the chance that a successful path appears. This is the same intuition behind ensembles and randomized search. Yet a pool containing a correct answer is useful only if the system can identify it.
-
-### Generate and test
-
-Program synthesis, theorem proving, and planning often separate proposal from validation. Generate a candidate; run a compiler, unit tests, a proof kernel, or a simulator; keep what passes. This arrangement is especially attractive when generation is uncertain but checking is cheap and exact.
-
-The mapping is straightforward:
-
-- sequential reasoning is a form of deeper search;
-- multiple completions form a stochastic ensemble;
-- a verifier supplies the acceptance or ranking rule;
-- an adaptive controller is a meta-policy over those choices.
-
-![VIZ m15/02 — depth, breadth, and adaptation](assets/modern-llms/en/module-13/m15_02_modes.svg)
-*Three ways to spend inference compute: deepen one path, widen the candidate set, or route adaptively.*
-
----
-
-## 4. What counts as a reasoning model?
-
-The phrase can easily be overinterpreted. A visible chain of text is not guaranteed to be a faithful transcript of internal computation, and a hidden chain is not automatically more rigorous. We will use a functional definition:
-
-> A **reasoning model** is trained or deployed so that additional computation before the final answer can be used productively.
-
-That property has several separable dimensions.
-
-**Representation.** Intermediate work may be exposed, hidden, summarized, placed in a dedicated message field, or represented by opaque signatures needed for continuity. A `<think>` token in a chat template establishes a format, not a capability guarantee.
-
-**Control.** The user may specify a token target, select an effort level, enable an adaptive mode, or receive no direct control at all.
-
-**Topology.** Increasing one model's effort and launching several workers are separate choices. A `max` setting does not specify the number of parallel candidates. Meta describes Muse Spark 1.1 as supporting planning and delegation in agent harnesses. When a chosen harness delegates work, its evaluation must count all workers' computation. This describes supported system behavior rather than establishing the model's internal architecture. [Muse Spark 1.1](https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/)
-
-**Accounting.** Reasoning tokens can consume output limits and be billed even when only a summary is visible. Gemini reports thought-token usage separately in metadata while charging for the underlying generated thinking tokens. [Gemini API](https://ai.google.dev/gemini-api/docs/thinking)
-
-**State across turns.** Some APIs require the application to return complete assistant messages, thought signatures, or reasoning items after tool calls. Dropping those fields may discard useful state or violate the protocol.
-
-A proper comparison therefore needs more than an effort label. It needs the depth of one trajectory, the number of parallel attempts, the selection rule, the visibility contract, and the accounting model.
-
----
-
-## 5. What DeepSeek-R1 teaches us about training reasoning
-
-DeepSeek-R1 is useful because its report separates an exploratory RL result from a deployable multi-stage system.
-
-### R1-Zero as a controlled experiment
-
-The starting checkpoint is the pretrained DeepSeek-V3-Base. “Without preliminary SFT” describes the reasoning post-training stage; language knowledge and representations already exist. The experiment does not train a language model from scratch using rewards alone.
-
-R1-Zero did not receive a supervised warm-up that taught it how a long solution should look. It was optimized with reinforcement learning on verifiable rewards and formatting constraints. During training, solutions became longer and exhibited behaviors such as checking previous work and trying another route.
-
-The defensible conclusion is not that a language model acquired human cognition. It is narrower: **a policy can discover token-level computational strategies when exploration is coupled to an informative, verifiable reward**.
-
-The experiment also exposed the cost of optimizing correctness in isolation. Outputs could be hard to read, switch languages, or use an inconvenient format. A useful assistant needs both problem-solving behavior and a stable human-facing interface.
-
-### The full R1 pipeline
-
-The complete recipe adds several stages:
-
-1. a small cold-start SFT set for readable reasoning behavior;
-2. reasoning-focused reinforcement learning;
-3. collection of successful trajectories from the RL checkpoint, followed by SFT of DeepSeek-V3-Base on those trajectories and a broader data mixture;
-4. additional reinforcement learning for general helpfulness, safety, and instruction following.
-
-This is a good antidote to the false choice between SFT and RL. Supervised data establish a usable format; RL explores under reward; selected trajectories become new data; broader post-training restores the full interaction contract.
-
-![VIZ m15/03 — the DeepSeek-R1 recipe](assets/modern-llms/en/module-13/m15_03_r1_pipeline.svg)
-*R1-Zero isolates the RL mechanism; DeepSeek-R1 combines it with cold-start data and broader post-training.*
-
----
-
-## 6. Parallel scaling, worked example A: voting can get worse first
-
-Assume that one independent completion is correct with probability
+A pretrained language model has spent its training budget minimizing a deceptively simple objective:
 
 $$
-p=0.4.
+-\log P_\theta(x_t\mid x_{<t}).
 $$
 
-When it is wrong, the answer is uniformly distributed across six distinct distractors. We draw $N$ completions and return the most frequent normalized answer.
+That objective rewards plausible continuation. It does not contain a separate term for respecting the boundary between a user turn and an assistant turn. It does not say that a JSON object must match a tool schema, that a refusal should be concise, or that the model should stop after answering.
 
-The procedure is still underspecified. What happens when several answers share the top count? We compare two exact policies:
+This distinction matters because a continuation can be statistically reasonable and operationally wrong. After a line such as `What is 2+2?`, a web page may continue with another exercise rather than the answer. A base model that does the same is behaving consistently with pretraining, even though it is failing the product contract.
 
-- **tie means failure**: the correct answer must be the unique mode;
-- **random top-mode selection**: choose uniformly among all modes tied for first place.
+SFT changes the conditional behavior by training on deliberately constructed demonstrations. The learning rule is still next-token prediction, but the sequence now encodes roles, message boundaries, and an example of the desired response. In most assistant recipes, the loss is concentrated on assistant-generated positions, so the model is optimized to produce the response given the prompt rather than to reconstruct every token in the prompt.
 
-A **distractor** is an incorrect answer option. A **mode** is the most frequent option. This is plurality voting: the winner need not receive more than half the votes. Let $c_i$ count occurrences of answer $i$, with index $0$ reserved for the correct answer. Then $q_0=0.4$ and $q_1=\dots=q_6=0.1$. Independence gives the multinomial probability
+SFT is best understood as behavioral adaptation. It can inject narrow facts or domain patterns, but it is not the most reliable mechanism for loading a large body of knowledge. Continued training modifies parameters, while retrieval and tools make information available in the response context. Reading an external document does not by itself store its facts in the weights. The choice depends on update frequency, source traceability, and the capability being taught; these approaches can be combined with SFT.
 
-$$
-P(c_0,\ldots,c_6)=\frac{N!}{\prod_{i=0}^{6}c_i!}\prod_{i=0}^{6}q_i^{c_i},
-\qquad \sum_{i=0}^{6}c_i=N.
-$$
+The practical work falls into four layers:
 
-The factorial term counts the sequences that produce the same counts. For the strict policy, sum this mass over outcomes satisfying $c_0>\max_{i>0}c_i$. For random tie-breaking, also include outcomes where the correct answer ties for first, weighted by $1/k$ when $k$ options share the lead.
+- **representation:** convert a conversation into the exact token grammar expected by the checkpoint;
+- **objective:** decide which positions should contribute to the loss;
+- **systems:** minimize padding and memory waste without allowing examples to leak into one another;
+- **data:** choose demonstrations whose behavior is worth imitating.
 
-For $N=3$, a unique correct mode requires two or three correct draws. An independent check is therefore $3p^2(1-p)+p^3=0.352$. At larger sample sizes, a unique mode can win without an absolute majority, so the full count vector matters.
+The last layer usually dominates final quality, but the first three determine whether the data means what we think it means.
 
-Enumerating the multinomial outcomes gives:
+## 2. From instruction tuning to structured post-training
 
-| $N$ | unique-mode success | random tie-breaking |
-|---:|---:|---:|
-| 1 | 0.400 | 0.400 |
-| 3 | 0.352 | 0.472 |
-| 5 | 0.509 | 0.596 |
-| 9 | 0.671 | 0.737 |
-| 17 | 0.857 | 0.889 |
+![VIZ m13/01 — the evolution of SFT](assets/modern-llms/en/module-13/m13_01_timeline.svg)
+*The trajectory from multitask instruction tuning to open alignment recipes, synthetic data, reasoning transfer, and structured tool-aware response formats.*
 
-At $N=3$, a top-mode tie occurs with probability 0.48. Under the strict rule, three samples are worse than one. The result is not a paradox; it is a reminder that tie handling is part of the algorithm.
+Modern SFT grew out of several research programs rather than a single canonical recipe.
 
-A reproducible self-consistency protocol must also define answer normalization. Are `0.5`, `1/2`, and `50%` equivalent? Are algebraically equivalent expressions canonicalized? Are code outputs compared by text or by execution? Small implementation choices can dominate the apparent gain from extra sampling.
+**FLAN** and **T0** established the value of expressing many supervised tasks through natural-language instructions. They showed that instruction-tuned models could generalize to task formulations not seen verbatim during training. **InstructGPT** then placed SFT at the beginning of a larger alignment pipeline: demonstrations created a useful initial policy before reward modeling and reinforcement learning.
 
-![VIZ m15/04 — voting and verification](assets/modern-llms/en/module-13/m15_04_maj_vs_verifier.png)
-*Exact voting policies, oracle coverage, and selection by a noisy verifier.*
+Open recipes accelerated in 2023. **Self-Instruct** used a language model to expand a seed collection of instructions. **LIMA** took a different path: only 1,000 carefully curated examples were used to fine-tune a 65B LLaMA model, producing surprisingly strong instruction-following behavior. That result made data selection a first-class research question.
 
-The *Large Language Monkeys* study showed that repeated sampling can improve coverage over very large ranges of sample count. In automatically verifiable domains, coverage can translate directly into solved tasks. Where selection relies on majority vote or imperfect reward models, the selector can plateau even while the generator continues to produce additional correct candidates. [Brown et al., 2024](https://arxiv.org/abs/2407.21787)
+The next wave focused on synthesis. **Magpie** observed that an aligned model can generate a user request when prompted only with the left side of its own chat template. The authors generated four million instructions and selected 300,000 high-quality instances. **Tülu 3** provided a particularly transparent open post-training stack in which an SFT mixture feeds later preference learning and reinforcement learning with verifiable rewards (RLVR). A verifiable reward can come from executable tests; Module 14 explains how it drives learning.
 
----
+Reasoning distillation became prominent in 2025. DeepSeek fine-tuned several smaller open models on roughly 800,000 curated samples produced through the DeepSeek-R1 pipeline. The **s1** project explored the opposite end of the data scale, using only 1,000 selected reasoning examples for a 32B model.
 
-## 7. Worked example B: coverage is not selection accuracy
+Response formats also became more explicit. Tool calls, hidden or internal channels, final user-visible text, and role hierarchy can no longer be treated as informal punctuation conventions. OpenAI's **Harmony** format for gpt-oss is one example: it represents `analysis`, `commentary`, and `final` as distinct channels in the serialized response.
 
-Voting uses frequency as a proxy for correctness. A verifier uses evidence about the candidate itself. Before modeling an imperfect verifier, we need an upper bound.
+![VIZ m13/02 — the SFT pipeline](assets/modern-llms/en/module-13/m13_02_pipeline.svg)
+*A complete SFT route: base checkpoint, tokenizer contract, curated demonstrations, packing and isolation, supervised labels, parameter update strategy, and behavioral evaluation.*
 
-For independent attempts with success probability $p$, the probability that at least one of $N$ candidates is correct is
+## 3. Three older ideas hiding inside SFT
 
-$$
-P_{\mathrm{coverage}}(N)=1-(1-p)^N.
-$$
+The current vocabulary is easier to navigate when we connect it to established machine-learning concepts.
 
-With $p=0.4$:
+### Transfer learning
 
-| $N$ | oracle coverage |
-|---:|---:|
-| 1 | 0.400 |
-| 3 | 0.784 |
-| 5 | 0.922 |
-| 9 | 0.990 |
-| 17 | 0.9998 |
+SFT follows the familiar pattern of broad pretraining followed by narrow adaptation. The expensive stage builds reusable representations; the cheaper stage specializes the model for a task distribution and an interaction protocol.
 
-This curve tells us what an oracle *could* recover. It says nothing about whether an actual ranking model will find the correct item.
+It is tempting to say that SFT changes only a superficial “behavior layer.” That metaphor is useful but not literal. In full fine-tuning, gradients may update parameters throughout the network. What makes the change behaviorally focused is the small dataset, modest learning rate, limited number of epochs, and narrow distribution of supervised examples.
 
-Use an accept/reject verifier with **true-positive rate (TPR)** 0.90: it accepts a correct candidate with probability 0.90. Its **false-positive rate (FPR)** is 0.05: it accepts an incorrect candidate with probability 0.05. Checks are independent across candidates conditional on correctness. Select uniformly among accepted candidates; if none pass, select uniformly from the entire generated pool. This precise policy gives:
+### Behavior cloning
 
-| $N$ | noisy-verifier accuracy |
-|---:|---:|
-| 1 | 0.400 |
-| 3 | 0.728 |
-| 5 | 0.851 |
-| 9 | 0.913 |
-| 17 | 0.923 |
-
-The plateau is approximately 0.923, rather than the verifier's TPR of 0.90. To see why, define the probability of accepting an arbitrary candidate, $a$, and the correctness rate among accepted candidates, $q$:
+A **policy** $\pi_\theta(a\mid s)$ assigns probabilities to actions $a$ given a state $s$. A demonstration dataset $\mathcal D_{\text{expert}}$ supplies state–action pairs, and behavior cloning maximizes the probability of those demonstrated actions:
 
 $$
-a=p\,\mathrm{TPR}+(1-p)\,\mathrm{FPR},\qquad
-q=\frac{p\,\mathrm{TPR}}{a}.
+\min_\theta
+\mathbb E_{(s,a)\sim\mathcal D_{\text{expert}}}
+[-\log\pi_\theta(a\mid s)].
 $$
 
-For $a>0$, the selection policy has the closed form
+For an autoregressive model, the state is the current dialogue prefix and the action is the next assistant token. This analogy exposes an important limitation: training states come from expert demonstrations, while deployment states are partly generated by the model itself. Once the model makes a mistake, subsequent prefixes may drift away from the demonstration distribution.
+
+Preference optimization and RL can train on model-generated responses and therefore address part of this mismatch. They do not automatically eliminate hallucination or compounding error; the policy, data, reward, and evaluation environment still determine the outcome.
+
+> **Further study.** The relationship between SFT, behavior cloning, on-policy data, and rollout distributions is developed in the *RL for LLM* course.
+
+### Dataset design
+
+SFT inherits every classical lesson about labels: coverage, disagreement, duplicates, leakage, and class imbalance. The object being labeled is richer, however. A response has factual content, format, style, length, refusal behavior, tool decisions, and implicit assumptions. The model learns all of them at once.
+
+That is why curation is not a preliminary cleanup step. It is part of the model specification.
+
+## 4. Chat templates are executable contracts
+
+Training data is often stored as a list of messages, but the Transformer consumes a single token sequence. A **chat template** maps roles and message content into that sequence.
+
+In the Hugging Face ecosystem, the template is commonly stored in `tokenizer_config.json` and rendered through `tokenizer.apply_chat_template`. It determines more than visual formatting. It specifies:
+
+- role markers;
+- turn boundaries;
+- beginning and end tokens;
+- the placement of a system or developer instruction;
+- tool-call and tool-result syntax;
+- stopping tokens;
+- optional response channels.
+
+Llama-family templates use role headers and an end-of-turn token such as `<|eot_id|>`. ChatML-like templates use markers such as `<|im_start|>` and `<|im_end|>`, but implementations diverge across model families. A model described as “ChatML-compatible” may still have different tool tokens, stop conditions, or reasoning markup.
+
+Harmony makes channel structure explicit. A message has a role and content, while the response can be emitted through `analysis`, `commentary`, or `final`. Tool namespaces and structured constraints are represented by the format rather than reconstructed from ad hoc text parsing.
+
+![VIZ m13/03 — conversation formats](assets/modern-llms/en/module-13/m13_03_templates.svg)
+*Several ways to serialize the same interaction: Llama role headers, ChatML-style delimiters, Harmony channels, and model-specific reasoning or tool tokens. The tokenizer contract is the source of truth.*
+
+A wrong template can produce a deceptively healthy training run. Loss decreases because the model learns the supplied sequence distribution, but deployment uses a different distribution. The safe workflow is simple: render examples with the official tokenizer, inspect token IDs around every boundary, and compare them with the model card and generation configuration.
+
+## 5. Label masking: a 56-token example
+
+Two masks serve different purposes. An attention mask controls which context a position may use; a loss mask chooses which predictions are scored. Removing prompt tokens from the loss does not remove their representations from the computation. Gradients from the answer can still flow through the processing of those prompt tokens.
+
+Let $x_0,\ldots,x_{T-1}$ be the stored tokens and let $m_t$ indicate that $x_t$ is a supervised target. Token-averaged training minimizes
+
+$$L=-\frac{\sum_{t=1}^{T-1}m_t\log p_\theta(x_t\mid x_{<t})}{\sum_{t=1}^{T-1}m_t}.$$
+
+Our `labels[t]` stores the target at its own position. We compare it with `logits[t-1]`; either the model or the caller performs that shift, exactly once. A batch with no active shifted targets has no defined mean loss and needs an explicit filtering or skip rule. The example below has 21 supervised tokens among 56 stored tokens. There are 55 next-token pairs after excluding the unpredicted BOS, of which 21 are scored.
+
+The denominator also decides how examples are weighted. Pooling token losses gives longer answers more influence. Averaging each example's mean gives equal weight to examples. An answer with one loss of 2 and another with three losses of 1 produce a pooled mean of 1.25 but an example mean of 1.5. Both objectives are possible; gradient accumulation across microbatches must preserve whichever one was chosen.
+
+Causal language modeling normally predicts the next token at every position. SFT often modifies the labels so that only assistant-generated tokens contribute directly to the cross-entropy loss.
+
+PyTorch uses `-100` as the conventional `ignore_index`. A system or user token remains in the input and affects the hidden state, but its label is ignored. This produces an **assistant-only loss**.
+
+Assistant-only masking is common, not mandatory. Full-sequence loss may be appropriate in continued pretraining or in a deliberately chosen instruction-tuning recipe. The mask should express the objective rather than imitate a framework default.
+
+Consider the frozen accounting scenario used throughout this module:
+
+- one BOS token;
+- three messages: system, user, assistant;
+- five structural tokens per message;
+- 12, 8, and 20 content tokens respectively.
+
+The total sequence length is
 
 $$
-S_N=q+(p-q)(1-a)^{N-1}.
+1+3\cdot5+(12+8+20)=56.
 $$
 
-When at least one candidate is accepted, a uniform accepted candidate is correct with probability $q$. If every candidate is rejected, a random rejected candidate is correct with probability $p(1-\mathrm{TPR})/(1-a)$. Weighting the two events yields the expression above. The boundary $a=1$ is read directly from the selection rule; if $a=0$, nothing is ever accepted and $S_N=p$.
-
-Here $a=0.39$ and $q=0.36/0.39=12/13\approx0.92308$. A single candidate gives $S_1=p$; a large pool approaches $q$. TPR is the probability of acceptance given correctness, whereas $q$ reverses that conditioning. Confusing them changes the predicted limit.
-
-With constant rates and TPR > FPR, this model improves monotonically. A decline under more search needs an additional mechanism, such as selecting an extreme noisy score or actively finding candidates that exploit the verifier. The latter resembles reward hacking from Module 14.
-
-Independence also needs care. Perfectly correlated errors give no coverage gain at all. Even independent attempts on each task do not justify substituting average task accuracy into the coverage formula. If half the tasks have $p=0$ and half have $p=0.8$, the mean is 0.4, but three-attempt coverage is $0.5[1-(1-0.8)^3]=0.496$, not 0.784. Task difficulty is shared across attempts.
-
-A sensible verification hierarchy is:
-
-1. a formal checker or deterministic executable rule;
-2. unit tests and explicit constraints;
-3. a specialized process or outcome model;
-4. a general LLM judge with a documented rubric;
-5. voting when no stronger signal is available.
-
-An LLM judge should not replace a compiler or proof kernel merely because it is convenient.
-
----
-
-## 8. Sequential scaling and budget forcing
-
-Parallel inference restarts the search. Sequential inference gives one trajectory more room to evolve.
-
-The s1 paper provides a clean demonstration. The authors curated 1,000 difficult, diverse, high-quality reasoning examples, fine-tuned Qwen2.5-32B-Instruct, and then controlled the length of its reasoning without another weight update. Their **budget forcing** procedure could:
-
-- extend a trace by appending `Wait` when the model attempted to finish;
-- shorten a trace by forcing the transition to the final answer.
-
-Under the reported AIME 2024 setup, increasing the budget raised s1-32B from 50% to 57%. That is evidence for one model and evaluation protocol, not a law that every task improves with every extra token. [Muennighoff et al., 2025](https://arxiv.org/abs/2501.19393)
-
-The intervention changes decoding while leaving weights fixed. Extra steps may let existing operations produce a new deduction or find a missed solution. They do not guarantee recovery of a missing fact; consulting a tool or an external source adds information through a separate mechanism.
-
-Sequential compute can support several policies: continue the current derivation, insert explicit checks, revisit a branch point, alternate planning with tool execution, or stop early once evidence is sufficient. A mature system needs the last operation as much as the first. Scaling inference includes learning when *not* to continue.
-
----
-
-## 9. Failure modes of longer reasoning
-
-Extra tokens are useful only if they change the computation in a productive direction.
-
-**Overthinking.** A model may reach the right answer quickly, then revise it into a wrong one. Empirical work has found non-monotonic relationships between chain length and accuracy, with shorter selections sometimes outperforming longer traces. The effect depends on the model, task, and selection protocol. [Hassid et al., 2025; v2 2026](https://arxiv.org/abs/2505.17813)
-
-Length and correctness can correlate because harder tasks induce longer attempts. Comparing trajectories for the same prompt reduces that confounding, but still does not randomly assign length: the model partly chooses when to stop. To estimate the effect of additional budget, assign different budgets to the same prompts, repeat sampling, and hold the selection protocol fixed.
-
-**Redundant continuation.** The model may restate the same hypothesis without creating new search state.
-
-**Error accumulation.** An early false premise becomes part of the context and shapes every later step. Fluency can increase even as correctness falls.
-
-**Verifier exploitation.** A search process can optimize whatever signal it sees. If the verifier rewards persuasive form, more search may find more persuasive errors.
-
-The module notebook contains a deliberately synthetic illustration: difficult tasks improve with additional budget, while easy-task accuracy eventually declines. The curves demonstrate a possible mechanism; they are not measurements of a deployed model.
-
-![VIZ m15/05 — stopping executable search](assets/modern-llms/en/module-13/m15_05_paradigms.svg)
-*Executable polynomial search: actual calls and the cost of two stopping rules; the lab is explained in §14.*
-
-![VIZ m15/06 — limits and failure modes](assets/modern-llms/en/module-13/m15_06_pitfalls.svg)
-*Observable search failures: correlated errors, weak verification, unproductive continuation, truncation, and cost.*
-
----
-
-## 10. Worked example C: an illustrative budget ladder
-
-Provider effort labels do not map to a universal token count. To reason about systems cost, we therefore use an explicit course scenario rather than pretending to reconstruct an API.
-
-Assumptions:
-
-- a dense $8.03\times10^9$-parameter decoder;
-- 209.4 sequential decode tokens per second, fixed as a course assumption;
-- 512 tokens for a short baseline answer;
-- illustrative budgets of 1K, 4K, 16K, and 64K generated tokens.
-
-A common approximation to dense weight-matrix multiplication work is
+If the supervised region contains 20 assistant-content tokens plus the assistant end-of-turn token, then
 
 $$
-C_{\text{decode}}\approx 2N_pT,
+21/56=37.5\%.
 $$
 
-and unbatched latency is
+![VIZ m13/04 — labels and packing](assets/modern-llms/en/module-13/m13_04_mask_pack.png)
+*The left panel decomposes the 56-token dialogue and its 21 supervised positions. The right panel shows the packing scenario used in the next section.*
 
-$$
-t\approx\frac{T}{209.4}.
-$$
+The end-of-turn token is not cosmetic. It teaches the model where the demonstrated response ends. The exact token is model-specific, so `<|eot_id|>` should be read as part of this scenario rather than a universal constant.
 
-| illustrative tier | tokens | latency | weight-matmul FLOP estimate | vs. 512 tokens |
-|---|---:|---:|---:|---:|
-| short baseline | 512 | 2.45 s | $8.22\times10^{12}$ | 1× |
-| small | 1,000 | 4.78 s | $1.61\times10^{13}$ | 1.95× |
-| medium | 4,000 | 19.10 s | $6.42\times10^{13}$ | 7.81× |
-| large | 16,000 | 76.41 s | $2.57\times10^{14}$ | 31.25× |
-| very large | 64,000 | 305.64 s | $1.03\times10^{15}$ | 125× |
+Reasoning channels require a policy decision. If a reasoning trace is a target output, its tokens can be supervised. If a system has a private channel, the training pipeline may include, exclude, or separately weight it. That choice determines both behavior and disclosure; there is no single masking rule for all reasoning models.
 
-The factor of two counts a multiplication and an addition as two operations. The $2N_pT$ approximation is useful when weight-matrix multiplications dominate. It omits prompt processing, attention products over a growing context, tools, and verification. Architecture also affects which parameters do work; a MoE model's total stored parameter count cannot simply be substituted here.
+### NumPy → PyTorch · B20 — Assistant-only labels
 
-Linear latency follows from the assumed constant 209.4-token/s rate. Actual decode throughput depends on context length, batching, and load, with queueing and prefill added to the request. A multi-candidate system must count discarded attempts as well. The calculation still conveys the scale of the tradeoff: five seconds and five minutes support different interactions.
-
-Extending a trajectory from 2K to 8K tokens adds
-
-$$
-\Delta t=\frac{8000-2000}{209.4}\approx28.65\text{ s}.
-$$
-
-Whether that is worthwhile cannot be decided from the cost equation. It requires an empirical quality curve on the target workload.
-
----
-
-## 11. Worked example D: the KV cost of a thought
-
-Consider a full-attention decoder that retains the entire history. In this model, each generated token adds K and V vectors in every attention layer.
-
-Take an illustrative model with 32 layers, KV width 1,024 per layer, and bf16 storage. The KV bytes per token are
-
-$$
-M_{\text{token}}
-=2\;(K,V)\times32\times1024\times2
-=131072\text{ bytes}=128\text{ KiB}.
-$$
-
-| reasoning length | KV per request |
-|---:|---:|
-| 512 | 0.0625 GiB |
-| 1K | 0.122 GiB |
-| 4K | 0.488 GiB |
-| 16K | 1.953 GiB |
-| 64K | 7.8125 GiB |
-
-The table counts KV for **generated tokens only**, retaining the full history in all 32 layers. A prompt of $P$ tokens changes the total to $128(P+T)$ KiB. With $P=4096$ and $T=4000$, this is $0.98828125$ GiB rather than the continuation-only $0.48828125$ GiB. Windowed or hybrid architectures require per-layer accounting; shared prefixes can reduce physical storage across candidates.
-
-The bounds below assume a zero-length input prefix and a teaching device with **80 GiB** available capacity. That is an explicit capacity assumption, not a conversion of every marketed “80 GB” device.
-
-The bf16 weights of an 8.03B model occupy about 14.96 GiB. If an 80 GiB device devoted every remaining byte to KV, the resulting upper bounds would be 1,040 concurrent 512-token requests, 532 at 1K, 133 at 4K, 33 at 16K, and only 8 at 64K.
-
-These are not throughput forecasts. They omit activations, fragmentation, scheduler state, batching, and runtime reserve. Reserving 8 GiB lowers the 1K–64K figures to 467, 116, 29, and 7. The calculation still exposes the order of magnitude: moving from 512 to 64K tokens reduces a KV-limited concurrency bound by roughly 130×.
-
-This is why the serving techniques from Module 10—paged allocation, KV quantization, offload, and tiered storage—become central for reasoning workloads rather than optional optimizations.
-
-![VIZ m15/07 — the economics of long reasoning](assets/modern-llms/en/module-13/m15_07_economics.png)
-*Assumed decode time, KV with and without a prompt, and a KV-only concurrency bound.*
-
----
-
-## 12. Worked example E: why adaptive allocation matters
-
-Suppose a workload has three classes:
-
-- 70% easy requests needing about 500 tokens;
-- 20% medium requests needing about 4,000;
-- 10% hard requests needing about 32,000.
-
-Assume that every assigned budget is used in full and the router identifies each task class perfectly. A uniform maximum then costs 32,000 tokens per request, while the routed mixture costs
-
-$$
-\mathbb{E}[T]
-=0.7(500)+0.2(4000)+0.1(32000)
-=4350.
-$$
-
-The ratio is
-
-$$
-\frac{32000}{4350}\approx7.36.
-$$
-
-This calculation assumes a perfect router and full consumption of each assigned budget. A cap is not consumption: a model allowed 32,000 tokens may stop much earlier. A real comparison must measure actual tokens and quality, including the work needed to determine the route.
-
-Possible routing signals include a cheap difficulty classifier, uncertainty after a short first pass, agreement between samples, a verifier threshold, or a signal from the environment such as passing tests.
-
-The first notebook simulation precomputes all candidate labels and scores. It then asks how many entries a policy would inspect before reaching a score of 0.82 or exhausting 16 attempts. On this fixed mixture, it inspects 4.02 candidates on average and achieves 0.886 accuracy, versus 0.632 for one shot and 0.940 for selecting from all sixteen. These are policy comparisons on shared data; the vectorized simulation itself saves no generator calls.
-
-A separate program-search lab then generates candidates inside the loop and actually stops further calls. §14 explains the experiment. Choose thresholds or budgets on a calibration split and evaluate the frozen policy on held-out tasks. Tuning them using the final test answers would bias the comparison.
-
-Adaptive inference is therefore a classification-and-control problem under noise. A router can waste compute on easy inputs or prematurely stop hard ones. Its error costs belong in the evaluation.
-
----
-
-## 13. Level-1 code: make selection and cost assumptions explicit
-
-The first function computes oracle coverage. It deliberately does not claim to model a selector.
+A label contains the real token ID or `-100`; the boolean mask only selects positions that contribute to the loss.
 
 ```python
-"""Coverage, noisy selection and scoped inference accounting."""
-import math
-from dataclasses import dataclass
-
-def positive_count(value, name):
-    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        raise ValueError(name + " must be a positive integer")
-
-def probability(value, name):
-    if not math.isfinite(value) or not 0 <= value <= 1:
-        raise ValueError(name + " must be finite and lie in [0, 1]")
-
-def oracle_coverage(p_correct, n):
-    """At least one success in n independent, identically distributed attempts."""
-    positive_count(n, "n")
-    probability(p_correct, "p_correct")
-    if p_correct == 1:
-        return 1.0
-    return -math.expm1(n * math.log1p(-p_correct))
-
-def noisy_selection(p, n, tpr, fpr):
-    """Uniform accepted candidate; uniform pool fallback if none are accepted."""
-    positive_count(n, "n")
-    for name, value in (("p", p), ("tpr", tpr), ("fpr", fpr)):
-        probability(value, name)
-    acceptance = p*tpr + (1-p)*fpr
-    if acceptance == 0 or n == 1:
-        return p
-    precision = p*tpr/acceptance
-    if acceptance == 1:
-        return precision
-    log_survival = (n-1)*math.log1p(-acceptance)
-    # A non-negative mixture avoids cancellation for tiny probabilities.
-    return p*math.exp(log_survival) + precision*(-math.expm1(log_survival))
-
-@dataclass(frozen=True)
-class ReasoningCost:
-    parameters: float = 8.03e9
-    tokens_per_second: float = 209.4
-    layers: int = 32
-    kv_width: int = 1024
-    bytes_per_element: int = 2
-
-    def __post_init__(self):
-        for name in ("parameters", "tokens_per_second"):
-            value = getattr(self, name)
-            if not math.isfinite(value) or value <= 0:
-                raise ValueError(name + " must be finite and positive")
-        for name in ("layers", "kv_width", "bytes_per_element"):
-            positive_count(getattr(self, name), name)
-
-    @property
-    def kv_bytes_per_token(self):
-        return 2*self.layers*self.kv_width*self.bytes_per_element
-
-    def estimate(self, tokens, prompt_tokens=0):
-        positive_count(tokens, "tokens")
-        if isinstance(prompt_tokens, bool) or not isinstance(prompt_tokens, int) or prompt_tokens < 0:
-            raise ValueError("prompt_tokens must be a non-negative integer")
-        return dict(decode_seconds=tokens/self.tokens_per_second,
-                    parameter_matmul_flops=2*self.parameters*tokens,
-                    generated_kv_gib=self.kv_bytes_per_token*tokens/2**30,
-                    total_kv_gib=self.kv_bytes_per_token*(tokens+prompt_tokens)/2**30)
-
-scenario = ReasoningCost()
-assert abs(noisy_selection(.4, 17, .9, .05)-.923)<.001
-assert oracle_coverage(1e-18, 1) > 0  # direct 1-(1-p)**n loses this value
-assert noisy_selection(1e-18, 1, 1, 0) == 1e-18
-assert math.isclose(noisy_selection(1e-18, 2, 1, 0), 2e-18, rel_tol=1e-15)
+import numpy as np
+import torch
 ```
 
-The logarithmic coverage expression remains accurate at tiny probabilities. Directly evaluating `1-(1-p)**n` can produce zero for $p=10^{-18}$ and $n=1$ in ordinary floating-point arithmetic. The selection function implements the closed form from §7. Counts and dimensions must be integers; `True` is not a valid budget.
+#### 1. Explicit NumPy implementation
 
-The cost object separates newly generated KV from total KV including the prompt. Its `parameter_matmul_flops` field estimates weight-matrix multiplication work, while `decode_seconds` assumes a fixed rate. Neither is a measurement of an entire serving request.
+```python
+def numpy_assistant_labels(input_ids: np.ndarray, assistant_mask: np.ndarray, *, ignore_index: int = -100) -> np.ndarray:
+    ids, mask = np.asarray(input_ids), np.asarray(assistant_mask)
+    if ids.dtype != np.int64 or mask.dtype != np.bool_:
+        raise TypeError("use int64 token IDs and a boolean assistant mask")
+    if np.any(ids < 0):
+        raise ValueError("input token IDs must be nonnegative")
+    if ids.shape != mask.shape:
+        raise ValueError("input_ids and assistant_mask must have identical shapes")
+    return np.where(mask, ids, ignore_index).astype(np.int64)
+```
 
----
+The boolean mask is not the label itself. NumPy keeps the real token ID on assistant positions and writes `ignore_index` everywhere else.
 
-## 15. Verifier families
+#### 2. The same mathematics as explicit PyTorch operations
 
-A verifier is not a single architectural object. Different tasks support different evidence.
+```python
+def torch_assistant_labels(input_ids: torch.Tensor, assistant_mask: torch.Tensor, *, ignore_index: int = -100) -> torch.Tensor:
+    if input_ids.dtype != torch.long or assistant_mask.dtype != torch.bool:
+        raise TypeError("use torch.long token IDs and a boolean assistant mask")
+    if input_ids.device != assistant_mask.device:
+        raise ValueError("input IDs and mask must share a device")
+    if torch.any(input_ids < 0):
+        raise ValueError("input token IDs must be nonnegative")
+    if input_ids.shape != assistant_mask.shape:
+        raise ValueError("input_ids and assistant_mask must have identical shapes")
+    labels = input_ids.clone()
+    return labels.masked_fill(~assistant_mask.to(torch.bool), ignore_index)
+```
 
-### Exact executable checks
+Use nonnegative `np.int64` / `torch.long` IDs and a boolean mask of the same shape; Torch inputs share a device. The result stores labels at their own positions. Align `logits[..., :-1, :]` with `labels[..., 1:]` exactly once before cross-entropy. A model that shifts internally must receive unshifted arrays. The loss function checks that active targets exist and belong to its vocabulary.
 
-A compiler, unit-test suite, symbolic algebra system, proof kernel, or environment simulator can give a transparent signal. Such checks may still be incomplete—tests do not cover every behavior—but their semantics are usually clearer than a learned judge.
+| Aspect | NumPy | PyTorch |
+|---|---|---|
+| Label value | real token ID | same ID |
+| Ignore | `np.where` | `masked_fill` |
+| Shape | must match the mask | validated before the operation |
+| Autograd | not applicable to integer labels | loss differentiates logits, not labels |
 
-### Outcome reward models
+**Executable parity and edge-case check**
 
-An outcome model scores a complete solution. Labels are relatively cheap, but the feedback is sparse: a poor score does not identify the failing step.
+```python
+ids_np = np.array([10,11,12,13,14,15]); mask_np = np.array([0,0,0,1,1,1], dtype=bool)
+np_labels = numpy_assistant_labels(ids_np, mask_np); t_labels = torch_assistant_labels(torch.tensor(ids_np), torch.tensor(mask_np))
+np.testing.assert_array_equal(np_labels, t_labels.numpy()); assert np_labels.tolist() == [-100,-100,-100,13,14,15]
+# Labels are stored at their own positions. Shift them once for explicit CE.
+scores = torch.zeros((len(ids_np), 20), dtype=torch.float64, requires_grad=True)
+loss = torch.nn.functional.cross_entropy(scores[:-1], t_labels[1:], ignore_index=-100)
+torch.testing.assert_close(loss, torch.log(torch.tensor(20.,dtype=torch.float64)))
+loss.backward()
+assert torch.count_nonzero(scores.grad[-1]) == 0
+assert torch.count_nonzero(scores.grad[:2]) == 0
+for ids_bad, mask_bad in [(ids_np.astype(float),mask_np),
+                           (ids_np,mask_np.astype(int)),
+                           (np.array([-1,1]),np.array([False,True]))]:
+    for run in (lambda: numpy_assistant_labels(ids_bad,mask_bad),
+                lambda: torch_assistant_labels(torch.tensor(ids_bad),torch.tensor(mask_bad))):
+        try:
+            run()
+        except (TypeError,ValueError):
+            pass
+        else:
+            raise AssertionError("invalid label input was accepted")
+print("B20 assistant labels: PASS")
+```
 
-### Process reward models
+Complete executable file: `m13_sft_bridges.py`
 
-A PRM scores intermediate steps. *Let's Verify Step by Step* released PRM800K, containing 800,000 human step-level labels, and reported process supervision outperforming outcome supervision in its mathematical setting. Such feedback can guide search and prune erroneous paths earlier. In that study, obtaining it involved human annotation of mathematical solutions. [Lightman et al., 2023](https://arxiv.org/abs/2305.20050)
+## 6. Packing variable-length examples safely
 
-Human annotation is not a defining requirement of a PRM. Math-Shepherd, for example, constructs process-supervision labels automatically. Changing their source does not remove the need to assess whether those labels track valid reasoning steps and generalize to new problems. [Wang et al., 2024](https://arxiv.org/abs/2312.08935)
+Padding is often the first major efficiency loss in SFT. When a 300-token example is padded to 2,048 tokens, most positions carry no learning signal. **Sequence packing** combines several examples in one fixed-length container.
 
-### Generative verifiers
+The module's deterministic length list contains 24 examples totaling 8,692 tokens. Padding every example independently to 2,048 tokens yields
 
-GenRM casts verification as next-token prediction. The model may produce a critique, while the probability of a verdict token supplies a score. This makes chain-of-thought and repeated sampling available to the verifier itself. The published experiments improved Best-of-N selection over several discriminative baselines under the paper's protocols; that result should not be universalized to every domain. [Zhang et al., 2024](https://arxiv.org/abs/2408.15240)
+$$
+\frac{8692}{24\cdot2048}=17.684\%
+$$
 
-### Reasoning reward models
+useful positions.
 
-RM-R1 treats judging as a reasoning task. It generates rubrics or analyses before the verdict and uses a two-stage recipe involving reasoning-trace distillation and RLVR. It is a research family with released artifacts, not a mandatory endpoint for all reward modeling. [Chen et al., 2025](https://arxiv.org/abs/2505.02387)
+First-Fit Decreasing sorts examples by length and places each one in the first container with enough remaining capacity. For this list, the five resulting container loads are 2,045, 2,017, 2,044, 2,047, and 539. Utilization becomes
 
-![VIZ m15/08 — verifier families](assets/modern-llms/en/module-13/m15_08_verifier_stack.svg)
-*Verifier contracts: executable rules, outcome and process models, generative judges, and reasoning reward models.*
+$$
+\frac{8692}{5\cdot2048}=84.883\%.
+$$
 
-Reasoning RL is most straightforward when rewards are objectively checkable. Creative writing, advice, and aesthetics do not have a unique ground truth; there, a learned verifier represents a preference or rubric rather than mathematical correctness.
+The number of fixed-length rows falls from 24 to five, a factor of 4.8. That factor is not a throughput guarantee. Real speed depends on kernel support, batch shape, attention implementation, device occupancy, and the distribution of sequence lengths. The calculation quantifies removed padding.
 
----
+Correctness is the harder part. If two examples are merely concatenated under an ordinary causal mask, later examples can attend to earlier ones. An EOS separator marks a boundary semantically but does not remove those attention edges.
 
-## 16. Distilling reasoning traces
+A correct packed implementation uses either:
 
-DeepSeek released six dense R1-Distill models ranging from 1.5B to 70B, trained using data generated by R1. The release made a practical route visible: successful long-form solutions from a strong teacher can become supervised data for a smaller student. [DeepSeek-R1, 2025](https://arxiv.org/abs/2501.12948)
+- a block-diagonal causal attention mask; or
+- a variable-length attention kernel supplied with sequence boundaries such as `cu_seq_lens`.
 
-A student can absorb:
+Resetting `position_ids` may be useful, but it is not an isolation mechanism by itself. The notebook includes an explicit negative test for cross-example leakage because visual inspection of the token buffer is not sufficient.
 
-- the surface format of decomposition;
-- recurring intermediate operations;
-- habits of checking and revision;
-- length and style distributions;
-- domain heuristics represented in the traces.
+Attention isolation is only half the boundary contract. A global label shift pairs the final logit of example A with the first token of example B. Blocking attention cannot repair that target pair. The first label of each independent segment must therefore be ignored. BOS already satisfies this rule in our teaching template; the packer enforces it even when given a different source example.
 
-Distillation updates the student's weights. Its data can teach new knowledge, representations, and procedures, so the starting checkpoint is not an immutable capability ceiling. What the student does not receive is the teacher's parameters or a guarantee of equivalent behavior. Capacity, data quality and diversity, the training objective, and the evaluation distribution all affect the result.
+A useful regression test compares separate and packed execution with dropout disabled: the same tokens and local positions should produce matching logits, summed loss and gradients. The training lab runs this test. Padding needs its own handling: a naive softmax over a fully forbidden row is undefined, so an implementation must omit such queries or rely on a kernel whose behavior for them has been checked.
 
-This differs from §8: extending inference with fixed weights changes work on one request, whereas distillation changes the function used for future requests. Both benefit from verified solutions, but they spend computation at different stages.
+### NumPy → PyTorch · B21 — Isolating packed dialogues
 
-It helps to separate three claims:
+`segment_ids` identify independent dialogues, `position_ids` reset per segment, and the boolean mask allows only causal attention inside the same segment.
 
-1. **format transfer**: the model produces an organized reasoning trace;
-2. **procedure transfer**: it applies patterns present in the training data;
-3. **out-of-distribution generalization**: this must be tested on new task families and depends on model capacity, data diversity, and the training objective.
+```python
+import numpy as np
+import torch
+```
 
-A “reasoning distillate” should therefore be evaluated as its own model, including quality, token efficiency, calibration, and failure modes.
+#### 1. Explicit NumPy implementation
 
-![VIZ m15/09 — reasoning distillation](assets/modern-llms/en/module-13/m15_09_distill_2026.svg)
-*Teacher traces transfer useful procedures, with weight updates and separate evaluation of the resulting student.*
+```python
+def numpy_segment_position_ids(segment_ids: np.ndarray, *, padding_id: int = -1) -> np.ndarray:
+    segments = np.asarray(segment_ids)
+    if segments.ndim not in (1, 2):
+        raise ValueError("segment_ids must be [T] or [B,T]")
+    batch = segments[None, :] if segments.ndim == 1 else segments
+    positions = np.zeros_like(batch, dtype=np.int64)
+    for row in range(batch.shape[0]):
+        for col in range(1, batch.shape[1]):
+            current, previous = batch[row, col], batch[row, col - 1]
+            if current != padding_id and current == previous:
+                positions[row, col] = positions[row, col - 1] + 1
+    return positions[0] if segments.ndim == 1 else positions
 
----
+def numpy_block_causal_mask(segment_ids: np.ndarray, *, padding_id: int = -1) -> np.ndarray:
+    segments = np.asarray(segment_ids)
+    if segments.ndim not in (1, 2):
+        raise ValueError("segment_ids must be [T] or [B,T]")
+    batch = segments[None, :] if segments.ndim == 1 else segments
+    t = batch.shape[-1]
+    boundaries = np.ones_like(batch, dtype=bool)
+    if t > 1:
+        boundaries[:, 1:] = batch[:, 1:] != batch[:, :-1]
+    run_ids = np.cumsum(boundaries, axis=-1)
+    same = run_ids[:, :, None] == run_ids[:, None, :]
+    valid = (batch[:, :, None] != padding_id) & (batch[:, None, :] != padding_id)
+    causal = np.arange(t)[None, None, :] <= np.arange(t)[None, :, None]
+    out = same & valid & causal
+    return out[0] if segments.ndim == 1 else out
+```
 
-## 17. Reading a model's reasoning passport
+NumPy first numbers contiguous runs, then permits attention only within one run and only causally. `position_ids` reset at every boundary.
 
-As of 11 October 2026, “supports reasoning” is not enough information for deployment. A useful passport answers at least seven questions.
+#### 2. The same mathematics as explicit PyTorch operations
 
-1. **How is reasoning enabled?** Is it always on, adaptive, selected by effort level, or controlled by a token target? Can it be disabled?
-2. **What kind of compute scales?** One longer trajectory, several candidates, subagents, or a combination?
-3. **What is exposed?** Full traces, summaries, a separate field, opaque signatures, or only the final answer?
-4. **What is billed and limited?** Do reasoning tokens count as output and consume `max_tokens`? Are they reported in usage metadata?
-5. **How does it interact with tools?** Must the client preserve complete assistant messages, signatures, or reasoning items across calls?
-6. **What are the systems consequences?** Measure median and tail latency, reasoning length, KV footprint, and concurrency on the actual workload.
-7. **How was quality compared?** Equal cost, equal wall-clock time, equal generated tokens, or unrestricted settings? Were tools and multiple agents allowed?
+```python
+def torch_segment_position_ids(segment_ids: torch.Tensor, *, padding_id: int = -1) -> torch.Tensor:
+    if segment_ids.ndim not in (1, 2):
+        raise ValueError("segment_ids must be [T] or [B,T]")
+    batch = segment_ids.unsqueeze(0) if segment_ids.ndim == 1 else segment_ids
+    positions = torch.zeros_like(batch, dtype=torch.long)
+    for col in range(1, batch.shape[-1]):
+        continues = (batch[:, col] != padding_id) & (batch[:, col] == batch[:, col - 1])
+        positions[:, col] = torch.where(continues, positions[:, col - 1] + 1, 0)
+    return positions[0] if segment_ids.ndim == 1 else positions
 
-This passport separates model capability from serving policy. It also prevents accidental comparisons between single-trajectory depth and multi-agent breadth.
+def torch_block_causal_mask(segment_ids: torch.Tensor, *, padding_id: int = -1) -> torch.Tensor:
+    if segment_ids.ndim not in (1, 2):
+        raise ValueError("segment_ids must be [T] or [B,T]")
+    batch = segment_ids.unsqueeze(0) if segment_ids.ndim == 1 else segment_ids
+    t = batch.shape[-1]
+    boundaries = torch.ones_like(batch, dtype=torch.bool)
+    if t > 1:
+        boundaries[:, 1:] = batch[:, 1:] != batch[:, :-1]
+    run_ids = boundaries.to(torch.long).cumsum(dim=-1)
+    same = run_ids[:, :, None] == run_ids[:, None, :]
+    valid = (batch[:, :, None] != padding_id) & (batch[:, None, :] != padding_id)
+    idx = torch.arange(t, device=batch.device)
+    causal = idx[None, None, :] <= idx[None, :, None]
+    out = same & valid & causal
+    return out[0] if segment_ids.ndim == 1 else out
+```
 
-![VIZ m15/10 — inference passport](assets/modern-llms/en/module-13/m15_10_cheatsheet.svg)
-*Each row records part of a reproducible protocol; a model name does not replace these details.*
+PyTorch builds the same `run_ids`, mask, and positions on the tensor device. Contiguous runs—not only numeric labels—matter because a segment label may reappear later.
 
----
+| Aspect | NumPy | PyTorch |
+|---|---|---|
+| Boundary | change in adjacent `segment_id` | same boolean test |
+| Positions | loop over T | loop over positions on the input device |
+| Isolation | `same_run & causal & valid` | same boolean mask |
+| Padding | segment `-1` is forbidden | same contract |
+| Regression | change A; B stays fixed | SDPA checks B logits/output |
+
+**Executable parity and edge-case check**
+
+```python
+segments_np = np.array([0,0,0,1,1,1,-1]); np_pos = numpy_segment_position_ids(segments_np); np_mask = numpy_block_causal_mask(segments_np)
+t_segments = torch.tensor(segments_np); t_pos = torch_segment_position_ids(t_segments); t_mask = torch_block_causal_mask(t_segments)
+np.testing.assert_array_equal(np_pos, t_pos.numpy()); np.testing.assert_array_equal(np_mask, t_mask.numpy())
+rng = np.random.default_rng(21); x = torch.tensor(rng.standard_normal((1,1,7,4)), dtype=torch.float64); mask = t_mask[None,None]
+out_a = torch.nn.functional.scaled_dot_product_attention(x, x, x, attn_mask=mask)
+x_changed = x.clone(); x_changed[..., :3, :] += 1000
+out_b = torch.nn.functional.scaled_dot_product_attention(x_changed, x_changed, x_changed, attn_mask=mask)
+torch.testing.assert_close(out_a[..., 3:6, :], out_b[..., 3:6, :], rtol=0, atol=0)
+repeated = np.array([0,0,1,1,0,0])
+np.testing.assert_array_equal(numpy_segment_position_ids(repeated), [0,1,0,1,0,1])
+repeat_mask = numpy_block_causal_mask(repeated)
+assert not repeat_mask[4,0] and repeat_mask[5,4]
+print("B21 packed isolation: PASS")
+```
+
+Complete executable file: `m13_sft_bridges.py`
+
+## 7. Compute accounting and hyperparameters
+
+SFT is cheap relative to pretraining, but “cheap” should be supported by a stated scenario.
+
+Take an 8.03B-parameter model, 200,000 examples, 1,200 tokens per example on average, and three epochs. One epoch contains
+
+$$
+D_{\text{epoch}}=2.4\cdot10^8\ \text{tokens}.
+$$
+
+Using the training approximation from Module 9,
+
+$$
+C_{\text{SFT}}\approx6ND_{\text{epoch}}\cdot3
+=3.46896\cdot10^{19}\ \text{FLOP}.
+$$
+
+Here $D$ counts every processed token, including the prompt. Assistant-only supervision does not make the forward processing of that prompt disappear, so multiplying compute by 21/56 would be incorrect. The $6ND$ rule approximates dense-model forward and backward work; it is not a rigorous lower bound and changes when parameters are frozen. Model FLOP utilization (MFU) compares useful model work with peak FLOP/s. The assumed 40% is an input to this scenario, not a measured efficiency.
+
+The comparison pretraining scenario uses 15 trillion tokens and therefore costs $7.227\cdot10^{23}$ FLOP for the same parameter count. The ratio is approximately 20,833. This is a ratio between two declared workloads, not a property of SFT in general.
+
+At 990 TFLOP/s peak and an assumed model FLOP utilization of 40%, the arithmetic wall-clock estimate is
+
+$$
+24.33\ \text{hours}.
+$$
+
+![VIZ m13/05 — compute and memory](assets/modern-llms/en/module-13/m13_05_cost_memory.png)
+*Orders of magnitude for the pretraining, SFT, and one-pass s1 scenarios, together with parameter-state memory for full fine-tuning and LoRA.*
+
+The estimate is useful because it changes experimental strategy. If the adaptation run is affordable, data ablations, template checks, and held-out behavioral evaluations deserve more attention than a single monolithic run.
+
+Reasonable starting ranges are not universal defaults:
+
+| Quantity | Initial search region |
+|---|---|
+| Epochs | 1–3, with held-out and behavioral monitoring |
+| Full-FT learning rate | roughly $5\times10^{-6}$ to $2\times10^{-5}$ |
+| LoRA learning rate | often $10^{-4}$ to $3\times10^{-4}$ |
+| LoRA rank | 8–64, depending on the adaptation |
+| Effective batch | tune in tokens, not examples alone |
+| Maximum length | match the target distribution |
+| Schedule | a smooth decay with a short warmup is common |
+| Gradient clipping | a safeguard, not a substitute for diagnosis |
+
+Training loss is only one signal. A useful run also tracks skill-specific validation, format validity, regressions on general capability, and human inspection of generated outputs.
+
+## 8. Organizing SFT data by capability
+
+![VIZ m13/06 — the data map](assets/modern-llms/en/module-13/m13_06_data_map.svg)
+*Data organized by function: general instruction following, reasoning demonstrations, tool trajectories, and domain or style adaptation.*
+
+A dataset name is not a training strategy. A production mixture usually combines several functional categories.
+
+### General instruction following
+
+This category includes conversational and multitask data such as OpenAssistant, UltraChat, WildChat-derived sets, FLAN-derived tasks, code, mathematics, multilingual examples, and safety or non-compliance demonstrations.
+
+The **Tülu 3 SFT Mixture** is a useful open reference because it documents a mixture reported as 939,344 examples in its card, the contributing subsets, and licensing caveats. Its value is not that 939,344 is a magic number; it is that the composition is inspectable.
+
+The mixture also illustrates why a card and a file are different evidence. At the check date, the Tülu 3 card reports 939,344 samples while the viewer counts 939,343 rows. A reproduction should pin a revision and count the loaded records. The collection license does not replace component licenses; the card explicitly flags non-commercial portions. We use it as a documented mixture example, not as the embedded data for this module's exercises.
+
+### Reasoning demonstrations
+
+These examples pair a problem with a longer solution and a final answer. DeepSeek reports that its R1 distillation stage used about 800,000 curated examples—roughly 600,000 reasoning-related and 200,000 non-reasoning samples. The distilled checkpoints were released, but those 800,000 examples should not be described as an open dataset unless a separate release provides them.
+
+Open reasoning datasets such as AM-DeepSeek-R1-Distilled-1.4M provide another route, but they require the same checks as any synthetic corpus: benchmark contamination, teacher artifacts, verifier quality, and duplicate solution patterns.
+
+### Tool trajectories
+
+Tool data includes function definitions, user requests, calls, tool results, and potentially multiple dependent steps. xLAM-function-calling-60k supplies 60,000 single-turn examples. ToolACE builds synthetic conversations over a large API pool and applies rule-based plus model-based verification. Multi-turn agent training needs trajectories in which each action depends on the observation returned by the environment.
+
+### Domain and style adaptation
+
+A small expert dataset can be more valuable than a much larger generic mixture when the target behavior is narrow: legal drafting conventions, a customer-support policy, a product ontology, or a specific response style. The key question is whether the demonstrations cover the decisions the model must make, not whether the row count resembles another project.
+
+## 9. Reading LIMA correctly
+
+Split by source family before producing derived data. If a teacher paraphrases one problem five times, a random row split may put four versions in training and the fifth in validation. The strings differ, but the underlying task has already been exposed. Keep an original problem, its revisions and all synthetic answers in one split. The same reasoning applies to related documents, conversations from one user, or tests from one software project.
+
+LIMA fine-tuned a 65B LLaMA model on only 1,000 curated prompt-response pairs, without reinforcement learning or preference modeling. The model learned strong instruction-following behavior and was competitive with much more expensive contemporary systems in a controlled human study.
+
+The paper's **Superficial Alignment Hypothesis** proposes that pretraining learns most knowledge and capability, while a relatively small amount of alignment data teaches the model which subdistribution of behavior to expose.
+
+The finding is important, but it is easy to overgeneralize. LIMA does not prove that every model, language, safety requirement, tool protocol, and professional domain can be covered with 1,000 examples. Its result depends on a large base model, carefully selected demonstrations, and the evaluation setting.
+
+A durable lesson is that demonstrations are multidimensional labels. They specify:
+
+- correctness;
+- relevance;
+- structure;
+- tone;
+- degree of detail;
+- uncertainty handling;
+- refusal behavior;
+- stopping behavior.
+
+Poor examples push all of those dimensions in the wrong direction. Data cleaning should therefore include executable checks where possible, semantic deduplication, benchmark-contamination scans, length and difficulty analysis, teacher-style diagnostics, and stratified human review.
+
+The objective is not to maximize dataset size. It is to make the empirical behavior distribution match the intended model contract.
+
+## 10. Synthetic data as a search-and-filter system
+
+Synthetic generation becomes much more reliable when treated as candidate search rather than automatic labeling.
+
+Self-Instruct expands a seed collection. Evol-Instruct modifies examples to increase difficulty. Magpie prompts an aligned model with only the left side of the user-turn template and lets the model synthesize both the request and the response.
+
+A robust pipeline records more than the final text:
+
+1. task source and transformation history;
+2. teacher model and exact version;
+3. sampling parameters;
+4. candidate set;
+5. verifier decisions;
+6. deduplication and contamination results;
+7. the reason a sample was retained.
+
+For verifiable tasks, best-of-$N$ makes the economics explicit. Suppose one candidate passes with probability $p_{\mathrm{pass}}=0.3$ and candidates are independent. The probability that at least one of $N$ candidates passes is
+
+$$
+1-(1-p_{\mathrm{pass}})^N.
+$$
+
+| $N$ | At least one pass | Expected yield per generation if at most one sample is kept |
+|---:|---:|---:|
+| 1 | 0.3000 | 0.3000 |
+| 4 | 0.7599 | 0.1900 |
+| 8 | 0.9424 | 0.1178 |
+| 16 | 0.9967 | 0.0623 |
+
+Coverage saturates while generation cost continues to grow. Dependence can change coverage in either direction; pairwise correlations alone do not determine it. If candidates repeatedly share the same failure, additional attempts may add little coverage. Improving the task prompt, choosing a better teacher, or inserting an intermediate verifier can be more valuable than increasing $N$.
+
+Now consider a **separate verifier-quality scenario**. Let $p_{\mathrm{correct}}$ be the probability that a candidate is actually correct, $s$ the fraction of correct candidates accepted, and $f$ the fraction of incorrect candidates accepted. The pass rate and precision are
+
+$$
+p_{\mathrm{pass}}=p_{\mathrm{correct}}s+(1-p_{\mathrm{correct}})f,
+\qquad
+P(\mathrm{correct}\mid\mathrm{pass})=
+\frac{p_{\mathrm{correct}}s}{p_{\mathrm{pass}}}.
+$$
+
+With $p_{\mathrm{correct}}=0.3$, $s=0.9$, and $f=0.1$, the accepted mass is $0.27+0.07=0.34$. Its precision is $0.27/0.34\approx79.4\%$: roughly one in five accepted candidates is wrong. This scenario has $p_{\mathrm{pass}}=0.34$, whereas the coverage table assumed 0.3. More candidates cannot make an imperfect filter certify correctness.
+
+The table's final column measures retained examples per generation when at most one answer is kept. It divides coverage by the $N$ generations paid for; it does not estimate the correctness of the selected answer.
+
+**Second pass: pairwise correlation does not determine coverage**
+
+Take three candidates and assign their success count $K$ the probabilities $P(K=0,1,2,3)=(0.1,0.5,0.2,0.2)$. Conditional on $K$, choose successful positions uniformly. Every candidate then has success probability $E[K]/3=0.5$. Each pair succeeds jointly with probability $E[K(K-1)]/6=4/15>1/4$, so pairwise correlations are positive. Yet coverage is 0.9, **above** the independent value $1-0.5^3=0.875$. The complete joint law matters. At the other extreme, perfectly identical outcomes leave coverage unchanged as candidates are added. The notebook checks both cases.
+
+> **Connection to RL systems.** Candidate sampling, verifiable filtering, and selected/rejected outputs reappear in preference optimization and RLVR. The *RL for LLM* course develops those pipelines in detail.
+
+## 11. Reasoning demonstrations and the s1 compute scenario
+
+A reasoning dataset supervises a sequence of intermediate steps rather than only the final answer. The student may learn useful decomposition patterns, checking behavior, and output structure—but it also inherits the teacher's mistakes, verbosity, and stylistic artifacts.
+
+The DeepSeek-R1 report provides a clear empirical reference. The authors fine-tuned smaller Qwen and Llama models on about 800,000 curated examples. Under their evaluation protocol, DeepSeek-R1-Distill-Qwen-7B scored 55.5% pass@1 on AIME 2024. The 32B model scored 72.6% on AIME 2024 and 94.3% on MATH-500. These are author-reported benchmark results, not architecture-independent guarantees.
+
+The **s1** project explored data efficiency. It selected 1,000 questions and reasoning traces, fine-tuned Qwen2.5-32B-Instruct for five epochs, and reported 26 minutes of training on 16 H100 GPUs. The paper also introduced **budget forcing**: when the model attempts to terminate its reasoning, appending `Wait` can extend the trajectory. In the reported experiment, AIME 2024 accuracy increased from 50% to 57%.
+
+The module's compute calculation answers a narrower question. For 1,000 traces averaging 9,000 tokens, one pass contains nine million tokens:
+
+$$
+C\approx6\cdot32\cdot10^9\cdot9\cdot10^6
+=1.728\cdot10^{18}\ \text{FLOP}.
+$$
+
+At eight 990-TFLOP/s accelerators and an assumed MFU of 40%, that is 9.09 minutes.
+
+![VIZ m13/07 — reasoning transfer](assets/modern-llms/en/module-13/m13_07_reasoning_sft.svg)
+*Reasoning transfer from a teacher to a student, with author-reported DeepSeek-R1-Distill results and a separate one-pass arithmetic estimate for the module's s1-like scenario.*
+
+The 9.09-minute value is not a reproduction of s1. It represents one epoch under stated throughput assumptions. The original run used five epochs, 16 devices, FSDP, and its own implementation. Comparing the figures without matching epochs and realized utilization would be misleading.
+
+Long reasoning traces also change the systems profile:
+
+- activation memory grows;
+- length variance affects packing;
+- incorrect intermediate steps become supervised targets;
+- benchmark leakage becomes easier;
+- the boundary between user-visible rationale and private model state must be specified explicitly.
+
+SFT can transfer reasoning patterns efficiently. It does not certify that the transferred process is faithful, minimal, or robust.
+
+## 12. Teaching a model to use tools
+
+Function calling is a policy problem expressed through structured text. A model must decide whether a tool is needed, choose one from the available schema, populate arguments, interpret the returned observation, and decide what to do next.
+
+A training trajectory therefore contains two distinct kinds of machine-readable content:
+
+- an **assistant action**, such as a tool call, which is normally supervised;
+- a **tool observation**, generated by the external environment, which is normally included as context but masked from the language-model loss.
+
+In this recipe, tool observations supply evidence for the next assistant action. Masking them expresses that objective; other training schemes can model observations deliberately, provided that execution still supplies the real result at inference.
+
+A useful curriculum covers at least five decisions:
+
+1. whether to call any tool;
+2. which tool is relevant;
+3. how to satisfy the schema exactly;
+4. how to handle missing data or execution failure;
+5. whether to issue another call or return a final answer.
+
+xLAM-function-calling-60k is a large single-turn seed resource. ToolACE uses a broad API pool and dual verification. Multi-turn datasets add stateful dependencies and error recovery. Evaluation should separate syntax, executability, relevance detection, parallel calls, and task completion instead of collapsing everything into one score.
+
+![VIZ m13/08 — tool-use SFT](assets/modern-llms/en/module-13/m13_08_tool_sft.svg)
+*A tool-use trajectory separates the supervised assistant action from the environment observation, then continues until the model can answer or needs clarification.*
+
+The Berkeley Function-Calling Leaderboard has evolved from single-call syntax tests toward multi-turn and agentic scenarios in BFCL V4. That evolution is a useful warning: a model can format one correct JSON call and still fail at tool use as a sequential decision problem.
+
+## 13. Level-one code: labels and traceable bins
+
+The following code exposes the two structures that trainers often hide: target token IDs and the membership of each packed container.
+
+```python
+import numpy as np
+
+IGNORE_INDEX = -100
+
+def build_sft_example(messages, special_ids):
+    """Build input_ids and labels; supervise assistant content and EOT."""
+    role_id = {
+        "system": special_ids["role_system"],
+        "user": special_ids["role_user"],
+        "assistant": special_ids["role_assistant"],
+        "tool": special_ids["role_tool"],
+    }
+    input_ids = [special_ids["bos"]]
+    labels = [IGNORE_INDEX]
+
+    for message in messages:
+        header = [
+            special_ids["start_header"],
+            role_id[message["role"]],
+            special_ids["end_header"],
+            special_ids["newline"],
+        ]
+        body = [*message["token_ids"], special_ids["eot"]]
+
+        input_ids.extend(header + body)
+        labels.extend([IGNORE_INDEX] * len(header))
+        labels.extend(
+            body
+            if message["role"] == "assistant"
+            else [IGNORE_INDEX] * len(body)
+        )
+
+    return np.asarray(input_ids), np.asarray(labels)
+
+def first_fit_decreasing(lengths, max_length=2048):
+    """Keep original example indices in every First-Fit Decreasing bin."""
+    if not isinstance(max_length, int) or isinstance(max_length, bool) or max_length <= 0:
+        raise ValueError("max_length must be a positive integer")
+    if any(not isinstance(n, (int, np.integer)) or isinstance(n, (bool, np.bool_)) for n in lengths):
+        raise ValueError("lengths must be integers")
+    bins = []
+    for index in sorted(range(len(lengths)), key=lambda i: (-lengths[i], i)):
+        length = lengths[index]
+        if length <= 0 or length > max_length:
+            raise ValueError("invalid sequence length")
+
+        for bucket in bins:
+            if bucket["used"] + length <= max_length:
+                bucket["indices"].append(index)
+                bucket["used"] += length
+                break
+        else:
+            bins.append({"indices": [index], "used": length})
+
+    return bins
+
+def lora_params(d=4096, d_kv=1024, layers=32, rank=16):
+    """Count q/k/v/o LoRA parameters for a GQA transformer."""
+    per_layer = rank * (
+        (d + d) + (d + d_kv) + (d + d_kv) + (d + d)
+    )
+    return per_layer * layers
+
+```
+
+The labels contain actual target token IDs. A boolean “train here” mask is not enough for a causal language-model loss. The packing function preserves original indices so the downstream pipeline can construct segment boundaries and identify the source of a failing sample.
+
+## 15. Distillation channels
+
+“Distillation” can mean several different supervision signals.
+
+### Hard targets
+
+The teacher generates a response and the student trains on that response with ordinary cross-entropy. This works through an API and does not require teacher logits. It is also lossy: the student sees one sampled path, not the teacher's uncertainty over alternatives.
+
+Hard-target distillation benefits from candidate diversity, executable verification, and careful metadata. A polished response from a powerful model is not automatically a trustworthy label.
+
+### Soft targets
+
+Classical knowledge distillation trains the student to match a softened teacher distribution:
+
+$$
+L=(1-\lambda)L_{\text{CE}}
++\lambda T^2\,\mathrm{KL}
+\left(p_{\text{teacher}}^{(T)}\Vert p_{\text{student}}^{(T)}\right).
+$$
+
+Temperature $T>0$ divides the logits before softmax, and $\lambda\in[0,1]$ sets the distillation weight. The KL direction is teacher-to-student: it penalizes the student for assigning little probability to events supported by the teacher. Multiplying by $T^2$ compensates for a change in gradient scale caused by softening; it does not make all temperatures equivalent. A softer distribution exposes relative preferences among alternatives, while $T$ and $\lambda$ remain experimental choices.
+
+For discrete distributions, $\mathrm{KL}(p\Vert q)=\sum_i p_i\log(p_i/q_i)$ over shared events, here tokens. A zero $p_i$ contributes zero; positive $p_i$ with zero $q_i$ gives infinite divergence. Matching distributions gives zero, and reversing the arguments generally changes the value. The objective requires teacher probabilities, available either directly or through logits. Tokenizer mismatch complicates the objective because the two models may not define probabilities over the same token events.
+
+> **Further study.** Cross-entropy, KL divergence, temperature, and the information content of a full distribution are covered in depth in *Information Theory for ML*.
+
+### Multiple teachers
+
+A pipeline can route domains to specialized teachers, sample several teachers and select with a verifier, or combine distributions when compatible logits are available. Multiple teachers expand coverage, but they also introduce inconsistent style, policy, licensing, and calibration.
+
+The engineering decision begins with the signal that is actually accessible. An API that returns only text supports hard targets. Full teacher probabilities or logits can support soft targets over compatible events; a truncated top-logprobs list does not by itself supply the complete vocabulary distribution. A verifiable task often benefits more from a strong checker than from an additional teacher.
+
+## 16. LoRA and a concrete parameter count
+
+Parameter-efficient fine-tuning (PEFT) updates a restricted parameter set. To make the memory calculation unambiguous, allocate 16 bytes per trainable parameter: 2 for its bf16 weight, 2 for its gradient, 4 for an fp32 master copy, and 4 for each of Adam's two moments. Implementations can store these objects differently. The adapter weight is already included in these 16 bytes.
+
+Full fine-tuning stores trainable weights, gradients, and optimizer state for every updated parameter. Under the module's 16-byte-per-parameter accounting, an 8.03B model requires
+
+$$
+119.656\ \text{GiB}
+$$
+
+for parameter-related training state alone.
+
+**Low-Rank Adaptation (LoRA)** freezes the base matrix $W$ and learns
+
+$$
+\Delta W=\frac{\alpha}{r}BA,
+$$
+
+with $A\in\mathbb R^{r\times d_{in}}$ and $B\in\mathbb R^{d_{out}\times r}$. The chosen scale $\alpha$ controls the update through the multiplier $\alpha/r$. The adapter uses $r(d_{in}+d_{out})$ parameters for one target matrix.
+
+Rank $r$ bounds the rank of the update $BA$, not of the complete matrix $W+BA$. Initializing one factor randomly and the other to zero preserves the starting model while allowing learning to begin. Initializing both to zero can leave both gradients zero. Frozen weights need no weight-gradient update, but backward propagation through them can still be needed to reach earlier adapters. Parameter savings therefore do not translate directly into the same FLOP savings.
+
+For a 32-layer GQA model with $d=4096$, $d_{kv}=1024$, rank 16, and adapters on q/k/v/o, the total is
+
+$$
+13,631,488\ \text{parameters},
+$$
+
+or 0.1698% of the 8.03B base. At 16 bytes of training state per adapter parameter, that is 208 MiB. Dividing the full-state estimate by the adapter-state estimate gives approximately 589.
+
+The ratio is deliberately narrow: it compares parameter-related state under one accounting convention. It is not a 589-fold reduction in total GPU memory.
+
+QLoRA stores the frozen base in 4-bit form while backpropagating into LoRA adapters. The simplified floor in this module is:
+
+- 3.739 GiB raw 4-bit base payload;
+- 208 MiB adapter training state, including 26 MiB of bf16 adapter weights;
+- 3.942 GiB total parameter-state floor.
+
+Quantization scales, activations, temporary dequantization buffers, allocator overhead, and distributed-training metadata raise the real requirement.
+
+![VIZ m13/09 — LoRA accounting](assets/modern-llms/en/module-13/m13_09_peft.svg)
+*The low-rank update, the 13.63M-parameter calculation, and the boundary between parameter-state accounting and complete training memory.*
+
+LoRA is a strong baseline, not a theorem of equivalence to full fine-tuning. Rank, target modules, quantization, data scale, and the depth of the desired distribution shift determine the gap.
+
+### 16.1. Tinker and Inkling: control without owning the cluster
+
+Thinking Machines released **Inkling** in July 2026 as an open-weight MoE model with 975B total and 41B active parameters. Its **Tinker** platform exposes a managed training API built around operations such as `forward_backward`, `optim_step`, `sample`, and state saving.
+
+This interface separates algorithm design from distributed execution. A user can define an SFT, LoRA, distillation, or RL loop while the service handles the underlying cluster.
+
+The arrangement is useful for clarifying what “open” means:
+
+1. Are the model weights downloadable?
+2. Can the user implement a custom training objective?
+3. Is the distributed execution stack itself reproducible?
+
+Inkling answers the first question positively. Tinker offers substantial control over the second. The third remains a managed-service boundary.
+
+## 17. Reconstructing an SFT recipe from a checkpoint
+
+A checkpoint directory often reveals more than its headline model card.
+
+**Tokenizer files.** Inspect `chat_template`, added tokens, special-token maps, and stop IDs. Render actual conversations rather than inferring the format from one token name.
+
+Three library details deserve a literal token-level check. A complete training conversation normally does not need an empty next-assistant header. If a template is first rendered to text and then tokenized, special tokens must not be added a second time. Finally, the assistant mask must come from valid spans in that actual template: TRL's assistant-only mode needs supported generation regions, commonly marked by Jinja `generation` blocks. Check these conventions against the installed library and official tokenizer, then inspect several serialized examples.
+
+**Adapter configuration.** `adapter_config.json` may expose `r`, `lora_alpha`, target modules, dropout, DoRA flags, and the expected base model. These fields are enough to reproduce the parameter count for standard transformer projections.
+
+**Generation configuration.** Stop sequences and decoding defaults describe deployment behavior, but they do not prove how the model was trained.
+
+**Model card and data statement.** Look for source datasets, licenses, filtering, epoch count, context length, evaluation harness, and contamination checks. Published weights without a data recipe are useful, but not fully reproducible.
+
+A disciplined inspection sequence is:
+
+1. render the official template;
+2. identify supervised roles and termination tokens;
+3. compute adapter size;
+4. audit data sources and licenses;
+5. reproduce at least one evaluation subset;
+6. only then interpret aggregate benchmark claims.
 
 ## 20. Key takeaways and sources
 
-- Test-time compute is a real scaling axis, but not a free substitute for a capable base model.
-- Sequential depth, parallel breadth, and adaptive allocation address different failure modes.
-- Repeated sampling raises coverage; selection quality determines how much of that coverage becomes accuracy.
-- Tie handling, answer normalization, and sample dependence are part of the self-consistency algorithm.
-- A verifier can become the bottleneck—and can itself be exploited.
-- With fixed decode rate and full-history caching, decode time and KV memory grow linearly with generated length, while the product impact on latency and concurrency can be severe.
-- Adaptive budgets are valuable because workload difficulty is heterogeneous and quality need not be monotonic in chain length.
-- Distillation transfers visible procedures and traces, not the teacher's full capability.
-- Comparing reasoning systems requires a passport covering controls, depth versus breadth, visibility, billing, tool continuity, systems cost, and evaluation protocol.
+![VIZ m13/10 — SFT in sixty seconds](assets/modern-llms/en/module-13/m13_10_cheatsheet.svg)
+*A compact map of the module: template contract, supervised positions, safe packing, compute, curation, synthesis, reasoning and tool demonstrations, distillation, and LoRA.*
 
-**Primary sources:**
+For the autoregressive model studied here, SFT remains next-token training, but the serialized protocol, target mask, and demonstration distribution turn it into behavioral adaptation.
 
-- [OpenAI — Learning to reason with LLMs](https://openai.com/index/learning-to-reason-with-llms/)
+- A chat template is part of the checkpoint contract.
+- Assistant-only loss is a design choice that should be verified token by token.
+- Packing removes padding only when examples remain attention-isolated.
+- The module's compute ratios are scenario-specific arithmetic, not universal constants.
+- LIMA argues for curation and coverage, not for a fixed minimal dataset size.
+- Synthetic data is strongest when generation is paired with provenance and verification.
+- Reasoning traces transfer strategies and artifacts together.
+- Tool use requires action selection, schema compliance, observation handling, and stopping.
+- LoRA changes parameter-state economics dramatically, but complete memory accounting remains broader.
+
+**Primary references:**
+
+- [FLAN: Finetuned Language Models Are Zero-Shot Learners](https://arxiv.org/abs/2109.01652)
+- [Training language models to follow instructions with human feedback](https://arxiv.org/abs/2203.02155)
+- [Self-Instruct](https://arxiv.org/abs/2212.10560)
+- [LIMA: Less Is More for Alignment](https://arxiv.org/abs/2305.11206)
+- [Magpie](https://arxiv.org/abs/2406.08464)
+- [Tülu 3](https://arxiv.org/abs/2411.15124)
 - [DeepSeek-R1](https://arxiv.org/abs/2501.12948)
-- [Scaling LLM Test-Time Compute Optimally](https://arxiv.org/abs/2408.03314)
-- [Large Language Monkeys](https://arxiv.org/abs/2407.21787)
-- [s1: Simple Test-Time Scaling](https://arxiv.org/abs/2501.19393)
-- [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050)
-- [Generative Verifiers](https://arxiv.org/abs/2408.15240)
-- [RM-R1: Reward Modeling as Reasoning](https://arxiv.org/abs/2505.02387)
-- [OpenAI API model guidance](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
-- [Anthropic thinking documentation](https://platform.claude.com/docs/en/build-with-claude/thinking)
-- [Gemini API thinking documentation](https://ai.google.dev/gemini-api/docs/thinking)
-- [Kimi K3 quickstart](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart)
-- [Thinking Machines — Inkling](https://thinkingmachines.ai/news/introducing-inkling/)
-- [Meta — Muse Spark 1.1](https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/)
+- [s1: Simple test-time scaling](https://arxiv.org/abs/2501.19393)
+- [ToolACE](https://arxiv.org/abs/2409.00920)
+- [LoRA](https://arxiv.org/abs/2106.09685)
+- [QLoRA](https://arxiv.org/abs/2305.14314)
+- [OpenAI Harmony specification](https://github.com/openai/harmony)
+- [Inkling model announcement](https://thinkingmachines.ai/news/introducing-inkling/)
+- [Tinker training API](https://tinker-docs.thinkingmachines.ai/tinker/)
 
-**Snapshot for current API details:** 11 October 2026.
+- [Transformers: chat templates](https://huggingface.co/docs/transformers/chat_templating)
+- [TRL: SFT trainer](https://huggingface.co/docs/trl/sft_trainer)
+- [Tülu 3 SFT mixture card](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)
+
+**Next:** Module 14 moves from demonstrations to preferences and rewards. SFT supplies the initial policy and response grammar; DPO, RLHF, and RLVR will use comparative labels and rewards. DPO can work with a fixed pair dataset, while reinforcement learning usually refreshes model-generated samples.
 
 ---
 
-*Landscape verified: October 11, 2026. Current API controls were checked against official documentation and research results against primary publications. Teaching estimates for latency, memory, and cost are reproduced by local calculations and apply only under the stated assumptions.*
+*Editorial and source check: October 11, 2026. Format, dataset, and service claims were checked against primary sources. Numerical scenarios are reproduced by local code; benchmark results retain the attribution and protocol of their original authors.*

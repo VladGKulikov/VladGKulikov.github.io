@@ -7,59 +7,38 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "E1. Oracle coverage",
-      "prompt": "Compute oracle coverage for $p=0.25$ at $N=1,4,8,16$. Explain why the table does not describe a verifier.",
-      "answer": "*Solution.* Under independent attempts, no candidate is correct with probability $(1-p)^N$, so oracle coverage is $1-(1-p)^N$.\n\n| $N$ | coverage |\n|---:|---:|\n| 1 | 0.250000 |\n| 4 | 0.683594 |\n| 8 | 0.899887 |\n| 16 | 0.989977 |\n\nThis is the probability that a correct candidate **exists**; calculating it needs no verifier at all. It would equal system accuracy under perfect selection. The table specifies no real verifier TPR/FPR and therefore does not predict which candidate will be selected.",
+      "title": "E1. Labels after serialization",
+      "prompt": "A system, user, and assistant message contain 12, 8, and 20 content tokens. Each message adds five structural tokens, and the dialogue begins with BOS. Compute the supervised fraction under assistant-only loss when the assistant end-of-turn token is included.",
+      "answer": "*Solution.* BOS contributes 1 token, three message shells contribute $3\\cdot5=15$, and content contributes $12+8+20=40$, for 56 total. Under assistant-only loss, system/user content and structure plus the assistant header receive label `-100`. The target contains 20 assistant-content tokens and its EOT: **21 tokens**, or $21/56=37.5\\%$. The target boundary must be derived after applying the real chat template, not guessed from raw strings.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "E2. Non-uniform distractors",
-      "prompt": "Modify the exact voting model so that two distractors are common and four are rare. Compare it with the uniform-distractor case.",
-      "answer": "*Solution.* Make the comparison concrete by keeping $p_{correct}=0.4$ and allocating the remaining 0.6 as `(0.20, 0.20, 0.05, 0.05, 0.05, 0.05)`; the uniform baseline has six distractors at 0.10. In the multinomial-composition enumeration, replace only the probability vector and keep the tie rule fixed.\n\n| $N$ | unique mode, uniform | unique mode, skew | random tie, uniform | random tie, skew |\n|---:|---:|---:|---:|---:|\n| 1 | 0.400000 | 0.400000 | 0.400000 | 0.400000 |\n| 3 | 0.352000 | 0.352000 | 0.472000 | 0.460000 |\n| 5 | 0.509440 | 0.456640 | 0.595840 | 0.554380 |\n| 9 | 0.671058 | 0.583120 | 0.737035 | 0.657549 |\n| 17 | 0.856688 | 0.728538 | 0.889316 | 0.775702 |\n\nCommon distractors consolidate wrong votes and compete more often with the correct mode. Equal one-shot correctness therefore does not imply equal self-consistency gains.",
+      "title": "E2. First-Fit Decreasing",
+      "prompt": "Pack\n\n`[403,527,315,180,267,165,425,1347,259,230,626,556,443,174,392,754,120,267,72,126,76,326,128,514]`\ninto 2,048-token containers and compare utilization with padding each sequence separately.",
+      "answer": "*Solution.* FFD sorts lengths descending, then places each item in the first existing bin with enough space. It produces\n\n```text\n[1347, 626, 72]                  = 2045\n[754, 556, 527, 180]            = 2017\n[514, 443, 425, 403, 259]       = 2044\n[392, 326, 315, 267, 267, 230,\n 174, 76]                        = 2047\n[165, 128, 126, 120]             = 539\n```\n\nUseful length is 8,692. Independent padding gives $8692/(24\\cdot2048)=17.684\\%$ utilization; five FFD rows give $8692/(5\\cdot2048)=84.883\\%$. This reduces fixed-shape forward rows by 4.8×, not necessarily wall time by 4.8×. A segment-aware attention mask must prevent cross-example attention.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "E3. Noisy verifier",
-      "prompt": "Plot the noisy-verifier curve through $N=64$ for TPR $=0.85$ and FPR $=0.10$. Identify diminishing returns.",
-      "answer": "*Solution.* Use the module scenario $p_{correct}=0.4$: independently accept a correct candidate with probability 0.85 and an incorrect one with 0.10; select uniformly among accepted candidates and fall back to a random generated candidate if none are accepted. Exact enumeration gives:\n\n| $N$ | accuracy |\n|---:|---:|\n| 1 | 0.400000 |\n| 2 | 0.580000 |\n| 4 | 0.752800 |\n| 8 | 0.837403 |\n| 16 | 0.849788 |\n| 32 | 0.850000 |\n| 64 | 0.850000 |\n\nGains diminish sharply around $N=8$. The limit is $q=0.4\\cdot0.85/(0.4\\cdot0.85+0.6\\cdot0.10)=0.85$. Its equality to TPR is a numerical coincidence; the limit is correctness conditional on acceptance. §7 already provides a counterexample: TPR $=0.90$ gives a limit of $12/13$.",
+      "title": "E3. Compute, best-of-$N$, and LoRA",
+      "prompt": "Revisit the four scenarios in §§7, 10, 11 and 16. For SFT, use an 8.03B model, 200,000 examples averaging 1,200 tokens and three epochs. Calculate FLOP and runtime on one accelerator with a 990 TFLOP/s peak at 40% MFU, then compare the workload with pretraining the same model on 15 trillion tokens.\n\n\nFor independent candidates with $p_{\\mathrm{pass}}=0.3$, find best-of-$N$ coverage at $N=1,4,8,16$. Next, estimate FLOP and runtime for one pass of a 32B model over 1,000 traces of 9,000 tokens, using eight accelerators with the same peak rate and MFU. For the LoRA calculation, adapt q/k/v/o in 32 layers with $d=4096$, $d_{kv}=1024$ and rank 16. Report adapter parameters, their fraction of the 8.03B base and training-state MiB at 16 bytes per trainable parameter.",
+      "answer": "*Solution.* One epoch contains $200000\\cdot1200=240$M tokens; three contain $D=720$M. With $C\\approx6ND$,\n\n$$C_{SFT}=6\\cdot8.03\\text{B}\\cdot720\\text{M}=3.46896\\times10^{19}\\ \\text{FLOP}.$$\n\nDividing by $990\\cdot10^{12}\\cdot0.4$ FLOP/s gives 24.33 hours; the stated 15T-token pretraining workload is about 20,833 times larger. Independent best-of-$N$ coverage is $1-(1-0.3)^N$: 0.3000, 0.7599, 0.9424, and 0.9967 for $N=1,4,8,16$.\n\nThe 32B scenario has $1000\\cdot9000=9$M tokens, hence $6\\cdot32\\text{B}\\cdot9\\text{M}=1.728\\times10^{18}$ FLOP and 9.09 minutes on eight stated devices.\n\nA LoRA adapter for a $d_{out}\\times d_{in}$ matrix has $r(d_{in}+d_{out})$ parameters. Per layer q/o contribute $16(4096+4096)$ each and k/v $16(4096+1024)$ each: 425,984 per layer, or **13,631,488** over 32 layers (0.1698% of the base). At the teaching 16-byte parameter-state accounting, that is **208 MiB**.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
-      "title": "E4. FP8 KV",
-      "prompt": "Recompute the KV table for 48 layers, KV width 512, and fp8 storage.",
-      "answer": "*Solution.* FP8 uses one byte per element, and K and V are stored separately:\n\n$$M_{token}=2\\cdot48\\cdot512\\cdot1=49152\\ \\text{bytes}=48\\ \\text{KiB}.$$\n\n| Tokens | KV per request |\n|---:|---:|\n| 512 | 0.023438 GiB |\n| 1,000 | 0.045776 GiB |\n| 4,000 | 0.183105 GiB |\n| 16,000 | 0.732422 GiB |\n| 64,000 | 2.929688 GiB |\n\nThis is $128/48=2.667$ times smaller than the original 128 KiB/token scenario. It is payload only, excluding scales, alignment, allocator overhead, and runtime buffers.",
-      "answerKind": "solution"
+      "title": "E4 [project]",
+      "prompt": "Extend the CPU dialogue task in Demo 1 with a second turn and a tool observation, supervising only the chosen assistant actions. Compare separate and packed execution on logits, summed loss, and gradients. Deliberately introduce a cross-example attention link and locate the resulting mismatch. Optionally pin a small model’s official tokenizer and chat template, then repeat the boundary inspection using its real token IDs.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 13](/downloads/modern-llms/project_demos/en/module_13_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
     },
     {
       "id": "exercise-05",
-      "title": "E5 [project]. Adaptive policy",
-      "prompt": "Design an adaptive policy for a chat/code/math workload. Specify the routing signal, stopping rule, and cost of each routing error.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 15](/downloads/modern-llms/project_demos/en/module_15_project_demo.ipynb), sections “Demo 1” and “Demo 2” as starting points for this module’s projects. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "title": "E5 [project]",
+      "prompt": "In Demo 2, change the true update rank and training-set size. Compare full updates with LoRA by trainable parameters and held-out MSE across several seeds. Separate rank constraints from finite-optimization error. An optional extension uses small verified-solution and multi-turn tool datasets with a common pretrained base, adding runtime and memory measurements and preserving synthetic-data provenance and verifier decisions.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 13](/downloads/modern-llms/project_demos/en/module_13_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
-    },
-    {
-      "id": "exercise-06",
-      "title": "E6 [project]. API passport",
-      "prompt": "Build a reasoning passport for one current API model using only official documentation, and record the snapshot date.",
-      "answer": "",
-      "answerKind": "guidance"
-    },
-    {
-      "id": "exercise-07",
-      "title": "E7 [project]. Matched budget",
-      "prompt": "Propose a matched-budget comparison between one long trajectory and eight short candidates.",
-      "answer": "",
-      "answerKind": "guidance"
-    },
-    {
-      "id": "exercise-08",
-      "title": "E8. Unit tests as a verifier",
-      "prompt": "Explain how a unit-test suite can be both more reliable than an LLM judge and still incomplete.",
-      "answer": "*Solution.* With fixed inputs and a deterministic environment, a test reproducibly checks a stated requirement. Answer position and verbosity do not change its verdict, and a failure supplies a counterexample. A suite nevertheless checks only its recorded inputs and assertions. A program may overfit visible examples or violate uncovered edge cases, security requirements, or performance constraints. A nondeterministic environment can also make a test flaky. Passing therefore supports correctness within tested coverage; hidden cases, property tests, fuzzing, and review of the specification provide additional evidence.",
-      "answerKind": "solution"
     }
   ],
   "bundle": {

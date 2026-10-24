@@ -4,23 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "9.4.1",
-      "prompt": "What does a compute-optimal scaling law optimize under the constraint C = 6ND?",
-      "explanation": "**Correct answer: A.** The law answers \"how to divide the compute\", not \"how much is needed\". The budget is given from outside, and the optimum splits it between N and D so as to minimize loss.",
-      "topic": "9.4. Formalism: compute, a fitted loss surface, and its analytic optimum",
+      "id": "8.4.1",
+      "prompt": "What does Zero-Order Hold compute for a linear SSM?",
+      "explanation": "**Correct answer: A.** ZOH gives $\\bar A=e^{\\Delta A}$ and the exact held-input coefficient $\\bar B$. A neural implementation may still choose another effective input update.",
+      "topic": "8.4. Discretization with Zero-Order Hold",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The split of a fixed budget between model size and data volume"
+          "text": "The exact discrete transition for an input held constant over the interval"
         },
         {
           "value": "B",
-          "text": "The number of training steps at a pre-selected model size"
+          "text": "An approximate distribution over coordinates of the previous state"
         },
         {
           "value": "C",
-          "text": "The convergence rate of the optimizer under a fixed schedule"
+          "text": "Only the eigenvalues associated with the observation matrix"
         }
       ],
       "correct": [
@@ -28,23 +28,47 @@
       ]
     },
     {
-      "id": "9.4.2",
-      "prompt": "For a budget of $7.23\\cdot10^{23}$ FLOP, the analytic optimum of the fitted law gives $N=35.7$B and $D=3.38$T. What is $D/N$?",
-      "explanation": "**Correct answer: B.** The fitted exponents on $N$ and $D$ differ, so the optimal ratio changes with budget. The value 94.7 belongs to this calculation; it is not a universal Chinchilla constant.",
-      "topic": "9.4. Formalism: compute, a fitted loss surface, and its analytic optimum",
+      "id": "8.4.2",
+      "prompt": "Why is |a|<10⁻¹⁴ insufficient to replace the ZOH input factor by Δ?",
+      "explanation": "**Correct answer: A.** For a=−10⁻¹⁵ and Δ=10¹⁵ the product is −1. Use the exact zero-mode limit at a=0.",
+      "topic": "8.4. Discretization with Zero-Order Hold",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Exactly 20 tokens per parameter"
+          "text": "The product Δa matters: tiny a with large Δ need not be a small step."
         },
         {
           "value": "B",
-          "text": "94.7 — close to one hundred tokens per parameter"
+          "text": "Because expm1 only accepts positive a."
         },
         {
           "value": "C",
-          "text": "1868 — the ratio in the Llama 3 8B/15T scenario"
+          "text": "Because zero eigenvalues are forbidden."
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.5.1",
+      "prompt": "At which $\\Delta$ does the $\\Delta B$ approximation have ten-percent relative error for $a=-1$?",
+      "explanation": "**Correct answer: B.** The root of $\\Delta/(1-e^{-\\Delta})-1=0.1$ is approximately 0.193747558.",
+      "topic": "8.5. Worked example: the cost of replacing exact ZOH by $\\Delta B$",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About 0.10"
+        },
+        {
+          "value": "B",
+          "text": "About 0.19375"
+        },
+        {
+          "value": "C",
+          "text": "About 0.50"
         }
       ],
       "correct": [
@@ -52,23 +76,23 @@
       ]
     },
     {
-      "id": "9.5.1",
-      "prompt": "What are effective epochs for a domain inside a data mixture?",
-      "explanation": "**Correct answer: C.** Giving a small domain a substantial mixture weight causes repeated use of its documents. Effective epochs quantify that repetition; memorization risk increases gradually rather than appearing at one universal epoch threshold.",
-      "topic": "9.5. From raw web pages to a training distribution",
+      "id": "8.6.1",
+      "prompt": "What does selectivity mean in Mamba?",
+      "explanation": "**Correct answer: C.** Input-dependent $B_t$, $C_t$, and $\\Delta_t$ let different tokens be written, exposed, and forgotten differently.",
+      "topic": "8.6. What selectivity changes in Mamba",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The number of steps after which the domain loss stops decreasing"
+          "text": "The model selects one of several full-attention mechanisms"
         },
         {
           "value": "B",
-          "text": "The domain's share of the mixture multiplied by the total epoch count"
+          "text": "The recurrent-state size grows with token importance"
         },
         {
           "value": "C",
-          "text": "The domain token presentations divided by its unique-token pool: average reuse"
+          "text": "Writing, reading, and step parameters depend on the current input"
         }
       ],
       "correct": [
@@ -76,23 +100,23 @@
       ]
     },
     {
-      "id": "9.5.2",
-      "prompt": "DCLM starts from a standardized candidate pool of roughly 240T tokens, while DCLM-Baseline trains on 2.6T tokens. Why should those numbers be reported separately?",
-      "explanation": "**Correct answer: A.** The candidate pool defines the space in which selection strategies are compared. A run’s training volume records the selected token presentations that the model actually consumes.",
-      "topic": "9.5. From raw web pages to a training distribution",
+      "id": "8.7.1",
+      "prompt": "What is the correct scope of State Space Duality?",
+      "explanation": "**Correct answer: A.** SSD connects a defined structured SSM class to multiple execution forms. It is not an identity between all SSMs and softmax attention.",
+      "topic": "8.7. Mamba-2 and the scope of State Space Duality",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The candidate pool and the selected training volume describe different stages of the pipeline"
+          "text": "A structured SSM class corresponds to a semiseparable masked matrix form"
         },
         {
           "value": "B",
-          "text": "The 2.6T figure is only the validation set and is unrelated to training"
+          "text": "Every continuous SSM is bitwise identical to ordinary softmax attention"
         },
         {
           "value": "C",
-          "text": "The 240T figure counts bytes whereas 2.6T counts tokens after a unit conversion"
+          "text": "Every recurrent network is replaced by a single dense-attention layer"
         }
       ],
       "correct": [
@@ -100,23 +124,23 @@
       ]
     },
     {
-      "id": "9.6.1",
-      "prompt": "Why can the \"20 tokens per parameter\" rule give the wrong optimum?",
-      "explanation": "**Correct answer: B.** When α ≠ β the optimal N and D grow with budget at different exponents, so their ratio is not constant. At Llama-3's budget the rule of thumb gives 77.6B against an exact 35.7B.",
-      "topic": "9.6. Worked example A: two budgets and the cost of a mnemonic",
+      "id": "8.7.2",
+      "prompt": "What does associativity of state-transform composition permit?",
+      "explanation": "**Correct answer: B.** Associativity is not commutativity. The boundary state carries contributions from earlier chunks.",
+      "topic": "8.7. Mamba-2 and the scope of State Space Duality",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It was derived for encoder models and does not carry to decoder-only"
+          "text": "Arbitrary token reordering."
         },
         {
           "value": "B",
-          "text": "The D/N ratio itself depends on budget, while the rule treats it as constant"
+          "text": "Regrouping operations while preserving step order."
         },
         {
           "value": "C",
-          "text": "It ignores vocabulary size, which is part of the model's parameter count"
+          "text": "Discarding the state at a chunk boundary."
         }
       ],
       "correct": [
@@ -124,23 +148,47 @@
       ]
     },
     {
-      "id": "9.7.1",
-      "prompt": "What does an isoFLOP curve show?",
-      "explanation": "**Correct answer: C.** The fitted valley is relatively shallow on the data-heavy side: training a smaller model longer may increase fitted loss only modestly. That geometry makes token-heavier allocations worth considering.",
-      "topic": "9.7. The isoFLOP valley and the fitted cost of long training",
+      "id": "8.8.1",
+      "prompt": "What does the delta rule do for a normalized key at $\\beta=1$?",
+      "explanation": "**Correct answer: B.** The update uses the error $v-Sk$, so retrieval along the normalized key becomes exactly $v$.",
+      "topic": "8.8. Delta-rule memory and adaptive forgetting",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "How loss falls over time at a fixed model size"
+          "text": "It sums the new and old values without removing the old association"
         },
         {
           "value": "B",
-          "text": "How the required budget grows as the quality target rises"
+          "text": "It exactly replaces the readout along the selected key direction"
         },
         {
           "value": "C",
-          "text": "Loss as a function of N at constant budget, with a minimum at the optimum"
+          "text": "It clears the entire state matrix before inserting the new association"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "8.9.1",
+      "prompt": "What does rising MSE in the toy additive linear memory show?",
+      "explanation": "**Correct answer: C.** This is a result for the declared synthetic associative memory, not a Mamba benchmark or a theorem about every SSM.",
+      "topic": "8.9. What a fixed state can and cannot preserve",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every Mamba necessarily loses all records after thirty-two tokens"
+        },
+        {
+          "value": "B",
+          "text": "Every softmax-attention system always produces exactly zero error"
+        },
+        {
+          "value": "C",
+          "text": "A fixed matrix memory can accumulate interference among associations"
         }
       ],
       "correct": [
@@ -148,71 +196,23 @@
       ]
     },
     {
-      "id": "9.7.2",
-      "prompt": "Llama-3 8B: 8.03B parameters and 15T tokens. How far from its budget's optimum is that?",
-      "explanation": "**Correct answer: A.** At $C=6ND=7.23\\cdot10^{23}$, the analytic optimum of the fitted law is 35.7B parameters and 3.38T tokens. The 8.03B/15T scenario incurs $\\Delta L=0.0258$ inside that law but uses a model about 4.4 times smaller, reducing dense inference cost.",
-      "topic": "9.7. The isoFLOP valley and the fitted cost of long training",
+      "id": "8.9.2",
+      "prompt": "What does a logit multiplier of 20 do in the softmax control?",
+      "explanation": "**Correct answer: C.** Multiplying logits by 20 is dividing by temperature 0.05. Finite-temperature error is generally nonzero.",
+      "topic": "8.9. What a fixed state can and cannot preserve",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "D/N is about 1868 rather than 94.7, nearly 20 times larger in this comparison"
+          "text": "Sets temperature to 20 and flattens the weights."
         },
         {
           "value": "B",
-          "text": "The model sits exactly at the optimum: 15T is what the law prescribes"
+          "text": "Guarantees exact recovery of arbitrary values."
         },
         {
           "value": "C",
-          "text": "The model is undertrained: the law would call for around 30T tokens"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "9.8.1",
-      "prompt": "Why can an inference-aware objective prefer a smaller model trained on more data?",
-      "explanation": "**Correct answer: B.** In the teaching model, dense decode costs roughly $2N$ FLOP per token. Extra compute spent training the smaller model can be recovered over a large serving volume; the break-even in this scenario is about $2.12\\cdot10^{12}$ generated tokens.",
-      "topic": "9.8. Inference-aware allocation: when does the smaller model repay its training?",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "A larger model is always cheaper to train and therefore prepays its serving cost"
-        },
-        {
-          "value": "B",
-          "text": "Training cost is paid once, while the cost of every generated token is paid repeatedly"
-        },
-        {
-          "value": "C",
-          "text": "A smaller model always requires a more expensive accelerator class"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "9.9.1",
-      "prompt": "What does the \"data wall\" mean?",
-      "explanation": "**Correct answer: C.** Compute capacity can grow faster than the supply of high-quality, sufficiently independent data. Reuse, synthetic transformations, and better curation address different parts of that constraint.",
-      "topic": "9.9. The data wall: token counts stop being interchangeable",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "A limit on the context length available during model training"
-        },
-        {
-          "value": "B",
-          "text": "A ceiling on corpus read speed from disk on large clusters"
-        },
-        {
-          "value": "C",
-          "text": "The pool of quality text grows slower than training runs consume it"
+          "text": "Sets temperature to 0.05 and sharpens the weights."
         }
       ],
       "correct": [
@@ -220,23 +220,23 @@
       ]
     },
     {
-      "id": "9.10.1",
-      "prompt": "What is Muon's core idea for matrix parameters?",
-      "explanation": "**Correct answer: A.** Coordinate-wise scaling is AdamW. Muon instead flattens the update's spectrum with a Newton–Schulz iteration, and it carries no second moment — hence the saving on optimizer state. A finite quintic trace does not set every nonzero singular value exactly to one.",
-      "topic": "9.10. Muon: change the spectrum of a matrix update",
+      "id": "8.10.1",
+      "prompt": "Which states belong in a Mamba-style serving cache?",
+      "explanation": "**Correct answer: A.** Autoregressive causal convolution also needs its recent tail; counting only `ssm_state` is incomplete.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Narrow the update’s singular-value spread with a short matrix iteration"
+          "text": "The main SSM state and the causal-convolution tail"
         },
         {
           "value": "B",
-          "text": "Scale the step coordinate-wise by the accumulated second moment"
+          "text": "Only the last hidden state of the final layer"
         },
         {
           "value": "C",
-          "text": "Zero out update components whose magnitude falls below a threshold"
+          "text": "The complete list of input tokens and their logits"
         }
       ],
       "correct": [
@@ -244,23 +244,23 @@
       ]
     },
     {
-      "id": "9.10.2",
-      "prompt": "Which Gram matrix is cheaper for a 64×32 update?",
-      "explanation": "**Correct answer: B.** Transposing makes the left Gram matrix square on the smaller dimension.",
-      "topic": "9.10. Muon: change the spectrum of a matrix update",
+      "id": "8.10.2",
+      "prompt": "A complete Mamba-1-like cache is 10 MiB and KV costs 128 KiB/token. Where is crossover?",
+      "explanation": "**Correct answer: B.** $10\\text{ MiB}/128\\text{ KiB}=80$. The 10 MiB includes 8 MiB of SSM state and 2 MiB of convolution state.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "64×64 without transposing"
+          "text": "At 64 tokens"
         },
         {
           "value": "B",
-          "text": "32×32 after transposing"
+          "text": "At 80 tokens"
         },
         {
           "value": "C",
-          "text": "64×32 without multiplication"
+          "text": "At 512 tokens"
         }
       ],
       "correct": [
@@ -268,71 +268,23 @@
       ]
     },
     {
-      "id": "9.11.1",
-      "prompt": "What does QK-Clip do when it detects excessively large attention logits?",
-      "explanation": "**Correct answer: B.** QK-Clip acts on the parameter source of excessive bilinear logits by rescaling $W_Q$ and $W_K$, rather than clipping one forward pass. The Kimi K2 report presents it as one component of the stabilization system for a 15.5T-token run; the reported absence of loss spikes belongs to the complete run, not to an isolated causal test.",
-      "topic": "9.11. MuonClip: correct the parameter source of unstable attention logits",
+      "id": "8.10.3",
+      "prompt": "A Mamba-2-like cache is 66.0625 MiB and KV costs 128 KiB/token. Which is the first integer token beyond crossover?",
+      "explanation": "**Correct answer: C.** The exact ratio is 528.5, so token 529 is the first integer position at which the KV cache is larger.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Clips the logits from above while leaving the projection weights alone"
+          "text": "Token 512"
         },
         {
           "value": "B",
-          "text": "Rescales the q and k projection weights, bringing logits back under threshold"
+          "text": "Token 528"
         },
         {
           "value": "C",
-          "text": "Skips the optimizer step for the layer where the outlier occurred"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "9.11.2",
-      "prompt": "Where should post-correction logit regrowth start?",
-      "explanation": "**Correct answer: B.** Starting at the old maxima would simulate a branch where the correction never happened.",
-      "topic": "9.11. MuonClip: correct the parameter source of unstable attention logits",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "The original, uncorrected maxima"
-        },
-        {
-          "value": "B",
-          "text": "The corrected maxima"
-        },
-        {
-          "value": "C",
-          "text": "Always zero"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "9.12.1",
-      "prompt": "Why does this Newton–Schulz implementation transpose a tall matrix (more rows than columns)?",
-      "explanation": "**Correct answer: C.** For an m×n input with m>n, transposition gives n×m X and an n×n left Gram matrix rather than m×m. The saving depends on shape; there is no universal factor of two. Transposing the result restores the input shape.",
-      "topic": "9.12. Code (level 1): small functions that expose their assumptions",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Every tall matrix necessarily diverges without transposition"
-        },
-        {
-          "value": "B",
-          "text": "Transposition replaces matrix multiplication by element-wise operations"
-        },
-        {
-          "value": "C",
-          "text": "To form the smaller left Gram matrix, then restore the original orientation"
+          "text": "Token 529"
         }
       ],
       "correct": [
@@ -340,23 +292,23 @@
       ]
     },
     {
-      "id": "9.14.1",
-      "prompt": "What problem does µP solve?",
-      "explanation": "**Correct answer: A.** Without a consistent parameterization, useful update scales and learning rates can shift substantially with width. µP defines a model family in which tuning on a small proxy transfers much more reliably; it is not a guarantee across arbitrary architectures.",
-      "topic": "9.14. µP and MetaP: make small-model tuning informative",
+      "id": "8.10.4",
+      "prompt": "With 10 MiB of fixed state and 128 KiB of KV per token, when is KV strictly larger?",
+      "explanation": "**Correct answer: A.** The sizes are equal at 80; strict inequality begins at 81.",
+      "topic": "8.10. Memory accounting and core-only arithmetic",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Transferring tuned hyperparameters across widths within a consistently parameterized family"
+          "text": "Starting at token 81."
         },
         {
           "value": "B",
-          "text": "Training stability when moving from bf16 to still lower precision"
+          "text": "Starting at token 80."
         },
         {
           "value": "C",
-          "text": "Aligning the learning-rate schedule with the training set length"
+          "text": "Starting at token 79."
         }
       ],
       "correct": [
@@ -364,23 +316,47 @@
       ]
     },
     {
-      "id": "9.15.1",
-      "prompt": "What does ZeRO-3's ideal memory floor mean?",
-      "explanation": "**Correct answer: B.** ZeRO-3 shards the listed persistent state. Activation memory must be accounted for separately: at fixed local microbatch size it does not acquire the same inverse-rank scaling. Gather windows, communication buffers, and allocator overhead also affect peak memory.",
-      "topic": "9.15. Parallelism: fitting the training state before optimizing communication",
+      "id": "8.11.1",
+      "prompt": "Why does a hybrid with occasional full-attention layers retaining all K/V use O(N) cache memory?",
+      "explanation": "**Correct answer: A.** Fewer such layers reduce the coefficient while retaining linear growth with length. If every addressable branch uses a fixed local window, this unbounded-cache conclusion no longer follows.",
+      "topic": "8.11. Three hybrid patterns",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The minimum below which training must fall back to CPU offload"
+          "text": "Those full-attention layers retain K/V for every token"
         },
         {
           "value": "B",
-          "text": "Weights, gradients and states are sharded across ranks; activations are not"
+          "text": "The recurrent state doubles at every attention layer"
         },
         {
           "value": "C",
-          "text": "The volume occupied by one model layer on one accelerator of the cluster"
+          "text": "The MoE router stores a separate log for every position"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.11.2",
+      "prompt": "Which layer pattern is published for Qwen3.5?",
+      "explanation": "**Correct answer: B.** The official contract uses a repeated 3:1 layout: three Gated DeltaNet → MoE layers and one Gated Attention → MoE layer.",
+      "topic": "8.11. Three hybrid patterns",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Seven Mamba layers followed by one full-attention layer"
+        },
+        {
+          "value": "B",
+          "text": "Three Gated DeltaNet layers followed by one full-attention layer"
+        },
+        {
+          "value": "C",
+          "text": "Parallel Mamba-2 and attention branches inside every block"
         }
       ],
       "correct": [
@@ -388,23 +364,71 @@
       ]
     },
     {
-      "id": "9.15.2",
-      "prompt": "For eight stages, f=7/(m+7). What is the smallest m with f strictly below 5%?",
-      "explanation": "**Correct answer: B.** At m=133 the result is exactly 5%; m=134 gives 7/141 ≈ 4.965%.",
-      "topic": "9.15. Parallelism: fitting the training state before optimizing communication",
+      "id": "8.12.1",
+      "prompt": "Why can an affine scan be parallelized?",
+      "explanation": "**Correct answer: C.** Associativity permits tree-structured prefix composition and correct chunk stitching.",
+      "topic": "8.12. Level-1 code: exact discretization, delta update, and scan composition",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "133"
+          "text": "All steps are computed independently of every preceding state"
         },
         {
           "value": "B",
-          "text": "134"
+          "text": "Every transition matrix is required to be strictly orthogonal"
         },
         {
           "value": "C",
-          "text": "128"
+          "text": "Affine-transition composition forms an associative operator"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "8.12.2",
+      "prompt": "Which test is especially important for a chunked scan?",
+      "explanation": "**Correct answer: A.** A partial final chunk exposes state-carry and off-by-one bugs hidden at perfectly divisible lengths.",
+      "topic": "8.12. Level-1 code: exact discretization, delta update, and scan composition",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A length not divisible by the chunk size"
+        },
+        {
+          "value": "B",
+          "text": "Only a length exactly equal to one chunk"
+        },
+        {
+          "value": "C",
+          "text": "Only an all-zero sequence"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "8.15.1",
+      "prompt": "Why is the label `linear attention` insufficient for a serving passport?",
+      "explanation": "**Correct answer: B.** Models with the same label may use a pure recurrent stack, a 3:1 hybrid, or a sparse/full branch with very different memory.",
+      "topic": "8.15. A current architecture passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "It omits license conditions and permitted modes of redistribution"
+        },
+        {
+          "value": "B",
+          "text": "It omits layer ratios, state shapes, and the remaining KV cache"
+        },
+        {
+          "value": "C",
+          "text": "It applies only to encoders and cannot describe autoregressive decode"
         }
       ],
       "correct": [
@@ -412,23 +436,23 @@
       ]
     },
     {
-      "id": "9.16.1",
-      "prompt": "Why can reported wall-clock training time not be equated directly with the arithmetic compute estimate $C\\approx6ND$?",
-      "explanation": "**Correct answer: C.** $C\\approx6ND$ estimates useful arithmetic work. Converting it to seconds requires cluster size and effective throughput; without MFU and downtime, neither quantity determines the other.",
-      "topic": "9.16. Four directions in contemporary pretraining",
+      "id": "8.16.1",
+      "prompt": "Why is a recurrent carrier attractive for audio and video?",
+      "explanation": "**Correct answer: C.** The advantage comes from the number of sequential time steps. Exact return to an event may still require attention or external memory.",
+      "topic": "8.16. Audio, video, and other long streams",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Time is always reported for one accelerator while the formula is for the full cluster"
+          "text": "Those modalities never require exact access to the past"
         },
         {
           "value": "B",
-          "text": "The formula counts only the forward pass whereas time counts forward and backward"
+          "text": "Their inputs are always statistically uniform"
         },
         {
           "value": "C",
-          "text": "Accelerator count, peak throughput, MFU, communication, and downtime stand between arithmetic FLOP and wall-clock time"
+          "text": "Long temporal streams can be updated with fixed-size state"
         }
       ],
       "correct": [

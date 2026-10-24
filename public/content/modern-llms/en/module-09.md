@@ -1,691 +1,837 @@
-# Module 10. KV Caches and Efficient Inference
+# Module 9. Pretraining: Data, Scaling Laws, and Optimizers
 
-*“Modern LLMs” course · Module 10 lecture · edition 2026.10.25*
+*“Modern LLMs” course · Module 9 lecture · edition 2026.10.25*
 
-> **What this module is about.** Module 9 ended when the training run produced a model. That is only the beginning of the system problem. A deployed model must now answer many requests at once, preserve latency targets, reuse work when possible, and fit both its weights and a growing amount of per-request state into a finite memory hierarchy.
+> **What this module is about.** The previous modules assembled the machine: tokenization, positional mechanisms, attention, Transformer blocks, mixture-of-experts routing, and alternative architectural branches. A model with those components is still only an untrained dynamical system. Pretraining is the stage at which architecture, data, optimization, numerical precision, and cluster topology must work together for months without a cheap reset button.
 >
-> The key object is the **KV cache**. It removes the need to recompute the entire prefix at every autoregressive step, yet it also grows with context length and concurrency. We will derive its size from the attention geometry, place it inside a simple bandwidth model, locate the point at which batching stops amortizing the weights efficiently, and then follow the engineering consequences: paged allocation, prefix reuse, tiered storage, prefill/decode disaggregation, quantization, and eviction.
+> We will follow three decisions that belong to the same training run. **What data should the model see?** **How should a fixed compute budget be divided between parameters and tokens?** **Which optimization and systems choices can carry the run through trillions of tokens without instability?** The mathematical path starts from $C\approx6ND$, derives the analytic optimum of a particular Chinchilla-style fit, measures the cost of moving away from that optimum, and adds inference to the lifecycle objective. The practical path covers data curation, Muon, MuonClip, µP-style transfer, and the memory accounting behind ZeRO/FSDP. We use these mechanisms to read large-run reports and their resource constraints. Implementing a distributed training runtime or GPU kernels requires a separate course.
 >
-> Every number in the worked examples belongs to an explicit teaching scenario. A bandwidth ceiling is not a benchmark, a vendor result is not an independent measurement, and an API price is not a permanent property of the underlying mechanism. Keeping those categories separate is part of the lesson.
+> The module distinguishes exact algebra inside an assumed model from empirical fit, vendor-reported run results, and broader conclusions. That distinction matters more at frontier scale, where a memorable number can travel farther than the conditions under which it was measured.
 >
-> **Useful background.** Module 5 supplies the attention layouts, Module 8 explains recurrent state, and Module 9 introduces lifecycle inference cost. We develop roofline reasoning here: both arithmetic and data movement limit runtime. With ideal overlap, the larger of the two times gives a lower bound.
+> **Useful background.** Modules 3 and 6 explain the computation and decoder block; Modules 5 and 7 provide the attention and expert-parallel context. For the compute estimates here, distinguish work in FLOP from throughput in FLOP/s: their ratio gives compute time. Device utilization, communication, and data movement reduce sustained throughput below the hardware peak. Module 10 develops the fuller roofline model.
 
 ### Reading routes
-**First pass — follow a token into the serving system.** Read §§1, 3–9, §11 up to “Implementation examples”, and the main takeaways in §20. Return to the “Compression” and “Storage tiers” paragraphs and the storage-tier parts of the figure after §§10 and 14–15. Follow the chain from retained state to bytes, bandwidth, allocation, and reuse. In §6, start with the throughput equation and table; leave the FLOP refinement for a return visit. Work through E1 and check E2 in the notebook.
 
-**Second pass — implement and challenge the assumptions.** Add the historical context (§2), refined arithmetic (§§6, 9), storage hierarchy (§10), code (§§12–13), and compression (§§14–15). Run every notebook cell, including invalid shapes, page exhaustion, and rollback beyond the retained window. Then solve E3 and run both project demos.
+- **First pass:** read §§1–3 and 5 for the problem and the data pipeline. In §4, focus on the variables and final allocation formula; continue with §§6–11 and 15, then try Q1–Q7 in §18 and E1–E3. Return to Q8 after reading the run passports in §17.
+- **Second pass:** work through the derivation in §4 and execute the code and notebooks in §§12–13. Follow with hyperparameter transfer (§14), precision (§16), and selected run reports (§17).
+- **Reference:** use §4 for equations, §§10–11 for optimizer mechanics, §15 for state accounting, and §20 for sources. The run reports can be read independently.
 
-**Reference use.** Consult §§16–17 when recording an engine/model configuration, §18 to test your understanding, and §19 for projects. API terms and connector support have a verification date; each calculation has explicit assumptions.
+Pretraining builds a base model from a large data mixture, usually through next-token prediction. Later training that shapes its behavior is a separate stage.
 
 ---
 
-## 1. Motivation: a generated token is a memory transaction
+## 1. Motivation: three irreversible choices
 
-During training, thousands of tokens can contribute to large matrix multiplications before the weights must be fetched again. Autoregressive decoding has a less favorable shape. Each active sequence asks for one new token. In a dense model with full attention, that step reads nearly all weights and the accumulated keys and values of the available context. MoE and bounded-memory mechanisms read different subsets, so architecture must remain explicit in the estimates. The amount of arithmetic per byte can become very small even on an accelerator with enormous peak FLOP/s.
+Imagine that the model code has passed small-scale tests and a large cluster has been reserved for several months. “Train the model” now decomposes into a sequence of choices whose mistakes are expensive in different ways.
 
-This is why parameter count alone is a poor predictor of serving behavior. Two models with similar active parameters may store radically different amounts of history. A conventional multi-head attention model keeps one key and one value vector for every head at every layer. GQA reduces the number of KV heads. MLA stores a compressed latent representation. Hybrid architectures may combine full-attention layers with recurrent or convolutional state. Before estimating latency or capacity, we must first ask a seemingly mundane question: **what exactly is retained after each token?**
+The first choice is the **training distribution**. The web does not arrive as a textbook. It contains duplicated pages, navigation fragments, generated spam, broken encodings, private information, and documents that are grammatical yet nearly useless as learning signal. A corpus is therefore not something found; it is something manufactured through extraction, filtering, deduplication, scoring, policy checks, and mixture design.
 
-We call prompt processing **prefill** and one-token-at-a-time generation **decode**. **HBM** is the accelerator's high-bandwidth memory; **DRAM** is CPU main memory. A **service-level objective (SLO)** sets a target such as an upper latency percentile. Section 5 connects these terms to user-visible timing.
+The second choice is the **allocation of compute**. With a fixed FLOP budget, one can train a larger model for fewer tokens or a smaller model for longer. Neither extreme is automatically attractive. Too few parameters impose a capacity penalty; too few tokens leave capacity underused. Scaling laws turn this trade-off into an empirical optimization problem, but the objective must be stated carefully. Chinchilla asks for the lowest fitted loss at a fixed training budget. A product team may care instead about total lifecycle cost after the model has generated trillions of tokens.
 
-The answer affects three quantities at once.
+The third choice is the **update rule and its numerical environment**. A brief instability in a toy experiment costs minutes. A divergence after ten trillion tokens can cost days of cluster time, checkpoint recovery, and forensic debugging. Optimizer geometry, learning-rate schedule, precision policy, and monitoring therefore form one control system rather than four independent implementation details.
 
-First, it affects **capacity**. A cache that is modest at 8K tokens may exceed the weight payload at one million tokens. Second, it affects **bandwidth**. Decoding must read the relevant state repeatedly, so longer contexts lower the memory-bound throughput ceiling. Third, it affects **scheduling**. A server that mixes long prompts, short prompts, cache hits, and growing outputs needs a memory manager rather than a single preallocated tensor.
+The choices interact. Data quality changes the observed scaling curve. The chosen parameter/token ratio changes future serving cost. The optimizer determines whether the planned token horizon is reachable. A strong pretraining recipe is not a bag of individually good techniques; it is a coherent design whose assumptions agree.
 
-The rest of the module follows that chain. We begin with bytes per token, turn those bytes into a speed ceiling, and then ask what a serving stack can do about the result.
+## 2. The historical arc: the objective kept expanding
 
-## 2. The historical arc: four successive bottlenecks
+![VIZ m9/01 — the expanding pretraining objective](assets/modern-llms/en/module-09/m9_01_timeline.svg)
+*From Kaplan’s empirical power laws to Chinchilla’s compute-optimal balance, inference-aware allocation, reproducible data pipelines, Muon/MuonClip, low-precision pretraining, and the 2026 public run reports.*
 
-![VIZ m10/01 — from a local buffer to a serving platform](assets/modern-llms/en/module-09/m10_01_timeline.svg)
-*The inference line: MQA reduces KV heads; GQA becomes a practical compromise; Orca introduces iteration-level scheduling; PagedAttention brings block allocation and sharing; MLA compresses stored attention state; Mooncake, LMCache, and later disaggregated runtimes turn KV into a distributed data object.*
+The modern story begins with a narrower question than the one posed in this module. Kaplan et al. showed in 2020 that language-model loss followed smooth power-law trends over the model, data, and compute ranges they studied. Their fitted regime encouraged parameter growth faster than token growth and matched the design instincts of the GPT-3 era: very large models trained on corpora that now look comparatively small.
 
-The first wave changed the **architecture**. Multi-Query Attention (MQA) showed that all query heads could share a much smaller set of key/value heads. Grouped-Query Attention (GQA) retained several KV groups and offered a better quality–memory compromise for many dense models. Multi-head Latent Attention (MLA) went further by storing a latent representation from which the required key/value information can be reconstructed.
+Chinchilla revisited the allocation in 2022 with a broader experimental sweep. Its central practical message was that many large models were undertrained on data. Under a fixed training-compute budget, parameter count and token count should grow in a much more balanced way. “About twenty tokens per parameter” became a convenient mnemonic for the studied range, although neither the paper nor the mathematics made it a timeless constant.
 
-The second wave changed the **scheduler**. Orca observed that sequences in a batch do not finish together and that waiting for a whole batch to complete wastes capacity. Its iteration-level scheduling allowed the active set to change after every decode step. The modern term *continuous batching* describes this family of schedulers: completed requests leave, new requests enter, and the GPU keeps doing useful work.
+The next expansion added **deployment**. A model is trained once but may be invoked billions of times. If two configurations reach comparable quality, a smaller model trained for longer can spend more compute up front and repay it through cheaper inference. This lifecycle view explains why a run such as Llama 3 8B on more than 15T tokens can be economically sensible even when it lies far to the data-heavy side of a historical compute-optimal fit.
 
-The third wave changed the **allocator**. Variable-length sequences make contiguous KV buffers expensive. PagedAttention borrowed the central idea of virtual memory: a logical sequence can be represented by a table of fixed-size physical blocks. This reduces fragmentation, supports copy-on-write sharing, and lets the scheduler grow sequences without reserving their maximum length in advance. vLLM made this design widely accessible; SGLang’s RadixAttention emphasized structured reuse of common prefixes.
+At the same time, the symbol $D$ stopped looking like an interchangeable pile of tokens. FineWeb, FineWeb-Edu, DCLM, Nemotron-CC, and later multilingual corpora such as FineWeb2 made data construction itself a reproducible research object. The question shifted from “how much web text?” to “which documents, with which filters, mixture weights, provenance, and evaluation loop?”
 
-The fourth wave changed the **scope of the cache**. Once the KV state became valuable enough, keeping it inside one process was no longer sufficient. LMCache added external storage and transfer paths. Mooncake treated CPU memory, local storage, and networked resources as a global KV pool. Prefill/decode disaggregation placed the two phases on different worker pools and turned KV transfer into an explicit systems operation. By 2026, context state had become a first-class distributed resource with its own placement, routing, and lifecycle policies.
+Optimization became more visible as runs grew longer. AdamW remained a strong default, but matrix-aware methods such as Muon appeared in public frontier-scale training stacks. Kimi K2 documented MuonClip and a 15.5T-token run without loss spikes. DeepSeek V4 reported Muon alongside mHC and hybrid attention. Kimi K3 extended the line with head-wise treatment inside the optimizer. These examples do not establish a universal winner; they establish that matrix-geometric optimization became operational at trillion-parameter scale.
 
-No wave made the previous ones obsolete. A current serving system typically combines architectural reduction, iteration-level scheduling, paged allocation, prefix reuse, and a memory hierarchy. Each mechanism removes a different term from the cost.
+Infrastructure evolved in parallel. ZeRO and FSDP reduced replicated state, multi-axis parallelism became normal, FP8 appeared in public large-scale pretraining, and NVIDIA documented NVFP4 pretraining in Nemotron 3. The historical pattern is therefore not a sequence of single-algorithm replacements. The objective expanded: predict loss, allocate compute, account for inference, curate data, preserve numerical stability, and map the whole state onto a cluster.
 
-## 3. A bridge to classical systems: pages, caches, and queues
+## 3. Three classical ideas hiding inside frontier pretraining
 
-Three older systems ideas provide a useful mental model.
+The scale is new; much of the logic is not.
 
-**Virtual memory.** A process sees a contiguous address space even though physical pages may be scattered. PagedAttention applies the same separation to a sequence: logical token positions map to fixed-size KV blocks, and the blocks need not be adjacent. Sharing a prefix then means sharing page-table entries; copy-on-write creates a private block only when one branch diverges.
+### An empirical law is a model of a regime
 
-**Cache hierarchies.** HBM is fast and scarce, CPU DRAM is larger and slower, local SSD is larger again, and remote storage adds network cost. Moving KV between these levels is governed by the same questions that appear in databases and operating systems: expected reuse, transfer latency, eviction policy, and prefetch timing. The unusual feature is the object being cached: a representation whose recomputation cost grows with the prefix length.
-
-**Queueing and phase separation.** Prefill and decode stress the accelerator differently. A long prefill can occupy compute resources for a relatively large contiguous interval, while interactive decode consists of many short latency-sensitive steps. A system may have excellent average throughput and still violate user-facing latency objectives because the two phases interfere in the tail. Goodput—the work completed while meeting the service-level objective—is therefore more informative than raw throughput alone.
-
-These analogies are not just pedagogical decoration. They tell us which knobs to expect: block size, admission control, queue discipline, cache key, time-to-live, placement tier, prefetch, and backpressure.
-
-## 4. Formalism and worked example A: how many bytes does one token add?
-
-For ordinary MHA or GQA, let
-
-- $L$ be the number of attention layers;
-- $H_{kv}$ the number of KV heads per layer;
-- $d_h$ the head dimension;
-- $b$ the number of bytes per stored scalar.
-
-Each token contributes one key vector and one value vector at every attention layer, so
+A relation such as
 
 $$
- b_{KV}=2L H_{kv}d_hb.
+y(x)=a x^{-\alpha}+b
 $$
 
-The factor of two is not an approximation: it is the pair $K$ and $V$. What *is* architecture-dependent is the object represented by $H_{kv}d_h$. MLA, recurrent attention variants, and hybrid models may store a latent or several kinds of state instead of ordinary key/value heads; those cases require their own geometry.
+has an exact straight-line form after subtracting the floor: for $a>0$ and $x>0$, $\log(y-b)=\log a-\alpha\log x$. Plotting $\log y$ itself is only approximately linear where $a x^{-\alpha}$ dominates $b$. Fitting such a relation can compress many experiments into a few coefficients. That is the appeal of scaling laws. It is also the danger. A fit is only as universal as the architectures, tokenizers, datasets, numerical formats, and scale range behind it. Kaplan and Chinchilla are a useful reminder that a smooth line may change when the experimental regime changes.
 
-For bf16, $b=2$. The teaching configurations give the following ladder:
+A responsible use of a scaling law therefore has three layers: fit the observed region, optimize the fitted function, and label any extrapolation beyond the observed region. The second step can be exact mathematics while the third remains uncertain science.
 
-| Architecture | Configuration | Stored state per token | Interpretation |
-|---|---|---:|---|
-| 70B MHA equivalent | $L=80$, $H_{kv}=64$, $d_h=128$ | **2,560 KiB** | full KV for every attention head |
-| Llama-3.3-70B GQA | $L=80$, $H_{kv}=8$, $d_h=128$ | **320 KiB** | eightfold reduction from the MHA equivalent |
-| Llama-3-8B GQA | $L=32$, $H_{kv}=8$, $d_h=128$ | **128 KiB** | reference geometry for the roofline example |
-| DeepSeek-V3 MLA | model-specific latent + RoPE state | **68.625 KiB** | a separate MLA calculation, not the GQA formula |
+### Corpus construction is sampling theory at industrial scale
 
-For MLA, use $b_{\mathrm{MLA}}=L(d_c+d_r)b$: with 61 layers, a 512-dimensional latent, 64 positional coordinates, and 2 bytes per scalar, the result is $61(512+64)2=70{,}272$ B = 68.625 KiB/token. A recurrent layer instead retains a fixed state; it has no constant per-token KV slope. A hybrid needs both terms.
+Classical ML already taught us to inspect duplicates, outliers, missing values, class imbalance, and train/test contamination. Web-scale pretraining encounters the same categories with documents rather than rows and billions rather than thousands of examples.
 
-Throughout the examples, 8K = 8192, 32K = 32768, 128K = 131072, and 1M = 1,000,000 tokens. These length labels are separate from memory units. For $B$ equal-length requests, $M_{KV}=BNb_{KV}$.
+The scale changes the algorithms. Pairwise document comparison is impossible, so near-duplicate search uses shingles, MinHash signatures, and locality-sensitive hashing. Human quality labels cannot cover the corpus, so a small labeled set trains a cheaper classifier that scores the rest. Domain weights resemble stratified or importance sampling, except that the objective is a general-purpose foundation model rather than one fixed target label.
 
-The units matter. Dividing bytes by $2^{10}$ gives KiB; accelerator and operating-system tools often report binary capacities even when product names use decimal “GB”.
+### Optimizers exploit different geometries
 
-Now consider the 70B GQA row. It stores 327,680 bytes per token. At batch one:
+It is useful to separate three families rather than place every method on one “approximate Hessian” ladder.
 
-- 8,192 tokens require 2.5 GiB;
-- 32,768 tokens require 10 GiB;
-- 131,072 tokens require 40 GiB;
-- 1,000,000 tokens require 327.68 GB, or about 305.18 GiB.
+- **First-order methods with gradient history**, such as AdamW and Lion, adapt updates in different ways: AdamW rescales by moment estimates, while Lion uses the sign of a momentum-based update.
+- **Preconditioning or curvature-oriented methods**, such as Shampoo, SOAP, and Sophia, construct richer approximations to local geometry.
+- **Matrix-geometric methods**, represented here by Muon, transform a momentum update using the fact that many parameters are matrices.
 
-A bf16 weight payload of 70 billion parameters is roughly 140 GB. The cache crosses that weight payload at
+Muon does not explicitly build a Hessian. Its practical operation is easier to understand through singular values: it turns a highly anisotropic matrix update into one with a much narrower spectrum. That is the mechanism we will derive in §10.
 
-$$
-N_{cross}=\frac{140\cdot 10^9}{327{,}680}\approx427{,}246\ \text{tokens}.
-$$
+> **Optional depth.** Cross-entropy, KL divergence, coding length, and the limits of interpreting loss as “information learned” are developed in *Information Theory for ML*. The present module remains self-contained and uses cross-entropy only as the measured pretraining objective.
 
-Beyond that point, a *single* sequence carries more KV state than the model’s weights. Concurrency multiplies the cache again. This is the arithmetic behind the statement that long-context serving is a memory problem.
+The calculations use mean cross-entropy in nats per token. Enter $N$ and $D$ as counts, not as numbers measured in billions. Table suffixes B and T mean $10^9$ and $10^{12}$. Loss values from different tokenizers are not directly comparable.
 
-![VIZ m10/02 — the KV ladder and the weight crossing](assets/modern-llms/en/module-09/m10_02_kv_ladder.png)
-*The top panel compares KiB per token across MHA, GQA, and MLA examples. The bottom panel shows the 70B GQA cache growing through the bf16 weight payload.*
+## 4. Formalism: compute, a fitted loss surface, and its analytic optimum
 
-## 5. One request, two computational regimes
+We begin with a dense-model approximation. Let
 
-An inference request has two phases, and treating them as one homogeneous workload hides the central scheduling problem.
+- $N$ be the parameter count;
+- $D$ the number of training tokens;
+- $C$ the total floating-point operation count.
 
-During **prefill**, the model processes the prompt and constructs its state. Many positions participate in matrix operations at once, so the accelerator can often use its compute units efficiently. The user experiences this phase through **time to first token (TTFT)**.
-
-During **decode**, the model adds one token per active sequence per step. The weights are read again, and attention reads the accumulated KV state. Arithmetic no longer grows in proportion to the amount of data moved, so the phase is often memory-bandwidth bound. The user experiences it through **inter-token latency (ITL)** or the corresponding stream rate after the first token.
-
-The distinction is workload-dependent, not metaphysical. Very short prompts may not make prefill fully compute-bound; large batches and fused kernels can improve decode utilization; sparse or recurrent architectures alter the state traffic. Nevertheless, the two-regime model is a useful first approximation because it explains why one long prompt can disturb many otherwise smooth decode streams.
-
-A service-level objective may constrain TTFT, ITL, a percentile of end-to-end latency, or all three. Interactive chat, offline batch generation, and agent rollout generation place different weights on these metrics. The scheduler should therefore maximize useful work **under the chosen constraints**, not merely display the largest aggregate token count.
-
-![VIZ m10/03 — two regimes inside one request](assets/modern-llms/en/module-09/m10_03_two_regimes.svg)
-*Prefill builds the prompt state with high matrix reuse; decode advances one token at a time and repeatedly reads weights plus KV. TTFT and ITL expose the two phases to the user.*
-
-## 6. Worked example B: the bandwidth ceiling and the KV term
-
-Take an 8B bf16 model with a 16 GB weight payload, the 128 KiB/token geometry above, and an H100-like memory bandwidth of 3.35 TB/s. We deliberately use a simple model: one decode step reads the weights once and reads the resident KV state once. Ignoring compute and all other traffic gives the aggregate bandwidth ceiling
+A common first-order estimate is
 
 $$
-Q(B,N)\leq\frac{B\,BW}{W+B N b_{KV}},
+C\approx6ND.
 $$
 
-where $B$ is the number of active sequences, $N$ the context length, $W$ the weight bytes, and $BW$ the memory bandwidth. For batch one this reduces to
+The intuition is roughly $2N$ operations per token for the forward pass and another $4N$ for the backward pass. This is not an accounting identity for every architecture. Long-context attention, sparse experts, embeddings, checkpointing, recomputation, and optimizer work add model- and system-specific terms. The approximation is useful because it exposes the dominant parameter–token trade-off.
+
+Take the following rounded Chinchilla-style fit:
 
 $$
-Q(1,N)\leq\frac{BW}{W+N b_{KV}}.
+L(N,D)=E+\frac{A}{N^{\alpha}}+\frac{B}{D^{\beta}},
 $$
 
-The resulting ceilings are:
-
-| Context | Cache traffic per sequence | Ceiling at batch 1 |
-|---:|---:|---:|
-| 0 | 0 | **209.4 tok/s** |
-| 8K | 1.0 GiB | **196.2 tok/s** |
-| 128K | 16 GiB | **101.0 tok/s** |
-| 1M | 122.1 GiB | **22.8 tok/s** |
-
-These are not expected wall-clock measurements. They omit kernels, synchronization, activation traffic, scheduler overhead, and the fact that not every implementation reads every byte in exactly this way. Their value is diagnostic: the equation shows why the ceiling falls as context grows even though the weights have not changed.
-
-The 0-context row is a weights-only baseline, not a usable prompt. The 1M row requires 136.97 GiB for weights plus KV before reserve and cannot run on the 80-GiB device assumed by the capacity example.
-
-### Refinement: context also adds attention FLOPs
+with
 
 $$
- F_{\mathrm{decode}}\approx B(2P+4LH_qd_hN),\qquad
- I=\frac{F_{\mathrm{decode}}}{W+BNb_{KV}}.
-$$
-Here $P$ counts parameters and $H_q$ counts query heads. The $2P$ estimate covers projections; the second term counts QK and AV, with two FLOPs per multiply-add. $N$ counts keys visible to the current query, including its own position; the model does not distinguish the new KV write from subsequent reads. Softmax, normalization, and bookkeeping remain excluded.
-
-Arithmetic intensity $I$ measures operations per byte read. Assume a peak of 990 TFLOP/s and bandwidth of 3.35 TB/s. Their ratio is the roofline ridge: the intensity where ideal compute and memory times coincide. Below it, memory takes longer.
-
-For the 8B example at $B=1$, $L=32$, $H_q=32$, $d_h=128$, and $N=131072$ give about 84.7195 GFLOP per step and 2.55334 FLOP/B. The roofline ridge is $990/3.35=295.522$ FLOP/B, about 115.74 times higher. Keeping only $2P$ gives 0.48222 FLOP/B and a 612.84 ratio: useful as a **projection-only baseline**, but incomplete as a decode intensity. GQA reduces **KV heads** for storage; attention arithmetic here uses **query heads**.
-
-With ideal overlap, a step takes at least $\max(F/\mathrm{peak},\,(W+BNb_{KV})/BW)$. Actual kernels add work and traffic. The model identifies a scale and a bottleneck; it does not promise latency.
-
-## 7. Batch economics: where weight amortization stops being the whole story
-
-Batching helps because several sequences can share one read of the weights. If KV traffic were zero, aggregate throughput would initially grow almost linearly with batch size. The denominator above shows why the gain eventually bends: each additional sequence brings its own context state.
-
-Set total KV traffic equal to the weight payload:
-
-$$
-B^*=\frac{W}{N b_{KV}}.
+E=1.69,\quad A=406.4,\quad B=410.7,\quad \alpha=0.34,\quad \beta=0.28.
 $$
 
-This is not a hard optimum. It marks a useful transition: before $B^*$, reading the weights dominates the denominator; after it, per-request KV traffic increasingly controls the gain.
+The terms have a simple interpretation. $E$ is the fitted irreducible floor. $A/N^{\alpha}$ is the capacity penalty. $B/D^{\beta}$ is the data penalty.
 
-For the teaching scenario:
-
-- at 8K, $B^*\approx14.90$;
-- at 32K, $B^*\approx3.73$;
-- at 128K, $B^*\approx0.93$.
-
-The last value is the striking one. At 128K, one sequence already brings roughly as much KV traffic as the weights. Batching remains useful, but it no longer behaves like free weight amortization.
-
-At batch 32 and 8K, the model predicts 2,128.7 tok/s rather than the 6,700 tok/s one would obtain by multiplying the zero-KV batch-one ceiling by 32. The ratio, about 3.15×, is the “KV tax” in this particular arithmetic scenario.
-
-$Q$ is aggregate throughput. With equal service, each request receives $Q/B$: batch 32 therefore gives 66.52 tok/s per request, corresponding to an ideal 15.03 ms step. Check capacity separately: the hypothetical 80-GiB device, less 16 GB of weights and an 8-GiB reserve, holds at most 57, 14, and 3 requests at 8K, 32K, and 128K; it holds none at 1M. The 80-GiB capacity is an explicit teaching input, not a relabeling of every H100 specification.
-
-![VIZ m10/04 — batch knees under growing context](assets/modern-llms/en/module-09/m10_04_roofline_batch.png)
-*Top: the bandwidth ceiling falls as context grows. Bottom: aggregate throughput rises with batch, but the curve bends earlier for longer contexts. Diamonds mark equal KV and weight traffic; dotted segments exceed the stated memory capacity.*
-
-## 8. PagedAttention: decouple logical length from physical placement
-
-A naïve server can reserve one contiguous KV buffer per request, sized for that request’s maximum allowed context. The policy is simple and usually wasteful. Most requests finish before the limit, sequences grow at different rates, and free regions become fragmented. Worse, a request that needs one more token may be unable to extend even when enough memory exists elsewhere.
-
-PagedAttention replaces the contiguous buffer with a table of fixed-size blocks. The logical token positions remain ordered, but their physical blocks may sit anywhere in the pool. A request receives blocks as it grows, not when it is admitted.
-
-The internal waste is then bounded by the unused tail of the final block. With block size $P$, a sequence wastes at most $P-1$ token slots. For a 32K maximum context, a request that currently contains 2K tokens would waste
+At fixed $C$, eliminate $D$:
 
 $$
-1-\frac{2{,}048}{32{,}768}=93.75\%
+D=\frac{C}{6N}.
 $$
 
-under full contiguous reservation. That exact 2048-token sequence fills 16-token pages without waste. Now consider a different workload: lengths average 2048, with uniform residues modulo 16. The mean unused tail is 7.5 slots, so the ratio of expected unused to expected allocated slots is approximately
+The loss along the iso-compute curve is
 
 $$
-\frac{(16-1)/2}{2048+(16-1)/2}\approx0.365\%.
+L_C(N)=E+A N^{-\alpha}+B\left(\frac{C}{6}\right)^{-\beta}N^{\beta}.
 $$
 
-Each figure belongs to its own assumptions. They are not universal measurements of vLLM. The original PagedAttention work reported near-zero memory waste and 2–4× throughput improvements over its comparison systems, but the realized gain depends on length distribution, block size, scheduler, and hardware.
-
-**Keep the workloads distinct.** A sequence of exactly 2048 tokens fills 16-token blocks with **zero** waste. The 0.365% result assumes varying lengths with mean 2048 and uniform remainders, leaving 7.5 slots unused on average. It divides expected unused slots by expected allocated slots, rather than averaging each request's waste fraction. Dividing by 2048 instead measures overhead relative to useful payload (0.366%).
-
-Block allocation also enables **copy-on-write**. Two branches can point to the same complete prefix blocks. A physical copy is needed only when a branch must modify a shared partial block. This matters for beam-like branching, speculative decoding, and any workflow that forks a common conversation state.
-
-![VIZ m10/05 — pages instead of contiguous buffers](assets/modern-llms/en/module-09/m10_05_paged.svg)
-*Logical sequences map through page tables into a shared block pool. The example contrasts maximum-length reservation with demand allocation and shows prefix sharing through copy-on-write.*
-
-## 9. Prefix caching: do not rebuild an identical beginning
-
-Many requests begin with the same material: a system instruction, a few-shot demonstration set, a tool schema, a large document, or an earlier part of a conversation. If the token sequence and every computation-relevant setting match, the corresponding KV state can be built once and reused.
-
-Consider 8192 input tokens, with 7680 already cached and 512 left to process. The projection-only estimate $2PN/\mathrm{peak}$ gives 132.396 ms versus 8.275 ms, a ratio of 16. Reusing a prefix does not remove the suffix queries' attention to that prefix. With suffix length $S$ and cached length $C$, causal attention costs:
+The first penalty falls with $N$. The second rises because a larger model leaves fewer tokens under the fixed budget. Differentiating gives
 
 $$
- F_{\mathrm{prefill}}\approx 2PS+
- 2LH_qd_h\big[(C+S)(C+S+1)-C(C+1)\big].
-$$
-There are $\sum_{j=1}^{S}(C+j)=CS+S(S+1)/2$ allowed query–key pairs. The bracket $(C+S)(C+S+1)-C(C+1)$ is **twice** that count. Each pair costs $4LH_qd_h$ FLOPs for QK and AV, leaving the factor $2LH_qd_h$ when applied to the bracket. Softmax and overhead are still excluded. For 32 layers, 32 query heads, dimension 128, and 990 TFLOP/s, full prefill gives 150.168 ms and the cached suffix gives 10.427 ms: a **14.402** ratio. These remain arithmetic estimates. KV transfer, lookup, queues, and achieved FLOP/s determine observed TTFT.
-
-Public APIs now expose caching rules for matching, retention, writes, and reads. Section 16 gives the OpenAI example. [Kimi K3](https://www.kimi.ai/blog/kimi-k3) also prices cache hits separately; Moonshot reports over 90% hits on its coding workloads. That is a service-specific observation, not a forecast for another application's traffic.
-
-Exact-prefix matching leads to a practical prompt-layout rule: place stable instructions and reusable documents first, and put request-specific material later. The rule has limits. A provider or engine may hash blocks differently, include model settings in the cache key, impose a minimum length or time-to-live (TTL), restrict sharing scope, or invalidate entries when images, tools, or model versions change. The relevant documentation must therefore be read as part of the serving contract.
-
-A block is contextual: identical token IDs after different earlier tokens need not produce the same K/V. A cache key must distinguish the model and adapters, positional configuration, and preceding prefix; sharing scope is a separate contract.
-
-Prefix caching offers little when the common portion is small, tokenization differs, or every request carries unique context. A process-local cache is also bounded by the process’s memory and lifetime. The next step is to make the state portable beyond one engine instance.
-
-![VIZ m10/06 — prompt layout determines reuse](assets/modern-llms/en/module-09/m10_06_prefix.svg)
-*Stable prompt components form a reusable prefix; changing material remains at the end. The diagram shows the 8K-to-512 arithmetic reduction and the exact-match constraint.*
-
-## 10. Tiered placement: when HBM is only the first level
-
-If useful KV state does not fit in HBM, the system can recompute it later or preserve it on a cheaper tier. The second option creates a hierarchy such as
-
-$$
-\text{HBM}\rightarrow\text{CPU DRAM}\rightarrow\text{local SSD}\rightarrow\text{remote storage}.
+\frac{dL_C}{dN}=-\alpha A N^{-\alpha-1}+\beta B\left(\frac{C}{6}\right)^{-\beta}N^{\beta-1}.
 $$
 
-Capacity rises along the hierarchy, while access latency and transfer cost rise as well. Offloading is therefore not automatically beneficial. Keeping a block is worthwhile when its expected reuse value and recomputation cost exceed the cost of writing, storing, and restoring it.
+Set the derivative to zero:
 
-**LMCache** separates KV storage and transfer from a particular inference engine. A deployment may use CPU memory or disk on the same node, a separate LMCache server shared by several vLLM instances, or external backends such as Redis/Valkey, Mooncake, S3-compatible storage, NIXL, or GDS. Some configurations reuse exact prefixes; CacheBlend extends the idea to selected blocks that reappear in different positions with partial recomputation. The important abstraction is that KV becomes managed data rather than a private tensor owned by one attention kernel.
+$$
+\alpha A N^{-\alpha-1}=\beta B\left(\frac{C}{6}\right)^{-\beta}N^{\beta-1}.
+$$
 
-**Mooncake** applies the idea at distributed-platform scale. In the published Kimi system, prefill and decode are separated, idle CPU memory and storage resources form a global KV pool, and a transfer engine moves state across the network. The scheduler considers service-level objectives and can reject requests early when the available capacity cannot meet them. In the FAST 2025 paper, the authors report 59–498% higher effective serving capacity in their trace-driven experiments while meeting the selected SLOs, operation across thousands of nodes, and more than 100 billion tokens served per day. These are results for the authors’ system and workloads, not generic factors for any cluster.
+Hence
 
-NVIDIA’s CMX announcement of 16 March 2026 describes a hardware-and-network context-memory layer built around BlueField-4 and Spectrum-X for the Vera Rubin ecosystem. NVIDIA reports up to 5× higher tokens per second and energy efficiency against a chosen conventional storage design. At the time of the course snapshot, that figure is a vendor projection for a specific forthcoming platform rather than a broadly reproduced H100 result.
+$$
+N^*=\left[\frac{\alpha A}{\beta B}\left(\frac{C}{6}\right)^\beta\right]^{\frac{1}{\alpha+\beta}},
+\qquad
+D^*=\frac{C}{6N^*}.
+$$
 
-The systems principle is stable even when products change: a large context state needs an explicit placement policy, a transfer path, and a decision about whether retrieval or recomputation is cheaper.
+The star denotes the exact optimum of **this rounded fitted function under the assumption $C=6ND$**. The algebra is exact inside the model; the model itself is empirical.
 
-![VIZ m10/07 — a hierarchy for context state](assets/modern-llms/en/module-09/m10_07_tiered.svg)
-*KV moves through HBM, CPU memory, local storage, and remote storage. LMCache and Mooncake provide software layers; CMX represents a hardware-oriented extension of the same hierarchy.*
+The scaling exponents follow immediately:
 
-## 11. Prefill/decode disaggregation: give each phase its own pool
+$$
+N^*\propto C^{\frac{\beta}{\alpha+\beta}},
+\qquad
+D^*\propto C^{\frac{\alpha}{\alpha+\beta}}.
+$$
 
-Return to the phases from §5. A long prefill in a shared queue can delay active decode streams. To isolate scheduling, start with two deliberately limited estimates: projection-only prefill at 132.396 ms and weight-read-only decode at 4.776 ms. Their serial sum, 137.172 ms, bounds the selected work; it is not a predicted interruption.
+Because $\alpha>\beta$ in this parameterization, the optimal token count grows slightly faster than the optimal parameter count, and
 
-**Chunked prefill** lets the scheduler insert decode steps between prompt segments. Projections for 512 tokens give 8.275 ms, so the two selected estimates sum to 13.051 ms. Equal-size chunks are not equal-cost once attention is counted: later chunks see more history. The notebook checks that all 16 chunks sum to the full prefill's work; the final chunk's attention-inclusive estimate is 10.427 ms.
+$$
+\frac{D^*}{N^*}\propto C^{\frac{\alpha-\beta}{\alpha+\beta}}
+$$
 
-The prefill work has not vanished; it has been divided and interleaved so that its tail-latency effect is smaller.
+drifts upward with the budget. The familiar twenty-token ratio is therefore not a mathematical invariant of this fit.
 
-A more structural remedy is **prefill/decode disaggregation**. Prefill workers can be configured for large prompt matrix operations and throughput; decode workers can be configured for low ITL and memory bandwidth. The KV state is transferred between the pools after prefill. Each pool can use a different tensor-parallel degree, admission policy, and batching strategy.
+## 5. From raw web pages to a training distribution
 
-The separation is not free. KV transfer joins the critical path, the scheduler must know where each block resides, and network backpressure becomes part of request admission. For small loads or short prompts, one pool with continuous batching and chunked prefill may be simpler and faster.
+Calling a corpus a “dataset” can make it sound like a static file. In practice it is the output of a long decision pipeline. Follow one hypothetical page through that pipeline.
 
-### Implementation examples
+### 5.1 Extract the document and identify its language
 
-As of 11 October 2026, vLLM’s stable documentation still labels disaggregated prefill experimental, while exposing several KV connectors and independent TTFT/ITL tuning. NVIDIA Dynamo 1.0, released on 16 March 2026, orchestrates vLLM, SGLang, and TensorRT-LLM, uses NIXL for data movement, and routes requests with KV locality in mind. NVIDIA reports up to 7× more requests served on Blackwell in a specific SemiAnalysis InferenceX DeepSeek-R1 configuration. That number belongs to the stated stack and protocol; it is not a universal multiplier for phase separation itself.
+The useful text must be separated from menus, consent banners, advertisements, repeated navigation, and footer material. A language identifier then estimates which language or languages the document contains. A single global threshold is rarely adequate for a multilingual corpus because classifier quality, script, and typical document length differ by language. FineWeb2 illustrates why per-language calibration matters when the goal extends far beyond English.
 
-> **Connection to RL infrastructure.** This module focuses on interactive and service inference. Large-scale rollout generation, actor/learner separation, policy staleness, and asynchronous queues are developed in *RL for LLM*, Module 12. The same memory and scheduling primitives reappear there under a different workload profile.
+### 5.2 Remove obvious structural junk
 
-![VIZ m10/08 — separate pools for separate regimes](assets/modern-llms/en/module-09/m10_08_pd_disagg.svg)
-*The prefill pool builds state, the transfer layer moves KV, and the decode pool advances streams. The lower panel compares monolithic and chunked interference in the teaching scenario.*
+Heuristics catch documents that parse successfully but do not resemble useful prose or code: repeated character runs, keyword lists, malformed markup, anomalous word lengths, excessive n-gram repetition, or pages dominated by boilerplate. Gopher-style pipelines use many such rules.
 
-## 12. Code (level 1): geometry, bandwidth, and private pages
+The thresholds are engineering choices, not universal constants. A repetition rule that works for web prose may destroy source code or tabular data. Mature pipelines therefore evaluate filters through small-model training and downstream metrics rather than visual cleanliness alone.
 
-Start with three small objects. `KVGeometry` counts bytes; `decode_bandwidth_ceiling` returns aggregate tokens per second; `PagedKV` allocates private pages as a sequence grows. It **does not share prefixes**. The notebook's `PagedKVPool` adds reference counts, copy-on-write, and allocation-failure atomicity.
+### 5.3 Deduplicate across documents
+
+A shingle is a short sequence of adjacent words or tokens. For shingle sets $A$ and $B$, Jaccard similarity is $J(A,B)=|A\cap B|/|A\cup B|$. MinHash compresses the sets while approximately preserving this similarity; locality-sensitive hashing (LSH) finds likely matches without an exhaustive pairwise scan. Candidate detection still needs a retention policy.
+
+Licenses, syndicated news, mirrored documentation, e-commerce templates, and copied articles can appear across thousands of domains. Repetition wastes training mass and increases the chance of benchmark contamination.
+
+All-pairs comparison is infeasible. Documents are represented by shingle sets, compressed into MinHash signatures, and grouped through locality-sensitive hashing. Candidate near-duplicates can then be compared more carefully, and each cluster can retain the most complete or highest-quality representative.
+
+### 5.4 Estimate learning value with a model
+
+Heuristics recognize junk better than they recognize educational value. A common pattern is to label a manageable sample with humans or a stronger model, train a cheaper classifier, and apply it at scale.
+
+FineWeb-Edu is a clear example. Llama 3 70B scored the educational value of roughly 460,000 documents; those labels trained a scalable classifier used on the larger pool. The resulting educational slice contains about 1.3T tokens, compared with roughly 15T in full FineWeb. The LLM acts as a costly teacher for a cheaper filter rather than as the corpus generator.
+
+### 5.5 Apply safety, privacy, and legal policy
+
+Quality and admissibility are different axes. Email addresses, phone numbers, identifiers, and other personally identifiable information (PII) may be detected with regular expressions and named entity recognition (NER) systems. Toxicity or policy categories require classifiers and an explicit governance decision. A high-quality document may be excluded for policy reasons; a harmless document may still be useless for training.
+
+### 5.6 Build the mixture and its schedule
+
+A clean document collection still does not define the distribution seen by the model. The team must choose the relative weight of code, mathematics, science, conversational text, books, and languages. The mixture may change over the run: broad coverage early, then higher-quality or domain-targeted data during a late annealing phase.
+
+Several public artifacts should not be compared as though they were the same object:
+
+- **FineWeb** contains about 15T tokens of filtered English web text; **FineWeb-Edu** is a roughly 1.3T-token educational subset.
+- **FineWeb2** extends the approach to more than a thousand languages and reports roughly 20 TB of text / about five billion documents; token count depends on the tokenizer.
+- **Nemotron-CC** is published as a family totaling about 6.3T tokens and includes quality classification plus synthetic rewriting of part of the corpus.
+- **DCLM** is a benchmark and standardized candidate pool of roughly 240T tokens for comparing data-selection strategies. DCLM-Baseline used 2.6T training tokens. The candidate pool and the token count of one training run are different passport fields.
+
+Code, mathematics, scientific documents, and multimodal data usually require specialized branches: parser-aware extraction, license checks, execution or formal verification, perceptual deduplication, and image–text alignment.
+
+The preprocessing system is also a software supply chain. Dataset loaders and conversion tools execute code and may access external storage. A July 2026 Hugging Face incident demonstrated that a data-processing path could become an intrusion path. Immutable images, allow-listed loaders, restricted network egress, secret isolation, pinned versions, and configuration review therefore belong to corpus engineering as surely as quality filters do.
+
+![VIZ m9/02 — a corpus is a pipeline](assets/modern-llms/en/module-09/m9_02_pipeline.svg)
+*Extraction and language identification → heuristics → near-duplicate removal → model-based quality scoring → privacy/policy checks → domain mixture. The diagram distinguishes a candidate pool from the token count of a particular training run.*
+
+## 6. Worked example A: two budgets and the cost of a mnemonic
+
+The analytic expression in §4 and the popular rule $D=20N$ answer similar-looking questions in different ways. Let us compare them explicitly.
+
+If we impose $D=20N$ and combine it with $C=6ND$, then
+
+$$
+C=120N^2,
+\qquad
+N=\sqrt{\frac{C}{120}},
+\qquad
+D=20N.
+$$
+
+The arithmetic is internally consistent, but the token-to-parameter ratio was fixed before optimization. The fitted loss surface does not impose that ratio; it produces one from its coefficients and the selected budget.
+
+| Training budget $C$ | Analytic $N^*$ | Analytic $D^*$ | $D^*/N^*$ | Imposed $D=20N$: $N$, $D$ |
+|---|---:|---:|---:|---:|
+| $7.23\cdot10^{23}$ FLOP | **35.7B** | **3.38T** | 94.7 | 77.6B, 1.55T |
+| $2.6\cdot10^{24}$ FLOP | **63.6B** | **6.82T** | 107.2 | 147.2B, 2.94T |
+
+The first budget is the rounded $6ND$ value of the 8.03B/15T teaching scenario. The second is a separate illustrative FLOP budget; it is not a hardware runtime estimate.
+
+The gap is not evidence for a new “correct” ratio of one hundred tokens per parameter. It is evidence that three objects must not be conflated:
+
+1. a convenient rule of thumb;
+2. the optimum of one rounded 2022 fit;
+3. the design point selected for a new architecture and a new data mixture.
+
+A real team builds its own iso-compute curves with proxy models and its own corpus. The closed-form calculator remains valuable because it makes the reasoning transparent and catches arithmetic errors. It is not a substitute for those experiments.
+
+## 7. The isoFLOP valley and the fitted cost of long training
+
+At fixed $C$, every parameter count determines exactly one token count, $D=C/(6N)$. We can therefore plot the fitted loss along a one-dimensional isoFLOP curve.
+
+On the left, the model is small and the capacity term $A/N^\alpha$ dominates. On the right, the model is large but receives too little data, so the data term dominates. Between them lies a broad valley.
+
+![VIZ m9/03 — equal-compute valleys](assets/modern-llms/en/module-09/m9_03_isoflop.png)
+*IsoFLOP curves for two budgets. The analytic optimum, the imposed 20-token rule, and the 8.03B/15T point are shown on the same fitted surface.*
+
+The shape of the valley matters for lifecycle design. Moving toward a smaller model and more tokens can add relatively little fitted loss while reducing the active parameter count—and therefore the cost of every future dense decode token.
+
+Take
+
+$$
+N=8.03\cdot10^9,
+\qquad
+D=15\cdot10^{12}.
+$$
+
+Under the dense approximation,
+
+$$
+C=6ND=7.227\cdot10^{23}\ \text{FLOP}.
+$$
+
+This is about 1,868 training tokens per parameter. The analytic optimum of the same fit at the same budget is
+
+$$
+N^*=35.663\text{B},
+\qquad
+D^*=3.377\text{T}.
+$$
+
+The fitted losses are
+
+$$
+L(8.03\text{B},15\text{T})=1.948310,
+$$
+
+and
+
+$$
+L(N^*,D^*)=1.922505.
+$$
+
+Taking the difference before rounding the losses gives
+
+$$
+\Delta L\approx0.025804.
+$$
+
+This number is a counterfactual inside the selected fit. It is not a measured penalty of Llama 3 8B and does not claim that the real team “paid 0.0258 loss.” The architecture, data mixture, and training recipe differ from the experiments behind the coefficients. The calculation says only: if we take this fitted surface literally, moving from 35.7B/3.38T to 8.03B/15T raises fitted loss by 0.0258 while making the model about 4.4 times smaller.
+
+That exchange cannot be judged from training alone. The smaller model keeps saving compute after release; the next section asks when those savings repay the additional pretraining.
+
+## 8. Inference-aware allocation: when does the smaller model repay its training?
+
+Change the comparison. Instead of asking for the lowest fitted loss at a fixed training budget, ask for two models that reach the same fitted target.
+
+Use the 8.03B/15T value
+
+$$
+L_t=1.948310.
+$$
+
+A 70B model reaches the same fitted value after solving
+
+$$
+L(70\text{B},D_{70})=L_t.
+$$
+
+The result is
+
+$$
+D_{70}=1.094026\cdot10^{12}\ \text{tokens}.
+$$
+
+Its training cost is
+
+$$
+C_{70}=6\cdot70\text{B}\cdot D_{70}=4.59491\cdot10^{23}\ \text{FLOP}.
+$$
+
+Inside this model, the 70B configuration reaches the target with about 36% less training compute than the 8.03B/15T configuration. If the model were trained once and never served, the larger model would win this comparison.
+
+Now add dense decoding. Approximate one generated token by $2N$ FLOP. The smaller model spent an extra
+
+$$
+\Delta C=C_8-C_{70}=2.63209\cdot10^{23}\ \text{FLOP}
+$$
+
+during training. The larger model spends an extra
+
+$$
+2(N_{70}-N_8)
+$$
+
+on every generated token. The break-even volume is
+
+$$
+T^*=\frac{\Delta C}{2(N_{70}-N_8)}
+=2.12368\cdot10^{12}\ \text{generated tokens}.
+$$
+
+Beyond roughly 2.12T generated tokens, the 8.03B configuration becomes cheaper in the sum of training compute plus this simple dense-decode estimate.
+
+![VIZ m9/04 — the lifecycle crossing and the data wall](assets/modern-llms/en/module-09/m9_04_inference_wall.png)
+*Lifecycle compute for two equal-fitted-loss configurations, and the token demand implied by extrapolating the selected fit to larger budgets.*
+
+The simplification omits batching, memory bandwidth, KV cache, quantization, speculative decoding, and the possibility that equal average loss does not mean equal task utility. The point is methodological: **the training-compute optimum and the product-cost optimum need not coincide**.
+
+Inference-aware scaling does not refute Chinchilla. It changes the objective from “minimize fitted loss under a training budget” to “minimize lifecycle cost under a quality target and an expected usage volume.”
+
+## 9. The data wall: token counts stop being interchangeable
+
+Extrapolating the fitted optimum produces about 14.3T tokens at $C=10^{25}$ and about 50.4T at $C=10^{26}$. These are not forecasts of a frontier recipe. They illustrate a structural tension: compute can grow faster than the supply of high-quality, sufficiently independent, legally usable data.
+
+A raw token, a filtered token, and a token that provides genuinely new learning signal are not the same quantity. Ten copies of the same article increase the literal counter by ten but contribute far less than ten independent observations. A superficial rewrite changes the surface form without necessarily changing the underlying information.
+
+Several responses address different parts of the problem.
+
+### Optimize the mixture rather than treating it as fixed
+
+DoReMi treats domain weights as tunable variables. A proxy model estimates which domains suffer the largest excess loss relative to a reference, and the mixture is adjusted accordingly. The method does not discover an objective universal mixture: its result depends on the domain partition, proxy model, and evaluation target. It does turn part of curation into a reproducible optimization loop.
+
+### Reuse the best data, but track diminishing returns
+
+Repeated epochs can still help when data is scarce, especially on high-quality subsets. The marginal value falls, however, because later exposures resemble earlier ones. It is therefore useful to distinguish literal token presentations from effective new data.
+
+Many recipes combine repetition with scheduling: broad coverage first, then a late high-quality or domain-specific phase. This is closer to curriculum design than to blindly replaying the whole corpus.
+
+### Transform documents into denser training signal
+
+Synthetic data can turn a weak page into a structured explanation, a verified code problem, a dialogue, or a cleaned rewrite. The benefit depends on verification and diversity. Model-generated text can also amplify the teacher’s mistakes, style, and blind spots; “synthetic” is not a synonym for “high quality.”
+
+For code and mathematics, executable or formally checkable outputs are especially valuable. They attach a verification channel to the generated example rather than relying only on linguistic plausibility.
+
+### Add reasoning trajectories carefully
+
+Reasoning traces may provide intermediate supervision and expose how a solution unfolds. They can also be long, persuasive, and wrong. The useful unit is not “a chain of thought” in the abstract but a trajectory whose outcome or intermediate steps can be checked.
+
+> **Connection to RL.** This section treats reasoning trajectories as data. Their generation through RLVR/GRPO, verifiable rewards, and large rollout systems is developed in *RL for LLM*, Modules 9–10. The information-theoretic view of reasoning signal is developed in *Information Theory for ML*, Module 13.
+
+### A note on diffusion language models
+
+A masked diffusion language model can revisit the same document under different masks and therefore solve a different conditional reconstruction problem on each exposure. That can create more varied supervision than replaying the same left-to-right factorization. It does not guarantee superiority in every data-limited regime; usefulness depends on the objective, architecture, and whether the new masks impose informative constraints.
+
+The “data wall” is not a date on which the internet runs out. It is a gradual decline in the marginal value of the next token and a rise in the cost of cleaning, licensing, verifying, and scheduling it.
+
+The notebook makes repetition concrete. A 15T-token run with a 15% mathematics share allocates 2.25T token presentations to mathematics. A unique pool of 0.4T tokens therefore receives $2.25/0.4=5.625$ effective epochs. This measures average reuse, not the arrival of 5.625 new corpora.
+
+## 10. Muon: change the spectrum of a matrix update
+
+AdamW remains a strong and well-understood baseline. Its practical advantage is coordinate-wise adaptation: parameters with different gradient histories receive different effective step sizes.
+
+The learning rate $\eta_t$ controls the overall step size. Momentum carries a decaying history of gradients, smoothing changes in direction. Weight decay shrinks the parameters themselves. AdamW applies that shrinkage separately from its adaptive gradient scaling, so adding an L2 penalty to the loss generally produces a different update.
+
+**Second pass: trace one AdamW step**
+
+Write $\theta_{t-1}$ for the parameters and $g_t$ for the loss gradient. Initialize two running averages at $m_0=v_0=0$, with decay coefficients $\beta_1,\beta_2\in[0,1)$. All operations are coordinate-wise:
+
+$$m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,\qquad v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2,$$
+$$\hat m_t=\frac{m_t}{1-\beta_1^t},\qquad\hat v_t=\frac{v_t}{1-\beta_2^t},$$
+$$\theta_t=(1-\eta_t\lambda)\theta_{t-1}-\eta_t\frac{\hat m_t}{\sqrt{\hat v_t}+\varepsilon}.$$
+
+The hats correct for initializing the averages at zero. Here $\lambda\ge0$ controls weight decay and $\varepsilon>0$ keeps the denominator positive. This is the common API convention in which decay is multiplied by the current learning rate.
+
+For $\theta_0=(1,-2)$, $g_1=(0.2,-0.4)$, $\eta_1=0.01$, $\lambda=0.1$, $\beta_1=0.9$, $\beta_2=0.999$, and $\varepsilon=10^{-8}$, the first result is approximately $(0.989,-1.988)$. Decay alone gives $(0.999,-1.998)$; the adaptive term contributes roughly $(-0.01,+0.01)$. The notebook follows another step after the gradient changes sign, exposing the role of history. [AdamW](https://arxiv.org/abs/1711.05101).
+
+Large Transformer parameters, however, are naturally matrices. Attention and MLP projections are not merely long vectors with arbitrary reshaping. Suppose a matrix update has a few dominant singular directions and many weak ones. A step can then concentrate most of its effect in a narrow subspace.
+
+Muon begins with a momentum-like update
+
+$$
+M_t=\mu M_{t-1}+g_t.
+$$
+
+For a two-dimensional parameter, it then approximates a polar factor
+
+$$
+O\approx(MM^\top)^{-1/2}M.
+$$
+
+Here $M$ is the update matrix and SVD means singular value decomposition. The inverse-square-root expression requires full row rank; a tall matrix has singular $MM^\top$. In general, use the pseudoinverse square root and retain zeros in null directions. The expression $UV^\top$ uses the compact SVD on the nonzero singular subspace. The code transposes tall inputs so the Gram matrix is only $\min(m,n)\times\min(m,n)$.
+
+If $M=U\Sigma V^\top$, the ideal polar factor is $UV^\top$. The singular-vector directions remain; the nonzero singular values are replaced by ones. In practical terms, Muon narrows the spread of singular values and makes the update more isotropic in matrix geometry.
+
+The momentum equation isolates accumulation. A complete implementation also chooses momentum normalization, optional Nesterov mixing, shape-dependent step scaling, and weight decay. The notebook starts with a prepared update matrix. GEMM means matrix multiplication; the five iterations below are only one part of an optimizer step.
+
+Computing an SVD for every large matrix on every step would be too expensive. Muon therefore uses a small number of Newton–Schulz matrix iterations implemented through GEMM. The teaching trace uses the quintic coefficients
+
+$$
+(a,b,c)=(3.4445,-4.7750,2.0315)
+$$
+
+and the normalized recurrence
+
+$$
+X_{k+1}=aX_k+b(X_kX_k^\top)X_k+c(X_kX_k^\top)^2X_k.
+$$
+
+For the fixed $64\times32$ matrix in the notebook, the initial singular-value spread is about 5.1 ($13.81/2.70$). After five quintic iterations, the spectrum lies roughly in $[0.682,1.133]$.
+
+This is not an exact orthogonal factor. $\|O^\top O-I\|$ remains nonzero. Three additional classical cubic iterations can move the band to approximately $[0.998968,1.0]$, but exactness costs more GEMM work. An optimizer needs a useful geometric transformation, not a perfect numerical linear-algebra result.
+
+![VIZ m9/05 — flattening the update spectrum](assets/modern-llms/en/module-09/m9_05_muon.svg)
+*Momentum update → five Newton–Schulz quintic iterations → a much narrower singular-value band. The inset contrasts the practical approximation with near-exact orthogonalization.*
+
+Calling Muon “second order” can obscure more than it clarifies. Some analyses connect it to Newton-like geometry, but the practical algorithm does not construct a Hessian. The robust statement is narrower: Muon exploits the matrix structure of the update and changes its spectrum.
+
+Public large-scale recipes are usually hybrid. Large matrices may use Muon, while embeddings, normalization parameters, biases, and other tensors remain on Adam or AdamW. “The model optimizer” can therefore mean a parameter-class policy rather than one update rule applied everywhere.
+
+## 11. MuonClip: correct the parameter source of unstable attention logits
+
+Spectral normalization of the update does not prevent every instability. During Kimi K2 scaling, the developers observed attention heads whose query–key logits grew over time. Large-magnitude $QK^\top$ values drive softmax toward saturation and can turn a local head-level problem into a loss spike.
+
+Clipping the logits in one forward pass treats the symptom. The matrices $W_Q$ and $W_K$ that produced the extreme value remain unchanged and may recreate it on the next step. QK-Clip instead rescales those parameters after the optimizer step.
+
+Let $m_h$ be the maximum positive, unmasked, scaled attention logit for head $h$, clamped below at zero and let $\tau$ be the threshold. Define
+
+$$
+\gamma_h=\begin{cases}1,&m_h\le\tau,\\ \tau/m_h,&m_h>\tau.\end{cases}.
+$$
+
+Then apply
+
+$$
+W_Q^{(h)}\leftarrow\gamma_h^\alpha W_Q^{(h)},
+\qquad
+W_K^{(h)}\leftarrow\gamma_h^{1-\alpha}W_K^{(h)}.
+$$
+
+The product of the two scales is $\gamma_h$, so the bilinear logit is reduced by the required factor. With a symmetric split, $\alpha=0.5$, both matrices receive $\sqrt{\gamma_h}$.
+
+For head maxima
+
+$$
+(45,120,260,80)
+$$
+
+and $\tau=100$,
+
+$$
+\gamma=(1,0.833,0.385,1).
+$$
+
+The symmetric scales are approximately
+
+$$
+(1,0.913,0.620,1),
+$$
+
+and the corrected maxima become
+
+$$
+(45,100,100,80).
+$$
+
+For the same inputs, the two excessive heads return to the threshold in this simplified bilinear model. A new batch may exceed it again. Shared keys in GQA also prevent treating every Q/K head pair as independently rescalable.
+
+![VIZ m9/06 — clip the cause, not only the symptom](assets/modern-llms/en/module-09/m9_06_qkclip.svg)
+*Head maxima → $\gamma$ → symmetric rescaling of $W_Q$ and $W_K$ → corrected maxima. The lower strip contrasts parameter correction with one-pass logit clipping.*
+
+The next optimizer steps can grow the weights again, so QK-Clip is part of a monitoring loop rather than a permanent vaccine. The Kimi K2 report associates the mechanism with MuonClip and reports 15.5T pretraining tokens with zero loss spikes. That is a result of one documented run, not a theorem that MuonClip prevents divergence on every architecture.
+
+The teaching example uses an ordinary MHA-like $QK^\top$ parameterization. Kimi K2 uses MLA, where the actual clipping path is more involved. The simplified trace keeps the essential bilinear scaling argument visible enough to verify by hand.
+
+## 12. Code (level 1): small functions that expose their assumptions
+
+Most equations in this module fit into a few lines of Python. That brevity is useful only if the implementation preserves the domain of the mathematics. A negative token count should not quietly produce a complex number; a zero matrix should not pass through a polar-factor routine as if it were an ordinary update.
+
+The first function below validates positive scalar inputs. `ScalingLaw` keeps the fitted coefficients and the compute convention $C=\kappa ND$ in one object. `newton_schulz` accepts both tall and wide matrices and makes the transpose convention explicit. `qk_clip_scales` computes the intervention without mutating model parameters, which makes the arithmetic independently testable.
 
 ```python
-"""Lecture-level geometry, bandwidth bound, and private page allocation."""
-from dataclasses import dataclass, field
+"""Minimal mechanisms embedded verbatim in the lecture and notebook."""
+from dataclasses import dataclass
 import math
+from numbers import Real
+import numpy as np
 
-def count(value, minimum=0):
-    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
-        raise ValueError(f"expected an integer >= {minimum}")
+def positive(name, value):
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
+        raise ValueError(f"{name} must be a real number")
+    value = float(value)
+    if not math.isfinite(value) or value <= 0:
+        raise ValueError(f"{name} must be positive and finite")
     return value
 
 @dataclass(frozen=True)
-class KVGeometry:
-    attention_layers: int
-    kv_heads: int
-    head_dim: int
-    bytes_per_element: int = 2
+class ScalingLaw:
+    E: float = 1.69
+    A: float = 406.4
+    B: float = 410.7
+    alpha: float = 0.34
+    beta: float = 0.28
+    kappa: float = 6.0
 
     def __post_init__(self):
-        for value in (self.attention_layers, self.kv_heads, self.head_dim, self.bytes_per_element):
-            count(value, 1)
+        for name in ("A", "B", "alpha", "beta", "kappa"):
+            object.__setattr__(self, name, positive(name, getattr(self, name)))
+        if isinstance(self.E, (bool, np.bool_)) or not isinstance(self.E, Real):
+            raise ValueError("E must be a real number")
+        if not math.isfinite(self.E) or self.E < 0:
+            raise ValueError("E must be finite and non-negative")
+        object.__setattr__(self, "E", float(self.E))
 
-    @property
-    def bytes_per_token(self):
-        return 2 * self.attention_layers * self.kv_heads * self.head_dim * self.bytes_per_element
+    def loss(self, N, D):
+        N, D = positive("N", N), positive("D", D)
+        return self.E + self.A * N**(-self.alpha) + self.B * D**(-self.beta)
 
-def decode_bandwidth_ceiling(context_tokens, weight_bytes, geometry, bandwidth_Bps,
-                             batch_size=1, kv_scale=1.0):
-    """Aggregate tok/s, assuming one weight read and one KV read per step."""
-    count(context_tokens); count(weight_bytes, 1); count(batch_size, 1)
-    for value in (bandwidth_Bps, kv_scale):
-        if isinstance(value, bool) or not math.isfinite(value) or value <= 0:
-            raise ValueError("bandwidth and scale must be positive and finite")
-    kv = geometry.bytes_per_token * context_tokens * batch_size * kv_scale
-    if not math.isclose(kv, round(kv), rel_tol=0, abs_tol=1e-9):
-        raise ValueError("the scaled payload must contain an integer number of bytes")
-    return batch_size * bandwidth_Bps / (weight_bytes + round(kv))
+    def optimal_split(self, C):
+        C = positive("C", C)
+        N = (
+            (self.alpha * self.A) / (self.beta * self.B)
+            * (C / self.kappa) ** self.beta
+        ) ** (1 / (self.alpha + self.beta))
+        return N, C / (self.kappa * N)
 
-@dataclass
-class PagedKV:
-    """Private logical pages only; the notebook adds sharing and copy-on-write."""
-    n_blocks: int
-    block_size: int = 16
-    free: list = field(init=False)
-    tables: dict = field(default_factory=dict, init=False)
-    lengths: dict = field(default_factory=dict, init=False)
+def newton_schulz(G, quintic_steps=5):
+    """Trace a rectangular polar-factor approximation."""
+    X = np.asarray(G, dtype=np.float64)
+    if X.ndim != 2 or 0 in X.shape or not np.isfinite(X).all():
+        raise ValueError("G must be a finite non-empty matrix")
+    if isinstance(quintic_steps, bool) or not isinstance(quintic_steps, int) or quintic_steps < 0:
+        raise ValueError("quintic_steps must be a non-negative integer")
+    scale = np.max(np.abs(X))
+    if scale == 0:
+        raise ValueError("G must not be all zeros")
+    transposed = X.shape[0] > X.shape[1]
+    X = (X.T if transposed else X) / scale
+    X /= np.linalg.norm(X, ord="fro")
+    for _ in range(quintic_steps):
+        XXt = X @ X.T
+        X = 3.4445 * X - 4.7750 * XXt @ X + 2.0315 * XXt @ XXt @ X
+    return X.T if transposed else X
 
-    def __post_init__(self):
-        count(self.n_blocks, 1); count(self.block_size, 1)
-        self.free = list(range(self.n_blocks - 1, -1, -1))
-
-    def append_to(self, seq_id, total_tokens):
-        count(total_tokens)
-        hash(seq_id)
-        if total_tokens < self.lengths.get(seq_id, 0):
-            raise ValueError("append_to cannot shorten a sequence")
-        table = self.tables.get(seq_id, [])
-        needed = (total_tokens + self.block_size - 1) // self.block_size - len(table)
-        if needed > len(self.free):
-            raise MemoryError("not enough free blocks")
-        self.tables.setdefault(seq_id, table)
-        table.extend(self.free.pop() for _ in range(needed))
-        self.lengths[seq_id] = total_tokens
-
-    def release(self, seq_id):
-        self.free.extend(self.tables.pop(seq_id))
-        del self.lengths[seq_id]
+def qk_clip_scales(max_logits, tau=100.0, split=0.5):
+    """Return gamma and Q/K scales for one monitoring step."""
+    maxima = np.asarray(max_logits, dtype=np.float64)
+    if maxima.ndim != 1 or maxima.size == 0 or not np.isfinite(maxima).all():
+        raise ValueError("max_logits must be a finite vector")
+    if np.any(maxima < 0) or not 0 <= split <= 1:
+        raise ValueError("maxima must be non-negative and split must lie in [0, 1]")
+    tau = positive("tau", tau)
+    gamma = np.ones_like(maxima)
+    over = maxima > tau
+    gamma[over] = tau / maxima[over]
+    q_scale = gamma**split
+    k_scale = gamma**(1 - split)
+    return gamma, q_scale, k_scale, maxima * q_scale * k_scale
 
 ```
 
-Check that 2048 tokens fill exactly 128 pages of size 16, and that an allocation failure leaves all tables unchanged. The same minimal source is embedded and executed in the notebook.
+These are diagnostic primitives, not production optimizer implementations. A complete Muon stack needs parameter groups, momentum buffers, weight decay, distributed state, mixed precision, and a policy for tensors that should remain on AdamW. A complete QK-Clip implementation must collect the appropriate statistics for the model’s attention parameterization and apply the scales to the actual parameters.
 
-The next bridge stores actual K/V tensors in a bounded window. Its attention check uses one query at a time; chunked multi-query attention needs its own mask and access to earlier positions. Rollback is valid only inside the retained interval and cannot recover an evicted prefix. Window movement never resets absolute positions.
+One temporal detail matters as well. The returned Q/K scales correct the state observed at the current monitoring step. Subsequent optimizer updates can enlarge the weights again. QK-Clip therefore belongs to a feedback loop: observe, intervene when necessary, and continue observing.
 
-### NumPy → PyTorch · B17 — Bounded KV cache: append, window, and rollback
+## 14. µP and MetaP: make small-model tuning informative
 
-The cache stores K/V together with an absolute position range. A bounded window physically evicts the old prefix, while rollback truncates only the retained suffix.
+Suppose the target model has 100B parameters and the learning rate is still unknown. A sweep that would be routine on a 100M proxy is financially absurd at the target scale. The obvious plan is to tune the small model and reuse the result. Standard parameterization makes that plan unreliable because width changes activation scales, gradient scales, and the relative size of updates across parameter classes.
 
-```python
-import numpy as np
-import torch
-import torch.nn.functional as F
-```
+**Maximal Update Parametrization (µP)** addresses this transfer problem by choosing width-dependent initialization and learning-rate rules that preserve a nontrivial limiting training dynamics as width grows. When the proxy and target belong to a correctly constructed µP family, useful hyperparameters can transfer across widths far better than under standard parameterization.
 
-#### 1. Explicit NumPy implementation
+The phrase “correctly constructed” carries most of the engineering burden. The two models must share the relevant architectural structure, tensors must be classified into the proper parameter types, and each type must follow its prescribed scaling rule. µTransfer is not a license to tune an arbitrary small dense Transformer and copy every value into a differently structured MoE.
 
-```python
-class NumpyKVCacheExplicit:
+The payoff is nevertheless substantial. A broad search can happen on cheap proxies; the target-scale run becomes a transfer validation rather than a fresh grid search. Scaling laws and µP solve different questions in the same planning loop. Scaling laws estimate how much model and data to buy. µP-like schemes reduce the cost of discovering how to train the selected configuration.
 
-    def __init__(self, *, window: int | None = None) -> None:
-        if window is not None and (isinstance(window, bool) or not isinstance(window, int) or window <= 0):
-            raise ValueError("window must be a positive integer or None")
-        self.window = window
-        self.k = self.v = None
-        self.start_pos = self.next_pos = 0
+Meta has described **MetaP** in the public account of Llama 4 as a related transfer technique for critical quantities such as per-layer learning rates and initialization scales across changes in width, depth, batch size, and training-token count. The public description is less formal than the µP theory, so it is safest to treat MetaP as a method with a closely related engineering objective rather than as a synonym for µP.
 
-    def append(self, k_new, v_new):
-        k_new, v_new = np.asarray(k_new), np.asarray(v_new)
-        if k_new.ndim != 4 or k_new.shape != v_new.shape or min(k_new.shape) <= 0:
-            raise ValueError("K and V need the same non-empty [B,H,T,D] shape")
-        if k_new.dtype != v_new.dtype or not np.issubdtype(k_new.dtype, np.floating):
-            raise ValueError("K and V need the same floating dtype")
-        if self.k is not None:
-            if self.k.shape[:2] + self.k.shape[3:] != k_new.shape[:2] + k_new.shape[3:]:
-                raise ValueError("cache geometry changed")
-            if self.k.dtype != k_new.dtype:
-                raise ValueError("cache dtype changed")
-        # Validate first; keep old state intact if an input is rejected.
-        k = k_new.copy() if self.k is None else np.concatenate([self.k, k_new], axis=-2)
-        v = v_new.copy() if self.v is None else np.concatenate([self.v, v_new], axis=-2)
-        drop = max(0, k.shape[-2] - self.window) if self.window is not None else 0
-        # A slice alone retains its backing allocation. Make owned bounded copies.
-        self.k = k[..., drop:, :].copy() if drop else k
-        self.v = v[..., drop:, :].copy() if drop else v
-        self.start_pos += drop
-        self.next_pos += k_new.shape[-2]
-        return self.k, self.v
+## 15. Parallelism: fitting the training state before optimizing communication
 
-    def truncate(self, absolute_end: int) -> None:
-        if isinstance(absolute_end, bool) or not isinstance(absolute_end, int):
-            raise ValueError("absolute_end must be an integer")
-        if not self.start_pos <= absolute_end <= self.next_pos:
-            raise ValueError("rollback lies outside the retained interval")
-        keep = absolute_end - self.start_pos
-        if self.k is not None:
-            self.k = self.k[..., :keep, :].copy()
-            self.v = self.v[..., :keep, :].copy()
-        self.next_pos = absolute_end
+A perfect corpus and optimizer are irrelevant if the training state does not fit in memory. Start with a deliberately simple mixed-precision AdamW accounting:
 
-    @property
-    def positions(self):
-        return np.arange(self.start_pos, self.next_pos, dtype=np.int64)
-```
+- bf16 parameter: 2 bytes;
+- bf16 gradient: 2 bytes;
+- fp32 master parameter: 4 bytes;
+- first moment $m$: 4 bytes;
+- second moment $v$: 4 bytes.
 
-The minimal cache exposes three pieces of state: retained K/V, the absolute position of the first retained token, and the next append position. After eviction, an owned copy releases this container's reference to the old backing buffer; slicing alone would retain it.
+That is **16 bytes per parameter**, before activations, temporary buffers, communication workspaces, allocator fragmentation, or checkpoint staging. A 7B model therefore requires
 
-#### 2. The same mathematics as explicit PyTorch operations
+$$
+7\cdot10^9\cdot16
+=112\cdot10^9\ \text{bytes}
+=112\ \text{GB}
+\approx104.31\ \text{GiB}
+$$
 
-```python
-class TorchKVCacheExplicit:
+per fully replicated data-parallel rank. Adding GPUs increases aggregate throughput but does not reduce this replicated payload.
 
-    def __init__(self, *, window: int | None = None) -> None:
-        if window is not None and (isinstance(window, bool) or not isinstance(window, int) or window <= 0):
-            raise ValueError("window must be a positive integer or None")
-        self.window = window
-        self.k = self.v = None
-        self.start_pos = self.next_pos = 0
+A distributed process is called a **rank**; the example maps one rank to one device. **ZeRO** means Zero Redundancy Optimizer; **FSDP**, Fully Sharded Data Parallel, denotes implementations that distribute parameters, gradients, and optimizer state. A recipe that stores gradients in fp32 needs a different byte accounting from the 16-byte policy here.
 
-    def append(self, k_new, v_new):
-        if not isinstance(k_new, torch.Tensor) or not isinstance(v_new, torch.Tensor):
-            raise TypeError("K and V must be tensors")
-        if k_new.ndim != 4 or k_new.shape != v_new.shape or min(k_new.shape) <= 0:
-            raise ValueError("K and V need the same non-empty [B,H,T,D] shape")
-        if k_new.dtype != v_new.dtype or k_new.device != v_new.device or not k_new.is_floating_point():
-            raise ValueError("K and V need the same floating dtype and device")
-        if k_new.requires_grad or v_new.requires_grad:
-            raise ValueError("this cache is for inference; detach inputs first")
-        if self.k is not None:
-            if self.k.shape[:2] + self.k.shape[3:] != k_new.shape[:2] + k_new.shape[3:]:
-                raise ValueError("cache geometry changed")
-            if self.k.dtype != k_new.dtype or self.k.device != k_new.device:
-                raise ValueError("cache dtype or device changed")
-        # Validate first; keep old state intact if an input is rejected.
-        k = k_new.clone() if self.k is None else torch.cat([self.k, k_new], dim=-2)
-        v = v_new.clone() if self.v is None else torch.cat([self.v, v_new], dim=-2)
-        drop = max(0, k.shape[-2] - self.window) if self.window is not None else 0
-        # A slice alone retains its backing allocation. Make owned bounded copies.
-        self.k = k[..., drop:, :].clone() if drop else k
-        self.v = v[..., drop:, :].clone() if drop else v
-        self.start_pos += drop
-        self.next_pos += k_new.shape[-2]
-        return self.k, self.v
+### ZeRO and FSDP: shard duplicated state
 
-    def truncate(self, absolute_end: int) -> None:
-        if isinstance(absolute_end, bool) or not isinstance(absolute_end, int):
-            raise ValueError("absolute_end must be an integer")
-        if not self.start_pos <= absolute_end <= self.next_pos:
-            raise ValueError("rollback lies outside the retained interval")
-        keep = absolute_end - self.start_pos
-        if self.k is not None:
-            self.k = self.k[..., :keep, :].clone()
-            self.v = self.v[..., :keep, :].clone()
-        self.next_pos = absolute_end
+ZeRO removes duplication in stages: optimizer state first, then gradients, then parameters. Under an idealized ZeRO-3 split across 64 ranks, the listed 112 GB becomes
 
-    @property
-    def positions(self):
-        device = self.k.device if self.k is not None else None
-        return torch.arange(self.start_pos, self.next_pos, dtype=torch.long, device=device)
-```
+$$
+\frac{112}{64}=1.75\ \text{GB}\approx1.63\ \text{GiB per rank}.
+$$
 
-The tensor version validates dtype and device, then owns the retained window. This inference-only container rejects gradient-tracked inputs. A serving engine normally uses pages or preallocated buffers; the temporary concatenation here can exceed the final window's payload.
+This is a lower bound for the enumerated state, not a promise about peak device memory. Real training still needs activations, gathered parameter windows, communication buffers, and working space. The arithmetic nevertheless captures the central idea: the data-parallel group becomes a memory resource, not only a throughput resource.
 
-| Aspect | NumPy | PyTorch |
-|---|---|---|
-| Append | `np.concatenate` | `torch.cat` |
-| Physical window | slice + owned copy | slice + clone |
-| Absolute positions | Python integers | Python integers plus tensor state |
-| Rollback | truncates the retained suffix | same contract |
-| Storage allocation | reference container with copying | engines usually use a buffer or block pool |
+### Tensor parallelism: split one layer’s matrices
 
-**Executable parity and edge-case check**
+When a layer is itself too large or its compute needs to be distributed, tensor parallelism partitions projections by rows or columns and combines partial results with collective communication. It is most attractive inside a node or another domain with very high interconnect bandwidth. Across a slower fabric, collective latency and traffic can dominate the saved compute.
 
-```python
-np_cache = NumpyKVCacheExplicit(window=3); t_cache = TorchKVCacheExplicit(window=3)
-for value in range(5):
-    k_np = np.full((1,1,1,2), value, dtype=np.float64); v_np = k_np + 100
-    np_cache.append(k_np, v_np); t_cache.append(torch.tensor(k_np), torch.tensor(v_np))
-np.testing.assert_allclose(np_cache.k, t_cache.k.numpy())
-np.testing.assert_array_equal(np_cache.positions, t_cache.positions.numpy())
-assert (np_cache.start_pos, np_cache.next_pos) == (2,5)
-np_cache.truncate(4); t_cache.truncate(4)
-np.testing.assert_allclose(np_cache.k, t_cache.k.numpy())
-rng = np.random.default_rng(17)
-keys = rng.standard_normal((1,1,6,4)); values = rng.standard_normal((1,1,6,4)); queries = rng.standard_normal((1,1,6,4))
-cache = TorchKVCacheExplicit(window=3)
-for step in range(6):
-    cache.append(torch.tensor(keys[..., step:step+1, :]), torch.tensor(values[..., step:step+1, :]))
-    cached = F.scaled_dot_product_attention(torch.tensor(queries[..., step:step+1, :]), cache.k, cache.v)
-    lo = max(0, step - 2)
-    full = F.scaled_dot_product_attention(torch.tensor(queries[..., step:step+1, :]), torch.tensor(keys[..., lo:step+1, :]), torch.tensor(values[..., lo:step+1, :]))
-    torch.testing.assert_close(cached, full)
+### Pipeline parallelism: split the network by depth
 
-# Rejected input must not mutate state; rollback cannot resurrect evicted tokens.
-for cache_type, convert in ((NumpyKVCacheExplicit, np.asarray), (TorchKVCacheExplicit, torch.tensor)):
-    c = cache_type(window=3)
-    c.truncate(0)
-    x = convert(np.ones((1,1,5,2), dtype=np.float64))
-    c.append(x,x)
-    assert (c.start_pos,c.next_pos) == (2,5)
-    for bad in (-1,1,6,2.5,True):
-        try: c.truncate(bad)
-        except ValueError: pass
-        else: raise AssertionError("invalid rollback accepted")
-    assert (c.start_pos,c.next_pos) == (2,5)
-    try: c.append(convert(np.zeros((1,2,1,2))),convert(np.zeros((1,2,1,2))))
-    except ValueError: pass
-    else: raise AssertionError("geometry change accepted")
-    c.truncate(2)
-    assert c.k.shape[-2] == 0
-    c.append(convert(np.ones((1,1,1,2))),convert(np.ones((1,1,1,2))))
-    assert (c.start_pos,c.next_pos) == (2,3)
-    for window in (0,-1,2.5,True):
-        try: cache_type(window=window)
-        except ValueError: pass
-        else: raise AssertionError("invalid window accepted")
-a = NumpyKVCacheExplicit(window=3)
-a.append(np.ones((1,1,10,2)),np.ones((1,1,10,2)))
-assert a.k.flags.owndata and a.k.nbytes == 3*2*8
-t = TorchKVCacheExplicit(window=3)
-t.append(torch.ones(1,1,10,2),torch.ones(1,1,10,2))
-assert t.k.untyped_storage().nbytes() == t.k.numel()*t.k.element_size()
+Pipeline parallelism assigns groups of layers to stages. Its characteristic cost is idle time while the pipeline fills and drains. For balanced 1F1B (one forward, one backward) stages with communication time omitted, the bubble fraction is
 
-print("B17 window, ownership, rollback, and invalid inputs: PASS")
-```
+$$
+f=\frac{p-1}{m+p-1},
+$$
 
-Complete executable file: `m10_cache_bridges.py`
+where $p$ is the number of stages and $m$ the number of microbatches. With $p=8$ and $m=32$,
 
-## 14. Compression I: eviction changes which history exists
+$$
+f=\frac{7}{39}=17.9\%.
+$$
 
-When full state cannot be retained even with a memory hierarchy, the server may keep only a subset of positions. This is the strongest form of compression: once a KV entry is removed, recovering it requires recomputing the relevant prefix.
+Increasing the microbatch count to 128 gives
 
-**StreamingLLM** keeps a small set of initial attention-sink tokens together with a sliding recent window. The rule is cheap and predictable. **H2O** keeps recent tokens plus heavy hitters with high accumulated attention mass. **SnapKV** estimates prompt-token importance from an observation window. Ada-KV and PyramidKV distribute a limited retained-cache budget across heads or layers.
+$$
+f=\frac{7}{135}=5.2\%.
+$$
 
-**Selecting pages to read** is a different operation. [QUEST](https://arxiv.org/html/2406.10774v2) retains all KV entries and uses the current query plus key summaries to choose pages for approximate attention. It reduces traffic on this step, not the stored history; a page skipped now may be useful to the next query. Selection overhead and approximation error must both be evaluated.
+More microbatches amortize filling and draining the pipeline. With local microbatch size fixed, they also enlarge the global batch per optimizer step. In 1F1B, the number of live activation sets is bounded by pipeline depth once the steady schedule is reached; it need not grow linearly with the microbatch count. GPipe, which accumulates all forward passes before backward passes, has different activation storage requirements.
 
-No policy is universally best. The notebook uses a deterministic 16-position example with a budget of eight. The simplified top-mass rule retains $\{0,1,2,5,7,8,14,15\}$, while a positional “first four plus last four” rule keeps $\{0,1,2,3,12,13,14,15\}$ and loses heavy hitters $\{5,7,8\}$. The example does not prove that H2O wins generally; it demonstrates the difference between content-aware and position-only decisions.
+### Expert parallelism: place sparse capacity
 
-Results published in 2025–2026 add two cautions. Reasoning workloads can be especially sensitive to eviction, and compression may lengthen the generated reasoning chain even when final accuracy is preserved. Another line of work shows that protecting structural prompt boundaries can matter as much as the scoring rule. Evaluation must therefore include the real prompt format, long decode, and total generated-token cost—not only retrieval accuracy on a short benchmark.
+MoE adds a different partitioning problem. The full parameter set is large, but only a subset of experts is active for a token. Expert parallelism places experts across devices and routes token representations to them. Its limiting resource may be all-to-all communication and load balance rather than matrix size alone.
 
-The notebook's top-mass rule ranks a supplied score vector. It is not full H2O: it has no online score updates or separate recent-token quota. The project demo measures **attention-output error**, rather than retained K/V norm, and includes a query shift that makes historical importance misleading.
+Frontier runs combine these axes: data or FSDP sharding, tensor parallelism, pipeline parallelism, context parallelism for long sequences, and expert parallelism for MoE. The correct combination follows the topology. A parallelism plan that is efficient on an NVSwitch island can become communication-bound when the same collectives cross racks.
 
-## 15. Compression II: quantization, low rank, and the order of operations
+![VIZ m9/07 — four ways to partition one training run](assets/modern-llms/en/module-09/m9_07_parallelism.svg)
+*The memory and parallelism ladder: replicated AdamW state, ideal ZeRO-3/64, tensor partitioning, a pipeline with its 1F1B bubble, expert placement, and a combined frontier-scale layout.*
 
-Eviction reduces the number of positions. Quantization keeps the positions but represents each one with fewer bits.
+Distributed training deserves its own course. The next layer includes topology-aware placement, context parallelism, bidirectional pipeline schedules, NCCL/RCCL behavior, asynchronous checkpointing, fault recovery, silent data corruption, and elastic response to failed nodes. The arithmetic here is enough to read a training passport and to understand why a run combines several forms of parallelism; it is not a substitute for operating a 10,000-GPU cluster.
 
-**KIVI** uses asymmetric 2-bit quantization: keys are quantized per channel and values per token. The paper reports up to 2.6× lower peak memory including weights, up to 4× larger batches, and 2.35–3.47× higher throughput on the evaluated workloads. The factors are smaller than the raw 16/2 ratio because the system still stores weights, scales, metadata, and a residual full-precision window and pays kernel overhead.
+## 16. Four directions in contemporary pretraining
 
-**TurboQuant** treats KV compression as streaming vector quantization. PolarQuant transforms vectors into a quantization-friendly representation, while QJL corrects dot-product estimates. The paper reports a near-lossless regime around 3.5 bits per channel and small degradation at 2.5 bits. Separately, Google Research reports up to 8× faster attention-logit computation with four-bit keys than with unquantized 32-bit keys on H100. That result concerns one operation, not the throughput of the whole model.
+A list of isolated tricks hides the larger pattern. Recent pretraining systems have been changing four parts of the training problem: the data schedule, the route to long context, the density of the learning signal, and the numerical representation of the run.
 
-The notebook asks a simpler question: how would ideal three-bit storage change the bandwidth ceiling? Scaling the KV payload by $3/16$ takes 128 KiB per token to 24 KiB. At 128K context, the ceiling rises from about 101 to **174 tokens/s**. This estimate excludes metadata and quantization-kernel overhead and makes no claim about output quality; actual memory use, speed, and quality must be measured together.
+### 16.1. Data is scheduled, not merely sampled
 
-Low-rank methods attack another redundancy: the stored vectors may lie near a lower-dimensional subspace. They can be attractive when the projection cost and reconstruction kernels are well optimized, but rank is workload- and layer-dependent.
+A training mixture is no longer necessarily fixed from the first token to the last. Teams can change domain weights, increase the share of highly filtered material near the end, or use a proxy model to optimize the mixture. Curriculum and annealing turn ordering into a hyperparameter.
 
-The practical order of levers is useful:
+DoReMi makes the domain weights themselves an optimization problem. Synthetic textbook-like material and rewritten web documents attempt to improve the quality of a limited raw source rather than only enlarging it. Reasoning traces and formal material can also appear before post-training, shaping the base model toward the kinds of structure later reinforced by SFT or RL.
 
-1. **architecture** — reduce the state the model creates, through GQA, MLA, or another mechanism;
-2. **quantization or low rank** — preserve positions while reducing bytes per position;
-3. **placement** — move colder state to a slower tier;
-4. **eviction** — remove positions only when the previous levers are insufficient.
+### 16.2. Long context is often a staged capability
 
-The order is not a theorem. It is a risk ordering: later steps are more likely to make specific long-range information unavailable.
+Training the entire base run at extreme sequence length is expensive and may waste compute before the model has learned basic syntax, knowledge, and local dependencies. A common pattern is a shorter-context base phase followed by continued training or specialized extension at longer lengths. Meta describes Scout as pretrained and post-trained at 256K before generalizing to 10M; a final context limit does not mean every pretraining example used that length. The exact recipe depends on the attention architecture and positional scheme, but the economic motivation is stable: pay the long-context cost when the model can benefit from it.
 
-> **Optional depth.** Rate–distortion reasoning and the distinction between lossy coding and task-aware distortion are developed in *Information Theory for ML*, Modules 6–7. The present module uses only the engineering consequence: fewer bits buy capacity at the price of controlled representation error.
+### 16.3. One forward pass can carry a denser target
 
-![VIZ m10/09 — the compression ladder](assets/modern-llms/en/module-09/m10_09_compression.svg)
-*Four different levers act on four different quantities: architecture changes the state definition, quantization changes bytes per coordinate, placement changes location, and eviction changes the set of retained positions.*
+Multi-token prediction adds auxiliary heads that predict several future tokens, increasing the supervision extracted from each hidden state and potentially supporting speculative decoding later. Meta reports co-distilling Maverick from Behemoth. Distillation also moves earlier in the lifecycle: a larger family member can shape a smaller sibling during or around pretraining, rather than serving only as a post-training teacher.
 
-## 16. Engines and cache contracts: a dated map, not a permanent ranking
+These methods do not create information from nothing. They change how strongly and how early the available information constrains the model.
 
-Serving software changes faster than the arithmetic. A useful map therefore describes responsibilities rather than declaring a single winner.
+### 16.4. Number format has become part of the algorithm
 
-| Layer | Representative systems | Main responsibility |
-|---|---|---|
-| execution engine | vLLM, SGLang, TensorRT-LLM | kernels, batching, paged KV, model-specific execution |
-| reuse and transfer | LMCache, Mooncake Store, NIXL connectors | external KV storage, movement, and sharing |
-| orchestration | NVIDIA Dynamo and comparable platforms | routing, locality, admission, multi-engine deployment |
-| public API contract | OpenAI, Anthropic, Kimi and others | cache key semantics, lifetime, minimum size, billing |
+FP8 established low-precision training as a mainstream systems choice on Hopper-era hardware. Blackwell-era NVFP4 pushes precision lower and therefore requires tighter control of scaling, calibration, accumulation, and outliers. A public run such as Nemotron 3 Ultra is valuable not merely because it names a four-bit format, but because its report documents both the recipe and the numerical failure modes encountered during the run.
 
-vLLM combines paged KV management, continuous batching, chunked prefill, prefix caching, quantized KV, and experimental disaggregated prefill. SGLang emphasizes RadixAttention, structured execution, and aggressive reuse. TensorRT-LLM integrates tightly with NVIDIA kernels and deployment tooling. LMCache and Mooncake extend the cache beyond one engine process. Dynamo coordinates several engines and transports rather than replacing them.
+A low-precision result should be read with three questions: which tensors use the format, where accumulation happens, and whether the reported gain is a throughput measurement under a specified setup or only a storage/operation-count argument. Precision is now part of optimizer and kernel design, not a serialization detail added after training.
 
-The public API layer deserves separate attention. A provider may expose prompt caching without revealing its allocator, may bill writes and reads differently, and may change cache lifetime or model compatibility. For reproducible cost analysis, store the provider, model version, date, cache conditions, and price sheet together with the result.
+![VIZ m9/08 — four directions beyond a simple scaling-law plan](assets/modern-llms/en/module-09/m9_08_trends.svg)
+*Four coordinated changes: scheduled data, staged context extension, denser learning signals, and numerical formats treated as part of the training algorithm.*
 
-As checked on 11 October 2026, [OpenAI's caching guide](https://developers.openai.com/api/docs/guides/prompt-caching) documents explicit boundaries, a 1024-visible-token minimum, and a 30-minute lifetime refreshed by writes or reuse for GPT-5.6 and later. Writes cost 1.25 times base input; reads usually cost 0.1, or 0.05 for GPT-6.1 Sol. A bill therefore depends on writes, reads, and uncached tokens, not a single discount.
+## 17. Run passports: how to read public evidence
 
-Hybrid state adds a second kind of contract. In [vLLM's Kimi K3 implementation](https://vllm.ai/blog/2026-07-27-k3), token-level MLA state is matched alongside selected KDA checkpoints: the recurrent state cannot be cached cheaply at every token. Layout and transfer metadata must preserve both components.
+A model announcement tells us what can be used. A training passport tells us what was actually learned from the run. A useful passport records at least total and active parameters, token count and mixture, optimizer policy, numerical format, context schedule, parallelism, stability interventions, and the status of the evidence.
 
-For [DeepSeek V4's supported layout](https://vllm.ai/blog/2026-04-24-deepseek-v4), vLLM gives a bf16 estimate of 9.62 GiB at 1M, combining compressed and local state. This is a specific layout estimate, not a number obtained by putting KV-head count into the GQA equation. Record which components and sequence-length convention the estimate includes.
+The examples below are not a leaderboard. They illustrate different degrees of transparency and different answers to the three questions that opened the module.
 
-## 17. Reading a model’s inference passport
+### Kimi K2: optimizer stability at trillion-parameter scale
 
-Before estimating service capacity, collect a compact inference passport.
+Kimi K2 has 1T total parameters and 32B active parameters. Its technical report describes a 15.5T-token pretraining run with MuonClip and reports zero loss spikes. The evidence matters because it connects a matrix-oriented optimizer and an explicit attention-logit control mechanism to one very large documented run.
 
-**Architecture and state**
+The claim should remain scoped to that run. It does not establish that MuonClip guarantees stability for every architecture, data mixture, or hardware stack.
 
-- number of attention layers;
-- attention type by layer: MHA, GQA, MLA, sparse, recurrent, or hybrid;
-- KV heads, head dimension, latent dimensions, and any retained recurrent state;
-- cache datatype or quantization scheme, group size, scales, and residual window.
+### Nemotron 3 Ultra: low precision with a failure log
 
-**Execution and hardware**
+Nemotron 3 Ultra reports 550B total and 55B active parameters and 20T text tokens. Its distinguishing systems choice is NVFP4 pretraining. The report also discusses numerical incidents and the controls used to recover or prevent them.
 
-- weight format and weight payload;
-- target accelerator, HBM capacity, memory bandwidth, and interconnect;
-- tensor-, pipeline-, and expert-parallel degrees;
-- supported kernels and engine version.
+The report describes two-dimensional block scaling, stochastic rounding, randomized Hadamard transforms, and sensitive operations kept at higher precision. BF16 branches at 5T, 10T, and 16T tokens showed an average relative training-loss gap below 0.4%. Around 8T, lowering local output-gradient accumulation from FP32 to BF16 caused instability; rolling back and restoring FP32 stabilized the run. The second divergence near 16T was not resolved by switching everything to BF16; its cause remained undetermined, and earlier learning-rate decay mitigated it.
 
-**Workload and objectives**
+That failure record is scientifically useful. A polished final loss curve alone cannot tell an engineer which tensors were sensitive, how scaling was managed, or where four-bit training departed from an FP8 recipe.
 
-- input/output length distributions rather than one maximum;
-- concurrency and arrival process;
-- prefix-hit distribution and sharing scope;
-- TTFT/ITL or end-to-end SLO percentiles;
-- acceptable quality loss from compression.
+### DeepSeek V4: one stack, several coupled innovations
 
-**Placement and lifecycle**
+The first DeepSeek V4 technical report describes the Pro model at 1.6T total and 49B active parameters and a smaller Flash model at 284B total and 13B active. The family combines hybrid attention, mHC residual connections, Muon, and more than 32T training tokens. mHC (Manifold-Constrained Hyper-Connections) extends a residual stream into interacting channels and constrains their mixing matrices. The Birkhoff-polytope structure restricts mixing to a doubly stochastic form, helping control signal amplification; a stable component in one architecture does not establish transfer to every other family. Module 6 supplies the residual-path background.
 
-- block size, cache key, time-to-live, and invalidation rules;
-- HBM/CPU/SSD/remote tiers and transfer bandwidth;
-- behavior across engine restarts and model-version changes;
-- admission control and overload policy.
+Here the lesson is coupling: attention geometry, residual transport, optimizer behavior, and data scale are parts of one system rather than independent switches.
 
-Only after this passport is known does a formula such as $2L H_{kv}d_hb$ become an operational estimate. A nominal “1M context” says nothing by itself about concurrency, latency, or cost.
+The report’s first version is dated 26 April 2026. NIST CAISI published an evaluation of DeepSeek V4 Pro on 1 May 2026. The two sources answer different questions: the technical report documents the developer’s architecture and run; the external evaluation studies model behavior under its own protocol.
+
+### Kimi K3: scale, long context, and a more structured MoE
+
+Kimi K3 was released with a technical report and full weights on 27 July 2026. The model has 2.8T total parameters and 104B active parameters, supports a 1M-token context, and uses architectural components including Kimi Delta Attention, Attention Residuals, and a Stable LatentMoE design with 16 active experts out of 896. The report also describes head-wise Muon and a developer-reported improvement in scaling efficiency relative to K2.
+
+The reported gain is about 2.5× within the developers' scaling comparison with K2. K3 also separates pretraining optimization from post-training quantization: QAT starts during SFT with MXFP4 weights and MXFP8 activations. Quantile Balancing controls expert load. These are different interventions, not consequences of a single optimizer choice.
+
+The scaling gain is a result reported by the model’s developers. It is valuable evidence about their training program, but it is not an independently measured universal law.
+
+### Qwen3.8-Max: downloadable weights, incomplete run evidence
+
+As of 11 October 2026, both the Max API and [Qwen3.8-2.4T-A95B text weights](https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B) are available. The checkpoint uses the `qwen3.8-max` license and reports 2.4T total parameters, 95B active parameters, and a 1M-token context. The API product and downloadable text model have different feature sets.
+
+A model card still leaves substantial gaps in a reproducible training account: the data mixture, optimizer and precision policies, context schedule, and stability history need their own evidence. Developer benchmarks describe outcomes without isolating the contribution of each pretraining choice. Access, licensing, and training transparency should be recorded separately.
+
+### Inkling: multimodal scale and a hybrid optimizer policy
+
+Thinking Machines Lab reports 975B total and 41B active parameters for Inkling and 45T multimodal training tokens. The published account describes Muon for large matrices and Adam for the remaining parameter classes, with weight decay coupled to the square of the learning rate.
+
+This is a concrete example of a parameter-class optimizer policy. “Trained with Muon” does not imply that every tensor in the model receives the same update rule.
+
+### Llama 4 Behemoth: infrastructure evidence from a model still in progress
+
+Meta’s Llama 4 announcement described Behemoth as a training-stage model rather than a completed public release. The infrastructure account reports FP8 training on 32K GPUs at 390 TFLOP/s per GPU and a mixture exceeding 30T tokens. It is therefore useful as evidence about training infrastructure and MetaP, but not as a completed open model passport.
+
+![VIZ m9/09 — selected training-run passports](assets/modern-llms/en/module-09/m9_09_run_passports.svg)
+*Seven public cases compared by scale, data, optimizer or numerical method, transparency, and release status. The purpose is to read evidence, not to rank model quality.*
+
+A good reading habit is to separate five verbs: **measured**, **derived**, **reported**, **released**, and **planned**. Many apparent contradictions disappear once each sentence uses the correct one.
 
 ## 20. Key takeaways and sources
 
-![VIZ m10/10 — efficient inference on one page](assets/modern-llms/en/module-09/m10_10_cheatsheet.svg)
-*The module in one diagram: KV geometry, the bandwidth ceiling, batch knees, paged allocation, prefix reuse, tiered placement, phase disaggregation, and compression.*
+![VIZ m9/10 — a compact map of pretraining decisions](assets/modern-llms/en/module-09/m9_10_cheatsheet.svg)
+*The module on one page: fitted scaling law, analytic split, inference-aware break-even, data pipeline and data wall, Muon and QK-Clip, training-state memory, parallelism, and public run passports.*
 
-**KV geometry comes first.** For ordinary attention,
+A pretraining plan is a coupled decision about **data**, **scale**, and **optimization**.
 
-$$
-b_{KV}=2LH_{kv}d_hb.
-$$
-
-The teaching ladder is 2,560, 320, and 128 KiB/token for the MHA/GQA configurations and 68.625 KiB/token for the separate MLA geometry. A hybrid model requires an inventory of its actual stored state before any capacity calculation.
-
-**Context lowers the memory-bound ceiling.** In the simplified model,
+With the fitted law
 
 $$
-Q(B,N)\leq\frac{B\,BW}{W+B N b_{KV}}.
+L=E+\frac{A}{N^\alpha}+\frac{B}{D^\beta},
+\qquad C\approx6ND,
 $$
 
-For the 8B bf16 scenario, batch-one throughput falls from 209.4 tok/s with no KV to 101.0 at 128K and 22.8 at 1M. These are arithmetic ceilings, not measurements of a particular engine.
+the analytic split is
 
-**Batching has a changing return.** $B^*=W/(Nb_{KV})$ marks the scale at which aggregate KV traffic catches the weight payload. Longer context moves the knee toward smaller batches.
+$$
+N^*=\left[\frac{\alpha A}{\beta B}
+\left(\frac{C}{6}\right)^\beta\right]^{1/(\alpha+\beta)},
+\qquad
+D^*=\frac{C}{6N^*}.
+$$
 
-**Memory management and state reduction are different jobs.** PagedAttention reduces allocation waste and enables sharing. Prefix caching removes repeated prefill for exact common beginnings.
+The optimum is mathematically exact for the chosen approximation. Its empirical reliability depends on the fitted range, the data regime, and the objective being optimized.
 
-**Storage tiers (reference).** LMCache and Mooncake extend placement and reuse beyond one process or one memory tier. Prefill/decode disaggregation separates latency-sensitive decode from long prompt work at the cost of explicit KV transport.
+Inference-aware planning changes that objective. The 8.03B/15T teaching scenario has a fitted loss 0.025804 above the same-budget optimum but a much smaller dense decoding cost. In the equal-fitted-loss comparison with a 70B model, the total-compute break-even occurs at $2.12368\cdot10^{12}$ generated tokens.
 
-**Compression levers act on different quantities.** Architectural methods change the base state, quantization changes bytes per coordinate, tiering changes location, and eviction changes which positions survive. They can be combined, but their quality and operational risks differ.
+Token count alone does not describe a corpus. Extraction, language identification, heuristic cleaning, near-duplicate removal, model-based quality scoring, PII and policy filtering, domain mixture, and scheduling determine what $D$ means. As high-quality independent data becomes harder to acquire, provenance and marginal value matter more than another undifferentiated trillion-token headline.
+
+Muon treats large updates as matrices and reshapes their singular spectrum through a short Newton–Schulz trace. QK-Clip complements that geometry by correcting parameter sources of excessive attention logits. Both mechanisms are useful only when described with their monitored quantities, parameter scope, and failure boundaries.
+
+Memory arithmetic constrains every optimizer choice. In the module’s convention, mixed-precision AdamW state occupies 16 bytes per parameter. A 7B model therefore carries 112 GB = 104.31 GiB of fully replicated state; ideal ZeRO-3/64 reduces the enumerated payload to 1.75 GB = 1.63 GiB per rank. Tensor, pipeline, context, and expert parallelism solve different placement and communication problems.
+
+Public training systems should be read through passports rather than slogans. Kimi K2 documents MuonClip and a 15.5T-token run; Nemotron 3 Ultra documents NVFP4 training and its numerical controls; DeepSeek V4 combines Muon, mHC, hybrid attention, and more than 32T tokens; Kimi K3 was released with full weights at 2.8T total and 104B active parameters; Inkling reports a hybrid Muon/Adam policy over 45T multimodal tokens. Qwen3.8-Max illustrates the separate axes of API access, published text weights, and incomplete pretraining disclosure.
 
 ### Primary sources
 
-- MQA: [*Fast Transformer Decoding: One Write-Head is All You Need*](https://arxiv.org/abs/1911.02150)
-- GQA: [*GQA: Training Generalized Multi-Query Transformer Models*](https://arxiv.org/abs/2305.13245)
-- iteration-level scheduling / continuous batching: [Orca, OSDI 2022](https://www.usenix.org/conference/osdi22/presentation/yu)
-- PagedAttention and vLLM: [*Efficient Memory Management for Large Language Model Serving*](https://arxiv.org/abs/2309.06180) and [vLLM stable documentation](https://docs.vllm.ai/en/stable/)
-- RadixAttention and SGLang: [SGLang](https://arxiv.org/abs/2312.07104)
-- external and tiered KV: [LMCache repository](https://github.com/LMCache/LMCache), [LMCache/vLLM examples](https://docs.vllm.ai/en/latest/examples/disaggregated/lmcache/), and [Mooncake, FAST 2025](https://www.usenix.org/conference/fast25/presentation/qin)
-- distributed orchestration: [NVIDIA Dynamo 1.0](https://developer.nvidia.com/blog/nvidia-dynamo-1-production-ready/) and [NVIDIA CMX](https://developer.nvidia.com/blog/introducing-nvidia-bluefield-4-powered-inference-context-memory-storage-platform-for-the-next-frontier-of-ai/)
-- public caching contracts: [OpenAI prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching), [Anthropic prompt caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), [Kimi K3](https://www.kimi.com/blog/kimi-k3), and [vLLM’s Kimi K3 serving note](https://vllm.ai/blog/2026-07-27-k3)
-- hybrid state geometry: [DeepSeek V4 technical report](https://arxiv.org/abs/2606.19348) and [vLLM’s DeepSeek V4 serving note](https://vllm.ai/blog/2026-04-24-deepseek-v4)
-- eviction: [StreamingLLM](https://arxiv.org/abs/2309.17453), [H2O](https://arxiv.org/abs/2306.14048), [SnapKV](https://arxiv.org/abs/2404.14469), [reasoning benchmark](https://arxiv.org/abs/2512.12008), and [structural-protection study](https://arxiv.org/abs/2605.18053)
-- quantization: [KIVI](https://arxiv.org/abs/2402.02750), [KVQuant](https://arxiv.org/abs/2401.18079), [TurboQuant](https://arxiv.org/abs/2504.19874), and [Google Research overview](https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/)
+- Kaplan et al., [*Scaling Laws for Neural Language Models*](https://arxiv.org/abs/2001.08361)
+- Hoffmann et al., [*Training Compute-Optimal Large Language Models*](https://arxiv.org/abs/2203.15556)
+- Sardana et al., [inference-aware scaling](https://arxiv.org/abs/2401.00448)
+- [FineWeb and FineWeb-Edu](https://arxiv.org/abs/2406.17557)
+- [FineWeb2](https://arxiv.org/abs/2506.20920)
+- [DCLM](https://arxiv.org/abs/2406.11794)
+- [Nemotron-CC](https://arxiv.org/abs/2412.02595)
+- [DoReMi](https://arxiv.org/abs/2305.10429)
+- [Muon reference implementation](https://github.com/KellerJordan/Muon)
+- [Kimi K2 technical report](https://arxiv.org/abs/2507.20534)
+- [µP](https://arxiv.org/abs/2203.03466)
+- [ZeRO](https://arxiv.org/abs/1910.02054)
+- [mHC](https://arxiv.org/abs/2512.24880)
+- [DeepSeek V4 technical report](https://arxiv.org/abs/2606.19348)
+- [Kimi K3 technical report](https://arxiv.org/abs/2607.24653), [official technical blog](https://www.kimi.com/blog/kimi-k3), and [full weights](https://huggingface.co/moonshotai/Kimi-K3)
+- [Qwen3.8-Max official announcement](https://qwen.ai/blog?id=qwen3.8)
+- [Hugging Face July 2026 incident timeline](https://huggingface.co/blog/agent-intrusion-technical-timeline)
+- [Nemotron 3 Ultra technical report](https://research.nvidia.com/labs/nemotron/files/NVIDIA-Nemotron-3-Ultra-Technical-Report.pdf)
+- [Inkling official description](https://thinkingmachines.ai/news/introducing-inkling/)
+- [Llama 4, MetaP, and FP8 infrastructure](https://ai.meta.com/blog/llama-4-multimodal-intelligence/)
+- [NIST CAISI evaluation of DeepSeek V4 Pro](https://www.nist.gov/news-events/news/2026/05/caisi-evaluation-deepseek-v4-pro)
 
-**Next.** Module 11 studies quantization and speculative decoding: move fewer bytes per step, or validate several tokens in one target-model pass. Output-format constraints return in Module 18 with tools and agents.
+**Next.** Module 10 moves from the cost of creating a model to the cost of serving it. KV state, memory bandwidth, batching, and cache placement will show why two models with similar parameter counts can behave very differently under a real inference workload.
 
 ---
 
-*Sources and service contracts checked on 11 October 2026. Teaching numbers are rebuilt from the local numerical contract; verify engine support and prices for the version used in an experiment.*
+*Sources and access checked on 11 October 2026. Run results retain their developer-reported status; calculations from the historical fit are illustrative, not quality forecasts for current models.*

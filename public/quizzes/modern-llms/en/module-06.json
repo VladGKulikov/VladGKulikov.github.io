@@ -4,23 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "7.4.1",
-      "prompt": "Why is the total/active parameter ratio not a guaranteed MoE speedup?",
-      "explanation": "**Correct answer: A.** The ratio measures parameter sparsity under a stated convention. Attention and output-projection parameters are included in this module's gpt-oss active count. That count does not determine attention runtime, communication cost, or kernel utilization.",
-      "topic": "7.4. A typed contract for routing and parameter accounting",
+      "id": "6.4.1",
+      "prompt": "What does the identity path in a Pre-LN residual block guarantee?",
+      "explanation": "**Correct answer: A.** For h+G(h), the Jacobian is I+J_G. With G(h)=−h, the terms cancel. A bypass also does not establish that removing a trained branch preserves quality.",
+      "topic": "6.4. A block makes two successive residual updates",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It does not model actual compute time, data movement, or device utilization"
+          "text": "The Jacobian contains an identity term, but the total gradient need not be nonzero"
         },
         {
           "value": "B",
-          "text": "Total is always counted in bf16 whereas active is counted only after 4-bit quantization"
+          "text": "Any trained sublayer can be removed with almost no quality loss because the residual path completely bypasses its computation"
         },
         {
           "value": "C",
-          "text": "Routed experts are excluded from total but automatically included in active"
+          "text": "The residual stream automatically keeps unit RMS at every depth regardless of the sublayer weights and outputs"
         }
       ],
       "correct": [
@@ -28,47 +28,23 @@
       ]
     },
     {
-      "id": "7.5.1",
-      "prompt": "What total does the open gpt-oss-120b implementation yield after its bias parameters are counted?",
-      "explanation": "**Correct answer: B.** Including attention, router, and expert biases gives 116,829,156,672. The 116,789,050,944 count retains the same matrices, norms, and attention sinks but excludes linear-layer biases, whose contribution is 40,105,728.",
-      "topic": "7.5. Rebuilding both gpt-oss models from open code",
+      "id": "6.5.1",
+      "prompt": "How does RMSNorm differ from LayerNorm in its basic formula?",
+      "explanation": "**Correct answer: C.** LayerNorm subtracts the mean and divides by the standard deviation. RMSNorm does not subtract the mean: before the learned per-coordinate gain, it divides all coordinates by one shared root-mean-square denominator.",
+      "topic": "6.5. What LayerNorm and RMSNorm compute",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "116,789,050,944 — the count without linear biases"
+          "text": "RMSNorm uses whole-batch statistics instead of per-token statistics"
         },
         {
           "value": "B",
-          "text": "116,829,156,672 — matrices, norms, sinks, and visible biases"
+          "text": "RMSNorm subtracts the mean but does not rescale"
         },
         {
           "value": "C",
-          "text": "117,000,000,000 — the rounded model-size headline"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "7.5.2",
-      "prompt": "What should be checked before comparing active-parameter headlines from two MoE models?",
-      "explanation": "**Correct answer: C.** Active parameters have no single universal convention. A comparison must align the shared path, expert path, and auxiliary components.",
-      "topic": "7.5. Rebuilding both gpt-oss models from open code",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Compare only routed-expert counts and top-k in one MoE layer"
-        },
-        {
-          "value": "B",
-          "text": "Convert both checkpoints to the same numerical storage format"
-        },
-        {
-          "value": "C",
-          "text": "Align the treatment of embeddings, output heads, shared parts, and auxiliary modules"
+          "text": "RMSNorm does not center the vector and normalizes by its root mean square"
         }
       ],
       "correct": [
@@ -76,23 +52,47 @@
       ]
     },
     {
-      "id": "7.6.1",
-      "prompt": "Selection bias changes top-k membership. What defines mixture weights in the studied sigmoid router?",
-      "explanation": "**Correct answer: A.** Bias affects selection, while mixture weights are normalized from the clean sigmoid scores of selected experts. Selection score and mixture weight are distinct.",
-      "topic": "7.6. A numerical router trace",
+      "id": "6.5.2",
+      "prompt": "At rms = 10⁻³, how much larger is the RMSNorm multiplier with eps=10⁻⁶ than with eps=10⁻⁵?",
+      "explanation": "**Correct answer: B.** The multipliers are about 707 and 302, so the ratio is roughly 2.35. Epsilon also depends on activation scale and reduction precision, not only on the working dtype’s machine epsilon.",
+      "topic": "6.5. What LayerNorm and RMSNorm compute",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The clean sigmoid scores of the experts that were selected"
+          "text": "About 1.41×"
         },
         {
           "value": "B",
-          "text": "Scores plus bias after a softmax over every expert"
+          "text": "About 2.35 times"
         },
         {
           "value": "C",
-          "text": "Raw logits after replacing them by integer top-k ranks"
+          "text": "Exactly 10×"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "6.5.3",
+      "prompt": "When is RMSNorm approximately invariant to positive input scaling with fixed ε>0?",
+      "explanation": "**Correct answer: A.** Require both mean(x²)≫ε and c²mean(x²)≫ε. Factoring c out gives an effective ε/c²; a very small c can make the stabilizer matter even for a large original input.",
+      "topic": "6.5. What LayerNorm and RMSNorm compute",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When mean square greatly exceeds ε both before and after scaling"
+        },
+        {
+          "value": "B",
+          "text": "For every nonzero vector, regardless of ε"
+        },
+        {
+          "value": "C",
+          "text": "Only when the input has zero mean"
         }
       ],
       "correct": [
@@ -100,95 +100,23 @@
       ]
     },
     {
-      "id": "7.6.2",
-      "prompt": "A top-1 router normalizes its sole gate to 1. Away from route changes, what is that gate’s logit gradient?",
-      "explanation": "**Correct answer: B.** The discrete index is not differentiated. Router gradients depend on the complete gating contract.",
-      "topic": "7.6. A numerical router trace",
+      "id": "6.5.4",
+      "prompt": "How should RMSNorm statistics be computed for large FP16 values?",
+      "explanation": "**Correct answer: A.** The square of 1000 exceeds FP16 range. Promotion after overflow cannot recover it.",
+      "topic": "6.5. What LayerNorm and RMSNorm compute",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The sigmoid derivative of the selected logit."
+          "text": "Promote the input to FP32 before squaring"
         },
         {
           "value": "B",
-          "text": "Zero: this normalized gate is constant."
+          "text": "Square in FP16, then promote the mean"
         },
         {
           "value": "C",
-          "text": "The selected expert index."
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "7.7.1",
-      "prompt": "What does Auxiliary-Loss-Free Balancing remove?",
-      "explanation": "**Correct answer: B.** The method adds no separate auxiliary objective to language-model loss. Bias still changes routes and therefore which experts receive LM gradients.",
-      "topic": "7.7. Load balancing without conflating three mechanisms",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Every effect of changed routing on expert training"
-        },
-        {
-          "value": "B",
-          "text": "The direct interference gradient from a separate balancing objective"
-        },
-        {
-          "value": "C",
-          "text": "The need to measure token-assignment frequencies for experts"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "7.7.2",
-      "prompt": "Which bias-update rule is the main one in the Loss-Free Balancing paper?",
-      "explanation": "**Correct answer: C.** The paper’s main algorithm uses the sign of the load deviation. The notebook’s proportional controller is separate and explicitly pedagogical.",
-      "topic": "7.7. Load balancing without conflating three mechanisms",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "A proportional step equal to the full load deviation"
-        },
-        {
-          "value": "B",
-          "text": "A gradient step on router z-loss with an adaptive rate"
-        },
-        {
-          "value": "C",
-          "text": "A fixed sign step up or down relative to mean load"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "7.7.3",
-      "prompt": "How is router z-loss computed across tokens?",
-      "explanation": "**Correct answer: A.** ST-MoE uses the mean squared log partition. Squaring the mean generally gives a different result.",
-      "topic": "7.7. Load balancing without conflating three mechanisms",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Square each token’s logsumexp, then average."
-        },
-        {
-          "value": "B",
-          "text": "Average logsumexp first, then square that mean."
-        },
-        {
-          "value": "C",
-          "text": "Compute the variance of expert selection frequencies."
+          "text": "Remove ε to avoid overflow"
         }
       ],
       "correct": [
@@ -196,47 +124,23 @@
       ]
     },
     {
-      "id": "7.7.4",
-      "prompt": "What balancing scheme does the DeepSeek-V3 report describe?",
-      "explanation": "**Correct answer: C.** An auxiliary-loss-free main controller does not imply that the entire model uses no auxiliary losses.",
-      "topic": "7.7. Load balancing without conflating three mechanisms",
+      "id": "6.6.1",
+      "prompt": "What is the structural difference between Post-LN and Pre-LN?",
+      "explanation": "**Correct answer: A.** Post-LN places normalization after h+F(h), on the direct path. Pre-LN computes h+F(Norm(h)) and preserves a clean identity route. This affects initialization-time gradients without determining every training outcome.",
+      "topic": "6.6. Placement changes the computation graph",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Router z-loss alone, without measuring load."
+          "text": "Post-LN normalizes the residual sum; Pre-LN normalizes the sublayer input before addition"
         },
         {
           "value": "B",
-          "text": "No auxiliary losses at any level."
+          "text": "Post-LN is restricted to encoder blocks, whereas Pre-LN is valid only inside decoder blocks"
         },
         {
           "value": "C",
-          "text": "Bias-based global balancing plus a small complementary sequence-level loss."
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "7.8.1",
-      "prompt": "How should C(128,4)=10,668,000 be interpreted?",
-      "explanation": "**Correct answer: A.** This is a combinatorial upper bound on subsets, not a count of learned skills. Training, correlated routes, and router constraints reduce the realized patterns.",
-      "topic": "7.8. Fine-grained experts and always-on shared capacity",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "10,668,000 unordered top-4 subsets before any extra routing constraints"
-        },
-        {
-          "value": "B",
-          "text": "128 independently learned skills, each of which activates 4 experts"
-        },
-        {
-          "value": "C",
-          "text": "4 experts that every batch is guaranteed to choose from all 128"
+          "text": "Pre-LN removes residual addition and concatenates the input with each sublayer output instead"
         }
       ],
       "correct": [
@@ -244,23 +148,47 @@
       ]
     },
     {
-      "id": "7.8.2",
-      "prompt": "What is the most defensible interpretation of a shared expert?",
-      "explanation": "**Correct answer: B.** A shared expert always participates in the MoE branch and is motivated by common computation and reduced duplication. Its semantic content requires intervention-based evidence.",
-      "topic": "7.8. Fine-grained experts and always-on shared capacity",
+      "id": "6.6.2",
+      "prompt": "What does Peri-LN add to ordinary Pre-LN?",
+      "explanation": "**Correct answer: C.** Peri-LN surrounds the sublayer: N_out(F(N_in(h))). This controls the scale of the written update. With a learned gain, that update need not have exactly unit RMS.",
+      "topic": "6.6. Placement changes the computation graph",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It is guaranteed to store grammar, arithmetic, and common function words"
+          "text": "It removes input normalization and keeps only final-logit normalization"
         },
         {
           "value": "B",
-          "text": "It provides always-on capacity for common work and may reduce bank redundancy"
+          "text": "It replaces residual addition with a learned stream-mixing matrix"
         },
         {
           "value": "C",
-          "text": "It replaces attention for tokens that occurred frequently during training"
+          "text": "It also normalizes the sublayer output before residual addition"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "6.6.3",
+      "prompt": "What does the 36-layer none/pre/post toy experiment establish?",
+      "explanation": "**Correct answer: B.** With one fixed input and weight stack, the final RMS values are roughly 4·10⁵, 6.42, and 1.0. The last value follows from explicit normalization at every step; the experiment isolates forward-scale dynamics only.",
+      "topic": "6.6. Placement changes the computation graph",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Post-LN always trains better than Pre-LN in real LLMs because every layer forces the RMS back to one"
+        },
+        {
+          "value": "B",
+          "text": "With the same linear weights, norm placement strongly changes forward scale, but does not prove training convergence"
+        },
+        {
+          "value": "C",
+          "text": "Peri-LN and OLMo2 implement the same computation graph, normalizing both the input and output of every sublayer"
         }
       ],
       "correct": [
@@ -268,71 +196,23 @@
       ]
     },
     {
-      "id": "7.8.3",
-      "prompt": "Which change preserves expert weights and active FFN work when each of eight width-i experts is split into four?",
-      "explanation": "**Correct answer: C.** Both E·i and k·i stay constant. Routing and communication costs can still change.",
-      "topic": "7.8. Fine-grained experts and always-on shared capacity",
+      "id": "6.7.1",
+      "prompt": "How should original QKNorm be distinguished from the notebook’s Q/K RMSNorm?",
+      "explanation": "**Correct answer: A.** Original QKNorm uses unit L2 vectors and a learned scale. The RMSNorm variant has a different denominator and retains division by √d_h. Positive epsilon makes scale invariance approximate.",
+      "topic": "6.7. Q/K normalization: check the equation and the axis",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Choose 2 of 32 width-i/4 experts."
+          "text": "Original QKNorm uses L2 normalization and a learned scale; the notebook uses RMS normalization with a different norm contract"
         },
         {
           "value": "B",
-          "text": "Choose 8 of 128 width-i experts."
+          "text": "After choosing epsilon they are identical: L2 norm and RMSNorm differ only by a constant absorbed into the learned scale"
         },
         {
           "value": "C",
-          "text": "Choose 8 of 32 width-i/4 experts instead of 2 of 8 width-i experts."
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "7.9.1",
-      "prompt": "How should routing frequency be turned into a claim about expert specialization?",
-      "explanation": "**Correct answer: C.** Routing frequency is correlational. A causal intervention or ablation tests whether the capability changes when the expert is modified.",
-      "topic": "7.9. What expert specialization evidence can actually support",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Name the expert after its ten most frequently routed tokens"
-        },
-        {
-          "value": "B",
-          "text": "Choose the most frequent domain and treat it as the expert’s function"
-        },
-        {
-          "value": "C",
-          "text": "Run an intervention or ablation and measure the functional change"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "7.10.1",
-      "prompt": "For E=128, k=4, and N=16, what is the expected touched-expert fraction under independent uniform routing?",
-      "explanation": "**Correct answer: A.** The formula gives 0.3982897, or about 39.83%. It assumes independent uniform routing and is not a prediction of a trained router.",
-      "topic": "7.10. Inference: the expert bank, all-to-all, and batch union",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "About 39.83% from 1-(1-4/128)^16"
-        },
-        {
-          "value": "B",
-          "text": "Exactly 3.125%, because one token selects 4 of 128"
-        },
-        {
-          "value": "C",
-          "text": "About 86.89%, which is the same setup with N=64"
+          "text": "QKNorm normalizes value vectors only, whereas Q/K RMSNorm is applied to the attention mask before softmax"
         }
       ],
       "correct": [
@@ -340,23 +220,23 @@
       ]
     },
     {
-      "id": "7.10.2",
-      "prompt": "What does 2Thkb measure in the Expert Parallelism estimate?",
-      "explanation": "**Correct answer: A.** Local assignments need no network transfer, aggregation can reduce messages, and padding or protocols add bytes.",
-      "topic": "7.10. Inference: the expert bank, all-to-all, and batch union",
+      "id": "6.7.2",
+      "prompt": "How do Q/K RMSNorm axes differ in the inspected OLMo2 and Qwen3 implementations?",
+      "explanation": "**Correct answer: A.** A shared denominator couples heads: changing one affects others. Independent head reductions avoid that coupling.",
+      "topic": "6.7. Q/K normalization: check the equation and the axis",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Logical dispatch-and-return payload for all assignments."
+          "text": "OLMo2 normalizes whole Q/K projections before head splitting; Qwen3 normalizes within each head"
         },
         {
           "value": "B",
-          "text": "Exact per-GPU traffic under any placement."
+          "text": "Both normalize only over the time axis"
         },
         {
           "value": "C",
-          "text": "A mandatory lower bound on network traffic."
+          "text": "Qwen3 joins all heads; OLMo2 normalizes each independently"
         }
       ],
       "correct": [
@@ -364,47 +244,23 @@
       ]
     },
     {
-      "id": "7.11.1",
-      "prompt": "What is the central idea of LatentMoE?",
-      "explanation": "**Correct answer: B.** LatentMoE keeps discrete experts and top-k. A narrower routed representation reduces communication and expert compute before projection back to model width.",
-      "topic": "7.11. LatentMoE and alternatives to fixed discrete top-k",
+      "id": "6.8.1",
+      "prompt": "How does a gated FFN differ fundamentally from a plain two-matrix FFN?",
+      "explanation": "**Correct answer: C.** One branch computes SiLU(W_gx), another W_ux; their product passes through W_d. The input-dependent gate need not lie in [0,1].",
+      "topic": "6.8. Why a gate adds a matrix",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Replace the discrete expert bank by a continuous basis-matrix mixture"
+          "text": "It mixes sequence positions through an additional attention matrix instead of transforming each position independently"
         },
         {
           "value": "B",
-          "text": "Keep discrete top-k while doing dispatch and expert compute in a narrower space"
+          "text": "It removes the nonlinearity between matrix projections and reduces the FFN to a single linear mapping"
         },
         {
           "value": "C",
-          "text": "Route attention heads only and remove feed-forward experts entirely"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "7.12.1",
-      "prompt": "One assignment is removed by capacity overflow. What happens to the remaining mixture weight?",
-      "explanation": "**Correct answer: C.** Dropping and rerouting policies vary. The course notebook renormalizes surviving weights, but that is not a universal MoE contract.",
-      "topic": "7.12. Level-one code: policies should be visible",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Every MoE runtime must leave it numerically unchanged"
-        },
-        {
-          "value": "B",
-          "text": "Every implementation must reroute the token to another expert"
-        },
-        {
-          "value": "C",
-          "text": "Runtime policy decides; the notebook renormalizes surviving weights"
+          "text": "It creates input-dependent multiplicative interaction between two branches before down projection"
         }
       ],
       "correct": [
@@ -412,23 +268,47 @@
       ]
     },
     {
-      "id": "7.14.1",
-      "prompt": "How does the gpt-oss router differ from the DeepSeek-V3-style contract discussed here?",
-      "explanation": "**Correct answer: A.** The open gpt-oss router selects top-k logits and softmaxes them. In the studied DeepSeek-style contract, selection uses sigmoid score plus bias, while mixture weights use clean scores.",
-      "topic": "7.14. Reading the gpt-oss implementation",
+      "id": "6.8.2",
+      "prompt": "How accurate is GELU(z) ≈ z·sigmoid(1.702z) on [-6,6] in the module’s calculation?",
+      "explanation": "**Correct answer: B.** The module’s dense grid gives a maximum of about 0.02033. The public gpt-oss code also uses 1.702, but its activation additionally includes clipping and the up+1 shift.",
+      "topic": "6.8. Why a gate adds a matrix",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "gpt-oss selects top-k logits then softmaxes them; DeepSeek uses sigmoid plus selection bias"
+          "text": "The maximum error is about 0.35"
         },
         {
           "value": "B",
-          "text": "gpt-oss uses sigmoid plus bias whereas DeepSeek softmaxes selected logits"
+          "text": "The maximum error is about 0.0203"
         },
         {
           "value": "C",
-          "text": "gpt-oss has no trained router whereas DeepSeek has no discrete top-k"
+          "text": "It is accurate only for z>0"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "6.8.3",
+      "prompt": "Can SiLU(g) in SwiGLU be interpreted as a probability?",
+      "explanation": "**Correct answer: A.** Multiplication by g changes the range. “Gate” describes its role in the product, not probability normalization.",
+      "topic": "6.8. Why a gate adds a matrix",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "No: g·sigmoid(g) can be negative or greater than one"
+        },
+        {
+          "value": "B",
+          "text": "Yes: sigmoid lies in [0,1], so the entire gate does too"
+        },
+        {
+          "value": "C",
+          "text": "Yes, if its output multiplies the up branch"
         }
       ],
       "correct": [
@@ -436,75 +316,219 @@
       ]
     },
     {
-      "id": "7.15.1",
-      "prompt": "How should the “Kimi K3: 2.8T / 104B” line be read?",
-      "explanation": "**Correct answer: B.** A total/active pair is only the beginning of a passport. Interpretation also needs top-k, shared/routed structure, attention, auxiliary modules, and the counting convention.",
-      "topic": "7.15. A source-aware snapshot of current MoE architectures",
+      "id": "6.9.1",
+      "prompt": "Why can a model-specific clamp not be changed freely only at inference time?",
+      "explanation": "**Correct answer: A.** The gate cap, two-sided up clipping, 1.702 coefficient, and up+1 shift define the gpt-oss computation graph. Changing them changes the model function; low-precision motivation should not be asserted without a source.",
+      "topic": "6.9. Budgeting SwiGLU and reading its variants",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "As proof of exactly a 26.9× speedup on any hardware"
+          "text": "It is part of the function under which the weights were trained"
         },
         {
           "value": "B",
-          "text": "As a total/active passport requiring the expert contract and counting convention"
+          "text": "It is used only while packaging the checkpoint and does not participate in the model forward pass"
         },
         {
           "value": "C",
-          "text": "As the sizes of the vision encoder and language decoder"
+          "text": "It affects only the weight-file size and does not change the activations computed by the model"
         }
       ],
       "correct": [
-        "B"
+        "A"
       ]
     },
     {
-      "id": "7.15.2",
-      "prompt": "Qwen3.5 includes MTP. Must its weights count as active on every ordinary decoding step?",
-      "explanation": "**Correct answer: B.** A configuration lists available components; an active count describes a particular execution path.",
-      "topic": "7.15. A source-aware snapshot of current MoE architectures",
+      "id": "6.9.2",
+      "prompt": "In the gpt-oss variant with g=u=z, what are the outputs at z=7 and z=9?",
+      "explanation": "**Correct answer: C.** On the positive diagonal both branches hit their clamp limits: gate=7 and up=7, hence up+1≈8 and the output is about 56. Zero derivative past a threshold applies to the clipped branch; negative up clipping still affects negative inputs.",
+      "topic": "6.9. Budgeting SwiGLU and reading its variants",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Yes: the field guarantees execution."
+          "text": "About 7 and 9"
         },
         {
           "value": "B",
-          "text": "Only if the specified execution path uses MTP."
+          "text": "About 56 and 72"
         },
         {
           "value": "C",
-          "text": "No: MTP is never used for inference."
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "7.16.1",
-      "prompt": "What may change when visual tokens enter a shared MoE router while top-k stays fixed?",
-      "explanation": "**Correct answer: C.** With fixed top-k, per-token expert compute need not increase. A more diverse batch may touch more distinct experts and change all-to-all traffic.",
-      "topic": "7.16. Multimodal MoE is not one architecture",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "The expert compute of every individual token must double"
-        },
-        {
-          "value": "B",
-          "text": "Every expert automatically becomes modality-specific"
-        },
-        {
-          "value": "C",
-          "text": "The batch expert union and communication profile may widen"
+          "text": "About 56 and 56"
         }
       ],
       "correct": [
         "C"
+      ]
+    },
+    {
+      "id": "6.10.1",
+      "prompt": "What fraction of a complete Llama-3.1-8B dense block is in the FFN matrices?",
+      "explanation": "**Correct answer: B.** The FFN has 176.16M parameters, attention 41.94M, and norms 8,192, for a 218.112M full block. Thus the FFN share is about 80.8% for this configuration.",
+      "topic": "6.10. From tensor shapes to 8,030,261,248 parameters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "About 19.2%"
+        },
+        {
+          "value": "B",
+          "text": "About 80.8%"
+        },
+        {
+          "value": "C",
+          "text": "Exactly 50%"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "6.10.2",
+      "prompt": "How do the estimates 13d² and 13d²+2d relate for Llama-3.1-8B?",
+      "explanation": "**Correct answer: A.** At d=4096, the matrix part is 218,103,808 parameters; norms add 8,192, giving 218,112,000. Small is not zero when the goal is an exact count.",
+      "topic": "6.10. From tensor shapes to 8,030,261,248 parameters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "13d² counts attention+FFN matrices only; two RMSNorm gains make the full block 13d²+2d"
+        },
+        {
+          "value": "B",
+          "text": "13d² already includes both norms, while the extra +2d counts the input and output embedding tables"
+        },
+        {
+          "value": "C",
+          "text": "13d² describes an MHA block, while +2d appears only after replacing MHA with GQA"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "6.11.1",
+      "prompt": "Why is DyT not identical to ordinary RMSNorm?",
+      "explanation": "**Correct answer: C.** DyT maps the same coordinate identically regardless of its neighbors; RMSNorm’s denominator changes with the whole vector. The notebook’s alpha≈1.43 is a course-owned synthetic fit, not a paper result.",
+      "topic": "6.11. Element-wise alternatives: DyT and DyISRU",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "DyT computes whole-batch statistics and depends on other examples, whereas RMSNorm processes each token independently"
+        },
+        {
+          "value": "B",
+          "text": "RMSNorm is a linear function with a fixed coefficient, while DyT merely adds a tanh nonlinearity"
+        },
+        {
+          "value": "C",
+          "text": "DyT acts element-wise, while RMSNorm couples coordinates through a shared denominator"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "6.11.2",
+      "prompt": "With γ=1 and β=0, which b in x/√(b+x²) gives slope 0.5 at zero?",
+      "explanation": "**Correct answer: A.** The derivative at zero is 1/√b, and 1/√4=0.5. The coefficient 1.43 belongs to a separate scalar DyT fit.",
+      "topic": "6.11. Element-wise alternatives: DyT and DyISRU",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "b=4"
+        },
+        {
+          "value": "B",
+          "text": "b=0.5"
+        },
+        {
+          "value": "C",
+          "text": "b=1.43"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "6.12.1",
+      "prompt": "What does Manifold-Constrained Hyper-Connections (mHC) constrain?",
+      "explanation": "**Correct answer: B.** mHC constrains the residual mixing matrix across streams. Finite Sinkhorn iterations give an approximately doubly stochastic matrix, so both row and column sums must be checked. The constraint is on connections, not a hidden-state manifold.",
+      "topic": "6.12. Several residual streams: what mHC constrains",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Hidden states from every residual stream are forced onto one low-dimensional feature manifold"
+        },
+        {
+          "value": "B",
+          "text": "Mixing matrices across multiple residual streams are projected into a constrained space"
+        },
+        {
+          "value": "C",
+          "text": "Only the late-stage learning-rate schedule is constrained, while the residual-link structure remains unchanged"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "6.12.2",
+      "prompt": "What should be checked after 20 Sinkhorn iterations?",
+      "explanation": "**Correct answer: A.** After finitely many iterations, one set of sums can still be inaccurate. Even an exact doubly stochastic matrix need not be the identity.",
+      "topic": "6.12. Several residual streams: what mHC constrains",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Nonnegativity and residuals of both row and column sums"
+        },
+        {
+          "value": "B",
+          "text": "Only one column sum: 20 iterations guarantee everything else"
+        },
+        {
+          "value": "C",
+          "text": "Equality of the result to the identity matrix"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "6.15.1",
+      "prompt": "How does original gpt-oss code split the packed gate/up projection?",
+      "explanation": "**Correct answer: A.** The code uses x[..., ::2] and x[..., 1::2]. Splitting into halves preserves shapes but changes the function.",
+      "topic": "6.15. Reading gpt-oss from code rather than from a guessed config field",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Even positions are gate, odd positions are up"
+        },
+        {
+          "value": "B",
+          "text": "The first half is gate, the second half is up"
+        },
+        {
+          "value": "C",
+          "text": "The same projected values serve both branches"
+        }
+      ],
+      "correct": [
+        "A"
       ]
     }
   ]

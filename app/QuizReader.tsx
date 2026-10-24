@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { gradeQuestion, type Quiz, type QuizQuestion } from './quizzes';
+import { progressModuleKey } from './module-progress';
 import { readQuizProgress, writeQuizProgress, subscribeQuizProgress, serverQuizProgress, type QuestionProgress } from './quiz-progress';
 
 export const questionAnchor = (q: QuizQuestion) => `question-${q.id}`;
@@ -17,7 +18,7 @@ const Markdown = QuizMarkdown;
 
 export function QuizReader({ quiz, revision }: { quiz: Quiz; revision: string }) {
   const ru = quiz.language === 'ru';
-  const key = `course-quiz:v1:${quiz.courseKey}:${quiz.moduleKey}:${revision}`;
+  const key = `course-quiz:v1:${quiz.courseKey}:${progressModuleKey(quiz.courseKey, quiz.moduleKey)}:${revision}`;
   const progress = useSyncExternalStore(subscribeQuizProgress, () => readQuizProgress(key), serverQuizProgress);
   const [resetPending, setResetPending] = useState(false);
   const update = (id: string, next: QuestionProgress) => writeQuizProgress(key, { ...readQuizProgress(key), [id]: next });

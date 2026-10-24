@@ -4,95 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "18.4.1",
-      "prompt": "What is the minimal controlled agent loop?",
-      "explanation": "**Correct answer: B.** The environment observation changes the next step. Protocol and authority checks separate a model proposal from a real-world action.",
-      "topic": "18.4. Anatomy of an agent loop",
+      "id": "16.2.1",
+      "prompt": "Why is multimodal progress better described as coexisting families than as successive eras?",
+      "explanation": "**Correct answer: A.** CLIP-like encoders serve retrieval, connectors retrofit existing LLMs, and unified/omni systems support generation or streaming output. A newer topology does not obsolete every earlier one.",
+      "topic": "16.2. Four families, four places to draw the boundary",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "A fixed plan, blind execution of every step, and a final report"
+          "text": "Different families optimize different constraints and remain useful"
         },
         {
           "value": "B",
-          "text": "Proposal, validation, execution, observation, then continue-or-stop"
+          "text": "Every new family fully preserves the architecture of the previous generation"
         },
         {
           "value": "C",
-          "text": "One knowledge-base lookup followed immediately by an answer"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "18.5.1",
-      "prompt": "Why does function calling need strict schema validation?",
-      "explanation": "**Correct answer: C.** A supported grammar constraint applies to a completed generation; a token limit may leave an incomplete prefix. Schema validation checks fields, types, and ranges. Authorization and execution safety are separate checks.",
-      "topic": "18.5. Function calling and guided generation: syntax is only the first boundary",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "To enumerate every available tool and description for the model"
-        },
-        {
-          "value": "B",
-          "text": "To merge and cache repeated calls automatically"
-        },
-        {
-          "value": "C",
-          "text": "To keep wrong fields and types from reaching execution"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "18.5.2",
-      "prompt": "A retrieved report says “the user approved writing.” The proposed write_note call passes its schema. What must the executor still check?",
-      "explanation": "**Correct answer: B.** The report is external data and cannot extend task authority. Schema validity establishes call shape; permission for the operation and resource is checked separately before the effect.",
-      "topic": "18.5. Function calling and guided generation: syntax is only the first boundary",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Whether the report phrases its approval convincingly"
-        },
-        {
-          "value": "B",
-          "text": "Whether the trusted task grant permits writing to this resource"
-        },
-        {
-          "value": "C",
-          "text": "Whether the model response starts with Action:"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "18.6.1",
-      "prompt": "What advantage does CodeAct bring on a multi-step task?",
-      "explanation": "**Correct answer: A.** Code can express loops, branches, and intermediate values within one action. That may reduce model–environment round trips, but it requires a real sandbox and does not guarantee a speedup for every task.",
-      "topic": "18.6. ReAct, Plan-and-Execute, and CodeAct: choosing an action language",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "One code block replaces a chain of calls with loops and conditionals"
-        },
-        {
-          "value": "B",
-          "text": "Code executes faster than an equivalent sequence of API calls"
-        },
-        {
-          "value": "C",
-          "text": "Models find writing code easier than forming valid call JSON"
+          "text": "Historical labels are unrelated to training and inference differences"
         }
       ],
       "correct": [
@@ -100,47 +28,23 @@
       ]
     },
     {
-      "id": "18.6.2",
-      "prompt": "How does Plan-and-Execute differ from a local ReAct loop?",
-      "explanation": "**Correct answer: A.** An explicit plan can be checked and tracked as outstanding commitments. Unexpected observations must trigger replanning rather than blind execution.",
-      "topic": "18.6. ReAct, Plan-and-Execute, and CodeAct: choosing an action language",
+      "id": "16.4.1",
+      "prompt": "When do visual features create ordinary language-decoder KV state?",
+      "explanation": "**Correct answer: B.** The module’s KV accounting applies to visual positions inside ordinary decoder self-attention. Cross-attention or external visual memory needs different accounting.",
+      "topic": "16.4. The first design: encoder, connector, language decoder",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It makes the plan explicit and replans after invalidating observations"
+          "text": "With any ViT encoder, even when it connects through cross-attention"
         },
         {
           "value": "B",
-          "text": "It forbids tools and restricts the system to text planning"
+          "text": "When visual positions enter the decoder self-attention stream"
         },
         {
           "value": "C",
-          "text": "It executes every item in the plan in parallel by definition"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "18.7.1",
-      "prompt": "For 20 input histories of length 3000 + 1500i, i = 0, …, 19, how many tokens does prefix reuse process compared with full reprocessing?",
-      "explanation": "**Correct answer: B.** Without prefix reuse, the growing history is reprocessed at every step. This scenario totals 345,000 versus 31,500 tokens; the benefit requires the early context to remain identical. This is a ratio of input-position counts, not elapsed time: new queries still read earlier KV.",
-      "topic": "18.7. Worked example A: context growth across the loop",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "345,000 tokens against 31,500: caching saves roughly threefold"
-        },
-        {
-          "value": "B",
-          "text": "31,500 tokens against 345,000 naive ones — a 10.95-fold saving"
-        },
-        {
-          "value": "C",
-          "text": "Nothing: each step changes the tail and the cache is invalidated anyway"
+          "text": "Only when the language decoder also generates images"
         }
       ],
       "correct": [
@@ -148,23 +52,23 @@
       ]
     },
     {
-      "id": "18.8.1",
-      "prompt": "An agent step takes 778 ms. What is it made of?",
-      "explanation": "**Correct answer: C.** In the stated scenario, decode takes 429.8 ms, the tool 300 ms, and the conditional prefill estimate 48.7 ms. Another model, tool, or workload can produce a very different split.",
-      "topic": "18.8. Worked example B: what one agent step costs",
+      "id": "16.5.1",
+      "prompt": "What is the InfoNCE loss in the teaching example at temperature τ=0.1?",
+      "explanation": "**Correct answer: C.** With the same similarities, lower temperature spreads the logits. Loss falls from 0.643738 at τ=0.5 to 0.007409 at τ=0.1; ln 4 is the uniform four-way value.",
+      "topic": "16.5. CLIP, SigLIP, and worked example C: reading InfoNCE numerically",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Prefill 430 ms, decode 49 ms, tool 300 ms: prefill dominates"
+          "text": "0.643738 — the value at τ=0.5"
         },
         {
           "value": "B",
-          "text": "Tool 600 ms and model 178 ms: the agent waits on external services"
+          "text": "1.386294 — the uniform ln 4 reference value"
         },
         {
           "value": "C",
-          "text": "Prefill 49 ms, decode 430 ms, tool 300 ms: decode is 55% of it"
+          "text": "0.007409 — the result of sharper softmax competition"
         }
       ],
       "correct": [
@@ -172,23 +76,23 @@
       ]
     },
     {
-      "id": "18.9.1",
-      "prompt": "What does MCP add on top of a plain tools JSON schema?",
-      "explanation": "**Correct answer: A.** JSON Schema describes one action shape. MCP standardizes capability discovery and exchange among host, client, and server. Authorization, confirmation, and sandboxing remain host responsibilities.",
-      "topic": "18.9. MCP: standardizing connection without outsourcing trust",
+      "id": "16.6.1",
+      "prompt": "Four local tiles and one thumbnail each contribute 576 tokens. How many visual tokens result?",
+      "explanation": "**Correct answer: A.** The teaching NeXT scenario uses five views: four local 336×336 tiles and one global thumbnail. Thus 2,880 describes a tiling policy, not one 672×672 grid.",
+      "topic": "16.6. Worked example A: three ways to spend visual tokens",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "A shared discovery and connection protocol: integrations become reusable"
+          "text": "2,880 = 5·576"
         },
         {
           "value": "B",
-          "text": "Strict typing of arguments, which plain schemas do not provide"
+          "text": "2,304 = 4·576 without the thumbnail"
         },
         {
           "value": "C",
-          "text": "Execution isolation: tools are launched inside a separate sandbox"
+          "text": "5,184 = the raw grid at 1008×1008"
         }
       ],
       "correct": [
@@ -196,23 +100,23 @@
       ]
     },
     {
-      "id": "18.9.2",
-      "prompt": "Does a stateless MCP core mean that the agent cannot retain history?",
-      "explanation": "**Correct answer: B.** In the 2026-07-28 revision, version and capabilities accompany the request. This protocol property does not replace application task state.",
-      "topic": "18.9. MCP: standardizing connection without outsourcing trust",
+      "id": "16.7.1",
+      "prompt": "How much KV memory do 1,296 visual positions require at 128 KiB per position?",
+      "explanation": "**Correct answer: B.** 1,296·128 KiB = 162 MiB. A resampler does not change that value if position count and KV format stay fixed. Reducing positions changes total KV; cross-attention requires accounting for a different storage path.",
+      "topic": "16.7. Worked example B: when images create ordinary decoder KV",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Yes, the protocol prohibits history"
+          "text": "1,296 MiB — one MiB per position"
         },
         {
           "value": "B",
-          "text": "No, the application owns task state"
+          "text": "162 MiB — the result of 1,296·128 KiB"
         },
         {
           "value": "C",
-          "text": "Yes, history must move to the server"
+          "text": "72 MiB — the cost of 576 positions without merging"
         }
       ],
       "correct": [
@@ -220,47 +124,23 @@
       ]
     },
     {
-      "id": "18.10.1",
-      "prompt": "Why should `eval` not be treated as a calculator security boundary?",
-      "explanation": "**Correct answer: B.** A safer calculator parses the AST and evaluates only explicitly allow-listed nodes and operators. General Python execution requires process or VM isolation and resource policies.",
-      "topic": "18.10. An implementation case study: the harness is part of the algorithm",
+      "id": "16.8.1",
+      "prompt": "Which resource does a Q-Former or resampler primarily reduce?",
+      "explanation": "**Correct answer: C.** Learned queries extract a bounded set of representations from a larger feature grid. This creates a bottleneck while reducing LLM context length.",
+      "topic": "16.8. Connectors control where computation happens",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It parses long arithmetic expressions too slowly for a tool"
+          "text": "The parameter count of every vision-encoder layer"
         },
         {
           "value": "B",
-          "text": "It executes general Python syntax rather than an allow-listed subset"
+          "text": "The bandwidth of a separate audio decoder"
         },
         {
           "value": "C",
-          "text": "It cannot reliably represent large integers and fractional values"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "18.10.2",
-      "prompt": "What must constrain tool execution in production?",
-      "explanation": "**Correct answer: C.** Schema validation catches malformed arguments, not infinite loops, unauthorized file access, or duplicated side effects. Those risks require execution boundaries of their own.",
-      "topic": "18.10. An implementation case study: the harness is part of the algorithm",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Only schema checks for types, ranges, and required fields"
-        },
-        {
-          "value": "B",
-          "text": "Only a complete log of arguments, results, and internal secrets"
-        },
-        {
-          "value": "C",
-          "text": "Timeouts, resource limits, authority, isolation, and idempotency"
+          "text": "The number of visual positions passed to the language model"
         }
       ],
       "correct": [
@@ -268,23 +148,23 @@
       ]
     },
     {
-      "id": "18.11.1",
-      "prompt": "All 20 required steps are independent, each with success probability 0.98. What is the probability that the entire chain succeeds?",
-      "explanation": "**Correct answer: A.** Under the independence assumption, success across all mandatory steps is the product of step probabilities. The calculation illustrates accumulated risk; real failures can be correlated.",
-      "topic": "18.11. Worked example C: reliability over a long trajectory",
+      "id": "16.8.2",
+      "prompt": "Why does freezing an LLM not remove all backward work when training its projector?",
+      "explanation": "**Correct answer: A.** Frozen weights need no weight gradients or optimizer state, but the loss must remain differentiable with respect to the projector output.",
+      "topic": "16.8. Connectors control where computation happens",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "About 0.668; at per-step probability 0.95 it would be about 0.358"
+          "text": "The projector still needs gradients through input activations"
         },
         {
           "value": "B",
-          "text": "0.98 — reliability does not follow length when the steps are independent"
+          "text": "Every LLM weight is still updated"
         },
         {
           "value": "C",
-          "text": "0.960 — losses are linear in step count and amount to about two percent"
+          "text": "Freezing doubles visual sequence length"
         }
       ],
       "correct": [
@@ -292,95 +172,23 @@
       ]
     },
     {
-      "id": "18.11.2",
-      "prompt": "One retry on failure lifts a step from 0.98 to 0.9996. What does that do for the trajectory?",
-      "explanation": "**Correct answer: B.** With independent attempts and steps, perfect failure detection, and a safe retry, step success is 0.9996 and twenty-step success is about 0.992. Dependence changes the conditional recovery probability. Replaying writes also requires protection against duplicate effects.",
-      "topic": "18.11. Worked example C: reliability over a long trajectory",
+      "id": "16.9.1",
+      "prompt": "How does M-RoPE relate to visual-token count?",
+      "explanation": "**Correct answer: A.** Position encoding preserves geometry. Resizing, tiling, spatial merging, temporal sampling, and pruning determine token count.",
+      "topic": "16.9. Dynamic resolution makes compute depend on image geometry",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "About two percent: retrying treats a symptom rather than a cause"
+          "text": "It encodes coordinates; resize, tiling, and merging change length"
         },
         {
           "value": "B",
-          "text": "0.992 over twenty steps against 0.668 with no retries at all"
+          "text": "It always merges four neighboring patches into one token"
         },
         {
           "value": "C",
-          "text": "Nothing: repeating the same mistake gives the same result deterministically"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "18.11.3",
-      "prompt": "At p=0.98, retry success conditional on failure is q=0.2. What is step success with perfect detection?",
-      "explanation": "**Correct answer: B.** p+(1−p)q = 0.98 + 0.02·0.2 = 0.984. An independent retry at the original success rate is a different assumption.",
-      "topic": "18.11. Worked example C: reliability over a long trajectory",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "0.9996"
-        },
-        {
-          "value": "B",
-          "text": "0.984"
-        },
-        {
-          "value": "C",
-          "text": "0.196"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "18.12.1",
-      "prompt": "400 min of work with a 5-min plan and 20-min merge in sequence. What do 20 subagents give?",
-      "explanation": "**Correct answer: C.** The baseline must be named. The serial 25 minutes cap the speedup; independent contexts also consume memory and introduce integration cost.",
-      "topic": "18.12. Subagents and Amdahl’s law",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "×20 — exactly the subagent count, since the work divides evenly"
-        },
-        {
-          "value": "B",
-          "text": "×1.0: the sequential parts consume the entire parallel gain"
-        },
-        {
-          "value": "C",
-          "text": "45 minutes: ×8.89 against useful work or ×9.44 end-to-end"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "18.13.1",
-      "prompt": "What stopping policy must an agent loop have?",
-      "explanation": "**Correct answer: A.** A loop needs step, action, token, time, and cost budgets plus a verifiable completion condition. A tool error may be recoverable and need not end the entire trajectory.",
-      "topic": "18.13. Level-1 code: a proposal is not verified completion",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "A step limit, a budget limit and an explicit completion signal"
-        },
-        {
-          "value": "B",
-          "text": "Stop at the first tool error, so that garbage does not accumulate"
-        },
-        {
-          "value": "C",
-          "text": "Stop on a whole-session timeout — the other conditions are redundant"
+          "text": "It replaces dynamic resolution with one fixed visual grid"
         }
       ],
       "correct": [
@@ -388,47 +196,23 @@
       ]
     },
     {
-      "id": "18.13.2",
-      "prompt": "The model returned Answer: 27.92. When does the teaching harness mark completed?",
-      "explanation": "**Correct answer: C.** A completion proposal and verified success are different events. Without a verifier the full teaching runtime returns answer_proposed.",
-      "topic": "18.13. Level-1 code: a proposal is not verified completion",
+      "id": "16.9.2",
+      "prompt": "What controls the geometric image budget in Qwen2-VL?",
+      "explanation": "**Correct answer: B.** Geometry-dependent dynamic resolution is not a learned semantic difficulty classifier.",
+      "topic": "16.9. Dynamic resolution makes compute depend on image geometry",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "As soon as the prefix is parsed"
+          "text": "Always the semantic difficulty of the image"
         },
         {
           "value": "B",
-          "text": "After any successful tool call"
+          "text": "Dimensions, aspect ratio and pixel limits"
         },
         {
           "value": "C",
-          "text": "After the task criterion passes"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "18.15.1",
-      "prompt": "Why should a model and an agent system be evaluated separately?",
-      "explanation": "**Correct answer: B.** An agent benchmark measures a policy together with its harness and environment. Changing any component changes the measured system, so the configuration passport is part of the result.",
-      "topic": "18.15. System landscape: compare action surfaces, not logos",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Because the results are usually published by different research teams"
-        },
-        {
-          "value": "B",
-          "text": "Because the harness and environment change the same model’s result"
-        },
-        {
-          "value": "C",
-          "text": "Because the model does not participate in choosing the next action"
+          "text": "Only the user's task name"
         }
       ],
       "correct": [
@@ -436,23 +220,47 @@
       ]
     },
     {
-      "id": "18.17.1",
-      "prompt": "What belongs in an agent-harness passport?",
-      "explanation": "**Correct answer: C.** These components define available actions and the trajectory. Without them the result cannot be reproduced or attributed to model versus system changes.",
-      "topic": "18.17. Reading an agent-harness passport",
+      "id": "16.10.1",
+      "prompt": "How can a unified model remain internally modular?",
+      "explanation": "**Correct answer: B.** Janus separates visual pathways, InternVL-U uses an MMDiT head, and Thinker–Talker has a speech decoder. A unified product does not require one internal representation.",
+      "topic": "16.10. Unified output reveals a conflict between semantics and fidelity",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Model name, run date, and the final average score"
+          "text": "Only if the modalities are never trained jointly"
         },
         {
           "value": "B",
-          "text": "Only the task list, attempt count, and final success rate"
+          "text": "Shared context can coexist with specialized internal modules"
         },
         {
           "value": "C",
-          "text": "Tools, authority, budgets, environment, and verifier"
+          "text": "Only if the system returns text and no other output modality"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.11.1",
+      "prompt": "Why does a large context window not solve long-video understanding by itself?",
+      "explanation": "**Correct answer: C.** Two hours at 1 fps and 576 tokens per frame produce 4.15 million tokens. Sampling, temporal pooling, and event selection determine retained evidence.",
+      "topic": "16.11. Worked example E: video is an information-selection problem",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Video frames cannot be represented as discrete visual tokens"
+        },
+        {
+          "value": "B",
+          "text": "A language-decoder KV cache cannot encode temporal coordinates"
+        },
+        {
+          "value": "C",
+          "text": "Frames and events must still be selected within the budget"
         }
       ],
       "correct": [
@@ -460,27 +268,195 @@
       ]
     },
     {
-      "id": "18.14.1",
-      "prompt": "The service committed an effect but its reply was lost. How does the SQLite experiment replay it?",
-      "explanation": "**Correct answer: A.** The operation record and effect commit in one transaction. The same id returns the existing result; changed arguments are rejected.",
-      "topic": "18.14. Practice: repair from an observation, then recover after failure",
+      "id": "16.12.1",
+      "prompt": "How does TMRoPE differ from ARIA in Thinker–Talker?",
+      "explanation": "**Correct answer: A.** They operate at different levels: positional geometry of audio/video input events versus adaptive interleaving of output streams.",
+      "topic": "16.12. Thinker–Talker: coordinating two clocks",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "With the same operation id and arguments"
+          "text": "TMRoPE aligns input time; ARIA coordinates output stream rates"
         },
         {
           "value": "B",
-          "text": "With a fresh id every time"
+          "text": "TMRoPE generates speech; ARIA recognizes individual images"
         },
         {
           "value": "C",
-          "text": "Until the counter doubles"
+          "text": "TMRoPE exists only in Talker; ARIA only in the vision encoder"
         }
       ],
       "correct": [
         "A"
+      ]
+    },
+    {
+      "id": "16.13.1",
+      "prompt": "Why does patch_layout reject silent integer truncation?",
+      "explanation": "**Correct answer: B.** Integer division could hide an incomplete patch. A processor may explicitly resize or pad; accounting for padded regions follows its actual interface and does not always require a separate pixel mask.",
+      "topic": "16.13. Code level 1: geometry before frameworks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To make every image automatically square before tokenization"
+        },
+        {
+          "value": "B",
+          "text": "To avoid losing a border without explicit resize or padding"
+        },
+        {
+          "value": "C",
+          "text": "To force spatial merging to use one universal factor"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.13.2",
+      "prompt": "What does the unpatchify(patchify(image)) round trip verify?",
+      "explanation": "**Correct answer: C.** Matching inverse permutations can pass even if their patch order violates the specification. A separate coordinate fixture is needed to check row-major order; the notebook includes one.",
+      "topic": "16.13. Code level 1: geometry before frameworks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Similarity between image and caption embeddings"
+        },
+        {
+          "value": "B",
+          "text": "Norm preservation through the connector MLP"
+        },
+        {
+          "value": "C",
+          "text": "Mutual consistency of the two operations on the tested input"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "16.15.1",
+      "prompt": "Why does audio need its own systems passport beyond text-token count?",
+      "explanation": "**Correct answer: A.** Audio has its own frame or codec-token rate. First-audio latency, real-time factor, interruptions, and semantic quality require separate measurement.",
+      "topic": "16.15. Audio is a continuous evidence stream",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Cost depends on audio rate, compression, and streaming latency"
+        },
+        {
+          "value": "B",
+          "text": "Audio is always processed without Transformer components"
+        },
+        {
+          "value": "C",
+          "text": "Speech contains no semantics until explicit transcription"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.16.1",
+      "prompt": "How should the internal architecture of a proprietary multimodal API be described?",
+      "explanation": "**Correct answer: B.** One interface may hide a cascade or several specialized models. Architecture claims require technical documentation, code, or configuration.",
+      "topic": "16.16. Reading the public landscape by design axis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Infer the hidden stack from one endpoint’s accepted formats"
+        },
+        {
+          "value": "B",
+          "text": "Record I/O and avoid guessing hidden topology without evidence"
+        },
+        {
+          "value": "C",
+          "text": "Treat every voice API as one end-to-end Transformer"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "16.16.2",
+      "prompt": "Which variant uses ViR in the InternVL3.5 report?",
+      "explanation": "**Correct answer: A.** The Flash router selects 256 or 64 visual positions per tile. This property must not be assigned to every model in the family.",
+      "topic": "16.16. Reading the public landscape by design axis",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "InternVL3.5-Flash"
+        },
+        {
+          "value": "B",
+          "text": "Every VLM regardless of encoder"
+        },
+        {
+          "value": "C",
+          "text": "Only Chameleon"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "16.17.1",
+      "prompt": "What is the minimum multimodal passport needed to price a request?",
+      "explanation": "**Correct answer: C.** Cost appears at preprocessing, encoder, fusion, prefill, KV, and output-decoder stages. A capability label does not specify them.",
+      "topic": "16.17. Follow one request through a multimodal passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Model name and its best published benchmark result"
+        },
+        {
+          "value": "B",
+          "text": "Only maximum resolution and maximum context length"
+        },
+        {
+          "value": "C",
+          "text": "Processor, fusion, positions, state, latency, and memory"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "16.14.1",
+      "prompt": "What does the tiny VLM's held-out split test?",
+      "explanation": "**Correct answer: C.** The 32 training and 16 held-out renders share the same 16 height pairs. Rendering changes; compositions do not.",
+      "topic": "16.14. Level 2: what the notebook makes reproducible",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Transfer to natural photographs"
+        },
+        {
+          "value": "B",
+          "text": "Previously unseen height pairs"
+        },
+        {
+          "value": "C",
+          "text": "Different brightness for familiar height pairs"
+        }
+      ],
+      "correct": [
+        "C"
       ]
     }
   ]

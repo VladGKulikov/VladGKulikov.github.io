@@ -7,37 +7,37 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "E1. The KV-cache ladder",
-      "prompt": "Derive the ordinary-attention KV bytes/token formula and recover the values for a 70B MHA equivalent, Llama-3.3-70B GQA, Llama-3-8B GQA, and DeepSeek-V3 MLA. For 70B GQA, compute the cache payload at 8K, 32K, 128K, and 1M tokens and find the point at which it equals 140 GB of bf16 weights.",
-      "answer": "*Solution.* For ordinary attention,\n\n$$\nb_{KV}=2L H_{kv}d_hb.\n$$\n\nSubstituting the configurations gives **2,560, 320, and 128 KiB/token**. The separate MLA calculation stores the latent and RoPE-related coordinates and gives **68.625 KiB/token**. For 70B GQA, $b_{KV}=327{,}680$ bytes, so the payload is 2.5 GiB at 8,192 tokens, 10 GiB at 32,768, 40 GiB at 131,072, and 305.176 GiB = 327.68 GB at one million. The crossing with 140 GB of weights is\n\n$$\n\\frac{140\\cdot10^9}{327{,}680}\\approx\\mathbf{427{,}246}\\ \\text{tokens}.\n$$\n\nThe reproducible table is in notebook sections **“1. Typed KV geometry and units”** and **“2. The KV/token ladder.”**",
+      "title": "E1. Loss gap at a fixed training budget",
+      "prompt": "Under the fitted law used in this module, evaluate the 8.03B-parameter, 15T-token scenario. Compare it with the analytic optimum at the same compute budget.",
+      "answer": "*Solution.* The budget is\n\n$$\nC=6\\cdot8.03\\cdot10^9\\cdot15\\cdot10^{12}\n=7.227\\cdot10^{23}\\ \\text{FLOP}.\n$$\n\nThe scenario gives\n\n$$\nL(8.03\\text{B},15\\text{T})=1.948310.\n$$\n\nThe fitted optimum is\n\n$$\nN^*=35.663\\text{B},\\qquad D^*=3.377\\text{T},\n$$\n\nwith\n\n$$\nL^*=1.922505.\n$$\n\nTherefore\n\n$$\n\\Delta L=L(8.03\\text{B},15\\text{T})-L(N^*,D^*)\\approx\\mathbf{0.025804}.\n$$\n\nThe difference uses unrounded loss values. This is arithmetic inside the stated approximation, not a claim about the realized quality of a particular 8B or 36B model. The notebook reproduces the calculation in **“1. Scaling law and the exact compute-optimal split.”**",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "E2. A decode roofline with KV traffic",
-      "prompt": "For an 8B bf16 model with $W=16$ GB, $b_{KV}=128$ KiB/token, memory bandwidth 3.35 TB/s, and peak arithmetic throughput 990 TFLOP/s, compute the batch-one bandwidth ceilings, the 128K arithmetic intensity, the batch knees, and the KV penalty at batch 32 and context 8K.",
-      "answer": "*Solution.* The aggregate ceiling is\n\n$$\nQ(B,N)=\\frac{B\\,BW}{W+B N b_{KV}}.\n$$\n\nAt batch one, $Q(0)=209.375$, $Q(8K)=196.208$, $Q(128K)=100.965$, and $Q(1M)=\\mathbf{22.778}$ tok/s. At 128K, intensity is 0.4822 FLOP/B for projections alone, or **2.55334 FLOP/B** including QK/AV while the ridge is $990/3.35=295.52$ FLOP/B, so the point lies **115.74×** below the ridge. The knees are 14.90, 3.73, and 0.93 at 8K, 32K, and 128K. At $B=32$, 8K, the ceiling is 2,128.7 tok/s rather than the zero-KV ideal of 6,700 tok/s, a **3.15×** reduction. See notebook section **“3. Decode roofline, intensity, and batch knees.”**",
+      "title": "E2. Inference-aware break-even",
+      "prompt": "The 8.03B model from E1 used $7.227\\cdot10^{23}$ training FLOP. A 70B model reaches the same fitted loss with less training. If dense decoding costs approximately $2N$ FLOP per generated token, find the lifetime output volume at which the smaller model becomes cheaper in total compute.",
+      "answer": "*Solution.* Solving\n\n$$\nL(70\\text{B},D_{70})=1.948310\n$$\n\ngives\n\n$$\nD_{70}=1.094026\\cdot10^{12}\n$$\n\nand\n\n$$\nC_{70}=6\\cdot70\\text{B}\\cdot D_{70}\n=4.59491\\cdot10^{23}\\ \\text{FLOP}.\n$$\n\nThe large model saves\n\n$$\n\\Delta C=2.63209\\cdot10^{23}\\ \\text{FLOP}\n$$\n\nin pretraining, while each generated token costs an extra\n\n$$\n2(70-8.03)\\text{B}=1.2394\\cdot10^{11}\\ \\text{FLOP}.\n$$\n\nThus\n\n$$\nT^*=\\frac{\\Delta C}{2(N_{70}-N_8)}\n=\\mathbf{2.12368\\cdot10^{12}}\\ \\text{tokens}.\n$$\n\nBelow that volume, the 70B alternative wins in this simplified total-compute objective; above it, the smaller model does. See **“2. Equal-quality break-even and a training-time scenario.”**",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "E3. Prefix reuse and phase interference",
-      "prompt": "In the notebook scenario, compare full prefill with a cache hit that leaves a 512-token suffix, then combine the prefill and decode lower bounds and show the effect of chunking.",
-      "answer": "*Solution.* Projections give 132.396 ms for the full prompt and 8.275 ms for the suffix, a 16× ratio. Including causal attention gives **150.168 and 10.427 ms**, a **14.402** ratio. The scheduling illustration sums only the original selected bounds: $4.776+132.396=137.172$ ms versus $4.776+8.275=13.051$ ms. It is not a measured ITL prediction; later chunks additionally attend to longer histories.\n\nFor a separate input-cost calculation, assume prefix writes cost 1.25, reads cost 0.1, and suffixes are uncached. A warm request costs $7680\\cdot0.1+512=1280$ base-price token equivalents: a 6.4× reduction. Ten requests with one write cost $7680(1.25+9\\cdot0.1)+10\\cdot512=21632$ versus 81920 without caching, a **3.787×** reduction. Exclude output tokens, expiry, and additional writes. The notebook tests billing and arithmetic separately.",
+      "title": "E3. Training-state memory and the 1F1B bubble",
+      "prompt": "Assume 16 bytes per parameter for a 7B model, 64 ranks, and ideal ZeRO-3. Then compute the pipeline bubble for eight stages with 32 and 128 microbatches.",
+      "answer": "*Solution.* The fully replicated state is\n\n$$\n7\\cdot10^9\\cdot16=112\\cdot10^9\\ \\text{bytes}\n=112\\ \\text{GB}=104.308\\ \\text{GiB}.\n$$\n\nIdeal ZeRO-3 over 64 ranks gives\n\n$$\n1.75\\ \\text{GB}=1.630\\ \\text{GiB per rank}.\n$$\n\nFor the pipeline,\n\n$$\nf(8,32)=\\frac{7}{39}=\\mathbf{17.9\\%},\n$$\n\nand\n\n$$\nf(8,128)=\\frac{7}{135}=\\mathbf{5.2\\%}.\n$$\n\nAt least 134 microbatches are required to fall strictly below 5% under this formula. The notebook contains the full tables and negative tests.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
       "title": "E4 [project]",
-      "prompt": "Start with Demo 1 on CPU. Compare 4096-slot reservation with 16-token pages over 500 lengths. Then trace five requests for each of 100 users, with ten shared templates in the workload. Report both request-hit fraction and reused-input fraction under shared and per-user cache scopes. Vary the length distribution or template count and explain the change. An optional engine experiment should pin arrivals, warm-up, sharing boundaries, and SLOs. Comparing shared and disaggregated prefill/decode requires suitable devices and separate KV-transfer accounting.",
-      "answer": "> **Project demo:** [English Module 10 project-demo notebook](/downloads/modern-llms/project_demos/en/module_10_project_demo.ipynb), section “Demo 1.” It provides a compact reproducible scaffold on small inputs, not the completed full-scale experiment.",
+      "prompt": "Start with the eight synthetic documents in Demo 1. Explain every retention or rejection decision and report survival relative both to the initial pool and to each stage’s input. Change the filter order and similarity threshold, then distinguish changes in rejection attribution from changes in the retained set. Language and quality labels are supplied. An optional extension uses a small pinned, licensed external sample with actual classifiers and timings; a 100 GB download is unnecessary.",
+      "answer": "> **Project demo:** [English Module 9 project-demo notebook](/downloads/modern-llms/project_demos/en/module_09_project_demo.ipynb), section “Demo 1.” It supplies the starting experiment; the exercise asks you to change its conditions and explain the outcome.",
       "answerKind": "guidance"
     },
     {
       "id": "exercise-05",
       "title": "E5 [project]",
-      "prompt": "Use Demo 2 to compare attention outputs before and after teaching quantization at 8 and 3 bits. Next, shift the query toward a previously unimportant position. Try both retention policies at 25%, 10%, and 5% budgets, stating how you round token counts. Explain why past attention alone cannot guarantee that a future answer survives.\n\n\nWith a suitable model, optionally add a fixed small subset of [LongBench](https://github.com/THUDM/LongBench), a collection of different long-context tasks, or a [needle-in-a-haystack](https://github.com/gkamradt/needle-in-a-haystack) experiment: insert a fact into a long text and ask for it. The latter measures retrieval of that fact, not long-context quality as a whole. Record text, tokenizer, length, insertion depth, seed, and answer-scoring rule. “128K” is a chosen length, not a universal benchmark version. Actual KIVI/TurboQuant comparisons additionally require their implementations and measured memory and throughput; the teaching quantizer does not implement either method.",
-      "answer": "> **Project demo:** [English Module 10 project-demo notebook](/downloads/modern-llms/project_demos/en/module_10_project_demo.ipynb), section “Demo 2.” It provides a compact reproducible scaffold on small inputs, not the completed full-scale experiment.",
+      "prompt": "Run the CPU mechanism in Demo 2: gather a matrix from two owned shards, average equal-sized local-batch gradients, and update each shard. Check parity with an unsharded update over several steps. Separately tabulate a hypothetical 1B model under ZeRO stages 0–3 at 1, 2, and 8 ranks using the 16-byte policy. Add a specified gather buffer and activation reserve. Explain why total peak memory no longer scales as one number divided by rank count. No distributed runtime is required.",
+      "answer": "> **Project demo:** [English Module 9 project-demo notebook](/downloads/modern-llms/project_demos/en/module_09_project_demo.ipynb), section “Demo 2.” It supplies the matrix experiment and a separate hypothetical memory ledger.",
       "answerKind": "guidance"
     }
   ],

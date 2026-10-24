@@ -4,23 +4,47 @@
   "language": "en",
   "questions": [
     {
-      "id": "13.4.1",
-      "prompt": "Why is a chat template part of the training contract rather than visual formatting?",
-      "explanation": "**Correct answer: C.** The template turns roles, message boundaries, tool calls, and turn endings into concrete tokens. A mismatch can degrade behavior without raising a runtime error.",
-      "topic": "13.4. Chat templates are executable contracts",
+      "id": "11.4.1",
+      "prompt": "How is a proposed token accepted in exact speculative decoding?",
+      "explanation": "**Correct answer: A.** A proposal is always accepted when the target assigns at least as much probability; otherwise it is accepted with probability p/q. Residual correction completes the target distribution.",
+      "topic": "11.4. The exact propose–verify–correct cycle",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It decides which roles may be stored in the dataset at all"
+          "text": "With probability min(1, p/q) for that token"
         },
         {
           "value": "B",
-          "text": "It creates new vocabulary tokens during SFT"
+          "text": "Whenever its target probability exceeds a fixed 0.5 threshold"
         },
         {
           "value": "C",
-          "text": "It defines the token serialization used in both training and inference"
+          "text": "With the normalized product of p and q"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.4.2",
+      "prompt": "Temperature and top-p are enabled. Which probabilities belong in the exact rule?",
+      "explanation": "**Correct answer: C.** q is the proposal law and p the intended target law at the same history.",
+      "topic": "11.4. The exact propose–verify–correct cycle",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Raw softmax before processing"
+        },
+        {
+          "value": "B",
+          "text": "Only the highest-probability token"
+        },
+        {
+          "value": "C",
+          "text": "Actual normalized sampling laws after processing"
         }
       ],
       "correct": [
@@ -28,47 +52,23 @@
       ]
     },
     {
-      "id": "13.5.1",
-      "prompt": "Under an assistant-only objective, what goes into `labels` for system and user tokens?",
-      "explanation": "**Correct answer: A.** With `ignore_index=-100`, the tokens remain in the input context but are not direct cross-entropy targets. Full-sequence loss is possible in a different training recipe.",
-      "topic": "13.5. Label masking: a 56-token example",
+      "id": "11.5.1",
+      "prompt": "What defines the correction distribution after the first rejection?",
+      "explanation": "**Correct answer: B.** Correction returns probability mass where the target exceeds the proposer, hence norm((p−q)+).",
+      "topic": "11.5. Worked example A: seeing the balance component by component",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "`−100`, so those positions contribute no direct loss term"
+          "text": "The target distribution with the rejected token removed"
         },
         {
           "value": "B",
-          "text": "The padding token ID, so all rows have equal length"
+          "text": "The normalized positive part of p − q over the vocabulary"
         },
         {
           "value": "C",
-          "text": "The original token ID multiplied by a zero weight"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "13.5.2",
-      "prompt": "A dialogue has 56 tokens and a 20-token assistant reply. What fraction is supervised if the reply terminator is also a target?",
-      "explanation": "**Correct answer: B.** $(20+1)/56=37.5\\%$. The extra position is the assistant turn terminator in this teaching template.",
-      "topic": "13.5. Label masking: a 56-token example",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "35.7%: only reply content is supervised"
-        },
-        {
-          "value": "B",
-          "text": "37.5%: the terminator is added to the twenty reply tokens"
-        },
-        {
-          "value": "C",
-          "text": "71.4%: the reply and preceding user turn are supervised"
+          "text": "The draft distribution multiplied by p/q"
         }
       ],
       "correct": [
@@ -76,23 +76,23 @@
       ]
     },
     {
-      "id": "13.5.3",
-      "prompt": "What is the main risk when the assistant turn terminator is excluded from the SFT targets?",
-      "explanation": "**Correct answer: C.** The base model may still stop, but the demonstrations do not reinforce the required terminator. Inspect target tokens at boundaries rather than relying on aggregate loss alone.",
-      "topic": "13.5. Label masking: a 56-token example",
+      "id": "11.6.1",
+      "prompt": "Why does the constant-acceptance model give E = 1 + α + … + α^γ?",
+      "explanation": "**Correct answer: C.** Successive reach probabilities are 1, α, α², and so on under constant conditional acceptance. An arbitrary average of observed rates is insufficient.",
+      "topic": "11.6. Expected progress per cycle",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Training loss must become infinite as soon as the first batch reaches the terminator"
+          "text": "Because all γ proposals are accepted independently"
         },
         {
           "value": "B",
-          "text": "Every response will stop after its first token"
+          "text": "Because the bonus token appears only after full acceptance"
         },
         {
           "value": "C",
-          "text": "SFT gives no direct signal for ending the turn at the demonstrated boundary"
+          "text": "Reaching position i requires all previous proposals to be accepted"
         }
       ],
       "correct": [
@@ -100,23 +100,23 @@
       ]
     },
     {
-      "id": "13.5.4",
-      "prompt": "Which row predicts labels[t] in causal training?",
-      "explanation": "**Correct answer: A.** The target is stored at its own position and predicted by the preceding position. Shift exactly once.",
-      "topic": "13.5. Label masking: a 56-token example",
+      "id": "11.7.1",
+      "prompt": "In the scenario α = 0.8 and c = 0.1, which γ≤10 is best?",
+      "explanation": "**Correct answer: A.** γ=5 gives about 2.46 and γ=9 about 2.35. Proposal length matters, but acceptance and proposal cost often matter more than exact tuning.",
+      "topic": "11.7. A cost model, an optimum, and an illustrative MTP point",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "logits[t−1]"
+          "text": "γ=6 with S≈2.47, and the optimum is broad"
         },
         {
           "value": "B",
-          "text": "logits[t+1]"
+          "text": "γ=10 because a longer proposal is always better"
         },
         {
           "value": "C",
-          "text": "Any row in the batch"
+          "text": "γ=1 because every extra proposal always costs more than it returns"
         }
       ],
       "correct": [
@@ -124,47 +124,23 @@
       ]
     },
     {
-      "id": "13.6.1",
-      "prompt": "What does the FFD result “24 examples → 5 containers” mean at a length of 2,048?",
-      "explanation": "**Correct answer: A.** The calculation measures fixed-length rows and removed padding. Runtime also depends on attention kernels, batch shape, device occupancy, and overhead.",
-      "topic": "13.6. Packing variable-length examples safely",
+      "id": "11.7.2",
+      "prompt": "What does the 1.79× result at γ=1, α=0.875, and c=0.05 mean?",
+      "explanation": "**Correct answer: B.** E=1.875 and S=1.875/1.05=1.78571. It calibrates a scenario rather than reproducing a particular external benchmark.",
+      "topic": "11.7. A cost model, an optimum, and an illustrative MTP point",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Fixed-length rows fall, while utilization rises from 17.7% to 84.9%"
+          "text": "A universally measured speedup for every MTP model"
         },
         {
           "value": "B",
-          "text": "Training throughput is guaranteed to improve by exactly 4.8×"
+          "text": "The output of the module’s scenario model for those parameters"
         },
         {
           "value": "C",
-          "text": "Every container holds the same number of source examples"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "13.6.2",
-      "prompt": "Why do packed examples need a block-diagonal attention mask?",
-      "explanation": "**Correct answer: B.** Without isolation, a token in one dialogue can depend on unrelated text in the same container. EOS marks a boundary but does not by itself remove cross-example attention edges.",
-      "topic": "13.6. Packing variable-length examples safely",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "So that positions of different examples get independent RoPE indices"
-        },
-        {
-          "value": "B",
-          "text": "Otherwise examples in one bin see each other and train on foreign text"
-        },
-        {
-          "value": "C",
-          "text": "So that FlashAttention can process the bin in a single kernel call"
+          "text": "The exact ceiling of all multi-step MTP architectures"
         }
       ],
       "correct": [
@@ -172,47 +148,47 @@
       ]
     },
     {
-      "id": "13.6.3",
-      "prompt": "How do you remove a target pair crossing from A into B?",
-      "explanation": "**Correct answer: A.** Attention masking cannot repair a cross-boundary logit–label pair created by shifting.",
-      "topic": "13.6. Packing variable-length examples safely",
+      "id": "11.7.3",
+      "prompt": "For γ=2, conditional acceptance rates are 0.9 and 0.5. What is expected output without EOS?",
+      "explanation": "**Correct answer: B.** E=1+0.9+0.9·0.5=2.35. Averaging rates loses the reach probabilities.",
+      "topic": "11.7. A cost model, an optimum, and an illustrative MTP point",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Ignore the first label of each segment"
+          "text": "2.19"
         },
         {
           "value": "B",
-          "text": "Only reset position_ids"
+          "text": "2.35"
         },
         {
           "value": "C",
-          "text": "Only insert EOS between examples"
+          "text": "1.40"
         }
       ],
       "correct": [
-        "A"
+        "B"
       ]
     },
     {
-      "id": "13.7.1",
-      "prompt": "What follows from comparing $3.47\\cdot10^{19}$ FLOP for SFT with $7.23\\cdot10^{23}$ FLOP for pretraining?",
-      "explanation": "**Correct answer: C.** The ratio belongs to the stated token and epoch counts. The time estimate additionally assumes 990 TFLOP/s and MFU 0.4; it is not a measured production run.",
-      "topic": "13.7. Compute accounting and hyperparameters",
+      "id": "11.8.1",
+      "prompt": "What distinguishes tree-based proposal from one linear draft continuation?",
+      "explanation": "**Correct answer: C.** A tree can raise the chance of a useful surviving path, while adding mask, selection, and verification complexity.",
+      "topic": "11.8. A taxonomy of proposers",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Every SFT run is always exactly 20,833× cheaper than every pretraining run"
+          "text": "It always preserves the target distribution without correction"
         },
         {
           "value": "B",
-          "text": "The two stages require equal compute at equal model size"
+          "text": "It does not require target verification"
         },
         {
           "value": "C",
-          "text": "The scenarios differ by 20,833; 24.33 hours is a separate estimate"
+          "text": "It proposes multiple branches that can be verified together"
         }
       ],
       "correct": [
@@ -220,23 +196,23 @@
       ]
     },
     {
-      "id": "13.7.2",
-      "prompt": "Why is an excessive learning rate especially risky in a short SFT run?",
-      "explanation": "**Correct answer: A.** The dataset is comparatively small, so large updates can cause regressions or overfitting. Validate the learning-rate range on held-out capabilities and behavior.",
-      "topic": "13.7. Compute accounting and hyperparameters",
+      "id": "11.9.1",
+      "prompt": "What operational advantage does native MTP provide?",
+      "explanation": "**Correct answer: A.** MTP reuses multi-token prediction modules. It need not serve a separate full draft model; some families package modules in a compatible auxiliary checkpoint.",
+      "topic": "11.9. Native multi-token prediction at inference time",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Large updates can erase useful pretrained behavior within a few steps"
+          "text": "A compatible model needs no separate full draft checkpoint"
         },
         {
           "value": "B",
-          "text": "AdamW cannot finish allocating optimizer state within only a few training epochs"
+          "text": "The MTP distribution automatically matches the target distribution on every workload"
         },
         {
           "value": "C",
-          "text": "A large step automatically unmasks user tokens"
+          "text": "Proposal requires no compute or extra memory"
         }
       ],
       "correct": [
@@ -244,23 +220,23 @@
       ]
     },
     {
-      "id": "13.8.1",
-      "prompt": "Why does row count alone not determine the quality of a public instruction dataset?",
-      "explanation": "**Correct answer: B.** Correctness, diversity, target-skill coverage, licensing, and contamination matter. Scale does not compensate for systematically poor demonstrations.",
-      "topic": "13.8. Organizing SFT data by capability",
+      "id": "11.10.1",
+      "prompt": "Why can verifying several proposals be more efficient than ordinary decode?",
+      "explanation": "**Correct answer: B.** Several positions amortize target-weight movement more effectively. KV traffic, batching, and implementation still determine the realized gain.",
+      "topic": "11.10. Verification as a short, wider decode operation",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Large datasets are always entirely synthetic"
+          "text": "It eliminates target-weight reads"
         },
         {
           "value": "B",
-          "text": "Rows may be duplicate, wrong, or unrelated to the target decisions"
+          "text": "One pass processes several positions and raises arithmetic intensity"
         },
         {
           "value": "C",
-          "text": "SFT depends only on example count and not on token count"
+          "text": "It always uses the same kernel and has the same cost as the original prefill pass"
         }
       ],
       "correct": [
@@ -268,23 +244,23 @@
       ]
     },
     {
-      "id": "13.9.1",
-      "prompt": "Which careful conclusion is supported by LIMA?",
-      "explanation": "**Correct answer: C.** LIMA demonstrates the value of curation for an already capable 65B model. It does not establish a universal minimum dataset size.",
-      "topic": "13.9. Reading LIMA correctly",
+      "id": "11.11.1",
+      "prompt": "How does post-training quantization differ from quantization-aware training?",
+      "explanation": "**Correct answer: C.** When quantization is introduced and which tensors are quantized are separate axes. PTQ is applied after training; QAT incorporates the effect during optimization.",
+      "topic": "11.11. What low-bit quantization actually changes",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Modern models no longer need instruction tuning after pretraining"
+          "text": "PTQ is for dense models and QAT only for MoE"
         },
         {
           "value": "B",
-          "text": "Exactly 1,000 examples suffice for every model and every domain"
+          "text": "PTQ always quantizes weights only, while QAT must quantize weights and activations together"
         },
         {
           "value": "C",
-          "text": "A strong base model can adapt from 1,000 carefully curated demonstrations"
+          "text": "PTQ transforms a trained checkpoint; QAT includes quantization effects during training"
         }
       ],
       "correct": [
@@ -292,23 +268,23 @@
       ]
     },
     {
-      "id": "13.9.2",
-      "prompt": "When should source-task families be split?",
-      "explanation": "**Correct answer: A.** Derived examples from one source stay in one split to prevent content leakage.",
-      "topic": "13.9. Reading LIMA correctly",
+      "id": "11.12.1",
+      "prompt": "Why does the module count 4.25 bits for MXFP4 and 4.50 for NVFP4?",
+      "explanation": "**Correct answer: A.** (32·4+8)/32=4.25 and (16·4+8)/16=4.50. This counts local-scale metadata, not every byte in a real checkpoint.",
+      "topic": "11.12. Microscaled FP4, W4A4, and the role of hardware",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Before generating paraphrases and synthetic answers"
+          "text": "One eight-bit local scale serves 32 versus 16 four-bit values"
         },
         {
           "value": "B",
-          "text": "After shuffling every generated answer"
+          "text": "Every NVFP4 value stores an extra half exponent bit inside its own four-bit code"
         },
         {
           "value": "C",
-          "text": "Only after training"
+          "text": "MXFP4 stores no scale metadata"
         }
       ],
       "correct": [
@@ -316,47 +292,23 @@
       ]
     },
     {
-      "id": "13.10.1",
-      "prompt": "Why does a synthetic data pipeline need a verifier?",
-      "explanation": "**Correct answer: A.** Incorrect demonstrations provide a learning signal in the wrong direction. A verifier applies explicit acceptance criteria, although incomplete tests and imperfect judges can still admit errors.",
-      "topic": "13.10. Synthetic data as a search-and-filter system",
+      "id": "11.12.2",
+      "prompt": "What does the notebook’s 3.32 MSE ratio establish?",
+      "explanation": "**Correct answer: B.** It is a local numerical illustration of range allocation, not a general format or model benchmark.",
+      "topic": "11.12. Microscaled FP4, W4A4, and the role of hardware",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "A generator model confidently produces both correct and wrong examples"
+          "text": "Every FP4 format is always 3.32 times more accurate than every INT4 format"
         },
         {
           "value": "B",
-          "text": "It is needed to deduplicate the generated examples against each other"
+          "text": "On one outlier-containing teaching vector, the selected FP4 grid had lower MSE"
         },
         {
           "value": "C",
-          "text": "It brings the style of generated answers to one common template"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "13.11.1",
-      "prompt": "How does SFT on worked solutions differ from training on final answers alone?",
-      "explanation": "**Correct answer: B.** When the worked solution is supervised, the model receives token-level signal over intermediate steps. Useful strategies and teacher artifacts can transfer together.",
-      "topic": "13.11. Reasoning demonstrations and the s1 compute scenario",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "It always requires a separate `reasoning` role in the template"
-        },
-        {
-          "value": "B",
-          "text": "Intermediate steps are targets, so the student imitates the solution path"
-        },
-        {
-          "value": "C",
-          "text": "It must run after preference optimization"
+          "text": "NVFP4 universally preserves downstream metrics better than INT4"
         }
       ],
       "correct": [
@@ -364,23 +316,23 @@
       ]
     },
     {
-      "id": "13.12.1",
-      "prompt": "What must be represented in a complete call–observation–response demonstration?",
-      "explanation": "**Correct answer: C.** The trajectory should cover the decision to call, the structured action, the environment observation, and the assistant's next step. The tool result is usually context rather than a model target.",
-      "topic": "13.12. Teaching a model to use tools",
+      "id": "11.13.1",
+      "prompt": "How should the teaching grouped quantizer handle an all-zero block?",
+      "explanation": "**Correct answer: C.** Dividing by a zero maximum would create NaNs. A service scale of one preserves zeros safely.",
+      "topic": "11.13. Code: make the probability contract explicit",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The tool must be reachable during training so the call can be verified"
+          "text": "Drop it and reconstruct its position from an index"
         },
         {
           "value": "B",
-          "text": "The example must contain at least two different tools in sequence"
+          "text": "Reuse the previous group’s scale"
         },
         {
           "value": "C",
-          "text": "The call itself, the tool response and the model's conclusion after it"
+          "text": "Keep it zero with a safe nonzero service scale"
         }
       ],
       "correct": [
@@ -388,23 +340,23 @@
       ]
     },
     {
-      "id": "13.15.1",
-      "prompt": "How does distribution distillation differ from training on one teacher response?",
-      "explanation": "**Correct answer: A.** Soft targets expose probabilities over alternatives, either directly or through teacher logits. The token events must be aligned. Matching only the argmax does not match the distribution.",
-      "topic": "13.15. Distillation channels",
+      "id": "11.13.2",
+      "prompt": "p and q nearly coincide, but their positive difference is nonzero. How should the residual be handled?",
+      "explanation": "**Correct answer: A.** Small mass makes correction rare; it does not eliminate the correction distribution.",
+      "topic": "11.13. Code: make the probability contract explicit",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The student matches teacher probabilities, not only one sampled sequence"
+          "text": "Normalize the positive difference by its sum"
         },
         {
           "value": "B",
-          "text": "Teacher and student must use the same architecture and parameter count"
+          "text": "Discard any sufficiently small difference"
         },
         {
           "value": "C",
-          "text": "The student must choose the same most likely token at every step"
+          "text": "Resample from p after rejection"
         }
       ],
       "correct": [
@@ -412,23 +364,47 @@
       ]
     },
     {
-      "id": "13.16.1",
-      "prompt": "Why does LoRA reduce optimizer-state memory?",
-      "explanation": "**Correct answer: B.** The base weights are frozen, so gradients and optimizer state are maintained only for adapters. Total memory still includes base weights, activations, buffers, and overhead.",
-      "topic": "13.16. LoRA and a concrete parameter count",
+      "id": "11.15.1",
+      "prompt": "Why are quantization and speculative-decoding multipliers not independent?",
+      "explanation": "**Correct answer: A.** Reducing weight traffic can expose compute, KV, or scheduling limits. The combined configuration must be profiled again.",
+      "topic": "11.15. Combining the levers without multiplying away the bottlenecks",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "All optimizer states are automatically stored in four bits"
+          "text": "The first optimization changes the bottleneck seen by the second"
         },
         {
           "value": "B",
-          "text": "Optimizer state is needed only for trainable adapter parameters"
+          "text": "Quantization always breaks exact acceptance and therefore requires approximate verification"
         },
         {
           "value": "C",
-          "text": "Moments are recomputed from scratch at every step"
+          "text": "Speculation requires bf16 weights"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "11.15.2",
+      "prompt": "Which distribution is preserved when the deployed target is quantized?",
+      "explanation": "**Correct answer: B.** The acceptance rule reconstructs the p produced by the verifier. A quantized verifier therefore defines the preserved distribution.",
+      "topic": "11.15. Combining the levers without multiplying away the bottlenecks",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The original bf16 checkpoint regardless of logit changes"
+        },
+        {
+          "value": "B",
+          "text": "The distribution of the actually executed quantized target"
+        },
+        {
+          "value": "C",
+          "text": "The average of the quantized and original distributions"
         }
       ],
       "correct": [
@@ -436,27 +412,51 @@
       ]
     },
     {
-      "id": "13.16.2",
-      "prompt": "If 208 MiB already includes adapter weights, what is added to the 4-bit base?",
-      "explanation": "**Correct answer: A.** The chosen 16 bytes include the weight, gradient, master copy and moments, each once.",
-      "topic": "13.16. LoRA and a concrete parameter count",
+      "id": "11.15.3",
+      "prompt": "The target step becomes four times faster while draft time is unchanged. What happens to c?",
+      "explanation": "**Correct answer: B.** c is draft time divided by target-step time. Reducing the denominator increases the ratio.",
+      "topic": "11.15. Combining the levers without multiplying away the bottlenecks",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "208 MiB"
+          "text": "It falls by a factor of four"
         },
         {
           "value": "B",
-          "text": "208 MiB plus another 26 MiB of weights"
+          "text": "It rises by a factor of four"
         },
         {
           "value": "C",
-          "text": "Only 26 MiB"
+          "text": "It stays constant"
         }
       ],
       "correct": [
-        "A"
+        "B"
+      ]
+    },
+    {
+      "id": "11.17.1",
+      "prompt": "What must a reproducible quant/spec passport contain?",
+      "explanation": "**Correct answer: C.** Without configuration, workload, hardware, and measurements, a speedup cannot be reproduced or compared fairly.",
+      "topic": "11.17. Reading a quant/spec run passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only the format name and best advertised multiplier"
+        },
+        {
+          "value": "B",
+          "text": "Only checkpoint size, GPU version, memory capacity, and average tokens per second"
+        },
+        {
+          "value": "C",
+          "text": "Format and scales, proposer, verification settings, workload, metrics, and full stack"
+        }
+      ],
+      "correct": [
+        "C"
       ]
     }
   ]

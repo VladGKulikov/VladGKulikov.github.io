@@ -1,634 +1,658 @@
-# Module 16. Multimodal LLMs: Vision, Audio, and Video
+# Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO
 
-*“Modern LLMs” course · Module 16 lecture · edition 2026.10.25*
+*Modern LLMs · Module 14 lecture · revision 2026.10.28*
 
-> **What this module is about.** Imagine a user who attaches a screenshot, explains it with a voice note, and asks the system to locate the same event in a video. The user sees one task. The model sees three physical signals with different geometry, time scales, and output requirements. Each signal creates four design obligations: build a representation, compress it into an affordable budget, preserve the structure that matters, and decide which component will produce the answer.
+> **What this module is about.** Module 13 taught a model to imitate demonstrations. That is enough when the target behaviour can be expressed as a strong reference answer. Many alignment goals are different: two responses may both be valid yet differ in usefulness, calibration, tone, or safety. Other tasks admit a direct signal from unit tests, a theorem checker, a simulator, or an interactive environment.
 >
-> We will first follow an image into a text answer, then add video and streaming speech. The necessary components emerge along that path: extracting features, connecting them to a language model, and reconstructing an output signal. This gives us a basis for comparing architectures by the work each component performs.
+> A comparison tells us which response is preferred; a checker reports an outcome for a task. Neither signal specifies how the model should learn from it. We will develop three routes: fit a separate evaluator, turn preference pairs directly into a training loss, or compare several fresh responses to the same prompt. The method names will become useful once these choices are clear.
 >
-> The worked examples connect geometry to systems cost: 576, 2,880, and 1,296 visual positions; 72, 360, and 162 MiB of image KV under one declared GQA geometry; symmetric InfoNCE on a four-pair batch; a dense-equivalent LLaVA-style training scenario; and a two-hour video that becomes millions of tokens under naive frame sampling. Each calculation is used to answer a systems question: where does the architecture pay for a modality, and what bottleneck appears next?
+> The module keeps an engineering perspective. We will identify the signal consumed by each method, the models and data it requires, what its equations estimate, and why rollout generation can cost more than the parameter update itself.
 >
-> **Prerequisites.** Module 4 introduces multidimensional position schemes, Module 5 provides GQA and KV-cache geometry, Module 9 uses the $C\approx6ND$ training approximation, Module 10 separates prefill from decode, and Module 15 studies the cost of extra inference context. The necessary ideas are restated here, so the chapter is self-contained.
-
-### Reading routes
-
-**First reading.** Follow the system in Sections 1–4, count the cost of one image in Sections 6–7, then connect resolution, video, and speech in Sections 9–12. Finish with Sections 15–17 and 20. Model names in the historical overview are signposts; their mechanisms are introduced later. At this stage, a contrastive encoder means an encoder trained to give matching images and captions nearby vectors.
-
-**Second reading.** Work through the loss in Section 5, connector training in Section 8, and the executable experiments in Sections 13–14. Use Section 19 to check whether you can explain each result from its assumptions, including the complete pixels-to-answer experiment.
-
-**Reference use.** Sections 6–8 and 11 hold the numerical examples, Section 16 records dated source evidence, and Section 17 provides a configuration-reading procedure. The teaching video budget uses exactly 256,000 positions; a vendor's “256K” label may refer to a different exact limit.
+> **Further study.** The module is self-contained. The author's companion course *RL for LLM* develops policy gradients, reward models, PPO, DPO, RLOO, GRPO/RLVR, interactive environments, rollout infrastructure, and reward hacking in substantially greater depth.
+>
+> **Prerequisites.** You should be comfortable with SFT from Module 13, the parameter-state memory estimates used in Modules 9 and 13, and the prefill/decode distinction from Module 10. Everything required for the derivations below is restated here, so the module remains self-contained.
+> **Reading routes.** On a first pass, follow §§1, 3–7 and 9: identify the feedback signal, then trace how it changes the probability of an answer. In §8, focus on the data each method needs. Use §§10–11 to interpret the costs, then read §15 on verifiable rewards and checker limitations. Run §14 and answer Q1–Q4 in §18; Q5 follows the reference discussion in §17. On a second pass, work through the DPO derivation, the weighting and bias questions in §§9 and 12, and the projects in §19. Treat §§2, 8 and 16–17 as a reference map; learning the method names can wait until the mechanics are clear.
 
 ---
 
-## 1. Motivation: every modality creates a new budget
+## 1. The signal changed: from imitation to judgment
 
-A text prompt already arrives in the model’s native currency: tokens. Pixels, waveforms, and video frames do not. They must first be converted into sequences or memories that a language-centered system can consume.
+A demonstration answers a concrete question: *what response should the model imitate in this context?* Preference data answers a different one: *which of these responses should the model move toward?*
 
-That conversion is not a neutral preprocessing step. It decides what evidence survives, how many positions are created, whether spatial and temporal relationships remain visible, and which decoder can later produce an answer.
+That difference matters whenever there is no canonical target. Suppose two explanations are factually sound. One is concise and directly addresses the user's misconception; the other is more complete but spends a paragraph on background. A supervised dataset must choose one text as the target. A preference dataset can preserve the comparison without pretending that the winner is the only acceptable continuation.
 
-A model connecting vision and language is a **vision-language model (VLM)**. Multimodal systems may also support audio and video.
+There is a second source of supervision that is particularly important for reasoning. A completion may be checked by unit tests, a symbolic verifier, an exact answer, or the terminal state of an environment. In that case the feedback need not express a human taste at all. It is a measurable outcome.
 
-The word *multimodal* therefore covers at least three capabilities:
+A **policy** is the trainable model viewed as a distribution over answers. We write $\pi_\theta(y\mid x)$ for the probability of completion $y$ given prompt $x$ and parameters $\theta$. A sampled response, its context and its feedback form a trajectory; producing it is a rollout. In a noninteractive task, one complete answer can be the whole trajectory. “Online” means that training collects new data as the policy changes; it does not mean an internet connection is required.
 
-1. **Perception:** accepting images, video, or audio as context.
-2. **Cross-modal reasoning:** combining evidence across those inputs.
-3. **Generation:** emitting speech, images, or another media stream rather than text alone.
+The source of feedback and the timing of data collection are separate choices. Human or model judgments and programmatic checks can be applied to stored responses or to newly collected ones. We will contrast two common workflows.
 
-A model may be strong at one and weak at another. A vision-to-text assistant can read charts without having an image generator. A unified image model may synthesize convincing pictures yet struggle with tiny text. A live speech system may expose one conversational endpoint while relying on separate internal components for understanding and audio production.
+- **Offline preference optimization** consumes a fixed collection of pairs or labels. The original DPO recipe is an example.
+- **Online reinforcement learning** samples fresh completions from the policy being trained, scores them, and updates the policy from those trajectories. PPO, RLOO, and GRPO belong here.
 
-Throughout the chapter, we will track four design obligations.
+Offline training is easier to reproduce and does not pay for generation at every optimizer step. Its blind spot is distribution shift: the dataset reflects policies that produced the stored answers, not necessarily the policy after several epochs of training. Online RL follows the moving policy distribution, but the system must now generate, score, transport, and sometimes discard a large number of trajectories.
 
-- **Representation:** what object replaces the raw physical signal?
-- **Budget:** how many positions, bytes, and operations does that object require?
-- **Structure:** how are space and time encoded after compression?
-- **Output:** which component generates text, pixels, or streaming audio?
+The rest of the module can be read as three different answers to one design question: **what mathematical object should a comparison become?** A scalar reward model, a pairwise classification loss, or a relative advantage inside a group of sampled completions.
 
-The obligations interact immediately. If one image becomes 576 decoder positions, it lengthens prefill and may contribute 576 entries to every self-attention KV cache. At one frame per second, a two-hour video represented at 576 positions per frame exceeds four million positions before the user’s text is added.
+Keep the objective separate from the collection procedure. We study the original fixed-pair DPO recipe, but one can collect fresh preference pairs between DPO rounds. Likewise, a verifier defines where rewards come from, not which optimizer or group estimator must consume them.
 
-This gives the chapter its central question:
+## 2. From reward modelling to environment-scale RL
 
-> **How does an architecture turn physical evidence into a computational object, and which new constraint does that choice create?**
+![VIZ m14/01 — the changing post-training loop](assets/modern-llms/en/module-14/m14_01_timeline.svg)
 
-A capability label such as “vision supported” cannot answer it. We need the processor, encoder, fusion topology, state layout, and output path.
+The modern pipeline did not appear all at once.
 
-## 2. Four families, four places to draw the boundary
+**Christiano et al. (2017)** showed how human comparisons could train a reward model for an agent. **InstructGPT (2022)** adapted the pattern to language models: supervised fine-tuning produced an initial assistant, a reward model learned from ranked answers, and PPO optimized the assistant while a KL term limited drift from the reference policy.
 
-![VIZ m16/01 — four persistent multimodal families](assets/modern-llms/en/module-14/m16_01_timeline.svg)
-*Four architectural lines: CLIP/SigLIP alignment, connector-based VLMs, unified understanding and generation, and omni systems with streaming audio. The lines overlap rather than replace one another.*
+**DPO (2023)** removed the online RL stage for a particular class of preference objectives. By expressing the optimal reward through a ratio between the trained and reference policies, it turned the problem into a supervised pairwise loss.
 
-The field does not form a clean staircase from “old modular system” to “new native model.” Each family moved a different boundary.
+By 2024, work was moving in two useful directions. IPO, KTO, SimPO, and ORPO explored alternative direct losses and data contracts. RLOO and GRPO revisited lightweight policy-gradient methods that construct baselines from multiple answers to the same prompt instead of training a separate critic.
 
-The earliest boundary was semantic. **CLIP** aligned image and text encoders so that paired items occupied nearby regions of one embedding space. **SigLIP** changed the objective while preserving the two-tower design. These encoders made retrieval and zero-shot transfer practical, but they did not answer users in natural language.
+The open releases around **DeepSeek-R1**, **DAPO**, and **Dr. GRPO** in 2025 made verifier-based RL a central topic in reasoning-model research. The next step was architectural rather than merely algorithmic. By 2026, open stacks such as **verl**, **NeMo RL**, and **NeMo Gym** expose rollout workers, interactive environments, asynchronous queues, and trajectory-freshness controls as first-class components.
 
-Connector-based systems moved the next boundary: instead of rebuilding language competence, **Flamingo, BLIP-2, and LLaVA** attached visual features to an existing LLM. The design was attractive because the language backbone could remain largely intact. Its new question was quantitative: how many visual positions reach the decoder, and where are they stored?
+This is the important historical shift. Post-training is no longer well described as “run PPO once after SFT.” For agents and long reasoning tasks it increasingly resembles a distributed data-generation system in which the optimizer is only one stage.
 
-Unified understanding-and-generation systems moved the boundary again. **Chameleon** placed discrete text and image tokens in one autoregressive stream. **Janus** kept one Transformer but separated visual representations for understanding and generation. **InternVL-U** let a multimodal language model provide reasoning and conditioning while an MMDiT head handled image generation and editing. These systems share an external interface, but they disagree about what should be common internally.
+## 3. Three old ideas that organize the new vocabulary
 
-Omni systems introduce a temporal boundary. **Qwen2.5-Omni** and **Qwen3.5-Omni** coordinate text, images, audio, and video while producing text and streaming speech. Thinker–Talker is explicitly multi-component: one part integrates evidence and language, another converts hidden state into an audio-token stream.
+Preference optimization becomes easier to reason about when it is anchored to three classical constructions.
 
-The coexistence is the point. A contrastive encoder is still the right object for retrieval. A connector can reuse a strong language model at a much smaller training budget than training all components from scratch; it is not universally the cheapest deployment. A unified generator is useful when text and pixels must share context. An omni system is designed around streaming clocks. Rather than asking which family is “most advanced,” ask **which representation, memory, and output boundaries the design chooses to share**.
+### Bradley–Terry: pairwise choice from a score difference
 
-## 3. Three older ideas provide the mental model
-
-VLMs become easier to reason about when we connect them to three older engineering traditions.
-
-### Metric learning organizes semantics
-
-Siamese and dual-encoder systems learn a geometry in which related objects are close and unrelated objects are far apart. CLIP applies that idea to image–caption pairs. The resulting visual vectors are not “words,” but they are already organized by concepts that language can name.
-
-This explains why a small connector can sometimes be effective. It does not start from raw pixels; it starts from representations that already distinguish meaningful visual content. This does not require individual coordinate axes to correspond to named concepts.
-
-### Vision Transformers turn area into sequence length
-
-ViT divides an image into patches, projects each patch, and sends the resulting sequence through a Transformer. For image height $H$, width $W$, and square patch size $p$,
+Assign each item a latent scalar score. The Bradley–Terry model writes the probability that item $i$ beats item $j$ as
 
 $$
-N_{\text{patch}}=\frac{H}{p}\frac{W}{p},
+P(i\succ j)=\sigma(s_i-s_j).
 $$
 
-when both dimensions divide exactly. The equation exposes a basic systems fact: doubling both spatial dimensions roughly quadruples the number of patch positions. Visual token count is tied to area, not only to semantic complexity.
-
-### Signal-processing pipelines separate rates and responsibilities
-
-Speech systems long separated acoustic encoding, language modeling, and waveform decoding. A contemporary multimodal model often makes the same separation trainable end to end: modality-specific encoders compress raw signals, a language-centered module reasons over them, and specialized decoders reconstruct speech or images.
-
-End-to-end training therefore does not imply one homogeneous network or one token rate. Jointly trained modules may still use different losses, temporal resolutions, and state layouts. That observation will recur throughout the chapter: specialization is often how a system avoids forcing semantic understanding, pixel fidelity, and streaming latency into one representation.
-
-## 4. The first design: encoder, connector, language decoder
-
-Start with a single image question. The system must extract visual evidence, translate that evidence into a form the language model can use, and generate a response. The most legible VLM architecture assigns those jobs to three components.
-
-1. A **vision encoder** converts pixels into a sequence of features.
-2. A **connector** adapts feature width, count, or access pattern to the LLM. A multilayer perceptron (MLP) stacks linear maps and nonlinearities; learned-query modules such as Q-Former and Perceiver Resampler can also shorten the feature sequence.
-3. A **language decoder** combines visual evidence with the prompt and generates text.
-
-![VIZ m16/02 — where vision meets language](assets/modern-llms/en/module-14/m16_02_recipe.svg)
-*A modular VLM: image processing and encoding produce visual features; a connector changes width or count; the language decoder consumes the result either in its token stream or through cross-attention.*
-
-The connector’s location determines where the visual cost appears.
-
-Modules 2–3 used “token” for a discrete ID that selects a row from an embedding table. A visual token often means a continuous feature vector occupying one sequence position. The projector can supply that vector directly, without assigning it an ID in the text vocabulary. Both occupy positions, but their representations are obtained differently. Section 10 will introduce visual codecs that do produce discrete indices.
-
-**Decoder-stream insertion.** Projected visual vectors become ordinary positions next to text embeddings. The design is simple and uses the decoder’s existing self-attention machinery, but every visual position lengthens the sequence and may create K/V state in every layer. Section 7 uses this contract.
-
-**External visual memory.** Flamingo-style cross-attention keeps visual features outside the text stream. The language stack periodically reads them. Sequence length pressure is reduced, but the model now carries a second attention path and a separate visual memory.
-
-**Compression before the LLM.** A Q-Former or resampler maps many patch features into a smaller set of learned queries. The connector spends compute to reduce the number of expensive decoder positions.
-
-The modular design also changes deployment choices. The vision encoder can be replaced, placed on another device, or cached when several questions refer to one document. But before exploiting those options, we need to understand what the encoder learned and how many positions its processor creates. Sections 5–7 make both quantities explicit.
-
-## 5. CLIP, SigLIP, and worked example C: reading InfoNCE numerically
-
-A small connector can work because the vision encoder has already been shaped by language supervision. InfoNCE makes that statement precise.
-
-Let normalized image embeddings form matrix $I$, normalized text embeddings form $T$, and define
+In RLHF the items are completions and the score is a learned reward. The standard reward-model loss,
 
 $$
-s_{ij}=I_i^\top T_j.
+\mathcal L_{\mathrm{RM}}
+=-\log\sigma(r_w-r_l),
 $$
 
-For image-to-text retrieval, one row of the similarity matrix is divided by temperature $\tau$ and normalized with softmax. Symmetric CLIP loss averages the image-to-text and text-to-image cross-entropies.
+is therefore logistic pairwise modelling, not an LLM-specific invention.
 
-Write the batch as $I,T\in\mathbb R^{N\times d}$: $N$ paired examples, embedding width $d$, and unit Euclidean norm for each row. Matching indices identify the supervised pair. With temperature $\tau>0$, the complete objective is
+Here $\sigma(u)=1/(1+e^{-u})$ is the sigmoid, which maps a real score gap to a probability between zero and one. Subscripts $w$ and $l$ denote the preferred and rejected answers. Rejected means that the answer lost this comparison; it need not be factually wrong.
 
-$$
-L_{\mathrm{CLIP}}=-\frac{1}{2N}\sum_{i=1}^{N}
-\left[\log\frac{\exp(s_{ii}/\tau)}{\sum_j\exp(s_{ij}/\tau)}
-+\log\frac{\exp(s_{ii}/\tau)}{\sum_j\exp(s_{ji}/\tau)}\right].
-$$
+### REINFORCE: reduce variance without changing the expectation
 
-Read the first denominator across captions and the second across images. The two retrieval problems share the same batch but need not have the same loss: in general the similarity matrix is not symmetric. Temperature scales the competition without changing the embedding vectors.
-
-Consider four matched pairs with diagonal similarity 0.8 and off-diagonal similarity 0.2. At $\tau=0.1$, the positive logit is 8 and each negative logit is 2. The matched probability is
+Let $J(\theta)$ be the expected reward under parameters $\theta$. For a one-step task, $J(\theta)=\mathbb E_{s,a\sim\pi_\theta}[R]$; in a multi-step task, $R$ denotes the future return. The score-function estimator gives
 
 $$
-p_+=\frac{e^8}{e^8+3e^2}=0.992619,
+\nabla J(\theta)
+=\mathbb E\left[R\,\nabla\log\pi_\theta(a\mid s)\right].
 $$
 
-so the loss is
+Its variance can be reduced by subtracting a baseline that does not depend on the sampled action:
 
 $$
--\log p_+=0.007409.
+\nabla J(\theta)
+=\mathbb E\left[(R-b)\,\nabla\log\pi_\theta(a\mid s)\right].
 $$
 
-At $\tau=0.5$, the probability falls to 0.525325 and the loss rises to 0.643738. Temperature has not changed the underlying similarities; it has changed how sharply they compete.
+RLOO forms $b$ from the other completions sampled for the same prompt. GRPO uses statistics of the entire group. The latter is convenient, but it is not automatically an unbiased substitute for a value function.
 
-If every similarity is equal, softmax is uniform and the loss is $\log N$. For $N=4$, the random-matching reference is 1.386294. It is a reference, not a mathematical floor: an actively misordered matrix can be worse.
+In these equations, $s$ is the context before an action, $a$ is the sampled action and $R$ is its reward. An action can be a complete answer or one token; in the latter interpretation, the context includes the generated prefix. The residual $A=R-b$ is called an **advantage**. Treat the baseline as a constant when taking this policy gradient. Rewards of the other responses provide an action-independent baseline when responses are conditionally independent draws from the same frozen sampler for that prompt.
 
-![VIZ m16/03 — temperature changes competition](assets/modern-llms/en/module-14/m16_03_clip.svg)
-*The 4×4 similarity matrix at two temperatures, together with the CLIP/SigLIP distinction. The numbers belong to the teaching batch, not to a published training curve.*
+### Prospect theory: utility relative to a reference point
 
-In a large CLIP batch, each item competes with $N-1$ negatives in the corresponding direction. More negatives help only up to a point, and the global softmax denominator complicates distributed training.
+Human judgments are often asymmetric around a reference point: gains and losses of the same magnitude need not have the same subjective effect. KTO uses this perspective to learn from individual desirable and undesirable examples rather than explicit pairs.
 
-**SigLIP** replaces row-wise global normalization with independent sigmoid losses on pairs. One loss term no longer requires a global softmax denominator, which simplifies implementation and permits different positive/negative sampling strategies. The examples included in a batch still affect the learned geometry.
+These three ideas give us three different geometries: pairwise score gaps, policy-gradient advantages, and utility measured relative to a reference point.
 
-SigLIP assigns each pair a label $y_{ij}\in\{-1,+1\}$ and a logit $z_{ij}=t\,s_{ij}+b$, using a positive scale $t$ and a bias $b$. Its pair loss is $\log(1+\exp(-y_{ij}z_{ij}))$, evaluated as `softplus(-y*z)`. The original batch objective sums the pair terms and divides by $N$; averaging over all $N^2$ pairs changes the scale. Pairwise logistic loss removes the shared softmax denominator, not every dependence on batch-size scaling or negative sampling.
+> **Further study.** The full DPO derivation, maximum-entropy interpretation of the KL term, and PPO mechanics are developed in *RL for LLM*, Modules 7–8. The information-theoretic role of KL regularization is covered in *Information Theory for ML*, Module 8.
 
-The temperature experiment also has a condition worth testing: the matched pair must already rank first. If a wrong caption has the highest score, lowering the temperature makes the error more confident and raises the loss. Semantically equivalent captions can become false negatives, so supervision quality remains part of the mechanism.
+## 4. Classical RLHF as an algorithmic contract
 
-Contrastive learning explains semantic compatibility. It does not determine how many visual features reach the decoder. That is the next accounting step.
+**RLHF** means reinforcement learning from human feedback. Let $\pi_{\mathrm{ref}}$ denote the policy obtained after SFT.
 
-## 6. Worked example A: three ways to spend visual tokens
+**Stage 1: supervised fine-tuning.** Demonstrations move the base model into a useful response distribution.
 
-The first bill for an image is issued by the processor, before any language-layer computation. Patch size, tiling, and merging decide how many positions the rest of the system must carry.
-
-For a 336×336 image with 14×14 patches,
+**Stage 2: reward modelling.** For prompt $x$, annotators compare a preferred completion $y_w$ with a rejected completion $y_l$. A reward model $r_\phi$ is trained with
 
 $$
-24\times24=576
+\mathcal L_{\mathrm{RM}}
+=-\log\sigma\left(r_\phi(x,y_w)-r_\phi(x,y_l)\right).
 $$
 
-positions are produced. This counts the spatial patches of CLIP ViT-L/14@336 used by LLaVA-1.5. The encoder's extra CLS position, which aggregates image information, is not one of these 576 patches.
-
-The module’s 2,880-token case is deliberately different from one 672×672 grid. It represents four local 336×336 tiles plus one global thumbnail:
+**Stage 3: policy optimization with PPO (Proximal Policy Optimization).** The current policy samples completions and is optimized against the learned reward while remaining close to the reference:
 
 $$
-5\times576=2880.
+\max_\theta\;
+\mathbb E_{x,\,y\sim\pi_\theta}
+\left[r_\phi(x,y)\right]
+-\beta\,\mathbb E_x\!\left[\mathrm{KL}\!\left(\pi_\theta(\cdot\mid x)\|\pi_{\mathrm{ref}}(\cdot\mid x)\right)\right].
 $$
 
-Tiling preserves local detail by paying for several views of the image.
-
-For a Qwen2-VL-like 1008×1008 input, 14-pixel patches create
+The positive coefficient $\beta$ sets the penalty for departing from the reference, and $\mathbb E_x$ averages over training prompts. Recall the KL definition from M13; the direction used here is
 
 $$
-72\times72=5184
+\mathrm{KL}(\pi_\theta\|\pi_{\mathrm{ref}}\mid x)
+=\sum_y\pi_\theta(y\mid x)\log\frac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}.
 $$
 
-spatial features. A 2×2 spatial merger combines four neighbors into one decoder-facing token:
+The sum runs over complete responses, with the log ratio averaged under the current policy. This is a soft incentive to stay near a fixed reference, not a bound on the size or speed of each update. PPO also modifies the objective relative to the policy that collected the current batch; §9 treats that mechanism separately. Neither mechanism repairs an incorrect reward or guarantees safe behaviour.
+
+**The critic** predicts expected future reward from the current context. Comparing the observed return with this prediction helps estimate advantage: how much better the action turned out than expected. The reward model has a different role: it scores a response using learned preferences.
+
+The canonical pipeline contains four logical roles: policy, reference policy, reward model, and critic/value model. A production implementation may share backbones, shard states, quantize frozen models, or place the roles on separate machines. “Four models” is therefore an algorithmic description, not a claim that four independent full checkpoints must remain resident on every accelerator.
+
+![VIZ m14/02 — the classical RLHF contract](assets/modern-llms/en/module-14/m14_02_rlhf.svg)
+
+## 5. Worked example A: invert a Bradley–Terry model
+
+Write $\Delta r=r_w-r_l$. Then
 
 $$
-5184/4=1296.
+P(y_w\succ y_l)=\sigma(\Delta r).
 $$
 
-This strategy retains high-resolution processing early and compresses the sequence before the expensive language layers.
+| $\Delta r$ | 0.5 | 1.0 | 2.0 | 4.0 |
+|---|---:|---:|---:|---:|
+| $P(y_w\succ y_l)$ | 0.622 | 0.731 | 0.881 | 0.982 |
 
-![VIZ m16/04 — resolution is not enough to predict token count](assets/modern-llms/en/module-14/m16_04_patch_kv.png)
-*Three explicitly different visual-processing contracts and their KV cost under one teaching GQA geometry.*
+A gap of 1 corresponds to roughly a 73% preference probability under this model. A gap of 2 raises it to about 88%. The units are not universal; the scale is set by the model and its regularization.
 
-The examples show why raw input resolution is not a sufficient passport field. A processor may preserve aspect ratio, round to a valid grid, enforce pixel limits, add overlapping tiles, include a thumbnail, use temporal patches, or insert separator tokens.
-
-Patch arithmetic is therefore a first sanity check. The authoritative count comes from the actual processor and model configuration. Once that count is known, we can ask where the positions live and how much state they create.
-
-## 7. Worked example B: when images create ordinary decoder KV
-
-Consider a language decoder with 32 layers, 8 KV heads, head dimension 128, and bf16 keys and values. One cached position costs
+The equation can also be inverted. If one completion wins 75% of comparisons, the corresponding logit is
 
 $$
-b_{KV}=2\cdot32\cdot8\cdot128\cdot2
-=131072\ \text{bytes}
-=128\ \text{KiB}.
+\Delta r
+=\log\frac{0.75}{0.25}
+=\log 3
+\approx1.099.
 $$
 
-If projected visual features enter ordinary decoder self-attention, image positions use the same accounting as text.
+This does not reveal an objective human utility. It maps an empirical win rate into the coordinate system of a logistic comparison model. That coordinate system will reappear in DPO, where $\beta$ controls the scale of policy log-ratios.
 
-| Representation | Visual positions | KV per image |
-|---|---:|---:|
-| LLaVA-336 | 576 | 72 MiB |
-| four local tiles + thumbnail | 2,880 | 360 MiB |
-| 1008 px with 2×2 merger | 1,296 | 162 MiB |
+## 6. DPO: eliminate the explicit reward model
 
-The table connects processor design to serving cost. The tiled input carries five times the KV of the 336 case. The merged case exposes the encoder to a higher-resolution input and uses less than half the tiled scenario's decoder KV. Whether useful detail survives learned compression is an empirical question.
-
-Suppose 15 GiB of an 80-GiB device is occupied by weights and, unrealistically, every remaining byte is available for image KV. The resulting upper bounds are 924, 184, and 410 images.
-
-They are intentionally optimistic. Real serving also needs text context, output tokens, activations, allocator reserve, temporary workspaces, and memory for the vision encoder.
-
-More importantly, the formula is architectural. It applies when visual positions pass through decoder self-attention and their K/V is retained in the stated format. Resampling can reduce the number of positions without changing their per-position KV formula; the resampler itself adds separate work. Pruning may likewise change which positions remain. A different state layout, such as cross-attention or recurrent memory, requires its own accounting.
-
-The connector therefore determines more than compatibility. It decides **where the cost of visual memory is paid**.
-
-## 8. Connectors control where computation happens
-
-Sections 6 and 7 exposed the cost of preserving visual detail: more patches can become more decoder positions and more KV state. The connector decides whether that cost remains in the LLM sequence, is compressed first, or is moved into a separate memory path.
-
-![VIZ m16/05 — three connector contracts](assets/modern-llms/en/module-14/m16_05_adapters.svg)
-*MLP projection, Q-Former/resampling, and gated cross-attention change different resources: width, position count, or the location of visual state.*
-
-### MLP projection: adapt width, keep the positions
-
-LLaVA-1.5 uses a two-layer MLP between CLIP features and the LLM width. For 1024→4096→4096 with biases,
+**DPO (Direct Preference Optimization)** starts from the KL-regularized objective in §4. For that objective, the optimal policy has the form
 
 $$
-1024\cdot4096+4096
-+4096\cdot4096+4096
-=20\,979\,712
+\pi^*(y\mid x)
+\propto
+\pi_{\mathrm{ref}}(y\mid x)
+\exp\!\left(\frac{r(x,y)}{\beta}\right).
 $$
 
-parameters are trainable in the projector. The MLP changes feature space, not sequence length: 576 image patches normally remain 576 visual positions in the decoder.
-
-Keeping position count does not guarantee preserving all information: the MLP is a learned transformation, not necessarily an invertible map. It transfers the full position count into the language stack.
-
-### Q-Former or resampler: purchase compression before the decoder
-
-BLIP-2 uses learned queries that cross-attend to a larger visual feature set. The number of output queries becomes an explicit information bottleneck. A high-resolution image can still produce a short decoder sequence.
-
-The saved decoder cost is paid in two ways: extra connector computation and the risk that a small query set omits a fine detail needed by the task. Query count is therefore both a systems parameter and an assumption about evidence complexity.
-
-### Gated cross-attention: keep visual state beside the text stream
-
-Flamingo leaves visual features in a separate memory and inserts gated cross-attention into the language stack. This avoids treating every image feature as an ordinary text position, but introduces a second state path and modifies the decoder architecture.
-
-Now consider the module’s LLaVA-style training scenario:
-
-- 558K alignment pairs at an assumed 600 tokens each;
-- 665K multimodal instruction examples at an assumed 1,000 tokens each.
-
-In $C\approx6ND$, $N$ is the language-model parameter count, $D$ is the number of processed positions, and $C$ is an approximate operation count. Model FLOP utilization (MFU) supplies the assumed useful fraction of peak throughput: $0.4\cdot990=396$ TFLOP/s here. Encoder work and quadratic attention operations are not separately included.
-
-For one common accounting convention, apply $6ND$ to a 7B model in both phases and divide by 990 TFLOP/s at MFU 0.4. The two estimates round to 9.864 and 19.592 hours. Adding before rounding gives a total of 29.455 H100-equivalent hours.
-
-That number is a **dense-equivalent teaching scenario**, not measured LLaVA wall time. Frozen LLM weights need neither weight gradients nor optimizer state during alignment, but backward computation through input activations is still required to train the projector. Wrapping the whole LLM in `no_grad()` would sever that path. Counting only the projector's 21 million parameters therefore also understates the work. Conversely, real training includes data loading, communication, and imperfect utilization.
-
-The calculation answers a narrower architectural question: why can attaching trained components be orders of magnitude cheaper than multimodal pretraining from scratch?
-
-A connector still cannot recover detail discarded by image preprocessing. As soon as OCR, diagrams, or fine-grained documents matter, the design pressure moves upstream to resolution. The next section follows that pressure and shows how input dimensions and processing policy make request cost variable.
-
-## 9. Dynamic resolution makes compute depend on image geometry
-
-A fixed square resize works well when the relevant object is large. It is destructive when the evidence is tiny text in a screenshot or a dense technical diagram. A larger resolution can preserve more of that detail, but also spends more resources on inputs that do not benefit from it.
-
-Qwen2-VL’s **Naive Dynamic Resolution** makes the processor respond to the actual image dimensions within a bounded range. Images approximately retain aspect ratio subject to grid rounding and become sequences of different lengths. The rule uses geometry and pixel limits, not a semantic judgment that one image is simpler than another. Spatial merging then reduces the number of positions before the language decoder.
-
-Variable length solves one problem and exposes another: positions must retain their meaning when text, image regions, and video frames are interleaved. **M-RoPE (Multimodal Rotary Position Embedding)** assigns temporal, vertical, and horizontal coordinates rather than treating the sequence as one undifferentiated line. Text advances coherently across the axes; an image occupies a two-dimensional grid; video adds time.
-
-Qwen2.5-VL strengthened explicit temporal grounding. Qwen3-VL combines improved interleaved M-RoPE, DeepStack injection of multi-level ViT features, and text-aligned timestamps within a native 256K interleaved context. The architectural sequence is causal: geometry-dependent processing changes sequence length; interleaving mixes evidence sources; positional encoding must preserve their addresses.
-
-InternVL follows another route to detail. It tiles large images and often adds a global thumbnail. The thumbnail preserves scene-level context while local tiles recover fine structure. The InternVL3.5-Flash variant adds ViR: a learned router selects 256 or 64 decoder positions from each tile's 1,024 encoder positions. This is content-dependent compression. Decoupled deployment of the vision and language components is a separate systems technique in the family.
-
-Both approaches make compute a property of the input, not merely the number of images. Capacity planning now needs distributions of post-processor area, tile count, visual sequence length, and packing efficiency.
-
-This also prepares the next question. A semantic encoder can discard nuisance detail when the output is text. A model that must generate or edit images may need exactly that discarded detail. “Unified” modeling begins where those objectives collide.
-
-## 10. Unified output reveals a conflict between semantics and fidelity
-
-![VIZ m16/06 — three meanings of unified](assets/modern-llms/en/module-14/m16_06_era3a.svg)
-*Chameleon, Janus, and InternVL-U share different things: discrete tokens, a Transformer backbone, or a language-centered reasoning context connected to an image-generation head.*
-
-Image understanding rewards invariance. To answer “what is in the scene?”, the representation should ignore many pixel-level changes. Image generation and editing reward the opposite property: texture, layout, and high-frequency details must remain recoverable.
-
-The term **unified** therefore needs a qualifier. Are tokens unified? Is the Transformer shared? Is training joint? Or is only the product interface unified?
-
-### Chameleon: one discrete stream
-
-Chameleon tokenizes images with a visual codec and trains one Transformer over mixed text and image token sequences. It is the most literal early-fusion design: the research model can continue in either modality. Meta's released Chameleon checkpoints expose text output; the paper's image-generation capability is not a capability of those released checkpoints.
-
-The simplicity concentrates the conflict in the codec. Strong compression helps sequence length and semantic abstraction, while high-fidelity generation needs detailed visual codes. One representation must serve both.
-
-### Janus: share sequence modeling, split visual encoders
-
-Janus uses separate visual paths for understanding and generation while keeping a shared Transformer. The understanding encoder can emphasize semantic invariance; the generative path can preserve the information required by an image decoder.
-
-Unification has moved upward—from the image representation to the reasoning backbone and shared context.
-
-### InternVL-U: reason jointly, render with a specialized head
-
-InternVL-U lets a multimodal LLM handle understanding and reasoning, then conditions a Multimodal Diffusion Transformer (MMDiT) head for image generation and editing. The system is unified at the level of task interpretation and context, not at the level of the pixel-generation mechanism.
-
-The examples lead to a durable principle:
-
-> **A unified user contract does not require one internal representation.**
-
-The more strongly modalities differ in semantic abstraction, precision, and output rate, the more useful specialized paths can become. Video adds another dimension to this conflict: before preserving detail, the system must decide which moments deserve representation at all.
-
-## 11. Worked example E: video is an information-selection problem
-
-An image has a spatial price. Video multiplies it by duration. Treating every frame as another image quickly turns context length into the dominant constraint.
-
-A two-hour video sampled at one frame per second contains 7,200 frames. At 576 positions per frame, naive representation requires
+The proportional weights become probabilities after division by the normalizing sum
 
 $$
-7{,}200\cdot576=4{,}147{,}200
+Z(x)=\sum_y\pi_{\mathrm{ref}}(y\mid x)\exp\!\left(\frac{r(x,y)}{\beta}\right).
 $$
 
-visual tokens—more than sixteen times a 256K context before text is included.
-
-Reserve 4,000 positions for the prompt and answer. The remaining visual budget is 252,000 tokens.
-
-Without merging,
+Assume this sum is finite and the reference assigns positive probability to the responses under consideration. Rearranging then gives
 
 $$
-\left\lfloor\frac{252000}{576}\right\rfloor=437
+r(x,y)
+=\beta\log\frac{\pi^*(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}
++\beta\log Z(x).
 $$
 
-frames fit, or one frame every 16.48 seconds.
-
-At 144 tokens per frame after a 2×2 merger,
+The partition term depends on the prompt but not on the completion. It cancels in a pairwise reward difference. Substituting into Bradley–Terry yields
 
 $$
-\left\lfloor\frac{252000}{144}\right\rfloor=1750
+\mathcal L_{\mathrm{DPO}}
+=-\log\sigma\!\left(
+\beta\left[
+\log\frac{\pi_\theta(y_w\mid x)}{\pi_{\mathrm{ref}}(y_w\mid x)}
+-
+\log\frac{\pi_\theta(y_l\mid x)}{\pi_{\mathrm{ref}}(y_l\mid x)}
+\right]
+\right).
 $$
 
-frames fit, or one every 4.11 seconds.
+The quantity
 
-Here K means 1,000. The quoted 16.48 and 4.11 seconds are inverse sampling densities, $7200/n$. The notebook includes both endpoints of the 7,200-frame sequence, so mean spacing between retained timestamps is $7199/(n-1)$: 16.5115 and 4.1161 seconds. Rounded indices produce unequal neighboring gaps. Density and timestamp spacing should not be reported as the same quantity.
+$$
+\hat r_\theta(x,y)
+=\beta\log\frac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}
+$$
 
-![VIZ m16/07 — context length forces selection](assets/modern-llms/en/module-14/m16_07_video.png)
-*The scenario shows why video systems need temporal compression. It is not a reconstruction of any particular processor.*
+is commonly called an **implicit reward**. The phrase is useful as long as its scope is remembered: DPO has not produced a standalone reward function that can score arbitrary model outputs independently. The reward is defined through two policies under the assumed preference model.
 
-At 128 KiB per decoder position, the 252K visual budget alone creates 30.7617 GiB of KV; the full 256K context creates 31.25 GiB in the module’s 8B GQA geometry.
+The original DPO recipe trains on fixed pairs without generating at each step. Precompute the reference log probabilities for those pairs and the reference checkpoint need not remain in the optimization process. Newly collected pairs require new reference values; changes to tokenization or the reference policy invalidate the corresponding cache. Refreshing the dataset therefore adds bookkeeping and scoring work rather than making caching impossible.
 
-Whole frames do not necessarily fill the allocation. With 437 frames, actual visual occupancy is $437\cdot576=251{,}712$ positions or 30.7266 GiB. Adding the full text reserve gives 255,712 positions and 31.2148 GiB, leaving 288 positions unused by frames. At 144 positions per frame, 1,750 frames fill the visual allocation exactly. Reserving future output capacity does not mean its KV has already been materialized.
+The implicit score can be evaluated on a new answer wherever both policies assign positive probability. It requires both policies, however; it is not an independently trained judge. A positive implicit reward gap describes ordering relative to the reference and does not establish answer quality beyond the comparisons used in training.
 
-The real question is not merely whether the context is large enough. It is which events deserve representation. Uniform sparse sampling can miss a short but critical event. Dense sampling preserves it while displacing other evidence. Practical systems therefore combine variable frame rate, temporal patching, near-duplicate removal, key-event selection, local temporal attention, hierarchical summaries, or external memory.
+For a completion, $\log\pi_\theta(y\mid x)$ is the sum of $\log\pi_\theta(y_t\mid x,y_{<t})$ over its target tokens. As in M13, align the preceding-position logits with each target exactly once, then exclude prompt and padding positions. Both policies must use the same dialogue template, tokenization and end-of-answer convention. Otherwise their difference also measures a mismatch in representation.
 
-A context-window number does not tell us what survived the selection policy. The Qwen3.5-Omni report, for example, states more than ten hours of audio but 400 seconds of 720p video at one frame per second. Different modalities run at different effective token rates even within one system.
+![VIZ m14/03 — direct optimization on preference pairs](assets/modern-llms/en/module-14/m14_03_dpo.svg)
 
-Video therefore introduces an **evidence-selection obligation**. Images ask how much detail to preserve; video first asks which moments should receive tokens at all. Streaming speech adds a second clock: the signal keeps arriving while output audio advances at its own rate.
+## 7. Worked example B: read the DPO margin carefully
 
-## 12. Thinker–Talker: coordinating two clocks
+For pair I, the preferred response has policy and reference log probabilities $-12.0$ and $-13.0$, so its log-ratio is $+1.0$. The rejected response has $-11.5$ and $-10.8$, giving a log-ratio of $-0.7$.
 
-![VIZ m16/08 — one conversation, multiple clocks](assets/modern-llms/en/module-14/m16_08_thinker_talker.svg)
-*The Thinker integrates multimodal evidence and generates language-level state; the Talker emits streaming codec tokens. TMRoPE locates input events, while ARIA coordinates output rates.*
+With $\beta=0.1$,
 
-Video introduced time on the input side. Live speech creates a second timing problem: text tokens, audio-codec tokens, and waveform packets are produced at different and variable rates. An omni system must know both **when evidence occurred** and **how to coordinate its outputs**.
+$$
+z=0.1\,[1.0-(-0.7)]=0.170.
+$$
 
-Before following the two modules, distinguish the objects they exchange. A **waveform** is a sequence of amplitude samples. An **acoustic frame** is a short time window from which spectral features can be computed. Its feature vector is continuous, not a vocabulary ID. An encoder may combine several frames before passing a lower-rate sequence to the language module.
+The pair loss and the derivative with respect to $z$ are
 
-A **neural audio codec** provides a route back to sound. Its encoder produces vectors; a vector quantizer replaces them with indices into a **codebook**, a learned table of representative vectors. Those indices are discrete audio codes. The decoder uses the selected vectors to reconstruct an approximate waveform. Codebook entries need not correspond to words or phonemes, and one temporal frame may carry several codes. Section 15 counts feature positions and codec codes separately.
+$$
+\mathcal L=-\log\sigma(0.170)=0.6118,
+\qquad
+\left|\frac{\partial\mathcal L}{\partial z}\right|
+=\sigma(-z)=0.4576.
+$$
 
-Qwen2.5-Omni offers a clear division of labor.
+For pair II, keep the policy values and use reference log probabilities $(-12.8,-11.65)$ for the preferred and rejected answers. The log ratios are $0.8$ and $0.15$, a gap of $0.65$. Thus $z=0.065$ and the derivative magnitude is 0.4838. At the decision boundary $z=0$, the magnitude is 0.5; for a misordered pair with $z<0$, it exceeds 0.5 and approaches 1 as $z$ becomes very negative. A near-boundary pair therefore pulls harder than an already well-ordered pair, while a strongly misordered pair receives an even larger local weight.
 
-The **Thinker** consumes text, images, video, and audio and produces text tokens and hidden representations. Its visual and audio encoders can process blocks for streaming input. **TMRoPE (Time-aligned Multimodal RoPE)** addresses the input clock by assigning compatible temporal coordinates to audio and video while preserving visual spatial coordinates.
+If pair I is evaluated with $\beta=0.5$, then $z=0.85$, the loss falls to 0.356, and $\sigma(-z)$ becomes 0.299. This number alone does not say that training has become weaker. The gradient with respect to model parameters also carries the factor $\beta$, and $\beta$ changes the scale at which policy movement is judged relative to the reference. In practice it should be tuned with KL drift, response quality, and the distribution of pair margins in view.
 
-The **Talker** addresses output. It consumes Thinker representations and autoregressively produces discrete audio-codec tokens. A sliding-window Diffusion Transformer (DiT) reconstructs waveform chunks without waiting for the entire response, reducing time to first audio.
+![VIZ m14/04 — one sigmoid, two interpretations](assets/modern-llms/en/module-14/m14_04_bt_dpo.png)
 
-Qwen3.5-Omni retains the Thinker–Talker split, scales both components with Hybrid-Attention MoE, and adds **ARIA (Adaptive Rate Interleave Alignment)**. ARIA is not another name for temporal position encoding. It coordinates text and speech streams whose tokenizers advance at different and changing rates. TMRoPE locates input events; ARIA synchronizes output production.
+## 8. Direct preference losses differ by contract, not branding
 
-Follow the waveform path all the way through the version boundary. Qwen2.5-Omni uses sliding-window diffusion reconstruction. Qwen3.5-Omni instead uses residual vector quantization (RVQ): successive codebooks approximate what earlier books have left unexplained. A multi-token prediction (MTP) module predicts the residual codes, and a causal Code2Wav convolutional network reconstructs the waveform. It also supplements temporal position encoding with explicit timestamp strings. A shared Thinker–Talker name does not make those implementations identical.
+The family is easier to navigate if every method is described by the data it expects, the anchor it uses, and the margin it tries to create.
 
-The architecture is end to end without being monolithic. Joint training and one conversational interface can coexist with specialized modules and separate clocks.
+### IPO: target a finite gap
 
-That design determines what must be measured. Voice interaction needs more than one latency number:
+**Identity Preference Optimization (IPO)** is derived as a special case of the broader $\Psi$PO framework. It replaces the unbounded logistic pressure of DPO with an objective that targets a finite preference gap. That can be useful when labels are noisy or many pairs are genuinely close.
 
-- semantic answer quality;
-- time to first audio packet;
-- real-time factor $RTF=t_{\mathrm{compute}}/t_{\mathrm{audio}}$: below one means generation is faster than playback;
-- streaming stability and prosody;
-- interruption latency and recovery;
-- audio–video synchronization;
-- voice similarity where cloning is supported.
+The finite target is an inductive bias, not a free correction. A poor target can underfit strong preferences or encode the wrong calibration.
 
-Sections 13 and 14 now freeze the minimal mechanics—patch geometry, KV cost, and frame capacity—before we return to audio as a general temporal modality and compare public architectures.
+### KTO: learn from desirable and undesirable examples
 
-## 13. Code level 1: geometry before frameworks
+**Kahneman–Tversky Optimization (KTO)** removes the requirement that every label come as a pair. An example is marked desirable or undesirable and evaluated relative to a reference point.
 
-The functions below make three assumptions explicit: divisibility of image dimensions, decoder-KV geometry, and integer frame capacity.
+A single-answer rating can be easier to collect because no alternative needs to be shown. What it omits is the identity of a comparison response. Neither one binary rating nor one binary pairwise choice directly specifies preference strength or a reason; those require additional annotations or explanations. The usefulness of pointwise feedback depends on negative-example quality, class balance and the reference point.
 
-```python
-"""Exact visual geometry and decoder-KV accounting; no implicit resize."""
-from dataclasses import dataclass
-from numbers import Integral
+### SimPO: a reference-free sequence reward
 
-def positive_count(value):
-    if isinstance(value, bool) or not isinstance(value, Integral) or value <= 0:
-        raise ValueError("expected a positive integer")
-    return int(value)
+**Simple Preference Optimization (SimPO)** uses average sequence log probability as its implicit reward and adds a target margin. Length normalization replaces the sum of token log probabilities with their average, while the absence of a separate reference model reduces memory and compute.
 
-@dataclass(frozen=True)
-class PatchLayout:
-    grid_h: int
-    grid_w: int
-    merge: int
-    visual_tokens: int
+Length normalization changes the incentive; it does not guarantee that response length will be neutral under every dataset and evaluation protocol.
 
-def patch_layout(height, width, *, patch=14, merge=1):
-    height, width, patch, merge = map(positive_count, (height, width, patch, merge))
-    if height % patch or width % patch:
-        raise ValueError("image dimensions must be divisible by patch")
-    gh, gw = height // patch, width // patch
-    if gh % merge or gw % merge:
-        raise ValueError("patch grid must be divisible by merge on both axes")
-    return PatchLayout(gh, gw, merge, (gh // merge) * (gw // merge))
+Write $\bar\ell_\theta(y)=\log\pi_\theta(y\mid x)/|y|$ for a completion's mean token log probability. A SimPO pair then contributes $-\log\sigma(\beta[\bar\ell_\theta(y_w)-\bar\ell_\theta(y_l)]-\gamma)$, where $\gamma$ specifies the target margin. Ordinary autoregressive sampling follows the product of token probabilities; it does not rank complete answers by this average. Length normalization is therefore an objective choice whose effect must be checked on generated lengths and quality.
 
-def kv_mib(tokens, *, layers=32, kv_heads=8, head_dim=128, bytes_per_value=2):
-    tokens, layers, kv_heads, head_dim, bytes_per_value = map(
-        positive_count, (tokens, layers, kv_heads, head_dim, bytes_per_value))
-    return tokens * 2 * layers * kv_heads * head_dim * bytes_per_value / 2**20
+### ORPO: preference alignment inside instruction tuning
 
-def video_frames_fit(context=256_000, text_reserve=4_000, tokens_per_frame=576):
-    context, tokens_per_frame = map(positive_count, (context, tokens_per_frame))
-    if (isinstance(text_reserve, bool) or not isinstance(text_reserve, Integral)
-            or not 0 <= text_reserve < context):
-        raise ValueError("text_reserve must be an integer in [0, context)")
-    return (context - int(text_reserve)) // tokens_per_frame
+**Odds Ratio Preference Optimization (ORPO)** combines the likelihood of the preferred response with an odds-ratio penalty for the rejected response. It is reference-free and is designed as a monolithic instruction-tuning objective rather than a separate alignment stage.
+
+The simplified pipeline comes with tighter coupling. When results deteriorate, the supervised and preference components must be diagnosed together.
+
+DPO remains a strong reproducible baseline. KTO is attractive for pointwise feedback, SimPO for a reference-free setup, ORPO for a single joint stage, and IPO when a finite target gap is a better model of the annotations.
+
+![VIZ m14/05 — a map of direct preference methods](assets/modern-llms/en/module-14/m14_05_dpo_family.svg)
+
+## 9. RLOO and GRPO: construct a baseline from sibling rollouts
+
+Offline pairs cannot follow the policy indefinitely. For verifiable tasks, it is often preferable to sample fresh completions from the current policy and score them immediately.
+
+**REINFORCE Leave-One-Out (RLOO)** samples $G$ completions for one prompt. Completion $i$ uses the mean reward of the other $G-1$ completions as its baseline:
+
+$$
+b_i=\frac{1}{G-1}\sum_{j\ne i}r_j,
+\qquad
+A_i=r_i-b_i.
+$$
+
+Under the usual conditional-independence assumptions, the baseline does not depend on completion $i$ and preserves the expectation of the REINFORCE gradient.
+
+**Group Relative Policy Optimization (GRPO)** instead standardizes rewards with statistics from the entire group:
+
+$$
+A_i=\frac{r_i-\operatorname{mean}(r_{1:G})}
+{\operatorname{std}(r_{1:G})}.
+$$
+
+The advantage is inserted into a PPO-style clipped objective, but no learned value model is required. GRPO is often associated with RLVR, although the reward may also come from a learned judge.
+
+Take the binary reward vector
+
+```text
+[1, 0, 0, 1, 0, 0, 1, 0].
 ```
 
-The lecture values follow directly:
+Its mean is 0.375 and its population standard deviation is 0.4841. Successful completions receive
+
+$$
+A_+=1.291,
+$$
+
+and unsuccessful ones receive
+
+$$
+A_-=-0.775.
+$$
+
+The advantages sum to zero. That is a within-group centering identity, not a proof that the estimator equals the true expected advantage. Because each sample contributes to the statistics used to normalize itself, group-relative methods can introduce difficulty- and length-dependent biases.
+
+A group with identical rewards has zero variance. If rewards are Bernoulli with success probability 0.3 and $G=8$, the probability of an all-success or all-failure group is
+
+$$
+0.3^8+0.7^8=0.0577.
+$$
+
+Such a group contains no relative ranking signal. Skipping it, resampling it, or assigning zero advantages are explicit policy choices; adding epsilon to the denominator only prevents a numerical exception.
+
+Our arithmetic uses the population standard deviation, `ddof=0`. Switching to `ddof=1` multiplies the advantages by $\sqrt{(G-1)/G}$, changing the update scale at the same learning rate. Equal rewards produce zero policy-gradient advantages, but a separate KL penalty can still update the model. Dropping a group also changes the averaging denominator; collecting a replacement costs additional rollouts.
+
+**Turning an advantage into an update.** Freeze the sampling policy $\pi_{\mathrm{old}}$ for a batch of trajectories. It is distinct from $\pi_{\mathrm{ref}}$: the former follows successive rollout batches, whereas the latter supplies a longer-term anchor. For completion token $t$ in answer $i$, define
+$$
+\rho_{i,t}=\frac{\pi_\theta(y_{i,t}\mid x,y_{i,<t})}
+{\pi_{\mathrm{old}}(y_{i,t}\mid x,y_{i,<t})},
+\qquad
+q_{i,t}=\min\!\left(\rho_{i,t}A_i,\,
+\operatorname{clip}(\rho_{i,t},1-\epsilon_{\mathrm{low}},1+\epsilon_{\mathrm{high}})A_i\right).
+$$
+Maximize an average of $q$, or minimize its negative, treating the old probabilities and advantages as constants. For positive advantage, increasing the ratio past its upper threshold stops improving this term; negative advantage produces the corresponding limit on decreasing the ratio. Clipping shapes the objective. It does not guarantee that every probability ratio after an optimizer step stays inside the interval.
+
+The denominator is part of the algorithm. Original GRPO averages tokens within each response, then responses: $G^{-1}\sum_i |y_i|^{-1}\sum_t q_{i,t}$. A token mean divides $\sum_{i,t}q_{i,t}$ by $\sum_i|y_i|$; the notebook's numerical example uses this normalization, as in that component of DAPO. If responses have lengths 1 and 3 and constant per-token values 2 and 0, these averages are 1 and 0.5 respectively. Padding enters neither sum. If KL regularization is used, specify its coefficient and normalization separately.
+
+![VIZ m14/06 — group-relative advantages](assets/modern-llms/en/module-14/m14_06_grpo.svg)
+
+## 10. Worked example D: a deliberately simplified memory model
+
+Assume an 8.03B-parameter model. Use 16 bytes per parameter for the teaching Adam stack: bf16 weights (2), bf16 gradients (2), an fp32 master copy (4), and two fp32 Adam states (4 + 4). A frozen bf16 copy costs 2 bytes per parameter. Other precision and optimizer choices change this accounting.
+
+A trainable model then occupies
+
+$$
+\frac{8.03\times10^9\times16}{2^{30}}
+=119.7\ \text{GiB},
+$$
+
+while a frozen copy occupies 14.96 GiB.
+
+For a transparent PPO teaching configuration, count two trainable full-sized networks—policy and critic—and two frozen ones—reference and reward model:
+
+$$
+\frac{36\cdot8.03\cdot10^9}{2^{30}}\approx269.2\ \text{GiB}.
+$$
+
+DPO with a resident reference policy uses
+
+$$
+\frac{18\cdot8.03\cdot10^9}{2^{30}}\approx134.6\ \text{GiB}.
+$$
+
+The ratio is exactly 2.00 under these assumptions, and the critic accounts for roughly 44% of the PPO total.
+
+This is an anatomy diagram, not a cluster quote. It omits activations, rollout KV state, temporary buffers, parameter sharding, shared backbones, PEFT, optimizer variants, and distributed placement. A GRPO system may still need a reference model for KL, a sampling snapshot, and dedicated rollout workers.
+
+For a fixed DPO dataset, cached reference log probabilities remove the frozen checkpoint from the optimizer phase. The persistent model-state budget then approaches the SFT case. That is a property of the offline workflow, not of every possible DPO implementation.
+
+## 11. Worked example E: rollout generation can dwarf the update
+
+Consider one illustrative RLVR batch:
+
+- 256 prompts;
+- 8 completions per prompt;
+- 4,000 generated tokens per completion.
+
+The rollout volume is
+
+$$
+256\times8\times4000=8{,}192{,}000
+$$
+
+tokens.
+
+At 209.4 tokens/s on each of eight accelerators, generation takes
+
+$$
+\frac{8{,}192{,}000}{8\times209.4}
+=4890.2\ \text{s}
+=81.5\ \text{min}.
+$$
+
+Estimate one training pass with $6ND$ for an 8.03B model. At 990 TFLOP/s per accelerator and 40% MFU across eight accelerators, the estimate is $6\cdot8.03\cdot10^9\cdot8{,}192{,}000/(8\cdot990\cdot10^{12}\cdot0.4\cdot60)\approx2.076444$ minutes.
+
+Compute the ratio before rounding either time; displaying six decimal places gives
+
+$$
+81.502706/2.076444\approx39.2511.
+$$
+
+Nothing in GRPO guarantees this number. It comes from the chosen completion length, throughput, model size, and utilization. What the example exposes is the possibility that autoregressive decode—not backpropagation—sets the wall-clock scale of RL.
+
+That observation motivates four systems techniques:
+
+1. faster and cheaper rollout inference;
+2. adaptive allocation of rollout count and response length;
+3. overlap between rollout generation and optimization;
+4. explicit control of policy staleness in asynchronous training.
+
+verl and NeMo RL both expose separated or asynchronous rollout/training architectures. The gain is not free: trajectories produced by older parameters become increasingly off-policy as they wait in queues.
+
+Here 209.4 tokens/s is an assumed aggregate per-device rate at a chosen batching setup, not a promised per-user rate. The calculation counts generated tokens and one training pass over them. Prompt processing, prefill, reward and reference evaluation, extra optimization epochs and communication add work. Account for these separately before using the estimate to size a system.
+
+![VIZ m14/07 — the economics of group-based RL](assets/modern-llms/en/module-14/m14_07_grpo_memory.png)
+
+## 12. What later GRPO variants are actually fixing
+
+GRPO's adoption exposed several independent failure modes: groups with no relative signal, collapsing exploration, response-length bias, prompt-difficulty bias, and expensive sampling. Later methods should be read as targeted repairs, not as a single leaderboard sequence.
+
+### DAPO: a complete large-scale recipe
+
+**Decoupled Clip and Dynamic sAmpling Policy Optimization (DAPO)** combines four mechanisms.
+
+1. **Clip-Higher** sets a wider upper than lower ratio threshold, supporting exploration.
+2. **Dynamic Sampling** discards equal-reward groups and continues collecting until enough informative groups fill the batch.
+3. **Token-Level Policy Gradient Loss** changes the averaging unit so long and short completions contribute differently from response-level averaging.
+4. **Overlong Reward Shaping** smooths the reward near the truncation boundary.
+
+The published recipe also sets the explicit KL penalty to zero. That is an empirical system choice, not a general theorem that reference regularization is unnecessary.
+
+### Dr. GRPO: inspect the normalization itself
+
+**Understanding R1-Zero-Like Training** argues that response-length and group-standard-deviation normalization can introduce optimization bias. Its Dr. GRPO variant removes parts of that normalization and improves token efficiency in the authors' experiments.
+
+The paper also makes a broader methodological point: the base checkpoint already determines what behaviours RL can amplify. An “aha moment” observed during training should not automatically be interpreted as a capability created from nothing.
+
+### 2025–2026: group-relative advantage under theoretical scrutiny
+
+Recent analyses study systematic bias with respect to prompt difficulty and reinterpret GRPO as a contrastive objective. These results do not make GRPO useless. They replace an overly simple story—“the group mean is a free critic”—with a more accurate one: group-relative normalization is a practical estimator with identifiable inductive biases.
+
+A serious implementation must document at least six choices:
+
+- reward definition;
+- treatment of zero-variance groups;
+- averaging unit: prompt, completion, or token;
+- KL placement and coefficient;
+- freshness of rollout data;
+- evolution of prompt difficulty and completion length.
+
+A small exact example exposes one source of bias. Let $a$ be Bernoulli with $p=\sigma(\theta)$ and reward $a$. The true reward gradient is $p(1-p)$. Subtracting the full-group mean, which includes the sample itself, gives expectation $(G-1)p(1-p)/G$; a leave-one-out baseline preserves $p(1-p)$. At $p=0.3$ and $G=8$, these are 0.18375 and 0.21. This calculation does not divide by standard deviation; doing so introduces another dependence on the sampled group. The notebook enumerates all $2^8$ groups before comparing the result with simulation.
+
+Dr. GRPO uses a constant token denominator $G L_{\max}$ and removes group-standard-deviation reward scaling. A constant denominator differs from both a response mean and a mean over the actual number of generated tokens. Consequently, “GRPO” alone is not enough information to reproduce a training run.
+
+![VIZ m14/08 — a taxonomy of GRPO repairs](assets/modern-llms/en/module-14/m14_08_grpo_line.svg)
+
+## 13. Level-one code: the numerical core
+
+The following functions reproduce the module's frozen examples. They are intentionally smaller than a trainer: the goal is to expose the contract of each calculation.
 
 ```python
-assert patch_layout(336, 336).visual_tokens == 576
-assert 5 * patch_layout(336, 336).visual_tokens == 2880
-assert patch_layout(1008, 1008, merge=2).visual_tokens == 1296
-assert kv_mib(2880) == 360.0
-assert video_frames_fit() == 437
+import math
+import numpy as np
+
+def stable_sigmoid(x):
+    """Numerically stable sigmoid."""
+    x = np.asarray(x, dtype=np.float64)
+    return np.exp(-np.logaddexp(0.0, -x))
+
+def dpo_loss(policy_lp_w, policy_lp_l, ref_lp_w, ref_lp_l, beta=0.1):
+    """DPO from completion-token log-probability sums."""
+    if not math.isfinite(beta) or beta <= 0:
+        raise ValueError("beta must be finite and positive")
+
+    pw, pl, rw, rl = np.broadcast_arrays(
+        np.asarray(policy_lp_w, dtype=float),
+        np.asarray(policy_lp_l, dtype=float),
+        np.asarray(ref_lp_w, dtype=float),
+        np.asarray(ref_lp_l, dtype=float),
+    )
+    if not all(np.all(np.isfinite(v)) for v in (pw, pl, rw, rl)):
+        raise ValueError("log probabilities must be finite")
+
+    z = beta * ((pw - rw) - (pl - rl))
+    loss = np.logaddexp(0.0, -z)
+    local_slope = stable_sigmoid(-z)
+    return loss, local_slope, z > 0
+
+def grpo_advantages(rewards, *, on_degenerate="raise"):
+    """Population normalization with explicit zero-variance handling."""
+    r = np.asarray(rewards, dtype=np.float64)
+    if r.ndim != 1 or r.size < 2 or not np.all(np.isfinite(r)):
+        raise ValueError("rewards must be a finite one-dimensional group of size >= 2")
+
+    if on_degenerate not in ("raise", "zeros"):
+        raise ValueError("on_degenerate must be raise or zeros")
+    std = float(r.std(ddof=0))
+    if std == 0.0:
+        if on_degenerate == "zeros":
+            return np.zeros_like(r)
+        raise ValueError("the group contains no relative signal")
+    return (r - r.mean()) / std
+
+def stage_memory_gib(n_params, stack):
+    """Teaching estimate of persistent model states, excluding activations."""
+    if not math.isfinite(n_params) or n_params <= 0:
+        raise ValueError("n_params must be finite and positive")
+    bytes_per_parameter = {"train": 16, "frozen_bf16": 2}
+    return sum(bytes_per_parameter[kind] * n_params for kind in stack) / 2**30
+
+ppo = stage_memory_gib(
+    8.03e9,
+    ["train", "train", "frozen_bf16", "frozen_bf16"],
+)
+dpo = stage_memory_gib(8.03e9, ["train", "frozen_bf16"])
 ```
 
-A real processor may explicitly resize or pad an image. Padded regions must be accounted for, but not every processor exposes a separate pixel mask; follow the actual interface contract. Silent integer truncation is not a preprocessing policy.
+`np.logaddexp(0, -z)` is the stable form of $-\log\sigma(z)$. `local_slope` is the derivative magnitude with respect to the scalar margin, not the norm of the parameter gradient. `grpo_advantages` forces the caller to decide what a zero-variance group means. `stage_memory_gib` states its limitation in the name and docstring: activations and rollout state are outside the model.
 
-## 15. Audio is a continuous evidence stream
+## 15. RLVR still obeys Goodhart's law
 
-Audio makes the representation problem more demanding than a bounded image. A minute of speech creates a dense sequence of acoustic frames even when the transcript contains few words. The system must decide which properties of the waveform survive compression and which decoder will reconstruct the response.
+**Reinforcement Learning with Verifiable Rewards (RLVR)** replaces a subjective reward proxy with a programmatic checker. Unit tests, exact-answer matching, proof verifiers, and environment success conditions can provide unusually clean supervision.
 
-### Front end and encoder: define the evidence
+“Verifiable” does not mean “unhackable.” The policy optimizes the checker that exists, not the intention behind it.
 
-A waveform becomes spectral features, learned representations, or discrete codec tokens. An automatic speech recognition (ASR) encoder such as Whisper prioritizes linguistic content. An omni system may also need prosody, environmental sounds, music, speaker attributes, and alignment with video.
+- An incomplete test suite may reward a brittle program.
+- A parser may accept a special output format that bypasses the intended reasoning.
+- End-result reward cannot distinguish a robust solution from a lucky guess.
+- A hard length cutoff may create incentives to stop prematurely or fill the entire budget.
+- Once easy prompts become all-correct, they stop contributing relative signal to group-based methods.
 
-The encoder therefore determines whether the language model receives only “what was said” or a richer description of how and when it was said.
+A mature RLVR dashboard therefore contains more than mean reward. It tracks completion length, zero-variance-group rate, policy entropy, verifier failures, held-out tests, and sampled trajectories reviewed by humans.
 
-### Temporal compression: buy positions per second
+The boundary between SFT and RL is porous. High-quality rollouts may be recycled into a new demonstration mixture. Conversely, an SFT checkpoint becomes the starting policy for online RL. Strong post-training recipes alternate between these signals rather than treating them as mutually exclusive schools.
 
-Raw acoustic frames are too dense for direct LLM attention. Strided convolutions, pooling, or a neural codec reduce the rate. The trade-off mirrors spatial merging in vision: fewer positions lower cost but may discard phonetic detail, emotion, or timing precision.
+## 16. Three open patterns: RLAIF, multi-stage reasoning, and environments
 
-### Worked example F: seconds, frames, positions and codes
+### Constitutional AI and RLAIF
 
-Start with six seconds of mono audio sampled at $f_s=16000$ samples/s. The waveform contains $L=96000$ amplitude samples, not 96,000 language tokens. Our teaching front end starts a 400-sample window every $h=160$ samples: a 25 ms window and a 10 ms hop. Window starts remain inside the signal; incomplete windows are padded on the right. This convention gives
+Constitutional AI uses a written set of principles to scale supervision. In the supervised phase, a model generates an answer, critiques it against a selected principle, and writes a revision; the revised responses become fine-tuning data. In the RL phase, a model judges pairs, a preference model is trained from those AI labels, and the policy is optimized against it. This second stage is commonly called **reinforcement learning from AI feedback (RLAIF)**.
 
-$$
-F=\left\lceil\frac{L}{h}\right\rceil=600.
-$$
+AI feedback reduces the amount of human comparison data required. It does not reduce governance to zero cost. The constitution must be designed, the judge calibrated, systematic biases measured, and self-reinforcing failure modes audited.
 
-Windows overlap, so multiplying their count by their width does not recover the original signal length. A real-input Fourier transform provides 201 frequency components per window. Keeping their magnitudes produces a $600\times201$ feature matrix. This small spectral front end is inspectable; it is not a replica of Whisper's or Qwen's encoder.
+### DeepSeek-R1 as a public multi-stage recipe
 
-Average successive groups of four frame vectors. The result has $\lceil600/4\rceil=150$ positions, each of width 201. For another input length, a final short group is averaged over its existing frames only. Position count and feature width are separate axes. If those positions are projected into the Section 7 decoder, their KV costs $150\cdot128/1024=18.75$ MiB, excluding front-end and projector work.
+DeepSeek-R1 documents four distinct stages:
 
-Now consider a **separate codec scenario**: 75 frames/s and eight codebooks with 1,024 entries each. Six seconds require 450 temporal frames and $450\cdot8=3600$ indices. Ten bits per index give a fixed-width payload of 36,000 bits, or $75\cdot8\cdot10=6000$ bits/s. Headers, side information and entropy coding are outside this calculation; it is not a file-size prediction.
+1. cold-start SFT on a small collection of long reasoning demonstrations;
+2. reasoning-focused RL with verifiable rewards;
+3. rejection sampling followed by another SFT stage;
+4. broader RL covering general helpfulness and safety objectives.
 
-The 3,600 indices do not uniquely determine decoder KV. A system could flatten them into 3,600 sequential positions, combine each frame's eight codes into one representation, or use a separate predictor for some codebooks. EnCodec's implementation explicitly separates batch, codebook and time axes as `[B,K,T]`. That contract illustrates the distinction without prescribing the topology of an arbitrary omni model. [EnCodec encoding and decoding](https://github.com/facebookresearch/encodec/blob/main/encodec/model.py)
+R1-Zero starts the RL stage directly from a base model. It demonstrates that large-scale verifier-guided RL can amplify reasoning behaviours without a preliminary SFT stage, while also reporting readability and language-mixing failures. Later analyses emphasize that the base model already contains much of the structure that RL selects and strengthens.
 
-![VIZ m16/11 — two representations of six seconds of sound](assets/modern-llms/en/module-14/m16_11_audio_units.svg)
-*The teaching spectral front end and a separate multi-codebook scenario. Temporal frames, discrete codes and decoder positions are distinct counts.*
+### Interactive environments
 
-**Second reading: residual vector quantization.** RVQ encodes what earlier codebooks have left unexplained. For input vector $z$, the first book selects $e_1$; the second approximates $z-e_1$, giving reconstruction $e_1+e_2$. With $z=(1.6,-0.6)$, $e_1=(1,0)$ and $e_2=(0.5,-0.5)$, squared error falls from $0.72$ after the first book to $0.02$ after the second. These books are hand-written and each includes zero, so the nearest residual entry cannot do worse than making no correction. An arbitrary set of books does not guarantee this property. The same residual-encoding mechanism appears in the [EnCodec implementation](https://github.com/facebookresearch/encodec/blob/main/encodec/quantization/core_vq.py).
+A single-turn math problem can be represented by a prompt, a completion, and a checker. An agent using a browser, shell, or software tool moves through a sequence of observations and actions. The environment must execute tools, preserve state, return errors, and define success.
 
-Representation size is also distinct from output speed. Suppose a speech decoder creates six seconds of audio in 2.4 seconds: $RTF=2.4/6=0.4$. Its first packet might arrive after 0.18 seconds, a separate latency measure. These are illustrative timings, not measurements made by our spectral example. An average $RTF<1$ does not rule out playback gaps; streaming evaluation must inspect when individual chunks become ready.
+**NeMo Gym** treats an environment as a combination of data, agent harness, tools, and verification logic. **NeMo RL** and **verl** support multi-turn rollouts and separated generation/training systems. This is the operational meaning of environment-native RL: the environment is part of the training specification, not merely a final reward function.
 
-### Semantic reasoning: connect the stream to the task
+When a proprietary model has no complete public post-training recipe, its behaviour cannot fill that evidential gap. Adjustable reasoning effort, hidden chains of thought, or strong tool use do not uniquely identify PPO, DPO, GRPO, distillation, or any particular mixture. Public behaviour should not be presented as evidence for an undisclosed algorithm.
 
-A language-centered module interprets the evidence, answers a question, or plans an action. Temporal coordinates connect audio to video and text. When speech overlaps an event on screen, simple token order is not enough; simultaneous events need compatible time references.
+![VIZ m14/09 — from pairs to environments](assets/modern-llms/en/module-14/m14_09_landscape.svg)
 
-### Speech generation: return a stream, not a sentence
+## 17. How to read a post-training passport
 
-Language-level state is converted into codec tokens and then waveform. A live system must start speaking before the full answer is complete and must stop or recover when the user interrupts. The decoder therefore determines not only voice quality but also streaming delay and full-duplex behavior.
+An algorithm name is not enough to reproduce or evaluate a post-training system.
 
-Qwen2.5-Omni and Qwen3.5-Omni document one such path; Step-Audio 2 provides another public audio-system report. Their latency figures are comparable only under matched language, hardware, buffering, and output contracts.
+### Data and policy distribution
 
-Audio brings the chapter back to its opening framework. A useful model passport must report the representation rate, compression, temporal geometry, memory path, and output decoder—not merely an “audio supported” badge.
+- Are the examples demonstrations, preference pairs, pointwise labels, or online trajectories?
+- Which policy generated the completions: the current actor, an earlier checkpoint, or a stronger teacher?
+- Are trajectories reused, and if so for how long?
+- How are benchmark contamination and train/evaluation overlap controlled?
 
-## 16. Reading the public landscape by design axis
+### Reward contract
 
-![VIZ m16/09 — a source-grounded multimodal landscape](assets/modern-llms/en/module-14/m16_09_landscape.svg)
-*The snapshot compares documented architecture and I/O rather than reconstructing proprietary internals from product behavior.*
+- Is feedback produced by humans, a learned judge, deterministic rules, tests, or an environment?
+- Is reward assigned once per completion or along the trajectory?
+- How are partial success, ambiguity, truncation, and invalid tool calls handled?
+- What evidence establishes the accuracy of the verifier itself?
 
-The table below is not a leaderboard. It is a set of documented answers to the four obligations introduced in Section 1.
+### Optimization
 
-| System | Input | Output | Architectural emphasis | Public evidence |
-|---|---|---|---|---|
-| Qwen3-VL | text, images, video | text | dynamic resolution, interleaved M-RoPE, DeepStack, 256K | report, code, and released model family |
-| InternVL3.5 / Flash | text, images, video | text | ViR in Flash, decoupled vision/LLM deployment, Cascade RL | report, code, and weights |
-| Qwen3.5-Omni | text, images, audio, video | text and streaming speech | Thinker–Talker, TMRoPE, ARIA, Hybrid-Attention MoE, 256K | report and documented API; not a claim of open weights |
-| InternVL-U | text and images | text, image generation, editing | multimodal LLM plus MMDiT generation head | 4B system report |
-| Chameleon | text and images | paper: text/images; released weights: text | discrete-token early fusion | paper and family artifacts |
-| Janus | text and images | text and images | separate visual pathways, shared Transformer | paper, code, and model family |
+- Is the algorithm offline, on-policy, or deliberately off-policy?
+- Which roles are present: policy, old policy, reference, critic, reward model?
+- Where is KL regularization applied?
+- Is the loss averaged over prompts, completions, or tokens?
+- What happens to zero-variance groups and extreme rewards?
 
-This is a mechanism-oriented selection verified on 11 October 2026, not an exhaustive release ranking. Configuration still matters within a family: Qwen3-VL uses 16-pixel patches, whereas our 1008×1008, patch-14 example uses Qwen2-VL-like geometry. The Qwen3.5-Omni report's “256K” training stage specifies 262,144 positions. The 256,000-position classroom calculation is a separate scenario.
+### Systems
 
-The first axis is **input-budget control**. Qwen3-VL combines dynamic processing, interleaved M-RoPE, DeepStack, and a 256K context. InternVL3.5-Flash uses ViR and decoupled placement of the vision encoder and LLM. Both produce text, but one emphasizes a common interleaved sequence while the other exposes a stronger routing and deployment boundary.
+- Are rollout and training workers colocated or disaggregated?
+- Is the loop synchronous, one-step-off, or fully asynchronous?
+- How is trajectory staleness bounded?
+- What fraction of time is spent on decode, verification, communication, and optimization?
 
-The second axis is the **output contract**. Qwen3.5-Omni must produce streaming speech, so Thinker–Talker, TMRoPE, and ARIA are part of its architecture passport. The report gives different limits for different signals—more than ten hours of audio and 400 seconds of 720p video at one frame per second. Those limits follow from a concrete processor and architecture, not from the 256K context number alone.
-
-The third axis is the **location of specialization**. Chameleon shares discrete tokens, Janus shares the Transformer while separating visual pathways, and InternVL-U shares language-centered reasoning while delegating image rendering to an MMDiT head. Similar external capabilities arise from different internal boundaries.
-
-This is the chapter’s argument in compact form. Multimodal systems differ in where they compress evidence, where they preserve structure, and where they specialize output. For a proprietary API, the defensible record is limited to documented inputs, outputs, limits, pricing, and date. Interface behavior alone cannot reveal whether the service contains one end-to-end model or a coordinated cascade.
-
-## 17. Follow one request through a multimodal passport
-
-A useful passport begins with an actual media request rather than a model name. Follow the evidence through five stages.
-
-### 1. Identify the input-processing pipeline
-
-Record how raw media becomes positions:
-
-- `patch_size`, `temporal_patch_size`, and `spatial_merge_size`;
-- pixel bounds and rounding rules;
-- tiling and thumbnail policy;
-- video frame sampling;
-- audio sample rate, encoder stride, and positions per second.
-
-These fields convert pixels and seconds into a token budget. A maximum context length without them says little about usable multimedia capacity.
-
-### 2. Trace the fusion path
-
-Determine whether visual vectors enter decoder self-attention, are reduced by a resampler, or remain in external memory accessed through cross-attention. Record whether vision and language are jointly trained, whether understanding and generation use separate pathways, and whether output modalities have dedicated decoders.
-
-This stage decides whether ordinary decoder-KV arithmetic applies.
-
-### 3. Trace the output path
-
-Input support does not imply output generation. Identify which module emits text, image latents, audio-codec tokens, or waveform chunks, and at what rate.
-
-### 4. Measure the system on the real request
-
-Collect:
-
-- visual or audio positions after preprocessing;
-- encoder latency;
-- language prefill time;
-- KV and peak memory;
-- time to first text token (TTFT), inter-token latency (ITL), or first-audio latency;
-- reuse when several questions refer to the same media object.
-
-The result shows not merely whether the request fits, but which component is the bottleneck.
-
-### 5. Record artifact status
-
-Distinguish paper, source code, open weights, hosted API, and product demonstration. They support different levels of inspection and reproduction. A behavioral test can verify an exposed capability, but not internal topology: an API may route between specialized models, or a product may disable a generation head that exists in the underlying system.
-
-The completed passport answers the chapter’s opening question. It shows how physical evidence became a model representation, how much it cost, which structure survived, and which component produced the output.
+When these fields are absent, the honest conclusion is “the exact recipe is not disclosed.” Behavioural clues are useful for evaluation, not for reverse-engineering a training stack with certainty.
 
 ## 20. Key takeaways and sources
 
-![VIZ m16/10 — testing a trainable pipeline](assets/modern-llms/en/module-14/m16_10_cheatsheet.svg)
-*A complete trainable pixels-to-answer path. The 16- and 4-position configurations achieve 16/16 and 6/16 on held-out brightness; blank-image controls achieve 4/16 and 6/16. These are teaching-model results, not a large-VLM benchmark.*
+![VIZ m14/10 — preference optimization on one page](assets/modern-llms/en/module-14/m14_10_cheatsheet.svg)
 
-The chapter began with one media-rich request and four design obligations. Most architectural differences can now be read as different placements of those obligations.
+**Distinguish the signals.** Demonstrations specify a target. Preferences rank alternatives. Verifiers score outcomes. Specify the feedback format, data-collection procedure and update rule separately.
 
-**Representation.** CLIP and SigLIP create semantic alignment. ViT converts image area into patch positions. Audio encoders and codecs do the same for a temporal signal. The representation decides what evidence reaches language-level reasoning.
+**Classical RLHF.** SFT feeds reward modelling, which feeds PPO under KL control. The four logical roles need not be four unshared full checkpoints in every implementation.
 
-**Budget.** The declared examples produce 576, 2,880, and 1,296 visual positions. Under the 32-layer GQA self-attention contract, they create 72, 360, and 162 MiB of KV state. A different fusion topology requires a different accounting model.
+**Bradley–Terry.** $P(y_w\succ y_l)=\sigma(r_w-r_l)$. A 75% win rate maps to $\log3\approx1.099$ inside this comparison model.
 
-**Compression and connection.** An MLP changes width but keeps positions. A Q-Former or resampler reduces position count through an information bottleneck. Cross-attention keeps visual state outside the text stream. A connector moves cost between components; it does not erase it.
+**DPO.** The implicit reward is a current/reference policy ratio. The original DPO recipe is an offline pairwise method and does not require rollout generation or a separately trained reward model.
 
-**Structure.** Dynamic resolution makes compute depend on the input. M-RoPE-style schemes preserve height, width, and time. Video turns context length into evidence selection: 7,200 frames at 576 tokens each produce 4.15 million positions before text.
+**Direct variants.** IPO targets a different margin geometry; KTO consumes pointwise desirable/undesirable labels; SimPO is reference-free and length-normalized; ORPO combines supervised likelihood and preference pressure in one objective.
 
-**Output.** Chameleon, Janus, and InternVL-U show that one user interface does not require one visual representation. Thinker–Talker shows the same for speech: evidence integration and audio generation may share training and context while operating with different clocks.
+**RLOO and GRPO.** Both compare sibling rollouts. RLOO uses a leave-one-out baseline. GRPO standardizes over the full group and removes the learned critic, but its estimator has identifiable bias and zero-variance cases.
 
-**Engineering conclusion.** A “vision/audio/video supported” label is not a system specification. We need the processor, token geometry, fusion path, state layout, output decoder, measurements, and artifact status.
+**The frozen scenarios.** The persistent-state teaching model gives 269.2 GiB for PPO and 134.6 GiB for DPO with a resident reference. The rollout scenario gives a 39.3 ratio between generation and one training pass. Both are conditional calculations.
 
-### Primary sources
+**RLVR.** A programmatic checker reduces subjectivity but remains a target that can be exploited. Verifier quality, length distributions, entropy, degenerate groups, and held-out tasks belong in the evaluation contract.
 
-- ViT — [An Image is Worth 16×16 Words](https://arxiv.org/abs/2010.11929)
-- CLIP — [Learning Transferable Visual Models From Natural Language Supervision](https://arxiv.org/abs/2103.00020)
-- SigLIP — [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343)
-- Flamingo — [a Visual Language Model for Few-Shot Learning](https://arxiv.org/abs/2204.14198)
-- BLIP-2 — [Bootstrapping Language-Image Pre-training](https://arxiv.org/abs/2301.12597)
-- LLaVA — [Visual Instruction Tuning](https://arxiv.org/abs/2304.08485)
-- LLaVA-1.5 — [Improved Baselines with Visual Instruction Tuning](https://arxiv.org/abs/2310.03744)
-- Qwen2-VL — [Dynamic Resolution and M-RoPE](https://arxiv.org/abs/2409.12191)
-- Qwen2.5-VL — [technical report](https://arxiv.org/abs/2502.13923)
-- Qwen3-VL — [technical report](https://arxiv.org/abs/2511.21631)
-- InternVL3.5 — [technical report](https://arxiv.org/abs/2508.18265)
-- Chameleon — [Mixed-Modal Early-Fusion Foundation Models](https://arxiv.org/abs/2405.09818)
-- Janus — [Decoupling Visual Encoding for Understanding and Generation](https://arxiv.org/abs/2410.13848)
-- InternVL-U — [Understanding, Reasoning, Generation and Editing](https://arxiv.org/abs/2603.09877)
-- Qwen2.5-Omni — [technical report](https://arxiv.org/abs/2503.20215)
-- Qwen3.5-Omni — [technical report](https://arxiv.org/abs/2604.15804)
-- Chameleon — [released interface documentation](https://huggingface.co/docs/transformers/en/model_doc/chameleon)
-- Qwen3-VL — [developer code and processor instructions](https://github.com/QwenLM/Qwen3-VL)
-- SigLIP — [reference loss implementation](https://github.com/google-research/big_vision/blob/main/big_vision/trainers/proj/image_text/siglip.py)
-- Step-Audio 2 — [technical report](https://arxiv.org/abs/2507.16632)
+**The systems transition.** Modern RL post-training increasingly uses interactive environments, separated worker pools, asynchronous queues, and explicit freshness control.
 
-**Next:** Module 17 turns to embeddings, retrieval, and RAG. The contrastive geometry from Section 5 becomes a mechanism for searching external data.
+**Primary sources:**
+
+- Christiano et al., *Deep Reinforcement Learning from Human Preferences* — [arxiv.org/abs/1706.03741](https://arxiv.org/abs/1706.03741)
+- Ouyang et al., *Training Language Models to Follow Instructions with Human Feedback* — [arxiv.org/abs/2203.02155](https://arxiv.org/abs/2203.02155)
+- Rafailov et al., *Direct Preference Optimization* — [arxiv.org/abs/2305.18290](https://arxiv.org/abs/2305.18290)
+- Azar et al., $\Psi$PO / IPO — [arxiv.org/abs/2310.12036](https://arxiv.org/abs/2310.12036)
+- Ethayarajh et al., KTO — [arxiv.org/abs/2402.01306](https://arxiv.org/abs/2402.01306)
+- Meng et al., SimPO — [arxiv.org/abs/2405.14734](https://arxiv.org/abs/2405.14734)
+- Hong et al., ORPO — [arxiv.org/abs/2403.07691](https://arxiv.org/abs/2403.07691)
+- Ahmadian et al., RLOO — [arxiv.org/abs/2402.14740](https://arxiv.org/abs/2402.14740)
+- Shao et al., DeepSeekMath / GRPO — [arxiv.org/abs/2402.03300](https://arxiv.org/abs/2402.03300)
+- Guo et al., DeepSeek-R1 — [arxiv.org/abs/2501.12948](https://arxiv.org/abs/2501.12948)
+- Yu et al., DAPO — [arxiv.org/abs/2503.14476](https://arxiv.org/abs/2503.14476)
+- Liu et al., *Understanding R1-Zero-Like Training* / Dr. GRPO — [arxiv.org/abs/2503.20783](https://arxiv.org/abs/2503.20783)
+- Wu et al., *It Takes Two: Your GRPO Is Secretly DPO* — [arxiv.org/abs/2510.00977](https://arxiv.org/abs/2510.00977)
+- Yang et al., *Your Group-Relative Advantage Is Biased* — [arxiv.org/abs/2601.08521](https://arxiv.org/abs/2601.08521)
+- Bai et al., Constitutional AI — [arxiv.org/abs/2212.08073](https://arxiv.org/abs/2212.08073)
+- Lambert et al., Tülu 3 — [arxiv.org/abs/2411.15124](https://arxiv.org/abs/2411.15124)
+- NeMo Gym — [docs.nvidia.com/nemo/gym](https://docs.nvidia.com/nemo/gym/)
+- NeMo RL — [github.com/NVIDIA-NeMo/RL](https://github.com/NVIDIA-NeMo/RL)
+- verl — [github.com/verl-project/verl](https://github.com/verl-project/verl)
+
+**Next:** Module 15 studies reasoning models and test-time compute. Here we changed the policy; next we decide how much computation an already trained policy should spend on a particular request.
 
 ---
 
-*Landscape verified: 11 October 2026. Patch counts, KV state, InfoNCE, dense-equivalent training, and video budget are reproducible module scenarios; a real processor may add resizing, padding, temporal patches, and separator tokens.*
+*Landscape verified: October 11, 2026. Current claims were checked against primary sources; exact recipes for closed models are not reconstructed from external behavior. Teaching estimates for memory and time are reproduced by local calculations and apply only under the stated assumptions.*

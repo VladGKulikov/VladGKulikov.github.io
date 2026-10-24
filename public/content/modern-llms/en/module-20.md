@@ -8,7 +8,7 @@ We will construct a complete mathematical description of a particular MiniLLM co
 
 ### Reading routes
 
-For a first reading, you need matrix multiplication, conditional probability, and the meaning of a gradient. [Module 3](module-18.md) provides a refresher; Modules 4–6 develop positions, attention, and the Transformer block. Read Sections 1–10, then 13–14 and 17–20. On this pass, Sections 11–12 can be read for the connection between prediction error and changing weights. Complete Exercises 1–3 and 6 in Section 18; the required material is included in this route.
+For a first reading, you need matrix multiplication, conditional probability, and the meaning of a gradient. [Module 3](module-03.md) provides a refresher; Modules 4–6 develop positions, attention, and the Transformer block. Read Sections 1–10, then 13–14 and 17–20. On this pass, Sections 11–12 can be read for the connection between prediction error and changing weights. Complete Exercises 1–3 and 6 in Section 18; the required material is included in this route.
 
 ## 1. Three computations that should not be conflated
 
@@ -124,7 +124,7 @@ Attention has exchanged information across positions. The FFN now transforms eac
 
 $$\mathcal F(Y)=\big[\operatorname{SiLU}(YW^{\rm gate})\odot(YW^{\rm up})\big]W^{\rm down},\qquad\operatorname{SiLU}(a)=a\sigma(a),\quad\sigma(a)=\frac1{1+e^{-a}}.$$
 
-The gate and up matrices have shape $d\times m$; the down matrix has shape $m\times d$. Two projections map the representation to $m$ coordinates, the nonlinear branch modulates an elementwise product, and the final projection returns to width $d$. Usually $m$ is larger than $d$; our small examples do not require that choice. This is the SwiGLU construction developed in [Module 6](module-05.md).
+The gate and up matrices have shape $d\times m$; the down matrix has shape $m\times d$. Two projections map the representation to $m$ coordinates, the nonlinear branch modulates an elementwise product, and the final projection returns to width $d$. Usually $m$ is larger than $d$; our small examples do not require that choice. This is the SwiGLU construction developed in [Module 6](module-06.md).
 
 For our numerical block, use
 
@@ -275,7 +275,7 @@ A cache is valid for the same prefix, weights, and positional rules. Updating th
 
 ## 15. MoE replaces a specific operator
 
-[Module 7](module-06.md) introduced experts as a replacement for the dense FFN. We can now identify the exact substitution: replace $\mathcal F_\ell$ in Section 7 by $\mathcal F_{\rm MoE,\ell}$. With all other settings held fixed, attention, residual connections, the vocabulary head, and the autoregressive factorization remain unchanged.
+[Module 7](module-07.md) introduced experts as a replacement for the dense FFN. We can now identify the exact substitution: replace $\mathcal F_\ell$ in Section 7 by $\mathcal F_{\rm MoE,\ell}$. With all other settings held fixed, attention, residual connections, the vocabulary head, and the autoregressive factorization remain unchanged.
 
 Consider MiniLLM's sigmoid router without an expert-capacity limit. With $E_r$ routed experts, the router matrix has shape $W^r\in\mathbb R^{d\times E_r}$. For a normalized row $y$, let $r=yW^r$ and $a_e=\sigma(r_e)$. A balancing offset $b_e$ affects the selected set $S(y)=\operatorname{TopK}_e(a_e+b_e)$, while mixture weights use the original sigmoid scores:
 
@@ -295,7 +295,7 @@ Preference learning can change the objective itself. For DPO, define $\ell_\thet
 
 $$\mathcal L_{\rm DPO}=-\log\sigma\!\left(\beta\left[\ell_\theta(y^+\mid c)-\ell_\theta(y^-\mid c)-\ell_{\rm ref}(y^+\mid c)+\ell_{\rm ref}(y^-\mid c)\right]\right).$$
 
-Here $\beta\gt0$ sets the scale of the comparison. Replacing response log-probability sums by length-normalized averages would change this objective. [Module 14](module-12.md) develops the derivation and limitations. For the synthesis, the key point is that the same forward distribution can support different learning objectives.
+Here $\beta\gt0$ sets the scale of the comparison. Replacing response log-probability sums by length-normalized averages would change this objective. [Module 14](module-14.md) develops the derivation and limitations. For the synthesis, the key point is that the same forward distribution can support different learning objectives.
 
 A multimodal model may insert image or audio projections into its input sequence instead of using only rows of $E$. Retrieval supplies documents to the context. An agent controller calls tools and constructs a subsequent request. None of these behaviors is supplied automatically by the final multiplication by $U$. The core equation describes a probability computation; it does not certify factual accuracy, retrieval quality, or system reliability. That is why the course also needs the evaluation methods of Module 19.
 
@@ -307,7 +307,7 @@ Attention retains separate key/value records for past positions and reads them a
 
 $$s_p=\overline A_p s_{p-1}+\overline B_p u_p,\qquad y_p=C_p s_p+D u_p.$$
 
-For this local recurrence, use column vectors: input $u_p\in\mathbb R^{d_u}$, state $s_p\in\mathbb R^n$, and output $y_p\in\mathbb R^{d_y}$. The coefficient shapes are $\overline A_p\in\mathbb R^{n\times n}$, $\overline B_p\in\mathbb R^{n\times d_u}$, $C_p\in\mathbb R^{d_y\times n}$, and $D\in\mathbb R^{d_y\times d_u}$. Selective models make some coefficients depend on the current input. The bars indicate coefficients already expressed in discrete time; [Module 8](module-07.md) explains the connection to continuous dynamics.
+For this local recurrence, use column vectors: input $u_p\in\mathbb R^{d_u}$, state $s_p\in\mathbb R^n$, and output $y_p\in\mathbb R^{d_y}$. The coefficient shapes are $\overline A_p\in\mathbb R^{n\times n}$, $\overline B_p\in\mathbb R^{n\times d_u}$, $C_p\in\mathbb R^{d_y\times n}$, and $D\in\mathbb R^{d_y\times d_u}$. Selective models make some coefficients depend on the current input. The bars indicate coefficients already expressed in discrete time; [Module 8](module-08.md) explains the connection to continuous dynamics.
 
 For a transparent scalar case, choose $\overline A=0.5$, $\overline B=C=1$, $D=0$, and $s_{-1}=0$. Inputs $(1,0,-1)$ produce states and outputs $(1,0.5,-0.75)$. Earlier inputs affect the result through the state, rather than through individually addressable K/V records. State size need not grow with prefix length; that does not mean it preserves every detail of an arbitrarily long history without loss.
 
@@ -323,7 +323,7 @@ $$\boxed{p_\theta(z^{(0)}\mid c)=\sum_{z^{(1)},\ldots,z^{(S)}}p_S(z^{(S)}\mid c)
 
 The product describes a single refinement trajectory. The sum accounts for all hidden intermediate sequences that could lead to the same clean result. Continuous-noise versions use corresponding integrals. If length is also generated, its distribution must be modeled separately.
 
-A denoiser often predicts clean-token probabilities, while the transition $K$ additionally depends on the corruption process and schedule. We therefore cannot automatically identify $K$ with a single token softmax. Attention may also become bidirectional: positions can read the available noisy state across the sequence. Simply removing a causal mask while asking a network to copy visible correct tokens would leak targets rather than define a valid diffusion task. In [Module 12](module-07b.md), training reconstructs hidden tokens from corrupted inputs; more generally, the objective follows the chosen forward corruption process and reverse-model formulation. [D3PM](https://arxiv.org/abs/2107.03006) develops this discrete setting.
+A denoiser often predicts clean-token probabilities, while the transition $K$ additionally depends on the corruption process and schedule. We therefore cannot automatically identify $K$ with a single token softmax. Attention may also become bidirectional: positions can read the available noisy state across the sequence. Simply removing a causal mask while asking a network to copy visible correct tokens would leak targets rather than define a valid diffusion task. In [Module 12](module-12.md), training reconstructs hidden tokens from corrupted inputs; more generally, the objective follows the chosen forward corruption process and reverse-model formulation. [D3PM](https://arxiv.org/abs/2107.03006) develops this discrete setting.
 
 To make marginalization tangible, consider a **hand-specified reverse chain**, not a trained denoiser. Two binary positions have four possible strings: 00, 01, 10, 11. From two MASK symbols, the first transition produces $r=(0.18,0.42,0.12,0.28)$. The second transition independently keeps each bit with probability 0.8 and flips it with probability 0.2. For strings differing in $h$ positions, the transition probability is $0.8^{2-h}0.2^h$. Multiplying $rK$ gives $(0.2128,0.3472,0.1672,0.2728)$. For instance, the probability of 00 is $0.18\cdot0.64+0.42\cdot0.16+0.12\cdot0.16+0.28\cdot0.04=0.2128$. This adds four possible paths; it is not a prediction of the first bit followed by a prediction of the second.
 

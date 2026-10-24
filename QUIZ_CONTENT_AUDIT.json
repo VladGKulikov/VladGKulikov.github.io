@@ -19,7 +19,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-18",
+      "module": "module-03",
       "language": "ru",
       "source": "modules/module-03/ru/module_03_tests_RU.md",
       "sha256": "84f850cd9271a2d5690cac0e73361bde92adb7b5f5f94f0ceae8de8f17fbf0bf",
@@ -27,7 +27,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-03",
+      "module": "module-04",
       "language": "ru",
       "source": "modules/module-04/ru/module_04_tests_RU.md",
       "sha256": "ca839db73fcc9fba74130b07ada00454b7d7e3e6b4ed5a1b0ddb84d973be98ba",
@@ -35,7 +35,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-04",
+      "module": "module-05",
       "language": "ru",
       "source": "modules/module-05/ru/module_05_tests_RU.md",
       "sha256": "941c62773aaa72ca7dc1896fe04fd4a7ad9a69c00db99053a2358e7b1f16dd97",
@@ -43,7 +43,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-05",
+      "module": "module-06",
       "language": "ru",
       "source": "modules/module-06/ru/module_06_tests_RU.md",
       "sha256": "46b3b7203e61a485adfebd81c84cb49051f4b02eb91cae53a9588f33de9929a9",
@@ -51,7 +51,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-06",
+      "module": "module-07",
       "language": "ru",
       "source": "modules/module-07/ru/module_07_tests_RU.md",
       "sha256": "5d80a0e24f5801aa855143b7961f9f777e531836cdf236a2099b4f68e5b12f47",
@@ -59,7 +59,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-07",
+      "module": "module-08",
       "language": "ru",
       "source": "modules/module-08/ru/module_08_tests_RU.md",
       "sha256": "f539e034565faaca217ca73dd1a313b25e577968138ed66689443ae814d605a9",
@@ -67,7 +67,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-08",
+      "module": "module-09",
       "language": "ru",
       "source": "modules/module-09/ru/module_09_tests_RU.md",
       "sha256": "6b90d9b0afe2e38966dad8f758f534b732ada721cea98e88acf0c58c41372509",
@@ -75,7 +75,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-09",
+      "module": "module-10",
       "language": "ru",
       "source": "modules/module-10/ru/module_10_tests_RU.md",
       "sha256": "b0eaeb96f627cc3c523a3bcc785b2de677062e44cf4e2ac0e3cb35c16a1b4479",
@@ -83,7 +83,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-10",
+      "module": "module-11",
       "language": "ru",
       "source": "modules/module-11/ru/module_11_tests_RU.md",
       "sha256": "cea72d896e0a9b45cd45bfab1596bab2a106841ee8b8f513209e4061c68b7165",
@@ -91,7 +91,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-07b",
+      "module": "module-12",
       "language": "ru",
       "source": "modules/module-12/ru/module_12_tests_RU.md",
       "sha256": "dc8d633d63a7624cb708b456e200eb2a41e587a767a72991bd34ee7e49dc7bf3",
@@ -99,7 +99,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-11",
+      "module": "module-13",
       "language": "ru",
       "source": "modules/module-13/ru/module_13_tests_RU.md",
       "sha256": "2685f452968d45fc16af2900c62ad72a8168ff0a5aa6d501233083e4f8e31d9a",
@@ -107,7 +107,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-12",
+      "module": "module-14",
       "language": "ru",
       "source": "modules/module-14/ru/module_14_tests_RU.md",
       "sha256": "815ba5a068c87bee4b9be512bdced74c1928b69ff77746f387c202d09af58c2a",
@@ -115,7 +115,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-13",
+      "module": "module-15",
       "language": "ru",
       "source": "modules/module-15/ru/module_15_tests_RU.md",
       "sha256": "9ac3f503ec7ae271d358897959f63490d2ff0e3bd529dd7d43f26b702d024020",
@@ -123,7 +123,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-14",
+      "module": "module-16",
       "language": "ru",
       "source": "modules/module-16/ru/module_16_tests_RU.md",
       "sha256": "f9a51bf6d2f3cc694f7826be0da55740c6d43a7be772f0884522e8d6f6e24ff2",
@@ -131,7 +131,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-15",
+      "module": "module-17",
       "language": "ru",
       "source": "modules/module-17/ru/module_17_tests_RU.md",
       "sha256": "aa479c80a6c4f9c5ca39b60794fa88423f2adea808743aea48684dc2ea0d05b5",
@@ -139,7 +139,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-16",
+      "module": "module-18",
       "language": "ru",
       "source": "modules/module-18/ru/module_18_tests_RU.md",
       "sha256": "0bda96a8123c98d63eec8bb3774aed9fe984eccc83f6495b9e95dfc01ae21d16",
@@ -147,7 +147,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-17",
+      "module": "module-19",
       "language": "ru",
       "source": "modules/module-19/ru/module_19_tests_RU.md",
       "sha256": "3c3b8bcc18fa1d8a98c31e927aeb8e248ac4ee37757c440c7d12f7c62f79e4b5",
@@ -179,7 +179,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-18",
+      "module": "module-03",
       "language": "en",
       "source": "modules/module-03/en/module_03_tests_EN.md",
       "sha256": "7df8f988a8a74397f0dbeb48b0abc30ea4792cc6b63178848d4e503aa405c1e2",
@@ -187,7 +187,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-03",
+      "module": "module-04",
       "language": "en",
       "source": "modules/module-04/en/module_04_tests_EN.md",
       "sha256": "cacf5c718dcd78112a30a2655c24f2995af8132312b795d8327bec0d57016cea",
@@ -195,7 +195,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-04",
+      "module": "module-05",
       "language": "en",
       "source": "modules/module-05/en/module_05_tests_EN.md",
       "sha256": "2e61f97d44f285a1c14879702ec89906da7a271d543c0d151ae47ea76687fbd0",
@@ -203,7 +203,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-05",
+      "module": "module-06",
       "language": "en",
       "source": "modules/module-06/en/module_06_tests_EN.md",
       "sha256": "7e9d715a43bd365672459a5ebafdbb5c030902c5720953f9979b6bd1b8ba622e",
@@ -211,7 +211,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-06",
+      "module": "module-07",
       "language": "en",
       "source": "modules/module-07/en/module_07_tests_EN.md",
       "sha256": "3418f4026bc133ac650653ea840c767a795f9edc9f624167fdf0eed62e7b9bdb",
@@ -219,7 +219,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-07",
+      "module": "module-08",
       "language": "en",
       "source": "modules/module-08/en/module_08_tests_EN.md",
       "sha256": "6fe15bf998ce4932842aa5ec15e8439b4b456df500504c0ee654bf75c91c26bb",
@@ -227,7 +227,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-08",
+      "module": "module-09",
       "language": "en",
       "source": "modules/module-09/en/module_09_tests_EN.md",
       "sha256": "8437777cdcbccf96c93212ee24fdce9c069fa89be788b7084368ebcc483a38c2",
@@ -235,7 +235,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-09",
+      "module": "module-10",
       "language": "en",
       "source": "modules/module-10/en/module_10_tests_EN.md",
       "sha256": "6f07a2c55ef91bdd7a92193fdd4dade1eb53a038c8cb6c987cedbc7d9590bea8",
@@ -243,7 +243,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-10",
+      "module": "module-11",
       "language": "en",
       "source": "modules/module-11/en/module_11_tests_EN.md",
       "sha256": "0d4e574d2e887ecede7642b14c81bd011f0be41c1eecb97a9db191c5dd0d0238",
@@ -251,7 +251,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-07b",
+      "module": "module-12",
       "language": "en",
       "source": "modules/module-12/en/module_12_tests_EN.md",
       "sha256": "4d940d9b5c2da9f7f3e71337b0be4f10d52b1ae63aa1a655b238d9177952165a",
@@ -259,7 +259,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-11",
+      "module": "module-13",
       "language": "en",
       "source": "modules/module-13/en/module_13_tests_EN.md",
       "sha256": "670388e7013651c5ac937f2bd5e9bb1c318fea771e894b20e0d0dfcf176af7fe",
@@ -267,7 +267,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-12",
+      "module": "module-14",
       "language": "en",
       "source": "modules/module-14/en/module_14_tests_EN.md",
       "sha256": "1fc1a755dfc0616e0ecc1251ae0b81fd4799f05d3878dd91c0d95f599c8e8ae1",
@@ -275,7 +275,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-13",
+      "module": "module-15",
       "language": "en",
       "source": "modules/module-15/en/module_15_tests_EN.md",
       "sha256": "1e5b8a859f214fac59886ab35fd49b0bf02e1c0dbdff3544608507bafd27819f",
@@ -283,7 +283,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-14",
+      "module": "module-16",
       "language": "en",
       "source": "modules/module-16/en/module_16_tests_EN.md",
       "sha256": "4d50c827a5a0157da7601822d9beb152ec722be64796d7873ebb8dd3cad6d98b",
@@ -291,7 +291,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-15",
+      "module": "module-17",
       "language": "en",
       "source": "modules/module-17/en/module_17_tests_EN.md",
       "sha256": "e85467979bbe7dfb518f8595ea6638e806a4f6aea6b85c87344bc528728d3051",
@@ -299,7 +299,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-16",
+      "module": "module-18",
       "language": "en",
       "source": "modules/module-18/en/module_18_tests_EN.md",
       "sha256": "1d4f9515c778e4b52f0e5b7e188c1881c03016dbba1eea63da7d034245aa3be4",
@@ -307,7 +307,7 @@
     },
     {
       "course": "modern-llms",
-      "module": "module-17",
+      "module": "module-19",
       "language": "en",
       "source": "modules/module-19/en/module_19_tests_EN.md",
       "sha256": "6e0dc897d89cfa22a8920c45139f202dbf1d4e2faadc63ff16da4e8bdbf1b313",

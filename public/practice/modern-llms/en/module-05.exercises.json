@@ -7,51 +7,51 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "E1. Exact block accounting",
-      "prompt": "Compute the matrix-only and full counts for the Llama-3.1-8B block.",
-      "answer": "*Solution.* In GQA, $Q$ and $O$ are $d\\times d$, while K/V width is one quarter of $d$. The two K/V matrices therefore contribute $2d(d/4)=0.5d^2$, giving\n\n$$P_{attn}=2d^2+0.5d^2=2.5d^2.$$\n\nSwiGLU has gate, up, and down projections. With $d_{ff}=3.5d$, their count is $3dd_{ff}=10.5d^2$. Thus\n\n$$P_{matrix}=13d^2=13\\cdot4096^2=218{,}103{,}808.$$\n\nTwo RMSNorm scales add $2d=8192$, yielding **218,112,000**. Biases are excluded by this architecture contract.",
+      "title": "E1. Hybrid cache arithmetic",
+      "prompt": "For 36 layers, $H_q=64$, $H_{kv}=8$, $d_h=64$, bf16, and context 131,072, compute the all-full cache and then replace 18 layers with a window of 128. Count one sequence and K/V payload only, assuming local caches are window-capped.",
+      "answer": "*Solution.* Each retained token needs both a key and a value on every layer:\n\n$$2H_{kv}d_h\\cdot2\\ \\text{bytes}=2\\cdot8\\cdot64\\cdot2=2048\\ \\text{B/token}.$$\n\nThus all-full cache is $36\\cdot131072\\cdot2048=9$ GiB. The 18 full layers use $18\\cdot131072\\cdot2048=4.5$ GiB, while 18 local layers retain only their window and use $18\\cdot128\\cdot2048=4.5$ MiB. Total: **4.5043945 GiB**. Query-head count does not enter because K/V are stored per KV head.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "E2. Epsilon and gain",
-      "prompt": "Compare the RMSNorm multipliers at input RMS $10^{-3}$ for $\\epsilon=10^{-6}$ and $10^{-5}$.",
-      "answer": "*Solution.* RMSNorm divides by $\\sqrt{\\operatorname{RMS}(x)^2+\\epsilon}$. Here the signal-square term is $10^{-6}$, so\n\n$$g_{10^{-6}}=1/\\sqrt{2\\cdot10^{-6}}\\approx707.1,$$\n$$g_{10^{-5}}=1/\\sqrt{11\\cdot10^{-6}}\\approx301.5.$$\n\nThe larger epsilon more than halves the gain because it dominates this small signal. Epsilon must therefore reflect reduction precision and expected activation scale, not dtype machine epsilon alone.",
+      "title": "E2. Online softmax",
+      "prompt": "Process logits `[2,1]` and `[3,0.5]` as two tiles with values `[1,2]` and `[3,4]`. Reproduce $\\ell_1=1.367879$, $n_1=1.735759$, the rescaling factor $e^{-1}$, and output 2.502297.",
+      "answer": "*Solution.* The first tile has maximum $m_1=2$:\n\n$$\\ell_1=e^{2-2}+e^{1-2}=1+e^{-1}=1.367879,$$\n$$n_1=1e^0+2e^{-1}=1.735759.$$\n\nFor the second tile, $m_2=3$, so $\\ell_2=1+e^{-2.5}=1.082085$ and $n_2=3+4e^{-2.5}=3.328340$. The global maximum is $M=3$; move tile 1 into this scale with $e^{m_1-M}=e^{-1}$:\n\n$$\\ell=e^{-1}\\ell_1+\\ell_2=1.585300,\\qquad n=e^{-1}n_1+n_2=3.966890.$$\n\nTherefore $O=n/\\ell=\\mathbf{2.502297}$. This rescaling is what lets tiled attention combine blocks without retaining all logits.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "E3. The negative gpt-oss branch",
-      "prompt": "Explain why the up-branch clip still changes the $z=-9$ case.",
-      "answer": "*Solution.* Use $g=\\min(z,7)$, $u=\\operatorname{clip}(z,-7,7)$, and $y=g\\sigma(1.702g)(u+1)$:\n\n| $z$ | $g$ | $u$ | $y$ |\n|---:|---:|---:|---:|\n| -9 | -9 | -7 | 0.000012019 |\n| -2 | -2 | -2 | 0.064341377 |\n| 0 | 0 | 0 | 0 |\n| 2 | 2 | 2 | 5.806975869 |\n| 7 | 7 | 7 | 55.999625026 |\n| 9 | 7 | 7 | 55.999625026 |\n\nAt $z=-9$, the gate is not lower-clipped and its sigmoid nearly suppresses it, but the up branch is still changed to $-7$ and enters as $u+1=-6$. The output is small because of the gate, not because the clip is irrelevant. At 7 and 9, both used branches are identical, so the outputs match.",
+      "title": "E3. Learned sink",
+      "prompt": "Prove equivalence to an extra score column of constant $s$ and a zero value. Explain why an ordinary fixed key cannot create the same constant score for every query.",
+      "answer": "*Solution.* Append a logit $s$ to the ordinary scores $z_i=q^\\top k_i/\\sqrt{d_h}$ and pair it with $v_s=0$. The output becomes\n\n$$\nO=\\frac{e^s0+\\sum_i e^{z_i}v_i}{e^s+\\sum_i e^{z_i}}\n=\\frac{\\sum_i e^{z_i}v_i}{e^s+\\sum_i e^{z_i}}.\n$$\n\nThe extra column can absorb probability mass without adding content. A fixed key instead produces $q^\\top k_s/\\sqrt{d_h}$, which changes with the query. Setting $k_s=0$ gives only the constant 0; an arbitrary learned constant $s$ for every query must be represented as a separate scalar/bias, not as an ordinary key.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
-      "title": "E4 [project]",
-      "prompt": "Compare RMSNorm, DyT, and DyISRU on one small language model with matched seeds, optimizer, data order, and a learning-rate sweep. Do not extrapolate one run to 100B scale.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 6](/downloads/modern-llms/project_demos/en/module_06_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
-      "answerKind": "guidance"
+      "title": "E4. GQA grouping",
+      "prompt": "With $H_q=8$ and $H_{kv}=2$, show that consecutive repeat matches the grouped formula while whole-array tiling changes head assignments.",
+      "answer": "*Solution.* The group size is $g=H_q/H_{kv}=4$, so query head $h$ uses KV head $\\lfloor h/4\\rfloor$: heads 0–3 map to KV0 and 4–7 to KV1. Label the KV heads `[10, 20]`. Correct expansion is\n\n```text\nrepeat_interleave(4): [10, 10, 10, 10, 20, 20, 20, 20]\n```\n\nwhich matches the grouped formula. `tile(4)` produces `[10, 20, 10, 20, 10, 20, 10, 20]`; the shape is valid but the head mapping is wrong. A shape check alone therefore cannot detect the bug.",
+      "answerKind": "solution"
     },
     {
       "id": "exercise-05",
       "title": "E5 [project]",
-      "prompt": "Compare Q/K score distributions for two open models with different stabilization mechanisms. Record the exact code path; do not merge L2 normalization, Q/K RMSNorm, and logit soft-capping into one label.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 6](/downloads/modern-llms/project_demos/en/module_06_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "prompt": "On a GPU, compare naive PyTorch attention with the available SDPA/Flash backend for $N=1K,2K,4K,8K$. Record time, peak memory, and error against a float64 reference.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 5](/downloads/modern-llms/project_demos/en/module_05_project_demo.ipynb), sections “Demo 1” and “Demo 2” as starting points for this module’s projects. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
     },
     {
       "id": "exercise-06",
-      "title": "E6. Scaling and reduction axes",
-      "prompt": "Why does fixed positive epsilon break exact scale invariance? How does changing one head affect per-head and whole-projection RMSNorm?",
-      "answer": "*Solution.* For a positive scale $c$, factor it out of the denominator:\n\n$$\n\\frac{cx}{\\sqrt{c^2\\operatorname{mean}(x^2)+\\epsilon}}\n=\\frac{x}{\\sqrt{\\operatorname{mean}(x^2)+\\epsilon/c^2}}.\n$$\n\nKeeping $\\epsilon>0$ fixed therefore changes the normalization. With a single value $x=10^{-3}$, $\\epsilon=10^{-6}$, and unit learned scale, the output is $1/\\sqrt2\\approx0.7071$. Doubling the input gives $2/\\sqrt5\\approx0.8944$. The stabilizer is comparable to the squared signal, so the difference is substantial.\n\nWhen RMS is reduced over all heads together, scaling one head changes the shared denominator and hence the untouched heads too. Separate head-wise reductions keep their denominators independent. Predict which heads will change before comparing the two notebook calculations.",
+      "title": "E6. Mask after a prefix",
+      "prompt": "For query position 5 and keys 0–5, write the full and $W=3$ window masks. Compare them with `tril(ones(1, 6))`.",
+      "answer": "*Solution.* Causality compares absolute positions: a key is visible when $k\\le5$. The full mask row is therefore `[1,1,1,1,1,1]`. A window of width 3 also requires $5-3+1\\le k$, retaining keys 3, 4, and 5: `[0,0,0,1,1,1]`.\n\nThe only row of `tril(ones(1,6))` has local index 0, so it yields `[1,0,0,0,0,0]`. The operation has no knowledge of the five preceding positions. Construct the mask from absolute indices or supply the appropriate offset. Extend the notebook experiment to a chunk of new queries, assigning each row its own absolute position.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-07",
-      "title": "E7. Doubly stochastic does not mean identity",
-      "prompt": "Verify the example in §12. Does satisfying both sum constraints imply $AX=X$?",
-      "answer": "*Solution.* Each row and column of the matrix in §12 sums to $0.75+0.25=1$. Its first output is $0.75\\cdot2+0.25\\cdot6=3$; its second is $0.25\\cdot2+0.75\\cdot6=5$. Thus $AX=(3,5)^\\top\\ne X$.\n\nNonnegative entries and unit row sums make each output a convex combination, bounded between 2 and 6. The output range can shrink: here it is 3 to 5. Unit column sums additionally preserve the sum across streams: $3+5=2+6$. Neither property preserves each stream separately. After a finite number of Sinkhorn–Knopp iterations, check both sum residuals before treating these properties as exact.",
+      "title": "E7. MLA absorption",
+      "prompt": "Use $A\\in\\mathbb R^{6\\times4}$, $B\\in\\mathbb R^{5\\times4}$, seven four-dimensional latents, and three six-dimensional queries. Compare scores and outputs before and after moving projections, then add the positional branch. Explain why absorbing rotation into the query depends on the key position.",
+      "answer": "*Solution.* Stack the queries as rows of $Q\\in\\mathbb R^{3\\times6}$ and the latents as rows of $C\\in\\mathbb R^{7\\times4}$. The direct path constructs $K=CA^\\top$ of shape $7\\times6$ and $V=CB^\\top$ of shape $7\\times5$. Its content scores satisfy\n\n$$QK^\\top=QAC^\\top.$$\n\nThe rearranged path first computes $QA$, a $3\\times4$ array, then the $3\\times7$ score matrix. Add the same positional scores and use identical scaling, masks, and softmax on both paths to obtain the same weights $P\\in\\mathbb R^{3\\times7}$. The value computation satisfies\n\n$$PV=P(CB^\\top)=(PC)B^\\top.$$\n\nThe direct path reconstructs seven width-5 values before mixing them. The rearranged path mixes four-dimensional latents first, producing $PC$ of shape $3\\times4$, then expands the result to $3\\times5$. With an output matrix $O\\in\\mathbb R^{5\\times d_{out}}$, the product $B^\\top O$ can be formed in advance.\n\nRotating reconstructed keys changes the effective query to $A^\\top R_{n-m}^\\top q$, which depends on key position $n$. It cannot be computed once and reused for every key. A separate positional branch avoids this particular dependency. Notebook §8 checks scores, values, and output projection at tolerance $10^{-12}$; a changed-key-position counterexample tests the limit of the rearrangement.\n\nFor the GPU project, establish accuracy on a short sequence with one head and an FP64 reference first. Benchmark larger shapes with matched inputs, masks and precision, warm-up, `no_grad`, CUDA synchronization around timing, and reset peak counters. State whether projections, mask construction and cache allocation are included; record the selected kernel and distinguish allocated from reserved memory. Reduce shapes on memory exhaustion; do not construct a large FP64 reference merely to measure speed.",
       "answerKind": "solution"
     }
   ],

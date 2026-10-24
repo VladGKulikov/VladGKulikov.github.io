@@ -191,7 +191,7 @@ def main():
     from assessment_source import load_canonical_tasks
     catalog=json.loads((ROOT/'app/generated/content.json').read_text(encoding='utf8'))
     modern=json.loads((roots['modern-llms']/'course_manifest.json').read_text(encoding='utf8'))['modules']
-    modern_ids={f'module-{m.get("previous_id") or m["id"]}':m['id'] for m in modern}
+    modern_ids={f'module-{m["id"]}':m['id'] for m in modern}
     pages=[]
     for course in catalog['courses']:
         key,language=course['course_key'],course['language'];root=roots[key]

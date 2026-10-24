@@ -3,7 +3,7 @@
 
 Refresh the public lecture layer after the October 2026 audits. Practice sections
 are published on their own pages and linked from the lecture layer. Modern
-module IDs follow previous_id so existing reader URLs retain their meaning.
+module IDs follow the current module numbers in the course manifest.
 The source repositories are read only; only this site is regenerated.
 """
 
@@ -456,7 +456,7 @@ def sanitize_markdown(
         manifest = json.loads((source_root / "course_manifest.json").read_text(encoding="utf-8"))
         targets = {
             (source_root / module["lectures"][language]).resolve():
-            f"module-{module.get('previous_id') or module['id']}"
+            f"module-{module['id']}"
             for module in manifest["modules"]
         }
     else:
@@ -621,7 +621,7 @@ def build_modern(boundary: dict[str, Any], language: str, context: BuildContext)
         expected = MODERN_EXPECTED_SECTIONS.get(number, 20)
         if len(sections) != expected:
             raise RuntimeError(f"Modern {language} module {number}: expected {expected} sections, got {len(sections)}")
-        key = f"module-{module.get('previous_id') or module['id']}"
+        key = f"module-{module['id']}"
         included = [preamble]
         for title, body in sections:
             prefix = re.match(r"^(\d+)\.\s", title)

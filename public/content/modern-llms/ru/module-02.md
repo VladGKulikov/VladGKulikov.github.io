@@ -578,7 +578,7 @@ $$
 - Claude Token Count API — [official documentation](https://platform.claude.com/docs/en/api/messages/count_tokens)
 - Gemini `models.countTokens` — [official documentation](https://ai.google.dev/api/tokens)
 
-**Дальше:** [модуль 3](module-18.md) связывает токены и эмбеддинги с вниманием, блоком Transformer и предсказанием следующего токена. Если весь вычислительный путь уже знаком, пройдите диагностику и переходите к позиционным представлениям в модуле 4.
+**Дальше:** [модуль 3](module-03.md) связывает токены и эмбеддинги с вниманием, блоком Transformer и предсказанием следующего токена. Если весь вычислительный путь уже знаком, пройдите диагностику и переходите к позиционным представлениям в модуле 4.
 
 ---
 

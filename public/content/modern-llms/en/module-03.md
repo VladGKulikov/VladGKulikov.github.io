@@ -1,707 +1,1136 @@
-# Module 4. Positional representations: from sinusoids to multiple axes
+# Module 3. The Basic Transformer
 
-*Modern LLMs · Module 4 lecture · 2026.10.6 edition · 10 October 2026*
+*Modern LLMs · Module 3 lecture · revision 2026.10.25 · 11 October 2026*
 
-Module 3 explained how a query retrieves a weighted mixture of values. Here we hold the query and key content fixed and change their positions. What should happen when the tokens move together? What if the gap between them grows? Working through those questions gives us sinusoidal encoding, RoPE, context extension, and spatial or temporal coordinates for multimodal inputs.
+An embedding lookup gives a token the same starting vector wherever it occurs. A Transformer turns that vector into a **contextual representation**: one that depends on the surrounding tokens. This chapter follows the computation all the way to a distribution over the next token.
 
-You need dot products and the attention mechanism from M3. We will introduce rotation using a pair of coordinates; complex numbers provide an optional shorthand for the same operation.
+Bring matrix multiplication, matrix shapes, and embeddings from Module 2. Section 2 introduces tensors as multidimensional arrays. The chapter introduces the remaining concepts as they become useful. By the end, you will be able to trace the original encoder–decoder design and build a small causal language model.
 
-**Reading routes**
+**Choose a reading route**
 
-- **First pass: follow the geometry.** Read §§1–10, using §2 as a map. The historical detail and the implementation in §4 are expandable. In §7, focus on which frequencies each method changes; return to the boundary derivation later. Finish with §§13 and 17, then try §15 without looking back.
-- **Implementation pass: reproduce the result.** Work through the numbers in §5, the ramp in §7, and the code in §§4 and 11. Run the notebook described in §12, including its cache and precision checks, and tackle §16.
-- **Reference pass.** Shapes and coordinate pairing: §4. Frequencies: §6. Scaling methods: §7. Configuration fields: §10. Multiple axes: §13. Verified implementation examples: §14. Module 5 then develops attention architecture and execution.
+- **First pass: follow the information.** Read §§1–12 in order; collapsed reference blocks can wait. In §2, focus on the input shape, and in §4.3, on what scaling accomplishes. Work through §4.5, then make sure the distinction between training and generation in §§11–12 is clear. Finish with §§16, 18, and 22. Save the longer code listings for the next pass.
+- **Second pass: make it run.** Expand the shape reference in §2, revisit the argument in §4.3, and study §§13–15. Use the notebook in §20 and the exercises in §19 to reproduce the results and test the computation.
+- **Reference pass: locate a contract.** Shapes are in §§2 and 15, masks in §5, normalization order in §8, and training versus generation in §§11–12. Section 17 collects common mistakes. If you can reconstruct the graph and answer §18 unaided, continue to Module 4.
 
-## 1. Motivation: content attention is not an ordering mechanism
+![VIZ m3/01 — three routes through the Transformer foundations](assets/modern-llms/en/module-03/m3_01_learning_route.svg)
+*Start by following the information, then reproduce the computation, and keep the shape and mask contracts nearby as a reference.*
 
-Consider bidirectional self-attention applied to a sequence matrix $X$, without positional information or a restrictive mask and with dropout disabled. If the rows are permuted by a permutation matrix $P$, the result obeys
+## 1. Why the Transformer was needed
 
-$$
-\operatorname{Attn}(PX)=P\operatorname{Attn}(X).
-$$
+Start with the engineering problem rather than the equation. A model that translates a sentence, summarizes a document, or predicts the next token must combine two kinds of information at every position:
 
-This is **permutation equivariance**. The output is not invariant—the rows move—but the computation has no independent way to decide that one arrangement represents “the cat chased the dog” and another represents “the dog chased the cat.” It only follows the rows it receives.
+1. the local content of the current token;
+2. information from other positions, where the useful positions depend on context.
 
-A causal mask changes the situation, because token $i$ can only attend to an allowed prefix. That asymmetry already carries some order information. It still does not provide a rich coordinate system for distance. A decoder may know that a key is in the past without having a stable representation of whether it is one, one hundred, or one hundred thousand tokens away.
+In “the bank raised the rate,” the meaning of “rate” is constrained by “bank.” In code, a closing delimiter may depend on a construct opened many lines earlier. During translation, each target token must use both the generated target prefix and the complete source sequence.
 
-A useful positional mechanism therefore has to support several distinct jobs:
+A recurrent network computes state $t$ from state $t-1$, creating a chain across positions. A Transformer instead uses **attention**: it builds a weighted mixture of vectors from accessible positions. When the requesting position and the vectors it reads belong to the same sequence, the operation is **self-attention**. A **feed-forward network (FFN)** then transforms each position’s features. Layers still depend on previous layers, but positions within a layer can be processed together.
 
-- distinguish order;
-- expose relative distance or direction;
-- remain usable when sequence length changes;
-- extend to more than one axis when the input is an image, video, or synchronized stream.
+Two mechanisms will make that computation respect sequence structure. A **positional signal** represents where a token occurs. A **causal mask** forbids a position from reading later tokens, which would reveal the answer during next-token training. Sections 3 and 5 make these ideas concrete.
 
-The history of positional encoding is largely a history of deciding where this information should enter the model: added to embeddings, inserted as a bias, or built into the geometry of the query-key product.
+The [original Transformer paper (Vaswani et al., 2017)](https://arxiv.org/abs/1706.03762) addresses translation. Its **encoder** turns the source text into contextual vectors, collectively called encoder memory. Its **decoder** builds the translation while reading both the available translation prefix and that memory. Attention that reads a different stream is called **cross-attention**. A **decoder-only** language model has no separate encoder: prompt and continuation occupy one sequence. Treat the next diagram as a map; the chapter will unpack its components.
 
-![VIZ m4/01 — from permutation symmetry to positional structure](assets/modern-llms/en/module-03/m4_01_permutation.svg)
-*Bidirectional self-attention is permutation-equivariant without a positional signal. A causal mask breaks full symmetry, but it does not by itself provide a rich distance geometry.*
+![VIZ m3/02 — the complete encoder–decoder Transformer](assets/modern-llms/en/module-03/m3_02_transformer_overview.svg)
+*The source branch produces contextual vectors. The decoder uses them through cross-attention while building the translation. Sections 8–10 expand the sublayers and residual paths inside each branch.*
 
-## 2. A map of where position enters
+### 1.1. Scope of this lesson
 
-**Positional encoding (PE)** introduces token coordinates into the computation. **RoPE (Rotary Position Embedding)** does so by rotating pairs of coordinates.
+The immediate goal is to understand the basic computation. The following links are a map of later topics, not a list of prerequisites:
 
-Position can change the input embedding, the projected query and key, or the score just before softmax. The last quantity is an attention logit: one number controlling a query–key connection. Each approach modifies a different step of the computation from M3.
+- [Module 4](module-04.md) develops modern positional methods;
+- [Module 5](module-05.md) moves from MHA to GQA, MLA, and FlashAttention;
+- [Module 6](module-06.md) studies the modern residual block;
+- [Module 10](module-10.md) turns the autoregressive forward pass into efficient serving.
 
-| Entry point | Operation | Example and section |
-|---|---|---|
-| Input representation | add a vector indexed by position | sinusoidal PE, §§3–4 |
-| Projected query and key | rotate coordinate pairs by position-dependent angles | RoPE, §§4–7 |
-| Attention logit | add a distance-dependent bias | ALiBi, §8 |
-| No separate positional term | learn order-sensitive behavior from the causal mask and layers | NoPE, §9 |
+This chapter is self-contained. Those links deepen the subject but are not prerequisites for completing this lesson.
 
-PI, NTK-aware scaling, and YaRN modify the RoPE frequency spectrum (§7). M-RoPE assigns coordinate pairs to several axes (§13). Treat these names as destinations on the map; you do not need their formulas yet.
+## 2. Notation and tensor shapes
 
-![VIZ m4/02 — branches of positional representation](assets/modern-llms/en/module-03/m4_02_pe_timeline.svg)
-*The branches differ in where and how they introduce position. A later method does not replace every earlier one.*
+Start with three axes. One token has $d_{model}$ features. A sequence has $T$ positions. A **batch** holds $B$ examples processed together. Their vectors form a tensor—a multidimensional array—of shape $B\times T\times d_{model}$. Reading the axes as “example, position, feature” will prevent many shape errors.
 
-**Historical connections — optional reading**
+For the first pass, keep $X\in\mathbb R^{B\times T\times d_{model}}$ in mind. Sections 4 and 6 introduce queries, keys, values, and heads; use the full index below once those concepts are familiar.
 
-The original Transformer used deterministic sinusoidal positional encoding. Each position was mapped to a geometric ladder of sine and cosine frequencies. The representation contained no learned positional parameters and could be evaluated beyond the training table.
+**Full shape index — second pass and reference**
 
-Learned absolute embeddings offered an even simpler interface: position $m$ selected row $m$ of a parameter matrix. They work well inside the trained range but tie the architecture to a finite table unless an explicit extension procedure is introduced.
+| Symbol | Meaning |
+|---|---|
+| $B$ | batch size |
+| $T$ | sequence length |
+| $T_q$, $T_k$ | number of queries and keys; usually equal in self-attention |
+| $d_{model}$ | number of features in the main representation stream |
+| $h$ | number of attention heads |
+| $d_k$, $d_v$ | key/query width and value width per head |
+| $d_{ff}$ | hidden width of the FFN |
+| $\lvert \mathcal V \rvert$ | vocabulary size |
 
-Relative methods moved the positional signal closer to attention. Shaw et al. added learned relative representations. Transformer-XL designed a relative formulation compatible with recurrent segment memory. ALiBi later showed that a head-specific linear distance penalty could provide a surprisingly strong extrapolation prior without rotating or adding embeddings.
-
-RoPE—Rotary Position Embedding—became a particularly influential decoder design. It represents absolute position as a rotation but makes the query-key dot product depend on relative phase. The operation changes neither tensor width nor KV-cache layout.
-
-Long-context work created another branch. Position Interpolation compresses new positions into the old phase range. Community-developed NTK-aware methods change the frequency ladder non-uniformly. YaRN blends original and interpolated frequencies through a ramp. LongRoPE searches dimension-specific extension factors. Llama3-style scaling, partial RoPE, RoPE/NoPE hybrids, local attention, and attention-temperature tuning solve related problems with different assumptions.
-
-Multimodal models then changed the question itself. An image needs height and width. Video adds time. A streaming audio-video model needs time IDs that mean the same thing across modalities. M-RoPE and TMRoPE turn a one-dimensional token index into a small coordinate system.
-
-## 3. Fourier intuition, complex rotations, and what is exact
-
-Let $m$ be an integer position counted from zero. Pair $i$ has angular frequency $\theta_i$, measured in radians per position step. Its **phase** is the angle $m\theta_i$. Frequency tells us how much that angle changes when we advance by one position.
-
-A sinusoidal encoding maps a position $m$ to periodic coordinates such as
+After embedding lookup,
 
 $$
-(\sin m\theta_i,\cos m\theta_i).
+X \in \mathbb{R}^{B \times T \times d_{model}}.
 $$
 
-For the pure positional vectors, the dot product of one sine-cosine pair is exactly relative:
+For multi-head attention, it is convenient to expose the head axis:
 
 $$
-\sin(m\theta)\sin(n\theta)+
-\cos(m\theta)\cos(n\theta)
+Q \in \mathbb{R}^{B \times h \times T_q \times d_k}, \qquad
+K \in \mathbb{R}^{B \times h \times T_k \times d_k}, \qquad
+V \in \mathbb{R}^{B \times h \times T_k \times d_v}.
+$$
+
+Attention weights have shape
+
+$$
+A \in \mathbb{R}^{B \times h \times T_q \times T_k}.
+$$
+
+We will denote the value mixture produced by each head as $Z$:
+
+$$
+Z=AV \in \mathbb{R}^{B \times h \times T_q \times d_v}.
+$$
+
+The final axis of $A$ is the **key axis**. Softmax is applied there: for a fixed batch element, head, and query, key weights must sum to one. The final axis of $Z$ instead has value width $d_v$.
+
+That is the first useful invariant. The second is that concatenated heads and the output projection $W_O$ must return to width $d_{model}$, otherwise the result cannot be added to the residual stream.
+
+### 2.1. The residual stream as the main route
+
+The main representation keeps shape $B\times T\times d_{model}$ as layers refine it. This is the **residual stream**. Each sublayer computes an update of the same shape, and a **residual connection** adds that update to the input:
+
+$$
+x \leftarrow x + \operatorname{Sublayer}(x).
+$$
+
+If the last dimension unexpectedly changes inside a basic block, that is almost never a subtle Transformer property. It is usually a shape bug or a missing output projection.
+
+## 3. Step 1: tokens, embeddings, and positions
+
+For this teaching model, IDs form the dense range $0,\ldots,|\mathcal V|-1$, and the table has exactly $|\mathcal V|$ rows. Real artifacts may distinguish defined IDs, the ID range, and allocated rows, as Module 2 explains.
+
+A neural network does not receive a string directly. A tokenizer maps text to integer identifiers
+
+$$
+(t_1,t_2,\ldots,t_T), \qquad t_i \in \{0,\ldots,|\mathcal V|-1\}.
+$$
+
+An embedding matrix
+
+$$
+E \in \mathbb{R}^{|\mathcal V| \times d_{model}}
+$$
+
+acts as a learned lookup table. Row $E_{t_i}$ is the vector for the token at position $i$. Batched lookup produces a tensor of shape $B \times T \times d_{model}$.
+
+The original architecture scaled token embeddings by $\sqrt{d_{model}}$ and added a positional encoding:
+
+$$
+x_{pos}=\sqrt{d_{model}}\,E[t_{pos}] + PE(pos).
+$$
+
+The scale factor is not a universal law of every LLM; it belongs to the 2017 recipe. The important idea is the addition: token content and position enter the same residual space.
+
+### 3.1. Why order vanishes without positions
+
+Consider unmasked self-attention with no positional information. Permuting the input vectors permutes the output vectors in the same way. The mechanism sees a set of vectors and relations among them, but it does not know which vector came first.
+
+For example, the vector associated with “dog” is unchanged when “dog bites person” becomes “person bites dog” under these assumptions; its output row simply moves. This property is **permutation equivariance**, not complete output invariance. A causal mask breaks that symmetry, so the argument applies specifically to unmasked attention without positional information.
+
+### 3.2. Sinusoidal encoding in the original paper
+
+Even and odd dimensions use sine/cosine pairs at different frequencies:
+
+$$
+PE(pos,2i)=\sin\left(\frac{pos}{10000^{2i/d_{model}}}\right),
+$$
+
+$$
+PE(pos,2i+1)=\cos\left(\frac{pos}{10000^{2i/d_{model}}}\right).
+$$
+
+Here $pos$ starts at zero, and $i$ indexes coordinate pairs from $0$ to $d_{model}/2-1$ for an even width. Small $i$ gives faster oscillations; large $i$ gives slower ones. This supplies several scales of variation. Being able to compute a positional code beyond the training lengths does not, by itself, guarantee useful model behavior there.
+
+![VIZ m3/03 — sinusoidal positional encoding](assets/modern-llms/en/module-03/m3_03_positional_encoding.png)
+*Four dimensions of one encoding. The high-frequency pair changes quickly from position to position, while the low-frequency pair supplies a slowly varying background.*
+
+This fixed formula makes a convenient starting point. Module 4 compares it with learned tables, relative biases, and RoPE rotations. For now, the key result is that a token vector carries information about both content and position.
+
+### 3.3. A quick shape check
+
+Let $B=2$, $T=5$, and $d_{model}=8$:
+
+- `token_ids`: `[2, 5]`;
+- `embedding(token_ids)`: `[2, 5, 8]`;
+- `position_encoding[:5]`: `[5, 8]`;
+- after broadcasting and addition: `[2, 5, 8]`.
+
+The positional table does not need a batch axis. The same coordinate $pos$ is used for every item in the batch.
+
+## 4. Step 2: scaled dot-product attention
+
+Imagine one position requesting context. Its **query** describes what to match. Each available position supplies a **key** for matching and a **value** to contribute to the result. Attention turns query–key scores into weights and uses them to mix the values. One such computation is an **attention head**. The matrices $Q$, $K$, and $V$ collect the respective vectors as rows. Queries and keys have width $d_k$ per head; values have width $d_v$. There are $T_q$ queries and $T_k$ keys and values.
+
+The computation for one head is
+
+$$
+\operatorname{Attention}(Q,K,V)
 =
-\cos((m-n)\theta).
+\operatorname{softmax}\!\left(
+\frac{QK^\top}{\sqrt{d_k}}
+\right)V.
 $$
 
-This identity concerns the positional vectors themselves. To understand its effect on attention, we also need to know where they enter the computation. In additive positional encoding, content and position are summed before learned projections. Cross-terms appear, so the final attention score need not be a pure function of $m-n$.
+**Softmax** converts scores into nonnegative weights that sum to one. Here it operates separately for each query row, across the available keys. The transpose $K^\top$ exchanges the final two axes so that the matrix product compares every query with every key. We will add masking after understanding this mixture.
 
-RoPE rotates the projected queries and keys. Picture each coordinate pair as an arrow in a plane: turning both arrows by the same angle leaves their dot product unchanged.
-
-**Optional complex notation.** Write the pair as $z=x_1+ix_2$, with $i$ now denoting the imaginary unit. Rotation is multiplication by
+It is useful to unpack the equation into three steps:
 
 $$
-e^{im\theta}.
-$$
-
-The common phase cancels in the inner product, leaving a rotation by the relative displacement. This is a direct algebraic property of the query-key geometry.
-
-The Fourier-features analogy remains valuable, but it should not be read too literally. Random Fourier Features sample frequencies to approximate a chosen kernel. Transformer sinusoidal and rotary frequencies are deterministic and geometrically spaced; they are an architectural basis, not a random kernel estimator.
-
-## 4. Formalism: the frequency ladder and the rotary identity
-
-Here $D$ is an even number of rotated coordinates, not the residual width $d_{model}$. Full-head RoPE has $D=d_k$; additive PE uses the same frequency construction at the input-vector width. Code often calls these values `inv_freq`, because they are reciprocals of the phase denominators. A base greater than one controls how quickly frequency falls across pairs.
-
-For an even rotated width $D$, define $D/2$ inverse frequencies
-
-$$
-\theta_i=\mathrm{base}^{-2i/D},
-\qquad i=0,\ldots,D/2-1.
-$$
-
-Their wavelengths in token positions are
-
-$$
-\lambda_i=\frac{2\pi}{\theta_i}.
-$$
-
-Classic sinusoidal encoding uses
-
-$$
-PE(m,2i)=\sin(m\theta_i),
+S=\frac{QK^\top}{\sqrt{d_k}},
 \qquad
-PE(m,2i+1)=\cos(m\theta_i).
-$$
-
-![VIZ m4/03 — sinusoidal PE](assets/modern-llms/en/module-03/m4_03_sinusoidal_heatmap.png)
-*Rows are positional coordinates. Adjacent rows form sine–cosine pairs; higher-index pairs vary more slowly.*
-
-RoPE turns the same phase into a rotation matrix:
-
-$$
-R_{m,i}=
-\begin{pmatrix}
-\cos(m\theta_i)&-\sin(m\theta_i)\\
-\sin(m\theta_i)&\cos(m\theta_i)
-\end{pmatrix}.
-$$
-
-For a query at position $m$ and a key at position $n$,
-
-$$
-q'_m=R_mq_m,
+A=\operatorname{softmax}_{\mathrm{row}}(S),
 \qquad
-k'_n=R_nk_n,
+Z=AV.
 $$
 
-and
+$S$ holds scaled compatibility scores, $A$ holds mixture weights, and $Z$ contains the resulting vectors. The symbol $W_O$ in §6 will instead name the output projection matrix.
+
+The matrix identity $Z=AV$ means, row by row,
 
 $$
-(q'_m)^Tk'_n
-=q_m^TR_{n-m}k_n.
+z_i=\sum_{j=1}^{T_k} a_{ij}v_j.
 $$
 
-RoPE therefore uses absolute position IDs to construct rotations, while the positional contribution to the bilinear score enters through the relative displacement $n-m$. The full score still depends on the content carried by $q_m$ and $k_n$.
+Every query position receives a weighted sum of value vectors. Section 5 keeps the same computation but replaces $S$ with masked scores $\widetilde S$ before softmax.
 
-There are two common coordinate layouts. Pedagogical derivations often rotate adjacent pairs $(x_0,x_1)$, $(x_2,x_3)$, and so on. Llama-style `rotate_half` pairs the first half of the vector with the second. They are equivalent under a fixed permutation, not interchangeable on the same trained weights.
+![VIZ m3/04 — the roles of query, key, and value](assets/modern-llms/en/module-03/m3_04_qkv_roles.svg)
+*$Q$, $K$, and $V$ are not three kinds of tokens. They are three learned roles assigned to representations. A table-lookup analogy helps as long as we remember that the query, index, and payload co-adapt during training.*
 
-The rotation preserves pairwise norms and leaves the tensor shape unchanged. It does not commute with an arbitrary learned matrix. The actual model order is simple: project the residual stream into $Q$ and $K$, then rotate those projected vectors.
+### 4.1. Where $Q$, $K$, and $V$ come from
 
-![VIZ m4/04 — RoPE inside attention](assets/modern-llms/en/module-03/m4_04_rope_mechanics.svg)
-*Project to Q/K/V, rotate Q and K, form scaled scores, then mix V. The version shown leaves V unrotated.*
+In self-attention, all three tensors are linear projections of the same input $X$:
 
-**Partial RoPE.** Some models rotate only D coordinates of a wider head, leaving the remaining channels unchanged. Frequencies use the rotated width D; attention normalization uses the full key width $d_k$. Scaling just the rotary channels does not multiply the entire dot product by one common factor.
+$$
+Q=XW_Q, \qquad K=XW_K, \qquad V=XW_V.
+$$
 
-**NumPy and PyTorch implementation — second pass**
+For one head, we may write
 
-### NumPy → PyTorch · B02 — RoPE: rotating coordinate pairs
+$$
+W_Q,W_K \in \mathbb{R}^{d_{model}\times d_k}, \qquad
+W_V \in \mathbb{R}^{d_{model}\times d_v}.
+$$
 
-Implementation route. Assume a validated, nonempty floating tensor `x[..., T, D]`, even D, nonnegative integer IDs `[T]`, and a finite base greater than one. Adjacent coordinates form pairs. The notebook adds input validation (§12).
+The projections let the model learn different features for “what I am looking for,” “how I should be found,” and “what I transmit.” A token may have a key that is useful for a syntactic match while its value carries semantic or positional content.
+
+In cross-attention, the sources differ:
+
+$$
+Q=X_{decoder}W_Q, \qquad K=X_{encoder}W_K, \qquad V=X_{encoder}W_V.
+$$
+
+Cross-attention changes where the vectors come from, while keeping the same scoring and mixing operation.
+
+### 4.2. Why a dot product
+
+Before scaling, the dot product of query $q_i$ with key $k_j$ is
+
+$$
+u_{ij}=\sum_{r=1}^{d_k}q_{ir}k_{jr}, \qquad s_{ij}=u_{ij}/\sqrt{d_k}.
+$$
+
+The scores $s_{ij}$ before softmax are **attention logits**. They are not yet probabilities: normalization turns each row into weights over keys. We will later use the same term for the model's output scores over vocabulary items.
+
+A larger score receives a larger weight, all else equal. The sign alone does not establish relevance: softmax compares scores within a row. For nonzero vectors, **cosine similarity** is $q^\top k/(\|q\|\|k\|)$, which normalizes away their lengths. The dot-product score used here retains both magnitude and directional information.
+
+### 4.3. Why divide by $\sqrt{d_k}$
+
+Assume for intuition that coordinates $q_r$ and $k_r$ are independent, zero-mean, and unit-variance. Then
+
+$$
+q^\top k=\sum_{r=1}^{d_k}q_rk_r,
+$$
+
+and under these simplifying assumptions,
+
+$$
+\operatorname{Var}(q^\top k)=d_k.
+$$
+
+The standard deviation grows like $\sqrt{d_k}$. Without scaling, wider keys can produce large logits, saturate softmax, make the distribution nearly one-hot, and leave small gradients for losing positions.
+
+After division,
+
+$$
+\operatorname{Var}\left(\frac{q^\top k}{\sqrt{d_k}}\right)=1.
+$$
+
+This is not a theorem about a trained network: learned coordinates are neither independent nor guaranteed to have unit variance. It is nevertheless an exact explanation of the natural scale and a phenomenon the notebook reproduces with random vectors.
+
+### 4.4. Softmax and the correct axis
+
+For query $i$ in unmasked attention,
+
+$$
+a_{ij}=\frac{\exp(s_{ij})}{\sum_{m=1}^{T_k}\exp(s_{im})}.
+$$
+
+Therefore
+
+$$
+a_{ij}\geq 0, \qquad \sum_{j=1}^{T_k} a_{ij}=1.
+$$
+
+In code this is `softmax(scores, dim=-1)` when the final axis is $T_k$. The wrong choice, such as `dim=-2`, may not raise an exception. It will normalize queries rather than keys. A row-sum assertion is therefore an essential unit test. Masked attention applies the same normalization to $\widetilde S$ from §5.
+
+### 4.5. Attention by hand: a complete numerical example
+
+Use one head, three positions, and $d_k=d_v=2$:
+
+$$
+Q=K=
+\begin{bmatrix}
+1&0\\
+0&1\\
+1&1
+\end{bmatrix},
+\qquad
+V=
+\begin{bmatrix}
+1&0\\
+0&2\\
+3&1
+\end{bmatrix}.
+$$
+
+Scaled scores are
+
+$$
+\frac{QK^\top}{\sqrt 2}
+=
+\begin{bmatrix}
+0.707&0&0.707\\
+0&0.707&0.707\\
+0.707&0.707&1.414
+\end{bmatrix}.
+$$
+
+Apply the **causal constraint**: row 1 may read key 1, row 2 may read keys 1–2, and row 3 may read all three. Replace future-key scores with $-\infty$ **before** softmax, making their exponentials zero, and normalize over the remaining keys. This gives
+
+$$
+A\approx
+\begin{bmatrix}
+1&0&0\\
+0.330&0.670&0\\
+0.248&0.248&0.503
+\end{bmatrix}.
+$$
+
+Let $Z$ denote the head output. In matrix form $Z=AV$, while each query row is
+
+$$
+z_i=\sum_{j=1}^{T_k}a_{ij}v_j.
+$$
+
+For this example,
+
+$$
+Z=AV\approx
+\begin{bmatrix}
+1.000&0.000\\
+0.330&1.340\\
+1.759&1.000
+\end{bmatrix}.
+$$
+
+The third row is especially useful to read in words:
+
+$$
+z_3\approx0.248255v_1+0.248255v_2+0.503490v_3\approx[1.758725,1.000000].
+$$
+
+![VIZ m3/05 — numerical trace of causal attention](assets/modern-llms/en/module-03/m3_05_attention_trace.svg)
+*The full route through one head: compatibility matrix, future-token prohibition, key-wise softmax, and value mixing. The module notebook reproduces every number.*
+
+This example also exposes a crucial distinction: an **attention weight is a routing coefficient, not a complete explanation of the model’s decision**. A high weight says how much of a transformed value entered this local mixture. The result still travels through residual paths, other heads, FFNs, and later layers.
+
+## 5. Masks: who is allowed to see whom
+
+The word *mask* is used for two related but distinct objects: a Boolean visibility matrix and a numerical bias added to logits. Rather than hide the operation inside “scores + mask,” begin with a Boolean matrix
+
+$$
+C_{ij}\in\{0,1\},
+$$
+
+where $C_{ij}=1$ means query $i$ is allowed to read key $j$. Define masked scores directly:
+
+$$
+\widetilde s_{ij}=
+\begin{cases}
+s_{ij}, & C_{ij}=1,\\
+-\infty, & C_{ij}=0.
+\end{cases}
+$$
+
+Then
+
+$$
+A=\operatorname{softmax}_{\mathrm{row}}(\widetilde S),
+\qquad
+Z=AV.
+$$
+
+Because $\exp(-\infty)=0$, forbidden connections receive zero weight. This is exactly the paper's prose description: illegal entries **at the input to softmax** are set to $-\infty$.
+
+Implementations often express the same operation as
+
+$$
+\widetilde S=S+M,
+\qquad
+M_{ij}=
+\begin{cases}
+0, & C_{ij}=1,\\
+-\infty, & C_{ij}=0.
+\end{cases}
+$$
+
+$M$ is a numerical bias constructed from $C$, not a learned parameter. Allowed links receive 0 and forbidden links receive $-\infty$. A finite negative number only approximates this prohibition and does not resolve a row with no allowed keys (§5.6).
+
+![VIZ m3/06 — padding, causal, and cross-attention masks](assets/modern-llms/en/module-03/m3_06_attention_masks.png)
+*Padding-key and causal constraints can be combined. The fourth panel shows rectangular cross-attention. These plots mask keys; padded query rows are not independently suppressed.*
+
+### 5.1. Padding mask
+
+Sequences in a batch have different lengths, but tensors are rectangular. Shorter examples are padded with `PAD`. Those positions contain no content and must not be used as keys. Query rows belonging to padding are normally excluded from the loss as well.
+
+### 5.2. Causal mask
+
+A decoder-only language model predicts token $t+1$ at position $t$ and must not use future context. Keys $j\leq i$ are allowed:
+
+$$
+C_{ij}=1 \text{ when } j\leq i, \qquad C_{ij}=0 \text{ when } j> i.
+$$
+
+This is a lower-triangular pattern. It makes parallel training valid: all positions are computed in one forward pass, but each position receives only its admissible prefix.
+
+### 5.3. Encoder self-attention
+
+A classic encoder has no reason to hide right context. Every source representation may read the complete source sequence. Only padding needs to be masked.
+
+### 5.4. Cross-attention mask
+
+The number of target queries and source keys may differ. Decoder queries read encoder memory; padded source keys are hidden. A causal triangle over the source axis is normally unnecessary because the complete source is already available.
+
+### 5.5. A common Boolean-mask trap
+
+Even PyTorch uses two conventions: Boolean `True` allows a link in [`functional.scaled_dot_product_attention`](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html), but forbids one in [`MultiheadAttention.attn_mask`](https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html). Our argument is named `allowed`, so `True` always permits a connection. A test checks that forbidden links receive zero weight.
+
+### 5.6. A fully masked row
+
+If a query is allowed to read **no** keys, the row does not define a probability distribution. A naive call such as
 
 ```python
-import numpy as np
 import torch
+
+torch.softmax(torch.tensor([-float("inf"), -float("inf")]), dim=0)
+# tensor([nan, nan])
 ```
 
-#### 1. Explicit NumPy implementation
+produces `NaN`: subtracting the row maximum creates the indeterminate expression $-\infty-(-\infty)$. A safe educational implementation must therefore expose an explicit policy:
+
+- `error` — the default: stop and surface a masking bug;
+- `zero` — return zero weights and a zero output for that row when this is intentional, for example for a padded query excluded from the loss.
+
+Under the `zero` policy the row sum of the weights is zero, not one. This is not an ordinary probability distribution; it is the contract “this query produces no attention output.” Silently substituting a uniform distribution or allowing `NaN` to propagate is incorrect.
+
+## 6. Multi-head attention
+
+One head produces one pattern of mixing weights. Multiple heads can produce different mixtures for the same position. Keep the notation explicit: $X_q,X_k,X_v$ are inputs before projection, while $Q_i,K_i,V_i$ are projected vectors for head $i$:
+
+$$
+Q_i=X_qW_Q^{(i)},\quad K_i=X_kW_K^{(i)},\quad V_i=X_vW_V^{(i)},
+\qquad Z_i=\operatorname{Attention}(Q_i,K_i,V_i),
+$$
+
+$$
+\operatorname{MHA}(X_q,X_k,X_v)=
+\operatorname{Concat}(Z_1,\ldots,Z_h)W_O.
+$$
+
+Self-attention uses $X_q=X_k=X_v=X$; cross-attention takes $X_q$ from the decoder and $X_k=X_v$ from the encoder. Every head sees the full input vector before projecting it to a narrower space.
+
+Let $h$ be the number of heads. A common configuration uses
+
+$$
+d_k=d_v=d_{model}/h.
+$$
+
+Concatenation then restores width $d_{model}$.
+
+![VIZ m3/07 — multi-head attention](assets/modern-llms/en/module-03/m3_07_multihead.svg)
+*The three input projections are often computed by one packed linear layer, then reshaped by head. Independent attention results are concatenated and passed through $W_O$.*
+
+### 6.1. Why several heads can help
+
+Each head has different $W_Q$, $W_K$, and $W_V$ projections. One head can become sensitive to local syntax, another to long-range matches, and another to separators or structure. That is a capacity, not a guarantee of clean, human-readable specialization. Heads may be redundant, distribute a function among themselves, or change roles across layers and examples.
+
+### 6.2. Parameter count of basic MHA
+
+Ignoring biases and assuming the total head width equals $d_{model}$:
+
+- $W_Q$, $W_K$, $W_V$ each contain $d_{model}^2$ weights;
+- $W_O$ adds another $d_{model}^2$.
+
+Under these assumptions, the exact total is
+
+$$
+4d_{model}^2.
+$$
+
+At $d_{model}=512$, this is $1\,048\,576$ weights. With fixed total width, changing the head count changes the partitioning but not this leading parameter count.
+
+### 6.3. What later modules change
+
+**Looking ahead to Module 5.** MQA and GQA share keys and values across multiple query heads; MLA uses a compressed representation. Those variants can wait. Standard MHA first gives us a complete calculation with separate projections for every head.
+
+## 7. The FFN: nonlinear processing at each position
+
+Attention brings information across positions. The **position-wise FFN** then transforms the features of each position using two linear maps with a nonlinearity between them. Keeping the chapter’s row-vector convention,
+
+$$
+\operatorname{FFN}(x)=\sigma(xW_1+b_1)W_2+b_2.
+$$
+
+Let $d_{ff}$ denote the hidden FFN width. In the original paper,
+
+$$
+W_1\in\mathbb R^{d_{model}\times d_{ff}}, \qquad
+W_2\in\mathbb R^{d_{ff}\times d_{model}},
+$$
+
+$\sigma$ is ReLU, which clips negative coordinates to zero: $\operatorname{ReLU}(u)=\max(0,u)$. Without a nonlinearity, the two linear maps could collapse into one. The base configuration uses $d_{model}=512$ and $d_{ff}=2048$.
+
+### 7.1. What position-wise means
+
+For $X$ of shape $B\times T\times d_{model}$, each linear layer acts on the final axis. Every token uses the same multilayer perceptron (MLP); no positions are mixed at this step. No explicit loop over $T$ is needed because `nn.Linear` already operates on the last dimension.
+
+### 7.2. Why the FFN is large
+
+Ignoring bias, the number of weights is
+
+$$
+2d_{model}d_{ff}.
+$$
+
+For $512\rightarrow2048\rightarrow512$, that is $2\,097\,152$ parameters—twice the four MHA projections in the same layer. In a simple encoder layer, the FFN owns roughly two thirds of the attention+FFN projection weights. Attention decides **where information comes from**; the FFN decides **how the resulting representation is transformed nonlinearly**.
+
+Module 6 introduces **gating**, where one computed signal controls how much of another passes through; SwiGLU is one example. For this chapter, keep the division of labor clear: attention mixes positions, while the FFN transforms features at each position.
+
+## 8. Residual connections and LayerNorm
+
+A deep network must add transformations while preserving a path for signals and gradients—the loss derivatives used to update weights during training. The Transformer wraps every sublayer with a residual connection and normalization.
+
+### 8.1. LayerNorm over the final axis
+
+For one position vector $x\in\mathbb{R}^{d_{model}}$,
+
+$$
+\mu=\frac{1}{d_{model}}\sum_{r=1}^{d_{model}}x_r,
+$$
+
+$$
+\sigma^2=\frac{1}{d_{model}}\sum_{r=1}^{d_{model}}(x_r-\mu)^2,
+$$
+
+$$
+\operatorname{LN}(x)=
+\gamma\odot\frac{x-\mu}{\sqrt{\sigma^2+\varepsilon}}+\beta.
+$$
+
+$\gamma$ and $\beta$ are learned scale and offset vectors; $\odot$ means elementwise multiplication. A small positive $\varepsilon$ prevents division by zero when variance vanishes. Statistics are computed over one position’s features, separately from other tokens and batch items.
+
+For $x=[1,2,3,4]$, $\gamma=1$, $\beta=0$, and negligible $\varepsilon$,
+
+$$
+\mu=2.5, \qquad \sigma^2=1.25,
+$$
+
+$$
+\operatorname{LN}(x)\approx[-1.342,-0.447,0.447,1.342].
+$$
+
+### 8.2. Post-norm in the original architecture
+
+`Attention Is All You Need` uses
+
+$$
+y=\operatorname{LN}(x+\operatorname{Sublayer}(x)).
+$$
+
+The sublayer runs first, residual addition follows, and LayerNorm comes last. The paper’s diagram labels this `Add & Norm`.
+
+### 8.3. Pre-norm in modern LLMs
+
+Many later decoder-only architectures normalize before the sublayer:
+
+$$
+y=x+\operatorname{Sublayer}(\operatorname{Norm}(x)).
+$$
+
+Now the input $x$ reaches the addition directly, while normalization lies inside the update branch. Moving the norm therefore changes both the signal and gradient paths. Module 6 also introduces RMSNorm, which normalizes using the mean square of the coordinates.
+
+![VIZ m3/08 — post-norm and pre-norm](assets/modern-llms/en/module-03/m3_08_block_order.svg)
+*Each wrapper applies to one sublayer F, either attention or an FFN. The norm sits after residual addition on the left and inside the update branch on the right.*
+
+### 8.4. Dropout in the original recipe
+
+**Dropout** randomly zeros some values during training and rescales the retained values; ordinary generation disables it. The original Transformer applies it to sublayer outputs before residual addition and to the sum of token and positional embeddings. We omit it from the equations above to keep the paths visible.
+
+## 9. The encoder layer and encoder stack
+
+One encoder layer performs two operations:
+
+1. bidirectional self-attention;
+2. a position-wise FFN.
+
+Each has its own residual connection and LayerNorm. In post-norm notation,
+
+$$
+h' = \operatorname{LN}\left(h+\operatorname{MHA}(h,h,h)\right),
+$$
+
+$$
+h^{next}=\operatorname{LN}\left(h'+\operatorname{FFN}(h')\right).
+$$
+
+The stack repeats the layer structure $N$ times, with separate learned parameters in each layer. The base paper uses $N=6$. The final output is encoder memory:
+
+$$
+H_{enc}\in\mathbb{R}^{B\times T_{src}\times d_{model}}.
+$$
+
+Every source vector is now contextual: it can incorporate any unmasked source position.
+
+### 9.1. When an encoder is useful
+
+An encoder is useful when all input tokens are available, as in classification or document embeddings for search. Bidirectional attention lets a position read both left and right context. In a causal decoder-only model, even prompt positions can read only their own prefixes; the final prompt position can incorporate the entire prompt.
+
+## 10. The decoder layer and cross-attention
+
+The original decoder layer contains three sublayers:
+
+1. masked self-attention over the target prefix;
+2. cross-attention to encoder memory;
+3. an FFN.
+
+In compact post-norm notation,
+
+$$
+z_1=\operatorname{LN}\left(z+\operatorname{MaskedMHA}(z,z,z)\right),
+$$
+
+$$
+z_2=\operatorname{LN}\left(z_1+\operatorname{MHA}(z_1,H_{enc},H_{enc})\right),
+$$
+
+$$
+z^{next}=\operatorname{LN}\left(z_2+\operatorname{FFN}(z_2)\right).
+$$
+
+The second line takes queries from the decoder and keys/values from the encoder. The decoder can therefore select relevant source information for each target step.
+
+### 10.1. Why the target is shifted
+
+Suppose the correct target sequence is
+
+```text
+I love models <EOS>
+```
+
+The decoder input is
+
+```text
+<BOS> I love models
+```
+
+while the loss targets are
+
+```text
+I love models <EOS>
+```
+
+Treat each word as one toy token here; a real tokenizer may split it further. `<BOS>` marks the start and `<EOS>` the end. The input is shifted by one token: the `<BOS>` position predicts “I,” the “I” position predicts “love,” and so on. The diagonal is allowed because the input token at a position is already part of the known prefix.
+
+### 10.2. Linear projection and softmax
+
+Each final position vector $h_t$, or **hidden state**, is multiplied by $W_{vocab}\in\mathbb R^{d_{model}\times|\mathcal V|}$. This produces one unnormalized score, called a **logit**, for each vocabulary item:
+
+$$
+\ell_t=h_tW_{vocab}+b, \qquad
+\ell_t\in\mathbb{R}^{|\mathcal V|}.
+$$
+
+Probabilities are
+
+$$
+p(y_t=v\mid y_{< t},x)=\operatorname{softmax}(\ell_t)_v.
+$$
+
+Some models tie the output matrix to the input embedding matrix. Weight tying saves parameters and connects the token-reading and token-writing spaces, but it is not required by the Transformer architecture.
+
+## 11. Training: teacher forcing and cross-entropy
+
+**Teacher forcing** supplies the known target sequence shifted by one position. The model is scored using the **negative log-likelihood (NLL)** of the correct next token. Summing over a sequence gives
+
+$$
+\mathcal L
+=-\sum_{t=1}^{T}
+\log p_\theta(y_t\mid y_{< t},x).
+$$
+
+$\theta$ denotes the learned parameters, $y_t$ the target token, $y_{<t}$ its prefix, and $x$ the source text in translation. Decoder-only modeling omits the separate source $x$. We use natural logarithms, so NLL is measured in nats. For a target distribution concentrated on one correct token, this loss is also the **cross-entropy** between the target and the model distribution.
+
+### 11.1. Why training is parallel
+
+Although the probability factorization is autoregressive, every correct target token is already available in a training example. The complete shifted target is passed as one tensor, and the causal mask preserves validity. Positions are computed in parallel while each sees only its allowed prefix.
+
+The distinction is fundamental:
+
+- the **distributional dependency** is autoregressive;
+- the **training forward computation** is parallel over positions.
+
+### 11.2. A numerical NLL example
+
+Suppose one position has vocabulary logits
+
+$$
+[1.2,\;0.3,\;-0.4,\;2.0].
+$$
+
+Softmax gives
+
+$$
+[0.2608,\;0.1060,\;0.0527,\;0.5805].
+$$
+
+If the correct token has zero-based index 3, the position loss is
+
+$$
+-\log p_3\approx 0.5439 \text{ nats}.
+$$
+
+Cross-entropy, KL divergence, and the coding interpretation of NLL are derived in the companion course: **Course *Information Theory for ML*, Module 3.** The engineering reading here is sufficient: the loss charges the model according to the probability it assigned to the correct token.
+
+### 11.3. Loss masks are not attention masks
+
+Let $m_t=1$ for a prediction that should be scored and $m_t=0$ otherwise. The mean loss is
+
+$$
+\overline{\mathcal L}=\frac{\sum_t m_t[-\log p_\theta(y_t\mid y_{<t},x)]}{\sum_t m_t},\qquad \sum_t m_t>0.
+$$
+
+Padding targets are excluded. Training on prompt–answer pairs may also score only the answer. An **attention mask** controls access to information; a **loss mask** selects predictions for scoring. A token excluded from the loss may still be available as context.
+
+## 12. Generation: the same forward pass in a different loop
+
+During generation, the next target token is not provided. The algorithm is:
+
+1. pass the current prefix to the model;
+2. read logits at the final position;
+3. select the next token;
+4. append it to the prefix;
+5. repeat until `<EOS>` or a length limit.
+
+![VIZ m3/09 — training and autoregressive inference](assets/modern-llms/en/module-03/m3_09_training_inference.svg)
+*The same computation produces a next-token distribution. Training supplies known prefixes; generation extends a prefix with the model’s own choices.*
+
+### 12.1. Greedy selection, sampling, and decoding policy
+
+The forward pass ends with one logit $z_i$ per vocabulary ID. Turning those scores into a token is a separate decision. **Greedy decoding** takes the largest score. **Sampling** draws from a probability distribution, so repeated runs can continue the same prefix differently.
+
+A positive **temperature** $\tau$ changes that distribution:
+
+$$
+p_i^{(\tau)}=\frac{\exp(z_i/\tau)}{\sum_j\exp(z_j/\tau)}.
+$$
+
+At $\tau=1$ this is ordinary softmax. A temperature below one concentrates mass on higher logits; a temperature above one spreads it more evenly. Positive temperature preserves the ranking, so it does not change the greedy choice. The formula does not admit division by zero. An interface that uses `temperature=0` to request greedy decoding is selecting a separate rule.
+
+For logits $[3,2,1,0]$, temperature one gives approximately $[0.643914,0.236883,0.087144,0.032059]$. At temperature two the probabilities become $[0.455054,0.276004,0.167405,0.101536]$. Greedy decoding still selects ID 0, while sampling is now more likely to pick one of the other IDs. Greater diversity alone says nothing about whether those alternatives solve the task better.
+
+We can also restrict the candidate set $S$. **Top-k** keeps the $k$ most probable IDs. **Top-p**, also called nucleus sampling, sorts candidates by probability and keeps the shortest prefix whose cumulative mass reaches $p$. The candidate that crosses the threshold is included. Either filter requires renormalization before drawing a token:
+
+$$
+\widetilde p_i=\frac{p_i^{(\tau)}\,\mathbf{1}[i\in S]}{\sum_{j\in S}p_j^{(\tau)}}.
+$$
+
+Apply the filters separately at temperature one. Top-k with $k=2$ keeps IDs 0 and 1, yielding $[0.731059,0.268941,0,0]$. With top-p at $p=0.9$, those two IDs contribute only about 0.880797. Including ID 2 raises the retained mass to 0.967941, and renormalization gives $[0.665241,0.244728,0.090031,0]$. Top-k fixes a count; top-p lets the count adapt to the current distribution. See [Holtzman et al., Section 3](https://arxiv.org/abs/1904.09751) for the definition and original motivation of nucleus sampling.
+
+![VIZ m3/12 — changing the token-selection distribution](assets/modern-llms/en/module-03/m3_12_sampling_policy.png)
+*Every series starts from the same logits. The two filters are applied separately at temperature one; a zero-height bar marks an excluded ID.*
+
+The notebook implements exponentiation, sorting, cumulative mass, and renormalization explicitly. It resolves equal logits by ID. When filters are combined, its order is temperature, top-k, then top-p; the final threshold is measured within the retained top-k distribution. Record that order as part of the generation protocol. Module 11 will preserve a target sampling distribution, which includes these transformations rather than only the model's raw softmax.
+
+### 12.1.1. Stopping the loop
+
+After selection, the new token joins the prefix used by the next forward pass. An **EOS token—end of sequence—** terminates the sequence. Dialogue formats may instead define particular end-of-turn markers; Module 13 explains that contract. A separate cap limits the number of new tokens. Reaching the cap is a different stopping reason from the model emitting an end marker.
+
+A filter can exclude EOS at one step, while the next step has a different logit vector. Neither greedy decoding nor sampling by itself guarantees that an end marker will arrive in time. The notebook checks EOS termination and length termination on prepared score traces. These traces isolate loop control; they do not evaluate a trained model's answer quality.
+
+### 12.2. Why errors can accumulate
+
+Training prefixes are correct. During generation, an early poor token becomes part of the next input. The model may enter prefix regions that were rare in training. This is one reason token-level loss and long-form generation quality are not identical quantities.
+
+### 12.3. Why a KV cache works
+
+In a causal stack, an old token’s representation depends only on its existing prefix. Appending a token therefore leaves old keys and values unchanged as long as weights, positions, and available context stay fixed and dropout is disabled. A **KV cache** stores those keys and values at each layer. A new token contributes one query row while the stored key/value sequence grows. Editing the prefix or renumbering positions requires reconsidering cache validity.
+
+Module 10 develops KV-cache memory and request serving. For an optional connection to reinforcement learning, *RL for LLM*, Module 6, treats token selection as an action under a policy. That perspective is not needed for the computation here.
+
+## 13. A minimal scaled dot-product attention implementation
+
+Run the code blocks in §§13–14 in order. This teaching version exposes the calculation and its main input checks: finite floating-point tensors with nonempty axes on one device, and a Boolean mask broadcastable to the score shape. It computes in float32 or float64 and returns `(output, weights)`. The notebook adds diagnostic fields and padding support.
 
 ```python
-def numpy_rope_explicit(
-    x: np.ndarray,
-    position_ids: np.ndarray,
+from __future__ import annotations
+
+import math
+from typing import Literal
+
+import torch
+from torch import Tensor
+
+def scaled_dot_product_attention(
+    q: Tensor,
+    k: Tensor,
+    v: Tensor,
+    allowed: Tensor | None = None,
     *,
-    base: float = 10_000.0,
-) -> np.ndarray:
-    dim = x.shape[-1]
-    inv_freq = base ** (-np.arange(0, dim, 2) / dim)
-    angles = position_ids[:, None] * inv_freq[None, :]
-    shape = (1,) * (x.ndim - 2) + angles.shape
-    cos, sin = np.cos(angles).reshape(shape), np.sin(angles).reshape(shape)
-    even, odd = x[..., 0::2], x[..., 1::2]
-    out = np.empty_like(x, dtype=np.result_type(x.dtype, np.float64))
-    out[..., 0::2] = even * cos - odd * sin
-    out[..., 1::2] = even * sin + odd * cos
-    return out
+    empty_row: Literal["error", "zero"] = "error",
+) -> tuple[Tensor, Tensor]:
+    """Educational attention with an explicit fully-masked-row policy.
+
+    q: [..., T_q, d_k]
+    k: [..., T_k, d_k]
+    v: [..., T_k, d_v]
+    allowed: broadcastable bool mask [..., T_q, T_k], True = allowed
+    """
+    if empty_row not in {"error", "zero"}:
+        raise ValueError("empty_row must be 'error' or 'zero'")
+    if min(q.ndim, k.ndim, v.ndim) < 2:
+        raise ValueError("q, k and v must have at least two dimensions")
+    if any(size <= 0 for t in (q, k, v) for size in t.shape):
+        raise ValueError("q, k and v must have non-empty axes")
+    if not all(t.is_floating_point() and torch.isfinite(t).all() for t in (q, k, v)):
+        raise ValueError("q, k and v must be finite floating-point tensors")
+    if not (q.device == k.device == v.device):
+        raise ValueError("q, k and v must be on one device")
+    if q.shape[-1] != k.shape[-1]:
+        raise ValueError("q and k must share d_k")
+    if k.shape[-2] != v.shape[-2]:
+        raise ValueError("k and v must share T_k")
+
+    dtype = torch.float64 if torch.float64 in {q.dtype, k.dtype, v.dtype} else torch.float32
+    q, k, v = (t.to(dtype=dtype) for t in (q, k, v))
+    batch_shape = torch.broadcast_shapes(q.shape[:-2], k.shape[:-2], v.shape[:-2])
+    q, k, v = (t.expand(*batch_shape, *t.shape[-2:]) for t in (q, k, v))
+    scores = (q @ k.transpose(-2, -1)) / math.sqrt(q.shape[-1])
+
+    if not torch.isfinite(scores).all():
+        raise FloatingPointError("attention scores overflowed")
+
+    if allowed is None:
+        allowed = torch.ones_like(scores, dtype=torch.bool)
+    else:
+        if allowed.dtype is not torch.bool:
+            raise TypeError("allowed must be a bool mask")
+        allowed = torch.broadcast_to(allowed.to(scores.device), scores.shape)
+
+    empty = ~allowed.any(dim=-1)
+    if empty_row == "error" and empty.any():
+        raise ValueError("attention contains a fully masked row")
+
+    masked_scores = scores.masked_fill(~allowed, float("-inf"))
+    row_max = torch.where(
+        (~empty)[..., None],
+        masked_scores.max(dim=-1, keepdim=True).values,
+        torch.zeros_like(masked_scores[..., :1]),
+    )
+    exponentials = torch.where(
+        allowed,
+        torch.exp(masked_scores - row_max),
+        torch.zeros_like(masked_scores),
+    )
+    denominator = exponentials.sum(dim=-1, keepdim=True)
+    denominator = torch.where(denominator > 0, denominator, torch.ones_like(denominator))
+    weights = exponentials / denominator
+    output = weights @ v
+    if not torch.isfinite(output).all():
+        raise FloatingPointError("attention output overflowed")
+    return output, weights
 ```
 
-NumPy exposes inverse frequencies, absolute-position angles, and both coordinates of every 2D rotation, making the positional contribution visible.
+A fully masked row is not a probability distribution: naive `softmax([-inf, …, -inf])` produces `NaN`. The safe default is therefore an error. Enable the `zero` policy only explicitly—for example, for a padded query whose attention output should be zero.
 
-#### 2. The same mathematics as explicit PyTorch operations
+### 13.1. A causal mask
 
 ```python
-def torch_rope_explicit(
-    x: torch.Tensor,
-    position_ids: torch.Tensor,
+def causal_allowed(
+    t_q: int,
+    t_k: int,
     *,
-    base: float = 10_000.0,
-) -> torch.Tensor:
-    dim = x.shape[-1]
-    work_dtype = torch.float64 if x.dtype == torch.float64 else torch.float32
-    inv_freq = base ** (-torch.arange(0, dim, 2, device=x.device, dtype=work_dtype) / dim)
-    angles = position_ids.to(device=x.device, dtype=work_dtype)[:, None] * inv_freq[None, :]
-    shape = (1,) * (x.ndim - 2) + tuple(angles.shape)
-    cos, sin = angles.cos().reshape(shape), angles.sin().reshape(shape)
-    even, odd = x[..., 0::2].to(work_dtype), x[..., 1::2].to(work_dtype)
-    out = torch.stack((even * cos - odd * sin, even * sin + odd * cos), dim=-1).flatten(-2)
-    return out.to(x.dtype)
+    query_offset: int = 0,
+    device=None,
+) -> Tensor:
+    if any(type(n) is not int for n in (t_q, t_k, query_offset)):
+        raise TypeError("lengths and offset must be integers")
+    if min(t_q, t_k) <= 0 or query_offset < 0:
+        raise ValueError("positive lengths and non-negative offset required")
+    q_pos = query_offset + torch.arange(t_q, device=device)[:, None]
+    k_pos = torch.arange(t_k, device=device)[None, :]
+    return k_pos <= q_pos
 ```
 
-Phase construction and rotation use at least float32 before conversion back to the input dtype. This avoids early FP16/BF16 position rounding. Float64 remains the reference for large indices: keeping IDs as integers does not remove error after conversion to a working float type. Gradients flow through the input vectors.
+For ordinary self-attention, $t_q=t_k=T$ and `query_offset=0`. During cached decoding, the new query may have local index zero but global position $t$; use `query_offset=t`, otherwise the mask incorrectly permits only the first key.
 
-| Aspect | NumPy | PyTorch |
-|---|---|---|
-| Frequencies | `np.arange` on a CPU array | `torch.arange(..., device=x.device)` |
-| Trigonometry | `np.cos`, `np.sin` | `Tensor.cos`, `Tensor.sin` |
-| Device | CPU | CPU/CUDA/MPS |
-| Gradients | none | autograd through the input |
-| Precision | float64 calculation and output | float32/64 phases; output keeps input dtype |
-| Absolute position | explicit `position_ids` | must agree with cached-key positions |
-
-**Executable parity and edge-case check**
+### 13.2. A minimal multi-head module
 
 ```python
-rng = np.random.default_rng(2)
-x_np = rng.standard_normal((2, 5, 8))
-pos_np = np.arange(5, dtype=np.int64) + 11
-np_out = numpy_rope_explicit(x_np, pos_np)
-x = torch.tensor(x_np, dtype=torch.float64, requires_grad=True)
-t_out = torch_rope_explicit(x, torch.tensor(pos_np))
-np.testing.assert_allclose(np_out, t_out.detach().numpy(), rtol=1e-12, atol=1e-12)
-t_out.square().sum().backward()
-# A rotation is orthogonal: d ||R x||^2 / dx = 2 x.
-torch.testing.assert_close(x.grad, 2 * x.detach(), rtol=1e-12, atol=1e-12)
-# Half-precision IDs would merge 2048 and 2049 before the rotation.
-long_ids = torch.tensor([2048, 2049], dtype=torch.int64)
-half_x = torch.ones((2, 8), dtype=torch.float16)
-half_out = torch_rope_explicit(half_x, long_ids)
-expected = numpy_rope_explicit(half_x.numpy(), long_ids.numpy())
-np.testing.assert_allclose(half_out.numpy(), expected, rtol=1e-3, atol=1e-3)
-assert not torch.equal(half_out[0], half_out[1])
-assert long_ids.to(torch.float16)[0] == long_ids.to(torch.float16)[1]
-print("B02 outputs, analytic gradient, and float16 positions: PASS")
+import torch.nn as nn
+
+class MultiHeadSelfAttention(nn.Module):
+    def __init__(self, d_model: int, n_heads: int) -> None:
+        super().__init__()
+        if any(type(n) is not int or n <= 0 for n in (d_model, n_heads)):
+            raise ValueError("d_model and n_heads must be positive integers")
+        if d_model % n_heads != 0:
+            raise ValueError("d_model must be divisible by n_heads")
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_head = d_model // n_heads
+        self.qkv = nn.Linear(d_model, 3 * d_model, bias=False)
+        self.out = nn.Linear(d_model, d_model, bias=False)
+
+    def forward(self, x: Tensor, causal: bool = True) -> Tensor:
+        b, t, _ = x.shape
+        qkv = self.qkv(x)
+        q, k, v = qkv.chunk(3, dim=-1)
+
+        def split_heads(z: Tensor) -> Tensor:
+            return z.view(b, t, self.n_heads, self.d_head).transpose(1, 2)
+
+        q, k, v = map(split_heads, (q, k, v))
+        allowed = None
+        if causal:
+            allowed = torch.ones(t, t, dtype=torch.bool, device=x.device).tril()
+        y, _ = scaled_dot_product_attention(q, k, v, allowed)
+        y = y.transpose(1, 2).contiguous().view(b, t, self.d_model)
+        return self.out(y.to(dtype=x.dtype))
 ```
 
-Complete executable file: `m04_rope_bridges.py`
+Once the explicit computation is clear, compare it with `torch.nn.functional.scaled_dot_product_attention`. The function selects an available implementation based on the device, dtype, and mask. Calling it does not guarantee FlashAttention or the absence of full intermediate matrices. The notebook compares outputs and gradients with `dropout_p=0.0` set explicitly.
 
-## 5. Worked example: three placements, one relative displacement
+## 14. A minimal Transformer block
+
+We now assemble a small decoder-only block with normalization before each sublayer. Its FFN uses **GELU**, the smooth nonlinearity $x\Phi(x)$, where $\Phi$ is the standard normal cumulative distribution function. This teaching variant uses pre-norm and GELU; the 2017 architecture uses post-norm and ReLU.
+
+```python
+class FeedForward(nn.Module):
+    def __init__(self, d_model: int, d_ff: int) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Linear(d_ff, d_model),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.net(x)
+
+class DecoderBlock(nn.Module):
+    def __init__(self, d_model: int, n_heads: int, d_ff: int) -> None:
+        super().__init__()
+        self.ln1 = nn.LayerNorm(d_model)
+        self.attn = MultiHeadSelfAttention(d_model, n_heads)
+        self.ln2 = nn.LayerNorm(d_model)
+        self.ffn = FeedForward(d_model, d_ff)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = x + self.attn(self.ln1(x), causal=True)
+        x = x + self.ffn(self.ln2(x))
+        return x
+```
+
+Read the graph in words:
+
+1. `ln1(x)` normalizes every position;
+2. causal self-attention mixes only the admissible prefix;
+3. its output is added to the original `x`;
+4. a second norm+FFN transforms every position;
+5. another residual connection preserves route and shape.
+
+### 14.1. Causal invariance as a unit test
+
+A strong mask test changes a future token and checks that earlier outputs do not change. For position $i$,
+
+$$
+h_i(x_1,\ldots,x_i,x_{i+1},\ldots)
+=
+h_i(x_1,\ldots,x_i,x'_{i+1},\ldots).
+$$
+
+Keep weights fixed and use `eval()` so dropout cannot create unrelated differences. Compare floating-point outputs with `torch.testing.assert_close`. Include an unmasked control to show that the chosen example can actually expose future leakage.
+
+## 15. A complete shape trace for a toy model
 
 Let
 
-$$
-q=(1,0,0.5,0.5),
-\qquad
-k=(0,1,1,-0.5),
-$$
+- $B=2$;
+- $T=5$;
+- $|\mathcal V|=100$;
+- $d_{model}=32$;
+- $h=4$;
+- $d_k=d_v=8$;
+- $d_{ff}=128$.
 
-with head dimension four and base 10,000. The inverse frequencies are
+One decoder-only forward pass has the following shapes:
 
-$$
-\theta_0=1,
-\qquad
-\theta_1=0.01.
-$$
+| Stage | Shape |
+|---|---|
+| token ids | $2\times5$ |
+| embedding + position | $2\times5\times32$ |
+| packed QKV | $2\times5\times96$ |
+| Q/K/V after splitting heads | $2\times4\times5\times8$ |
+| scores | $2\times4\times5\times5$ |
+| per-head attention output | $2\times4\times5\times8$ |
+| concatenation + $W_O$ | $2\times5\times32$ |
+| FFN hidden state | $2\times5\times128$ |
+| block output | $2\times5\times32$ |
+| vocabulary logits | $2\times5\times100$ |
 
-Place the query at position 3 and the key at position 1. Using **adjacent coordinate pairs**, their rotated dot product before attention scaling is
+This table is a practical debugger. Most first-implementation failures are not in the mathematics. They are in `transpose`, `view`, mask broadcasting, or the softmax axis.
 
-$$
-\langle R_3q,R_1k\rangle\approx1.144248.
-$$
+### 15.1. Counting the main projection weights
 
-Now shift both tokens by four positions. The pair $(7,5)$ has the same displacement as $(3,1)$, so the result is unchanged. The pair $(2,0)$ gives the same value as well.
+Return now from the toy dimensions to the paper’s base configuration: $d_{model}=512$, $d_{ff}=2048$. For one layer, excluding biases, LayerNorm parameters, and embeddings:
 
-| query position | key position | $m-n$ | unscaled dot product |
-|---:|---:|---:|---:|
-| 3 | 1 | 2 | 1.144248 |
-| 7 | 5 | 2 | 1.144248 |
-| 2 | 0 | 2 | 1.144248 |
+- encoder self-attention: $4d_{model}^2=1\,048\,576$;
+- FFN: $2d_{model}d_{ff}=2\,097\,152$;
+- encoder layer: $3\,145\,728$;
+- decoder layer: two attention sublayers plus the FFN = $4\,194\,304$.
 
-![VIZ m4/05 — a four-dimensional RoPE trace](assets/modern-llms/en/module-03/m4_05_worked_example.svg)
-*Absolute angles change across placements, but a shared relative displacement preserves the same unscaled dot product.*
+These counts are exact under the stated exclusions. A complete layer also has biases and normalization parameters; a complete model adds embeddings, the vocabulary projection, and multiple layers. The comparison explains the large FFN share: its two wide matrices contain twice as many weights as the four MHA projections.
 
-To obtain the standard attention logit from M3, divide by $\sqrt{d_k}=\sqrt4=2$, giving approximately **0.572124**. Masking and softmax follow. This constant scaling preserves the common-shift identity.
+## 16. The 2017 original and a modern LLM: what survived
 
-The identity is exact for fixed $q$ and $k$. In a network, those vectors still depend on content and layer state, so attention does not reduce to a distance-only kernel.
+The word “Transformer” can misleadingly suggest one fixed architecture. In practice it names a family.
 
-## 6. Reading the RoPE frequency spectrum
+![VIZ m3/10 — encoder-only, decoder-only, and encoder–decoder](assets/modern-llms/en/module-03/m3_10_family_map.svg)
+*All three families use the same construction kit but differ in masks and information flow. Modern LLMs center the decoder-only branch, while encoders and cross-attention remain important for understanding the origin of the architecture and many multimodal systems.*
 
-The base parameter controls a geometric spectrum. The fastest pair is always
+**Reference map.** The replacement names below point to later chapters: positions in M4, attention variants in M5, norms and FFNs in M6, pretraining in M9, and execution in M10. They describe common choices rather than requirements for every LLM.
 
-$$
-\theta_0=1,
-\qquad
-\lambda_0=2\pi,
-$$
+| Component | Original Transformer | Typical modern decoder-only LLM |
+|---|---|---|
+| architecture | encoder–decoder | decoder-only |
+| attention | MHA | MHA, GQA, MQA, MLA, or a hybrid |
+| position | sinusoidal absolute | usually RoPE and extensions |
+| normalization order | post-norm | usually pre-norm |
+| normalization | LayerNorm | often RMSNorm |
+| FFN | ReLU MLP | often SwiGLU/gated MLP |
+| task | seq2seq translation | next-token pretraining |
+| inference | autoregressive decoder | autoregressive decoder + KV cache |
+| efficiency | ordinary attention computation | FlashAttention, fused kernels, paging |
 
-regardless of base. Increasing `rope_theta` therefore does not remove the fastest local phase. It mainly slows the higher-index pairs, allocating more of the spectrum to long wavelengths.
+### 16.1. The stable core
 
-The diagnostic is $L\theta_i/(2\pi)$: turns across a **span of L position steps**, following the YaRN convention. A sequence indexed from 0 to L−1 has endpoint separation L−1. These are different quantities. Wavelengths below are measured in position steps.
+Despite those replacements, the recognizable path remains:
 
-For $D=64$:
+1. discrete tokens become vectors;
+2. positions and masks define sequence structure;
+3. attention routes information across positions;
+4. the FFN transforms each position nonlinearly;
+5. residual connections and normalization support a deep stack;
+6. a vocabulary head defines the next-token distribution.
 
-| base | minimum wavelength | maximum wavelength | pairs with ≥1 turn by 4096 |
-|---:|---:|---:|---:|
-| 10,000 | 6.28 | 47,117 | 23 of 32 |
-| 150,000 | 6.28 | 649,409 | 18 of 32 |
-| 500,000 | 6.28 | 2,084,765 | 16 of 32 |
+This connects Module 2’s embeddings to the positional mechanisms in Module 4. The rest of the course asks how to scale, stabilize, train, serve, and extend it.
 
-![VIZ m4/06 — the wavelength spectrum](assets/modern-llms/en/module-03/m4_06_wavelength_spectrum.png)
-*Wavelengths show how a base redistributes phases. Context-length guide lines are diagnostics, not a global period for the full positional vector.*
+### 16.2. Why GPT is more than “a Transformer with the encoder removed”
 
-Each coordinate pair is periodic. The complete representation combines many different periods. One pair returning to a similar angle does not make two full positional vectors identical. Consequently, the largest wavelength of one pair is not a hard context limit, and a small base does not imply that every position beyond that wavelength becomes indistinguishable.
+Formally, a decoder-only stack removes the encoder and cross-attention. The more useful positive description is a stack of causal self-attention blocks trained on a next-token objective. Prompt and continuation occupy one token stream. The graph is not merely truncated; its dominant training and deployment regime is different.
 
-Turn counts still convey useful information. Fast pairs sweep through many phases during training; slow pairs may cover only a small arc. Extrapolating those slow coordinates sends the model into new phase regions. That is an out-of-distribution geometry, not a mathematical prohibition. Whether the model uses it successfully is empirical.
+## 17. Common confusions
 
-## 7. Context extension changes a spectrum, not just one number
+### 17.1. “Attention stores knowledge”
 
-Let $L_0$ be the reference length used to set the frequencies, and let $s\ge1$ be an extension factor. We want to process $sL_0$ tokens. In a research experiment, $L_0$ is often the training length; a configuration field alone does not establish the full training history (§10).
+The weights $A$ are computed afresh from the current input. Learned projection, FFN, and embedding matrices persist across requests. Keep those model parameters distinct from temporary mixing weights. The size of the FFN alone does not establish what fraction of the model’s knowledge it stores.
 
-### Position Interpolation
+### 17.2. “A large attention weight proves causality”
 
-Position Interpolation maps $m$ to $m/s$. Equivalently,
+A weight is a local mixture coefficient for one head and one layer. It omits residual paths, other heads, transformed values, FFNs, and later layers. It is a diagnostic signal, not a universal explanation.
 
-$$
-\theta'_i=\frac{\theta_i}{s}.
-$$
+### 17.3. “A causal mask makes computation sequential”
 
-The new range stays inside familiar angular values. The cost is that all local phases are compressed as well. Fine-tuning is normally used to help the model adapt to this altered geometry.
+It makes the **dependency** causal. The training forward pass is still parallel over positions. The generation loop is sequential because future tokens do not yet exist.
 
-### Static NTK-aware scaling
+### 17.4. “Self-attention is always square”
 
-A widely used static heuristic changes the base to
+Scores have shape $T_q\times T_k$. Ordinary self-attention uses $T_q=T_k$, but cross-attention and cached decoding may be rectangular.
 
-$$
-\mathrm{base}'
-=
-\mathrm{base}\,s^{D/(D-2)}.
-$$
+### 17.5. “Heads split the input features before projection”
 
-This leaves the fastest end of the spectrum less changed and slows the low-frequency end more aggressively. “NTK-aware” describes the motivation, not a general theorem guaranteeing safe zero-shot extension.
+Each head projects from **all** $d_{model}$ input features. It is the projected result that is partitioned into heads, conventionally with width $d_{model}/h$. Different heads can therefore use the same input coordinates.
 
-Assume $s\ge1$ and $D>2$. Substituting the new base gives $\theta_i^\prime/\theta_i=s^{-2i/(D-2)}$: pair zero is unchanged, while the final pair slows by exactly s. The expression is undefined at D=2. NTK stands for Neural Tangent Kernel, a theoretical description of wide networks; this calculation uses only the stated base-change rule.
+### 17.6. “LayerNorm normalizes the batch”
 
-### YaRN
+LayerNorm normalizes features within one token position. BatchNorm uses statistics across examples; it is a different operation.
 
-YaRN builds an original spectrum and a fully interpolated spectrum, then blends them through a frequency-dependent ramp. A diagnostic number of rotations within the reference context determines the ramp boundaries.
+### 17.7. “Masking after softmax is equivalent”
 
-Define $r_i=L_0\theta_i/(2\pi)$, the number of turns over the reference span. Two thresholds, $\beta_{fast}>\beta_{slow}>0$, select the transition: fast pairs keep their original frequencies, while slow pairs use interpolation. Solving $r_i=\beta$ gives a fractional pair index:
+Simply zeroing weights after softmax makes row sums smaller than one. Renormalization is possible but unnecessary and easy to destabilize. The canonical operation modifies logits before softmax.
 
-$$
-b(\beta)=\frac{D\ln[L_0/(2\pi\beta)]}{2\ln(\mathrm{base})},\qquad
-\mathrm{low}=b(\beta_{fast}),\quad \mathrm{high}=b(\beta_{slow}).
-$$
+### 17.8. “Post-norm and pre-norm differ only in the drawing”
 
-A **ramp** is a linear transition clipped to the interval [0,1]:
+Norm placement changes signal and gradient routes. The equation and the code must describe the same variant.
 
-$$
-w_i=\operatorname{clip}\!\left(\frac{i-\mathrm{low}}{\mathrm{high}-\mathrm{low}},0,1\right),\qquad
-\theta_i^\prime=(1-w_i)\theta_i+w_i\frac{\theta_i}{s}.
-$$
+### 17.9. “Input embeddings and the output head must share weights”
 
-Zero selects the original frequency; one selects full interpolation. Intermediate weights blend the two. Our example has distinct boundaries inside the spectrum; the teaching implementation rejects a collapsed range.
+Weight tying is common, not mandatory. Inspect the model configuration and implementation.
 
-For the module scenario
+### 17.10. “The basic Transformer explains everything about modern LLMs”
 
-```text
-head_dim = 64
-base = 150000
-reference length = 4096
-factor = 32
-beta_fast = 32
-beta_slow = 1
-```
+It explains the computational skeleton. Data, optimization, scaling laws, post-training, retrieval, serving, multimodality, and evaluation are separate systems covered by the core course.
 
-the original gpt-oss implementation uses the continuous bounds
+## 21. Reading route and sources
 
-$$
-\mathrm{low}\approx8.0928,
-\qquad
-\mathrm{high}\approx17.3980.
-$$
+The following resources serve different purposes rather than duplicating one another.
 
-Those values still divide the integer-indexed pairs into three groups:
+1. **Primary source:** [Vaswani et al., “Attention Is All You Need”](https://arxiv.org/abs/1706.03762). Read the abstract, §3, Figure 1, §5, and the hyperparameter table before attempting the full training setup.
+2. **Visual intuition:** [Jay Alammar, “The Illustrated Transformer”](https://jalammar.github.io/illustrated-transformer/). A strong first pass through encoder–decoder flow and Q/K/V.
+3. **Text next to code:** [Harvard NLP, “The Annotated Transformer”](https://nlp.seas.harvard.edu/annotated-transformer/) and its [repository](https://github.com/harvardnlp/annotated-transformer). Useful for matching the paper to an implementation.
+4. **Geometric intuition:** [3Blue1Brown, “Attention in transformers”](https://www.3blue1brown.com/lessons/attention/) and [“Transformers, the tech behind LLMs”](https://www.3blue1brown.com/lessons/gpt/).
+5. **Building a decoder-only model from scratch:** [Andrej Karpathy, “Let’s build GPT”](https://www.youtube.com/watch?v=kCc8FmEb1nY) and the [Zero to Hero](https://karpathy.ai/zero-to-hero.html) route. This is the GPT branch, not an exact encoder–decoder reproduction.
+6. **A textbook with exercises:** [Dive into Deep Learning, Transformer chapter](https://d2l.ai/chapter_attention-mechanisms-and-transformers/transformer.html).
+7. **Modern PyTorch API:** the [Scaled Dot Product Attention tutorial](https://docs.pytorch.org/tutorials/intermediate/scaled_dot_product_attention_tutorial.html) and [function documentation](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html).
+8. **A compact self-attention implementation:** [Sebastian Raschka, “Understanding and Coding Self-Attention…”](https://sebastianraschka.com/blog/2023/self-attention-from-scratch.html).
 
-- 9 pairs remain at their original frequencies;
-- 9 pairs occupy the transition ramp;
-- 14 pairs are fully interpolated.
+A useful route for a newcomer is: this lesson → Alammar → the notebook → Figure 1 and §3 of the paper → Karpathy or the Annotated Transformer. Experienced readers may need only the paper, VIZ 11, and the notebook tests.
 
-The generic Hugging Face YaRN utility also offers `truncate=True`, which rounds the boundaries to `low=8`, `high=18`. `GptOssConfig` sets `truncate=False`, so the continuous values are the faithful default for this model.
+## 22. Final cheat sheet and the next step
 
-In this particular configuration, the fully interpolated set coincides with pairs that complete less than one turn in the reference context. That is a property of the chosen boundary formula and hyperparameters, not a universal rule that one full turn makes extrapolation “safe.”
+![VIZ m3/11 — the basic Transformer in 60 seconds](assets/modern-llms/en/module-03/m3_11_cheatsheet.svg)
+*Four panels to reconstruct from memory: tensor shapes, one attention head, the role of each sublayer, and correctness checks.*
 
-![VIZ m4/07 — diagnostic YaRN zones](assets/modern-llms/en/module-03/m4_07_rotations_zones.png)
-*Turn counts help define the teaching YaRN ramp. The zones mean original, transition, and interpolated—not mathematically allowed and forbidden.*
+The complete route is now compact:
 
-YaRN also adjusts attention concentration. **Temperature** divides logits before softmax; lowering it makes a fixed set of scores more uneven. An `attention_factor` can implement this by scaling the rotated vectors. The original gpt-oss implementation and its Hugging Face adaptation use this approach. For $s>1$, both checked paths use
+1. a tokenizer produces ids; embeddings and positions turn them into $B\times T\times d_{model}$;
+2. $QK^\top/\sqrt{d_k}$ produces connection logits, a mask removes forbidden links, and softmax normalizes over keys;
+3. $AV$ mixes values, heads are joined through $W_O$;
+4. the FFN transforms each position, while residual connections and normalization support a deep stack;
+5. the encoder reads the complete source; the decoder reads only its target prefix and, when present, encoder memory;
+6. teacher forcing trains all positions in parallel, while generation creates them sequentially;
+7. modern LLMs replace positional methods, norms, FFNs, head layouts, and kernels, but this computational skeleton remains recognizable.
 
-$$
-a=1+0.1\ln s.
-$$
-
-At $s=32$, $a=1.346574$. Both checked implementations apply this factor to computed rotary cosines and sines. If both rotated queries and keys therefore receive the same factor, their dot product is scaled by
-
-$$
-a^2=1.813260.
-$$
-
-The whole-score factor assumes that **every** query and key coordinate receives a. With partial RoPE, only the rotary contribution is scaled unless the remaining channels are adjusted separately. The fitted rule for a is empirical, not a consequence of rotation algebra.
-
-Another runtime may move the equivalent scaling into queries, keys, or the attention score. A configuration field only becomes unambiguous when read with the implementation that consumes it.
-
-### Beyond one scaling recipe
-
-LongRoPE searches per-dimension factors and can use different regimes for different lengths. LongRoPE2 incorporates training-aware criteria. Llama3-style scaling divides the spectrum into wavelength bands. Other models use partial RoPE, interleaved RoPE/NoPE, local attention, or length-dependent attention temperature.
-
-![VIZ m4/08 — three spectrum transformations](assets/modern-llms/en/module-03/m4_08_scaling_methods.png)
-*PI, static NTK-aware scaling, and YaRN reshape the same starting spectrum differently. The figure compares geometry, not guaranteed downstream quality.*
-
-## 8. ALiBi: a distance prior in the logits
-
-ALiBi—Attention with Linear Biases—leaves queries and keys untouched. Head $h$ receives a slope $m_h$, and causal attention uses
-
-$$
-S_{ij}^{(h)}=\frac{q_i^Tk_j}{\sqrt{d_k}}-m_h(i-j),
-\qquad j\le i.
-$$
-
-The slope $m_h>0$ is fixed per head and measured in logit units per position step. A separate causal mask excludes future keys; a finite ALiBi penalty cannot replace it.
-
-Heads with steeper slopes favor nearby context more strongly. If the content score were fixed, softmax would turn the linear penalty into an exponential distance prior:
-
-$$
-\exp[-m_h(i-j)].
-$$
-
-The complete attention pattern is not a stationary kernel by itself; it still depends on content and normalization across available keys.
-
-ALiBi's strength is structural simplicity and a bias that continues to any distance. Its limitation is equally clear: the form of the distance prior is fixed in advance.
-
-One common measure of next-token prediction is **perplexity**, $\mathrm{PPL}=\exp(\overline{\mathrm{NLL}})$, using M3's mean negative log-likelihood in nats per evaluated token. On the same data, with the same tokenizer and evaluation mask, lower perplexity means that the model assigns higher probability, on average, to the observed continuations. Maintaining this score at longer lengths does not establish reliable retrieval from the middle of a document or reasoning across distant evidence. Those require separate evaluations.
-
-## 9. NoPE and hybrid position mechanisms
-
-NoPE—No Positional Encoding—removes an explicit positional term. A causal model is not deprived of all order information: the mask, depth, and recursively constructed hidden states expose asymmetries tied to prefix length.
-
-Research shows that substantial positional behavior can emerge under these conditions. That does not make explicit position universally unnecessary. It means the model can infer part of the structure from other components of the computation.
-
-Two cases should be separated:
-
-- **pure NoPE**, where no layer receives an explicit positional encoding;
-- **hybrid designs**, where some layers use RoPE and others NoPE, or where positional mechanisms are combined with different attention patterns.
-
-Llama 4 is a concrete hybrid. Its open configuration supports a NoPE layer at a regular interval, chunked attention, and length-dependent temperature tuning. In the [Llama 4 implementation](https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama4/modeling_llama4.py), enabling `attn_temperature_tuning` scales queries in NoPE layers. This is separate from the YaRN frequency ramp.
-
-## 10. Reading the gpt-oss positional configuration
-
-This example uses the [original gpt-oss-120b configuration](https://huggingface.co/openai/gpt-oss-120b/blob/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/config.json) at revision `b5c939de…`. The module includes its bytes and checksum, so later edits to `main` cannot change the exercise. We checked it against OpenAI revision `7b583341…` and Transformers revision `536ecc007…` on 10 October 2026.
-
-The relevant fields are
-
-```json
-{
-  "head_dim": 64,
-  "initial_context_length": 4096,
-  "rope_theta": 150000,
-  "rope_scaling_factor": 32.0,
-  "rope_ntk_alpha": 1,
-  "rope_ntk_beta": 32
-}
-```
-
-This is enough to reconstruct a positional geometry:
-
-- 32 rotary pairs per head;
-- base 150,000;
-- a reference length of 4,096;
-- a 32-fold extension factor;
-- correction-boundary parameters corresponding to 1 and 32 rotations.
-
-The module's transparent reconstruction therefore gives the continuous bounds `low≈8.0928`, `high≈17.3980`, together with the default attention factor 1.346574. The integer pair `8/18` belongs to the optional `truncate=True` mode, not to the original gpt-oss path.
-
-What the file does not provide is a complete training chronology. `initial_context_length` tells us the reference length used by the scaling contract. It does not, by itself, prove that all pretraining happened at 4K and that one particular extension phase followed. Such claims require a technical report or training recipe.
-
-Converted Hugging Face configurations may express the same information through a more general RoPE parameter dictionary. Field names and scaling placement can change across representations, so the config should be read together with the model code and library revision.
-
-![VIZ m4/09 — interpreting a RoPE configuration](assets/modern-llms/en/module-03/m4_09_config_rope.svg)
-*The gpt-oss fields support a reconstruction of the positional spectrum. They do not constitute a complete training schedule.*
-
-## 11. Level-one code: explicit shapes and explicit scaling placement
-
-The following NumPy code is designed for inspection rather than fused execution. It validates head width, positions, frequency shape, and the YaRN ramp. The pairing convention is the split-half `rotate_half` layout used by Llama-like implementations.
-
-The compact `apply_rope` below requires equal Q/K shapes and one shared position vector. It represents a full sequence block; the notebook rotates queries and cached keys separately when their lengths differ. This core calculates in float64 and returns the YaRN amplitude for the caller to apply. It covers the declared scenario, not every library variant.
-
-```python
-import math
-import numpy as np
-
-def rope_inv_freq(head_dim: int, base: float = 150_000.0) -> np.ndarray:
-    """Return theta_i = base**(-2i/D) for D/2 rotary pairs."""
-    if isinstance(head_dim, bool) or not isinstance(head_dim, int):
-        raise TypeError("head_dim must be an integer")
-    if head_dim < 2 or head_dim % 2:
-        raise ValueError("head_dim must be positive and even")
-    if not math.isfinite(base) or base <= 1.0:
-        raise ValueError("base must be finite and greater than 1")
-    i = np.arange(head_dim // 2, dtype=np.float64)
-    return base ** (-2.0 * i / head_dim)
-
-def rotate_half(x: np.ndarray) -> np.ndarray:
-    """Quarter-turn the split-half coordinate pairs."""
-    if x.ndim < 2 or x.size == 0 or x.shape[-1] % 2:
-        raise ValueError("x must have shape [..., T, D] with even D")
-    half = x.shape[-1] // 2
-    return np.concatenate((-x[..., half:], x[..., :half]), axis=-1)
-
-def apply_rope(q, k, positions, inv_freq):
-    """Apply split-half RoPE to q/k of shape [..., T, D]."""
-    if any(np.iscomplexobj(x) for x in (q, k, inv_freq)):
-        raise TypeError("q, k and inv_freq must be real")
-    q = np.asarray(q, dtype=np.float64)
-    k = np.asarray(k, dtype=np.float64)
-    positions = np.asarray(positions)
-    inv = np.asarray(inv_freq, dtype=np.float64)
-    if q.shape != k.shape or q.ndim < 2 or q.size == 0 or q.shape[-1] % 2:
-        raise ValueError("q and k must share shape [..., T, D], with even D")
-    if not np.isfinite(q).all() or not np.isfinite(k).all():
-        raise ValueError("q and k must be finite")
-    if positions.ndim != 1 or positions.dtype.kind not in "iu":
-        raise ValueError("positions must be an integer vector [T]")
-    if positions.size != q.shape[-2] or np.any(positions < 0):
-        raise ValueError("positions do not match the sequence axis")
-    if inv.shape != (q.shape[-1] // 2,) or not np.isfinite(inv).all() or np.any(inv <= 0):
-        raise ValueError("inv_freq must be positive and have shape [D/2]")
-
-    angles = positions.astype(np.float64)[:, None] * inv[None, :]
-    angles = angles.reshape((1,) * (q.ndim - 2) + angles.shape)
-    if not np.isfinite(angles).all():
-        raise FloatingPointError("phase overflow")
-    full = np.concatenate((angles, angles), axis=-1)
-    cos, sin = np.cos(full), np.sin(full)
-    qr, kr = q * cos + rotate_half(q) * sin, k * cos + rotate_half(k) * sin
-    if not np.isfinite(qr).all() or not np.isfinite(kr).all():
-        raise FloatingPointError("rotation overflow")
-    return qr, kr
-
-def yarn_inv_freq(head_dim, base, factor, original_context,
-                  beta_fast=32.0, beta_slow=1.0, *, truncate=False):
-    """Blend original and interpolated frequencies with a YaRN-style ramp."""
-    inv = rope_inv_freq(head_dim, base)
-    if not math.isfinite(factor) or factor < 1.0:
-        raise ValueError("factor must be at least 1")
-    if isinstance(original_context, bool) or not isinstance(original_context, int):
-        raise TypeError("original_context must be an integer")
-    if not math.isfinite(beta_fast) or not math.isfinite(beta_slow):
-        raise ValueError("beta parameters must be finite")
-    if original_context <= 0 or beta_fast <= beta_slow or beta_slow <= 0:
-        raise ValueError("invalid context or beta parameters")
-    if not isinstance(truncate, bool):
-        raise TypeError("truncate must be bool")
-
-    def correction_dim(turns: float) -> float:
-        return head_dim * math.log(
-            original_context / (turns * 2 * math.pi)
-        ) / (2 * math.log(base))
-
-    pair_count = head_dim // 2
-    low_raw = correction_dim(beta_fast)
-    high_raw = correction_dim(beta_slow)
-    low = math.floor(low_raw) if truncate else low_raw
-    high = math.ceil(high_raw) if truncate else high_raw
-    low = min(max(float(low), 0.0), float(pair_count - 1))
-    high = min(max(float(high), 0.0), float(pair_count - 1))
-    if high <= low:
-        raise ValueError("the YaRN ramp collapsed")
-
-    ramp = np.clip(
-        (np.arange(pair_count, dtype=np.float64) - low) / (high - low),
-        0.0,
-        1.0,
-    )
-    scaled = inv * (1.0 - ramp) + (inv / factor) * ramp
-    attention_factor = 1.0 if factor <= 1 else 1.0 + 0.1 * math.log(factor)
-    return scaled, attention_factor, attention_factor**2, low, high
-```
-
-The last function returns both the rotary factor and the score factor implied when the same scaling enters queries and keys. Keeping them separate prevents a common ambiguity in configuration discussions.
-
-## 13. M-RoPE and time-aligned multimodal position
-
-M-RoPE—Multimodal Rotary Position Embedding—assigns different sections of rotary channels to temporal, height, and width coordinates. A single attention operation can therefore represent text and visual geometry without switching to a separate positional mechanism.
-
-Text uses the same ID on all three axes:
-
-$$
-(m,m,m).
-$$
-
-Every frequency pair therefore receives the ordinary one-dimensional position $m$, regardless of which section it belongs to. The text path is equivalent to standard 1D RoPE.
-
-A still image holds temporal position constant and varies its two spatial coordinates:
-
-$$
-(t_0,h,w).
-$$
-
-A $2\times2$ grid can be represented as
-
-$$
-(0,0,0),
-(0,0,1),
-(0,1,0),
-(0,1,1).
-$$
-
-Video changes all three axes. Qwen2.5-VL can space temporal IDs according to real time between grid elements rather than treating frame number as the only clock.
-
-TMRoPE—Time-aligned Multimodal Rotary Position Embedding—was documented in the Qwen2.5-Omni technical report in March 2025. It aligns audio and video timestamps. In that model, one temporal ID corresponds to 40 ms. This is a model-specific time grid, not a universal definition of TMRoPE.
-
-![VIZ m4/10 — M-RoPE and TMRoPE](assets/modern-llms/en/module-03/m4_10_mrope.svg)
-*Text repeats one position ID across all axes; images vary height and width at fixed time; video and synchronized audio use a temporal coordinate.*
-
-### Interleaved axes in Qwen3-VL
-
-Sectioned M-RoPE gives time, height, and width separate frequency groups. [Qwen3-VL, §2.1](https://arxiv.org/html/2511.21631v1#S2.SS1) instead interleaves axis assignments across frequency pairs, giving each axis access to faster and slower bands. This is **Interleaved-MRoPE**. Axis allocation is separate from the adjacent-versus-split-half layout of the two coordinates inside each pair.
-
-The report also describes explicit textual video timestamps (§2.3). The 40 ms grid from Qwen2.5-Omni is therefore not a family-wide rule. Our 2×2 example implements sectioned M-RoPE, not a complete Qwen3-VL position system. Mixed text and visual sequences also need a convention for coordinate offsets and the text that follows; the toy grid starts at zero for clarity.
-
-## 14. The 2026 landscape is a branching architecture map
-
-This selective implementation map was checked on 10 October 2026. Use it as a reference after learning the mechanisms: each row points to evidence for a particular positional design, not a ranking or an exhaustive catalogue.
-
-| Family or method | Positional mechanism | Purpose or context | Evidence |
-|---|---|---|---|
-| Transformer | deterministic sinusoidal PE | original sequence architecture | paper |
-| RoFormer / RoPE | rotation in $Q/K$ | relative phase in attention | paper |
-| ALiBi | linear logit bias | length extrapolation without a position table | paper |
-| Position Interpolation | uniform position compression plus tuning | RoPE context extension | paper |
-| YaRN | original/interpolated spectral ramp plus scaling | long-context extension | paper and runtime implementations |
-| LongRoPE / LongRoPE2 | per-dimension and length-dependent factors | very long context | papers |
-| gpt-oss | base 150K, reference length 4096, factor 32, correction parameters | up to 128K positional configuration | official config; config alone is not a training schedule |
-| Llama 4 | interleaved RoPE/NoPE, chunked attention, temperature tuning | hybrid long-context stack | open configuration and implementation |
-| Qwen2-VL / Qwen2.5-VL | M-RoPE | text, image, and video coordinates | paper and code |
-| Qwen2.5-Omni | TMRoPE | aligned audio-video time | technical report |
-| Qwen3-VL | Interleaved-MRoPE and textual timestamps | frequency allocation across axes and video event timing | [report, §2](https://arxiv.org/html/2511.21631v1#S2) and open implementation |
-| Inkling | relative positional embeddings with sliding/global layers | 1M context | official architecture announcement |
-| Closed API models | may be undisclosed | advertised window does not reveal the formula | provider documentation only where available |
-
-A context-window number does not identify the positional mechanism, and it does not establish reliable use of every position inside the window. Operational context quality is an evaluation problem, addressed later in Module 19.
-
-## 17. Key takeaways
-
-![VIZ m4/11 — positional mechanisms at a glance](assets/modern-llms/en/module-03/m4_11_cheatsheet.svg)
-*Permutation symmetry, rotary relativity, spectral diagnostics, context-scaling families, ALiBi/NoPE, and multimodal axes on one page.*
-
-- Bidirectional self-attention without position is permutation-equivariant. A causal mask supplies access order, not a complete distance geometry.
-- Pure sinusoidal pairs already have an exact relative dot product. RoPE inserts relative phase directly into the projected query-key score.
-- `rope_theta` redistributes a frequency ladder. A larger base introduces slower components without removing the fastest pair.
-- A single wavelength or turn count is not a hard context boundary.
-- PI compresses every frequency; static NTK-aware scaling is a heuristic; YaRN blends original and interpolated spectra; other long-context families make different trade-offs.
-- `attention_factor` must be interpreted at the point where the runtime applies it.
-- ALiBi is a linear positional bias. NoPE can be pure or part of a hybrid stack.
-- M-RoPE repeats IDs for text and uses multiple axes for visual tokens. TMRoPE aligns multimodal time.
-- A configuration describes architectural geometry; it is not a substitute for a training report.
-
-**Next:** [Module 5, attention mechanisms](module-04.md). With position accounted for, we can examine how heads are organized and how attention is computed without unnecessary memory use.
-
-## 18. primary sources
-
-**Primary sources:**
-
-- Vaswani et al., *Attention Is All You Need* — [arxiv.org/abs/1706.03762](https://arxiv.org/abs/1706.03762)
-- Shaw et al., *Self-Attention with Relative Position Representations* — [arxiv.org/abs/1803.02155](https://arxiv.org/abs/1803.02155)
-- Dai et al., *Transformer-XL* — [arxiv.org/abs/1901.02860](https://arxiv.org/abs/1901.02860)
-- Su et al., *RoFormer / RoPE* — [arxiv.org/abs/2104.09864](https://arxiv.org/abs/2104.09864)
-- Press et al., *ALiBi* — [arxiv.org/abs/2108.12409](https://arxiv.org/abs/2108.12409)
-- Haviv et al., positional behavior without explicit PE — [arxiv.org/abs/2203.16634](https://arxiv.org/abs/2203.16634)
-- Chen et al., *Position Interpolation* — [arxiv.org/abs/2306.15595](https://arxiv.org/abs/2306.15595)
-- Peng et al., *YaRN* — [arxiv.org/abs/2309.00071](https://arxiv.org/abs/2309.00071)
-- Ding et al., *LongRoPE* — [arxiv.org/abs/2402.13753](https://arxiv.org/abs/2402.13753)
-- Shang et al., *LongRoPE2* — [arxiv.org/abs/2502.20082](https://arxiv.org/abs/2502.20082)
-- Bai et al., *Qwen2-VL* — [arxiv.org/abs/2409.12191](https://arxiv.org/abs/2409.12191)
-- Xu et al., *Qwen2.5-Omni* — [arxiv.org/abs/2503.20215](https://arxiv.org/abs/2503.20215)
-- [Hugging Face RoPE utilities](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/modeling_rope_utils.py)
-- [gpt-oss original configuration](https://huggingface.co/openai/gpt-oss-120b/blob/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/config.json)
-- [gpt-oss reference RoPE implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py)
-- [Hugging Face GptOssConfig](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gpt_oss/configuration_gpt_oss.py)
-- [Llama 4 model documentation](https://huggingface.co/docs/transformers/model_doc/llama4)
-- Qwen3-VL — [report, §2](https://arxiv.org/html/2511.21631v1#S2); [implementation](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3_vl/modeling_qwen3_vl.py)
-- [Inkling architecture announcement](https://thinkingmachines.ai/news/introducing-inkling/)
-
-**Further study.** Fourier features, kernels, and information geometry are developed in *Information Theory for ML*. Recurrent and state-space alternatives to explicit positional encoding appear in later *Modern LLMs* modules.
+**Next:** [Module 4, positional representations](module-04.md), examines how the model represents token order and what happens when context grows beyond the lengths used in training.
 
 ---
 
-*Selected implementations checked: 10 October 2026. Spectrum and YaRN numbers belong to an explicitly stated teaching scenario. For closed models, an undisclosed positional mechanism is not inferred from the advertised context window.*
+*Stable mathematical foundations. Modules 4–6 and 10 develop modern variants of these mechanisms. Cross-entropy/KL theory: Information Theory for ML, Module 3. The token model viewed as a policy: RL for LLM, Module 6.*

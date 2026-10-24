@@ -563,7 +563,7 @@ The byte alphabet covers valid UTF-8, but preserving the original spelling also 
 - Claude token-count endpoint — [official documentation](https://platform.claude.com/docs/en/api/messages/count_tokens)
 - Gemini `models.countTokens` — [official documentation](https://ai.google.dev/api/tokens)
 
-**Next:** [Module 3](module-18.md) connects embeddings to attention, Transformer blocks, and next-token prediction. If you can already explain the complete computation, use its diagnostic to move directly to positional representations in Module 4.
+**Next:** [Module 3](module-03.md) connects embeddings to attention, Transformer blocks, and next-token prediction. If you can already explain the complete computation, use its diagnostic to move directly to positional representations in Module 4.
 
 ---
 

@@ -4,47 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "15.1.1",
-      "prompt": "How does sequential depth differ from parallel breadth in test-time compute?",
-      "explanation": "**Correct answer: B.** Sequential compute continues one search path. Parallel compute widens the set of independent or partly independent solutions and therefore needs a selection rule.",
-      "topic": "15.1. A second scaling axis",
+      "id": "13.4.1",
+      "prompt": "Why is a chat template part of the training contract rather than visual formatting?",
+      "explanation": "**Correct answer: C.** The template turns roles, message boundaries, tool calls, and turn endings into concrete tokens. A mismatch can degrade behavior without raising a runtime error.",
+      "topic": "13.4. Chat templates are executable contracts",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Depth increases model size while breadth extends the context window"
+          "text": "It decides which roles may be stored in the dataset at all"
         },
         {
           "value": "B",
-          "text": "Depth develops one trajectory; breadth creates several candidates"
+          "text": "It creates new vocabulary tokens during SFT"
         },
         {
           "value": "C",
-          "text": "Depth applies only to mathematics and breadth only to code"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "15.5.1",
-      "prompt": "What did DeepSeek-R1-Zero primarily demonstrate?",
-      "explanation": "**Correct answer: C.** R1-Zero isolated the RL mechanism. Longer paths and self-checking emerged without a cold SFT start, while readability and format stability remained weaker. The starting checkpoint was the pretrained DeepSeek-V3-Base.",
-      "topic": "15.5. What DeepSeek-R1 teaches us about training reasoning",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Long-form reasoning emerges only after SFT on human-written reasoning chains"
-        },
-        {
-          "value": "B",
-          "text": "Distillation always produces a stronger model than reinforcement learning"
-        },
-        {
-          "value": "C",
-          "text": "RL on verifiable rewards can produce reasoning strategies without prior chain-format SFT"
+          "text": "It defines the token serialization used in both training and inference"
         }
       ],
       "correct": [
@@ -52,23 +28,23 @@
       ]
     },
     {
-      "id": "15.6.1",
-      "prompt": "For independent attempts with p = 0.4 and six equiprobable distractors, what is voting accuracy at N = 3 when a tie counts as failure?",
-      "explanation": "**Correct answer: A.** A top-mode tie occurs with probability 0.48. Tie handling is therefore part of the algorithm; random top-mode selection would raise success to 0.472.",
-      "topic": "15.6. Parallel scaling, worked example A: voting can get worse first",
+      "id": "13.5.1",
+      "prompt": "Under an assistant-only objective, what goes into `labels` for system and user tokens?",
+      "explanation": "**Correct answer: A.** With `ignore_index=-100`, the tokens remain in the input context but are not direct cross-entropy targets. Full-sequence loss is possible in a different training recipe.",
+      "topic": "13.5. Label masking: a 56-token example",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "0.352 — lower than one attempt"
+          "text": "`−100`, so those positions contribute no direct loss term"
         },
         {
           "value": "B",
-          "text": "0.400 — exactly equal to one attempt"
+          "text": "The padding token ID, so all rows have equal length"
         },
         {
           "value": "C",
-          "text": "0.596 — higher than with five attempts"
+          "text": "The original token ID multiplied by a zero weight"
         }
       ],
       "correct": [
@@ -76,23 +52,23 @@
       ]
     },
     {
-      "id": "15.6.2",
-      "prompt": "What must a self-consistency protocol specify?",
-      "explanation": "**Correct answer: B.** Textually different answers can be mathematically equivalent, and tie policy materially changes accuracy. Without both rules the result is not reproducible.",
-      "topic": "15.6. Parallel scaling, worked example A: voting can get worse first",
+      "id": "13.5.2",
+      "prompt": "A dialogue has 56 tokens and a 20-token assistant reply. What fraction is supervised if the reply terminator is also a target?",
+      "explanation": "**Correct answer: B.** $(20+1)/56=37.5\\%$. The extra position is the assistant turn terminator in this teaching template.",
+      "topic": "13.5. Label masking: a 56-token example",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Only the temperature and sampling settings used for generation"
+          "text": "35.7%: only reply content is supervised"
         },
         {
           "value": "B",
-          "text": "Answer normalization and the tie-breaking rule"
+          "text": "37.5%: the terminator is added to the twenty reply tokens"
         },
         {
           "value": "C",
-          "text": "Only the order in which candidates run on one accelerator"
+          "text": "71.4%: the reply and preceding user turn are supervised"
         }
       ],
       "correct": [
@@ -100,23 +76,23 @@
       ]
     },
     {
-      "id": "15.7.1",
-      "prompt": "What does 1 − (1 − p)^N represent?",
-      "explanation": "**Correct answer: C.** For independent, identically distributed attempts this is oracle coverage, an upper bound on selection rather than a guarantee of identifying a correct candidate.",
-      "topic": "15.7. Worked example B: coverage is not selection accuracy",
+      "id": "13.5.3",
+      "prompt": "What is the main risk when the assistant turn terminator is excluded from the SFT targets?",
+      "explanation": "**Correct answer: C.** The base model may still stop, but the demonstrations do not reinforce the required terminator. Inspect target tokens at boundaries rather than relying on aggregate loss alone.",
+      "topic": "13.5. Label masking: a 56-token example",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The probability of a correct result after majority voting"
+          "text": "Training loss must become infinite as soon as the first batch reaches the terminator"
         },
         {
           "value": "B",
-          "text": "The probability that the verifier scores all N candidates without error"
+          "text": "Every response will stop after its first token"
         },
         {
           "value": "C",
-          "text": "The probability that at least one correct answer appears among N candidates"
+          "text": "SFT gives no direct signal for ending the turn at the demonstrated boundary"
         }
       ],
       "correct": [
@@ -124,23 +100,23 @@
       ]
     },
     {
-      "id": "15.7.2",
-      "prompt": "Why can a weak verifier plateau or even degrade as the candidate count grows?",
-      "explanation": "**Correct answer: A.** Search optimizes the verifier signal. A wider pool expands both the space of correct solutions and the space of false positives or exploitable loopholes. Uniform accepted-candidate selection with constant TPR > FPR grows toward a limit; degradation needs another mechanism, such as extreme noisy-score selection.",
-      "topic": "15.7. Worked example B: coverage is not selection accuracy",
+      "id": "13.5.4",
+      "prompt": "Which row predicts labels[t] in causal training?",
+      "explanation": "**Correct answer: A.** The target is stored at its own position and predicted by the preceding position. Shift exactly once.",
+      "topic": "13.5. Label masking: a 56-token example",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "With larger N, a persuasive wrong answer has more chances to receive a high verifier score"
+          "text": "logits[t−1]"
         },
         {
           "value": "B",
-          "text": "As N grows, the probability of generating a correct candidate must decrease"
+          "text": "logits[t+1]"
         },
         {
           "value": "C",
-          "text": "After N = 8, the verifier stops considering the earliest candidates"
+          "text": "Any row in the batch"
         }
       ],
       "correct": [
@@ -148,23 +124,23 @@
       ]
     },
     {
-      "id": "15.7.3",
-      "prompt": "With p=0.4, TPR=0.9 and FPR=0.05, what is the large-N limit for uniform selection among accepted candidates?",
-      "explanation": "**Correct answer: A.** The limit is p·TPR / [p·TPR + (1−p)·FPR], correctness conditional on acceptance.",
-      "topic": "15.7. Worked example B: coverage is not selection accuracy",
+      "id": "13.6.1",
+      "prompt": "What does the FFD result “24 examples → 5 containers” mean at a length of 2,048?",
+      "explanation": "**Correct answer: A.** The calculation measures fixed-length rows and removed padding. Runtime also depends on attention kernels, batch shape, device occupancy, and overhead.",
+      "topic": "13.6. Packing variable-length examples safely",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "12/13 ≈ 0.923"
+          "text": "Fixed-length rows fall, while utilization rises from 17.7% to 84.9%"
         },
         {
           "value": "B",
-          "text": "0.9, always equal to TPR"
+          "text": "Training throughput is guaranteed to improve by exactly 4.8×"
         },
         {
           "value": "C",
-          "text": "1, regardless of the verifier"
+          "text": "Every container holds the same number of source examples"
         }
       ],
       "correct": [
@@ -172,23 +148,23 @@
       ]
     },
     {
-      "id": "15.8.1",
-      "prompt": "What does budget forcing do in the s1 work?",
-      "explanation": "**Correct answer: B.** The procedure intervenes in decoding by appending `Wait` or forcing the final-answer transition. No additional weight update occurs at request time.",
-      "topic": "15.8. Sequential scaling and budget forcing",
+      "id": "13.6.2",
+      "prompt": "Why do packed examples need a block-diagonal attention mask?",
+      "explanation": "**Correct answer: B.** Without isolation, a token in one dialogue can depend on unrelated text in the same container. EOS marks a boundary but does not by itself remove cross-example attention edges.",
+      "topic": "13.6. Packing variable-length examples safely",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It updates model weights while processing the user request"
+          "text": "So that positions of different examples get independent RoPE indices"
         },
         {
           "value": "B",
-          "text": "It controls when generation ends and therefore the length of one trajectory"
+          "text": "Otherwise examples in one bin see each other and train on foreign text"
         },
         {
           "value": "C",
-          "text": "It launches several independent models and averages their answers"
+          "text": "So that FlashAttention can process the bin in a single kernel call"
         }
       ],
       "correct": [
@@ -196,47 +172,23 @@
       ]
     },
     {
-      "id": "15.9.1",
-      "prompt": "What does overthinking mean for reasoning models?",
-      "explanation": "**Correct answer: C.** Quality can be non-monotonic in trace length: the model may revise away from a correct result, repeat itself, or amplify an early error.",
-      "topic": "15.9. Failure modes of longer reasoning",
+      "id": "13.6.3",
+      "prompt": "How do you remove a target pair crossing from A into B?",
+      "explanation": "**Correct answer: A.** Attention masking cannot repair a cross-boundary logit–label pair created by shifting.",
+      "topic": "13.6. Packing variable-length examples safely",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The KV cache completely fills all available accelerator memory"
+          "text": "Ignore the first label of each segment"
         },
         {
           "value": "B",
-          "text": "The model always exhausts its token limit before it can produce an answer"
+          "text": "Only reset position_ids"
         },
         {
           "value": "C",
-          "text": "Continued reasoning damages an answer that is already or potentially correct"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "15.10.1",
-      "prompt": "How should the module’s 1K, 4K, 16K, and 64K token ladder be interpreted?",
-      "explanation": "**Correct answer: A.** The ladder fixes course assumptions: an 8.03B model at 209.4 tokens/s. Provider labels and budgets are not standardized.",
-      "topic": "15.10. Worked example C: an illustrative budget ladder",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "As a transparent cost scenario, not official tiers of a particular API"
-        },
-        {
-          "value": "B",
-          "text": "As an exact mapping to low, medium, high, and max across providers"
-        },
-        {
-          "value": "C",
-          "text": "As a speed measurement of one published production system"
+          "text": "Only insert EOS between examples"
         }
       ],
       "correct": [
@@ -244,23 +196,71 @@
       ]
     },
     {
-      "id": "15.11.1",
-      "prompt": "For 512 tokens, the teaching model gives a 0.0625 GiB KV footprint. What does (80 − 14.96) / 0.0625 ≈ 1040 represent?",
-      "explanation": "**Correct answer: B.** About 14.96 GiB is first reserved for the bf16 weights of the 8.03B model; the remainder of an 80 GiB device is divided by one 512-token KV footprint. This is only an upper bound because workspaces, fragmentation, and scheduling reduce achievable concurrency. This scenario assumes a zero input prefix and no runtime reserve.",
-      "topic": "15.11. Worked example D: the KV cost of a thought",
+      "id": "13.7.1",
+      "prompt": "What follows from comparing $3.47\\cdot10^{19}$ FLOP for SFT with $7.23\\cdot10^{23}$ FLOP for pretraining?",
+      "explanation": "**Correct answer: C.** The ratio belongs to the stated token and epoch counts. The time estimate additionally assumes 990 TFLOP/s and MFU 0.4; it is not a measured production run.",
+      "topic": "13.7. Compute accounting and hyperparameters",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Throughput of about 80 generated tokens per second"
+          "text": "Every SFT run is always exactly 20,833× cheaper than every pretraining run"
         },
         {
           "value": "B",
-          "text": "A KV-only upper bound of about 1040 concurrent sequences"
+          "text": "The two stages require equal compute at equal model size"
         },
         {
           "value": "C",
-          "text": "A minimum context length of about 512 thousand tokens"
+          "text": "The scenarios differ by 20,833; 24.33 hours is a separate estimate"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "13.7.2",
+      "prompt": "Why is an excessive learning rate especially risky in a short SFT run?",
+      "explanation": "**Correct answer: A.** The dataset is comparatively small, so large updates can cause regressions or overfitting. Validate the learning-rate range on held-out capabilities and behavior.",
+      "topic": "13.7. Compute accounting and hyperparameters",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Large updates can erase useful pretrained behavior within a few steps"
+        },
+        {
+          "value": "B",
+          "text": "AdamW cannot finish allocating optimizer state within only a few training epochs"
+        },
+        {
+          "value": "C",
+          "text": "A large step automatically unmasks user tokens"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.8.1",
+      "prompt": "Why does row count alone not determine the quality of a public instruction dataset?",
+      "explanation": "**Correct answer: B.** Correctness, diversity, target-skill coverage, licensing, and contamination matter. Scale does not compensate for systematically poor demonstrations.",
+      "topic": "13.8. Organizing SFT data by capability",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Large datasets are always entirely synthetic"
+        },
+        {
+          "value": "B",
+          "text": "Rows may be duplicate, wrong, or unrelated to the target decisions"
+        },
+        {
+          "value": "C",
+          "text": "SFT depends only on example count and not on token count"
         }
       ],
       "correct": [
@@ -268,47 +268,23 @@
       ]
     },
     {
-      "id": "15.11.2",
-      "prompt": "KV uses 128 KiB per token. How much is needed for a 4096-token prompt and 4000-token continuation with full caching?",
-      "explanation": "**Correct answer: A.** 128·1024·(4096+4000) / 2³⁰ = 0.98828125. The second option counts only the continuation.",
-      "topic": "15.11. Worked example D: the KV cost of a thought",
+      "id": "13.9.1",
+      "prompt": "Which careful conclusion is supported by LIMA?",
+      "explanation": "**Correct answer: C.** LIMA demonstrates the value of curation for an already capable 65B model. It does not establish a universal minimum dataset size.",
+      "topic": "13.9. Reading LIMA correctly",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "0.98828125 GiB"
+          "text": "Modern models no longer need instruction tuning after pretraining"
         },
         {
           "value": "B",
-          "text": "0.48828125 GiB"
+          "text": "Exactly 1,000 examples suffice for every model and every domain"
         },
         {
           "value": "C",
-          "text": "128 GiB"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "15.12.1",
-      "prompt": "In the teaching mixture, 70% of requests receive a 500-token budget, 20% receive 4K, and 10% receive 32K. What is the average budget?",
-      "explanation": "**Correct answer: C.** The weighted mean is 0.70·500 + 0.20·4K + 0.10·32K = 4.35K tokens. Relative to a fixed 32K budget, this teaching scenario reduces the average generated-token budget by about 7.36×. Interpreting this as consumption rather than assigned caps additionally assumes full use of every budget.",
-      "topic": "15.12. Worked example E: why adaptive allocation matters",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "8.00K tokens per request"
-        },
-        {
-          "value": "B",
-          "text": "32.00K tokens per request"
-        },
-        {
-          "value": "C",
-          "text": "4.35K tokens per request"
+          "text": "A strong base model can adapt from 1,000 carefully curated demonstrations"
         }
       ],
       "correct": [
@@ -316,23 +292,23 @@
       ]
     },
     {
-      "id": "15.12.2",
-      "prompt": "Why is a fixed maximum budget not a universally safe choice?",
-      "explanation": "**Correct answer: A.** Actual consumption matters, not just the cap. Continuing generation costs time and KV memory and may lead to overthinking. A model with a high cap can still stop early; compare quality with measured costs.",
-      "topic": "15.12. Worked example E: why adaptive allocation matters",
+      "id": "13.9.2",
+      "prompt": "When should source-task families be split?",
+      "explanation": "**Correct answer: A.** Derived examples from one source stay in one split to prevent content leakage.",
+      "topic": "13.9. Reading LIMA correctly",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "When the extra budget is used, it costs time and memory and may harm answers"
+          "text": "Before generating paraphrases and synthetic answers"
         },
         {
           "value": "B",
-          "text": "It automatically disables verifiers, tools, and repeated sampling"
+          "text": "After shuffling every generated answer"
         },
         {
           "value": "C",
-          "text": "It inevitably lowers the probability that at least one correct candidate appears"
+          "text": "Only after training"
         }
       ],
       "correct": [
@@ -340,23 +316,23 @@
       ]
     },
     {
-      "id": "15.12.3",
-      "prompt": "A simulation precomputes all sixteen candidates, then models stopping at the fourth. What actually decreased?",
-      "explanation": "**Correct answer: A.** Avoiding generation requires stopping before the next call. The program-search lab implements that control flow.",
-      "topic": "15.12. Worked example E: why adaptive allocation matters",
+      "id": "13.10.1",
+      "prompt": "Why does a synthetic data pipeline need a verifier?",
+      "explanation": "**Correct answer: A.** Incorrect demonstrations provide a learning signal in the wrong direction. A verifier applies explicit acceptance criteria, although incomplete tests and imperfect judges can still admit errors.",
+      "topic": "13.10. Synthetic data as a search-and-filter system",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Candidates inspected by the modeled policy"
+          "text": "A generator model confidently produces both correct and wrong examples"
         },
         {
           "value": "B",
-          "text": "Generator calls already executed"
+          "text": "It is needed to deduplicate the generated examples against each other"
         },
         {
           "value": "C",
-          "text": "Memory of the existing array automatically"
+          "text": "It brings the style of generated answers to one common template"
         }
       ],
       "correct": [
@@ -364,47 +340,23 @@
       ]
     },
     {
-      "id": "15.15.1",
-      "prompt": "How does a process reward model differ from an outcome reward model?",
-      "explanation": "**Correct answer: A.** Step-level feedback can localize errors and prune paths. Human annotation can be expensive, but process labels can also be constructed automatically. Either source requires checks of label quality and transfer across tasks.",
-      "topic": "15.15. Verifier families",
+      "id": "13.11.1",
+      "prompt": "How does SFT on worked solutions differ from training on final answers alone?",
+      "explanation": "**Correct answer: B.** When the worked solution is supervised, the model receives token-level signal over intermediate steps. Useful strategies and teacher artifacts can transfer together.",
+      "topic": "13.11. Reasoning demonstrations and the s1 compute scenario",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It scores intermediate steps rather than only the final outcome"
+          "text": "It always requires a separate `reasoning` role in the template"
         },
         {
           "value": "B",
-          "text": "It must use a formal proof checker"
+          "text": "Intermediate steps are targets, so the student imitates the solution path"
         },
         {
           "value": "C",
-          "text": "It is used only during training and never for selection"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "15.16.1",
-      "prompt": "What does reasoning-trace distillation primarily transfer?",
-      "explanation": "**Correct answer: B.** Training on traces can teach new procedures and knowledge because student weights change. It does not guarantee the teacher’s full capability; generalization needs separate evaluation.",
-      "topic": "15.16. Distilling reasoning traces",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "The teacher’s hidden weights, internal states, and full computational capacity"
-        },
-        {
-          "value": "B",
-          "text": "Observable formats, operations, and procedures represented in training traces"
-        },
-        {
-          "value": "C",
-          "text": "The teacher API’s official budget controls and private parameters"
+          "text": "It must run after preference optimization"
         }
       ],
       "correct": [
@@ -412,23 +364,23 @@
       ]
     },
     {
-      "id": "15.17.1",
-      "prompt": "What should a reasoning-model passport distinguish?",
-      "explanation": "**Correct answer: C.** One effort label does not describe the compute contract. We need to know what scales, what the user sees and pays for, and how state survives across calls.",
-      "topic": "15.17. Reading a model's reasoning passport",
+      "id": "13.12.1",
+      "prompt": "What must be represented in a complete call–observation–response demonstration?",
+      "explanation": "**Correct answer: C.** The trajectory should cover the decision to call, the structured action, the environment observation, and the assistant's next step. The tool result is usually context rather than a model target.",
+      "topic": "13.12. Teaching a model to use tools",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "An average score on one public benchmark under one fixed configuration"
+          "text": "The tool must be reachable during training so the call can be verified"
         },
         {
           "value": "B",
-          "text": "The maximum answer length, context size, and model name"
+          "text": "The example must contain at least two different tools in sequence"
         },
         {
           "value": "C",
-          "text": "Trajectory depth, search breadth, visibility, billing, and tool-continuity protocol"
+          "text": "The call itself, the tool response and the model's conclusion after it"
         }
       ],
       "correct": [
@@ -436,23 +388,71 @@
       ]
     },
     {
-      "id": "15.14.1",
-      "prompt": "Why does score 1 establish correctness in the polynomial lab?",
-      "explanation": "**Correct answer: A.** One value is fixed for the generator and two more are checked. The guarantee is specific to this grammar.",
-      "topic": "15.14. Level 2: the module notebook",
+      "id": "13.15.1",
+      "prompt": "How does distribution distillation differ from training on one teacher response?",
+      "explanation": "**Correct answer: A.** Soft targets expose probabilities over alternatives, either directly or through teacher logits. The token events must be aligned. Matching only the argmax does not match the distribution.",
+      "topic": "13.15. Distillation channels",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Three matching values identify a polynomial of degree at most two"
+          "text": "The student matches teacher probabilities, not only one sampled sequence"
         },
         {
           "value": "B",
-          "text": "Two tests suffice for arbitrary code"
+          "text": "Teacher and student must use the same architecture and parameter count"
         },
         {
           "value": "C",
-          "text": "The generator saw hidden-test answers"
+          "text": "The student must choose the same most likely token at every step"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "13.16.1",
+      "prompt": "Why does LoRA reduce optimizer-state memory?",
+      "explanation": "**Correct answer: B.** The base weights are frozen, so gradients and optimizer state are maintained only for adapters. Total memory still includes base weights, activations, buffers, and overhead.",
+      "topic": "13.16. LoRA and a concrete parameter count",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All optimizer states are automatically stored in four bits"
+        },
+        {
+          "value": "B",
+          "text": "Optimizer state is needed only for trainable adapter parameters"
+        },
+        {
+          "value": "C",
+          "text": "Moments are recomputed from scratch at every step"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "13.16.2",
+      "prompt": "If 208 MiB already includes adapter weights, what is added to the 4-bit base?",
+      "explanation": "**Correct answer: A.** The chosen 16 bytes include the weight, gradient, master copy and moments, each once.",
+      "topic": "13.16. LoRA and a concrete parameter count",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "208 MiB"
+        },
+        {
+          "value": "B",
+          "text": "208 MiB plus another 26 MiB of weights"
+        },
+        {
+          "value": "C",
+          "text": "Only 26 MiB"
         }
       ],
       "correct": [

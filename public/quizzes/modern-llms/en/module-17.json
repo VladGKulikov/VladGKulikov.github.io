@@ -4,23 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "19.4.1",
-      "prompt": "Why can a public benchmark lose discriminating power over time?",
-      "explanation": "**Correct answer: A.** Exposure can inflate scores, while saturation compresses differences among strong systems. Both effects motivate refreshed, private, or harder evaluation sets.",
-      "topic": "19.4. How a benchmark loses measurement power",
+      "id": "17.4.1",
+      "prompt": "Why does BM25 remain useful alongside dense retrieval?",
+      "explanation": "**Correct answer: A.** Rare strings may distinguish semantically similar documents. The analyzer must retain the required identifiers; neither branch is guaranteed to succeed on every query.",
+      "topic": "17.4. BM25 and learned sparse retrieval: the branch that protects exact terms",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Item exposure combines with strong systems approaching the benchmark ceiling"
+          "text": "It preserves rare literal terms when the analyzer retains them"
         },
         {
           "value": "B",
-          "text": "A public metric stops reflecting human judgment after its first year"
+          "text": "It runs faster and is therefore needed as the first filtering stage"
         },
         {
           "value": "C",
-          "text": "Published items can no longer be audited or corrected by experts"
+          "text": "It needs no training and transfers between languages unchanged"
         }
       ],
       "correct": [
@@ -28,23 +28,23 @@
       ]
     },
     {
-      "id": "19.5.1",
-      "prompt": "Why should a model-selection decision not be based on one aggregate score?",
-      "explanation": "**Correct answer: B.** A product decision is multidimensional. Two systems with the same mean can differ sharply on a critical slice, cost, or tail latency.",
-      "topic": "19.5. Build an evaluation map before choosing benchmark names",
+      "id": "17.5.1",
+      "prompt": "How is the bi-encoder trained in the lecture’s contrastive example?",
+      "explanation": "**Correct answer: B.** The positive pair should receive a higher relative score. Hard negatives teach fine distinctions, while false negatives supply an incorrect training signal.",
+      "topic": "17.5. Dense bi-encoders: learning a semantic space",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Aggregates are valid only for tasks with one correct class"
+          "text": "By recovering masked tokens inside query-document pairs"
         },
         {
           "value": "B",
-          "text": "The mean hides critical slices, cost, latency, and risk"
+          "text": "By contrasting pairs: the relevant pair is encouraged to outscore in-batch negatives"
         },
         {
           "value": "C",
-          "text": "Every aggregate metric has a systematic downward bias"
+          "text": "By regression onto relevance scores labelled by human assessors"
         }
       ],
       "correct": [
@@ -52,47 +52,23 @@
       ]
     },
     {
-      "id": "19.5.2",
-      "prompt": "A confidence threshold retains 4 correct responses from 20 requests. What follows?",
-      "explanation": "**Correct answer: B.** Risk uses accepted responses as its denominator; coverage uses all requests. Four successes do not establish future reliability. If no responses were accepted, risk would be undefined.",
-      "topic": "19.5. Build an evaluation map before choosing benchmark names",
+      "id": "17.6.1",
+      "prompt": "How does Matryoshka Representation Learning allow the embedding size to vary?",
+      "explanation": "**Correct answer: C.** At inference a slice v[:k] with renormalization suffices — no separate model is needed. Hence the working pattern: coarse search on the short representation, rescoring with the full vector.",
+      "topic": "17.6. Matryoshka Representation Learning (MRL), quantization, and worked example A: the price of storing meaning",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The system is proven error-free on all future requests"
+          "text": "It stores several versions of the vector and picks one per query"
         },
         {
           "value": "B",
-          "text": "Coverage is 20%; observed risk is zero over four responses"
+          "text": "It trains a separate projection compressing the vector to a target size"
         },
         {
           "value": "C",
-          "text": "Each token probability equals the probability of a correct response"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "19.6.1",
-      "prompt": "At planned N=500, assume success probabilities 0.955 and 0.950. What does the independent approximation imply?",
-      "explanation": "**Correct answer: C.** These are assumed probabilities: 95.5% cannot be observed in one N=500 binary run. The normal half-width is about 2.64 points, larger than the 0.5-point gap; an observed comparison on shared tasks requires paired outcomes.",
-      "topic": "19.6. Worked example A: what does half a percentage point mean?",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "System A is proven better under every item-level error pattern"
-        },
-        {
-          "value": "B",
-          "text": "The gap is exactly five extra successes and is therefore significant"
-        },
-        {
-          "value": "C",
-          "text": "The planned half-width is substantially larger than the probability gap"
+          "text": "Losses applied to several prefixes train useful nested representations"
         }
       ],
       "correct": [
@@ -100,23 +76,23 @@
       ]
     },
     {
-      "id": "19.6.2",
-      "prompt": "How many tasks per system target a normal 95% difference-interval half-width of 0.5 pp for independent rates near 95%?",
-      "explanation": "**Correct answer: A.** Rounding 2·0.95·0.05·(1.96/0.005)² up gives 14,599. This plans interval precision, not a specified statistical power.",
-      "topic": "19.6. Worked example A: what does half a percentage point mean?",
+      "id": "17.6.2",
+      "prompt": "Ten million 1024-component vectors: what is the payload?",
+      "explanation": "**Correct answer: A.** MRL-256 plus int8 gives 2.38 GiB — a ×16 compromise. The table counts vectors only: index metadata, graph edges and replication are added separately on top.",
+      "topic": "17.6. Matryoshka Representation Learning (MRL), quantization, and worked example A: the price of storing meaning",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "About 14,599 items per system"
+          "text": "38.15 GiB in fp32 against 1.19 GiB in binary — a ×32 saving"
         },
         {
           "value": "B",
-          "text": "About 3,650 items per system"
+          "text": "38.15 GiB in fp32 against 9.54 GiB in binary — a ×4 saving"
         },
         {
           "value": "C",
-          "text": "About 500 items per system"
+          "text": "4.10 GiB in fp32: one byte for each component of the vector"
         }
       ],
       "correct": [
@@ -124,23 +100,23 @@
       ]
     },
     {
-      "id": "19.6.3",
-      "prompt": "Two N=200 tables give 85%/80%. Which has the smaller exact McNemar p-value?",
-      "explanation": "**Correct answer: B.** All ten disagreements favor A in the second table: p=0.001953, versus about 0.098737 in the first. Aggregates are insufficient.",
-      "topic": "19.6. Worked example A: what does half a percentage point mean?",
+      "id": "17.7.1",
+      "prompt": "How does a cross-encoder differ from a bi-encoder?",
+      "explanation": "**Correct answer: B.** Joint attention operates within the pair and requires new computation for each candidate. This expands what the scorer can model; target-query evaluation determines quality. Pairs can be batched; scoring each one does not require a separate sequential call.",
+      "topic": "17.7. One vector, one pair, or a matrix: where query-document interaction happens",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "20 A-only successes, 10 B-only"
+          "text": "It trains on the same pairs but with a different loss function"
         },
         {
           "value": "B",
-          "text": "10 A-only successes, 0 B-only"
+          "text": "It encodes the pair jointly; its final score cannot be computed before the query"
         },
         {
           "value": "C",
-          "text": "Equal p-values because accuracies match"
+          "text": "It emits a fixed-length vector for every document in the corpus"
         }
       ],
       "correct": [
@@ -148,47 +124,23 @@
       ]
     },
     {
-      "id": "19.7.1",
-      "prompt": "Why use several hard sets—HLE, FrontierMath, and ARC-AGI—instead of one “hardest benchmark”?",
-      "explanation": "**Correct answer: B.** A low score can have different causes. The sets probe expert knowledge, original mathematical problems, and transfer of rules to novel visual structures.",
-      "topic": "19.7. Difficulty has several sources: HLE, FrontierMath, and ARC-AGI",
+      "id": "17.7.2",
+      "prompt": "What does late interaction do in ColBERT-style systems?",
+      "explanation": "**Correct answer: C.** Document token vectors are precomputed. The index is generally larger than a single-vector index; the ratio depends on dimensions, vector count, and compression.",
+      "topic": "17.7. One vector, one pair, or a matrix: where query-document interaction happens",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "To obtain one averaged coefficient of general intelligence"
+          "text": "It defers comparison until the full answer context has been assembled"
         },
         {
           "value": "B",
-          "text": "To separate expert knowledge, mathematics, and abstract generalization"
+          "text": "It computes similarity using only the last layers of both encoders"
         },
         {
           "value": "C",
-          "text": "Because each set supports only one architecture family"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "19.8.1",
-      "prompt": "With n=20 generations and c=4 successes, what is the unbiased pass@10 estimate?",
-      "explanation": "**Correct answer: C.** The formula 1−C(n−c,k)/C(n,k) gives 0.9567. Unbiasedness for at least one success requires independent draws from a fixed policy. Plugging c/n into the nonlinear formula introduces bias.",
-      "topic": "19.8. `pass@k`: finding one solution is not the same as being reliable",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "0.8926 — the plug-in estimate with independent repeated attempts"
-        },
-        {
-          "value": "B",
-          "text": "0.2000 — the observed success rate of one random generation"
-        },
-        {
-          "value": "C",
-          "text": "0.9567 — the finite-sample estimate without replacement"
+          "text": "It keeps a vector per token and matches them between query and document"
         }
       ],
       "correct": [
@@ -196,23 +148,23 @@
       ]
     },
     {
-      "id": "19.8.2",
-      "prompt": "What does a large gap between pass@1 and pass@10 mean?",
-      "explanation": "**Correct answer: A.** The gap separates search capability from single-attempt reliability. A product that permits one try may gain little from a high pass@10.",
-      "topic": "19.8. `pass@k`: finding one solution is not the same as being reliable",
+      "id": "17.8.1",
+      "prompt": "At 10 GFLOP/s, what is the arithmetic-only estimate for 10M 1024-dimensional vectors?",
+      "explanation": "**Correct answer: A.** 2Nd = 2·10⁷·1024 ≈ 2.05·10¹⁰ operations. This is a transparent model of operation count, not a benchmark: graph traversal, memory access and recall are outside it.",
+      "topic": "17.8. Worked example B: exact search and the arithmetic of ANN",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "There is solution-finding headroom, but the first attempt remains unreliable"
+          "text": "2.048 s against 0.4096 ms for a 2,000-distance scenario — a factor of 5,000"
         },
         {
           "value": "B",
-          "text": "The model necessarily switches among ten different solution algorithms"
+          "text": "20.48 ms: modern libraries fit comfortably inside that budget"
         },
         {
           "value": "C",
-          "text": "pass@10 penalizes errors more strictly than a one-attempt metric"
+          "text": "0.4096 ms — and that is the measured latency of an HNSW index"
         }
       ],
       "correct": [
@@ -220,23 +172,23 @@
       ]
     },
     {
-      "id": "19.9.1",
-      "prompt": "What is the main limitation of a composite index or arena rating?",
-      "explanation": "**Correct answer: B.** A composite is useful as a broad map, but its coordinate system is determined by its users, tasks, weights, and aggregation protocol. Product decisions need private slices as well.",
-      "topic": "19.9. Human arenas and composite indices answer someone else’s question",
+      "id": "17.9.1",
+      "prompt": "What is HNSW's main trade-off?",
+      "explanation": "**Correct answer: B.** The efSearch knob moves the recall-versus-latency trade-off, and it must be measured on your own index. Graph edges meanwhile occupy memory on top of the vectors themselves.",
+      "topic": "17.9. ANN under the hood: three indexes for three resource constraints",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "An arena cannot collect human pairwise preferences at scale"
+          "text": "High recall at the price of slow index rebuilds during inserts"
         },
         {
           "value": "B",
-          "text": "The index inherits someone else’s task weights, audience, and aggregation"
+          "text": "Fast search at the price of graph memory and an approximate answer"
         },
         {
           "value": "C",
-          "text": "A composite is always statistically less stable than a single metric"
+          "text": "An exact answer at the price of time growing linearly with corpus size"
         }
       ],
       "correct": [
@@ -244,23 +196,23 @@
       ]
     },
     {
-      "id": "19.10.1",
-      "prompt": "How can position bias in pairwise LLM judging be reduced?",
-      "explanation": "**Correct answer: C.** Swapping exposes preference for the first or second position. A stronger protocol also controls rubric, length, judge family, and cost.",
-      "topic": "19.10. LLM judges: a synthetic 30-point illusion",
+      "id": "17.10.1",
+      "prompt": "How does RRF merge rankings without comparable raw scores?",
+      "explanation": "**Correct answer: C.** RRF replaces original scores with rank contributions. Score calibration is another valid strategy, but RRF requires none and guarantees no quality improvement.",
+      "topic": "17.10. Hybrid retrieval, reciprocal-rank fusion, and worked example F",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Always show the new system first in every comparison"
+          "text": "It brings scores to a common scale by normalizing per branch maximum"
         },
         {
           "value": "B",
-          "text": "Raise judge temperature until order dependence disappears"
+          "text": "It takes documents that landed in the top of both branches at once"
         },
         {
           "value": "C",
-          "text": "Evaluate A/B and B/A and aggregate by candidate identity"
+          "text": "It sums 1/(k + rank): the position matters, not the score value"
         }
       ],
       "correct": [
@@ -268,23 +220,23 @@
       ]
     },
     {
-      "id": "19.10.2",
-      "prompt": "How many calls per pair are required by three LLM judges evaluating both A/B and B/A orders?",
-      "explanation": "**Correct answer: A.** Each of the three judges evaluates two orderings, so the protocol uses 3×2=6 calls. Bias control has a measurable cost.",
-      "topic": "19.10. LLM judges: a synthetic 30-point illusion",
+      "id": "17.10.2",
+      "prompt": "Why is hybrid search not obliged to win on every metric at once?",
+      "explanation": "**Correct answer: A.** Fusion changes candidate order. Average quality can improve or worsen; measure it on fixed queries and inspect distinct error classes.",
+      "topic": "17.10. Hybrid retrieval, reciprocal-rank fusion, and worked example F",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "6 calls per pair"
+          "text": "Another branch can promote irrelevant items above relevant ones"
         },
         {
           "value": "B",
-          "text": "3 calls per pair"
+          "text": "Hybrid is tuned for recall and therefore always loses on precision"
         },
         {
           "value": "C",
-          "text": "2 calls per pair"
+          "text": "Hybrid metrics are incomparable with single-branch metrics by construction"
         }
       ],
       "correct": [
@@ -292,23 +244,23 @@
       ]
     },
     {
-      "id": "19.11.1",
-      "prompt": "Why should safety, truthfulness, and general capability not be collapsed into one number?",
-      "explanation": "**Correct answer: B.** A system can be capable but unsafe, or factually strong yet vulnerable to adversarial prompts. These axes should be measured separately and combined only through an explicit product utility.",
-      "topic": "19.11. Multimodal capability, safety, truthfulness, and honesty are not one axis",
+      "id": "17.10.3",
+      "prompt": "Two documents are relevant; one reaches the top five. What is Recall@5?",
+      "explanation": "**Correct answer: B.** Recall divides retrieved relevant documents by all relevant documents, not by ranking length.",
+      "topic": "17.10. Hybrid retrieval, reciprocal-rank fusion, and worked example F",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Safety cannot be measured quantitatively on a fixed evaluation set"
+          "text": "1 if it ranks first"
         },
         {
           "value": "B",
-          "text": "The axes describe different risks and need different failure criteria"
+          "text": "0.5"
         },
         {
           "value": "C",
-          "text": "Truthfulness requires humans, while capability requires only tests"
+          "text": "0.2"
         }
       ],
       "correct": [
@@ -316,23 +268,47 @@
       ]
     },
     {
-      "id": "19.12.1",
-      "prompt": "How does working context differ from a nominal context window?",
-      "explanation": "**Correct answer: C.** Accepting one million tokens does not guarantee uniform use of the beginning, middle, and end. Working context depends on task, evidence position, and quality threshold.",
-      "topic": "19.12. Long context: accepted length versus usable evidence",
+      "id": "17.11.1",
+      "prompt": "What semantic relationship can be lost when chunks are too short and have no overlap?",
+      "explanation": "**Correct answer: B.** A boundary may separate a definition from its use. Both pieces can remain retrievable while neither is sufficient alone. Overlap, section headings, or wider context are possible remedies to evaluate.",
+      "topic": "17.11. Chunking: deciding what the index is allowed to retrieve",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Working context is always half of the advertised context length"
+          "text": "Indexing speed: short chunks simply produce many more of them"
         },
         {
           "value": "B",
-          "text": "Nominal length belongs to prefill, while working length belongs to decode"
+          "text": "Coherence: a definition and its use land in two separate chunks"
         },
         {
           "value": "C",
-          "text": "It is the region where evidence is used above a chosen threshold"
+          "text": "The option to use a reranker, which needs chunks of equal length"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.12.1",
+      "prompt": "What must a context assembler guarantee under a hard token budget?",
+      "explanation": "**Correct answer: C.** Deterministic truncation is reproducible, but can remove necessary context. The teaching packer accepts whole chunks and records every skip; it counts the budget after citations are added.",
+      "topic": "17.12. The full cascade and worked example D: where request latency lives",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "That every retrieved document enters the context at least in fragments"
+        },
+        {
+          "value": "B",
+          "text": "That the document order matches the order of their relevance scores"
+        },
+        {
+          "value": "C",
+          "text": "Determinism and an explicit decision about what exactly was dropped"
         }
       ],
       "correct": [
@@ -340,23 +316,23 @@
       ]
     },
     {
-      "id": "19.12.2",
-      "prompt": "What does 0.246752 mean for the synthetic U-shaped profile?",
-      "explanation": "**Correct answer: A.** The 0.9 threshold selects two disjoint edges under a uniform position distribution and an assumed curve.",
-      "topic": "19.12. Long context: accepted length versus usable evidence",
+      "id": "17.12.2",
+      "prompt": "Why is the 1.658 s total not a rigorous lower bound?",
+      "explanation": "**Correct answer: A.** It is a conditional serial budget; assumed rates are not hardware guarantees.",
+      "topic": "17.12. The full cascade and worked example D: where request latency lives",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The combined measure of two edge regions"
+          "text": "Decode and MFU are assumed; some costs are omitted"
         },
         {
           "value": "B",
-          "text": "A contiguous 246752-token usable window"
+          "text": "Stage times can never be added"
         },
         {
           "value": "C",
-          "text": "Measured accuracy of a particular LLM"
+          "text": "2PT counts only KV"
         }
       ],
       "correct": [
@@ -364,23 +340,23 @@
       ]
     },
     {
-      "id": "19.13.1",
-      "prompt": "Why should a harness call the system once per item within a fixed run and trial?",
-      "explanation": "**Correct answer: A.** A second call to a stochastic or stateful model can produce a different answer and add cost. All metrics should be derived from one stored observation.",
-      "topic": "19.13. A minimal evaluation harness: one call, one observed output",
+      "id": "17.15.1",
+      "prompt": "How does agentic RAG differ from a retrieve-once pipeline?",
+      "explanation": "**Correct answer: A.** Another search can use newly read evidence to refine the query. This may help with multi-hop tasks, but the benefit needs measurement. Call count, latency, and cost depend on the chosen trajectory.",
+      "topic": "17.15. The evolution of RAG: repair the measured failure, not the acronym list",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "So output, metrics, latency, and cost refer to one observed response"
+          "text": "The model itself decides whether to search again and how to rephrase"
         },
         {
           "value": "B",
-          "text": "Because a second call deterministically reproduces the first response"
+          "text": "It uses several indexes instead of one shared vector store"
         },
         {
           "value": "C",
-          "text": "To prohibit computing several different metrics on the same example"
+          "text": "It searches after generation in order to verify the produced answer"
         }
       ],
       "correct": [
@@ -388,23 +364,47 @@
       ]
     },
     {
-      "id": "19.13.2",
-      "prompt": "A metric raises after a successful model response. What does the full teaching notebook do?",
-      "explanation": "**Correct answer: C.** An evaluator bug is not a model failure. A None aggregate prevents publication of a misleading quality result.",
-      "topic": "19.13. A minimal evaluation harness: one call, one observed output",
+      "id": "17.16.1",
+      "prompt": "A 200K-token document against a 3,712-token RAG context. What does the gap give?",
+      "explanation": "**Correct answer: B.** The ratio 200000/3712 belongs to the assumed linear model. Quadratic attention, caching, and answer quality require separate treatment.",
+      "topic": "17.16. Worked example E: RAG or long context",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Drops the row and reduces the denominator"
+          "text": "Nothing in the limit: long context is processed in parallel anyway"
         },
         {
           "value": "B",
-          "text": "Silently assigns a model failure"
+          "text": "53.88× in input length and the linear prefill estimate: 6.489 s versus 0.120 s"
         },
         {
           "value": "C",
-          "text": "Retains the response and invalidates the aggregate"
+          "text": "×53.88 on input, but prefill is the same — it does not follow length"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "17.17.1",
+      "prompt": "Which pair of metrics separates the retrieval and generation stages?",
+      "explanation": "**Correct answer: C.** Low recall can come from chunking, representations, filters, or the index. At high recall, inspect context assembly and generation: fluent prose does not replace evidence.",
+      "topic": "17.17. Evaluation and the embedder passport",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Answer completeness and its factual correctness in a judge's opinion"
+        },
+        {
+          "value": "B",
+          "text": "Request latency and the cost of processing it in tokens"
+        },
+        {
+          "value": "C",
+          "text": "Retrieval recall and the answer's groundedness in the retrieved context"
         }
       ],
       "correct": [
@@ -412,71 +412,47 @@
       ]
     },
     {
-      "id": "19.15.1",
-      "prompt": "Why keep a private golden set versioned?",
-      "explanation": "**Correct answer: B.** Privacy reduces direct tuning to the test; versioning ties a result to specific items, rules, slices, and date. The set becomes reproducible change control.",
-      "topic": "19.15. A private golden set in seven deliberate steps",
+      "id": "17.17.2",
+      "prompt": "Why reject a repeated ID in an nDCG ranking?",
+      "explanation": "**Correct answer: A.** The ideal ranking contains each document once. Counting its gain repeatedly can inflate nDCG above one.",
+      "topic": "17.17. Evaluation and the embedder passport",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "To avoid documenting criteria, slices, and evaluation rules"
+          "text": "Its gain can be counted twice"
         },
         {
           "value": "B",
-          "text": "To reduce test-specific tuning and track dataset versions"
+          "text": "Logarithms are undefined for repeated strings"
         },
         {
           "value": "C",
-          "text": "To prevent the model from solving any publicly released task"
+          "text": "MRR always becomes zero"
         }
       ],
       "correct": [
-        "B"
+        "A"
       ]
     },
     {
-      "id": "19.15.2",
-      "prompt": "A private set repeatedly guides prompt tuning. What changes?",
-      "explanation": "**Correct answer: B.** Selection based on results creates adaptation without gradients or public task disclosure.",
-      "topic": "19.15. A private golden set in seven deliberate steps",
+      "id": "17.14.1",
+      "prompt": "What does matching an excerpt to source offsets establish?",
+      "explanation": "**Correct answer: C.** Exact text and a citation establish provenance; relevance and completeness need separate checks.",
+      "topic": "17.14. Level 2: what the notebook makes reproducible",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It automatically becomes weight training"
+          "text": "Answer correctness"
         },
         {
           "value": "B",
-          "text": "It becomes development evidence; a separate final audit is needed"
+          "text": "LLM generation quality"
         },
         {
           "value": "C",
-          "text": "Secrecy alone preserves its independence"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "19.17.1",
-      "prompt": "What should a reported-result passport contain beyond benchmark name and score?",
-      "explanation": "**Correct answer: C.** The same benchmark name does not guarantee the same protocol. Without a full passport, the result cannot be reproduced or attributed to model versus system scaffolding.",
-      "topic": "19.17. Read two passports: the benchmark and the reported run",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Only parameter count, context length, and model name"
-        },
-        {
-          "value": "B",
-          "text": "Only run date, GPU type, and the final aggregate score"
-        },
-        {
-          "value": "C",
-          "text": "Version, protocol, attempts, tools, cost, and uncertainty"
+          "text": "The excerpt's provenance"
         }
       ],
       "correct": [

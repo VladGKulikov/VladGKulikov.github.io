@@ -37,7 +37,7 @@ for (const entry of practiceModules) {
     if(entry.section==='exercises') {
       counts.exercises++;
       if(!item.answer) {
-        checks([entry.courseKey,entry.moduleKey,item.answerKind],['modern-llms','module-13','guidance'],'Only authored project guidance may lack an answer');
+        checks([entry.courseKey,entry.moduleKey,item.answerKind],['modern-llms','module-15','guidance'],'Only authored project guidance may lack an answer');
         assert(['exercise-06','exercise-07'].includes(item.id),'Known project guidance IDs');
       }
       for(const file of item.codeFiles??[]) {

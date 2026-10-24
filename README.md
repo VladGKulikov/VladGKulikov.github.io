@@ -50,9 +50,10 @@ expandable worked answers also remain readable without JavaScript.
 
 Permanent addresses use `/courses/<course-key>/<module-key>/` in English and
 `/ru/courses/<course-key>/<module-key>/` in Russian. Course overviews omit the
-module key. Module quiz URLs append `tests/`, exercise URLs `exercises/`, and notebook URLs `notebooks/` to the lecture URL. Module keys identify subjects, not reading order: in Modern LLMs,
-for example, `module-18` is the Basic Transformer lecture at reading position 3.
-Do not renumber keys when changing the catalog order. Previous query-based URLs
+module key. Module quiz URLs append `tests/`, exercise URLs `exercises/`, and notebook URLs `notebooks/` to the lecture URL. Module keys match the current module numbers:
+`module-03` is Module 3, the Basic Transformer, and `module-12` is Module 12,
+Diffusion LLMs. The old numbering is no longer used for page addresses.
+Previous query-based URLs
 are translated to permanent addresses by the browser, preserving section hashes;
 GitHub Pages itself redirects the previous domain to the configured custom domain.
 
@@ -90,7 +91,7 @@ and publication/license checks remain separate.
 `python scripts/export-quizzes.py` exports the current authored question files
 from the three local canonical repositories without modifying them. It accepts
 the same `--source-root COURSE=PATH` overrides as the lecture exporter. Modern
-module keys follow `previous_id`; RU/EN question and grading parity is required.
+module keys follow the current manifest IDs; RU/EN question and grading parity is required.
 Information Theory uses stable internal question IDs because a few optional
 topics have different section numbers in the translations; original source
 question numbers are still displayed. File provenance and SHA-256 hashes are

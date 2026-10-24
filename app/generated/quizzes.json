@@ -26,10 +26,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-18",
+      "moduleKey": "module-03",
       "language": "ru",
-      "file": "modern-llms/ru/module-18.json",
-      "hash": "6aec2c184c47452925eef33ea833479172f229ec4b6d116b9e366cabf824b645",
+      "file": "modern-llms/ru/module-03.json",
+      "hash": "ef4e5f92d5a1cb9df2969a9d528b4857c230aefa8771d532eff21ac62ee5c311",
       "count": 46,
       "kinds": {
         "single": 46
@@ -38,10 +38,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-03",
+      "moduleKey": "module-04",
       "language": "ru",
-      "file": "modern-llms/ru/module-03.json",
-      "hash": "e26b408894ab4f020747659a28c30f217ffe78abbfc6edc5f8dd892cc29b7487",
+      "file": "modern-llms/ru/module-04.json",
+      "hash": "f6df520c4e7fd5b2d22b9472a12eb615549a2b77b5e5bf34b84405b83d899073",
       "count": 23,
       "kinds": {
         "single": 23
@@ -50,10 +50,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-04",
+      "moduleKey": "module-05",
       "language": "ru",
-      "file": "modern-llms/ru/module-04.json",
-      "hash": "ed67c8961abc4b3ca04c1b74674896b60ee2556b99bb3dfcc6b5f93a5fd57a10",
+      "file": "modern-llms/ru/module-05.json",
+      "hash": "b328421af3c54ffd9dce975efb74011a1cce818e3798c68279ac1e2154ea4864",
       "count": 23,
       "kinds": {
         "single": 23
@@ -62,10 +62,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-05",
+      "moduleKey": "module-06",
       "language": "ru",
-      "file": "modern-llms/ru/module-05.json",
-      "hash": "1133f2fcee801c4c0d80ab32739621dd10a6376d93be740c98f784424c0ff2b2",
+      "file": "modern-llms/ru/module-06.json",
+      "hash": "cd5741a817c1b7bcc0ee3d60e1540a677a734d28805d4deef1d766d4514411fd",
       "count": 22,
       "kinds": {
         "single": 22
@@ -74,10 +74,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-06",
+      "moduleKey": "module-07",
       "language": "ru",
-      "file": "modern-llms/ru/module-06.json",
-      "hash": "523fa5d7a2e96aba908eb04135c2b7d04ff8def960ee116fb55226ec164f4bea",
+      "file": "modern-llms/ru/module-07.json",
+      "hash": "7df07adbeadd338a26b7e851af739015d2bcdf0009eb4d327af2acbd080a452a",
       "count": 21,
       "kinds": {
         "single": 21
@@ -86,10 +86,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-07",
+      "moduleKey": "module-08",
       "language": "ru",
-      "file": "modern-llms/ru/module-07.json",
-      "hash": "a0d6e76e5f4000f00ecdda92c4a2da14f44575fa645650dc47316472056eafea",
+      "file": "modern-llms/ru/module-08.json",
+      "hash": "2032ab6350e662d142bde6dec50e8ff0b189edc490d90b8b9373bddea1472c8a",
       "count": 19,
       "kinds": {
         "single": 19
@@ -98,10 +98,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-08",
+      "moduleKey": "module-09",
       "language": "ru",
-      "file": "modern-llms/ru/module-08.json",
-      "hash": "a544b75dd78e930d9fb01ed2508ee1cd49217592dcd9d644ec9cc399717c2a46",
+      "file": "modern-llms/ru/module-09.json",
+      "hash": "8df9d7f84098645ace18e11fb5c24d3340aec123d6e2017348c59a0573cca609",
       "count": 18,
       "kinds": {
         "single": 18
@@ -110,10 +110,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-09",
+      "moduleKey": "module-10",
       "language": "ru",
-      "file": "modern-llms/ru/module-09.json",
-      "hash": "95a284bc76624a278faead2cacfe77bfc89a169b5a5a2f986695d358b4a0930c",
+      "file": "modern-llms/ru/module-10.json",
+      "hash": "75180a0b22c93d88b1cf9274545131ecb0243bd80d491cecf2199768de269349",
       "count": 20,
       "kinds": {
         "single": 20
@@ -122,10 +122,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-10",
+      "moduleKey": "module-11",
       "language": "ru",
-      "file": "modern-llms/ru/module-10.json",
-      "hash": "b3f5a2d49ab0ab3c27ed3b63a1fcf29285c5cd23c78233ce9b852515e579b9ab",
+      "file": "modern-llms/ru/module-11.json",
+      "hash": "8cad42d4e65182db59f26eed97e605669e420be7ded6e88f0c7462c24ffdaa26",
       "count": 19,
       "kinds": {
         "single": 19
@@ -134,10 +134,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-07b",
+      "moduleKey": "module-12",
       "language": "ru",
-      "file": "modern-llms/ru/module-07b.json",
-      "hash": "e31598ad51a7fc063411782bd21cb5abfcebc89d1d4b2bb3294d67fc824016a0",
+      "file": "modern-llms/ru/module-12.json",
+      "hash": "f698002d68cd4baaadb0106947674168bbf9bd3bbe156af7e2701b37b9ce4287",
       "count": 19,
       "kinds": {
         "single": 19
@@ -146,10 +146,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-11",
+      "moduleKey": "module-13",
       "language": "ru",
-      "file": "modern-llms/ru/module-11.json",
-      "hash": "55507734564b0f5710449ef00397d126cf4a860099e9c7ba827f8f62620dfeaa",
+      "file": "modern-llms/ru/module-13.json",
+      "hash": "1ef24cc241679323fec013c6e4d1701f14a13efb01bd7561ea19bdce54167a85",
       "count": 19,
       "kinds": {
         "single": 19
@@ -158,10 +158,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-12",
+      "moduleKey": "module-14",
       "language": "ru",
-      "file": "modern-llms/ru/module-12.json",
-      "hash": "354a690ef16b4ec6aea2c529cfefe1ff25ac1b4221acb8f083228dc7f912f870",
+      "file": "modern-llms/ru/module-14.json",
+      "hash": "d3f20ec6ec42098c864c109e1f448f34e948d6f31855c6313a6466d5e3e943f2",
       "count": 19,
       "kinds": {
         "single": 19
@@ -170,10 +170,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-13",
+      "moduleKey": "module-15",
       "language": "ru",
-      "file": "modern-llms/ru/module-13.json",
-      "hash": "31a583720fba95b4393725e21812dc7f8d563d53bfd5443e63ad8c102df56917",
+      "file": "modern-llms/ru/module-15.json",
+      "hash": "0198486ff75b4e4c34e33316384e28a780b543fa4986482c3113b4a00dd562da",
       "count": 19,
       "kinds": {
         "single": 19
@@ -182,10 +182,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-14",
+      "moduleKey": "module-16",
       "language": "ru",
-      "file": "modern-llms/ru/module-14.json",
-      "hash": "e6d2404df7778390ff43bdb87021a1ebee1f77e64a3d5f84666646351b154e7a",
+      "file": "modern-llms/ru/module-16.json",
+      "hash": "7de95ac65cc2dafd1b31106def8382b1116e9f1d72f600763b2cba51a54d5b70",
       "count": 19,
       "kinds": {
         "single": 19
@@ -194,10 +194,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-15",
+      "moduleKey": "module-17",
       "language": "ru",
-      "file": "modern-llms/ru/module-15.json",
-      "hash": "13ef1ffb8d812f3f4d5564d6d7ce11c86ba48eaef8bbcc363148aeb293fcfa94",
+      "file": "modern-llms/ru/module-17.json",
+      "hash": "5e860cc92956bb2cde77bbbc0f58b095809478d55c2e29b83472e812f8d173a5",
       "count": 19,
       "kinds": {
         "single": 19
@@ -206,10 +206,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-16",
+      "moduleKey": "module-18",
       "language": "ru",
-      "file": "modern-llms/ru/module-16.json",
-      "hash": "b6408b14945f76b8592c9292ea928c4d02360d9ce7944ede6a0955f050d1ab9c",
+      "file": "modern-llms/ru/module-18.json",
+      "hash": "4ce511edfa2ae177e18685d2bc0ea2a29b6cea23a7831d39f783115765349434",
       "count": 20,
       "kinds": {
         "single": 20
@@ -218,10 +218,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-17",
+      "moduleKey": "module-19",
       "language": "ru",
-      "file": "modern-llms/ru/module-17.json",
-      "hash": "ab60e43eaa9189b54df13ea3fb206fd738a24e84e1e7f892f6cfb0c824353a14",
+      "file": "modern-llms/ru/module-19.json",
+      "hash": "b86fa5b2d965df7fe21eb3637d8d22de50a66f0cb77042371aa5ddb31f5ef4a1",
       "count": 20,
       "kinds": {
         "single": 20
@@ -266,10 +266,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-18",
+      "moduleKey": "module-03",
       "language": "en",
-      "file": "modern-llms/en/module-18.json",
-      "hash": "6fd0ae835d3093f31ff70f206e7417ef5da11e215223c09d4d5049b36fcdb59e",
+      "file": "modern-llms/en/module-03.json",
+      "hash": "0bf313e87e606277ef0c5258d19da883c31c374e567b3b79830d61b1099a8595",
       "count": 46,
       "kinds": {
         "single": 46
@@ -278,10 +278,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-03",
+      "moduleKey": "module-04",
       "language": "en",
-      "file": "modern-llms/en/module-03.json",
-      "hash": "e140da6504b6c71ba22c43e441fa588f693bbe26fbd3e80d05fa27bc1caf47ee",
+      "file": "modern-llms/en/module-04.json",
+      "hash": "d2af7edab5ac0f3df15abe14f56fffd2abeb6565e92f084e6d611db415023cd2",
       "count": 23,
       "kinds": {
         "single": 23
@@ -290,10 +290,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-04",
+      "moduleKey": "module-05",
       "language": "en",
-      "file": "modern-llms/en/module-04.json",
-      "hash": "5f1c28b2b32738687043858d7e819626f0542a9dd2b1395938a5f91bf2a92f0e",
+      "file": "modern-llms/en/module-05.json",
+      "hash": "55692a83b124082fc79ba4b26af904f926b09c1800016196600900c87c2350af",
       "count": 23,
       "kinds": {
         "single": 23
@@ -302,10 +302,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-05",
+      "moduleKey": "module-06",
       "language": "en",
-      "file": "modern-llms/en/module-05.json",
-      "hash": "23c83a8d627d368b518b8e5e3bc7766fca41703431ecf4ea542a386ca6360917",
+      "file": "modern-llms/en/module-06.json",
+      "hash": "e3c8e3796bc385c92a07b3a760e44cf98cd62e6c5e09ddb0ffb330c37b6fd326",
       "count": 22,
       "kinds": {
         "single": 22
@@ -314,10 +314,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-06",
+      "moduleKey": "module-07",
       "language": "en",
-      "file": "modern-llms/en/module-06.json",
-      "hash": "7c2645c4d81b8f5638f53ea2f1620f4f9921d061ae41fb59e2d146ee3c9f05d6",
+      "file": "modern-llms/en/module-07.json",
+      "hash": "2210045bb958cfe9c2730d7af5d90d849210a1cfb442a6ba633113a53f51aec0",
       "count": 21,
       "kinds": {
         "single": 21
@@ -326,10 +326,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-07",
+      "moduleKey": "module-08",
       "language": "en",
-      "file": "modern-llms/en/module-07.json",
-      "hash": "e070a21462497802688b2a35e6107c1bb4a470995b1d3941fbf5fbed8041f934",
+      "file": "modern-llms/en/module-08.json",
+      "hash": "1e8d5dae6163a7018a70978e9e1d164ab5cd589f1175f76af7fecd0dba0d9508",
       "count": 19,
       "kinds": {
         "single": 19
@@ -338,10 +338,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-08",
+      "moduleKey": "module-09",
       "language": "en",
-      "file": "modern-llms/en/module-08.json",
-      "hash": "7278b10ab34272c2ead4135aeeda967e809e3b5415429ce5e724aac5b15a9071",
+      "file": "modern-llms/en/module-09.json",
+      "hash": "98e65b1edc67ae04155b119fdf437d649a039c4c1c75b06525b5b3e56cece088",
       "count": 18,
       "kinds": {
         "single": 18
@@ -350,10 +350,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-09",
+      "moduleKey": "module-10",
       "language": "en",
-      "file": "modern-llms/en/module-09.json",
-      "hash": "d9819da4c6950a77d1196f587ae4a9991f0566d63d30c3e862f4e886bbf7ef8a",
+      "file": "modern-llms/en/module-10.json",
+      "hash": "0a0a2e0550131e4d1e7cdc6b9db4366827ad27a9a7e6305abae707c02e1368d3",
       "count": 20,
       "kinds": {
         "single": 20
@@ -362,10 +362,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-10",
+      "moduleKey": "module-11",
       "language": "en",
-      "file": "modern-llms/en/module-10.json",
-      "hash": "b518c14162449663294420f5bcca2eb802d8f709a049bcb5f99204d3d8e6eccf",
+      "file": "modern-llms/en/module-11.json",
+      "hash": "42894c2c66e45c03a8493a8e1f83708773a1c0759e01026817eda034442e87bd",
       "count": 19,
       "kinds": {
         "single": 19
@@ -374,10 +374,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-07b",
+      "moduleKey": "module-12",
       "language": "en",
-      "file": "modern-llms/en/module-07b.json",
-      "hash": "05842ccea5da1a8f5e4c4bfcef5f3fcf7101056ad851f186c190328654e28bbd",
+      "file": "modern-llms/en/module-12.json",
+      "hash": "c1e5a4fce009b1cb73c8f8f8885e0a9c1d13f51de6e9f6e09c38d13dc97514db",
       "count": 19,
       "kinds": {
         "single": 19
@@ -386,10 +386,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-11",
+      "moduleKey": "module-13",
       "language": "en",
-      "file": "modern-llms/en/module-11.json",
-      "hash": "5a2a03f11c3d8a44316e7545625b862ce2417f2ebaa512195c1c228ef300634f",
+      "file": "modern-llms/en/module-13.json",
+      "hash": "3b1d3cb67ac06c511e9820aeb4a5a53728a67df18c3a38b6c880d2da759b18ed",
       "count": 19,
       "kinds": {
         "single": 19
@@ -398,10 +398,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-12",
+      "moduleKey": "module-14",
       "language": "en",
-      "file": "modern-llms/en/module-12.json",
-      "hash": "26108c63df4aa419f8c258cb57fea71ac32e5c289459a2923920711c29bf9fb9",
+      "file": "modern-llms/en/module-14.json",
+      "hash": "d129b825416d738c1055202e0d1d797672f57c46ddd1b7a139b08e40a739df4d",
       "count": 19,
       "kinds": {
         "single": 19
@@ -410,10 +410,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-13",
+      "moduleKey": "module-15",
       "language": "en",
-      "file": "modern-llms/en/module-13.json",
-      "hash": "dbf10e24a95e0582f8024d9b2111f1bd8ae6bc9f2ada5b5266e5db1769cdfb42",
+      "file": "modern-llms/en/module-15.json",
+      "hash": "86dd7a25465a2a577e4b4a026e90df0560456bc1dd5c6202a01dcb135f2a613b",
       "count": 19,
       "kinds": {
         "single": 19
@@ -422,10 +422,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-14",
+      "moduleKey": "module-16",
       "language": "en",
-      "file": "modern-llms/en/module-14.json",
-      "hash": "cf6cdd1537500436a1c7f4b3be5d4dfba2ef3a19ff43cba07a52824c2492de12",
+      "file": "modern-llms/en/module-16.json",
+      "hash": "3c2ff2a8082cdfaa0705bdeabbd2c4dc59fa6393ab9d0db9b24f3b0e179ddec5",
       "count": 19,
       "kinds": {
         "single": 19
@@ -434,10 +434,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-15",
+      "moduleKey": "module-17",
       "language": "en",
-      "file": "modern-llms/en/module-15.json",
-      "hash": "83370bacc8a599aa769109a4c920ceb93572c1f9d61614fb9b039a844b3e81e8",
+      "file": "modern-llms/en/module-17.json",
+      "hash": "3fecb2f4c36edb0c3c8c837d8ff0a30332dc2136ee8da7e2c89ae6f8c551f95e",
       "count": 19,
       "kinds": {
         "single": 19
@@ -446,10 +446,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-16",
+      "moduleKey": "module-18",
       "language": "en",
-      "file": "modern-llms/en/module-16.json",
-      "hash": "f2b69dfbe2454cbfad2c582983b4f0d8aca518025dd01d01384d0bc2d6323ca4",
+      "file": "modern-llms/en/module-18.json",
+      "hash": "80bafc8cc9fbb98f6d38ab0e9a06f62058d65b8dfdccf37a8a18a8d8d6fdccbe",
       "count": 20,
       "kinds": {
         "single": 20
@@ -458,10 +458,10 @@
     },
     {
       "courseKey": "modern-llms",
-      "moduleKey": "module-17",
+      "moduleKey": "module-19",
       "language": "en",
-      "file": "modern-llms/en/module-17.json",
-      "hash": "397ce7129e414149e7dd404e4c7362abaccc6875ee65e753ad479a19c99c2ecc",
+      "file": "modern-llms/en/module-19.json",
+      "hash": "5f6ea2089a367c5806759cb5f315238d719ba9a553909f30f13b5edaee109460",
       "count": 20,
       "kinds": {
         "single": 20

@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-24",
+  "status": "PASS",
+  "policy": "Published module-NN paths use the current course module number in RU and EN. Existing path shape is retained; no compatibility redirects.",
+  "migration": {
+    "status": "PASS",
+    "mapping": {
+      "module-01": "module-01",
+      "module-02": "module-02",
+      "module-18": "module-03",
+      "module-03": "module-04",
+      "module-04": "module-05",
+      "module-05": "module-06",
+      "module-06": "module-07",
+      "module-07": "module-08",
+      "module-08": "module-09",
+      "module-09": "module-10",
+      "module-10": "module-11",
+      "module-07b": "module-12",
+      "module-11": "module-13",
+      "module-12": "module-14",
+      "module-13": "module-15",
+      "module-14": "module-16",
+      "module-15": "module-17",
+      "module-16": "module-18",
+      "module-17": "module-19",
+      "module-20": "module-20"
+    },
+    "files": 562,
+    "cross_course_changes": [],
+    "lecture_text_unchanged_except_links": true,
+    "quiz_and_practice_payloads_preserved": true,
+    "illustration_bytes_unchanged": true,
+    "relative_asset_links_updated": 402,
+    "final_inverse_check": 160
+  },
+  "numbering": {
+    "status": "PASS",
+    "lectures": 40,
+    "pages": 160,
+    "unchanged_progress_topics": 40
+  },
+  "static": {
+    "status": "PASS",
+    "counts": {
+      "pages": 362,
+      "lectures": 98,
+      "quizzes": 96,
+      "exercises": 94,
+      "notebooks": 66,
+      "links": 18754,
+      "images": 857,
+      "formulas": 22422
+    },
+    "errors": []
+  },
+  "practice": {
+    "status": "PASS",
+    "counts": {
+      "pages": 160,
+      "exercises": 938,
+      "notebooks": 110,
+      "codeCells": 988,
+      "pythonAnswers": 18,
+      "downloads": 552,
+      "assertions": 10902
+    }
+  },
+  "content_scope": "Only module identifiers, file locations, links and supporting navigation/export code changed. Course prose, questions, solutions, notebook code and illustration contents are preserved.",
+  "browser_checks": [
+    "M3 lecture RU to EN retains module-03",
+    "M3 quizzes retain module-03/tests and answer state across RU/EN",
+    "M3 exercises retain module-03/exercises"
+  ],
+  "progress": "Existing local-storage identifiers remain attached to their original topics; these identifiers are not URLs."
+}

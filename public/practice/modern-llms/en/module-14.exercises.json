@@ -7,45 +7,38 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "E1. Visual tokens and KV",
-      "prompt": "Reproduce 576 tokens for 336×336 with patch size 14, 2,880 for four local tiles plus a thumbnail, and 1,296 for 1008×1008 with a 2×2 spatial merger. At 128 KiB of KV per token, calculate memory and KV-only capacity in 65 GiB.",
-      "answer": "*Solution.* A 336×336 image with patch size 14 has $336/14=24$ positions per axis, hence $24^2=576$ tokens. Four local tiles plus one thumbnail are five such grids: $5\\cdot576=2880$. At 1008×1008 there are $72^2=5184$ patches; a 2×2 merger combines four neighboring positions, leaving $5184/4=1296$.\n\nAt 128 KiB/token, these cost 72, 360, and 162 MiB. Since 65 GiB = 66,560 MiB, KV-only capacities are $\\lfloor66560/M\\rfloor$: **924, 184, and 410** images. They exclude text, output, activations, buffers, and the vision encoder.",
+      "title": "E1. Bradley–Terry and DPO by hand",
+      "prompt": "Compute $\\sigma(\\Delta)$ for $\\Delta\\in\\{0.5,1,2,4\\}$ and recover the logit associated with a 75% win rate. Then evaluate two DPO pairs at $\\beta=0.1$. The policy sequence log probabilities are $(-12.0,-11.5)$ for both pairs. The reference values are $(-13.0,-10.8)$ for pair I and $(-12.8,-11.65)$ for pair II. The preferred completion is listed first.",
+      "answer": "*Solution.* The sigmoid values are 0.622459, 0.731059, 0.880797, and 0.982014. The inverse logit is $\\log(0.75/0.25)=\\log3=1.098612$.\n\nFor pair I, policy chosen-minus-rejected margin is $-12-(-11.5)=-0.5$ and reference margin is $-13-(-10.8)=-2.2$. Their difference is 1.7, so $z=0.1\\cdot1.7=0.17$ and $L=-\\log\\sigma(z)=0.611755$. For pair II, reference margin is $-12.8-(-11.65)=-1.15$; the margin gap is 0.65, giving $z=0.065$ and $L=0.661175$.\n\nThe derivative sign matters: $dL/dz=\\sigma(z)-1$, so the values are **−0.457602** and **−0.483756**. At $\\beta=0.5$, pair I has $z=0.85$, loss 0.355865, and $dL/dz=-0.299433$. The full parameter gradient also contains $\\beta$ and log-probability derivatives.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "E2. InfoNCE and projector size",
-      "prompt": "For diagonal similarity 0.8, off-diagonal similarity 0.2, and $N=4$, calculate positive probability and loss at $\\tau=0.1$ and $0.5$. Then count parameters in a biased 1024→4096→4096 MLP.",
-      "answer": "*Solution.* One row contains one positive score 0.8 and three negative scores 0.2, so\n\n$$p_+=\\frac{e^{0.8/\\tau}}{e^{0.8/\\tau}+3e^{0.2/\\tau}}=\\frac1{1+3e^{-0.6/\\tau}},\\qquad L=-\\log p_+.$$\n\nAt $\\tau=0.1$, $p_+=0.992619$ and $L=0.007409$; at $\\tau=0.5$, $p_+=0.525325$ and $L=0.643738$. Equal scores give $p_+=1/4$ and $L=\\log4=1.386294$.\n\nThe first biased linear layer has $1024\\cdot4096+4096=4{,}198{,}400$ parameters; the second has $4096^2+4096=16{,}781{,}312$. Total: **20,979,712**.",
+      "title": "E2. GRPO group and persistent-state memory",
+      "prompt": "For rewards `[1,0,0,1,0,0,1,0]`, compute population-standardized advantages and the probability of a degenerate group of size 8 when the independent success probability is 0.3. Then compare the teaching PPO and DPO memory models for 8.03B parameters using 16 bytes per trainable parameter and 2 bytes per frozen bf16 parameter.",
+      "answer": "*Solution.* Three of eight rewards equal one, so $\\mu=3/8=0.375$ and population standard deviation is $\\sqrt{\\frac18\\sum_i(r_i-\\mu)^2}=0.484123$. Standardization gives 1.290994 to successes and −0.774597 to failures; advantages sum to zero. A group is degenerate if all samples succeed or all fail: $0.3^8+0.7^8=0.057714$.\n\nFor 8.03B parameters, trainable state is $(8.03\\cdot10^9\\cdot16)/2^{30}\\approx119.656$ GiB and a frozen bf16 copy is $(8.03\\cdot10^9\\cdot2)/2^{30}\\approx14.957$ GiB. The teaching PPO anatomy has two trainable networks (policy and value) plus two frozen ones (reference and reward), giving $36\\cdot8.03\\cdot10^9/2^{30}\\approx269.227$ GiB. DPO has one trainable policy plus one frozen reference, giving 134.613 GiB. These are persistent-state floors without activations or rollout buffers.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "E3. Two hours inside 256K",
-      "prompt": "With one source frame per second, a 4,000-token text reserve, and 576 or 144 tokens per retained frame, calculate retained frames, sampling interval, and KV for the full context.",
-      "answer": "*Solution.* Two hours at 1 fps contain $2\\cdot3600=7200$ source frames. After text reserve, visual budget is $256000-4000=252000$ tokens. It retains $\\lfloor252000/576\\rfloor=437$ or $\\lfloor252000/144\\rfloor=1750$ frames. The inverse sampling densities are $7200/437=16.476$ or $7200/1750=4.114$ seconds per retained frame.\n\nVisual-budget KV is $252000\\cdot128$ KiB = **30.7617 GiB**; the full 256K context is $256000\\cdot128$ KiB = **31.25 GiB**. These counts refer to post-processor positions, not raw pixels.\n\nWith both source endpoints included, the actual mean timestamp gaps are 16.5115 and 4.1161 seconds. The 437-frame configuration occupies 251,712 visual positions, or 30.7266 GiB, rather than the entire visual allocation.",
+      "title": "E3. Rollout economics",
+      "prompt": "Generate 8 completions of 4,000 tokens for each of 256 prompts. Estimate generation time on eight accelerators at 209.4 tokens/s each. Compare it with a $6ND$ training estimate for an 8.03B model at 990 TFLOP/s per accelerator and 40% MFU.",
+      "answer": "*Solution.* Rollout volume is $D=256\\cdot8\\cdot4000=8{,}192{,}000$ tokens. Eight devices provide aggregate rate $8\\cdot209.4=1675.2$ tok/s, so generation takes $D/1675.2=4890.2$ s = **81.50 minutes**.\n\nTraining arithmetic is\n\n$$C=6ND=6\\cdot8.03\\text{B}\\cdot8.192\\text{M}\\approx3.946\\cdot10^{17}\\ \\text{FLOP}.$$\n\nEffective throughput is $8\\cdot990\\text{ TFLOP/s}\\cdot0.4=3.168\\cdot10^{15}$ FLOP/s, hence 124.6 s = **2.076 minutes**. The ratio is 39.25: autoregressive rollout, not one training pass, dominates this scenario. It is not a universal RLVR constant.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
       "title": "E4 [project]",
-      "prompt": "Compare two open VLMs on 30 DocVQA or ChartQA examples. Record actual processor token count, encoder latency, language prefill, peak memory, and answer quality. Equal source resolution does not imply equal cost. If processor controls permit it, add a comparison at similar visual-position counts. Otherwise report the actual counts and the constraint that prevents independent budget matching.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 16](/downloads/modern-llms/project_demos/en/module_16_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "prompt": "Compare `run_dpo` at $\\beta=0.1$ and $\\beta=0.5$ using the same pairs and 140 updates. Begin with the default zero initialization, which makes both runs deterministic. Then set `init_std=0.02` and repeat the comparison for seeds 41, 42 and 43. Within each seed, both $\\beta$ values must start from identical weights and an identical reference copied from those weights.\n\n\nRecord initial and final loss, training-pair ordering accuracy, held-out correct-answer probability and reference KL. Explain why losses measured at different $\\beta$ values are not a direct scale of answer quality, and why correct training-pair ordering does not establish generation quality. As an optional extension, use an open 0.5–3B model with pinned templates and masks, then inspect response lengths and 50 generated answers.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 14](/downloads/modern-llms/project_demos/en/module_14_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
     },
     {
       "id": "exercise-05",
       "title": "E5 [project]",
-      "prompt": "Build a sandboxed multimodal router: image or audio input → intent classification → allowlisted mock action. Measure routing accuracy, stage-level latency, and the token cost of each media input.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 16](/downloads/modern-llms/project_demos/en/module_16_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "prompt": "Implement a GRPO-like loop for a binary-verifier task. Compare skipping, zeroing, and resampling equal-reward groups. Measure rollout cost, zero-variance rate, and sensitivity to the number of completions $G$.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 14](/downloads/modern-llms/project_demos/en/module_14_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
-    },
-    {
-      "id": "exercise-06",
-      "title": "E6. Audio units",
-      "prompt": "Extend the Section 15 waveform from 96,000 to 96,001 samples. How many acoustic frames and pooled positions result? Why do eight codebooks not necessarily multiply context length by eight?",
-      "answer": "*Solution.* Starting a window every 160 samples while its start remains inside the signal gives $\\lceil96001/160\\rceil=601$ frames, then $\\lceil601/4\\rceil=151$ pooled positions. The last group has one frame; dividing it by four would incorrectly attenuate its features. Codebooks encode different aspects of the same temporal frame. A decoder may serialize the codes, combine them or predict some through another module, so its interface determines the final sequence length.",
-      "answerKind": "solution"
     }
   ],
   "bundle": {

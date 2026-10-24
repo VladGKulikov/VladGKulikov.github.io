@@ -7,37 +7,44 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "E1. Bradley–Terry and DPO by hand",
-      "prompt": "Compute $\\sigma(\\Delta)$ for $\\Delta\\in\\{0.5,1,2,4\\}$ and recover the logit associated with a 75% win rate. Then evaluate two DPO pairs at $\\beta=0.1$. The policy sequence log probabilities are $(-12.0,-11.5)$ for both pairs. The reference values are $(-13.0,-10.8)$ for pair I and $(-12.8,-11.65)$ for pair II. The preferred completion is listed first.",
-      "answer": "*Solution.* The sigmoid values are 0.622459, 0.731059, 0.880797, and 0.982014. The inverse logit is $\\log(0.75/0.25)=\\log3=1.098612$.\n\nFor pair I, policy chosen-minus-rejected margin is $-12-(-11.5)=-0.5$ and reference margin is $-13-(-10.8)=-2.2$. Their difference is 1.7, so $z=0.1\\cdot1.7=0.17$ and $L=-\\log\\sigma(z)=0.611755$. For pair II, reference margin is $-12.8-(-11.65)=-1.15$; the margin gap is 0.65, giving $z=0.065$ and $L=0.661175$.\n\nThe derivative sign matters: $dL/dz=\\sigma(z)-1$, so the values are **−0.457602** and **−0.483756**. At $\\beta=0.5$, pair I has $z=0.85$, loss 0.355865, and $dL/dz=-0.299433$. The full parameter gradient also contains $\\beta$ and log-probability derivatives.",
+      "title": "E1. Parity in the generic dense-8B scenario",
+      "prompt": "Derive the largest integer number of calls for which full-canvas diffusion remains above the batch-one AR ceiling.",
+      "answer": "*Solution.* AR emits one token per pass, so its ceiling is $1/0.004776119=209.375$ tok/s. A diffusion model reveals a 1,024-token canvas in $S$ full passes, giving average rate $1024/(S\\cdot0.016549495)$. It is faster when\n\n$$\n\\frac{1024}{S\\cdot0.016549495}>209.375.\n$$\n\nThis gives $S<295.52$, so the largest integer is **295**; at 296 calls it has already fallen below the AR boundary in this arithmetic model.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "E2. GRPO group and persistent-state memory",
-      "prompt": "For rewards `[1,0,0,1,0,0,1,0]`, compute population-standardized advantages and the probability of a degenerate group of size 8 when the independent success probability is 0.3. Then compare the teaching PPO and DPO memory models for 8.03B parameters using 16 bytes per trainable parameter and 2 bytes per frozen bf16 parameter.",
-      "answer": "*Solution.* Three of eight rewards equal one, so $\\mu=3/8=0.375$ and population standard deviation is $\\sqrt{\\frac18\\sum_i(r_i-\\mu)^2}=0.484123$. Standardization gives 1.290994 to successes and −0.774597 to failures; advantages sum to zero. A group is degenerate if all samples succeed or all fail: $0.3^8+0.7^8=0.057714$.\n\nFor 8.03B parameters, trainable state is $(8.03\\cdot10^9\\cdot16)/2^{30}\\approx119.656$ GiB and a frozen bf16 copy is $(8.03\\cdot10^9\\cdot2)/2^{30}\\approx14.957$ GiB. The teaching PPO anatomy has two trainable networks (policy and value) plus two frozen ones (reference and reward), giving $36\\cdot8.03\\cdot10^9/2^{30}\\approx269.227$ GiB. DPO has one trainable policy plus one frozen reference, giving 134.613 GiB. These are persistent-state floors without activations or rollout buffers.",
+      "title": "E2. Dense arithmetic versus DiffusionGemma",
+      "prompt": "Reproduce the bf16 and idealized four-bit lower bounds for a dense 8B block of 256 positions. Explain why neither describes DiffusionGemma.",
+      "answer": "*Solution.* Eight billion dense weights occupy $8\\text{B}\\cdot2=16$ GB in bf16 and $8\\text{B}\\cdot0.5=4$ GB at ideal four-bit packing. At 3.35 TB/s, one weight read takes $16\\,\\mathrm{GB}/(3350\\,\\mathrm{GB/s})=0.004776\\,\\mathrm{s}=4.776$ ms or $4\\,\\mathrm{GB}/(3350\\,\\mathrm{GB/s})=0.001194\\,\\mathrm{s}=1.194$ ms. A 256-position pass has dense arithmetic floor\n\n$$\\frac{2\\cdot8\\text{B}\\cdot256}{990\\text{ TFLOP/s}}=4.137\\text{ ms}.$$\n\nThe bf16 case is therefore memory-limited by the larger 4.776-ms floor, while ideal four-bit weights expose the 4.137-ms compute floor. These are lower bounds, not their sum under perfect overlap.\n\nDiffusionGemma is instead a 25.2B-total/3.8B-active sparse MoE. Different canvas positions can select different experts, so one pass may read the union of many experts; tensor precisions are heterogeneous and runtime placement matters. Its H100 result uses FP8, while NVFP4 refers to Blackwell. Dense-8B arithmetic therefore cannot be relabeled as a DiffusionGemma prediction.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "E3. Rollout economics",
-      "prompt": "Generate 8 completions of 4,000 tokens for each of 256 prompts. Estimate generation time on eight accelerators at 209.4 tokens/s each. Compare it with a $6ND$ training estimate for an 8.03B model at 990 TFLOP/s per accelerator and 40% MFU.",
-      "answer": "*Solution.* Rollout volume is $D=256\\cdot8\\cdot4000=8{,}192{,}000$ tokens. Eight devices provide aggregate rate $8\\cdot209.4=1675.2$ tok/s, so generation takes $D/1675.2=4890.2$ s = **81.50 minutes**.\n\nTraining arithmetic is\n\n$$C=6ND=6\\cdot8.03\\text{B}\\cdot8.192\\text{M}\\approx3.946\\cdot10^{17}\\ \\text{FLOP}.$$\n\nEffective throughput is $8\\cdot990\\text{ TFLOP/s}\\cdot0.4=3.168\\cdot10^{15}$ FLOP/s, hence 124.6 s = **2.076 minutes**. The ratio is 39.25: autoregressive rollout, not one training pass, dominates this scenario. It is not a universal RLVR constant.",
+      "title": "E3. Read speed claims as passports",
+      "prompt": "Compare Mercury 2’s 1009 tok/s on Blackwell, Gemini Diffusion’s 1479 tok/s excluding 0.84 s overhead, and Seed Diffusion’s 2146 tok/s on H20 coding workloads.",
+      "answer": "*Solution.* There is no defensible winner without a shared model-quality target, prompt/output distribution, batch size, precision, sampler, and end-to-end latency boundary. Gemini makes the boundary issue explicit: for $N$ output tokens, a scenario that applies its reported averages to that length gives approximately $0.84+N/1479$ seconds, so 1,479 tok/s is not the end-to-end rate of a short response. A matched comparison should report time to first token, complete-request latency, and steady-state throughput separately.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
-      "title": "E4 [project]",
-      "prompt": "Compare `run_dpo` at $\\beta=0.1$ and $\\beta=0.5$ using the same pairs and 140 updates. Begin with the default zero initialization, which makes both runs deterministic. Then set `init_std=0.02` and repeat the comparison for seeds 41, 42 and 43. Within each seed, both $\\beta$ values must start from identical weights and an identical reference copied from those weights.\n\n\nRecord initial and final loss, training-pair ordering accuracy, held-out correct-answer probability and reference KL. Explain why losses measured at different $\\beta$ values are not a direct scale of answer quality, and why correct training-pair ordering does not establish generation quality. As an optional extension, use an open 0.5–3B model with pinned templates and masks, then inspect response lengths and 50 generated answers.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 14](/downloads/modern-llms/project_demos/en/module_14_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
-      "answerKind": "guidance"
+      "title": "E4. Block mask",
+      "prompt": "Construct the attention mask for a three-token completed prefix and a four-token current block. Identify the cacheable rows.",
+      "answer": "*Solution.* With rows and columns ordered `P1 P2 P3 B1 B2 B3 B4`, the allowed mask is\n\n```text\nP1  1 0 0 | 0 0 0 0\nP2  1 1 0 | 0 0 0 0\nP3  1 1 1 | 0 0 0 0\n    -------+--------\nB1  1 1 1 | 1 1 1 1\nB2  1 1 1 | 1 1 1 1\nB3  1 1 1 | 1 1 1 1\nB4  1 1 1 | 1 1 1 1\n```\n\nPrefix queries are causal and independent of the active block, so their K/V can be reused across denoising steps. Every active-block query reads the complete prefix and block; when masks change, those four states must be recomputed.",
+      "answerKind": "solution"
     },
     {
       "id": "exercise-05",
       "title": "E5 [project]",
-      "prompt": "Implement a GRPO-like loop for a binary-verifier task. Compare skipping, zeroing, and resampling equal-reward groups. Measure rollout cost, zero-variance rate, and sensitivity to the number of completions $G$.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 14](/downloads/modern-llms/project_demos/en/module_14_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "prompt": "Train a small character-level masked-diffusion Transformer and compare random, confidence, and entropy reveal policies at equal model-call budgets.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 12](/downloads/modern-llms/project_demos/en/module_12_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
+    },
+    {
+      "id": "exercise-06",
+      "title": "E6 [project]",
+      "prompt": "Start with the demo’s work ledger. Vary block length and denoising steps, including the separate clean-block pass. Compare model calls and positions processed, then estimate weight bytes for a hypothetical dense model under one full weight read per call. On the tiny trained CPU model, measure quality and latency, reporting thread count, warm-up, and repetitions. Explain why estimated bytes are not measured traffic. Hardware memory profiling is an optional extension.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 12](/downloads/modern-llms/project_demos/en/module_12_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
     }
   ],

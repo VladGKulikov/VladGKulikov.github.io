@@ -1,658 +1,542 @@
-# Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO
+# Module 12. Diffusion Language Models
 
-*Modern LLMs · Module 14 lecture · revision 2026.10.28*
+*Modern LLMs · Module 12 lecture · 11 October 2026 edition*
 
-> **What this module is about.** Module 13 taught a model to imitate demonstrations. That is enough when the target behaviour can be expressed as a strong reference answer. Many alignment goals are different: two responses may both be valid yet differ in usefulness, calibration, tone, or safety. Other tasks admit a direct signal from unit tests, a theorem checker, a simulator, or an interactive environment.
+> **What this module changes.** We have built and trained an autoregressive model, studied its serving costs, and seen how speculative decoding can accelerate generation while preserving its target distribution. Here the architecture can remain recognizably Transformer-like while the **generation protocol** changes. An autoregressive (**AR**) model commits one token at a time. A diffusion large language model (**dLLM**) starts from a corrupted draft and repeatedly predicts many positions. The working sequence is called a **canvas**; recovering its tokens is **denoising**. We will derive the absorbing-mask objective, execute a transparent denoising trace, examine reveal and remasking policies, and build a deliberately generic 8B roofline scenario. Only after that will we read the actual DiffusionGemma passport, keeping a teaching bound separate from a released system measurement.
 >
-> A comparison tells us which response is preferred; a checker reports an outcome for a task. Neither signal specifies how the model should learn from it. We will develop three routes: fit a separate evaluator, turn preference pairs directly into a training loss, or compare several fresh responses to the same prompt. The method names will become useful once these choices are clear.
->
-> The module keeps an engineering perspective. We will identify the signal consumed by each method, the models and data it requires, what its equations estimate, and why rollout generation can cost more than the parameter update itself.
->
-> **Further study.** The module is self-contained. The author's companion course *RL for LLM* develops policy gradients, reward models, PPO, DPO, RLOO, GRPO/RLVR, interactive environments, rollout infrastructure, and reward hacking in substantially greater depth.
->
-> **Prerequisites.** You should be comfortable with SFT from Module 13, the parameter-state memory estimates used in Modules 9 and 13, and the prefill/decode distinction from Module 10. Everything required for the derivations below is restated here, so the module remains self-contained.
-> **Reading routes.** On a first pass, follow §§1, 3–7 and 9: identify the feedback signal, then trace how it changes the probability of an answer. In §8, focus on the data each method needs. Use §§10–11 to interpret the costs, then read §15 on verifiable rewards and checker limitations. Run §14 and answer Q1–Q4 in §18; Q5 follows the reference discussion in §17. On a second pass, work through the DPO derivation, the weighting and bias questions in §§9 and 12, and the projects in §19. Treat §§2, 8 and 16–17 as a reference map; learning the method names can wait until the mechanics are clear.
+> **Prerequisites.** We build on autoregressive generation from Module 3, pretraining from Module 9, the serving cost model from Module 10, and speculative decoding from Module 11. Together they make a fair comparison of generation protocols possible. The sparse-model discussion also uses MoE from Module 7.
+
+**First pass:** read Sections 1 and 4–9 for the mechanism, Section 10 for one cost calculation, and Section 14 for block generation. In Section 7, focus on what the loss measures and the worked example; return to the expectation formula later. Use Section 18 to check your understanding.
+
+**Second pass:** work through the objective in Section 7, batching in Section 11, and the implementation in Sections 12–13 before doing the notebook and Section 19 exercises. **Reference pass:** Sections 2–3 explain the origins of the ideas; Sections 15–17 are a dated guide to released systems.
+
+**Contents**
+
+1. [The sequential unit of work](#1-the-sequential-unit-of-work)
+2. [How the field arrived here](#2-how-the-field-arrived-here)
+3. [Three intellectual ancestors](#3-three-intellectual-ancestors)
+4. [A two-axis map](#4-a-two-axis-map)
+5. [The absorbing-mask forward process](#5-the-absorbing-mask-forward-process)
+6. [Worked example A: a mask schedule](#6-worked-example-a-a-mask-schedule)
+7. [Training objective and likelihood](#7-training-objective-and-likelihood)
+8. [Any-order training and its limits](#8-any-order-training-and-its-limits)
+9. [Sampling and worked example B](#9-sampling-and-worked-example-b)
+10. [A generic roofline calculation](#10-a-generic-roofline-calculation)
+11. [Steps, batching, and weight precision](#11-steps-batching-and-weight-precision)
+12. [Level-1 code](#12-level-1-code)
+13. [What the notebook verifies](/courses/modern-llms/module-12/notebooks/)
+14. [Block diffusion, length, and caching](#14-block-diffusion-length-and-caching)
+15. [Reading the DiffusionGemma passport](#15-reading-the-diffusiongemma-passport)
+16. [The dLLM landscape on 11 October 2026](#16-the-dllm-landscape-on-11-october-2026)
+17. [Multimodal diffusion systems](#17-multimodal-diffusion-systems)
+18. [Self-check questions](/courses/modern-llms/module-12/tests/)
+19. [Exercises](/courses/modern-llms/module-12/exercises/)
+20. [Takeaways and sources](#20-takeaways-and-sources)
 
 ---
 
-## 1. The signal changed: from imitation to judgment
+## 1. The sequential unit of work
 
-A demonstration answers a concrete question: *what response should the model imitate in this context?* Preference data answers a different one: *which of these responses should the model move toward?*
+The bottleneck in batch-one autoregressive decoding is often not a shortage of arithmetic. The problem is that a very large set of weights is streamed for one incremental token. The model then waits for that token before the next decode step can begin.
 
-That difference matters whenever there is no canonical target. Suppose two explanations are factually sound. One is concise and directly addresses the user's misconception; the other is more complete but spends a paragraph on background. A supervised dataset must choose one text as the target. A preference dataset can preserve the comparison without pretending that the winner is the only acceptable continuation.
-
-There is a second source of supervision that is particularly important for reasoning. A completion may be checked by unit tests, a symbolic verifier, an exact answer, or the terminal state of an environment. In that case the feedback need not express a human taste at all. It is a measurable outcome.
-
-A **policy** is the trainable model viewed as a distribution over answers. We write $\pi_\theta(y\mid x)$ for the probability of completion $y$ given prompt $x$ and parameters $\theta$. A sampled response, its context and its feedback form a trajectory; producing it is a rollout. In a noninteractive task, one complete answer can be the whole trajectory. “Online” means that training collects new data as the policy changes; it does not mean an internet connection is required.
-
-The source of feedback and the timing of data collection are separate choices. Human or model judgments and programmatic checks can be applied to stored responses or to newly collected ones. We will contrast two common workflows.
-
-- **Offline preference optimization** consumes a fixed collection of pairs or labels. The original DPO recipe is an example.
-- **Online reinforcement learning** samples fresh completions from the policy being trained, scores them, and updates the policy from those trajectories. PPO, RLOO, and GRPO belong here.
-
-Offline training is easier to reproduce and does not pay for generation at every optimizer step. Its blind spot is distribution shift: the dataset reflects policies that produced the stored answers, not necessarily the policy after several epochs of training. Online RL follows the moving policy distribution, but the system must now generate, score, transport, and sometimes discard a large number of trajectories.
-
-The rest of the module can be read as three different answers to one design question: **what mathematical object should a comparison become?** A scalar reward model, a pairwise classification loss, or a relative advantage inside a group of sampled completions.
-
-Keep the objective separate from the collection procedure. We study the original fixed-pair DPO recipe, but one can collect fresh preference pairs between DPO rounds. Likewise, a verifier defines where rewards come from, not which optimizer or group estimator must consume them.
-
-## 2. From reward modelling to environment-scale RL
-
-![VIZ m14/01 — the changing post-training loop](assets/modern-llms/en/module-12/m14_01_timeline.svg)
-
-The modern pipeline did not appear all at once.
-
-**Christiano et al. (2017)** showed how human comparisons could train a reward model for an agent. **InstructGPT (2022)** adapted the pattern to language models: supervised fine-tuning produced an initial assistant, a reward model learned from ranked answers, and PPO optimized the assistant while a KL term limited drift from the reference policy.
-
-**DPO (2023)** removed the online RL stage for a particular class of preference objectives. By expressing the optimal reward through a ratio between the trained and reference policies, it turned the problem into a supervised pairwise loss.
-
-By 2024, work was moving in two useful directions. IPO, KTO, SimPO, and ORPO explored alternative direct losses and data contracts. RLOO and GRPO revisited lightweight policy-gradient methods that construct baselines from multiple answers to the same prompt instead of training a separate critic.
-
-The open releases around **DeepSeek-R1**, **DAPO**, and **Dr. GRPO** in 2025 made verifier-based RL a central topic in reasoning-model research. The next step was architectural rather than merely algorithmic. By 2026, open stacks such as **verl**, **NeMo RL**, and **NeMo Gym** expose rollout workers, interactive environments, asynchronous queues, and trajectory-freshness controls as first-class components.
-
-This is the important historical shift. Post-training is no longer well described as “run PPO once after SFT.” For agents and long reasoning tasks it increasingly resembles a distributed data-generation system in which the optimizer is only one stage.
-
-## 3. Three old ideas that organize the new vocabulary
-
-Preference optimization becomes easier to reason about when it is anchored to three classical constructions.
-
-### Bradley–Terry: pairwise choice from a score difference
-
-Assign each item a latent scalar score. The Bradley–Terry model writes the probability that item $i$ beats item $j$ as
+Take a deliberately stripped-down scenario: an 8-billion-parameter dense model, 16 GB of bf16 weights, 3.35 TB/s of memory bandwidth, and a 990-TFLOP/s arithmetic peak. A weight-stream lower bound for one decode step is
 
 $$
-P(i\succ j)=\sigma(s_i-s_j).
+ t_{\mathrm{mem}}
+ =\frac{16\cdot10^9}{3.35\cdot10^{12}}
+ \approx4.776\ \mathrm{ms}.
 $$
 
-In RLHF the items are completions and the score is a learned reward. The standard reward-model loss,
+The corresponding ideal $2P$ matrix arithmetic would take only
 
 $$
-\mathcal L_{\mathrm{RM}}
-=-\log\sigma(r_w-r_l),
+ t_{\mathrm{compute}}
+ =\frac{16\cdot10^9}{990\cdot10^{12}}
+ \approx16.16\ \mu\mathrm{s}.
 $$
 
-is therefore logistic pairwise modelling, not an LLM-specific invention.
+The ratio $t_{\mathrm{compute}}/t_{\mathrm{mem}}$, 0.338%, is not a measured GPU-utilization number. It is the share of this simplified step lower bound occupied by ideal arithmetic. Under these assumptions the batch-one ceiling is 209.375 tokens/s.
 
-Here $\sigma(u)=1/(1+e^{-u})$ is the sigmoid, which maps a real score gap to a probability between zero and one. Subscripts $w$ and $l$ denote the preferred and rejected answers. Rejected means that the answer lost this comparison; it need not be factually wrong.
-
-### REINFORCE: reduce variance without changing the expectation
-
-Let $J(\theta)$ be the expected reward under parameters $\theta$. For a one-step task, $J(\theta)=\mathbb E_{s,a\sim\pi_\theta}[R]$; in a multi-step task, $R$ denotes the future return. The score-function estimator gives
+A diffusion sampler changes the granularity. One network invocation scores an entire canvas of $N$ positions. The price is $S$ denoising calls rather than one causal call per token. The rough arithmetic becomes
 
 $$
-\nabla J(\theta)
-=\mathbb E\left[R\,\nabla\log\pi_\theta(a\mid s)\right].
+2PNS.
 $$
 
-Its variance can be reduced by subtracting a baseline that does not depend on the sampled action:
+For $N=1024$, one ideal pass costs 16.549 ms of compute and is no longer limited by the 4.776-ms weight stream. At $S=64$, the arithmetic ceiling is 966.8 tokens/s—4.62 times the batch-one AR ceiling, despite roughly 64 times more FLOPs.
+
+This apparent paradox is the core engineering proposition of diffusion decoding: **do more total work, but cross fewer sequential barriers**. It is only a proposition, not a guaranteed result. Bidirectional attention over the canvas, activation traffic, MoE expert union, kernel quality, runtime overhead, and the number of useful denoising steps determine whether the trade pays off.
+
+There is also a behavioral distinction. A masked-diffusion sampler can reopen a weak position and revise it in the next iteration. A standard ancestral AR decode does not revise its committed prefix. AR systems can of course add a verifier, a second editing pass, Fill-in-the-Middle (**FIM**), or an agent loop; diffusion places revision inside the sampling algorithm itself.
+
+## 2. How the field arrived here
+
+![VIZ m12/01 — the diffusion-LM timeline](assets/modern-llms/en/module-12/m12_01_timeline.svg)
+*The line from discrete transition kernels to masked likelihood models, block diffusion, open-weight systems, and commercial APIs. Each milestone addresses a different obstacle rather than replacing all earlier methods.*
+
+The first problem was mathematical: what does “add noise” mean when the object is a token ID? **D3PM — Discrete Denoising Diffusion Probabilistic Models** (2021) answered with transition matrices over discrete states. One option was an absorbing state: a token may become `[MASK]` and remains masked in the forward process.
+
+**Diffusion-LM** (2022) explored a continuous alternative. It corrupted token embeddings with Gaussian noise and later rounded the resulting representation back to the vocabulary. The route offered controllability, but the continuous-to-discrete boundary added its own difficulty.
+
+By 2024, discrete objectives became much more competitive. **SEDD — Score Entropy Discrete Diffusion** developed a suitable discrete score objective. **MDLM — Masked Diffusion Language Models** showed that an absorbing-mask construction admits a simple likelihood-oriented loss and efficient samplers, including semi-autoregressive variable-length generation.
+
+Scale became the next question. **LLaDA 8B** was trained from scratch on 2.3T tokens. **BD3-LM** introduced block diffusion, letting completed blocks form a causal prefix while the active block is denoised bidirectionally. **LLaDA-MoE**, Dream, Seed Diffusion, Mercury, and Gemini Diffusion explored sparse models, AR-checkpoint conversion, and specialized runtimes.
+
+The 2025–2026 wave broadened both routes. **LLaDA2.0** converted 16B and 100B AR-MoE checkpoints through a Warmup–Stable–Decay (**WSD**) schedule. **LLaDA2.1** added Token-to-Token correction so already revealed values could be replaced. **iLLaDA** returned to from-scratch training at 8B scale, using 12T pretraining tokens, fully bidirectional attention, and variable-length generation.
+
+Product releases developed on a separate evidence track. Mercury 2, Gemini Diffusion, Seed Diffusion, and DiffusionGemma reported very high generation rates, but on different accelerators, workloads, precision formats, and latency boundaries. Their numbers are useful only when those conditions remain attached.
+
+The outcome is not one canonical dLLM. We now have full-canvas masked models, block-autoregressive models, token-editing samplers, insertion-based flexible-length methods, and proprietary systems whose exact objectives are not public.
+
+## 3. Three intellectual ancestors
+
+Diffusion language modeling inherits three different ideas.
+
+The first is continuous diffusion: define a known corruption path and learn its reversal. Tokens prevent a literal copy of Gaussian pixel noise, which is why discrete transition kernels matter.
+
+The second is masked language modeling (**MLM**). Bidirectional prediction from partially observed text already exists in BERT-like encoders. Diffusion contributes a time variable, a family of corruption levels, and a generative trajectory connecting a heavily corrupted sample to a clean one.
+
+The third is variable-order factorization. A causal model commits to
 
 $$
-\nabla J(\theta)
-=\mathbb E\left[(R-b)\,\nabla\log\pi_\theta(a\mid s)\right].
+p(x)=\prod_{i=1}^{N}p(x_i\mid x_{<i}).
 $$
 
-RLOO forms $b$ from the other completions sampled for the same prompt. GRPO uses statistics of the entire group. The latter is convenient, but it is not automatically an unbiased substitute for a value function.
+A masked objective exposes the model to many observed/hidden subsets. Some objectives can be interpreted as averaging autoregressive factorizations over token orders. That interpretation belongs to the training objective; it does not make every dLLM computationally identical to an ensemble of all possible AR models.
 
-In these equations, $s$ is the context before an action, $a$ is the sampled action and $R$ is its reward. An action can be a complete answer or one token; in the latter interpretation, the context includes the generated prefix. The residual $A=R-b$ is called an **advantage**. Treat the baseline as a constant when taking this policy gradient. Rewards of the other responses provide an action-independent baseline when responses are conditionally independent draws from the same frozen sampler for that prompt.
+![VIZ m12/02 — a paradigm map](assets/modern-llms/en/module-12/m12_02_axes.svg)
+*Two independent design axes: causal versus bidirectional conditioning, and token versus block versus canvas as the unit of sequential progress.*
 
-### Prospect theory: utility relative to a reference point
+## 4. A two-axis map
 
-Human judgments are often asymmetric around a reference point: gains and losses of the same magnitude need not have the same subjective effect. KTO uses this perspective to learn from individual desirable and undesirable examples rather than explicit pairs.
+It helps to ask two questions separately:
 
-These three ideas give us three different geometries: pairwise score gaps, policy-gradient advantages, and utility measured relative to a reference point.
+1. Which positions may condition one another inside a network call?
+2. How much of the output becomes stable before the next call?
 
-> **Further study.** The full DPO derivation, maximum-entropy interpretation of the KL term, and PPO mechanics are developed in *RL for LLM*, Modules 7–8. The information-theoretic role of KL regularization is covered in *Information Theory for ML*, Module 8.
+| Regime | Stable state before a call | Positions updated by a call | Cache implication |
+|---|---|---|---|
+| AR | causal prefix | one new token | exact prefix KV cache |
+| full masked diffusion | fixed condition plus mutable canvas | many canvas positions | mutable canvas is recomputed |
+| block diffusion | completed blocks | one current block | completed prefix is cacheable |
+| token editing | a partially stable draft | selected replacements | depends on which regions remain stable |
+| flexible masked diffusion | current variable-length draft | unmasking and/or insertion | method-specific |
 
-## 4. Classical RLHF as an algorithmic contract
+A call can refine positions in the current block without completing that block. Several calls may be needed before its tokens become stable. The map prevents two common errors. A diffusion model is not necessarily restricted to a fixed final length. Conversely, block diffusion does not become ordinary AR merely because blocks are ordered causally: the active block is still modeled with bidirectional, any-order refinement.
 
-**RLHF** means reinforcement learning from human feedback. Let $\pi_{\mathrm{ref}}$ denote the policy obtained after SFT.
+## 5. The absorbing-mask forward process
 
-**Stage 1: supervised fine-tuning.** Demonstrations move the base model into a useful response distribution.
+The main formalism in this module is **absorbing masked diffusion**. It is a particular discrete kernel, not a definition of all diffusion language models. D3PM also permits random substitutions and more general transition matrices.
 
-**Stage 2: reward modelling.** For prompt $x$, annotators compare a preferred completion $y_w$ with a rejected completion $y_l$. A reward model $r_\phi$ is trained with
-
-$$
-\mathcal L_{\mathrm{RM}}
-=-\log\sigma\left(r_\phi(x,y_w)-r_\phi(x,y_l)\right).
-$$
-
-**Stage 3: policy optimization with PPO (Proximal Policy Optimization).** The current policy samples completions and is optimized against the learned reward while remaining close to the reference:
-
-$$
-\max_\theta\;
-\mathbb E_{x,\,y\sim\pi_\theta}
-\left[r_\phi(x,y)\right]
--\beta\,\mathbb E_x\!\left[\mathrm{KL}\!\left(\pi_\theta(\cdot\mid x)\|\pi_{\mathrm{ref}}(\cdot\mid x)\right)\right].
-$$
-
-The positive coefficient $\beta$ sets the penalty for departing from the reference, and $\mathbb E_x$ averages over training prompts. Recall the KL definition from M13; the direction used here is
+Let $x_0=(x_0^1,\ldots,x_0^N)$ be a clean sequence. Under a linear schedule, each eligible position is retained with probability $1-t$ and replaced by a special mask state $m$ with probability $t$:
 
 $$
-\mathrm{KL}(\pi_\theta\|\pi_{\mathrm{ref}}\mid x)
-=\sum_y\pi_\theta(y\mid x)\log\frac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}.
+q(x_t^i\mid x_0^i)
+=
+(1-t)\delta_{x_0^i}(x_t^i)
++t\delta_m(x_t^i),
+\qquad t\in[0,1].
 $$
 
-The sum runs over complete responses, with the log ratio averaged under the current policy. This is a soft incentive to stay near a fixed reference, not a bound on the size or speed of each update. PPO also modifies the objective relative to the policy that collected the current batch; §9 treats that mechanism separately. Neither mechanism repairs an incorrect reward or guarantees safe behaviour.
+The symbol $\delta_a(z)$ is 1 for $z=a$ and 0 otherwise. This equation specifies a marginal at a single time. A monotone sample path can be constructed by drawing one threshold $u_i\sim U(0,1)$ per position and masking that position whenever $t\ge u_i$. Resampling fresh Bernoulli variables at every time gives the right marginals but does not trace one absorbing path.
 
-**The critic** predicts expected future reward from the current context. Comparing the observed return with this prediction helps estimate advantage: how much better the action turned out than expected. The reward model has a different role: it scores a response using learned preferences.
+“Absorbing” describes the forward chain: after entering the mask state, the position does not spontaneously return to content. The learned reverse model predicts clean tokens from the partially observed sequence.
 
-The canonical pipeline contains four logical roles: policy, reference policy, reward model, and critic/value model. A production implementation may share backbones, shard states, quantize frozen models, or place the roles on separate machines. “Four models” is therefore an algorithmic description, not a claim that four independent full checkpoints must remain resident on every accelerator.
+For conditional generation, a prompt can be marked ineligible for corruption. Only the answer region follows the mask process. This separation becomes important in systems such as DiffusionGemma, where the prompt is encoded and cached while the generation canvas is repeatedly recomputed.
 
-![VIZ m14/02 — the classical RLHF contract](assets/modern-llms/en/module-12/m14_02_rlhf.svg)
+![VIZ m12/03 — the forward process](assets/modern-llms/en/module-12/m12_03_forward.svg)
+*Absorbing masking is the chapter’s reference kernel. Other discrete diffusion models may use substitution noise or a general transition matrix.*
 
-## 5. Worked example A: invert a Bradley–Terry model
+## 6. Worked example A: a mask schedule
 
-Write $\Delta r=r_w-r_l$. Then
-
-$$
-P(y_w\succ y_l)=\sigma(\Delta r).
-$$
-
-| $\Delta r$ | 0.5 | 1.0 | 2.0 | 4.0 |
-|---|---:|---:|---:|---:|
-| $P(y_w\succ y_l)$ | 0.622 | 0.731 | 0.881 | 0.982 |
-
-A gap of 1 corresponds to roughly a 73% preference probability under this model. A gap of 2 raises it to about 88%. The units are not universal; the scale is set by the model and its regularization.
-
-The equation can also be inverted. If one completion wins 75% of comparisons, the corresponding logit is
+With eight positions and four model calls, use the target counts
 
 $$
-\Delta r
-=\log\frac{0.75}{0.25}
-=\log 3
-\approx1.099.
+[8,6,4,2,0].
 $$
 
-This does not reveal an objective human utility. It maps an empirical win rate into the coordinate system of a logistic comparison model. That coordinate system will reappear in DPO, where $\beta$ controls the scale of policy log-ratios.
-
-## 6. DPO: eliminate the explicit reward model
-
-**DPO (Direct Preference Optimization)** starts from the KL-regularized objective in §4. For that objective, the optimal policy has the form
+One explicit schedule is
 
 $$
-\pi^*(y\mid x)
-\propto
-\pi_{\mathrm{ref}}(y\mid x)
-\exp\!\left(\frac{r(x,y)}{\beta}\right).
+m_s=\left\lceil N\frac{S-s}{S}\right\rceil,
+\qquad s=0,\ldots,S.
 $$
 
-The proportional weights become probabilities after division by the normalizing sum
+Exactly two positions become stable after each call. When $S>N$, duplicate counts can appear; a model call may then perform work without revealing a new token.
+
+Here $s$ is a discrete iteration index, whereas $t$ in the forward process is a continuous corruption time. The count schedule tells us how many positions to reveal; we still need an objective that teaches the network what to put there.
+
+## 7. Training objective and likelihood
+
+Training requires an objective before it requires a reveal policy. Ideally we would maximize the probability of a clean sequence, summing over all hidden paths that could have produced it. That sum is generally difficult. An **evidence lower bound (ELBO)** provides a tractable lower bound on log probability; its negative, **NELBO**, is an upper bound on negative log-likelihood.
+
+For a linear absorbing-mask process, a clean-token parameterization that copies observed tokens and excludes mask from clean predictions simplifies the continuous-time objective. One sampled slice contributes:
 
 $$
-Z(x)=\sum_y\pi_{\mathrm{ref}}(y\mid x)\exp\!\left(\frac{r(x,y)}{\beta}\right).
+L_t
+=
+\frac1t
+\sum_{i\in M_t}
+-\log p_\theta(x_0^i\mid x_t,t).
 $$
 
-Assume this sum is finite and the reference assigns positive probability to the responses under consideration. Rearranging then gives
+Here $M_t$ denotes the masked positions, and natural logarithms give the loss in nats. Averaging the slice over uniform time and the corruption process gives
 
 $$
-r(x,y)
-=\beta\log\frac{\pi^*(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}
-+\beta\log Z(x).
+\mathcal L(x_0)=\mathbb E_{t\sim U(0,1)}\mathbb E_{q(x_t\mid x_0)}L_t,
+\qquad -\log p_\theta(x_0)\le\mathcal L(x_0).
 $$
 
-The partition term depends on the prompt but not on the completion. It cancels in a pairwise reward difference. Substituting into Bradley–Terry yields
+The bound applies to this complete objective, not to every sampled slice individually. With retention probability $\alpha(t)=1-t$, the general weighting $-\alpha'(t)/(1-\alpha(t))$ becomes $1/t$. Low-noise slices hide fewer positions, so a hidden position receives greater weight.
+
+For a continuous linear masking process, the slice weight is $1/t$. At $t=0.25,0.5,0.75$, the values are $4$, $2$, and $4/3$. Early-time slices contain fewer corrupted positions, so each receives greater weight. This may increase estimator variance and motivates alternative schedules or time-sampling strategies in practical training.
+
+Reduction is part of the objective. Dividing by a fixed sequence length changes a constant scale. Dividing by the random mask count changes the relative weight of examples and requires a correction if the same estimator is intended. A corruption sample with no masks contributes zero to the sum. Discarding it, or forcing one position to be masked, changes the sampling law.
+
+Suppose four masked target tokens receive probabilities
 
 $$
-\mathcal L_{\mathrm{DPO}}
-=-\log\sigma\!\left(
-\beta\left[
-\log\frac{\pi_\theta(y_w\mid x)}{\pi_{\mathrm{ref}}(y_w\mid x)}
--
-\log\frac{\pi_\theta(y_l\mid x)}{\pi_{\mathrm{ref}}(y_l\mid x)}
-\right]
-\right).
+[0.9,0.7,0.6,0.8]
 $$
 
-The quantity
+at $t=0.5$. Then
 
 $$
-\hat r_\theta(x,y)
-=\beta\log\frac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}
+L_{0.5}
+=
+2[-\log0.9-\log0.7-\log0.6-\log0.8]
+\approx2.392009269.
 $$
 
-is commonly called an **implicit reward**. The phrase is useful as long as its scope is remembered: DPO has not produced a standalone reward function that can score arbitrary model outputs independently. The reward is defined through two policies under the assumed preference model.
+![VIZ m12/04 — the masked-diffusion objective](assets/modern-llms/en/module-12/m12_04_loss.svg)
+*The loss contract: masked positions, time weighting, and an explicit reduction convention. Likelihood interpretation depends on the forward process and estimator.*
 
-The original DPO recipe trains on fixed pairs without generating at each step. Precompute the reference log probabilities for those pairs and the reference checkpoint need not remain in the optimization process. Newly collected pairs require new reference values; changes to tokenization or the reference policy invalidate the corresponding cache. Refreshing the dataset therefore adds bookkeeping and scoring work rather than making caching impossible.
+The value $t=0$ has zero measure under a continuous sampler but remains a software edge case because $1/t$ is undefined.
 
-The implicit score can be evaluated on a new answer wherever both policies assign positive probability. It requires both policies, however; it is not an independently trained judge. A positive implicit reward gap describes ordering relative to the reference and does not establish answer quality beyond the comparisons used in training.
+Likelihood language also needs care. AR provides a direct left-to-right **NLL — Negative Log-Likelihood**. Many diffusion models optimize an **ELBO — Evidence Lower Bound** or report **NELBO — Negative Evidence Lower Bound**. Yet masked diffusion can be designed as a likelihood-oriented language model, as MDLM demonstrates. A fair comparison records the estimator, time discretization, and number of Monte Carlo samples instead of treating every reported “perplexity” as the same object.
 
-For a completion, $\log\pi_\theta(y\mid x)$ is the sum of $\log\pi_\theta(y_t\mid x,y_{<t})$ over its target tokens. As in M13, align the preceding-position logits with each target exactly once, then exclude prompt and padding positions. Both policies must use the same dialogue template, tokenization and end-of-answer convention. Otherwise their difference also measures a mismatch in representation.
+## 8. Any-order training and its limits
 
-![VIZ m14/03 — direct optimization on preference pairs](assets/modern-llms/en/module-12/m14_03_dpo.svg)
+Random corruption turns one document into many conditional prediction tasks. A person’s name may be observed while the relation is hidden in one sample, and the reverse may occur in another. This offers a more symmetric training signal than a single left-to-right order.
 
-## 7. Worked example B: read the DPO margin carefully
+For a uniform-order objective, masked diffusion can be related to autoregressive factorizations averaged over permutations. The Any-Order GPT study also finds that many orders are less informative than natural left-to-right structure. The result is a design trade-off, not a contradiction: order diversity is useful, but language still has asymmetric sequential regularities.
 
-For pair I, the preferred response has policy and reference log probabilities $-12.0$ and $-13.0$, so its log-ratio is $+1.0$. The rejected response has $-11.5$ and $-10.8$, giving a log-ratio of $-0.7$.
+The same caution applies to the **reversal curse**. Consider the fictional fact “Anna Vetrova wrote *The Quiet Harbour*.” A model may complete the author’s name with the book title yet fail to name the author when asked who wrote that book. Reversing the question is not the same as claiming that authorship is a symmetric relation. LLaDA reported a striking reversal-poem result. Later work, DiffER, found that dLLMs can still fail reversed relations because of fragmented entities, asymmetric training data, or entirely missing reverse facts. Bidirectional conditioning removes one architectural asymmetry; it does not invent absent evidence.
 
-With $\beta=0.1$,
+A related empirical result appears in data-constrained training. When a finite corpus is reused for many epochs, masked diffusion exposes the model to varied conditional tasks. *Diffusion Beats Autoregressive in Data-Constrained Settings* reports an advantage under the studied data/compute regimes. The claim should remain local to those regimes rather than becoming a universal statement about data efficiency.
 
-$$
-z=0.1\,[1.0-(-0.7)]=0.170.
-$$
+## 9. Sampling and worked example B
 
-The pair loss and the derivative with respect to $z$ are
+A denoising network returns token distributions, while a sampler defines how to use them. For the linear absorbing process, one standard reverse transition from time $t$ to $\tau<t$ leaves a masked position masked with probability $\tau/t$ and reveals it with probability $(t-\tau)/t$, using the predicted clean-token distribution. Visible positions are copied. This connects the forward kernel to a reverse transition; deployed policies often alter the schedule or position choices to trade quality for speed.
 
-$$
-\mathcal L=-\log\sigma(0.170)=0.6118,
-\qquad
-\left|\frac{\partial\mathcal L}{\partial z}\right|
-=\sigma(-z)=0.4576.
-$$
+Our teaching trace uses a fixed mask-count schedule and greedy token choices. It makes the operations inspectable but does not establish exact sampling from the data distribution. Confidence-based reveal has no universal distribution-correction guarantee analogous to the speculative algorithm in Module 11.
 
-For pair II, keep the policy values and use reference log probabilities $(-12.8,-11.65)$ for the preferred and rejected answers. The log ratios are $0.8$ and $0.15$, a gap of $0.65$. Thus $z=0.065$ and the derivative magnitude is 0.4838. At the decision boundary $z=0$, the magnitude is 0.5; for a misordered pair with $z<0$, it exceeds 0.5 and approaches 1 as $z$ becomes very negative. A near-boundary pair therefore pulls harder than an already well-ordered pair, while a strongly misordered pair receives an even larger local weight.
+A generic iteration performs five operations:
 
-If pair I is evaluated with $\beta=0.5$, then $z=0.85$, the loss falls to 0.356, and $\sigma(-z)$ becomes 0.299. This number alone does not say that training has become weaker. The gradient with respect to model parameters also carries the factor $\beta$, and $\beta$ changes the scale at which policy movement is judged relative to the reference. In practice it should be tuned with KL drift, response quality, and the distribution of pair margins in view.
+1. optionally remask open positions using scores saved from earlier predictions;
+2. call the model once on that actual corrupted canvas;
+3. choose candidates and rank masked positions;
+4. reveal enough positions to meet the next mask count;
+5. save the result and confidence scores for the next iteration.
 
-![VIZ m14/04 — one sigmoid, two interpretations](assets/modern-llms/en/module-12/m14_04_bt_dpo.png)
+Possible ordering rules include random reveal, maximum candidate probability, minimum entropy, a learned policy, block-specific schedules, and task-dependent heuristics.
 
-## 8. Direct preference losses differ by contract, not branding
+Candidate confidence is the single probability $p_i(v_i)$, whereas entropy $H(p_i)=-\sum_v p_i(v)\log p_i(v)$ measures uncertainty across the whole positional distribution. Low entropy means that probability is concentrated among fewer alternatives. The rankings can differ, especially when a candidate is sampled rather than chosen by argmax.
 
-The family is easier to navigate if every method is described by the data it expects, the anchor it uses, and the margin it tries to create.
+The first frozen trace uses fixed logits and opens two positions per step. Six of eight final tokens match the targets, regardless of the order in which all greedy candidates are eventually revealed. It tests scheduling, not context sensitivity. A second notebook experiment makes predictions depend on previously revealed anchors; there the order can change the final answer.
 
-### IPO: target a finite gap
+![VIZ m12/05 — a denoising trace](assets/modern-llms/en/module-12/m12_05_demask_trace.svg)
+*One call per iteration, candidate tokens for every position, a confidence ranking, and an exact target mask count.*
 
-**Identity Preference Optimization (IPO)** is derived as a special case of the broader $\Psi$PO framework. It replaces the unbounded logistic pressure of DPO with an objective that targets a finite preference gap. That can be useful when labels are noisy or many pairs are genuinely close.
+A two-token example explains why extra passes can matter. Suppose the source emits only $AA$ or $BB$, each with probability $1/2$. With both positions masked, each marginal assigns $1/2$ to A and B. Sampling them independently in one pass produces $AA,AB,BA,BB$ with probability $1/4$ each; half the outputs violate the source's dependency. Reveal one token and recompute the other conditional, and the dependency can be recovered. Parallel predictions may be individually well calibrated while their product is a poor joint model.
 
-The finite target is an inductive bias, not a free correction. A poor target can underfit strong preferences or encode the wrong calibration.
+Remasking can revisit a poor early choice after more context becomes available. Revision spends extra calls or reduces net progress at a fixed call budget. In our implementation, selected positions are masked before the network is invoked; logits computed while a token was still visible are not treated as predictions from a masked input. The useful metric is therefore not “tokens predicted per pass” alone; it is final committed output per pass at a target quality.
 
-### KTO: learn from desirable and undesirable examples
+DiffusionGemma illustrates a more sophisticated policy. Its recommended **EB — Entropy Bound** sampler selects low-entropy positions subject to a bound on dependence between jointly revealed positions (a mutual-information bound), renoises unselected positions, and stops only when entropy and prediction stability criteria are satisfied. The sampler is part of the released system contract, not an interchangeable afterthought.
 
-**Kahneman–Tversky Optimization (KTO)** removes the requirement that every label come as a pair. An example is marked desirable or undesirable and evaluated relative to a reference point.
+## 10. A generic roofline calculation
 
-A single-answer rating can be easier to collect because no alternative needs to be shown. What it omits is the identity of a comparison response. Neither one binary rating nor one binary pairwise choice directly specifies preference strength or a reason; those require additional annotations or explanations. The usefulness of pointwise feedback depends on negative-example quality, class balance and the reference point.
+Return to the hypothetical dense 8B model. Nothing in this section describes DiffusionGemma’s MoE traffic.
 
-### SimPO: a reference-free sequence reward
-
-**Simple Preference Optimization (SimPO)** uses average sequence log probability as its implicit reward and adds a target margin. Length normalization replaces the sum of token log probabilities with their average, while the absence of a separate reference model reduces memory and compute.
-
-Length normalization changes the incentive; it does not guarantee that response length will be neutral under every dataset and evaluation protocol.
-
-Write $\bar\ell_\theta(y)=\log\pi_\theta(y\mid x)/|y|$ for a completion's mean token log probability. A SimPO pair then contributes $-\log\sigma(\beta[\bar\ell_\theta(y_w)-\bar\ell_\theta(y_l)]-\gamma)$, where $\gamma$ specifies the target margin. Ordinary autoregressive sampling follows the product of token probabilities; it does not rank complete answers by this average. Length normalization is therefore an objective choice whose effect must be checked on generated lengths and quality.
-
-### ORPO: preference alignment inside instruction tuning
-
-**Odds Ratio Preference Optimization (ORPO)** combines the likelihood of the preferred response with an odds-ratio penalty for the rejected response. It is reference-free and is designed as a monolithic instruction-tuning objective rather than a separate alignment stage.
-
-The simplified pipeline comes with tighter coupling. When results deteriorate, the supervised and preference components must be diagnosed together.
-
-DPO remains a strong reproducible baseline. KTO is attractive for pointwise feedback, SimPO for a reference-free setup, ORPO for a single joint stage, and IPO when a finite target gap is a better model of the annotations.
-
-![VIZ m14/05 — a map of direct preference methods](assets/modern-llms/en/module-12/m14_05_dpo_family.svg)
-
-## 9. RLOO and GRPO: construct a baseline from sibling rollouts
-
-Offline pairs cannot follow the policy indefinitely. For verifiable tasks, it is often preferable to sample fresh completions from the current policy and score them immediately.
-
-**REINFORCE Leave-One-Out (RLOO)** samples $G$ completions for one prompt. Completion $i$ uses the mean reward of the other $G-1$ completions as its baseline:
+For a 1024-position canvas, one ideal pass performs
 
 $$
-b_i=\frac{1}{G-1}\sum_{j\ne i}r_j,
-\qquad
-A_i=r_i-b_i.
+2PN
+=2\cdot8\cdot10^9\cdot1024
+=16.384\ \mathrm{TFLOP}.
 $$
 
-Under the usual conditional-independence assumptions, the baseline does not depend on completion $i$ and preserves the expectation of the REINFORCE gradient.
-
-**Group Relative Policy Optimization (GRPO)** instead standardizes rewards with statistics from the entire group:
+At 990 TFLOP/s, the compute floor is
 
 $$
-A_i=\frac{r_i-\operatorname{mean}(r_{1:G})}
-{\operatorname{std}(r_{1:G})}.
+16.549\ \mathrm{ms},
 $$
 
-The advantage is inserted into a PPO-style clipped objective, but no learned value model is required. GRPO is often associated with RLVR, although the reward may also come from a learned judge.
-
-Take the binary reward vector
-
-```text
-[1, 0, 0, 1, 0, 0, 1, 0].
-```
-
-Its mean is 0.375 and its population standard deviation is 0.4841. Successful completions receive
+which is larger than the 4.776-ms weight-stream floor. For $S$ calls,
 
 $$
-A_+=1.291,
+Q_{\mathrm{dLLM}}
+\le
+\frac{1024}{S\cdot16.549\ \mathrm{ms}}.
 $$
 
-and unsuccessful ones receive
+| Calls $S$ | Arithmetic ceiling |
+|---:|---:|
+| 16 | 3867.2 tok/s |
+| 64 | 966.8 tok/s |
+| 128 | 483.4 tok/s |
+
+The continuous parity point with the batch-one AR ceiling is approximately $S=295.5$. Integer call counts give 295 as the largest value still above that ceiling.
+
+![VIZ m12/06 — the teaching roofline](assets/modern-llms/en/module-12/m12_06_roofline.png)
+*Generic dense-8B roofline. The 0.338% figure is ideal compute time divided by the simplified step floor, not measured accelerator utilization.*
+
+The calculation is useful precisely because it is narrow. It excludes attention’s sequence-length cost, KV traffic, activations, communication, routing, batching, kernel overhead, and actual utilization.
+
+## 11. Steps, batching, and weight precision
+
+Autoregressive batching also amortizes weight reads. Under a crude linear batch-throughput approximation, the $S=64$ diffusion ceiling equals AR at
 
 $$
-A_-=-0.775.
+B^*\approx\frac{966.8}{209.4}=4.62.
 $$
 
-The advantages sum to zero. That is a within-group centering identity, not a proof that the estimator equals the true expected advantage. Because each sample contributes to the statistics used to normalize itself, group-relative methods can introduce difficulty- and length-dependent biases.
+This is not a claim that the fifth concurrent request always erases the benefit. Actual batching changes KV traffic, tensor shapes, occupancy, and latency objectives. The calculation identifies the direction: low-batch interactive use is the most favorable regime for parallel denoising.
 
-A group with identical rewards has zero variance. If rewards are Bernoulli with success probability 0.3 and $G=8$, the probability of an all-success or all-failure group is
+The same dense model gives a second teaching comparison at a 256-token block. The compute floor is 4.137 ms. With 16 GB of bf16 weights, the 4.776-ms memory floor still dominates. If every parameter were ideally stored in four bits, the payload would be 4 GB and the memory floor 1.194 ms; the block would become compute-bound. At 16 calls, the arithmetic ceiling is again 3867.2 tok/s.
 
-$$
-0.3^8+0.7^8=0.0577.
-$$
+![VIZ m12/07 — calls versus throughput](assets/modern-llms/en/module-12/m12_07_tps.png)
+*Throughput versus call count for the generic dense-8B scenario. The four-bit line is an arithmetic payload hypothesis, not a DiffusionGemma checkpoint measurement.*
 
-Such a group contains no relative ranking signal. Skipping it, resampling it, or assigning zero advantages are explicit policy choices; adding epsilon to the denominator only prevents a numerical exception.
+A sparse MoE invalidates a naive substitution of “active parameters” for bytes per call. Different canvas positions can select different experts, so the union of touched expert weights may be much larger than a single token’s active count. This is the key reason to keep the following released-model passport separate.
 
-Our arithmetic uses the population standard deviation, `ddof=0`. Switching to `ddof=1` multiplies the advantages by $\sqrt{(G-1)/G}$, changing the update scale at the same learning rate. Equal rewards produce zero policy-gradient advantages, but a separate KL penalty can still update the model. Dropping a group also changes the averaging denominator; collecting a replacement costs additional rollouts.
+## 12. Level-1 code
 
-**Turning an advantage into an update.** Freeze the sampling policy $\pi_{\mathrm{old}}$ for a batch of trajectories. It is distinct from $\pi_{\mathrm{ref}}$: the former follows successive rollout batches, whereas the latter supplies a longer-term anchor. For completion token $t$ in answer $i$, define
-$$
-\rho_{i,t}=\frac{\pi_\theta(y_{i,t}\mid x,y_{i,<t})}
-{\pi_{\mathrm{old}}(y_{i,t}\mid x,y_{i,<t})},
-\qquad
-q_{i,t}=\min\!\left(\rho_{i,t}A_i,\,
-\operatorname{clip}(\rho_{i,t},1-\epsilon_{\mathrm{low}},1+\epsilon_{\mathrm{high}})A_i\right).
-$$
-Maximize an average of $q$, or minimize its negative, treating the old probabilities and advantages as constants. For positive advantage, increasing the ratio past its upper threshold stops improving this term; negative advantage produces the corresponding limit on decreasing the ratio. Clipping shapes the objective. It does not guarantee that every probability ratio after an optimizer step stays inside the interval.
-
-The denominator is part of the algorithm. Original GRPO averages tokens within each response, then responses: $G^{-1}\sum_i |y_i|^{-1}\sum_t q_{i,t}$. A token mean divides $\sum_{i,t}q_{i,t}$ by $\sum_i|y_i|$; the notebook's numerical example uses this normalization, as in that component of DAPO. If responses have lengths 1 and 3 and constant per-token values 2 and 0, these averages are 1 and 0.5 respectively. Padding enters neither sum. If KL regularization is used, specify its coefficient and normalization separately.
-
-![VIZ m14/06 — group-relative advantages](assets/modern-llms/en/module-12/m14_06_grpo.svg)
-
-## 10. Worked example D: a deliberately simplified memory model
-
-Assume an 8.03B-parameter model. Use 16 bytes per parameter for the teaching Adam stack: bf16 weights (2), bf16 gradients (2), an fp32 master copy (4), and two fp32 Adam states (4 + 4). A frozen bf16 copy costs 2 bytes per parameter. Other precision and optimizer choices change this accounting.
-
-A trainable model then occupies
-
-$$
-\frac{8.03\times10^9\times16}{2^{30}}
-=119.7\ \text{GiB},
-$$
-
-while a frozen copy occupies 14.96 GiB.
-
-For a transparent PPO teaching configuration, count two trainable full-sized networks—policy and critic—and two frozen ones—reference and reward model:
-
-$$
-\frac{36\cdot8.03\cdot10^9}{2^{30}}\approx269.2\ \text{GiB}.
-$$
-
-DPO with a resident reference policy uses
-
-$$
-\frac{18\cdot8.03\cdot10^9}{2^{30}}\approx134.6\ \text{GiB}.
-$$
-
-The ratio is exactly 2.00 under these assumptions, and the critic accounts for roughly 44% of the PPO total.
-
-This is an anatomy diagram, not a cluster quote. It omits activations, rollout KV state, temporary buffers, parameter sharding, shared backbones, PEFT, optimizer variants, and distributed placement. A GRPO system may still need a reference model for KL, a sampling snapshot, and dedicated rollout workers.
-
-For a fixed DPO dataset, cached reference log probabilities remove the frozen checkpoint from the optimizer phase. The persistent model-state budget then approaches the SFT case. That is a property of the offline workflow, not of every possible DPO implementation.
-
-## 11. Worked example E: rollout generation can dwarf the update
-
-Consider one illustrative RLVR batch:
-
-- 256 prompts;
-- 8 completions per prompt;
-- 4,000 generated tokens per completion.
-
-The rollout volume is
-
-$$
-256\times8\times4000=8{,}192{,}000
-$$
-
-tokens.
-
-At 209.4 tokens/s on each of eight accelerators, generation takes
-
-$$
-\frac{8{,}192{,}000}{8\times209.4}
-=4890.2\ \text{s}
-=81.5\ \text{min}.
-$$
-
-Estimate one training pass with $6ND$ for an 8.03B model. At 990 TFLOP/s per accelerator and 40% MFU across eight accelerators, the estimate is $6\cdot8.03\cdot10^9\cdot8{,}192{,}000/(8\cdot990\cdot10^{12}\cdot0.4\cdot60)\approx2.076444$ minutes.
-
-Compute the ratio before rounding either time; displaying six decimal places gives
-
-$$
-81.502706/2.076444\approx39.2511.
-$$
-
-Nothing in GRPO guarantees this number. It comes from the chosen completion length, throughput, model size, and utilization. What the example exposes is the possibility that autoregressive decode—not backpropagation—sets the wall-clock scale of RL.
-
-That observation motivates four systems techniques:
-
-1. faster and cheaper rollout inference;
-2. adaptive allocation of rollout count and response length;
-3. overlap between rollout generation and optimization;
-4. explicit control of policy staleness in asynchronous training.
-
-verl and NeMo RL both expose separated or asynchronous rollout/training architectures. The gain is not free: trajectories produced by older parameters become increasingly off-policy as they wait in queues.
-
-Here 209.4 tokens/s is an assumed aggregate per-device rate at a chosen batching setup, not a promised per-user rate. The calculation counts generated tokens and one training pass over them. Prompt processing, prefill, reward and reference evaluation, extra optimization epochs and communication add work. Account for these separately before using the estimate to size a system.
-
-![VIZ m14/07 — the economics of group-based RL](assets/modern-llms/en/module-12/m14_07_grpo_memory.png)
-
-## 12. What later GRPO variants are actually fixing
-
-GRPO's adoption exposed several independent failure modes: groups with no relative signal, collapsing exploration, response-length bias, prompt-difficulty bias, and expensive sampling. Later methods should be read as targeted repairs, not as a single leaderboard sequence.
-
-### DAPO: a complete large-scale recipe
-
-**Decoupled Clip and Dynamic sAmpling Policy Optimization (DAPO)** combines four mechanisms.
-
-1. **Clip-Higher** sets a wider upper than lower ratio threshold, supporting exploration.
-2. **Dynamic Sampling** discards equal-reward groups and continues collecting until enough informative groups fill the batch.
-3. **Token-Level Policy Gradient Loss** changes the averaging unit so long and short completions contribute differently from response-level averaging.
-4. **Overlong Reward Shaping** smooths the reward near the truncation boundary.
-
-The published recipe also sets the explicit KL penalty to zero. That is an empirical system choice, not a general theorem that reference regularization is unnecessary.
-
-### Dr. GRPO: inspect the normalization itself
-
-**Understanding R1-Zero-Like Training** argues that response-length and group-standard-deviation normalization can introduce optimization bias. Its Dr. GRPO variant removes parts of that normalization and improves token efficiency in the authors' experiments.
-
-The paper also makes a broader methodological point: the base checkpoint already determines what behaviours RL can amplify. An “aha moment” observed during training should not automatically be interpreted as a capability created from nothing.
-
-### 2025–2026: group-relative advantage under theoretical scrutiny
-
-Recent analyses study systematic bias with respect to prompt difficulty and reinterpret GRPO as a contrastive objective. These results do not make GRPO useless. They replace an overly simple story—“the group mean is a free critic”—with a more accurate one: group-relative normalization is a practical estimator with identifiable inductive biases.
-
-A serious implementation must document at least six choices:
-
-- reward definition;
-- treatment of zero-variance groups;
-- averaging unit: prompt, completion, or token;
-- KL placement and coefficient;
-- freshness of rollout data;
-- evolution of prompt difficulty and completion length.
-
-A small exact example exposes one source of bias. Let $a$ be Bernoulli with $p=\sigma(\theta)$ and reward $a$. The true reward gradient is $p(1-p)$. Subtracting the full-group mean, which includes the sample itself, gives expectation $(G-1)p(1-p)/G$; a leave-one-out baseline preserves $p(1-p)$. At $p=0.3$ and $G=8$, these are 0.18375 and 0.21. This calculation does not divide by standard deviation; doing so introduces another dependence on the sampled group. The notebook enumerates all $2^8$ groups before comparing the result with simulation.
-
-Dr. GRPO uses a constant token denominator $G L_{\max}$ and removes group-standard-deviation reward scaling. A constant denominator differs from both a response mean and a mean over the actual number of generated tokens. Consequently, “GRPO” alone is not enough information to reproduce a training run.
-
-![VIZ m14/08 — a taxonomy of GRPO repairs](assets/modern-llms/en/module-12/m14_08_grpo_line.svg)
-
-## 13. Level-one code: the numerical core
-
-The following functions reproduce the module's frozen examples. They are intentionally smaller than a trainer: the goal is to expose the contract of each calculation.
+The minimal implementation must make two contracts visible: the loss only includes corrupted positions, and one sampler iteration makes exactly one network call before revealing the scheduled number of tokens.
 
 ```python
-import math
+"""M12: summed masked loss and deterministic reveal schedule."""
 import numpy as np
 
-def stable_sigmoid(x):
-    """Numerically stable sigmoid."""
-    x = np.asarray(x, dtype=np.float64)
-    return np.exp(-np.logaddexp(0.0, -x))
-
-def dpo_loss(policy_lp_w, policy_lp_l, ref_lp_w, ref_lp_l, beta=0.1):
-    """DPO from completion-token log-probability sums."""
-    if not math.isfinite(beta) or beta <= 0:
-        raise ValueError("beta must be finite and positive")
-
-    pw, pl, rw, rl = np.broadcast_arrays(
-        np.asarray(policy_lp_w, dtype=float),
-        np.asarray(policy_lp_l, dtype=float),
-        np.asarray(ref_lp_w, dtype=float),
-        np.asarray(ref_lp_l, dtype=float),
+def linear_mask_schedule(length: int, steps: int) -> tuple[int, ...]:
+    """Target counts from fully masked to fully revealed."""
+    if any(isinstance(v, (bool, np.bool_)) or
+           not isinstance(v, (int, np.integer)) or v <= 0
+           for v in (length, steps)):
+        raise ValueError("length and steps must be positive")
+    return tuple(
+        (int(length) * remaining + int(steps) - 1) // int(steps)
+        for remaining in range(steps, -1, -1)
     )
-    if not all(np.all(np.isfinite(v)) for v in (pw, pl, rw, rl)):
-        raise ValueError("log probabilities must be finite")
 
-    z = beta * ((pw - rw) - (pl - rl))
-    loss = np.logaddexp(0.0, -z)
-    local_slope = stable_sigmoid(-z)
-    return loss, local_slope, z > 0
+def dllm_loss(logits, target_ids, loss_mask, time: float) -> float:
+    """(1/t) times the summed NLL on explicitly masked positions."""
+    logits = np.asarray(logits, dtype=np.float64)
+    target_ids = np.asarray(target_ids)
+    loss_mask = np.asarray(loss_mask)
+    if logits.ndim != 2 or target_ids.shape != (logits.shape[0],):
+        raise ValueError("expected logits [T,V] and target_ids [T]")
+    if logits.shape[1] == 0 or target_ids.dtype.kind not in "iu":
+        raise ValueError("target_ids must be integers and vocabulary non-empty")
+    if np.any(target_ids < 0) or np.any(target_ids >= logits.shape[1]):
+        raise ValueError("target IDs must be in [0, V)")
+    if loss_mask.shape != target_ids.shape or loss_mask.dtype.kind != "b":
+        raise ValueError("loss_mask must be boolean [T]")
+    if isinstance(time, (bool, np.bool_)) or not (0.0 < time <= 1.0):
+        raise ValueError("time must be in (0,1]")
+    if not np.isfinite(logits).all():
+        raise ValueError("logits must be finite")
+    shifted = logits - logits.max(axis=-1, keepdims=True)
+    log_probs = shifted - np.log(np.exp(shifted).sum(axis=-1, keepdims=True))
+    nll = -log_probs[np.arange(target_ids.size), target_ids]
+    return float(nll[loss_mask].sum() / time)
 
-def grpo_advantages(rewards, *, on_degenerate="raise"):
-    """Population normalization with explicit zero-variance handling."""
-    r = np.asarray(rewards, dtype=np.float64)
-    if r.ndim != 1 or r.size < 2 or not np.all(np.isfinite(r)):
-        raise ValueError("rewards must be a finite one-dimensional group of size >= 2")
+def sample_dllm(predict, length: int, steps: int, mask_id: int):
+    """Greedy confidence reveal with one model invocation per iteration."""
+    schedule = linear_mask_schedule(length, steps)
+    if isinstance(mask_id, (bool, np.bool_)) or not isinstance(mask_id, (int, np.integer)):
+        raise ValueError("mask_id must be an integer")
+    vocabulary = None
+    tokens = np.full(length, mask_id, dtype=np.int64)
+    trace = []
+    for step, target_masked in enumerate(schedule[1:], start=1):
+        logits = np.asarray(predict(tokens.copy(), step), dtype=np.float64)
+        if logits.ndim != 2 or logits.shape[0] != length or logits.shape[1] == 0 or not np.isfinite(logits).all():
+            raise ValueError("predict must return finite logits [T,V]")
+        if vocabulary is not None and logits.shape[1] != vocabulary:
+            raise ValueError("predict changed vocabulary size")
+        vocabulary = logits.shape[1]
+        if 0 <= mask_id < vocabulary:
+            raise ValueError("mask_id must lie outside the vocabulary")
+        shifted = logits - logits.max(axis=-1, keepdims=True)
+        probs = np.exp(shifted)
+        probs /= probs.sum(axis=-1, keepdims=True)
+        candidates = probs.argmax(axis=-1)
+        confidence = probs[np.arange(length), candidates]
+        masked = np.flatnonzero(tokens == mask_id)
+        open_count = masked.size - target_masked
+        order = np.lexsort((masked, -confidence[masked]))
+        opened = masked[order[:open_count]]
+        tokens[opened] = candidates[opened]
+        trace.append((tuple(opened), tokens.copy()))
+    return tokens, trace
 
-    if on_degenerate not in ("raise", "zeros"):
-        raise ValueError("on_degenerate must be raise or zeros")
-    std = float(r.std(ddof=0))
-    if std == 0.0:
-        if on_degenerate == "zeros":
-            return np.zeros_like(r)
-        raise ValueError("the group contains no relative signal")
-    return (r - r.mean()) / std
-
-def stage_memory_gib(n_params, stack):
-    """Teaching estimate of persistent model states, excluding activations."""
-    if not math.isfinite(n_params) or n_params <= 0:
-        raise ValueError("n_params must be finite and positive")
-    bytes_per_parameter = {"train": 16, "frozen_bf16": 2}
-    return sum(bytes_per_parameter[kind] * n_params for kind in stack) / 2**30
-
-ppo = stage_memory_gib(
-    8.03e9,
-    ["train", "train", "frozen_bf16", "frozen_bf16"],
-)
-dpo = stage_memory_gib(8.03e9, ["train", "frozen_bf16"])
 ```
 
-`np.logaddexp(0, -z)` is the stable form of $-\log\sigma(z)$. `local_slope` is the derivative magnitude with respect to the scalar margin, not the norm of the parameter gradient. `grpo_advantages` forces the caller to decide what a zero-variance group means. `stage_memory_gib` states its limitation in the name and docstring: activations and rollout state are outside the model.
+Read the loop as an execution record: one copied input goes into the network, the stored output supplies both candidates and scores, and only then does the state change. Equal scores choose the lower position index. A schedule with more calls than tokens may include calls that reveal nothing.
 
-## 15. RLVR still obeys Goodhart's law
+Using −1 outside the output vocabulary is a teaching interface, not a universal model requirement. Real models often include a special mask token in their vocabulary and exclude it from final clean-token predictions through parameterization or filtering. The notebook adds categorical draws, entropy ranking, and remasking. Adaptive production samplers need not follow our fixed mask counts.
 
-**Reinforcement Learning with Verifiable Rewards (RLVR)** replaces a subjective reward proxy with a programmatic checker. Unit tests, exact-answer matching, proof verifiers, and environment success conditions can provide unusually clean supervision.
+## 14. Block diffusion, length, and caching
 
-“Verifiable” does not mean “unhackable.” The policy optimizes the checker that exists, not the intention behind it.
+A mutable bidirectional canvas cannot use an ordinary causal KV cache internally: changing one position can change representations at every other position on the next call.
 
-- An incomplete test suite may reward a brittle program.
-- A parser may accept a special output format that bypasses the intended reasoning.
-- End-result reward cannot distinguish a robust solution from a lucky guess.
-- A hard length cutoff may create incentives to stop prematurely or fill the entire budget.
-- Once easy prompts become all-correct, they stop contributing relative signal to group-based methods.
+Block diffusion separates completed history from a mutable block of length $L_b$. Cache validity requires the history's states to be independent of future blocks. It does not require token-wise causal attention within every completed block: bidirectional attention inside an already completed block is compatible with block causality. Section 19 uses the simpler special case of a token-causal prefix.
 
-A mature RLVR dashboard therefore contains more than mean reward. It tracks completion length, zero-variance-group rate, policy entropy, verifier failures, held-out tests, and sampled trajectories reviewed by humans.
+The active block reads that history and all of its own positions. After final token choices, the cache must represent the clean block. The last denoising call may have seen masks or earlier values, so its K/V cannot automatically serve as the completed history. BD3-LM runs the clean block to obtain cache states; DiffusionGemma uses its encoder for this step. That pass and prompt processing contribute to end-to-end latency, though they are omitted from the narrow arithmetic in Sections 10–11.
 
-The boundary between SFT and RL is porous. High-quality rollouts may be recycled into a new demonstration mixture. Conversely, an SFT checkpoint becomes the starting policy for online RL. Strong post-training recipes alternate between these signals rather than treating them as mutually exclusive schools.
+![VIZ m12/08 — block-diffusion spectrum](assets/modern-llms/en/module-12/m12_08_block_spectrum.svg)
+*The teaching attention mask makes the completed prefix independent of the active block. Cache states must correspond to the finalized history.*
 
-## 16. Three open patterns: RLAIF, multi-stage reasoning, and environments
+As $L_b$ changes:
 
-### Constitutional AI and RLAIF
+- $L_b=1$ approaches AR;
+- larger blocks expose more parallel work;
+- completed blocks become cacheable;
+- the active block remains bidirectional;
+- output length can grow block by block.
 
-Constitutional AI uses a written set of principles to scale supervision. In the supervised phase, a model generates an answer, critiques it against a selected principle, and writes a revision; the revised responses become fine-tuning data. In the RL phase, a model judges pairs, a preference model is trained from those AI labels, and the policy is optimized against it. This second stage is commonly called **reinforcement learning from AI feedback (RLAIF)**.
+BD3-LM formalizes this class. MDLM also presents semi-autoregressive variable-length sampling, FlexMDM inserts mask states, and iLLaDA reports variable-length generation. Block diffusion is therefore one strong design, not a monopoly on flexible length.
 
-AI feedback reduces the amount of human comparison data required. It does not reduce governance to zero cost. The constitution must be designed, the judge calibrated, systematic biases measured, and self-reinforcing failure modes audited.
+LLaDA2.0 uses block size as a conversion curriculum. During warmup:
 
-### DeepSeek-R1 as a public multi-stage recipe
+$$
+1\rightarrow4\rightarrow32\rightarrow64\rightarrow4096.
+$$
 
-DeepSeek-R1 documents four distinct stages:
+The stable phase trains full-sequence masked diffusion; decay returns to smaller blocks for efficient inference. LLaDA2.1 adds Token-to-Token editing so a revealed value may later be replaced. The published mechanism revises values while keeping the current positions.
 
-1. cold-start SFT on a small collection of long reasoning demonstrations;
-2. reasoning-focused RL with verifiable rewards;
-3. rejection sampling followed by another SFT stage;
-4. broader RL covering general helpfulness and safety objectives.
+## 15. Reading the DiffusionGemma passport
 
-R1-Zero starts the RL stage directly from a base model. It demonstrates that large-scale verifier-guided RL can amplify reasoning behaviours without a preliminary SFT stage, while also reporting readability and language-mixing failures. Later analyses emphasize that the base model already contains much of the structure that RL selects and strengthens.
+DiffusionGemma is a useful case because its model card exposes architecture, sampler, and hardware conditions rather than only a headline TPS number.
 
-### Interactive environments
+![VIZ m12/09 — DiffusionGemma passport](assets/modern-llms/en/module-12/m12_09_gemma_passport.svg)
+*An autoregressive prompt encoder, cacheable context, a bidirectional diffusion canvas, sparse MoE routing, and separate H100 FP8 and Blackwell NVFP4 paths.*
 
-A single-turn math problem can be represented by a prompt, a completion, and a checker. An agent using a browser, shell, or software tool moves through a sequence of observations and actions. The environment must execute tools, preserve state, return errors, and define success.
+| Field | Released contract |
+|---|---|
+| architecture | encoder–decoder, block-autoregressive multi-canvas diffusion |
+| total / active parameters | 25.2B / 3.8B |
+| layers | 30 |
+| experts | 128 routed, top-8, plus one shared |
+| canvas | 256 tokens |
+| context | up to 256K |
+| sliding window | 1024 |
+| input | text, images, and video represented as frames |
+| output | text |
+| sampler | Entropy-Bounded Denoising, adaptive stopping, at most 48 calls |
+| committed progress | typically 15–20 final tokens per forward pass |
+| reported speed | over 1100 tok/s, H100, FP8, low batch |
+| native low-bit path | NVFP4 on NVIDIA Blackwell |
 
-**NeMo Gym** treats an environment as a combination of data, agent harness, tools, and verification logic. **NeMo RL** and **verl** support multi-turn rollouts and separated generation/training systems. This is the operational meaning of environment-native RL: the environment is part of the training specification, not merely a final reward function.
+The prompt is processed by an autoregressive encoder and stored as cacheable context. A bidirectional decoder denoises the active canvas through cross-attention to the prefix. After completion, the canvas is encoded and appended to the prefix cache.
 
-When a proprietary model has no complete public post-training recipe, its behaviour cannot fill that evidential gap. Adjustable reasoning effort, hidden chains of thought, or strong tool use do not uniquely identify PPO, DPO, GRPO, distillation, or any particular mixture. Public behaviour should not be presented as evidence for an undisclosed algorithm.
+Two idealized four-bit payloads are easy to compute:
 
-![VIZ m14/09 — from pairs to environments](assets/modern-llms/en/module-12/m14_09_landscape.svg)
+$$
+25.2\mathrm{B}\times\frac4{8}=12.6\ \mathrm{GB}=11.735\ \mathrm{GiB},
+$$
 
-## 17. How to read a post-training passport
+$$
+3.8\mathrm{B}\times\frac4{8}=1.9\ \mathrm{GB}=1.770\ \mathrm{GiB}.
+$$
 
-An algorithm name is not enough to reproduce or evaluate a post-training system.
+Neither is measured bytes per diffusion call. The full bank includes heterogeneous tensors; a 256-position canvas can route tokens to different experts; actual traffic depends on the expert union, precision, metadata, caches, and kernels.
 
-### Data and policy distribution
+The joint vLLM release report gives 1008 tokens/s on H100 FP8 in its own experiment. That is a separate protocol record from the model card’s “over 1100,” not a number to average into it.
 
-- Are the examples demonstrations, preference pairs, pointwise labels, or online trajectories?
-- Which policy generated the completions: the current actor, an earlier checkpoint, or a stronger teacher?
-- Are trajectories reused, and if so for how long?
-- How are benchmark contamination and train/evaluation overlap controlled?
+The quality side matters as much as speed. The model card reports lower scores than AR Gemma 4 on many benchmarks, with some exceptions. DiffusionGemma is therefore a point on a quality–latency curve, not proof that a generation paradigm dominates every task.
 
-### Reward contract
+## 16. The dLLM landscape on 11 October 2026
 
-- Is feedback produced by humans, a learned judge, deterministic rules, tests, or an environment?
-- Is reward assigned once per completion or along the trajectory?
-- How are partial success, ambiguity, truncation, and invalid tool calls handled?
-- What evidence establishes the accuracy of the verifier itself?
+The following rows deliberately include the measurement context. Tokens per second without hardware, sampler, and overhead is not a comparable metric.
 
-### Optimization
+| System | Access and branch | Published signal | Evidence boundary |
+|---|---|---|---|
+| LLaDA 8B | open weights, from scratch | 2.3T pretraining tokens | scale result; reversal result belongs to one task |
+| LLaDA-MoE 7B-A1B | open weights | sparse diffusion MoE, 1.4B active | active count does not determine runtime speed |
+| LLaDA2.0 16B / 100B | open weights, AR conversion | WSD and block diffusion | throughput depends on CAP/dInfer, threshold, and hardware |
+| LLaDA2.1 | open weights | Token-to-Token editing | value revision, not insertion-based length editing |
+| iLLaDA 8B | open weights, from scratch | 12T pretraining tokens, variable length | foundation-model result rather than a universal TPS claim |
+| Mercury 2 | commercial API | 1009 tok/s on Blackwell, 128K | developer-reported product configuration |
+| Gemini Diffusion | experimental demo | 1479 tok/s sampling, 0.84 s overhead excluded | sampling rate is not end-to-end latency |
+| Seed Diffusion Preview | experimental, code-focused | 2146 tok/s on H20 | developer result on coding workloads |
+| DiffusionGemma | open weights | >1100 tok/s, H100 FP8; 15–20 committed tokens/pass | detailed open passport with stated measurement conditions |
 
-- Is the algorithm offline, on-policy, or deliberately off-policy?
-- Which roles are present: policy, old policy, reference, critic, reward model?
-- Where is KL regularization applied?
-- Is the loss averaged over prompts, completions, or tokens?
-- What happens to zero-variance groups and extreme rewards?
+Mercury 2 adds reasoning controls, tool use, and schema-constrained JSON to a commercial dLLM API. Gemini Diffusion makes the measurement boundary unusually explicit: 1479 tok/s excludes 0.84 seconds of fixed overhead. Seed Diffusion targets code and reports H20 throughput. None of those numbers can be ranked fairly without rerunning a shared workload.
 
-### Systems
+iLLaDA highlights a different frontier: improving a from-scratch bidirectional model rather than solely accelerating a converted checkpoint. Its 12T-token pretraining run and variable-length generation show that the research space includes foundation-model quality, not only sampler speed.
 
-- Are rollout and training workers colocated or disaggregated?
-- Is the loop synchronous, one-step-off, or fully asynchronous?
-- How is trajectory staleness bounded?
-- What fraction of time is spent on decode, verification, communication, and optimization?
+## 17. Multimodal diffusion systems
 
-When these fields are absent, the honest conclusion is “the exact recipe is not disclosed.” Behavioural clues are useful for evaluation, not for reverse-engineering a training stack with certainty.
+“Multimodal diffusion” can refer to different components.
 
-## 20. Key takeaways and sources
+**LLaDA-V** applies diffusion language modeling to vision-language understanding: a visual representation conditions a diffusion-generated text response.
 
-![VIZ m14/10 — preference optimization on one page](assets/modern-llms/en/module-12/m14_10_cheatsheet.svg)
+**LLaDA2.0-Uni** discretizes visual inputs through SigLIP-VQ, uses a MoE dLLM backbone over semantic tokens, and employs a separate diffusion decoder to reconstruct images. Text-token diffusion and pixel/latent generation are distinct parts of the stack.
 
-**Distinguish the signals.** Demonstrations specify a target. Preferences rank alternatives. Verifiers score outcomes. Specify the feedback format, data-collection procedure and update rule separately.
+**DiffusionGemma** accepts interleaved text, images, and video frames but produces text. Its vision encoder does not imply that the response is generated by the same image diffusion decoder used in a text-to-image system.
 
-**Classical RLHF.** SFT feeds reward modelling, which feeds PPO under KL control. The four logical roles need not be four unshared full checkpoints in every implementation.
+The useful passport question is:
 
-**Bradley–Terry.** $P(y_w\succ y_l)=\sigma(r_w-r_l)$. A 75% win rate maps to $\log3\approx1.099$ inside this comparison model.
+> Which object is diffused—language tokens, visual semantic tokens, a continuous image latent, or several of these at different stages?
 
-**DPO.** The implicit reward is a current/reference policy ratio. The original DPO recipe is an offline pairwise method and does not require rollout generation or a separately trained reward model.
+Without that distinction, two systems bearing the same label may have entirely different compute and memory profiles.
 
-**Direct variants.** IPO targets a different margin geometry; KTO consumes pointwise desirable/undesirable labels; SimPO is reference-free and length-normalized; ORPO combines supervised likelihood and preference pressure in one objective.
+## 20. Takeaways and sources
 
-**RLOO and GRPO.** Both compare sibling rollouts. RLOO uses a leave-one-out baseline. GRPO standardizes over the full group and removes the learned critic, but its estimator has identifiable bias and zero-variance cases.
+![VIZ m12/10 — diffusion language models at a glance](assets/modern-llms/en/module-12/m12_10_cheatsheet.svg)
+*The forward kernel, loss, sampler, teaching roofline, block spectrum, and a released-system evidence passport on one page.*
 
-**The frozen scenarios.** The persistent-state teaching model gives 269.2 GiB for PPO and 134.6 GiB for DPO with a resident reference. The rollout scenario gives a 39.3 ratio between generation and one training pass. Both are conditional calculations.
+**Generation protocol.** AR commits one token. Masked diffusion revises a canvas. Block diffusion makes completed history independent of future blocks and cacheable.
 
-**RLVR.** A programmatic checker reduces subjectivity but remains a target that can be exploited. Verifier quality, length distributions, entropy, degenerate groups, and held-out tasks belong in the evaluation contract.
+**Forward process.** The chapter uses an absorbing mask; discrete diffusion supports other kernels.
 
-**The systems transition.** Modern RL post-training increasingly uses interactive environments, separated worker pools, asynchronous queues, and explicit freshness control.
+**Objective.** The 2.392009269 example uses time weighting and sum reduction over corrupted positions. Likelihood claims require an explicit estimator.
 
-**Primary sources:**
+**Sampling.** Reveal order, remasking, entropy bounds, and adaptive stopping are part of the algorithm, not cosmetic decoding flags.
 
-- Christiano et al., *Deep Reinforcement Learning from Human Preferences* — [arxiv.org/abs/1706.03741](https://arxiv.org/abs/1706.03741)
-- Ouyang et al., *Training Language Models to Follow Instructions with Human Feedback* — [arxiv.org/abs/2203.02155](https://arxiv.org/abs/2203.02155)
-- Rafailov et al., *Direct Preference Optimization* — [arxiv.org/abs/2305.18290](https://arxiv.org/abs/2305.18290)
-- Azar et al., $\Psi$PO / IPO — [arxiv.org/abs/2310.12036](https://arxiv.org/abs/2310.12036)
-- Ethayarajh et al., KTO — [arxiv.org/abs/2402.01306](https://arxiv.org/abs/2402.01306)
-- Meng et al., SimPO — [arxiv.org/abs/2405.14734](https://arxiv.org/abs/2405.14734)
-- Hong et al., ORPO — [arxiv.org/abs/2403.07691](https://arxiv.org/abs/2403.07691)
-- Ahmadian et al., RLOO — [arxiv.org/abs/2402.14740](https://arxiv.org/abs/2402.14740)
-- Shao et al., DeepSeekMath / GRPO — [arxiv.org/abs/2402.03300](https://arxiv.org/abs/2402.03300)
-- Guo et al., DeepSeek-R1 — [arxiv.org/abs/2501.12948](https://arxiv.org/abs/2501.12948)
-- Yu et al., DAPO — [arxiv.org/abs/2503.14476](https://arxiv.org/abs/2503.14476)
-- Liu et al., *Understanding R1-Zero-Like Training* / Dr. GRPO — [arxiv.org/abs/2503.20783](https://arxiv.org/abs/2503.20783)
-- Wu et al., *It Takes Two: Your GRPO Is Secretly DPO* — [arxiv.org/abs/2510.00977](https://arxiv.org/abs/2510.00977)
-- Yang et al., *Your Group-Relative Advantage Is Biased* — [arxiv.org/abs/2601.08521](https://arxiv.org/abs/2601.08521)
-- Bai et al., Constitutional AI — [arxiv.org/abs/2212.08073](https://arxiv.org/abs/2212.08073)
-- Lambert et al., Tülu 3 — [arxiv.org/abs/2411.15124](https://arxiv.org/abs/2411.15124)
-- NeMo Gym — [docs.nvidia.com/nemo/gym](https://docs.nvidia.com/nemo/gym/)
-- NeMo RL — [github.com/NVIDIA-NeMo/RL](https://github.com/NVIDIA-NeMo/RL)
-- verl — [github.com/verl-project/verl](https://github.com/verl-project/verl)
+**Roofline.** The 8B/H100 figures are a generic teaching floor. The 0.338% quantity is not measured utilization.
 
-**Next:** Module 15 studies reasoning models and test-time compute. Here we changed the policy; next we decide how much computation an already trained policy should spend on a particular request.
+**DiffusionGemma.** 25.2B total / 3.8B active, 128 routed experts with top-8 plus one shared, 256-token canvas, 15–20 committed tokens per pass, over 1100 tok/s on H100 FP8, and a native NVFP4 Blackwell path. Four-bit parameter arithmetic does not equal measured per-pass traffic.
+
+**Evidence.** Mercury, Gemini, Seed, and DiffusionGemma report throughput under different protocols. Always keep hardware, precision, sampler, batch, overhead, and quality attached.
+
+**Primary sources**
+
+- [D3PM](https://arxiv.org/abs/2107.03006)
+- [Diffusion-LM](https://arxiv.org/abs/2205.14217)
+- [SEDD](https://arxiv.org/abs/2310.16834)
+- [FlexMDM](https://arxiv.org/abs/2509.01025)
+- [DiffusionGemma in vLLM](https://vllm-project.github.io/2026/06/10/diffusion-gemma)
+- [MDLM](https://arxiv.org/abs/2406.07524)
+- [LLaDA](https://arxiv.org/abs/2502.09992)
+- [BD3-LM](https://arxiv.org/abs/2503.09573)
+- [Any-Order GPT as Masked Diffusion](https://arxiv.org/abs/2506.19935)
+- [Data-Constrained Diffusion](https://arxiv.org/abs/2507.15857)
+- [LLaDA2.0](https://arxiv.org/abs/2512.15745)
+- [DiffER](https://arxiv.org/abs/2601.07347)
+- [LLaDA2.1](https://arxiv.org/abs/2602.08676)
+- [LLaDA2.0-Uni](https://arxiv.org/abs/2604.20796)
+- [iLLaDA](https://arxiv.org/abs/2606.25331)
+- [DiffusionGemma model card](https://huggingface.co/google/diffusiongemma-26B-A4B-it)
+- [DiffusionGemma announcement](https://deepmind.google/models/gemma/diffusiongemma/)
+- [Mercury 2](https://www.inceptionlabs.ai/blog/introducing-mercury-2)
+- [Gemini Diffusion](https://deepmind.google/models/gemini-diffusion/)
+- [Seed Diffusion](https://seed.bytedance.com/en/public_papers/seed-diffusion-a-large-scale-diffusion-language-model-with-high-speed-inference)
+
+**Next:** Module 13 returns to the autoregressive path for supervised fine-tuning: preparing demonstrations and teaching a pretrained model the response patterns expected of an assistant.
 
 ---
 
-*Landscape verified: October 11, 2026. Current claims were checked against primary sources; exact recipes for closed models are not reconstructed from external behavior. Teaching estimates for memory and time are reproduced by local calculations and apply only under the stated assumptions.*
+*Landscape verified: 11 October 2026. Product throughput figures are developer-reported results under different hardware and sampling protocols. Sections 10–11 describe a separate generic dense-8B teaching scenario.*

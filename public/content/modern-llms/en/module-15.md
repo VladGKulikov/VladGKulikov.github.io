@@ -1,584 +1,611 @@
-# Module 17. Embeddings, Retrieval, and RAG
+# Module 15. Reasoning Models and Test-Time Compute
 
-*“Modern LLMs” course · Module 17 lecture · edition 2026.10.25*
-
-> **What this module is about.** A language model cannot keep every private document, recent policy update, source citation, and access rule inside its parameters. Retrieval-Augmented Generation, or **RAG**, gives the model an external evidence path. Yet RAG is not one search call followed by one prompt. A query moves through a sequence of compressions: documents become chunks, chunks become representations, an index keeps only a candidate set, a reranker keeps an even smaller set, and a context builder decides which evidence reaches the generator. Each compression saves time or memory, and each can discard the answer. We will use one query as the thread through the module and ask four questions at every stage: what information is retained, what is lost, how the stage is measured, and what the next stage can still repair.
+> **What this module is about.** The previous modules improved a model before deployment: pretraining built the base policy, supervised fine-tuning shaped its interface, and feedback-based learning changed which outputs it prefers. This module studies a different lever. Once the weights are fixed, a system can still spend more computation on a particular request—by extending one solution path, sampling several alternatives, checking them, or routing difficult prompts to a more expensive procedure.
 >
-> **Prerequisites.** Module 2 develops tokenization and embeddings; Module 10 provides the prefill/decode cost model; Module 13 provides the data-engineering discipline used for examples and evaluation. All retrieval definitions, formulas, and numerical scenarios are developed here, so the lecture remains self-contained.
+> These mechanisms are often grouped under *test-time compute*, but they buy different things. A longer trajectory deepens a single search. Parallel candidates widen the search distribution. A verifier turns candidate generation into selection. An adaptive controller decides which kind of work is worth paying for on each prompt.
+>
+> We will treat quality and systems cost together. The module therefore follows reasoning tokens all the way down to decode latency, FLOP, KV memory, and concurrency. Numerical serving figures are explicit teaching scenarios, not performance claims about a particular vendor or accelerator.
+
+> **Further study.** Everything required for this module is developed here. The companion course *RL for LLM* goes deeper into RLVR, GRPO, verifier-driven training, and interactive environments, especially in Modules 9–10. *Information Theory for ML* provides a broader treatment of ensembles, uncertainty, and the value of additional observations.
+
+## Reading routes
+
+**First pass.** Follow §§1–5, then read §§6–7 for the distinction between finding a correct candidate and selecting it. Continue through §§8–12 and §§15–17. The tables initially serve to show what changes as the budget grows. Use §18 to check that you can identify the generator, the verifier, and the cost of their work.
+
+**Second pass.** Derive the probabilities in §§6–7, reproduce the accounting in §§10–12, and run §13 together with the notebook in §14. Work through §19 with particular attention to tie policies, independence, and the difference between a budget cap and actual consumption.
+
+**Reference pass.** §§4 and 17 provide an API comparison checklist; §15 compares verification contracts. The API examples are dated observations, not a permanent model ranking.
+
+The prerequisites are conditional probability, the KV-cache accounting in Module 10, and the SFT/RL distinction from Modules 13–14. RLVR means reinforcement learning with verifiable rewards, such as exact-answer checks or executable tests. Here a related checking signal will also guide inference while model weights stay fixed.
 
 ---
 
-### Reading routes
+## 1. A second scaling axis
 
-**First reading:** follow Sections 1, 4–5, 7, 10–12, and 15–17, then the conclusion. Keep asking which stage can discard the evidence. Section 10 defines the three metrics before presenting results, so the index internals can wait.
+We need four terms before comparing policies. A **trajectory** is one sequence of intermediate actions ending in an answer. A **candidate** is the result of an attempt that can be compared with others. A **verifier** checks or scores it; a **selector** uses that evidence to choose an answer. In **best-of-N**, the system generates $N$ candidates and returns the highest-ranked one under a specified rule. “Best” refers to that rule, which may disagree with correctness.
 
-**Second reading:** add the history in 2–3, storage and search arithmetic in 6 and 8, index design in 9, and implementation in 13–14. Work through 18–19. Trace one saved query through every ranking, predict what a smaller context budget will remove, and then run the change.
+A large language model is usually evaluated as though it had one chance: one prompt enters, one completion leaves. That convention hides an important design choice. We can also ask how well the same trained model performs when it is allowed to spend more computation on the instance in front of it.
 
-**Reference reading:** return to the resource tables, the embedder passport in 17, metric equations, and primary sources. Timing numbers describe a specified scenario and must be replaced by measurements when choosing a deployed system.
+There are three broad ways to spend that budget.
 
-## 1. Motivation: one query, four opportunities to lose the answer
+- **Go deeper.** Continue one trajectory, revise an intermediate step, run a longer plan, or interleave reasoning with tools.
+- **Go wider.** Produce independent candidates, perhaps from one model or from several agents, and then aggregate or select.
+- **Allocate adaptively.** Give easy inputs a short path and reserve expensive search for requests that appear difficult or uncertain.
 
-Suppose a user asks a precise question about a large internal corpus. The relevant passage exists, but the generator cannot read every document on every request. A retrieval system therefore compresses the corpus repeatedly.
+All three need a decision rule. A long chain needs a stopping condition. A candidate pool needs a selector. An adaptive system needs a signal that says whether more work is likely to pay off.
 
-The first compression is **chunking**. A long document is divided into retrievable units. If the boundary falls between a definition and the sentence that uses it, neither chunk may be sufficient.
+This is why inference-time scaling is not merely “turning up intelligence.” It is an algorithm for allocating a finite resource. Snell et al. showed that the most effective allocation varied strongly with prompt difficulty. Under their experimental setup, compute-optimal routing used test-time computation more than four times as efficiently as a simple best-of-N baseline, and a smaller model could beat a model fourteen times larger on a subset of tasks under FLOP-matched evaluation. Those are study-specific results, but the underlying lesson is general: **the allocation policy is part of the method**. [Snell et al., 2024](https://arxiv.org/abs/2408.03314)
 
-The second compression is **representation**. A sparse index keeps terms and their frequencies; a dense encoder maps a passage into a vector; a late-interaction system keeps several token vectors. Each representation preserves different evidence and discards different detail.
+![VIZ m15/01 — the second scaling axis](assets/modern-llms/en/module-15/m15_01_timeline.svg)
+*From the first public reasoning systems to controllable and adaptive inference contracts.*
 
-The third compression is **candidate search**. Exact search compares the query with every stored representation. Approximate nearest-neighbor search inspects only part of the index, gaining speed at the risk of missing a relevant item.
+---
 
-The fourth compression is **context assembly**. Even a good candidate list cannot be sent to the model without limits. The system removes duplicates, applies permissions, chooses an order, and fits the selected passages into a token budget.
+## 2. From longer traces to explicit controls
 
-The generator sees only what survives all four stages. If the answer is wrong, “the RAG system failed” is not yet a diagnosis. The chunk may never have contained the evidence; the representation may have hidden it; approximate nearest-neighbor (ANN) search may have missed it; fusion may have ranked it too low; or the context builder may have dropped it at the budget boundary.
+Chain-of-thought prompting, self-consistency, and generate-and-test workflows predate the current generation of reasoning models. The 2024–2026 shift was more specific: model training and product interfaces began to treat inference computation as a resource that could be deliberately scaled.
 
-This viewpoint gives the module its central discipline: **evaluate every irreversible reduction at the point where it occurs**. Retrieval quality is not a property of the embedding model alone, and answer quality is not a sufficient diagnostic for retrieval.
+OpenAI's September 2024 o1 announcement described performance improving along two axes: more reinforcement-learning compute during training and more time spent reasoning at test time. The public article did not disclose a full recipe, but it made inference-time scaling a first-class claim rather than a prompting trick. [OpenAI, 2024](https://openai.com/index/learning-to-reason-with-llms/)
 
-## 2. Historical progression: each generation restored a signal that the previous one had compressed away
+DeepSeek-R1 supplied a much more inspectable training story in January 2025. R1-Zero used large-scale reinforcement learning on verifiable signals without a preliminary supervised phase. The model developed longer solutions, self-checking behavior, and course corrections, while also suffering from readability and language-mixing problems. The full R1 pipeline then combined cold-start data, reasoning RL, rejection sampling, renewed SFT, and broader RL objectives. [DeepSeek-R1, 2025](https://arxiv.org/abs/2501.12948)
 
-![VIZ m17/01 — retrieval as a sequence of recovered signals](assets/modern-llms/en/module-15/m17_01_timeline.svg)
-*From inverted indexes to dense retrieval, late interaction, multimodal retrieval, and agentic search. Each step restores a kind of evidence that an earlier representation made difficult to recover.*
+By **11 October 2026**, inference controls had become a regular part of model APIs, but the contracts were not standardized:
 
-The earliest large-scale search systems relied on inverted indexes. TF-IDF (Term Frequency–Inverse Document Frequency) and BM25 (Best Matching 25, the historical name of the ranking function) answered a concrete question efficiently: which documents contain these terms, and how unusual are those terms in the collection? BM25 refined this branch by balancing term frequency, document length, and corpus rarity. For identifiers, names, error codes, and exact phrases, that literal signal remains difficult to replace.
+- **GPT-6.1 Sol** supports `low`, `medium` (the default), `high`, `xhigh`, and `max` effort. It does not support `none` or `minimal`.
+- **Claude Opus 5.5** uses adaptive thinking. Manual `budget_tokens` and disabling thinking are unavailable on this model; effort and the display of intermediate content remain separate controls.
+- **Gemini 3.8 Flash through the Interactions API** accepts `generation_config.thinking_level` values of `low`, `medium`, or `high`, with `medium` as the default. The field name belongs to this API surface.
+- **Kimi K3** always reasons and accepts `low`, `high`, and `max` through `reasoning_effort`; its documented default is `max`.
+- **Inkling** was trained for controllable reasoning effort according to its developer. That release claim describes this model, not a standard shared by other APIs.
 
-Dense retrieval changed the unit of comparison. DPR (Dense Passage Retrieval) and related bi-encoders learned separate functions for queries and passages, turning semantic similarity into geometry. A question and a relevant paragraph no longer needed to share the same wording. The gain came with a new loss: one vector had to summarize an entire passage before the query ever arrived.
+The labels are local to each API. A `high` setting does not imply a common token count, latency target, search algorithm, or billing rule. Documentation tells us what control surface exists; it rarely reveals the complete internal computation. [OpenAI API](https://developers.openai.com/api/docs/models/gpt-6.1-sol) · [Anthropic](https://platform.claude.com/docs/en/build-with-claude/thinking) · [Gemini API](https://ai.google.dev/gemini-api/docs/thinking) · [Kimi K3](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart) · [Inkling](https://thinkingmachines.ai/news/introducing-inkling/)
 
-ColBERT (Contextualized Late Interaction over BERT) and other late-interaction systems recovered part of that token-level structure. Documents could still be encoded in advance, but matching happened between sets of token vectors rather than between two single points. The index became larger, yet the scorer could preserve local alignments that a single-vector representation had collapsed.
+The important historical change, then, is not that models began emitting intermediate text. It is that **reasoning depth, search breadth, and routing became deployable system parameters**.
 
-The next wave addressed the documents themselves. Late chunking retained long-document context before pooling into chunks. ColPali treated rendered pages as visual objects instead of forcing every table, layout cue, and figure through OCR. Qwen3 Embedding combined multilingual embedding and reranking checkpoints in several sizes. Benchmarking IR (BEIR), the Massive Text Embedding Benchmark (MTEB), and the Massive Multilingual Text Embedding Benchmark (MMTEB) broadened evaluation beyond one English retrieval collection.
+---
 
-The original RAG formulation by Lewis et al. treated the retrieved document as a latent variable. It combined generation probabilities across documents, weighted by retrieval probabilities: RAG-Sequence used one latent document for a whole output, while RAG-Token marginalized separately at each position. The application pipeline studied here instead assembles retrieved passages into a shared generator context. These are different ways to connect retrieval and generation.
+## 3. Three older ideas hiding inside test-time compute
 
-Subsequent RAG research also moved beyond a fixed retrieval pass. Hypothetical Document Embeddings (HyDE) changed the query representation, Self-Reflective Retrieval-Augmented Generation (Self-RAG) learned when to retrieve and critique evidence, Recursive Abstractive Processing for Tree-Organized Retrieval (RAPTOR) introduced hierarchical summaries, and GraphRAG targeted corpus-level questions through graph and community summaries. The final transition is architectural: retrieval becomes a tool in an agent loop. The model can search, inspect evidence, reformulate, and decide whether another retrieval step is worth its cost.
+Modern reasoning systems recombine several classical patterns.
 
-The historical pattern is therefore not “lexical search was replaced by vectors.” It is a sequence of trade-offs. Each method makes one form of evidence cheap enough to search, then later methods recover detail that the compression had hidden.
+### Anytime computation
 
-## 3. A bridge to classical methods: three old problems inside RAG
+An anytime algorithm returns a usable answer early and improves it while resources remain. Search, planning, and numerical optimization all have examples. A well-designed reasoning model should exhibit the same property: extra time should be optional, and the system should be able to stop with a coherent result.
 
-### Information retrieval: relevance under incomplete evidence
+A token cap alone does not create an anytime algorithm. A hard cutoff can leave an unfinished derivation or no final answer. A practical controller can retain the best verified candidate so far and return it when the budget expires. An incomplete new attempt then cannot erase an existing usable result.
 
-BM25, relevance judgments, Mean Reciprocal Rank (MRR), Recall, and normalized Discounted Cumulative Gain (nDCG) come from information retrieval, not from generative AI. That tradition already distinguished between finding a relevant item and ordering several relevant items well. RAG inherits the same distinction, with one additional downstream consumer: a language model that may ignore, misread, or overstate retrieved evidence.
+### Repeated stochastic search
 
-### Metric learning: place useful pairs close and confusing pairs apart
+If one attempt has a non-zero chance of success, independent restarts increase the chance that a successful path appears. This is the same intuition behind ensembles and randomized search. Yet a pool containing a correct answer is useful only if the system can identify it.
 
-Dense retrieval is a form of metric learning. A query encoder and a document encoder produce vectors, and training makes a relevant pair score higher than negative pairs. The loss says little unless we also ask where the negatives came from. Random negatives rapidly become trivial. Hard negatives define the decision boundary but may accidentally be relevant, creating false-negative gradients.
+### Generate and test
 
-### Cascades and selective computation
+Program synthesis, theorem proving, and planning often separate proposal from validation. Generate a candidate; run a compiler, unit tests, a proof kernel, or a simulator; keep what passes. This arrangement is especially attractive when generation is uncertain but checking is cheap and exact.
 
-A search cascade resembles a classical detection pipeline. A cheap stage aims for high recall and allows many false positives. A more expensive stage spends computation only on the reduced candidate set. The correct optimization target is not “make every stage individually perfect.” It is to preserve enough recall early that later stages can recover precision without exceeding latency and memory budgets.
+The mapping is straightforward:
 
-These ancestors suggest a useful reading rule. Sparse retrieval, dense retrieval, ANN, reranking, and generation are not competing products. They are stages with different jobs, different failure costs, and different evaluation metrics.
+- sequential reasoning is a form of deeper search;
+- multiple completions form a stochastic ensemble;
+- a verifier supplies the acceptance or ranking rule;
+- an adaptive controller is a meta-policy over those choices.
 
-## 4. BM25 and learned sparse retrieval: the branch that protects exact terms
+![VIZ m15/02 — depth, breadth, and adaptation](assets/modern-llms/en/module-15/m15_02_modes.svg)
+*Three ways to spend inference compute: deepen one path, widen the candidate set, or route adaptively.*
 
-An **inverted index** maps each term to the documents containing it, together with occurrence information needed for scoring. A lexical retriever uses these lists to find candidates. Each document is represented by vocabulary coordinates rather than a single dense vector. The classic BM25 score for query $q$ and document $d$ can be written as
+---
+
+## 4. What counts as a reasoning model?
+
+The phrase can easily be overinterpreted. A visible chain of text is not guaranteed to be a faithful transcript of internal computation, and a hidden chain is not automatically more rigorous. We will use a functional definition:
+
+> A **reasoning model** is trained or deployed so that additional computation before the final answer can be used productively.
+
+That property has several separable dimensions.
+
+**Representation.** Intermediate work may be exposed, hidden, summarized, placed in a dedicated message field, or represented by opaque signatures needed for continuity. A `<think>` token in a chat template establishes a format, not a capability guarantee.
+
+**Control.** The user may specify a token target, select an effort level, enable an adaptive mode, or receive no direct control at all.
+
+**Topology.** Increasing one model's effort and launching several workers are separate choices. A `max` setting does not specify the number of parallel candidates. Meta describes Muse Spark 1.1 as supporting planning and delegation in agent harnesses. When a chosen harness delegates work, its evaluation must count all workers' computation. This describes supported system behavior rather than establishing the model's internal architecture. [Muse Spark 1.1](https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/)
+
+**Accounting.** Reasoning tokens can consume output limits and be billed even when only a summary is visible. Gemini reports thought-token usage separately in metadata while charging for the underlying generated thinking tokens. [Gemini API](https://ai.google.dev/gemini-api/docs/thinking)
+
+**State across turns.** Some APIs require the application to return complete assistant messages, thought signatures, or reasoning items after tool calls. Dropping those fields may discard useful state or violate the protocol.
+
+A proper comparison therefore needs more than an effort label. It needs the depth of one trajectory, the number of parallel attempts, the selection rule, the visibility contract, and the accounting model.
+
+---
+
+## 5. What DeepSeek-R1 teaches us about training reasoning
+
+DeepSeek-R1 is useful because its report separates an exploratory RL result from a deployable multi-stage system.
+
+### R1-Zero as a controlled experiment
+
+The starting checkpoint is the pretrained DeepSeek-V3-Base. “Without preliminary SFT” describes the reasoning post-training stage; language knowledge and representations already exist. The experiment does not train a language model from scratch using rewards alone.
+
+R1-Zero did not receive a supervised warm-up that taught it how a long solution should look. It was optimized with reinforcement learning on verifiable rewards and formatting constraints. During training, solutions became longer and exhibited behaviors such as checking previous work and trying another route.
+
+The defensible conclusion is not that a language model acquired human cognition. It is narrower: **a policy can discover token-level computational strategies when exploration is coupled to an informative, verifiable reward**.
+
+The experiment also exposed the cost of optimizing correctness in isolation. Outputs could be hard to read, switch languages, or use an inconvenient format. A useful assistant needs both problem-solving behavior and a stable human-facing interface.
+
+### The full R1 pipeline
+
+The complete recipe adds several stages:
+
+1. a small cold-start SFT set for readable reasoning behavior;
+2. reasoning-focused reinforcement learning;
+3. collection of successful trajectories from the RL checkpoint, followed by SFT of DeepSeek-V3-Base on those trajectories and a broader data mixture;
+4. additional reinforcement learning for general helpfulness, safety, and instruction following.
+
+This is a good antidote to the false choice between SFT and RL. Supervised data establish a usable format; RL explores under reward; selected trajectories become new data; broader post-training restores the full interaction contract.
+
+![VIZ m15/03 — the DeepSeek-R1 recipe](assets/modern-llms/en/module-15/m15_03_r1_pipeline.svg)
+*R1-Zero isolates the RL mechanism; DeepSeek-R1 combines it with cold-start data and broader post-training.*
+
+---
+
+## 6. Parallel scaling, worked example A: voting can get worse first
+
+Assume that one independent completion is correct with probability
 
 $$
-\operatorname{BM25}(q,d)
-=\sum_{t\in q}
-\operatorname{IDF}(t)
-\frac{f(t,d)(k_1+1)}
-{f(t,d)+k_1\left(1-b+b\frac{|d|}{\operatorname{avgdl}}\right)}.
+p=0.4.
 $$
 
-Here $q$ denotes the query, $d$ the document, and $t$ a tokenized term. The frequency $f(t,d)$ counts occurrences of $t$ in $d$. Document length $|d|$ and collection mean $\operatorname{avgdl}$ use that same tokenizer.
+When it is wrong, the answer is uniformly distributed across six distinct distractors. We draw $N$ completions and return the most frequent normalized answer.
 
-The parameter $k_1>0$ controls frequency saturation; $b\in[0,1]$ controls length normalization. With $b=0$, length has no effect; with $b=1$, the normalization uses the full length ratio. Values such as $k_1=1.5$ and $b=0.75$ are starting points to evaluate on the target collection.
+The procedure is still underspecified. What happens when several answers share the top count? We compare two exact policies:
 
-Our implementation chooses the positive IDF convention
+- **tie means failure**: the correct answer must be the unique mode;
+- **random top-mode selection**: choose uniformly among all modes tied for first place.
 
-$$\operatorname{IDF}(t)=\ln\left(1+\frac{N-\operatorname{df}(t)+0.5}{\operatorname{df}(t)+0.5}\right).$$
-
-$N$ counts documents; $\operatorname{df}(t)$ counts documents containing the term. With 100 documents, a term found in one has weight $\ln(202/3)\approx4.210$, whereas one found in fifty has weight $\ln2\approx0.693$. Repeating a query term repeats its contribution in this implementation; other query-frequency conventions need not match it.
-
-Literal retrieval is only as literal as its analyzer. The notebook's word tokenizer splits `TS-999` into `ts` and `999`, and `4.7.3` into three numbers. If the entire identifier matters, inspect the analyzed representation and preserve an exact field where needed. BM25's name alone promises no such preservation.
-
-The three components have different roles.
-
-- $\operatorname{IDF}(t)$ rewards terms that are rare in the collection.
-- The fraction involving $f(t,d)$ saturates repeated occurrences; the tenth repetition should not be worth ten times the first.
-- The length normalization prevents long documents from winning merely because they contain more words.
-
-BM25 is especially strong when relevance is anchored by a literal string: a product code, stack-trace fragment, legal clause number, API name, or person. A dense encoder may place several related identifiers near one another, while a lexical index retains the distinctions represented by its analyzer.
-
-Learned sparse methods such as SPLADE (Sparse Lexical and Expansion Model) keep the inverted-index execution model but learn term weights and expansion terms. A passage about “heart attack” may activate a “myocardial” dimension even when that word is absent. The representation is still sparse enough for posting-list retrieval, yet it acquires some semantic generalization.
-
-This branch has its own failure mode. Literal terms may be absent from a paraphrased query; vocabulary expansion may introduce noisy associations; and exact matching cannot by itself decide whether the same term is used in the relevant sense. The dense branch is introduced not because sparse retrieval is obsolete, but because the two branches lose different information.
-
-## 5. Dense bi-encoders: learning a semantic space
-
-In Module 2, an embedding was a table row selected by one token ID. Retrieval needs a representation of an entire query or passage. A Transformer encoder first contextualizes the tokens, then combines their states into one vector, for example by averaging or using a designated position. This pooling rule must match the model’s training. An arbitrary row of an LLM’s input table is therefore not a substitute for a retrieval representation.
-
-A bi-encoder computes a query vector $u=f_q(q)$ and a document vector $v=f_d(d)$ independently. Similarity is then a cheap function such as a dot product or cosine:
+A **distractor** is an incorrect answer option. A **mode** is the most frequent option. This is plurality voting: the winner need not receive more than half the votes. Let $c_i$ count occurrences of answer $i$, with index $0$ reserved for the correct answer. Then $q_0=0.4$ and $q_1=\dots=q_6=0.1$. Independence gives the multinomial probability
 
 $$
-s(q,d)=u^\top v
-\quad\text{or}\quad
-s(q,d)=\frac{u^\top v}{\|u\|\,\|v\|}.
+P(c_0,\ldots,c_6)=\frac{N!}{\prod_{i=0}^{6}c_i!}\prod_{i=0}^{6}q_i^{c_i},
+\qquad \sum_{i=0}^{6}c_i=N.
 $$
 
-The decisive engineering advantage is precomputation. Document vectors are built once and stored in an index. At request time the system encodes only the query and searches the stored geometry.
+The factorial term counts the sequences that produce the same counts. For the strict policy, sum this mass over outcomes satisfying $c_0>\max_{i>0}c_i$. For random tie-breaking, also include outcomes where the correct answer ties for first, weighted by $1/k$ when $k$ options share the lead.
 
-A common contrastive objective places the positive document above negatives in the same batch:
+For $N=3$, a unique correct mode requires two or three correct draws. An independent check is therefore $3p^2(1-p)+p^3=0.352$. At larger sample sizes, a unique mode can win without an absolute majority, so the full count vector matters.
 
-$$
-\mathcal L_i
-=-\log
-\frac{\exp(s(q_i,d_i^+)/\tau)}
-{\sum_j \exp(s(q_i,d_j)/\tau)}.
-$$
+Enumerating the multinomial outcomes gives:
 
-The temperature $\tau>0$ controls sharpness: reducing it emphasizes the largest scores, including incorrectly preferred negatives. It cannot repair a mislabeled pair.
+| $N$ | unique-mode success | random tie-breaking |
+|---:|---:|---:|
+| 1 | 0.400 | 0.400 |
+| 3 | 0.352 | 0.472 |
+| 5 | 0.509 | 0.596 |
+| 9 | 0.671 | 0.737 |
+| 17 | 0.857 | 0.889 |
 
-The denominator converts other documents in the batch into negatives. This makes large batches attractive, but it also creates a data-quality question: another query's positive document may be relevant to $q_i$ as well. Treating it as negative produces a false-negative signal.
+At $N=3$, a top-mode tie occurs with probability 0.48. Under the strict rule, three samples are worse than one. The result is not a paradox; it is a reminder that tie handling is part of the algorithm.
 
-Hard negatives are usually more informative. A lexical or earlier dense retriever finds passages that look plausible but are not judged relevant. They force the model to separate near misses—two similar policies, two software versions, or two entities with related names. Yet hard-negative mining must be audited: the better the retriever, the more likely it is to surface unlabeled positives.
+A reproducible self-consistency protocol must also define answer normalization. Are `0.5`, `1/2`, and `50%` equivalent? Are algebraically equivalent expressions canonicalized? Are code outputs compared by text or by execution? Small implementation choices can dominate the apparent gain from extra sampling.
 
-Instruction-aware embedding models add another conditioning channel. A query prefix such as “retrieve passages that answer the question” distinguishes search from clustering or semantic similarity. E5 popularized explicit input prefixes; more recent families expose task instructions or a `prompt_name` interface. This means the exact text given to the encoder is part of the retrieval contract, not a harmless wrapper.
+![VIZ m15/04 — voting and verification](assets/modern-llms/en/module-15/m15_04_maj_vs_verifier.png)
+*Exact voting policies, oracle coverage, and selection by a noisy verifier.*
 
-Pooling is another quiet design choice. A CLS token, mean pooling, last-token pooling, or a learned head can produce different spaces from the same backbone. Before adopting an embedding model, the system should verify the documented pooling rule, normalization, maximum length, and query/document prefixes rather than infer them from the architecture name.
+The *Large Language Monkeys* study showed that repeated sampling can improve coverage over very large ranges of sample count. In automatically verifiable domains, coverage can translate directly into solved tasks. Where selection relies on majority vote or imperfect reward models, the selector can plateau even while the generator continues to produce additional correct candidates. [Brown et al., 2024](https://arxiv.org/abs/2407.21787)
 
-![VIZ m17/02 — how a dense retriever learns](assets/modern-llms/en/module-15/m17_02_training.svg)
-*A positive pair, in-batch negatives, hard negatives, and the two-stage training pattern. The quality of the negative set defines the boundary learned by the retriever.*
+---
 
-## 6. Matryoshka Representation Learning (MRL), quantization, and worked example A: the price of storing meaning
+## 7. Worked example B: coverage is not selection accuracy
 
-A dense index may contain millions or billions of vectors. The storage question is therefore part of model selection.
+Voting uses frequency as a proxy for correctness. A verifier uses evidence about the candidate itself. Before modeling an imperfect verifier, we need an upper bound.
 
-For $N$ vectors of dimension $d$ and $b$ bytes per coordinate, the raw payload is
-
-$$M=Ndb.$$
-
-Take $N=10{,}000{,}000$ and $d=1024$.
-
-| Representation | Effective payload | Decimal GB | Binary GiB |
-|---|---:|---:|---:|
-| fp32 | 32 bits/component | 40.96 | **38.147** |
-| fp16 | 16 bits/component | 20.48 | 19.073 |
-| int8 | 8 bits/component | 10.24 | 9.537 |
-| binary | 1 bit/component | 1.28 | **1.192** |
-| MRL prefix 256 + int8 | 256 bytes/vector | 2.56 | 2.384 |
-
-The table counts vectors only. Graph edges, posting lists, centroids, codebooks, document IDs, replicas, and allocator overhead are separate.
-
-**Matryoshka Representation Learning (MRL)** trains several prefixes of one vector to be useful representations. If the model is trained at dimensions such as 64, 128, 256, 512, and 1024, then the first 256 coordinates can serve as a compact embedding after renormalization. This is not a license to truncate an arbitrary embedding model. The nested property must be part of training and validated for the released checkpoint.
-
-MRL supports a useful cascade. A short prefix performs coarse search over the whole corpus; full vectors rerank only the candidate set. The same checkpoint can therefore trade memory and quality without maintaining several unrelated encoders.
-
-Scalar or binary quantization attacks a different dimension. It reduces the bits per retained coordinate. MRL and quantization can be composed because one shortens the vector and the other compresses each coordinate. The quality cost depends on the embedding distribution and the index, so storage ratios are not retrieval guarantees.
-
-![VIZ m17/04 — storage and arithmetic scale](assets/modern-llms/en/module-15/m17_04_storage_speed.png)
-*Raw storage for 10M 1024-dimensional vectors and the arithmetic exact-search/shortlist comparison used throughout the module.*
-
-## 7. One vector, one pair, or a matrix: where query-document interaction happens
-
-Retrieval architectures can be arranged by the moment at which the query and document are allowed to interact.
-
-### Bi-encoder: interaction after compression
-
-The document is reduced to one vector before the query is known. Search is cheap and scalable, but all token-level structure must survive that compression indirectly.
-
-### Cross-encoder: interaction before scoring
-
-A cross-encoder receives the query and document jointly:
-
-```text
-[CLS] query [SEP] document [SEP]
-```
-
-Self-attention can compare any query token with any document token, and a head emits one relevance score. Joint encoding can improve ordering on a bounded candidate set, but the outcome still depends on training and the task. The price is that document scores cannot be precomputed: every query-document pair must be jointly encoded. The $N$ pairs can be batched; they do not require $N$ sequential model calls. Pair count measures work, while batch size and execution determine latency.
-
-### Late interaction: interaction after token encoding
-
-ColBERT stores multiple vectors per document. One common MaxSim-style score is
+For independent attempts with success probability $p$, the probability that at least one of $N$ candidates is correct is
 
 $$
-s(q,d)=\sum_{i\in q}\max_{j\in d} q_i^\top d_j.
+P_{\mathrm{coverage}}(N)=1-(1-p)^N.
 $$
 
-Document token vectors are indexed in advance, while matching remains token-aware. Late interaction therefore occupies a middle point: more expressive than one-vector search and more indexable than a full cross-encoder, but with a substantially larger index.
+With $p=0.4$:
 
-ColPali applies late interaction to rendered document pages, retaining visual features that OCR and text parsing may discard. Its authors evaluated this approach on ViDoRe, a collection of page-retrieval tasks. Their results do not make text extraction unnecessary: exact strings, copyable content, metadata filtering, and accessibility still benefit from a text path. The visual branch provides another candidate source with its own storage and indexing costs.
+| $N$ | oracle coverage |
+|---:|---:|
+| 1 | 0.400 |
+| 3 | 0.784 |
+| 5 | 0.922 |
+| 9 | 0.990 |
+| 17 | 0.9998 |
 
-The architectural choice can now be read as a compression decision. A bi-encoder discards token identity early. A cross-encoder keeps the original tokens but pays per pair. Late interaction stores a matrix-like document representation and pays in index size.
+This curve tells us what an oracle *could* recover. It says nothing about whether an actual ranking model will find the correct item.
 
-![VIZ m17/03 — where interaction occurs](assets/modern-llms/en/module-15/m17_03_architectures.svg)
-*The scoring continuum: one vector per side, joint pair encoding, and token-level late interaction. Expressiveness rises together with serving cost or index size.*
+Use an accept/reject verifier with **true-positive rate (TPR)** 0.90: it accepts a correct candidate with probability 0.90. Its **false-positive rate (FPR)** is 0.05: it accepts an incorrect candidate with probability 0.05. Checks are independent across candidates conditional on correctness. Select uniformly among accepted candidates; if none pass, select uniformly from the entire generated pool. This precise policy gives:
 
-## 8. Worked example B: exact search and the arithmetic of ANN
+| $N$ | noisy-verifier accuracy |
+|---:|---:|
+| 1 | 0.400 |
+| 3 | 0.728 |
+| 5 | 0.851 |
+| 9 | 0.913 |
+| 17 | 0.923 |
 
-For normalized vectors, exact cosine search is a matrix-vector product. Comparing one query with $N$ vectors of dimension $d$ requires approximately
-
-$$2Nd$$
-
-floating-point operations.
-
-With $N=10^7$ and $d=1024$:
-
-$$2Nd=2.048\cdot10^{10}\ \text{FLOP}.$$
-
-At an illustrative sustained rate of 10 GFLOP/s, the arithmetic-only time estimate is
-
-$$2.048\ \text{s}.$$
-
-Now imagine that an ANN structure navigates to a shortlist requiring 2000 full vector distances. The corresponding arithmetic is
+The plateau is approximately 0.923, rather than the verifier's TPR of 0.90. To see why, define the probability of accepting an arbitrary candidate, $a$, and the correctness rate among accepted candidates, $q$:
 
 $$
-2\cdot2000\cdot1024
-=4.096\cdot10^6\ \text{FLOP},
+a=p\,\mathrm{TPR}+(1-p)\,\mathrm{FPR},\qquad
+q=\frac{p\,\mathrm{TPR}}{a}.
 $$
 
-or 0.4096 ms at the same rate. The ratio of distance arithmetic is 5000.
-
-This is deliberately **not** an HNSW (Hierarchical Navigable Small World) latency claim. ANN (Approximate Nearest Neighbor) search also performs graph or centroid navigation, random memory access, decompression, filtering, and candidate maintenance. Its central trade-off is not “exact search but faster”; it is **less inspected state in exchange for a nonzero miss probability**.
-
-The correct benchmark therefore has at least four axes:
-
-- recall at a chosen $k$ against an exact reference;
-- latency distribution, not only the mean;
-- memory including index metadata;
-- update and rebuild cost.
-
-A speed number without recall is incomplete. A recall number without a latency and memory budget is equally incomplete.
-
-## 9. ANN under the hood: three indexes for three resource constraints
-
-Approximate nearest-neighbor methods reduce the part of the vector space examined per query, but they do so in different ways.
-
-### HNSW (Hierarchical Navigable Small World): spend memory on navigable links
-
-Hierarchical Navigable Small World graphs connect each vector to neighbors at several levels. Search begins in a sparse upper layer and descends toward denser local neighborhoods. Parameters such as construction degree and `efSearch` trade graph memory and query work for recall.
-
-HNSW is attractive for low-latency in-memory search and incremental insertion. Its main tax is the graph itself: edges can occupy memory comparable to or larger than compressed vectors. Filtering and deletions also require careful implementation because the graph was built without necessarily knowing the request-time predicate.
-
-### IVF-PQ (Inverted File + Product Quantization): partition first, compress second
-
-An inverted file index assigns vectors to coarse centroids. A query probes only several nearby lists. Product Quantization then splits a vector into subspaces and stores a small code per subvector.
-
-`nprobe` controls how many coarse lists are examined; code length controls the memory/error trade-off. IVF-PQ is compelling when vector payload dominates the system budget, but it introduces centroid training, quantization error, and a more involved update path.
-
-### DiskANN: keep the large body of the index on SSD
-
-DiskANN combines graph navigation with storage layouts designed for SSD. The original work demonstrated billion-point search on a single machine with 64 GB of RAM and SSD storage. The result does not imply that every disk-backed index beats in-memory HNSW. It addresses a different constraint: the collection is too large for the available memory.
-
-The index algorithm and the operating model are separate decisions. ANN may live inside a library, a relational extension, a search engine, or a dedicated vector service. A database extension can simplify transactions, metadata, and access-control enforcement when the data already lives there. A separate service can offer independent scaling and specialized lifecycle management. There is no universal corpus-size threshold at which “a vector database becomes mandatory.”
-
-![VIZ m17/05 — choose ANN by the scarce resource](assets/modern-llms/en/module-15/m17_05_ann.svg)
-*HNSW spends memory on a graph, IVF-PQ compresses and probes selected regions, and DiskANN moves the large body of the index to SSD.*
-
-## 10. Hybrid retrieval, reciprocal-rank fusion, and worked example F
-
-Sparse and dense branches return scores in different units. BM25 may produce values in the teens; cosine similarity may lie near one; distributions also change from query to query. Direct score addition therefore requires calibration.
-
-**Reciprocal Rank Fusion (RRF)** avoids this calibration by combining positions:
+For $a>0$, the selection policy has the closed form
 
 $$
-\operatorname{RRF}(d)=\sum_b\frac{w_b}{k+r_b(d)},
+S_N=q+(p-q)(1-a)^{N-1}.
 $$
 
-where $r_b(d)$ is the one-based rank of document $d$ in branch $b$. A missing document contributes zero. The constant $k$ softens the gap between neighboring top ranks; branch weights $w_b$ can express prior importance.
+When at least one candidate is accepted, a uniform accepted candidate is correct with probability $q$. If every candidate is rejected, a random rejected candidate is correct with probability $p(1-\mathrm{TPR})/(1-a)$. Weighting the two events yields the expression above. The boundary $a=1$ is read directly from the selection rule; if $a=0$, nothing is ever accepted and $S_N=p$.
 
-RRF can recover a document that appears high in either branch, but it cannot create evidence absent from both lists. It also does not inspect the query-document pair again. That is the job of a reranker.
+Here $a=0.39$ and $q=0.36/0.39=12/13\approx0.92308$. A single candidate gives $S_1=p$; a large pool approaches $q$. TPR is the probability of acceptance given correctness, whereas $q$ reverses that conditioning. Confusing them changes the predicted limit.
 
-The table uses three different views of a ranking. **Recall@k** is the fraction of the relevant set retrieved in the first $k$ positions: retrieving one of two relevant documents gives $1/2$, even if that document ranks first. **MRR** averages the reciprocal position of the first relevant result, using zero when none is found. **nDCG@k** compares the graded value of the returned order with an ideal order. A value of one is ideal under the supplied judgments; Section 17 develops the discount and gain functions.
+With constant rates and TPR > FPR, this model improves monotonically. A decline under more search needs an additional mechanism, such as selecting an extreme noisy score or actively finding candidates that exploit the verifier. The latter resembles reward hacking from Module 14.
 
-The offline dense branch uses Latent Semantic Analysis (LSA). It constructs a document–term TF-IDF matrix $X$ and uses singular value decomposition (SVD) to approximate it as $X\approx U_k\Sigma_kV_k^\top$. The retained $k$ directions have the largest singular values: they capture strong co-occurrence patterns in this matrix, rather than predefined semantic topics. Both documents and queries are projected as $xV_k$ and normalized for cosine comparison. The resulting geometry is learned from word co-occurrence in this collection. It is a linear model without the pretrained knowledge of a large neural encoder, so paraphrase understanding is not guaranteed.
+Independence also needs care. Perfectly correlated errors give no coverage gain at all. Even independent attempts on each task do not justify substituting average task accuracy into the coverage formula. If half the tasks have $p=0$ and half have $p=0.8$, the mean is 0.4, but three-attempt coverage is $0.5[1-(1-0.8)^3]=0.496$, not 0.784. Task difficulty is shared across attempts.
 
-The frozen thirteen-document, seven-query English teaching collection produces these metrics:
+A sensible verification hierarchy is:
 
-| Method | MRR (Mean Reciprocal Rank) | Recall@5 | nDCG@5 (Normalized Discounted Cumulative Gain) |
-|---|---:|---:|---:|
-| BM25 | **1.000** | **0.929** | **0.971** |
-| dense LSA (Latent Semantic Analysis) proxy | 0.905 | 0.714 | 0.730 |
-| RRF, $k=60$ | 0.929 | 0.857 | 0.855 |
-| interaction reranker | **1.000** | **0.929** | 0.970 |
+1. a formal checker or deterministic executable rule;
+2. unit tests and explicit constraints;
+3. a specialized process or outcome model;
+4. a general LLM judge with a documented rubric;
+5. voting when no stronger signal is available.
 
-These are authored diagnostic documents and development queries, frozen outside the lecture. LSA is fitted to the indexed corpus without query labels. The untrained reranker averages each query word's best character-trigram Jaccard match: it does not run a neural cross-encoder or ColBERT. Since the RU and EN wording differs, the two tables do not estimate a language effect.
+An LLM judge should not replace a compiler or proof kernel merely because it is convenient.
 
-Here the lexical branch is already extremely strong. Adding the weaker dense ranking through RRF lowers nDCG, and the reranker mostly restores the original ordering rather than surpassing it. The Russian frozen collection shows a different pattern, where the dense branch contributes additional recall and reranking improves nDCG substantially.
+---
 
-The contrast is the lesson: hybrid retrieval is not guaranteed to beat every branch on every metric. Its value depends on whether branches fail on different query classes. Fusion broadens or stabilizes the candidate set; reranking re-evaluates individual pairs. They solve different problems.
+## 8. Sequential scaling and budget forcing
 
-![VIZ m17/06 — candidate recall before fine ordering](assets/modern-llms/en/module-15/m17_06_hybrid.svg)
-*Sparse and dense branches create candidates, RRF merges positions, and an interaction reranker revisits a bounded set of query-document pairs.*
+Parallel inference restarts the search. Sequential inference gives one trajectory more room to evolve.
 
-## 11. Chunking: deciding what the index is allowed to retrieve
+The s1 paper provides a clean demonstration. The authors curated 1,000 difficult, diverse, high-quality reasoning examples, fine-tuned Qwen2.5-32B-Instruct, and then controlled the length of its reasoning without another weight update. Their **budget forcing** procedure could:
 
-A retriever does not search an abstract document. It searches the units created during indexing. Chunking therefore defines the memory granularity of the whole system.
+- extend a trace by appending `Wait` when the model attempted to finish;
+- shorten a trace by forcing the transition to the final answer.
 
-A long chunk may mix several topics into one embedding and consume too much generator context. A very short chunk may omit a definition, antecedent, table header, or causal step. The best boundary is a relevance decision, not merely preprocessing.
+Under the reported AIME 2024 setup, increasing the budget raised s1-32B from 50% to 57%. That is evidence for one model and evaluation protocol, not a law that every task improves with every extra token. [Muennighoff et al., 2025](https://arxiv.org/abs/2501.19393)
 
-### Fixed windows with overlap
+The intervention changes decoding while leaving weights fixed. Extra steps may let existing operations produce a new deduction or find a missed solution. They do not guarantee recovery of a missing fact; consulting a tool or an external source adds information through a separate mechanism.
 
-A window of several hundred tokens with overlap is a strong baseline. It is deterministic, simple to reproduce, and easy to vary in an ablation. Overlap protects local relationships near boundaries, but increases duplicate evidence and index size.
+Sequential compute can support several policies: continue the current derivation, insert explicit checks, revisit a branch point, alternate planning with tool execution, or stop early once evidence is sufficient. A mature system needs the last operation as much as the first. Scaling inference includes learning when *not* to continue.
 
-### Structure-aware chunks
+---
 
-Headings, paragraphs, table regions, code blocks, and page boundaries may provide more natural units. The quality then depends on parsing. A malformed PDF or inconsistent markup can produce fragments that are semantically worse than fixed windows.
+## 9. Failure modes of longer reasoning
 
-### Late chunking
+Extra tokens are useful only if they change the computation in a productive direction.
 
-Late chunking runs a long document through a long-context encoder first and pools contextualized token representations only afterward. A short chunk can retain information from earlier text, including antecedents and section context. The cost is a more expensive indexing pass and dependence on the encoder's maximum length. The described method needs token states and mean pooling within each chunk; a last-token-only embedding interface cannot be substituted unchanged. The authors separately study overlapping windows for longer documents, and report that gains depend on chunk size and task.
+**Overthinking.** A model may reach the right answer quickly, then revise it into a wrong one. Empirical work has found non-monotonic relationships between chain length and accuracy, with shorter selections sometimes outperforming longer traces. The effect depends on the model, task, and selection protocol. [Hassid et al., 2025; v2 2026](https://arxiv.org/abs/2505.17813)
 
-### Contextual Retrieval
+Length and correctness can correlate because harder tasks induce longer attempts. Comparing trajectories for the same prompt reduces that confounding, but still does not randomly assign length: the model partly chooses when to stop. To estimate the effect of additional budget, assign different budgets to the same prompts, repeat sampling, and hold the selection protocol fixed.
 
-Anthropic's Contextual Retrieval prepends a short generated description of where a chunk sits within its source document before embedding and lexical indexing. In the company's reported experiments, contextual embeddings reduced top-20 retrieval failure by 35%; combining contextual embeddings with contextual BM25 reduced it by 49%; adding reranking yielded a 67% reduction. These are results for the stated models, corpora, and protocol, not universal multipliers.
+**Redundant continuation.** The model may restate the same hypothesis without creating new search state.
 
-Now take a 20-million-token corpus, chunk size 400, and overlap 64. The stride is 336, so the exact chunk count is
+**Error accumulation.** An early false premise becomes part of the context and shapes every later step. Fluency can increase even as correctness falls.
+
+**Verifier exploitation.** A search process can optimize whatever signal it sees. If the verifier rewards persuasive form, more search may find more persuasive errors.
+
+The module notebook contains a deliberately synthetic illustration: difficult tasks improve with additional budget, while easy-task accuracy eventually declines. The curves demonstrate a possible mechanism; they are not measurements of a deployed model.
+
+![VIZ m15/05 — stopping executable search](assets/modern-llms/en/module-15/m15_05_paradigms.svg)
+*Executable polynomial search: actual calls and the cost of two stopping rules; the lab is explained in §14.*
+
+![VIZ m15/06 — limits and failure modes](assets/modern-llms/en/module-15/m15_06_pitfalls.svg)
+*Observable search failures: correlated errors, weak verification, unproductive continuation, truncation, and cost.*
+
+---
+
+## 10. Worked example C: an illustrative budget ladder
+
+Provider effort labels do not map to a universal token count. To reason about systems cost, we therefore use an explicit course scenario rather than pretending to reconstruct an API.
+
+Assumptions:
+
+- a dense $8.03\times10^9$-parameter decoder;
+- 209.4 sequential decode tokens per second, fixed as a course assumption;
+- 512 tokens for a short baseline answer;
+- illustrative budgets of 1K, 4K, 16K, and 64K generated tokens.
+
+A common approximation to dense weight-matrix multiplication work is
 
 $$
-1+\left\lceil\frac{20{,}000{,}000-400}{336}\right\rceil
-=59{,}524.
+C_{\text{decode}}\approx 2N_pT,
 $$
 
-The count assumes one continuous document. For separate documents, sum the count per document instead of applying this equation to their combined length. Padding every window to 400 positions gives $59{,}524\cdot400=23{,}809{,}600$ encoded positions, including overlaps and padding.
+and unbatched latency is
 
-The frozen scenario estimates encoding with a 0.6B model at $2.86\cdot10^{16}$ FLOP. At 990 TFLOP/s and MFU 0.5, the $2PT/(990\cdot10^{12}\cdot0.5)$ estimate is 57.7 seconds. It excludes reading, tokenization, packing, writes, retries, and orchestration.
+$$
+t\approx\frac{T}{209.4}.
+$$
 
-The raw vectors occupy 232.52 MiB in fp32, 58.13 MiB in int8, and 7.27 MiB in binary form. At this corpus size, metadata, access rules, update logic, and chunk quality may dominate the vector payload itself.
+| illustrative tier | tokens | latency | weight-matmul FLOP estimate | vs. 512 tokens |
+|---|---:|---:|---:|---:|
+| short baseline | 512 | 2.45 s | $8.22\times10^{12}$ | 1× |
+| small | 1,000 | 4.78 s | $1.61\times10^{13}$ | 1.95× |
+| medium | 4,000 | 19.10 s | $6.42\times10^{13}$ | 7.81× |
+| large | 16,000 | 76.41 s | $2.57\times10^{14}$ | 31.25× |
+| very large | 64,000 | 305.64 s | $1.03\times10^{15}$ | 125× |
 
-## 12. The full cascade and worked example D: where request latency lives
+The factor of two counts a multiplication and an addition as two operations. The $2N_pT$ approximation is useful when weight-matrix multiplications dominate. It omits prompt processing, attention products over a growing context, tools, and verification. Architecture also affects which parameters do work; a MoE model's total stored parameter count cannot simply be substituted here.
 
-Access-control lists (ACLs) must constrain visible data before text reaches any reranker or generator that lacks permission to read it. With post-filtered search, measure candidate count and recall after filtering; restricted metadata must not leak through the response.
+Linear latency follows from the assumed constant 209.4-token/s rate. Actual decode throughput depends on context length, batching, and load, with queueing and prefill added to the request. A multi-candidate system must count discarded attempts as well. The calculation still conveys the scale of the tradeoff: five seconds and five minutes support different interactions.
 
-We can now follow one request through a realistic cascade.
+Extending a trajectory from 2K to 8K tokens adds
 
-1. Normalize the query or decompose it into subqueries.
-2. Run lexical and dense candidate generation.
-3. Merge candidates with RRF or another fusion rule.
-4. Rerank a bounded list.
-5. Remove duplicates from authorized evidence, preserve citations, and pack evidence into a token budget.
-6. Run generator prefill and decode.
-7. If evidence remains insufficient, reformulate and search again.
+$$
+\Delta t=\frac{8000-2000}{209.4}\approx28.65\text{ s}.
+$$
 
-The assembled context crosses a trust boundary. Retrieved passages supply **evidence**, not authority to issue new commands. A highly ranked, correctly cited document may still contain an instruction planted by someone else. Its position in the results does not authorize a tool action. Module 18 develops this distinction in an agent loop.
+Whether that is worthwhile cannot be decided from the cost equation. It requires an empirical quality curve on the target workload.
 
-The frozen scenario uses an approximately 8B generator, eight 400-token chunks, a 0.6B reranker over 100 candidates, and a 300-token answer.
+---
 
-The timing assumptions need to be visible before the stages are added. For the encoder and reranker, approximate forward work as $2PT$, with $P$ parameters and $T$ processed tokens. A peak rate of 990 TFLOP/s and an assumed MFU of 0.5 give a modeled rate of $495\cdot10^{12}$ FLOP/s. The query has 32 tokens, so its estimate is $2\cdot0.6\cdot10^9\cdot32/(495\cdot10^{12})=0.0776$ ms. One hundred query–chunk pairs contain $100(32+400)$ tokens and require 104.7 ms under the same model.
+## 11. Worked example D: the KV cost of a thought
 
-The generator has exactly $8.03\cdot10^9$ parameters in this calculation. Its input consists of 512 instruction/query tokens plus eight 400-token chunks, giving 3712 and a linear prefill estimate of 120.4 ms. Decode uses a separate **assumed** rate of 209.4 tokens/s: $300/209.4=1.4327$ s. That rate was neither measured here nor derived from $2PT$.
+Consider a full-attention decoder that retains the entire history. In this model, each generated token adds K and V vectors in every attention layer.
 
-Adding the stages assumes serial execution. Queuing, networking, index reads, and packing are omitted. MFU need not be equal for a tiny query and a batch of pairs; attention's quadratic work is also omitted. This makes the table a conditional scenario budget, not a rigorous request-latency lower bound.
+Take an illustrative model with 32 layers, KV width 1,024 per layer, and bf16 storage. The KV bytes per token are
 
-| Stage | Conditional time estimate | Share of total |
-|---|---:|---:|
-| query encoding | 0.0776 ms | <0.1% |
-| 2000 full distances after ANN navigation | 0.4096 ms | <0.1% |
-| rerank 100 candidates | 104.7 ms | 6.3% |
-| prefill 3712 tokens | 120.4 ms | 7.3% |
-| decode 300 tokens | 1432.7 ms | **86.4%** |
-| **total** | **1.658 s** | 100% |
+$$
+M_{\text{token}}
+=2\;(K,V)\times32\times1024\times2
+=131072\text{ bytes}=128\text{ KiB}.
+$$
 
-![VIZ m17/07 — where the request second is spent](assets/modern-llms/en/module-15/m17_07_budget.png)
-*Left: a parameterized cascade budget. Right: the same input-length factor appears in prefill and KV memory in the teaching comparison of RAG and a full document.*
+| reasoning length | KV per request |
+|---:|---:|
+| 512 | 0.0625 GiB |
+| 1K | 0.122 GiB |
+| 4K | 0.488 GiB |
+| 16K | 1.953 GiB |
+| 64K | 7.8125 GiB |
 
-The table does not establish that reranking is generally cheap. It shows that one long-answer interactive scenario is dominated by decode. Short answers, a larger rerank set, a remote API, or saturated batch generation can move the bottleneck elsewhere.
+The table counts KV for **generated tokens only**, retaining the full history in all 32 layers. A prompt of $P$ tokens changes the total to $128(P+T)$ KiB. With $P=4096$ and $T=4000$, this is $0.98828125$ GiB rather than the continuation-only $0.48828125$ GiB. Windowed or hybrid architectures require per-layer accounting; shared prefixes can reduce physical storage across candidates.
 
-The correct optimization sequence therefore begins with measurement. A team may need to accelerate generation, reduce candidate count, cache query embeddings, or simplify retrieval. The 6.34% retrieval-before-prefill share belongs to this scenario only.
+The bounds below assume a zero-length input prefix and a teaching device with **80 GiB** available capacity. That is an explicit capacity assumption, not a conversion of every marketed “80 GB” device.
 
-## 13. Level-1 code: hybrid retrieval with explicit contracts
+The bf16 weights of an 8.03B model occupy about 14.96 GiB. If an 80 GiB device devoted every remaining byte to KV, the resulting upper bounds would be 1,040 concurrent 512-token requests, 532 at 1K, 133 at 4K, 33 at 16K, and only 8 at 64K.
 
-The two functions below expose different sources of evidence. RRF reads ranks and combines their contributions without inspecting text. MaxSim forms a token-similarity matrix, then chooses the strongest document match for each query token. Token vectors arrive normalized; this example does not train an encoder.
+These are not throughput forecasts. They omit activations, fragmentation, scheduler state, batching, and runtime reserve. Reserving 8 GiB lowers the 1K–64K figures to 467, 116, 29, and 7. The calculation still exposes the order of magnitude: moving from 512 to 64K tokens reduces a KV-limited concurrency bound by roughly 130×.
+
+This is why the serving techniques from Module 10—paged allocation, KV quantization, offload, and tiered storage—become central for reasoning workloads rather than optional optimizations.
+
+![VIZ m15/07 — the economics of long reasoning](assets/modern-llms/en/module-15/m15_07_economics.png)
+*Assumed decode time, KV with and without a prompt, and a KV-only concurrency bound.*
+
+---
+
+## 12. Worked example E: why adaptive allocation matters
+
+Suppose a workload has three classes:
+
+- 70% easy requests needing about 500 tokens;
+- 20% medium requests needing about 4,000;
+- 10% hard requests needing about 32,000.
+
+Assume that every assigned budget is used in full and the router identifies each task class perfectly. A uniform maximum then costs 32,000 tokens per request, while the routed mixture costs
+
+$$
+\mathbb{E}[T]
+=0.7(500)+0.2(4000)+0.1(32000)
+=4350.
+$$
+
+The ratio is
+
+$$
+\frac{32000}{4350}\approx7.36.
+$$
+
+This calculation assumes a perfect router and full consumption of each assigned budget. A cap is not consumption: a model allowed 32,000 tokens may stop much earlier. A real comparison must measure actual tokens and quality, including the work needed to determine the route.
+
+Possible routing signals include a cheap difficulty classifier, uncertainty after a short first pass, agreement between samples, a verifier threshold, or a signal from the environment such as passing tests.
+
+The first notebook simulation precomputes all candidate labels and scores. It then asks how many entries a policy would inspect before reaching a score of 0.82 or exhausting 16 attempts. On this fixed mixture, it inspects 4.02 candidates on average and achieves 0.886 accuracy, versus 0.632 for one shot and 0.940 for selecting from all sixteen. These are policy comparisons on shared data; the vectorized simulation itself saves no generator calls.
+
+A separate program-search lab then generates candidates inside the loop and actually stops further calls. §14 explains the experiment. Choose thresholds or budgets on a calibration split and evaluate the frozen policy on held-out tasks. Tuning them using the final test answers would bias the comparison.
+
+Adaptive inference is therefore a classification-and-control problem under noise. A router can waste compute on easy inputs or prematurely stop hard ones. Its error costs belong in the evaluation.
+
+---
+
+## 13. Level-1 code: make selection and cost assumptions explicit
+
+The first function computes oracle coverage. It deliberately does not claim to model a selector.
 
 ```python
-"""RRF and exact late interaction: executable, model-independent mechanisms."""
-import numpy as np
+"""Coverage, noisy selection and scoped inference accounting."""
+import math
+from dataclasses import dataclass
 
-def rrf(rankings, k=60):
-    """Accumulate one-based reciprocal ranks, then sort U unique candidates."""
-    if not np.isfinite(k) or k <= 0:
-        raise ValueError("k must be positive and finite")
-    scores = {}
-    for ranking in rankings:
-        if any(not isinstance(doc, str) or not doc for doc in ranking):
-            raise ValueError("IDs must be nonempty strings")
-        if len(ranking) != len(set(ranking)):
-            raise ValueError("duplicate document in a branch")
-        for rank, doc in enumerate(ranking, 1):
-            scores[doc] = scores.get(doc, 0.0) + 1.0 / (k + rank)
-    return sorted(scores, key=lambda doc: (-scores[doc], doc)), scores
+def positive_count(value, name):
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise ValueError(name + " must be a positive integer")
 
-def maxsim(query, document):
-    """Q:[nq,d], D:[nd,d]; sum the best document match for each query row."""
-    q, d = np.asarray(query, float), np.asarray(document, float)
-    if q.ndim != 2 or d.ndim != 2 or q.shape[1] != d.shape[1]:
-        raise ValueError("expected two matrices with one shared feature dimension")
-    if not all(q.shape) or not all(d.shape):
-        raise ValueError("empty token matrices")
-    if not np.isfinite(q).all() or not np.isfinite(d).all():
-        raise ValueError("non-finite vectors")
-    if not (np.allclose(np.linalg.norm(q, axis=1), 1)
-            and np.allclose(np.linalg.norm(d, axis=1), 1)):
-        raise ValueError("normalize token vectors before cosine MaxSim")
-    similarities = q @ d.T
-    return float(similarities.max(axis=1).sum()), similarities
+def probability(value, name):
+    if not math.isfinite(value) or not 0 <= value <= 1:
+        raise ValueError(name + " must be finite and lie in [0, 1]")
 
-order, scores = rrf([["a", "b"], ["b", "c"]])
-assert order == ["b", "a", "c"]
-assert np.isclose(scores["b"], 1 / 62 + 1 / 61)
-score, matrix = maxsim(np.eye(2), np.array([[1.0, 0.0]]))
-assert score == 1.0 and matrix.shape == (2, 1)
+def oracle_coverage(p_correct, n):
+    """At least one success in n independent, identically distributed attempts."""
+    positive_count(n, "n")
+    probability(p_correct, "p_correct")
+    if p_correct == 1:
+        return 1.0
+    return -math.expm1(n * math.log1p(-p_correct))
+
+def noisy_selection(p, n, tpr, fpr):
+    """Uniform accepted candidate; uniform pool fallback if none are accepted."""
+    positive_count(n, "n")
+    for name, value in (("p", p), ("tpr", tpr), ("fpr", fpr)):
+        probability(value, name)
+    acceptance = p*tpr + (1-p)*fpr
+    if acceptance == 0 or n == 1:
+        return p
+    precision = p*tpr/acceptance
+    if acceptance == 1:
+        return precision
+    log_survival = (n-1)*math.log1p(-acceptance)
+    # A non-negative mixture avoids cancellation for tiny probabilities.
+    return p*math.exp(log_survival) + precision*(-math.expm1(log_survival))
+
+@dataclass(frozen=True)
+class ReasoningCost:
+    parameters: float = 8.03e9
+    tokens_per_second: float = 209.4
+    layers: int = 32
+    kv_width: int = 1024
+    bytes_per_element: int = 2
+
+    def __post_init__(self):
+        for name in ("parameters", "tokens_per_second"):
+            value = getattr(self, name)
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError(name + " must be finite and positive")
+        for name in ("layers", "kv_width", "bytes_per_element"):
+            positive_count(getattr(self, name), name)
+
+    @property
+    def kv_bytes_per_token(self):
+        return 2*self.layers*self.kv_width*self.bytes_per_element
+
+    def estimate(self, tokens, prompt_tokens=0):
+        positive_count(tokens, "tokens")
+        if isinstance(prompt_tokens, bool) or not isinstance(prompt_tokens, int) or prompt_tokens < 0:
+            raise ValueError("prompt_tokens must be a non-negative integer")
+        return dict(decode_seconds=tokens/self.tokens_per_second,
+                    parameter_matmul_flops=2*self.parameters*tokens,
+                    generated_kv_gib=self.kv_bytes_per_token*tokens/2**30,
+                    total_kv_gib=self.kv_bytes_per_token*(tokens+prompt_tokens)/2**30)
+
+scenario = ReasoningCost()
+assert abs(noisy_selection(.4, 17, .9, .05)-.923)<.001
+assert oracle_coverage(1e-18, 1) > 0  # direct 1-(1-p)**n loses this value
+assert noisy_selection(1e-18, 1, 1, 0) == 1e-18
+assert math.isclose(noisy_selection(1e-18, 2, 1, 0), 2e-18, rel_tol=1e-15)
 ```
 
-Document `b` receives two reciprocal-rank contributions and moves ahead of both single-branch documents. In the MaxSim example, one query vector matches the sole document vector and the other is orthogonal, so the sum is one. Several query tokens may choose the same document token: MaxSim imposes no one-to-one assignment.
+The logarithmic coverage expression remains accurate at tiny probabilities. Directly evaluating `1-(1-p)**n` can produce zero for $p=10^{-18}$ and $n=1$ in ordinary floating-point arithmetic. The selection function implements the closed form from §7. Counts and dimensions must be integers; `True` is not a valid budget.
 
-Accumulation is linear in the total input-list length. Sorting the $U$ unique candidates adds $O(U\log U)$ work. The notebook surrounds these mechanisms with indexing, validation, metrics, and provenance checks.
+The cost object separates newly generated KV from total KV including the prompt. Its `parameter_matmul_flops` field estimates weight-matrix multiplication work, while `decode_seconds` assumes a fixed rate. Neither is a measurement of an entire serving request.
 
-## 15. The evolution of RAG: repair the measured failure, not the acronym list
+---
 
-“Advanced RAG” is most useful when understood as a set of repairs.
+## 15. Verifier families
 
-If a short question embeds poorly because relevant documents are written in answer form, **HyDE (Hypothetical Document Embeddings)** generates a hypothetical answer and searches with its representation. The method changes the query side of the mismatch.
+A verifier is not a single architectural object. Different tasks support different evidence.
 
-If one retrieval pass is sometimes unnecessary and sometimes insufficient, **Self-RAG** adds retrieval and critique decisions to generation. The model can decide whether evidence is needed and evaluate what it receives.
+### Exact executable checks
 
-If retrieved evidence may be weak or misleading, **CRAG (Corrective Retrieval-Augmented Generation)** introduces a retrieval-quality evaluator and a fallback path. The repair is not a new index; it is a decision about whether to trust the current candidates.
+A compiler, unit-test suite, symbolic algebra system, proof kernel, or environment simulator can give a transparent signal. Such checks may still be incomplete—tests do not cover every behavior—but their semantics are usually clearer than a learned judge.
 
-If the answer depends on information at several scales, **RAPTOR (Recursive Abstractive Processing for Tree-Organized Retrieval)** builds a hierarchy of recursive summaries. Fine chunks and higher-level summaries become retrievable units.
+### Outcome reward models
 
-If the question is global—“what themes or relationships characterize this corpus?”—plain top-$k$ chunks may not contain a sufficient view. **GraphRAG** builds entity and relationship structures plus community summaries to support corpus-level synthesis. That capability comes with higher indexing cost and more model-generated intermediate state.
+An outcome model scores a complete solution. Labels are relatively cheap, but the feedback is sparse: a poor score does not identify the failing step.
 
-The next step is agentic retrieval. Search becomes one tool in a loop: formulate a query, inspect results, follow a lead, reformulate, and stop when evidence is sufficient. The gain is adaptive multi-hop behavior. The price is variable latency, cost, and a larger failure surface.
+### Process reward models
 
-![VIZ m17/08 — from one retrieval pass to a controlled loop](assets/modern-llms/en/module-15/m17_08_rag_evolution.svg)
-*Each family addresses a distinct failure: query mismatch, uncertain evidence, missing hierarchy, global corpus questions, or the need for iterative search.*
+A PRM scores intermediate steps. *Let's Verify Step by Step* released PRM800K, containing 800,000 human step-level labels, and reported process supervision outperforming outcome supervision in its mathematical setting. Such feedback can guide search and prune erroneous paths earlier. In that study, obtaining it involved human annotation of mathematical solutions. [Lightman et al., 2023](https://arxiv.org/abs/2305.20050)
 
-The design rule is intentionally conservative: add the smallest mechanism that fixes an observed error. If BM25 plus a reranker already satisfies the task, a graph and an autonomous loop may add cost without adding evidence.
+Human annotation is not a defining requirement of a PRM. Math-Shepherd, for example, constructs process-supervision labels automatically. Changing their source does not remove the need to assess whether those labels track valid reasoning steps and generalize to new problems. [Wang et al., 2024](https://arxiv.org/abs/2312.08935)
 
-## 16. Worked example E: RAG or long context
+### Generative verifiers
 
-Suppose the complete document contains 200,000 tokens, while retrieval and context assembly produce 3,712 tokens. The length ratio is
+GenRM casts verification as next-token prediction. The model may produce a critique, while the probability of a verdict token supplies a score. This makes chain-of-thought and repeated sampling available to the verifier itself. The published experiments improved Best-of-N selection over several discriminative baselines under the paper's protocols; that result should not be universalized to every domain. [Zhang et al., 2024](https://arxiv.org/abs/2408.15240)
 
-$$
-\frac{200000}{3712}=53.8793.
-$$
+### Reasoning reward models
 
-Under the same linearized prefill model, the full document requires 6.4889 seconds and the RAG context 0.120434 seconds. With a KV cost of 128 KiB per token, the payloads are
+RM-R1 treats judging as a reasoning task. It generates rubrics or analyses before the verdict and uses a two-stage recipe involving reasoning-trace distillation and RLVR. It is a research family with released artifacts, not a mandatory endpoint for all reward modeling. [Chen et al., 2025](https://arxiv.org/abs/2505.02387)
 
-$$24.4141\ \text{GiB}$$
+![VIZ m15/08 — verifier families](assets/modern-llms/en/module-15/m15_08_verifier_stack.svg)
+*Verifier contracts: executable rules, outcome and process models, generative judges, and reasoning reward models.*
 
-for the full document and
+Reasoning RL is most straightforward when rewards are objectively checkable. Creative writing, advice, and aesthetics do not have a unique ground truth; there, a learned verifier represents a preference or rubric rather than mathematical correctness.
 
-$$0.453125\ \text{GiB}$$
+---
 
-for the RAG context. The same ratio appears because the scenario holds architecture and bytes per token constant.
+## 16. Distilling reasoning traces
 
-The equal ratios follow from the linear $2PT$ approximation. Attention's quadratic work may matter at 200,000 tokens. Constant KV bytes per position assumes unchanged architecture and precision. These payloads count input KV only, excluding the future answer and other runtime memory.
+DeepSeek released six dense R1-Distill models ranging from 1.5B to 70B, trained using data generated by R1. The release made a practical route visible: successful long-form solutions from a strong teacher can become supervised data for a smaller student. [DeepSeek-R1, 2025](https://arxiv.org/abs/2501.12948)
 
-This arithmetic does not make RAG universally superior. Long context preserves document order, global structure, and evidence that may not be individually retrievable. It can be preferable when one or a few documents must be read as wholes, when queries are global, or when retrieval recall is difficult to guarantee.
+A student can absorb:
 
-RAG is attractive when the corpus is much larger than one request's evidence needs, changes frequently, requires access control, or must provide citations. It pays an indexing and retrieval tax in exchange for a much smaller generator input.
+- the surface format of decomposition;
+- recurring intermediate operations;
+- habits of checking and revision;
+- length and style distributions;
+- domain heuristics represented in the traces.
 
-Research comparing RAG and long context finds the same qualitative split: with enough resources, long-context models can be stronger on average for some tasks; RAG is usually cheaper; routing between them can approach long-context quality while avoiding its cost on every query. The correct policy is therefore often conditional rather than ideological.
+Distillation updates the student's weights. Its data can teach new knowledge, representations, and procedures, so the starting checkpoint is not an immutable capability ceiling. What the student does not receive is the teacher's parameters or a guarantee of equivalent behavior. Capacity, data quality and diversity, the training objective, and the evaluation distribution all affect the result.
 
-A router can use cheap features—document count, requested scope, retrieval confidence, question type, or a learned classifier—to choose retrieval, full context, or a hybrid path. The router itself must be evaluated because a wrong route can be more expensive than a modestly suboptimal retriever.
+This differs from §8: extending inference with fixed weights changes work on one request, whereas distillation changes the function used for future requests. Both benefit from verified solutions, but they spend computation at different stages.
 
-## 17. Evaluation and the embedder passport
+It helps to separate three claims:
 
-A RAG evaluation should identify the stage that failed.
+1. **format transfer**: the model produces an organized reasoning trace;
+2. **procedure transfer**: it applies patterns present in the training data;
+3. **out-of-distribution generalization**: this must be tested on new task families and depends on model capacity, data diversity, and the training objective.
 
-### Retrieval metrics
+A “reasoning distillate” should therefore be evaluated as its own model, including quality, token efficiency, calibration, and failure modes.
 
-- **Recall@k** asks whether the relevant set survived candidate generation.
-- **MRR** emphasizes the first relevant item.
-- **nDCG@k** rewards good ordering when relevance is graded.
+![VIZ m15/09 — reasoning distillation](assets/modern-llms/en/module-15/m15_09_distill_2026.svg)
+*Teacher traces transfer useful procedures, with weight updates and separate evaluation of the resulting student.*
 
-These metrics require relevance judgments and an explicit unit of retrieval. Page-level, chunk-level, and document-level judgments are not interchangeable.
+---
 
-To make nDCG reproducible, define both gain and discount. Let $g_i\ge0$ be the integer relevance grade at rank $i$:
+## 17. Reading a model's reasoning passport
 
-$$
-\operatorname{DCG}@k=\sum_{i=1}^{k}\frac{2^{g_i}-1}{\log_2(i+1)},\qquad
-\operatorname{nDCG}@k=\frac{\operatorname{DCG}@k}{\operatorname{IDCG}@k}.
-$$
+As of 11 October 2026, “supports reasoning” is not enough information for deployment. A useful passport answers at least seven questions.
 
-IDCG sorts all known grades before taking the first $k$. With grades 3 and 1, the ideal value is $7+1/\log_2 3\approx7.631$. Reversing the documents gives $(1+7/\log_2 3)/7.631\approx0.710$. Recall@2 remains one, and reciprocal rank remains one too: the first item is still relevant. Graded ordering, completeness, and the first useful result are distinct properties.
+1. **How is reasoning enabled?** Is it always on, adaptive, selected by effort level, or controlled by a token target? Can it be disabled?
+2. **What kind of compute scales?** One longer trajectory, several candidates, subagents, or a combination?
+3. **What is exposed?** Full traces, summaries, a separate field, opaque signatures, or only the final answer?
+4. **What is billed and limited?** Do reasoning tokens count as output and consume `max_tokens`? Are they reported in usage metadata?
+5. **How does it interact with tools?** Must the client preserve complete assistant messages, signatures, or reasoning items across calls?
+6. **What are the systems consequences?** Measure median and tail latency, reasoning length, KV footprint, and concurrency on the actual workload.
+7. **How was quality compared?** Equal cost, equal wall-clock time, equal generated tokens, or unrestricted settings? Were tools and multiple agents allowed?
 
-The notebook rejects a query with no positive judgments instead of silently reporting zero. Such queries belong in a real evaluation of abstention, but need an explicit protocol. Rankings must not repeat an ID, since duplicated gains can inflate nDCG above one. Aggregation gives every query equal weight, regardless of how many documents it retrieves.
+This passport separates model capability from serving policy. It also prevents accidental comparisons between single-trajectory depth and multi-agent breadth.
 
-### Generation metrics
+![VIZ m15/10 — inference passport](assets/modern-llms/en/module-15/m15_10_cheatsheet.svg)
+*Each row records part of a reproducible protocol; a model name does not replace these details.*
 
-- groundedness or faithfulness to retrieved evidence;
-- citation correctness and completeness;
-- answer relevance and task success;
-- refusal behavior when evidence is insufficient.
-
-A high retrieval recall with poor groundedness points toward generation or context assembly. A polished answer with low retrieval recall may be unsupported even if it sounds correct.
-
-### System metrics
-
-Latency should be split into query encoding, ANN, filtering, reranking, context assembly, prefill, and decode. Track memory, index build time, update lag, failure rate, and cache hit rate where relevant. Tail latency matters for agent loops because one slow retrieval can delay the entire trajectory.
-
-Public suites help form a shortlist. BEIR (Benchmarking IR) evaluates zero-shot retrieval across heterogeneous tasks; MTEB (Massive Text Embedding Benchmark) broadens embedding evaluation; MMTEB (Massive Multilingual Text Embedding Benchmark) extends coverage to more than 500 tasks and more than 250 languages. A leaderboard score still does not describe the target corpus, query style, chunk size, language mixture, instruction format, or latency budget.
-
-A useful **embedder passport** records:
-
-- model revision and license;
-- vector dimension and whether shorter vector prefixes were trained as usable representations (MRL, Section 6);
-- tokenizer, maximum length, pooling, and normalization;
-- query/document instructions or prefixes;
-- supported languages and domains;
-- retrieval unit and chunking method used in evaluation;
-- dense index and precision;
-- metrics on the local judged query set;
-- hardware, batch size, and measured latency.
-
-Qwen3 Embedding is one example of why the passport matters: the family includes 0.6B, 4B, and 8B embedding and reranking models under Apache 2.0. The model name alone does not tell a system which size, dimension, instruction, precision, or reranker was used.
-
-![VIZ m17/09 — what must accompany an embedding score](assets/modern-llms/en/module-15/m17_09_landscape.svg)
-*An embedder passport connects the checkpoint to tokenization, pooling, instructions, dimensionality, corpus, metrics, index, and measured hardware.*
+---
 
 ## 20. Key takeaways and sources
 
-![VIZ m17/10 — one query through a RAG cascade](assets/modern-llms/en/module-15/m17_10_cheatsheet.svg)
-*The module in one map: four information losses, three scoring architectures, ANN, fusion and reranking, chunking, context assembly, and stage-wise evaluation.*
+- Test-time compute is a real scaling axis, but not a free substitute for a capable base model.
+- Sequential depth, parallel breadth, and adaptive allocation address different failure modes.
+- Repeated sampling raises coverage; selection quality determines how much of that coverage becomes accuracy.
+- Tie handling, answer normalization, and sample dependence are part of the self-consistency algorithm.
+- A verifier can become the bottleneck—and can itself be exploited.
+- With fixed decode rate and full-history caching, decode time and KV memory grow linearly with generated length, while the product impact on latency and concurrency can be severe.
+- Adaptive budgets are valuable because workload difficulty is heterogeneous and quality need not be monotonic in chain length.
+- Distillation transfers visible procedures and traces, not the teacher's full capability.
+- Comparing reasoning systems requires a passport covering controls, depth versus breadth, visibility, billing, tool continuity, systems cost, and evaluation protocol.
 
-A RAG request passes through a cascade in which every stage reduces information.
+**Primary sources:**
 
-**Lexical retrieval** preserves rare literal terms when the analyzer retains the required distinctions. BM25 combines corpus rarity, term-frequency saturation, and document-length normalization. Learned sparse models add semantic expansion while retaining inverted-index execution.
+- [OpenAI — Learning to reason with LLMs](https://openai.com/index/learning-to-reason-with-llms/)
+- [DeepSeek-R1](https://arxiv.org/abs/2501.12948)
+- [Scaling LLM Test-Time Compute Optimally](https://arxiv.org/abs/2408.03314)
+- [Large Language Monkeys](https://arxiv.org/abs/2407.21787)
+- [s1: Simple Test-Time Scaling](https://arxiv.org/abs/2501.19393)
+- [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050)
+- [Generative Verifiers](https://arxiv.org/abs/2408.15240)
+- [RM-R1: Reward Modeling as Reasoning](https://arxiv.org/abs/2505.02387)
+- [OpenAI API model guidance](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
+- [Anthropic thinking documentation](https://platform.claude.com/docs/en/build-with-claude/thinking)
+- [Gemini API thinking documentation](https://ai.google.dev/gemini-api/docs/thinking)
+- [Kimi K3 quickstart](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart)
+- [Thinking Machines — Inkling](https://thinkingmachines.ai/news/introducing-inkling/)
+- [Meta — Muse Spark 1.1](https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/)
 
-**Dense retrieval** represents text as vectors. Its quality depends on negatives, instructions, pooling, language, and domain. One-vector search scales well but compresses token structure early.
-
-**Cross-encoders and late interaction** restore richer interaction. A cross-encoder is suited to a bounded pair list; late interaction keeps multiple document vectors and pays with a larger index.
-
-**MRL and quantization** control storage. MRL trains useful prefixes of one vector (Section 6); quantization reduces bits per retained coordinate. Ten million 1024-dimensional vectors range from 38.15 GiB in fp32 to 1.19 GiB as a raw binary payload, before index metadata.
-
-**ANN** reduces inspected state and introduces miss probability. HNSW, IVF-PQ, and DiskANN spend memory and storage differently; none is selected by corpus size alone.
-
-**Fusion and reranking** have different responsibilities. RRF combines positions without score calibration; a reranker revisits actual pairs. On the frozen teaching set, fusion does not beat BM25 on nDCG, while reranking improves the final order.
-
-**Chunking** defines the retrievable memory unit. Overlapping windows are a strong baseline; late chunking and contextual retrieval restore document context at additional indexing cost.
-
-**RAG and long context** are conditional tools. RAG reduces input and supports freshness, access-control lists (ACLs), and citations. Long context preserves a document's global structure. Routing can choose per request.
-
-**Evaluation must remain stage-wise.** Recall, MRR, and nDCG diagnose retrieval. Groundedness, citation quality, and task success diagnose generation. An embedding leaderboard is a shortlist, not a deployment decision.
-
-### Primary sources
-
-- Gao et al., HyDE — [arxiv.org/abs/2212.10496](https://arxiv.org/abs/2212.10496)
-- Yan et al., CRAG — [arxiv.org/abs/2401.15884](https://arxiv.org/abs/2401.15884)
-- Lewis et al., RAG — [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
-- Karpukhin et al., DPR — [arxiv.org/abs/2004.04906](https://arxiv.org/abs/2004.04906)
-- Khattab & Zaharia, ColBERT — [arxiv.org/abs/2004.12832](https://arxiv.org/abs/2004.12832)
-- Formal et al., SPLADE — [arxiv.org/abs/2107.05720](https://arxiv.org/abs/2107.05720)
-- Wang et al., E5 — [arxiv.org/abs/2212.03533](https://arxiv.org/abs/2212.03533)
-- Kusupati et al., MRL — [arxiv.org/abs/2205.13147](https://arxiv.org/abs/2205.13147)
-- Malkov & Yashunin, HNSW — [arxiv.org/abs/1603.09320](https://arxiv.org/abs/1603.09320)
-- Subramanya et al., DiskANN — [NeurIPS 2019](https://proceedings.neurips.cc/paper/2019/hash/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Abstract.html)
-- Faysse et al., ColPali — [arxiv.org/abs/2407.01449](https://arxiv.org/abs/2407.01449)
-- Zhang et al., Qwen3 Embedding — [arxiv.org/abs/2506.05176](https://arxiv.org/abs/2506.05176)
-- Günther et al., Late Chunking v3 — [arxiv.org/abs/2409.04701v3](https://arxiv.org/abs/2409.04701v3)
-- Anthropic, Contextual Retrieval — [anthropic.com/engineering/contextual-retrieval](https://www.anthropic.com/engineering/contextual-retrieval)
-- Asai et al., Self-RAG — [arxiv.org/abs/2310.11511](https://arxiv.org/abs/2310.11511)
-- Sarthi et al., RAPTOR — [arxiv.org/abs/2401.18059](https://arxiv.org/abs/2401.18059)
-- Edge et al., GraphRAG — [arxiv.org/abs/2404.16130](https://arxiv.org/abs/2404.16130)
-- Li et al., RAG versus long context / Self-Route — [arxiv.org/abs/2407.16833](https://arxiv.org/abs/2407.16833)
-- Thakur et al., BEIR — [arxiv.org/abs/2104.08663](https://arxiv.org/abs/2104.08663)
-- Muennighoff et al., MTEB — [arxiv.org/abs/2210.07316](https://arxiv.org/abs/2210.07316)
-- Enevoldsen et al., MMTEB — [arxiv.org/abs/2502.13595](https://arxiv.org/abs/2502.13595)
-- Es et al., Retrieval-Augmented Generation Assessment (RAGAS) — [arxiv.org/abs/2309.15217](https://arxiv.org/abs/2309.15217)
-
-**Next:** Module 18 studies the agent that treats retrieval as one tool among many: it plans an action, calls an environment, observes the result, and decides whether to continue.
+**Snapshot for current API details:** 11 October 2026.
 
 ---
 
-*Landscape verified: 11 October 2026. Storage and latency values are reproducible module scenarios, not measurements of a particular vector engine or production service.*
+*Landscape verified: October 11, 2026. Current API controls were checked against official documentation and research results against primary publications. Teaching estimates for latency, memory, and cost are reproduced by local calculations and apply only under the stated assumptions.*

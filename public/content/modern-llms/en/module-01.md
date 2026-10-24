@@ -4,7 +4,7 @@
 
 A release announcement gives you specifications, claims, and unanswered questions. This module turns them into a decision you can check. We will build a **model passport**, recording the model's properties and available evidence, and a **system passport**, recording how it is used and evaluated. Resource estimates will help us test those descriptions. The running example is an assistant that answers questions about internal documents and cites its sources.
 
-You should have a broad idea of how neural networks learn from examples and how language models generate text from a prompt. You do not need to know Transformer internals. We will explain new terms when they become useful, then develop the mechanisms across the course: Module 2 introduces tokenization and embeddings, and [Module 3](module-18.md) connects them to the Transformer computation. The calculations use algebra and powers of two; the exercises use Python functions and dictionaries.
+You should have a broad idea of how neural networks learn from examples and how language models generate text from a prompt. You do not need to know Transformer internals. We will explain new terms when they become useful, then develop the mechanisms across the course: Module 2 introduces tokenization and embeddings, and [Module 3](module-03.md) connects them to the Transformer computation. The calculations use algebra and powers of two; the exercises use Python functions and dictionaries.
 
 **Choose a route**
 

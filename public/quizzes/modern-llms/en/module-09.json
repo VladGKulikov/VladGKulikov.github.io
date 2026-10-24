@@ -4,23 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "10.4.1",
-      "prompt": "For Llama-3-8B, use 32 layers, 8 KV heads, head dimension 128, and bf16. What is the KV payload per token?",
-      "explanation": "**Correct answer: A.** The two in the formula stands for K and V, and query heads do not enter it. The same count gives 2,560 KiB for a 70B MHA equivalent and 68.625 KiB for DeepSeek-V3 with MLA.",
-      "topic": "10.4. Formalism and worked example A: how many bytes does one token add?",
+      "id": "9.4.1",
+      "prompt": "What does a compute-optimal scaling law optimize under the constraint C = 6ND?",
+      "explanation": "**Correct answer: A.** The law answers \"how to divide the compute\", not \"how much is needed\". The budget is given from outside, and the optimum splits it between N and D so as to minimize loss.",
+      "topic": "9.4. Formalism: compute, a fitted loss surface, and its analytic optimum",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "128 KiB per token — that is 2·32·8·128·2 bytes by the cache formula"
+          "text": "The split of a fixed budget between model size and data volume"
         },
         {
           "value": "B",
-          "text": "512 KiB per token, because all 32 query heads are counted in"
+          "text": "The number of training steps at a pre-selected model size"
         },
         {
           "value": "C",
-          "text": "16 KiB per token, since K and V share one common table"
+          "text": "The convergence rate of the optimizer under a fixed schedule"
         }
       ],
       "correct": [
@@ -28,23 +28,23 @@
       ]
     },
     {
-      "id": "10.4.2",
-      "prompt": "Why does MLA need its own memory formula instead of the standard GQA one?",
-      "explanation": "**Correct answer: B.** Ordinary KV stores 2LHkv·dh scalars; MLA stores L(dc+dr). At bf16, the V3 example uses 61·(512+64)·2 = 70272 bytes = 68.625 KiB per token.",
-      "topic": "10.4. Formalism and worked example A: how many bytes does one token add?",
+      "id": "9.4.2",
+      "prompt": "For a budget of $7.23\\cdot10^{23}$ FLOP, the analytic optimum of the fitted law gives $N=35.7$B and $D=3.38$T. What is $D/N$?",
+      "explanation": "**Correct answer: B.** The fitted exponents on $N$ and $D$ differ, so the optimal ratio changes with budget. The value 94.7 belongs to this calculation; it is not a universal Chinchilla constant.",
+      "topic": "9.4. Formalism: compute, a fitted loss surface, and its analytic optimum",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Because MLA stores the cache at reduced precision while GQA uses bf16"
+          "text": "Exactly 20 tokens per parameter"
         },
         {
           "value": "B",
-          "text": "It caches a latent plus a separate RoPE part, not per-head K and V"
+          "text": "94.7 — close to one hundred tokens per parameter"
         },
         {
           "value": "C",
-          "text": "Because MLA reconstructs the keys anew on every decode step"
+          "text": "1868 — the ratio in the Llama 3 8B/15T scenario"
         }
       ],
       "correct": [
@@ -52,23 +52,23 @@
       ]
     },
     {
-      "id": "10.5.1",
-      "prompt": "Which profile is common for a long prefill and a small-batch decode?",
-      "explanation": "**Correct answer: C.** Prefill reuses weights across many prompt positions. Decode adds one token per request and reads accumulated state. These are common regimes, not guarantees: batch size, context, kernels, and hardware matter.",
-      "topic": "10.5. One request, two computational regimes",
+      "id": "9.5.1",
+      "prompt": "What are effective epochs for a domain inside a data mixture?",
+      "explanation": "**Correct answer: C.** Giving a small domain a substantial mixture weight causes repeated use of its documents. Effective epochs quantify that repetition; memorization risk increases gradually rather than appearing at one universal epoch threshold.",
+      "topic": "9.5. From raw web pages to a training distribution",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Prefill needs more memory, decode needs more memory bandwidth"
+          "text": "The number of steps after which the domain loss stops decreasing"
         },
         {
           "value": "B",
-          "text": "Prefill works with the cache while decode builds it from scratch each step"
+          "text": "The domain's share of the mixture multiplied by the total epoch count"
         },
         {
           "value": "C",
-          "text": "Prefill often approaches the compute limit; decode often approaches the weight-plus-KV bandwidth limit"
+          "text": "The domain token presentations divided by its unique-token pool: average reuse"
         }
       ],
       "correct": [
@@ -76,23 +76,23 @@
       ]
     },
     {
-      "id": "10.6.1",
-      "prompt": "Use 16 GB of weights, 128 KiB/token, 3.35 TB/s, and batch one. What bandwidth ceiling does the 8B teaching model give at 128K?",
-      "explanation": "**Correct answer: A.** BW/(W+NbKV) gives 100.965 tok/s under the one-read traffic assumption. Other work and traffic are excluded. The 1M row gives 22.778 tok/s but cannot fit the hypothetical 80-GiB capacity.",
-      "topic": "10.6. Worked example B: the bandwidth ceiling and the KV term",
+      "id": "9.5.2",
+      "prompt": "DCLM starts from a standardized candidate pool of roughly 240T tokens, while DCLM-Baseline trains on 2.6T tokens. Why should those numbers be reported separately?",
+      "explanation": "**Correct answer: A.** The candidate pool defines the space in which selection strategies are compared. A run’s training volume records the selected token presentations that the model actually consumes.",
+      "topic": "9.5. From raw web pages to a training distribution",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "101 tok/s: the decode step reads 16 GiB of cache on top of the weights"
+          "text": "The candidate pool and the selected training volume describe different stages of the pipeline"
         },
         {
           "value": "B",
-          "text": "209 tok/s: context length does not affect the speed of reading weights"
+          "text": "The 2.6T figure is only the validation set and is unrelated to training"
         },
         {
           "value": "C",
-          "text": "196 tok/s: the cache adds only a few percent to what must be read"
+          "text": "The 240T figure counts bytes whereas 2.6T counts tokens after a unit conversion"
         }
       ],
       "correct": [
@@ -100,47 +100,23 @@
       ]
     },
     {
-      "id": "10.6.2",
-      "prompt": "In GQA, which head counts enter KV storage and the teaching QK/AV FLOP estimate?",
-      "explanation": "**Correct answer: A.** KV is retained per KV head; each query head still performs attention. Including QK/AV changes the 8B/128K intensity from 0.48222 to 2.55334 FLOP/B.",
-      "topic": "10.6. Worked example B: the bandwidth ceiling and the KV term",
+      "id": "9.6.1",
+      "prompt": "Why can the \"20 tokens per parameter\" rule give the wrong optimum?",
+      "explanation": "**Correct answer: B.** When α ≠ β the optimal N and D grow with budget at different exponents, so their ratio is not constant. At Llama-3's budget the rule of thumb gives 77.6B against an exact 35.7B.",
+      "topic": "9.6. Worked example A: two budgets and the cost of a mnemonic",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Storage uses Hkv; the QK/AV estimate uses Hq"
+          "text": "It was derived for encoder models and does not carry to decoder-only"
         },
         {
           "value": "B",
-          "text": "Both calculations always use Hkv"
+          "text": "The D/N ratio itself depends on budget, while the rule treats it as constant"
         },
         {
           "value": "C",
-          "text": "Both calculations always use Hq"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.7.1",
-      "prompt": "What does the batch knee B* = W / KV(N) mean?",
-      "explanation": "**Correct answer: B.** B* marks a change in the dominant traffic term, not a capacity limit or an optimal batch. More requests still raise aggregate throughput beyond it, with diminishing weight-amortization gains.",
-      "topic": "10.7. Batch economics: where weight amortization stops being the whole story",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "The largest batch fitting into 80 GiB of the given device's memory"
-        },
-        {
-          "value": "B",
-          "text": "The batch size where total KV traffic equals one read of the weights"
-        },
-        {
-          "value": "C",
-          "text": "The batch at which accelerator utilization reaches 100 percent"
+          "text": "It ignores vocabulary size, which is part of the model's parameter count"
         }
       ],
       "correct": [
@@ -148,23 +124,23 @@
       ]
     },
     {
-      "id": "10.8.1",
-      "prompt": "What problem does PagedAttention solve?",
-      "explanation": "**Correct answer: C.** Preallocating for the maximum length wastes memory on requests that never reach it. Pages allow allocation as the sequence grows and let requests share common prefixes.",
-      "topic": "10.8. PagedAttention: decouple logical length from physical placement",
+      "id": "9.7.1",
+      "prompt": "What does an isoFLOP curve show?",
+      "explanation": "**Correct answer: C.** The fitted valley is relatively shallow on the data-heavy side: training a smaller model longer may increase fitted loss only modestly. That geometry makes token-heavier allocations worth considering.",
+      "topic": "9.7. The isoFLOP valley and the fitted cost of long training",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It speeds up attention itself by splitting the logit matrix into blocks"
+          "text": "How loss falls over time at a fixed model size"
         },
         {
           "value": "B",
-          "text": "It compresses the cache by keeping pages at reduced precision on disk"
+          "text": "How the required budget grows as the quality target rises"
         },
         {
           "value": "C",
-          "text": "Fragmentation: the cache is allocated in pages, not one contiguous buffer"
+          "text": "Loss as a function of N at constant budget, with a minimum at the optimum"
         }
       ],
       "correct": [
@@ -172,23 +148,23 @@
       ]
     },
     {
-      "id": "10.8.2",
-      "prompt": "Why is copy-on-write needed when a partially filled KV block is shared?",
-      "explanation": "**Correct answer: A.** While the block is only read, no copy is needed. The moment one branch appends its token into the shared partial block, the contents must diverge — otherwise the branches corrupt each other's cache.",
-      "topic": "10.8. PagedAttention: decouple logical length from physical placement",
+      "id": "9.7.2",
+      "prompt": "Llama-3 8B: 8.03B parameters and 15T tokens. How far from its budget's optimum is that?",
+      "explanation": "**Correct answer: A.** At $C=6ND=7.23\\cdot10^{23}$, the analytic optimum of the fitted law is 35.7B parameters and 3.38T tokens. The 8.03B/15T scenario incurs $\\Delta L=0.0258$ inside that law but uses a model about 4.4 times smaller, reducing dense inference cost.",
+      "topic": "9.7. The isoFLOP valley and the fitted cost of long training",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Branches diverge from a shared prefix and begin writing into one block"
+          "text": "D/N is about 1868 rather than 94.7, nearly 20 times larger in this comparison"
         },
         {
           "value": "B",
-          "text": "To keep pages from being evicted to disk while another request reads them"
+          "text": "The model sits exactly at the optimum: 15T is what the law prescribes"
         },
         {
           "value": "C",
-          "text": "To synchronize writes between different groups of serving devices"
+          "text": "The model is undertrained: the law would call for around 30T tokens"
         }
       ],
       "correct": [
@@ -196,19 +172,235 @@
       ]
     },
     {
-      "id": "10.8.3",
-      "prompt": "How many unused slots does an exactly 2048-token sequence have with 16-token pages?",
-      "explanation": "**Correct answer: A.** 2048 is divisible by 16. The 7.5-slot expectation applies to uniform remainders across varying lengths, not this fixed length.",
-      "topic": "10.8. PagedAttention: decouple logical length from physical placement",
+      "id": "9.8.1",
+      "prompt": "Why can an inference-aware objective prefer a smaller model trained on more data?",
+      "explanation": "**Correct answer: B.** In the teaching model, dense decode costs roughly $2N$ FLOP per token. Extra compute spent training the smaller model can be recovered over a large serving volume; the break-even in this scenario is about $2.12\\cdot10^{12}$ generated tokens.",
+      "topic": "9.8. Inference-aware allocation: when does the smaller model repay its training?",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "0"
+          "text": "A larger model is always cheaper to train and therefore prepays its serving cost"
         },
         {
           "value": "B",
-          "text": "7.5 in every individual sequence"
+          "text": "Training cost is paid once, while the cost of every generated token is paid repeatedly"
+        },
+        {
+          "value": "C",
+          "text": "A smaller model always requires a more expensive accelerator class"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.9.1",
+      "prompt": "What does the \"data wall\" mean?",
+      "explanation": "**Correct answer: C.** Compute capacity can grow faster than the supply of high-quality, sufficiently independent data. Reuse, synthetic transformations, and better curation address different parts of that constraint.",
+      "topic": "9.9. The data wall: token counts stop being interchangeable",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "A limit on the context length available during model training"
+        },
+        {
+          "value": "B",
+          "text": "A ceiling on corpus read speed from disk on large clusters"
+        },
+        {
+          "value": "C",
+          "text": "The pool of quality text grows slower than training runs consume it"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "9.10.1",
+      "prompt": "What is Muon's core idea for matrix parameters?",
+      "explanation": "**Correct answer: A.** Coordinate-wise scaling is AdamW. Muon instead flattens the update's spectrum with a Newton–Schulz iteration, and it carries no second moment — hence the saving on optimizer state. A finite quintic trace does not set every nonzero singular value exactly to one.",
+      "topic": "9.10. Muon: change the spectrum of a matrix update",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Narrow the update’s singular-value spread with a short matrix iteration"
+        },
+        {
+          "value": "B",
+          "text": "Scale the step coordinate-wise by the accumulated second moment"
+        },
+        {
+          "value": "C",
+          "text": "Zero out update components whose magnitude falls below a threshold"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "9.10.2",
+      "prompt": "Which Gram matrix is cheaper for a 64×32 update?",
+      "explanation": "**Correct answer: B.** Transposing makes the left Gram matrix square on the smaller dimension.",
+      "topic": "9.10. Muon: change the spectrum of a matrix update",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "64×64 without transposing"
+        },
+        {
+          "value": "B",
+          "text": "32×32 after transposing"
+        },
+        {
+          "value": "C",
+          "text": "64×32 without multiplication"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.11.1",
+      "prompt": "What does QK-Clip do when it detects excessively large attention logits?",
+      "explanation": "**Correct answer: B.** QK-Clip acts on the parameter source of excessive bilinear logits by rescaling $W_Q$ and $W_K$, rather than clipping one forward pass. The Kimi K2 report presents it as one component of the stabilization system for a 15.5T-token run; the reported absence of loss spikes belongs to the complete run, not to an isolated causal test.",
+      "topic": "9.11. MuonClip: correct the parameter source of unstable attention logits",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Clips the logits from above while leaving the projection weights alone"
+        },
+        {
+          "value": "B",
+          "text": "Rescales the q and k projection weights, bringing logits back under threshold"
+        },
+        {
+          "value": "C",
+          "text": "Skips the optimizer step for the layer where the outlier occurred"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.11.2",
+      "prompt": "Where should post-correction logit regrowth start?",
+      "explanation": "**Correct answer: B.** Starting at the old maxima would simulate a branch where the correction never happened.",
+      "topic": "9.11. MuonClip: correct the parameter source of unstable attention logits",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The original, uncorrected maxima"
+        },
+        {
+          "value": "B",
+          "text": "The corrected maxima"
+        },
+        {
+          "value": "C",
+          "text": "Always zero"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.12.1",
+      "prompt": "Why does this Newton–Schulz implementation transpose a tall matrix (more rows than columns)?",
+      "explanation": "**Correct answer: C.** For an m×n input with m>n, transposition gives n×m X and an n×n left Gram matrix rather than m×m. The saving depends on shape; there is no universal factor of two. Transposing the result restores the input shape.",
+      "topic": "9.12. Code (level 1): small functions that expose their assumptions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Every tall matrix necessarily diverges without transposition"
+        },
+        {
+          "value": "B",
+          "text": "Transposition replaces matrix multiplication by element-wise operations"
+        },
+        {
+          "value": "C",
+          "text": "To form the smaller left Gram matrix, then restore the original orientation"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "9.14.1",
+      "prompt": "What problem does µP solve?",
+      "explanation": "**Correct answer: A.** Without a consistent parameterization, useful update scales and learning rates can shift substantially with width. µP defines a model family in which tuning on a small proxy transfers much more reliably; it is not a guarantee across arbitrary architectures.",
+      "topic": "9.14. µP and MetaP: make small-model tuning informative",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Transferring tuned hyperparameters across widths within a consistently parameterized family"
+        },
+        {
+          "value": "B",
+          "text": "Training stability when moving from bf16 to still lower precision"
+        },
+        {
+          "value": "C",
+          "text": "Aligning the learning-rate schedule with the training set length"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "9.15.1",
+      "prompt": "What does ZeRO-3's ideal memory floor mean?",
+      "explanation": "**Correct answer: B.** ZeRO-3 shards the listed persistent state. Activation memory must be accounted for separately: at fixed local microbatch size it does not acquire the same inverse-rank scaling. Gather windows, communication buffers, and allocator overhead also affect peak memory.",
+      "topic": "9.15. Parallelism: fitting the training state before optimizing communication",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The minimum below which training must fall back to CPU offload"
+        },
+        {
+          "value": "B",
+          "text": "Weights, gradients and states are sharded across ranks; activations are not"
+        },
+        {
+          "value": "C",
+          "text": "The volume occupied by one model layer on one accelerator of the cluster"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "9.15.2",
+      "prompt": "For eight stages, f=7/(m+7). What is the smallest m with f strictly below 5%?",
+      "explanation": "**Correct answer: B.** At m=133 the result is exactly 5%; m=134 gives 7/141 ≈ 4.965%.",
+      "topic": "9.15. Parallelism: fitting the training state before optimizing communication",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "133"
+        },
+        {
+          "value": "B",
+          "text": "134"
         },
         {
           "value": "C",
@@ -216,271 +408,31 @@
         }
       ],
       "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.9.1",
-      "prompt": "What does prefix caching give?",
-      "explanation": "**Correct answer: B.** Reuse depends on an identical token history and compatible state, not merely similar text. The uncached suffix still attends to the prefix; billing depends on the service contract.",
-      "topic": "10.9. Prefix caching: do not rebuild an identical beginning",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "It shrinks the cache by dropping positions with low attention weight"
-        },
-        {
-          "value": "B",
-          "text": "It avoids recomputing an exactly matching prefix under matching model and execution settings"
-        },
-        {
-          "value": "C",
-          "text": "It speeds up decode by predicting the next tokens of the shared prefix"
-        }
-      ],
-      "correct": [
         "B"
       ]
     },
     {
-      "id": "10.9.2",
-      "prompt": "A 7680-token prefix is cached and a 512-token suffix arrives. Which work remains?",
-      "explanation": "**Correct answer: A.** Caching avoids rebuilding prefix state, not reading it for new attention queries. The teaching QK/AV-inclusive ratio is 14.402, versus 16 for projections alone.",
-      "topic": "10.9. Prefix caching: do not rebuild an identical beginning",
+      "id": "9.16.1",
+      "prompt": "Why can reported wall-clock training time not be equated directly with the arithmetic compute estimate $C\\approx6ND$?",
+      "explanation": "**Correct answer: C.** $C\\approx6ND$ estimates useful arithmetic work. Converting it to seconds requires cluster size and effective throughput; without MFU and downtime, neither quantity determines the other.",
+      "topic": "9.16. Four directions in contemporary pretraining",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Suffix projections and suffix attention to the prefix and earlier suffix positions"
+          "text": "Time is always reported for one accelerator while the formula is for the full cluster"
         },
         {
           "value": "B",
-          "text": "Suffix projections only; attention is unnecessary"
+          "text": "The formula counts only the forward pass whereas time counts forward and backward"
         },
         {
           "value": "C",
-          "text": "Full prefill of all 8192 positions"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.9.3",
-      "prompt": "Identical token blocks follow different earlier prefixes. Are their KV states interchangeable?",
-      "explanation": "**Correct answer: A.** Matching local tokens does not imply matching contextual state. The demo key includes the full prefix and model revision.",
-      "topic": "10.9. Prefix caching: do not rebuild an identical beginning",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "No: state depends on preceding context and model settings"
-        },
-        {
-          "value": "B",
-          "text": "Yes: a hash of the block alone is enough"
-        },
-        {
-          "value": "C",
-          "text": "Yes: equal block length guarantees it"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.10.1",
-      "prompt": "What is the main trade-off of tiered KV offloading?",
-      "explanation": "**Correct answer: C.** Compare the expected benefit of reuse with writing, storage, and restore costs. If transfer is more expensive than recomputing the required state, offloading does not pay.",
-      "topic": "10.10. Tiered placement: when HBM is only the first level",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "A cache on the CPU takes more room because of different page alignment"
-        },
-        {
-          "value": "B",
-          "text": "Offloaded blocks cannot be shared between several concurrent requests"
-        },
-        {
-          "value": "C",
-          "text": "Space is cheaper, but bringing blocks back runs over a slow bus"
+          "text": "Accelerator count, peak throughput, MFU, communication, and downtime stand between arithmetic FLOP and wall-clock time"
         }
       ],
       "correct": [
         "C"
-      ]
-    },
-    {
-      "id": "10.11.1",
-      "prompt": "Why separate prefill and decode onto different device groups?",
-      "explanation": "**Correct answer: A.** Independent pools allow different batching and parallelism policies. The trade-off is KV transfer and coordination; separation is not always better at low load.",
-      "topic": "10.11. Prefill/decode disaggregation: give each phase its own pool",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "The phases have different profiles; separate pools can protect decode from long prefills"
-        },
-        {
-          "value": "B",
-          "text": "So that the cache fits entirely into the memory of one of the groups"
-        },
-        {
-          "value": "C",
-          "text": "So that training and inference can share one and the same cluster"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.12.1",
-      "prompt": "How should a KV pool behave when blocks run out during append?",
-      "explanation": "**Correct answer: B.** Preflight the allocation. If it fails, preserve page tables and reference counts so that the scheduler can decide how to proceed.",
-      "topic": "10.12. Code (level 1): geometry, bandwidth, and private pages",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Silently overwrite the oldest blocks of that same sequence"
-        },
-        {
-          "value": "B",
-          "text": "Raise an explicit error without partially changing the pool"
-        },
-        {
-          "value": "C",
-          "text": "Halve the block size repeatedly until free space is found"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "10.12.2",
-      "prompt": "A cache retains absolute positions [2,5). What should truncate(1) do?",
-      "explanation": "**Correct answer: A.** The earlier prefix is gone. Reject without mutation; recovering it requires a separate snapshot or recomputation.",
-      "topic": "10.12. Code (level 1): geometry, bandwidth, and private pages",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Reject rollback outside the retained interval"
-        },
-        {
-          "value": "B",
-          "text": "Restore the evicted position 1"
-        },
-        {
-          "value": "C",
-          "text": "Reset all absolute positions to zero"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.14.1",
-      "prompt": "How does eviction based on accumulated attention mass differ from a simple streaming policy?",
-      "explanation": "**Correct answer: C.** Streaming decides in advance and identically: keep the head and the tail of the window. Attention-aware ranks tokens by contribution but must accumulate statistics and pays its own price.",
-      "topic": "10.14. Compression I: eviction changes which history exists",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "It offloads blocks to the CPU while streaming deletes them for good"
-        },
-        {
-          "value": "B",
-          "text": "It works during prefill, whereas streaming applies only at decode"
-        },
-        {
-          "value": "C",
-          "text": "It looks at accumulated attention weights rather than token position"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "10.15.1",
-      "prompt": "Why does bf16→3 bits per coordinate not guarantee a 16/3 reduction in total memory?",
-      "explanation": "**Correct answer: A.** 16/3 compares ideal value codes only. Scales, zero points when used, alignment, high-precision residuals, and page metadata add bytes; model weights remain too.",
-      "topic": "10.15. Compression II: quantization, low rank, and the order of operations",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Group scales, zero points and page metadata occupy space as well"
-        },
-        {
-          "value": "B",
-          "text": "Because only K is quantized while V always stays in the original dtype"
-        },
-        {
-          "value": "C",
-          "text": "Because the first layers of the stack are always excluded from quantization"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.15.2",
-      "prompt": "Why does the suggested evaluation order leave eviction until last?",
-      "explanation": "**Correct answer: A.** Evicted positions are unavailable to future attention unless recomputed, potentially breaking a long-range dependency. Quantization and architectural compression also need quality checks: this is an evaluation order, not a quality guarantee.",
-      "topic": "10.15. Compression II: quantization, low rank, and the order of operations",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Eviction irreversibly removes part of the context and may change the model output"
-        },
-        {
-          "value": "B",
-          "text": "Eviction works only after the KV cache has been moved to local SSD"
-        },
-        {
-          "value": "C",
-          "text": "Eviction requires every KV block to use the same bit width"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "10.17.1",
-      "prompt": "What must an inference passport contain besides the weight size?",
-      "explanation": "**Correct answer: B.** Weights are a constant, the cache is a function of load. Without length, batch and cache scheme the weight size does not answer \"will this fit on the card\".",
-      "topic": "10.17. Reading a model’s inference passport",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "The model's release date and the licence its weights are published under"
-        },
-        {
-          "value": "B",
-          "text": "KV per token, target length, batch, engine and cache quantization mode"
-        },
-        {
-          "value": "C",
-          "text": "The parameter count together with the layer count and vocabulary size"
-        }
-      ],
-      "correct": [
-        "B"
       ]
     }
   ]

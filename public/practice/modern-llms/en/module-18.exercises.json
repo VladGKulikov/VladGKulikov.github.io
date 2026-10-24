@@ -7,58 +7,37 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "Exercise 1. The correct softmax axis",
-      "prompt": "`scores` has shape `[B, h, T_q, T_k] = [2, 4, 3, 5]`.\n\n\n1. What is the shape of `weights`?\n\n2. Which sum must equal one?\n\n3. What does `softmax(dim=-2)` do?",
-      "answer": "**Solution.** The shape remains `[2,4,3,5]`. For each fixed `(batch, head, query)`, the sum across the final key axis is one. `dim=-2` normalizes the three query positions for each key. The code runs but no longer implements attention.",
+      "title": "E1. Context and step latency",
+      "prompt": "A loop begins with 3,000 tokens and appends 1,500 on each of 20 steps. Compare full-history prefill with prefix reuse and find final KV at 128 KiB/token. For one step, add prefill of 1,500 tokens for an 8.03B model at 495 TFLOP/s, decode of 90 tokens at 209.4 tok/s, and a 300 ms tool call.",
+      "answer": "*Solution.* Without reuse, step $i$ processes full history $3000+1500i$. The arithmetic progression gives $20\\cdot3000+1500(0+\\cdots+19)=345000$ tokens. Reuse processes initial prefix once and the 19 increments preceding calls once: $3000+19\\cdot1500=31500$, a 10.9524 ratio of processed input positions, excluding the growing cost of reading old KV. Final KV is $33000\\cdot128$ KiB = **4.0283 GiB**.\n\nThe conditional $2PT$ prefill estimate is $2\\cdot8.03\\text{B}\\cdot1500/(495\\text{ TFLOP/s})=48.667$ ms. Decode is $90/209.4=429.799$ ms and tool latency 300 ms. Total is **778.466 ms**, with decode at 55.21%. This is a conditional scenario without queueing or runtime overhead.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "Exercise 2. Dot-product scaling",
-      "prompt": "Let $d_k=64$ and assume independent, zero-mean, unit-variance coordinates. Estimate the variance of $q^\\top k$ before and after scaling.",
-      "answer": "**Solution.** Under the stated assumptions, the variance is 64 before scaling. Dividing by $\\sqrt{64}=8$ divides variance by $8^2$, leaving 1. The notebook samples 50,000 pairs with seed 18, prints the empirical variances, and checks an 8% tolerance around these theoretical values.",
+      "title": "E2. Reliability and parallel accounting",
+      "prompt": "Compute twenty-step success for step probabilities 0.98 and 0.95, without and with one independent retry. Find the per-step probability required for 90% success over 50 steps. Then analyze 20 subagents with 400 work minutes, 5 planning minutes, 20 merge minutes, 30K tokens per worker, and 128 KiB KV/token.",
+      "answer": "*Solution.* Without retry, every step must succeed: $0.98^{20}=0.66761$ and $0.95^{20}=0.35849$. With one independent retry, per-step success is $1-(1-p)^2$, or 0.9996 and 0.9975; raising these to the twentieth power gives **0.99203** and **0.95117**. Requiring $p^{50}=0.9$ gives $p=0.9^{1/50}=0.997895$.\n\nPerfect partitioning makes worker time $400/20=20$ minutes and critical path $5+20+20=45$ minutes. Speedups are $400/45=8.89\\times$ against useful work and $(5+400+20)/45=9.44\\times$ end-to-end. Even infinitely many workers leave 25 serial minutes, imposing 16× and 17× ceilings. KV is $20\\cdot30000\\cdot128$ KiB = **73.242 GiB**. Retry independence and perfect partitioning are strong assumptions.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "Exercise 3. Attention by hand",
-      "prompt": "Using the matrices in §4.5, reconstruct the second causal output row.",
-      "answer": "**Solution.** The available logits are `[0,0.707]`, giving softmax weights `[0.330238,0.669762]`. Therefore\n\n$$\nZ_2\\approx0.330238[1,0]+0.669762[0,2]\n\\approx[0.330238,1.339523].\n$$",
+      "title": "E3. CodeAct and a reproducible trace",
+      "prompt": "Five JSON actions use 90 tokens each; one CodeAct block uses 160 tokens. Compute both ratios and interpret $150000/(2\\cdot8.03\\text{B})$. Then reproduce a trace that repairs a failed call and returns 27.92.",
+      "answer": "*Solution.* The JSON path uses $5\\cdot90=450$ tokens and five model/tool round trips; CodeAct uses 160 tokens and one. The ratios are $450/160=\\mathbf{2.8125\\times}$ and $5/1=\\mathbf{5\\times}$. The value $150000/(2\\cdot8.03\\text{B})=9.33998\\cdot10^{-6}$ compares 150K simple mask checks with rough $2P$ arithmetic for one model token; the work units differ, so the ratio is not a measured time fraction.\n\nThe reproducible trace first calls `lookup(sensor_bach)` and receives `tool_error`; it corrects the key to `sensor_batch` and obtains 13.96; then it calls the calculator with `13.96 * 2`, obtains 27.92, and returns `Answer: 27.92`. Event kinds are `assistant_action → tool_error → assistant_action → tool_result → assistant_action → tool_result → assistant_final → verification_pass`, with three registry invocations, one error, and status `completed`. The invariant is that the failure becomes an observation rather than uncontrolled execution.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
-      "title": "Exercise 4. LayerNorm",
-      "prompt": "Normalize $x=[1,2,3,4]$ with $\\gamma=1$, $\\beta=0$, and $\\varepsilon=0$.",
-      "answer": "**Solution.** $\\mu=2.5$, $\\sigma^2=1.25$, and standard deviation $\\sqrt{1.25}\\approx1.1180$. Thus\n\n$$\n[-1.3416,-0.4472,0.4472,1.3416].\n$$",
-      "answerKind": "solution"
+      "title": "E4 [project]",
+      "prompt": "Build a ReAct-style agent with search, calculator, and a safe local executor. On 20 tasks, report task success, protocol-error rate, tool-error rate, steps, and cost. Then attach a read-only MCP server and repeat the evaluation.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 18](/downloads/modern-llms/project_demos/en/module_18_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
     },
     {
       "id": "exercise-05",
-      "title": "Exercise 5. Layer parameters",
-      "prompt": "For $d_{model}=512$ and $d_{ff}=2048$, count MHA and FFN weights without biases.",
-      "answer": "**Solution.** MHA: $4\\cdot512^2=1\\,048\\,576$. FFN: $2\\cdot512\\cdot2048=2\\,097\\,152$. The total is $3\\,145\\,728$, and the FFN owns $2/3$.",
-      "answerKind": "solution"
-    },
-    {
-      "id": "exercise-06",
-      "title": "Exercise 6 [project]. Catch future leakage",
-      "prompt": "Implement a decoder block once with a causal mask and once without it. Create two sequences that share their first three positions but differ at the fourth. Compare logits at the first three positions.",
-      "answer": "**Expected result.** With masking, the logits agree up to floating-point tolerance. Without masking, at least some earlier logits differ. The module notebook includes a reproducible test.",
-      "answerKind": "guidance"
-    },
-    {
-      "id": "exercise-07",
-      "title": "Exercise 7 [project]. Draw the block from memory",
-      "prompt": "On a blank page, reconstruct:\n\n\n1. one complete encoder layer;\n\n2. one complete original decoder layer;\n\n3. a modern pre-norm decoder-only block.\n\nLabel every arrow with a tensor shape, then compare your result with VIZ 02 and VIZ 08.",
-      "answer": "**Readiness criterion.** You included a separate `Add & Norm` after every original sublayer, sent decoder queries and encoder keys/values into cross-attention, and preserved $d_{model}$ along the residual stream.",
-      "answerKind": "guidance"
-    },
-    {
-      "id": "exercise-08",
-      "title": "Exercise 8 [project]. A tiny language model",
-      "prompt": "Wrap one `DecoderBlock` with token and positional embeddings, a final norm, and a vocabulary head. Overfit the model on a short periodic sequence. Check that:\n\n- loss decreases;\n- generated continuation follows the pattern;\n- the causal-invariance test passes;\n- removing the causal mask exposes the next target token, even if the loss on this simple period does not decrease further.",
-      "answer": "**Boundary of the result.** A single preceding token determines the next item of this period. Success does not show that attention is necessary or that the model uses long contexts. This experiment checks training and generation on a simple task, without a separate generalization test.",
+      "title": "E5 [project]",
+      "prompt": "Divide analysis of a ten-file project among subagents. Compare sequential and parallel versions by wall-clock time, total tokens, KV memory, duplicated work, and merge conflicts. Add checkpoint recovery after one worker failure.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 18](/downloads/modern-llms/project_demos/en/module_18_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
     }
   ],

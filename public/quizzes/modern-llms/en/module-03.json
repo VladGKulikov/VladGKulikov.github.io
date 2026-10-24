@@ -4,23 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "4.1.1",
-      "prompt": "What does permutation equivariance mean for bidirectional self-attention without position or a mask?",
-      "explanation": "**Correct answer: A.** Equivariance means that the output transforms with the input; it is not permutation invariance. A causal mask adds access asymmetry but not a full distance geometry.",
-      "topic": "4.1. Motivation: content attention is not an ordering mechanism",
+      "id": "3.1.1",
+      "prompt": "What problem did the Transformer solve compared with recurrent processing?",
+      "explanation": "**Correct answer: A.** In a recurrent network the path between distant positions equals their distance, and training is sequential in time. Attention gives a path of length one and a parallel pass over the whole sequence.",
+      "topic": "3.1. Why the Transformer was needed",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Permuting input positions produces the same permutation of the outputs"
+          "text": "Positions are processed in parallel and the link is direct"
         },
         {
           "value": "B",
-          "text": "Every permutation leaves the entire output tensor unchanged"
+          "text": "The parameter count grows more slowly as the stack gets deeper"
         },
         {
           "value": "C",
-          "text": "Softmax reconstructs order from attention values even without a mask"
+          "text": "The model no longer needs any positional signal at its input"
         }
       ],
       "correct": [
@@ -28,23 +28,23 @@
       ]
     },
     {
-      "id": "4.3.1",
-      "prompt": "What is exactly true for one sine-cosine pair in classic positional encoding?",
-      "explanation": "**Correct answer: B.** The identity sin(mθ)sin(nθ)+cos(mθ)cos(nθ)=cos((m−n)θ) is exact. RoPE differs by inserting relative phase directly into projected query-key geometry.",
-      "topic": "4.3. Fourier intuition, complex rotations, and what is exact",
+      "id": "3.1.2",
+      "prompt": "When is a reader ready to move from M3 to M4?",
+      "explanation": "**Correct answer: B.** Reconstructing the computation tests understanding beyond recognizing names. The reference sections remain available in later chapters.",
+      "topic": "3.1. Why the Transformer was needed",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Its dot product depends on the sum of absolute positions"
+          "text": "Recognizing the names in the diagram is sufficient"
         },
         {
           "value": "B",
-          "text": "The dot product equals cos((m−n)θ) for one fixed frequency θ"
+          "text": "They can reconstruct the computation and answer the self-check"
         },
         {
           "value": "C",
-          "text": "Relative dependence appears only after projection weights are trained"
+          "text": "They must first read every external source"
         }
       ],
       "correct": [
@@ -52,23 +52,23 @@
       ]
     },
     {
-      "id": "4.4.1",
-      "prompt": "Where is RoPE applied in the attention block studied here?",
-      "explanation": "**Correct answer: C.** An arbitrary matrix W generally does not satisfy WR=RW. RoPE integrates cleanly because it is applied after the Q/K projections and preserves tensor shape.",
-      "topic": "4.4. Formalism: the frequency ladder and the rotary identity",
+      "id": "3.2.1",
+      "prompt": "What does d_model denote in the base Transformer?",
+      "explanation": "**Correct answer: C.** It is the one width seen by the input and output of every sublayer. The inner dimensions — d_k, d_v, d_ff — live inside sublayers and never reach the bus.",
+      "topic": "3.2. Notation and tensor shapes",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "RoPE rotates only scalar features after normalization"
+          "text": "The number of positions the model handles in one forward pass"
         },
         {
           "value": "B",
-          "text": "Attention constructs Q and K without any linear projections"
+          "text": "The inner width of the FFN between its two linear projections"
         },
         {
           "value": "C",
-          "text": "Q and K are projected first, then their coordinate pairs are rotated"
+          "text": "The width of the residual stream, shared across every layer"
         }
       ],
       "correct": [
@@ -76,47 +76,23 @@
       ]
     },
     {
-      "id": "4.4.2",
-      "prompt": "Partial RoPE rotates D coordinates of a head of width d_k. Which dimension defines the frequencies?",
-      "explanation": "**Correct answer: B.** There are D/2 rotated pairs. Standard attention scaling still uses 1/√d_k.",
-      "topic": "4.4. Formalism: the frequency ladder and the rotary identity",
+      "id": "3.2.2",
+      "prompt": "B = 2, T = 5, h = 4 heads. What is the shape of the attention weight matrix?",
+      "explanation": "**Correct answer: A.** Explicitly stored weights require B·h·T² values. An optimized algorithm can compute the result in tiles without storing the full matrix.",
+      "topic": "3.2. Notation and tensor shapes",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Always the full residual width d_model"
+          "text": "2 × 4 × 5 × 5 — one square matrix for each of the 4 heads"
         },
         {
           "value": "B",
-          "text": "The rotated width D"
+          "text": "2 × 5 × 32 — the weights live in the same width as the residual stream"
         },
         {
           "value": "C",
-          "text": "Sequence length T"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "4.5.1",
-      "prompt": "Why does a common position shift preserve a RoPE score when q, k, and frequencies are fixed?",
-      "explanation": "**Correct answer: A.** R_{m+c}^T R_{n+c}=R_{n−m}. For fixed q and k, the logit depends on displacement rather than the coordinate origin.",
-      "topic": "4.5. Worked example: three placements, one relative displacement",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "The common phase cancels, leaving only relative phase"
-        },
-        {
-          "value": "B",
-          "text": "Positions are normalized by context length first"
-        },
-        {
-          "value": "C",
-          "text": "The √d scale removes absolute coordinates"
+          "text": "2 × 4 × 5 × 8 — each position gets a weight vector of length 8"
         }
       ],
       "correct": [
@@ -124,47 +100,23 @@
       ]
     },
     {
-      "id": "4.5.2",
-      "prompt": "The rotated dot product is 1.144248 with d_k=4. What is the standard pre-mask attention logit?",
-      "explanation": "**Correct answer: C.** Divide the dot product by √4=2, not by four.",
-      "topic": "4.5. Worked example: three placements, one relative displacement",
+      "id": "3.3.1",
+      "prompt": "What does an embedding lookup do?",
+      "explanation": "**Correct answer: B.** It is plain indexing: an integer becomes a vector of width d_model. The matrix trains with the model, and modern LLMs often tie it to the output projection.",
+      "topic": "3.3. Step 1: tokens, embeddings, and positions",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "1.144248"
+          "text": "It compresses the vocabulary to a multiple of the head count"
         },
         {
           "value": "B",
-          "text": "0.286062"
+          "text": "It replaces a token identifier with a row of a learned matrix"
         },
         {
           "value": "C",
-          "text": "0.572124"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "4.6.1",
-      "prompt": "What does increasing rope_theta primarily do?",
-      "explanation": "**Correct answer: B.** The fastest pair θ₀=1 is unchanged. A larger base reallocates the spectrum toward slower high-index coordinates; it does not guarantee long-context quality.",
-      "topic": "4.6. Reading the RoPE frequency spectrum",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "It removes the fastest frequencies and erases local order"
-        },
-        {
-          "value": "B",
-          "text": "It slows higher-index pairs more strongly, adding longer wavelengths"
-        },
-        {
-          "value": "C",
-          "text": "It automatically guarantees a larger usable context"
+          "text": "It computes the token's similarity with all others in the vocabulary"
         }
       ],
       "correct": [
@@ -172,23 +124,23 @@
       ]
     },
     {
-      "id": "4.6.2",
-      "prompt": "Why is the largest wavelength of one RoPE pair not a hard context limit?",
-      "explanation": "**Correct answer: C.** Each pair is periodic, but the complete code is multi-frequency. Wavelengths and turn counts are diagnostics rather than a physical global limit.",
-      "topic": "4.6. Reading the RoPE frequency spectrum",
+      "id": "3.3.2",
+      "prompt": "What happens when rows of unmasked self-attention input are permuted without positional information?",
+      "explanation": "**Correct answer: C.** This is permutation equivariance. A fixed causal mask breaks the assumptions of this statement.",
+      "topic": "3.3. Step 1: tokens, embeddings, and positions",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "All coordinate pairs share one common period for the full vector"
+          "text": "Every output row stays in its original location"
         },
         {
           "value": "B",
-          "text": "The causal mask removes periodicity from every rotary component"
+          "text": "The output becomes zero because the order changed"
         },
         {
           "value": "C",
-          "text": "The full code combines many frequencies; one repeated pair does not repeat the vector"
+          "text": "Output rows undergo the same permutation"
         }
       ],
       "correct": [
@@ -196,23 +148,23 @@
       ]
     },
     {
-      "id": "4.7.1",
-      "prompt": "Why is Position Interpolation normally followed by fine-tuning?",
-      "explanation": "**Correct answer: A.** PI maps m→m/s and slows the whole spectrum. New positions stay inside the old angular range, but local geometry changes as well.",
-      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "id": "3.4.1",
+      "prompt": "How should the roles of Q, K and V be read?",
+      "explanation": "**Correct answer: A.** The match between query and key sets the weight, and it is the value's content that travels. The three projections train independently, so \"what to look for\" and \"what to hand over\" are different things.",
+      "topic": "3.4. Step 2: scaled dot-product attention",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It compresses every phase and changes the familiar local geometry"
+          "text": "The query asks, the key answers a match, the value is what travels"
         },
         {
           "value": "B",
-          "text": "It adds a new table of learned vectors for every position"
+          "text": "All three are copies of the input differing only in projection scale"
         },
         {
           "value": "C",
-          "text": "It works only in bidirectional encoders with a full mask"
+          "text": "Q and K encode position while V encodes the content of the token"
         }
       ],
       "correct": [
@@ -220,23 +172,23 @@
       ]
     },
     {
-      "id": "4.7.2",
-      "prompt": "What is the most accurate description of static NTK-aware scaling?",
-      "explanation": "**Correct answer: B.** The base·s^(D/(D−2)) formula is motivated by spectral structure, but its effectiveness is model- and length-dependent and must be measured.",
-      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "id": "3.4.2",
+      "prompt": "Q, K, and V have shape 2 × 4 × 5 × 8. What is the shape of Z = AV before merging heads?",
+      "explanation": "**Correct answer: B.** The weight matrix B × h × T × T multiplies values of B × h × T × d_v and yields a positional output at head width. It returns to the bus only after concatenating heads and applying W_O.",
+      "topic": "3.4. Step 2: scaled dot-product attention",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "A theorem guaranteeing safe extrapolation without fine-tuning"
+          "text": "2 × 4 × 5 × 5 — the head output inherits the weight matrix shape"
         },
         {
           "value": "B",
-          "text": "A heuristic that reshapes the spectrum through a new base"
+          "text": "2 × 4 × 5 × 8 — key weights are applied to the values"
         },
         {
           "value": "C",
-          "text": "A form of ALiBi with a learned slope for every attention head"
+          "text": "2 × 5 × 32 — the head returns straight into the residual stream"
         }
       ],
       "correct": [
@@ -244,23 +196,23 @@
       ]
     },
     {
-      "id": "4.7.3",
-      "prompt": "The entire query and key are each scaled by a≈1.3466. How does their dot product change?",
-      "explanation": "**Correct answer: C.** Bilinearity gives (aq)ᵀ(ak)=a²qᵀk, with a²≈1.8133. Partial RoPE requires an extra check because unrotated channels may not receive the factor.",
-      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "id": "3.5.1",
+      "prompt": "How does a padding mask differ from a causal mask?",
+      "explanation": "**Correct answer: C.** Boolean allowed masks combine with AND. One excludes PAD keys; the other excludes keys later than the query position.",
+      "topic": "3.5. Masks: who is allowed to see whom",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Every runtime must multiply final logits by exactly 1.3466"
+          "text": "Padding is applied before the softmax while causal is applied after"
         },
         {
           "value": "B",
-          "text": "Every inverse frequency is divided by an additional factor of 1.3466"
+          "text": "Padding is needed only in training and causal only at inference"
         },
         {
           "value": "C",
-          "text": "If the factor enters q and k, their dot-product score receives about 1.8133"
+          "text": "One hides non-existent tokens, the other hides future positions"
         }
       ],
       "correct": [
@@ -268,23 +220,23 @@
       ]
     },
     {
-      "id": "4.7.4",
-      "prompt": "What does the static NTK-aware formula do for s≥1 and D>2?",
-      "explanation": "**Correct answer: A.** The frequency ratio is s^(−2i/(D−2)): one at i=0 and 1/s at the last pair.",
-      "topic": "4.7. Context extension changes a spectrum, not just one number",
+      "id": "3.5.2",
+      "prompt": "Why can the softmax not be computed first and forbidden weights zeroed afterwards?",
+      "explanation": "**Correct answer: A.** Softmax normalizes across the whole row including forbidden keys, and part of the mass leaks to them. Logits must be masked with minus infinity before normalization so the distribution covers only what is allowed.",
+      "topic": "3.5. Masks: who is allowed to see whom",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Preserve the first frequency and divide the last by s"
+          "text": "The remaining weights would stop summing to one along the row"
         },
         {
           "value": "B",
-          "text": "Leave all frequencies unchanged"
+          "text": "Zeroing after the softmax would need an extra pass over the matrix"
         },
         {
           "value": "C",
-          "text": "Guarantee model quality at any length"
+          "text": "Zeroing weights after softmax changes the output vector's dimensionality"
         }
       ],
       "correct": [
@@ -292,23 +244,23 @@
       ]
     },
     {
-      "id": "4.8.1",
-      "prompt": "What does ALiBi do?",
-      "explanation": "**Correct answer: A.** ALiBi leaves Q/K unchanged and adds a positional bias. An exponential distance prior appears under fixed content scores, while full attention still depends on qᵀk.",
-      "topic": "4.8. ALiBi: a distance prior in the logits",
+      "id": "3.5.3",
+      "prompt": "What does True mean in this chapter’s allowed mask?",
+      "explanation": "**Correct answer: A.** The name allowed matches the meaning of True. Another API may use the inverse convention.",
+      "topic": "3.5. Masks: who is allowed to see whom",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It adds a head-specific linear penalty for relative distance to the logit"
+          "text": "The connection is permitted"
         },
         {
           "value": "B",
-          "text": "It rotates queries and keys by a shared relative-position angle"
+          "text": "The connection is forbidden"
         },
         {
           "value": "C",
-          "text": "It learns a separate absolute-position table for every attention head"
+          "text": "It depends on the input tensor dtype"
         }
       ],
       "correct": [
@@ -316,23 +268,23 @@
       ]
     },
     {
-      "id": "4.8.2",
-      "prompt": "Why is a finite ALiBi penalty insufficient for causal attention?",
-      "explanation": "**Correct answer: B.** A finite score generally retains nonzero softmax weight. Future positions must be excluded by the mask.",
-      "topic": "4.8. ALiBi: a distance prior in the logits",
+      "id": "3.6.1",
+      "prompt": "With d_model = 32, h = 4, and the standard equal split, what is the head width?",
+      "explanation": "**Correct answer: B.** 32 / 4 = 8. The projection-weight count stays 4·32²; explicitly stored attention weights also depend on head count.",
+      "topic": "3.6. Multi-head attention",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "ALiBi makes all values V negative"
+          "text": "32: each head retains the entire projected width"
         },
         {
           "value": "B",
-          "text": "Future keys must be masked, not merely assigned lower scores"
+          "text": "8: the projected result is split across four heads"
         },
         {
           "value": "C",
-          "text": "ALiBi requires a learned absolute-position table"
+          "text": "128: head count multiplies the resulting width"
         }
       ],
       "correct": [
@@ -340,47 +292,23 @@
       ]
     },
     {
-      "id": "4.9.1",
-      "prompt": "Which statement about NoPE is correct?",
-      "explanation": "**Correct answer: B.** NoPE means no explicit positional mechanism in the relevant layer or model. Interleaved RoPE/NoPE is one hybrid design, not the definition.",
-      "topic": "4.9. NoPE and hybrid position mechanisms",
+      "id": "3.6.2",
+      "prompt": "Why does multi-head attention need the output projection W_O?",
+      "explanation": "**Correct answer: C.** W_O mixes head outputs within the attention sublayer and returns the required residual width. Removing it removes this particular mixing operation; later FFNs or projections can still mix those channels.",
+      "topic": "3.6. Multi-head attention",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "NoPE always means strict alternation between RoPE and non-RoPE layers"
+          "text": "It casts the output to the right precision before the residual add"
         },
         {
           "value": "B",
-          "text": "Pure NoPE models and hybrids with explicit position in only some layers both exist"
+          "text": "It normalizes head outputs so that their scales become comparable"
         },
         {
           "value": "C",
-          "text": "NoPE is used only in encoders that do not have a causal attention mask"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "4.10.1",
-      "prompt": "What can be inferred reliably from initial_context_length=4096 in the gpt-oss config?",
-      "explanation": "**Correct answer: C.** The config describes scaling geometry. A full training chronology requires separate documentation and cannot be reconstructed from one field.",
-      "topic": "4.10. Reading the gpt-oss positional configuration",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "All model pretraining used only sequences of exactly 4096 tokens"
-        },
-        {
-          "value": "B",
-          "text": "The model necessarily underwent one particular YaRN fine-tuning phase"
-        },
-        {
-          "value": "C",
-          "text": "4096 is the reference length of the published positional scaling contract"
+          "text": "It learns to mix head channels and sets the output-vector width"
         }
       ],
       "correct": [
@@ -388,47 +316,23 @@
       ]
     },
     {
-      "id": "4.11.1",
-      "prompt": "How should the teaching implementation handle NaN in the frequency vector?",
-      "explanation": "**Correct answer: C.** Shape and positivity checks are insufficient: NaN≤0 is false. Finiteness must be checked separately.",
-      "topic": "4.11. Level-one code: explicit shapes and explicit scaling placement",
+      "id": "3.7.1",
+      "prompt": "What does it mean that the FFN is position-wise?",
+      "explanation": "**Correct answer: A.** Mixing across positions is attention's job; the FFN only transforms each vector in place. A division of labour: attention routes, the FFN computes.",
+      "topic": "3.7. The FFN: nonlinear processing at each position",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Silently replace NaN with zero"
+          "text": "The same weights are applied to every position independently"
         },
         {
           "value": "B",
-          "text": "Continue and hide NaN in softmax"
+          "text": "A separate set of layer weights is learned for each position"
         },
         {
           "value": "C",
-          "text": "Reject the invalid input explicitly"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "4.12.1",
-      "prompt": "A cached prefix contains p tokens at positions 0…p−1. Which position belongs to the next query?",
-      "explanation": "**Correct answer: A.** The current block size does not reset absolute position. Cached keys have already been rotated at their positions.",
-      "topic": "4.12. What the notebook validates",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "p"
-        },
-        {
-          "value": "B",
-          "text": "0 because this call contains one token"
-        },
-        {
-          "value": "C",
-          "text": "Always p−1"
+          "text": "The FFN processes positions sequentially, from left to right"
         }
       ],
       "correct": [
@@ -436,23 +340,23 @@
       ]
     },
     {
-      "id": "4.12.2",
-      "prompt": "Why do integer position_ids not guarantee an exact phase?",
-      "explanation": "**Correct answer: B.** For example, FP16 merges 2048 and 2049. FP32 delays this limit but does not provide arbitrary precision.",
-      "topic": "4.12. What the notebook validates",
+      "id": "3.7.2",
+      "prompt": "What happens if the nonlinearity between the two FFN linear layers is removed?",
+      "explanation": "**Correct answer: B.** A composition of affine maps remains affine. Width alone does not create nonlinearity; ReLU, GELU, or another activation supplies it.",
+      "topic": "3.7. The FFN: nonlinear processing at each position",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Sine accepts only negative indices"
+          "text": "They become attention across positions"
         },
         {
           "value": "B",
-          "text": "Conversion to working floats and multiplication by frequencies introduce rounding"
+          "text": "They can be combined into one affine transformation"
         },
         {
           "value": "C",
-          "text": "Every integer ID requires a learned parameter"
+          "text": "They still represent an arbitrary nonlinear function"
         }
       ],
       "correct": [
@@ -460,47 +364,23 @@
       ]
     },
     {
-      "id": "4.13.1",
-      "prompt": "Which position IDs does M-RoPE use for ordinary text tokens?",
-      "explanation": "**Correct answer: B.** All three text axes receive the same index. Every rotary pair therefore sees position m regardless of its assigned section.",
-      "topic": "4.13. M-RoPE and time-aligned multimodal position",
+      "id": "3.8.1",
+      "prompt": "Along which axis does LayerNorm normalize a Transformer representation?",
+      "explanation": "**Correct answer: C.** Here LayerNorm computes statistics over one token’s final feature axis. For a fixed input vector, the result does not depend on other batch items.",
+      "topic": "3.8. Residual connections and LayerNorm",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "(m,0,0): only the temporal rotary section receives a position"
+          "text": "Along the batch: statistics are taken over all examples at once"
         },
         {
           "value": "B",
-          "text": "(m,m,m): the text path is equivalent to ordinary one-dimensional RoPE"
+          "text": "Along positions: each position is normalized against its neighbours"
         },
         {
           "value": "C",
-          "text": "(0,h,w): text uses the same coordinates as a still image"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "4.13.2",
-      "prompt": "Which statement about TMRoPE is supported by the published technical report?",
-      "explanation": "**Correct answer: C.** TMRoPE was published in the March 2025 Qwen2.5-Omni report. Time alignment is the general idea; the duration represented by one ID is architecture-specific.",
-      "topic": "4.13. M-RoPE and time-aligned multimodal position",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "By definition it forbids the use of spatial coordinates"
-        },
-        {
-          "value": "B",
-          "text": "It always assigns one temporal ID to exactly 40 ms in every model"
-        },
-        {
-          "value": "C",
-          "text": "It is documented in Qwen2.5-Omni; 40 ms belongs to that implementation"
+          "text": "Along features: statistics are taken inside a single vector"
         }
       ],
       "correct": [
@@ -508,51 +388,723 @@
       ]
     },
     {
-      "id": "4.13.3",
-      "prompt": "What is interleaved by Qwen3-VL Interleaved-MRoPE?",
-      "explanation": "**Correct answer: C.** This allocates axes across the spectrum. It is separate from adjacent or split-half pairing within each rotary pair.",
-      "topic": "4.13. M-RoPE and time-aligned multimodal position",
+      "id": "3.8.2",
+      "prompt": "How is the residual update written in the pre-norm scheme?",
+      "explanation": "**Correct answer: A.** Pre-norm leaves a direct residual path around the sublayer, with normalization inside the update branch. This does not guarantee perfect gradient stability throughout the network.",
+      "topic": "3.8. Residual connections and LayerNorm",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Training and evaluation documents"
+          "text": "x ← x + Sub(Norm(x)): the sublayer reads a normalized state"
         },
         {
           "value": "B",
-          "text": "Layers with and without softmax"
+          "text": "x ← Norm(x + Sub(x)): the norm follows the residual addition"
         },
         {
           "value": "C",
-          "text": "Temporal and spatial axis assignments across frequency pairs"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "4.14.1",
-      "prompt": "What is the more accurate description of Llama 4 positional architecture?",
-      "explanation": "**Correct answer: A.** The published implementation includes NoPE layers, RoPE elsewhere, and chunked attention. Temperature tuning applies to the NoPE layers. One rope_theta field does not identify the entire design.",
-      "topic": "4.14. The 2026 landscape is a branching architecture map",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "A RoPE/NoPE hybrid with chunked attention and temperature tuning"
-        },
-        {
-          "value": "B",
-          "text": "Ordinary RoPE with mandatory YaRN scaling in every layer"
-        },
-        {
-          "value": "C",
-          "text": "Pure ALiBi with a linear bias and no rotary component"
+          "text": "x ← Norm(x) + Sub(x): norm and sublayer are applied in parallel"
         }
       ],
       "correct": [
         "A"
+      ]
+    },
+    {
+      "id": "3.9.1",
+      "prompt": "Which keys can a position read in ordinary encoder self-attention?",
+      "explanation": "**Correct answer: B.** The encoder uses bidirectional context. Padding restrictions still apply: the full input does not mean PAD keys are included.",
+      "topic": "3.9. The encoder layer and encoder stack",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Only keys to its left"
+        },
+        {
+          "value": "B",
+          "text": "All content positions in the input, excluding PAD keys"
+        },
+        {
+          "value": "C",
+          "text": "Only keys from decoder outputs"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.9.2",
+      "prompt": "Why do encoder-only models remain useful?",
+      "explanation": "**Correct answer: C.** Classification and retrieval can use representations of an already available text. An encoder processes it bidirectionally; generating a continuation is not required.",
+      "topic": "3.9. The encoder layer and encoder stack",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "They are cheaper to train and so serve as drafting models"
+        },
+        {
+          "value": "B",
+          "text": "They generate text faster thanks to having no causal mask"
+        },
+        {
+          "value": "C",
+          "text": "Classification and retrieval need a text vector, not a continuation"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.10.1",
+      "prompt": "Where do Q, K and V come from in decoder cross-attention?",
+      "explanation": "**Correct answer: A.** The decoder asks and the encoder answers: the query is formed by what has been generated so far while the content comes from the encoded input. That is the mechanism transferring information between sequences.",
+      "topic": "3.10. The decoder layer and cross-attention",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Q from the decoder, K and V from the encoder output"
+        },
+        {
+          "value": "B",
+          "text": "All three from the encoder: the decoder only applies the weights"
+        },
+        {
+          "value": "C",
+          "text": "Q and K from the encoder, V from the decoder's current state"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.10.2",
+      "prompt": "What targets correspond to the toy training input BOS, A, B?",
+      "explanation": "**Correct answer: B.** The shift defines the next-token targets. Causal masking prevents a position from reading its target from the next input position.",
+      "topic": "3.10. The decoder layer and cross-attention",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "BOS, A, B — the same tokens"
+        },
+        {
+          "value": "B",
+          "text": "A, B, EOS — the next token at each position"
+        },
+        {
+          "value": "C",
+          "text": "Only EOS at the final position"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.11.1",
+      "prompt": "What does teacher forcing mean?",
+      "explanation": "**Correct answer: C.** Known training prefixes allow positions to be processed in parallel under a causal mask. During generation, the model’s selected tokens may create prefixes that were rare in training.",
+      "topic": "3.11. Training: teacher forcing and cross-entropy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model trains on its own predictions from previous steps"
+        },
+        {
+          "value": "B",
+          "text": "A teacher of a larger model supplies the target distributions"
+        },
+        {
+          "value": "C",
+          "text": "Ground-truth tokens are fed as input rather than generated ones"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.11.2",
+      "prompt": "A 100-token vocabulary. What does cross-entropy measure, and what is the uniform-prediction reference value?",
+      "explanation": "**Correct answer: A.** Here cross-entropy is the negative log-probability of the true token, measured in nats. A uniform distribution gives NLL = ln(V) = ln(100) ≈ 4.605. This is a baseline, not an upper bound: a confidently wrong model can incur a much larger loss.",
+      "topic": "3.11. Training: teacher forcing and cross-entropy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model's surprise at the true token; about 4.605 nats for uniform logits"
+        },
+        {
+          "value": "B",
+          "text": "The share of argmax matches with truth; by construction it cannot exceed 1.000"
+        },
+        {
+          "value": "C",
+          "text": "The distance between embeddings; the reference follows from the 100-row matrix norm"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.11.3",
+      "prompt": "Can a token excluded by the loss mask remain available as context?",
+      "explanation": "**Correct answer: B.** A loss mask selects scored predictions; an attention mask selects accessible connections.",
+      "topic": "3.11. Training: teacher forcing and cross-entropy",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "No, its key and value are automatically removed"
+        },
+        {
+          "value": "B",
+          "text": "Yes; a separate attention mask controls access"
+        },
+        {
+          "value": "C",
+          "text": "Only if its token ID is zero"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.12.1",
+      "prompt": "Why is generation sequential when training is parallel?",
+      "explanation": "**Correct answer: B.** In training the whole true sequence is known and the mask merely forbids peeking. In generation the future simply does not exist yet, and that is a constraint of the task, not of the implementation.",
+      "topic": "3.12. Generation: the same forward pass in a different loop",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The causal mask at inference forbids computing positions at once"
+        },
+        {
+          "value": "B",
+          "text": "Token t+1 cannot be fed as input until it has been generated"
+        },
+        {
+          "value": "C",
+          "text": "Positional embeddings are computed one by one in order"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.12.2",
+      "prompt": "What does a causal model’s KV cache retain when weights and positions stay fixed?",
+      "explanation": "**Correct answer: C.** A new token creates a new query. Past keys and values can be reused because appending future tokens leaves earlier causal states unchanged.",
+      "topic": "3.12. Generation: the same forward pass in a different loop",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Probabilities of all future tokens"
+        },
+        {
+          "value": "B",
+          "text": "Only queries from previous positions"
+        },
+        {
+          "value": "C",
+          "text": "Past tokens’ keys and values at each layer"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.13.1",
+      "prompt": "What does the displayed scaled_dot_product_attention function return for float16 inputs?",
+      "explanation": "**Correct answer: A.** The teaching function computes in at least float32, or float64 when an input uses float64. Its dtype contract differs from the MHA wrapper’s.",
+      "topic": "3.13. A minimal scaled dot-product attention implementation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "float32; the MHA wrapper casts before its output projection"
+        },
+        {
+          "value": "B",
+          "text": "float16, because the function always preserves input dtype"
+        },
+        {
+          "value": "C",
+          "text": "float64 regardless of the input dtypes"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.13.2",
+      "prompt": "How does the causal mask change during decode with a cache and a query offset?",
+      "explanation": "**Correct answer: B.** With T_q = 1 and a long cache the mask row must permit every past key and forbid future ones relative to the **absolute** position. An off-by-one here raises no exception — the model simply sees one token more or less.",
+      "topic": "3.13. A minimal scaled dot-product attention implementation",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "No mask is needed at all: the cache holds only permitted positions"
+        },
+        {
+          "value": "B",
+          "text": "The query position is compared against the key's absolute cache index"
+        },
+        {
+          "value": "C",
+          "text": "The mask is built from the cache length and applied to all rows at once"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.14.1",
+      "prompt": "Both update branches in a pre-norm block return zero, including biases. What is the output?",
+      "explanation": "**Correct answer: A.** Each update becomes x + 0. This requires zero branch outputs and pre-norm; post-norm would still normalize the main path.",
+      "topic": "3.14. A minimal Transformer block",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The original x, through the residual additions"
+        },
+        {
+          "value": "B",
+          "text": "LayerNorm(x), because the norm acts on the main path"
+        },
+        {
+          "value": "C",
+          "text": "A zero tensor, because both branches are zero"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.14.2",
+      "prompt": "How can a block's causality be checked?",
+      "explanation": "**Correct answer: A.** Compare outputs over the shared prefix with allclose and explicit rtol/atol. Bitwise equality is appropriate only for one deterministic CPU path; fused or GPU kernels can change rounding slightly. Shape or triangularity alone misses errors such as applying the mask after softmax.",
+      "topic": "3.14. A minimal Transformer block",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Feed two sequences that differ only in a future token"
+        },
+        {
+          "value": "B",
+          "text": "Compare the block output with the same implementation run without a mask"
+        },
+        {
+          "value": "C",
+          "text": "Verify that the attention-weight matrix is strictly lower-triangular"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.15.1",
+      "prompt": "B = 2, T = 5, d_model = 32, h = 4, d_ff = 128. What is the shape of the packed QKV?",
+      "explanation": "**Correct answer: B.** The head split comes next and gives 2 × 4 × 5 × 8. Scores are then 2 × 4 × 5 × 5, and after concatenation and W_O the stream returns to 2 × 5 × 32.",
+      "topic": "3.15. A complete shape trace for a toy model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "2 × 5 × 32 — packing does not change the residual stream width"
+        },
+        {
+          "value": "B",
+          "text": "2 × 5 × 96 — three projections of 32 computed as one matrix"
+        },
+        {
+          "value": "C",
+          "text": "2 × 4 × 5 × 8 — packing splits the tensor by heads immediately"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.15.2",
+      "prompt": "What is excluded from the main layer-weight count in §15.1?",
+      "explanation": "**Correct answer: C.** 4d_model² + 2d_model·d_ff counts MHA and FFN weights for one encoder layer. A complete model includes additional parameters.",
+      "topic": "3.15. A complete shape trace for a toy model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All four attention projections"
+        },
+        {
+          "value": "B",
+          "text": "All weights of the wide FFN"
+        },
+        {
+          "value": "C",
+          "text": "Biases, norm parameters, embeddings, and the model’s other layers"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.16.1",
+      "prompt": "Which components of the base Transformer survive in a modern decoder-only LLM?",
+      "explanation": "**Correct answer: A.** The immobile core: discrete input becomes vectors, position and mask impose structure, attention routes, the FFN computes, residual and norm sustain depth. Everything else changed.",
+      "topic": "3.16. The 2017 original and a modern LLM: what survived",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Tokens into vectors, attention, FFN, residual connection and norm"
+        },
+        {
+          "value": "B",
+          "text": "The encoder stack, cross-attention and sinusoidal positions"
+        },
+        {
+          "value": "C",
+          "text": "Post-norm ordering, ReLU in the FFN and training on translation"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.16.2",
+      "prompt": "Which substitution is characteristic of a modern LLM against the 2017 original?",
+      "explanation": "**Correct answer: B.** The list of substitutions is long: MHA to GQA or MLA, post-norm to pre-norm, LayerNorm to RMSNorm, ReLU MLP to SwiGLU. But each changes a detail of the core, not the core itself.",
+      "topic": "3.16. The 2017 original and a modern LLM: what survived",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Attention has been replaced by fully connected position mixing"
+        },
+        {
+          "value": "B",
+          "text": "Absolute sinusoids have been replaced by RoPE and its extensions"
+        },
+        {
+          "value": "C",
+          "text": "The residual connection has been replaced by learned hyper-connections in every model"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.17.1",
+      "prompt": "Why does a large attention weight not prove causal influence?",
+      "explanation": "**Correct answer: C.** The contribution also depends on the value vector, output projection, and other paths through the model. One mixing coefficient cannot establish a token’s complete causal contribution.",
+      "topic": "3.17. Common confusions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because weights are normalized and their absolute size is conventional"
+        },
+        {
+          "value": "B",
+          "text": "Because the weight is computed before the output projection W_O"
+        },
+        {
+          "value": "C",
+          "text": "The weight shows a route; the contribution also depends on the value"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.17.2",
+      "prompt": "Why does the causal mask not make training sequential?",
+      "explanation": "**Correct answer: A.** The true sequence is known in advance, so predictions for every position are computed in parallel. Only generation becomes sequential, where the future does not exist yet.",
+      "topic": "3.17. Common confusions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "All positions compute in one pass; the mask merely forbids looking ahead"
+        },
+        {
+          "value": "B",
+          "text": "Because the mask is applied only to the first layer of the stack"
+        },
+        {
+          "value": "C",
+          "text": "Because training uses a bidirectional mask rather than a causal one"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.18.1",
+      "prompt": "What should a reader do if several self-check questions remain difficult?",
+      "explanation": "**Correct answer: B.** The self-check identifies a part of the computation to revisit. Module 4 uses these concepts to study position representations.",
+      "topic": "3.18. Self-check",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Skip the corresponding definitions until the end of the course"
+        },
+        {
+          "value": "B",
+          "text": "Revisit the relevant sections before Module 4"
+        },
+        {
+          "value": "C",
+          "text": "Immediately increase the size of the toy model"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.18.2",
+      "prompt": "Which axis does attention softmax normalize when a query has allowed keys?",
+      "explanation": "**Correct answer: C.** Each query distributes unit mass over its allowed keys. Using a different axis can leave tensor shapes valid while changing the operation. Check sums along the key axis; successful execution alone does not establish correctness.",
+      "topic": "3.18. Self-check",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Normalization runs over features inside a single attention head"
+        },
+        {
+          "value": "B",
+          "text": "Normalization runs over the batch so examples stay comparable"
+        },
+        {
+          "value": "C",
+          "text": "Normalization runs over keys: one query's weights sum to one"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.19.1",
+      "prompt": "What does the exercise with two sequences differing only in the future check?",
+      "explanation": "**Correct answer: A.** Changing future tokens can expose leakage into earlier positions. The comparison uses explicit rtol/atol. Passing establishes the result for the tested inputs, not causality for every sequence; mask inspection and other probes complement it.",
+      "topic": "3.19. Exercises with solutions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "On the tested inputs, the shared prefix stays equal within the stated tolerance"
+        },
+        {
+          "value": "B",
+          "text": "That the model is robust to small changes in its input data"
+        },
+        {
+          "value": "C",
+          "text": "That positional embeddings are applied correctly to both rows"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.19.2",
+      "prompt": "What does successfully learning the period 0,1,2,3,4,5 establish?",
+      "explanation": "**Correct answer: B.** One preceding token determines the next token here. Success checks the implementation without demonstrating long-range dependencies or generalization to new data.",
+      "topic": "3.19. Exercises with solutions",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The model has learned to handle long contexts"
+        },
+        {
+          "value": "B",
+          "text": "Training and generation work on this simple task"
+        },
+        {
+          "value": "C",
+          "text": "Attention is necessary to predict this period"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.20.1",
+      "prompt": "Why does the notebook verify its embedded numerical contract by SHA-256?",
+      "explanation": "**Correct answer: C.** The hash identifies the embedded bytes. It checks integrity, not mathematical correctness; separate recalculation and independent implementations check correctness.",
+      "topic": "3.20. The module notebook",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "To confirm the notebook was downloaded from the official repository"
+        },
+        {
+          "value": "B",
+          "text": "To speed startup: checking a sum is cheaper than recomputing values"
+        },
+        {
+          "value": "C",
+          "text": "So that an edit to the reference values cannot pass silently"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.20.2",
+      "prompt": "Why is the published notebook shipped without saved outputs?",
+      "explanation": "**Correct answer: A.** Someone else's numbers in the cells create the illusion that the code was verified on your machine too. A clean notebook forces execution and shows your own numbers — including any discrepancies.",
+      "topic": "3.20. The module notebook",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "So the reader gets the results of their own run, not someone else's"
+        },
+        {
+          "value": "B",
+          "text": "Because saved outputs inflate the file size several times over"
+        },
+        {
+          "value": "C",
+          "text": "Because outputs contain file paths from the author's specific machine"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.21.1",
+      "prompt": "Which source is the primary reference for the 2017 Transformer architecture?",
+      "explanation": "**Correct answer: B.** Illustrated walkthroughs help on a second pass, but the primary source fixes the formulations and notation. Discrepancies between popular retellings are usually resolved by it.",
+      "topic": "3.21. Reading route and sources",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The survey post The Illustrated Transformer with its diagram walkthrough"
+        },
+        {
+          "value": "B",
+          "text": "The paper Attention Is All You Need by Vaswani and co-authors"
+        },
+        {
+          "value": "C",
+          "text": "The documentation of the framework the architecture was implemented in"
+        }
+      ],
+      "correct": [
+        "B"
+      ]
+    },
+    {
+      "id": "3.21.2",
+      "prompt": "Why does the reading route suggest several sources instead of one?",
+      "explanation": "**Correct answer: C.** The paper gives precision, the illustration intuition, the annotated implementation the mapping from formulas to lines of code. A gap left after one pass usually closes on another format.",
+      "topic": "3.21. Reading route and sources",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Because no single source covers every section of the module"
+        },
+        {
+          "value": "B",
+          "text": "Because the sources contradict each other and must be cross-checked"
+        },
+        {
+          "value": "C",
+          "text": "Formula, picture and code explain the same thing from different sides"
+        }
+      ],
+      "correct": [
+        "C"
+      ]
+    },
+    {
+      "id": "3.22.1",
+      "prompt": "What is the operation order in an encoder block of the original post-norm Transformer?",
+      "explanation": "**Correct answer: A.** Each sublayer in the original post-norm design has its own wrapper: add the sublayer input to its output, then normalize. Add & Norm therefore appears between attention and the FFN as well as after the FFN.",
+      "topic": "3.22. Final cheat sheet and the next step",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "Attention → residual addition and norm → FFN → residual addition and norm"
+        },
+        {
+          "value": "B",
+          "text": "Attention → FFN → one residual addition and one norm after both sublayers"
+        },
+        {
+          "value": "C",
+          "text": "One input norm → attention → FFN with no residual connections"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "3.22.2",
+      "prompt": "What does the conclusion \"the computational skeleton remains recognizable\" mean?",
+      "explanation": "**Correct answer: B.** The Transformer branch studied here retains attention, FFNs, and residual paths. Replacing components can substantially affect quality and cost; other families introduced in M1 may use a different graph.",
+      "topic": "3.22. Final cheat sheet and the next step",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "That modern models are trained in the same way as the original was"
+        },
+        {
+          "value": "B",
+          "text": "That the changes touch details of the core rather than its scheme"
+        },
+        {
+          "value": "C",
+          "text": "That differences between architecture generations do not matter in practice"
+        }
+      ],
+      "correct": [
+        "B"
       ]
     }
   ]

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "build:pages": "vite build --config vite.pages.config.ts && vite build --config vite.prerender.config.ts && node scripts/prerender.mjs && node scripts/validate-static.mjs && node scripts/validate-quizzes.mjs && node scripts/validate-practice.mjs",
+    "build:pages": "vite build --config vite.pages.config.ts && vite build --config vite.prerender.config.ts && node scripts/prerender.mjs && node scripts/validate-static.mjs && node scripts/validate-quizzes.mjs && node scripts/validate-practice.mjs && node scripts/validate-numbering.mjs",
     "check:math": "node scripts/validate-math.mjs",
     "check:markup": "node scripts/validate-markup.mjs",
     "check:publication": "node scripts/validate-publication.mjs",

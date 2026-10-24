@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { CodeBlock } from './CodeBlock';
+import { progressModuleKey } from './module-progress';
 import { buildLocation, type CourseKey, type Language } from './site';
 import { practiceAnchor, type Practice, type Exercise, type Notebook } from './practice';
 import { readQuizProgress, writeQuizProgress, subscribeQuizProgress, serverQuizProgress } from './quiz-progress';
@@ -31,7 +32,7 @@ export function PracticeMarkdown({children, ru, inline = false}: {children: stri
 const size = (bytes: number, ru: boolean) => `${(bytes / 1024).toFixed(1).replace('.', ru ? ',' : '.')} ${ru ? 'КБ' : 'KB'}`;
 export function PracticeReader({ page, revision }: { page: Practice; revision: string }) {
   const ru = page.language === 'ru';
-  const key = `course-practice:v1:${page.courseKey}:${page.moduleKey}:${page.section}:${revision}`;
+  const key = `course-practice:v1:${page.courseKey}:${progressModuleKey(page.courseKey, page.moduleKey)}:${page.section}:${revision}`;
   const progress = useSyncExternalStore(subscribeQuizProgress, () => readQuizProgress(key), serverQuizProgress);
   const toggle = (id: string, open: boolean) => {
     if (Boolean(readQuizProgress(key)[id]?.revealed) !== open) writeQuizProgress(key, {...readQuizProgress(key), [id]: {values: [], revealed: open}});

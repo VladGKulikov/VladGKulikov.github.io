@@ -4,23 +4,23 @@
   "language": "en",
   "questions": [
     {
-      "id": "16.2.1",
-      "prompt": "Why is multimodal progress better described as coexisting families than as successive eras?",
-      "explanation": "**Correct answer: A.** CLIP-like encoders serve retrieval, connectors retrofit existing LLMs, and unified/omni systems support generation or streaming output. A newer topology does not obsolete every earlier one.",
-      "topic": "16.2. Four families, four places to draw the boundary",
+      "id": "14.4.1",
+      "prompt": "Which stages form the classical RLHF route?",
+      "explanation": "**Correct answer: A.** This is a three-stage algorithmic route. Policy, reference, reward model, and critic define four logical roles, although an implementation may share backbones, offload, or shard them.",
+      "topic": "14.4. Classical RLHF as an algorithmic contract",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Different families optimize different constraints and remain useful"
+          "text": "SFT, reward-model training, and policy updates through PPO"
         },
         {
           "value": "B",
-          "text": "Every new family fully preserves the architecture of the previous generation"
+          "text": "Pretraining, teacher distillation, and output-probability calibration"
         },
         {
           "value": "C",
-          "text": "Historical labels are unrelated to training and inference differences"
+          "text": "Pair collection, critic-only training, and best-of-group selection"
         }
       ],
       "correct": [
@@ -28,23 +28,23 @@
       ]
     },
     {
-      "id": "16.4.1",
-      "prompt": "When do visual features create ordinary language-decoder KV state?",
-      "explanation": "**Correct answer: B.** The module’s KV accounting applies to visual positions inside ordinary decoder self-attention. Cross-attention or external visual memory needs different accounting.",
-      "topic": "16.4. The first design: encoder, connector, language decoder",
+      "id": "14.5.1",
+      "prompt": "Annotators prefer one response in 75% of comparisons. What score difference does the Bradley–Terry model imply?",
+      "explanation": "**Correct answer: B.** Bradley–Terry maps a score difference through a sigmoid. The inverse map is the logit, giving ln(3) ≈ 1.099.",
+      "topic": "14.5. Worked example A: invert a Bradley–Terry model",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "With any ViT encoder, even when it connects through cross-attention"
+          "text": "0.750 — the win rate is directly the score difference"
         },
         {
           "value": "B",
-          "text": "When visual positions enter the decoder self-attention stream"
+          "text": "1.099 — ln(0.75/0.25), the inverse sigmoid transform"
         },
         {
           "value": "C",
-          "text": "Only when the language decoder also generates images"
+          "text": "0.622 — the sigmoid evaluated at the observed win rate"
         }
       ],
       "correct": [
@@ -52,23 +52,23 @@
       ]
     },
     {
-      "id": "16.5.1",
-      "prompt": "What is the InfoNCE loss in the teaching example at temperature τ=0.1?",
-      "explanation": "**Correct answer: C.** With the same similarities, lower temperature spreads the logits. Loss falls from 0.643738 at τ=0.5 to 0.007409 at τ=0.1; ln 4 is the uniform four-way value.",
-      "topic": "16.5. CLIP, SigLIP, and worked example C: reading InfoNCE numerically",
+      "id": "14.6.1",
+      "prompt": "What does DPO remove from the classical RLHF loop?",
+      "explanation": "**Correct answer: C.** Under the chosen KL-regularized formulation, reward differences can be written through policy ratios. This yields a direct pairwise loss, not a universal standalone response evaluator.",
+      "topic": "14.6. DPO: eliminate the explicit reward model",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "0.643738 — the value at τ=0.5"
+          "text": "Only KL regularization, while retaining the reward model and PPO"
         },
         {
           "value": "B",
-          "text": "1.386294 — the uniform ln 4 reference value"
+          "text": "Only PPO clipping, replacing it with an ordinary policy gradient"
         },
         {
           "value": "C",
-          "text": "0.007409 — the result of sharper softmax competition"
+          "text": "It removes the explicit reward model and PPO, training directly on pairs"
         }
       ],
       "correct": [
@@ -76,23 +76,23 @@
       ]
     },
     {
-      "id": "16.6.1",
-      "prompt": "Four local tiles and one thumbnail each contribute 576 tokens. How many visual tokens result?",
-      "explanation": "**Correct answer: A.** The teaching NeXT scenario uses five views: four local 336×336 tiles and one global thumbnail. Thus 2,880 describes a tiling policy, not one 672×672 grid.",
-      "topic": "16.6. Worked example A: three ways to spend visual tokens",
+      "id": "14.7.1",
+      "prompt": "For a DPO margin z = 0.170, what is the magnitude of the local derivative with respect to z?",
+      "explanation": "**Correct answer: A.** For L = softplus(−z), the derivative magnitude with respect to z is σ(−z). The full parameter gradient also contains β and log-probability derivatives.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "2,880 = 5·576"
+          "text": "0.4576 — it is σ(−z)"
         },
         {
           "value": "B",
-          "text": "2,304 = 4·576 without the thumbnail"
+          "text": "1.0000 — the DPO derivative is independent of the margin"
         },
         {
           "value": "C",
-          "text": "5,184 = the raw grid at 1008×1008"
+          "text": "0.6118 — the derivative equals the loss itself"
         }
       ],
       "correct": [
@@ -100,23 +100,23 @@
       ]
     },
     {
-      "id": "16.7.1",
-      "prompt": "How much KV memory do 1,296 visual positions require at 128 KiB per position?",
-      "explanation": "**Correct answer: B.** 1,296·128 KiB = 162 MiB. A resampler does not change that value if position count and KV format stay fixed. Reducing positions changes total KV; cross-attention requires accounting for a different storage path.",
-      "topic": "16.7. Worked example B: when images create ordinary decoder KV",
+      "id": "14.7.2",
+      "prompt": "For the same log-ratio gap, β increases from 0.1 to 0.5. What happens in the numerical example?",
+      "explanation": "**Correct answer: B.** In this fixed example, β scales the margin passed to the sigmoid. This describes local pair geometry; its effect on full training also depends on data and policy dynamics.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "1,296 MiB — one MiB per position"
+          "text": "The margin is unchanged because β cancels inside the difference"
         },
         {
           "value": "B",
-          "text": "162 MiB — the result of 1,296·128 KiB"
+          "text": "The margin grows to 0.85 and the local pair weight falls to 0.299"
         },
         {
           "value": "C",
-          "text": "72 MiB — the cost of 576 positions without merging"
+          "text": "The margin shrinks to 0.034 and the local weight rises above 0.5"
         }
       ],
       "correct": [
@@ -124,23 +124,23 @@
       ]
     },
     {
-      "id": "16.8.1",
-      "prompt": "Which resource does a Q-Former or resampler primarily reduce?",
-      "explanation": "**Correct answer: C.** Learned queries extract a bounded set of representations from a larger feature grid. This creates a bottleneck while reducing LLM context length.",
-      "topic": "16.8. Connectors control where computation happens",
+      "id": "14.7.3",
+      "prompt": "Which positions normally enter the log-probability sum for a DPO pair?",
+      "explanation": "**Correct answer: C.** The preferred and rejected responses share a prompt. The teaching contract sums log-probabilities over completion tokens only and masks padding explicitly.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The parameter count of every vision-encoder layer"
+          "text": "Every position, including the shared prompt and batch padding"
         },
         {
           "value": "B",
-          "text": "The bandwidth of a separate audio decoder"
+          "text": "Only the first token at which the two responses diverge"
         },
         {
           "value": "C",
-          "text": "The number of visual positions passed to the language model"
+          "text": "Completion tokens; the shared prompt and padding are masked out"
         }
       ],
       "correct": [
@@ -148,23 +148,23 @@
       ]
     },
     {
-      "id": "16.8.2",
-      "prompt": "Why does freezing an LLM not remove all backward work when training its projector?",
-      "explanation": "**Correct answer: A.** Frozen weights need no weight gradients or optimizer state, but the loss must remain differentiable with respect to the projector output.",
-      "topic": "16.8. Connectors control where computation happens",
+      "id": "14.7.4",
+      "prompt": "How large is the DPO derivative magnitude with respect to z when z<0?",
+      "explanation": "**Correct answer: A.** 0.5 is the value at z=0. The parameter gradient also includes β and derivatives of log probabilities.",
+      "topic": "14.7. Worked example B: read the DPO margin carefully",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "The projector still needs gradients through input activations"
+          "text": "Above 0.5, approaching 1 as z → −∞"
         },
         {
           "value": "B",
-          "text": "Every LLM weight is still updated"
+          "text": "Always below 0.5"
         },
         {
           "value": "C",
-          "text": "Freezing doubles visual sequence length"
+          "text": "Always equal to β"
         }
       ],
       "correct": [
@@ -172,23 +172,23 @@
       ]
     },
     {
-      "id": "16.9.1",
-      "prompt": "How does M-RoPE relate to visual-token count?",
-      "explanation": "**Correct answer: A.** Position encoding preserves geometry. Resizing, tiling, spatial merging, temporal sampling, and pruning determine token count.",
-      "topic": "16.9. Dynamic resolution makes compute depend on image geometry",
+      "id": "14.8.1",
+      "prompt": "Why are DPO, IPO, KTO, SimPO, and ORPO not merely different names for one method?",
+      "explanation": "**Correct answer: A.** For example, KTO accepts individual binary labels, SimPO uses no separate reference policy, and ORPO combines SFT and preference learning in one objective.",
+      "topic": "14.8. Direct preference losses differ by contract, not branding",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "It encodes coordinates; resize, tiling, and merging change length"
+          "text": "They change labels, the reference, normalization, or the objective"
         },
         {
           "value": "B",
-          "text": "It always merges four neighboring patches into one token"
+          "text": "They differ only by laboratory and publication year"
         },
         {
           "value": "C",
-          "text": "It replaces dynamic resolution with one fixed visual grid"
+          "text": "They use one loss but different variants of the Adam optimizer"
         }
       ],
       "correct": [
@@ -196,23 +196,23 @@
       ]
     },
     {
-      "id": "16.9.2",
-      "prompt": "What controls the geometric image budget in Qwen2-VL?",
-      "explanation": "**Correct answer: B.** Geometry-dependent dynamic resolution is not a learned semantic difficulty classifier.",
-      "topic": "16.9. Dynamic resolution makes compute depend on image geometry",
+      "id": "14.9.1",
+      "prompt": "How does RLOO's baseline differ from GRPO's full-group mean?",
+      "explanation": "**Correct answer: B.** A leave-one-out baseline uses the other responses. The full-group mean contains the current response reward, so the two estimators do not automatically share the same statistical properties.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Always the semantic difficulty of the image"
+          "text": "RLOO uses the previous group whereas GRPO uses the current group"
         },
         {
           "value": "B",
-          "text": "Dimensions, aspect ratio and pixel limits"
+          "text": "RLOO excludes the current response from its own baseline"
         },
         {
           "value": "C",
-          "text": "Only the user's task name"
+          "text": "RLOO averages log rewards whereas GRPO averages rewards"
         }
       ],
       "correct": [
@@ -220,47 +220,23 @@
       ]
     },
     {
-      "id": "16.10.1",
-      "prompt": "How can a unified model remain internally modular?",
-      "explanation": "**Correct answer: B.** Janus separates visual pathways, InternVL-U uses an MMDiT head, and Thinker–Talker has a speech decoder. A unified product does not require one internal representation.",
-      "topic": "16.10. Unified output reveals a conflict between semantics and fidelity",
+      "id": "14.9.2",
+      "prompt": "How should a GRPO group with identical rewards be handled?",
+      "explanation": "**Correct answer: C.** With zero variance, z-normalization is undefined. A small ε can prevent NaNs but cannot create information, so handling must be part of the explicit training contract.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Only if the modalities are never trained jointly"
+          "text": "Reuse the previous group mean and continue with the same objective"
         },
         {
           "value": "B",
-          "text": "Shared context can coexist with specialized internal modules"
+          "text": "Add ε to the denominator and treat the relative signal as recovered"
         },
         {
           "value": "C",
-          "text": "Only if the system returns text and no other output modality"
-        }
-      ],
-      "correct": [
-        "B"
-      ]
-    },
-    {
-      "id": "16.11.1",
-      "prompt": "Why does a large context window not solve long-video understanding by itself?",
-      "explanation": "**Correct answer: C.** Two hours at 1 fps and 576 tokens per frame produce 4.15 million tokens. Sampling, temporal pooling, and event selection determine retained evidence.",
-      "topic": "16.11. Worked example E: video is an information-selection problem",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Video frames cannot be represented as discrete visual tokens"
-        },
-        {
-          "value": "B",
-          "text": "A language-decoder KV cache cannot encode temporal coordinates"
-        },
-        {
-          "value": "C",
-          "text": "Frames and events must still be selected within the budget"
+          "text": "Explicitly filter the group or assign zero advantages: no relative signal exists"
         }
       ],
       "correct": [
@@ -268,23 +244,23 @@
       ]
     },
     {
-      "id": "16.12.1",
-      "prompt": "How does TMRoPE differ from ARIA in Thinker–Talker?",
-      "explanation": "**Correct answer: A.** They operate at different levels: positional geometry of audio/video input events versus adaptive interleaving of output streams.",
-      "topic": "16.12. Thinker–Talker: coordinating two clocks",
+      "id": "14.9.3",
+      "prompt": "Which policy forms the denominator of the clipped objective ratio?",
+      "explanation": "**Correct answer: A.** The old policy describes the sampler. The reference supplies a separate KL anchor.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "TMRoPE aligns input time; ARIA coordinates output stream rates"
+          "text": "The policy that sampled this rollout batch"
         },
         {
           "value": "B",
-          "text": "TMRoPE generates speech; ARIA recognizes individual images"
+          "text": "Necessarily the initial SFT policy"
         },
         {
           "value": "C",
-          "text": "TMRoPE exists only in Talker; ARIA only in the vision encoder"
+          "text": "The policy after the next update"
         }
       ],
       "correct": [
@@ -292,23 +268,71 @@
       ]
     },
     {
-      "id": "16.13.1",
-      "prompt": "Why does patch_layout reject silent integer truncation?",
-      "explanation": "**Correct answer: B.** Integer division could hide an incomplete patch. A processor may explicitly resize or pad; accounting for padded regions follows its actual interface and does not always require a separate pixel mask.",
-      "topic": "16.13. Code level 1: geometry before frameworks",
+      "id": "14.9.4",
+      "prompt": "All rewards are equal and advantages are zero. Can weights still update?",
+      "explanation": "**Correct answer: A.** Zero advantage removes the policy-gradient term, but the KL gradient need not vanish.",
+      "topic": "14.9. RLOO and GRPO: construct a baseline from sibling rollouts",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "To make every image automatically square before tokenization"
+          "text": "Yes, through a separate KL term"
         },
         {
           "value": "B",
-          "text": "To avoid losing a border without explicit resize or padding"
+          "text": "No, every gradient must vanish"
         },
         {
           "value": "C",
-          "text": "To force spatial merging to use one universal factor"
+          "text": "Yes, division by zero creates a signal"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.10.1",
+      "prompt": "In the 8.03B teaching memory model, how do PPO and DPO compare?",
+      "explanation": "**Correct answer: A.** This is a scenario for persistent parameter states: 16 bytes per trained parameter and 2 per frozen parameter. It excludes activations, KV state, sharding, and shared backbones.",
+      "topic": "14.10. Worked example D: a deliberately simplified memory model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "269.2 GiB and 134.6 GiB in the stated teaching configuration"
+        },
+        {
+          "value": "B",
+          "text": "134.6 GiB versus 119.7 GiB regardless of roles or implementation"
+        },
+        {
+          "value": "C",
+          "text": "119.7 GiB for both algorithms in every configuration"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.10.2",
+      "prompt": "When can a fixed DPO dataset remove the reference model from memory during optimization?",
+      "explanation": "**Correct answer: B.** For a fixed pair dataset, reference log-probabilities can be computed once. Optimization then keeps one trained network; this is a workflow property, not a universal DPO implementation rule.",
+      "topic": "14.10. Worked example D: a deliberately simplified memory model",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "When the reference is quantized to four bits at every step"
+        },
+        {
+          "value": "B",
+          "text": "When its log-probabilities have been precomputed for every pair"
+        },
+        {
+          "value": "C",
+          "text": "When the trainable policy and reference always share the same weights"
         }
       ],
       "correct": [
@@ -316,23 +340,23 @@
       ]
     },
     {
-      "id": "16.13.2",
-      "prompt": "What does the unpatchify(patchify(image)) round trip verify?",
-      "explanation": "**Correct answer: C.** Matching inverse permutations can pass even if their patch order violates the specification. A separate coordinate fixture is needed to check row-major order; the notebook includes one.",
-      "topic": "16.13. Code level 1: geometry before frameworks",
+      "id": "14.11.1",
+      "prompt": "Why can rollout generation dominate the time budget in online RL?",
+      "explanation": "**Correct answer: C.** In the module scenario, long responses produce a 39.3× ratio between generation and one estimated training pass. The number depends on length, hardware, and throughput, but the mechanism is general.",
+      "topic": "14.11. Worked example E: rollout generation can dwarf the update",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Similarity between image and caption embeddings"
+          "text": "It necessarily runs on CPU while accelerators remain idle"
         },
         {
           "value": "B",
-          "text": "Norm preservation through the connector MLP"
+          "text": "Every rollout requires training a new reward model"
         },
         {
           "value": "C",
-          "text": "Mutual consistency of the two operations on the tested input"
+          "text": "Autoregressive decode produces tokens sequentially"
         }
       ],
       "correct": [
@@ -340,23 +364,23 @@
       ]
     },
     {
-      "id": "16.15.1",
-      "prompt": "Why does audio need its own systems passport beyond text-token count?",
-      "explanation": "**Correct answer: A.** Audio has its own frame or codec-token rate. First-audio latency, real-time factor, interruptions, and semantic quality require separate measurement.",
-      "topic": "16.15. Audio is a continuous evidence stream",
+      "id": "14.12.1",
+      "prompt": "Which problems do DAPO and Dr. GRPO address?",
+      "explanation": "**Correct answer: A.** DAPO introduces dynamic sampling, asymmetric clipping, token-level normalization, and overlong-response shaping. Dr. GRPO separately revisits normalization that can induce undesirable bias.",
+      "topic": "14.12. What later GRPO variants are actually fixing",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Cost depends on audio rate, compression, and streaming latency"
+          "text": "Group selection, clipping, length normalization, and token efficiency"
         },
         {
           "value": "B",
-          "text": "Audio is always processed without Transformer components"
+          "text": "Only reward-model training speed on the original labels"
         },
         {
           "value": "C",
-          "text": "Speech contains no semantics until explicit transcription"
+          "text": "Restoring a mandatory critic to every group-relative RL method"
         }
       ],
       "correct": [
@@ -364,23 +388,47 @@
       ]
     },
     {
-      "id": "16.16.1",
-      "prompt": "How should the internal architecture of a proprietary multimodal API be described?",
-      "explanation": "**Correct answer: B.** One interface may hide a cascade or several specialized models. Architecture claims require technical documentation, code, or configuration.",
-      "topic": "16.16. Reading the public landscape by design axis",
+      "id": "14.12.2",
+      "prompt": "Responses have lengths 1 and 3 with per-token values 2 and 0. What is the token mean?",
+      "explanation": "**Correct answer: A.** The sum is 2 across 4 tokens. A response mean would be 1.",
+      "topic": "14.12. What later GRPO variants are actually fixing",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "Infer the hidden stack from one endpoint’s accepted formats"
+          "text": "0.5"
         },
         {
           "value": "B",
-          "text": "Record I/O and avoid guessing hidden topology without evidence"
+          "text": "1"
         },
         {
           "value": "C",
-          "text": "Treat every voice API as one end-to-end Transformer"
+          "text": "2"
+        }
+      ],
+      "correct": [
+        "A"
+      ]
+    },
+    {
+      "id": "14.15.1",
+      "prompt": "Why does a verifiable reward not eliminate reward hacking automatically?",
+      "explanation": "**Correct answer: B.** Verifiability makes the signal reproducible, but tests, rules, and length limits can contain loopholes. Hidden tasks, rollout audits, and verifier evaluation are still required.",
+      "topic": "14.15. RLVR still obeys Goodhart's law",
+      "type": "single",
+      "options": [
+        {
+          "value": "A",
+          "text": "The verifier is always slower than the model and cannot score responses"
+        },
+        {
+          "value": "B",
+          "text": "The policy optimizes the check, not necessarily the intended task"
+        },
+        {
+          "value": "C",
+          "text": "Formal tests cannot be used for mathematics or programming"
         }
       ],
       "correct": [
@@ -388,71 +436,23 @@
       ]
     },
     {
-      "id": "16.16.2",
-      "prompt": "Which variant uses ViR in the InternVL3.5 report?",
-      "explanation": "**Correct answer: A.** The Flash router selects 256 or 64 visual positions per tile. This property must not be assigned to every model in the family.",
-      "topic": "16.16. Reading the public landscape by design axis",
+      "id": "14.16.1",
+      "prompt": "What is the published Constitutional AI route?",
+      "explanation": "**Correct answer: C.** The method includes supervised critique and revision followed by RLAIF: a model produces constitutional preferences, which train a reward model and then an RL policy. Human effort is reduced, not eliminated.",
+      "topic": "14.16. Three open patterns: RLAIF, multi-stage reasoning, and environments",
       "type": "single",
       "options": [
         {
           "value": "A",
-          "text": "InternVL3.5-Flash"
+          "text": "The constitution only filters the raw dataset before SFT"
         },
         {
           "value": "B",
-          "text": "Every VLM regardless of encoder"
+          "text": "The principles are appended as a system prompt to every user request"
         },
         {
           "value": "C",
-          "text": "Only Chameleon"
-        }
-      ],
-      "correct": [
-        "A"
-      ]
-    },
-    {
-      "id": "16.17.1",
-      "prompt": "What is the minimum multimodal passport needed to price a request?",
-      "explanation": "**Correct answer: C.** Cost appears at preprocessing, encoder, fusion, prefill, KV, and output-decoder stages. A capability label does not specify them.",
-      "topic": "16.17. Follow one request through a multimodal passport",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Model name and its best published benchmark result"
-        },
-        {
-          "value": "B",
-          "text": "Only maximum resolution and maximum context length"
-        },
-        {
-          "value": "C",
-          "text": "Processor, fusion, positions, state, latency, and memory"
-        }
-      ],
-      "correct": [
-        "C"
-      ]
-    },
-    {
-      "id": "16.14.1",
-      "prompt": "What does the tiny VLM's held-out split test?",
-      "explanation": "**Correct answer: C.** The 32 training and 16 held-out renders share the same 16 height pairs. Rendering changes; compositions do not.",
-      "topic": "16.14. Level 2: what the notebook makes reproducible",
-      "type": "single",
-      "options": [
-        {
-          "value": "A",
-          "text": "Transfer to natural photographs"
-        },
-        {
-          "value": "B",
-          "text": "Previously unseen height pairs"
-        },
-        {
-          "value": "C",
-          "text": "Different brightness for familiar height pairs"
+          "text": "Critique and revision under principles, followed by RLAIF with a reward model and RL"
         }
       ],
       "correct": [

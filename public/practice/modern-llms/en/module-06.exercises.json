@@ -7,45 +7,52 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "E1. Complete gpt-oss-120b count",
-      "prompt": "Starting from the component table, calculate total and active parameters. How many parameters were omitted by a total excluding linear-layer biases 116,789,050,944?",
-      "answer": "*Solution.* Summing every passport row—both vocabulary matrices, biased attention, the full expert bank, routers, norms, and learned sinks—gives 116,829,156,672. Therefore\n\n$$116{,}829{,}156{,}672-116{,}789{,}050{,}944=40{,}105{,}728.$$\n\nThis baseline keeps normalization scales and attention sinks; the difference isolates linear-layer biases. The declared active count is 5,132,849,472: it charges the shared token path and four selected experts per MoE layer, includes one full output-vocabulary projection, and does not charge an indexed input embedding lookup as though every row were multiplied. This convention is necessary to reproduce the number.",
+      "title": "E1. Exact block accounting",
+      "prompt": "Compute the matrix-only and full counts for the Llama-3.1-8B block.",
+      "answer": "*Solution.* In GQA, $Q$ and $O$ are $d\\times d$, while K/V width is one quarter of $d$. The two K/V matrices therefore contribute $2d(d/4)=0.5d^2$, giving\n\n$$P_{attn}=2d^2+0.5d^2=2.5d^2.$$\n\nSwiGLU has gate, up, and down projections. With $d_{ff}=3.5d$, their count is $3dd_{ff}=10.5d^2$. Thus\n\n$$P_{matrix}=13d^2=13\\cdot4096^2=218{,}103{,}808.$$\n\nTwo RMSNorm scales add $2d=8192$, yielding **218,112,000**. Biases are excluded by this architecture contract.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "E2. Read the real Qwen3.5-35B-A3B config",
-      "prompt": "Record hidden size, layer count, routed/shared experts, top-k, expert width, and MTP. Explain why $k/E$ times 35B cannot recover 3B active.",
-      "answer": "*Solution.* The config gives hidden width 2048, 40 layers, 256 routed plus one shared expert, top-8, expert width 512, and one MTP layer. Multiplying all 35B parameters by $8/256$ incorrectly treats the whole model as the routed bank. Only routed experts receive that factor. The accounting structure is\n\n$$P_{active}=P_{shared\\ path}+P_{shared\\ expert}+\\frac{k}{E}P_{routed\\ bank},$$\n\nAttention/DeltaNet, the output head, router, norms, and shared expert do not receive the $k/E$ factor. Add MTP separately only when the selected execution path runs it, and state the input-embedding convention.",
+      "title": "E2. Epsilon and gain",
+      "prompt": "Compare the RMSNorm multipliers at input RMS $10^{-3}$ for $\\epsilon=10^{-6}$ and $10^{-5}$.",
+      "answer": "*Solution.* RMSNorm divides by $\\sqrt{\\operatorname{RMS}(x)^2+\\epsilon}$. Here the signal-square term is $10^{-6}$, so\n\n$$g_{10^{-6}}=1/\\sqrt{2\\cdot10^{-6}}\\approx707.1,$$\n$$g_{10^{-5}}=1/\\sqrt{11\\cdot10^{-6}}\\approx301.5.$$\n\nThe larger epsilon more than halves the gain because it dominates this small signal. Epsilon must therefore reflect reduction precision and expected activation scale, not dtype machine epsilon alone.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "E3. A selection boundary",
-      "prompt": "Expert 0 and expert 6 have clean scores 0.768525 and 0.710950. Each step lowers expert 0's bias by 0.01875 and raises expert 6's by the same amount. Check one and two steps.",
-      "answer": "*Solution.* After $t$ steps the biased scores are $s_0(t)=0.768525-0.01875t$ and $s_6(t)=0.710950+0.01875t$. One step gives 0.749775 versus 0.729700, so expert 0 remains ahead. Equality occurs at\n\n$$t=\\frac{0.768525-0.710950}{2\\cdot0.01875}=1.5353,$$\n\nso the first integer step beyond the crossing is step 2: 0.731025 versus 0.748450. This constructed example shows a boundary crossing under two fixed opposing increments. Both a sign controller and a proportional controller can produce those increments for suitable loads; the calculation does not reproduce the full balancing simulation.",
+      "title": "E3. The negative gpt-oss branch",
+      "prompt": "Explain why the up-branch clip still changes the $z=-9$ case.",
+      "answer": "*Solution.* Use $g=\\min(z,7)$, $u=\\operatorname{clip}(z,-7,7)$, and $y=g\\sigma(1.702g)(u+1)$:\n\n| $z$ | $g$ | $u$ | $y$ |\n|---:|---:|---:|---:|\n| -9 | -9 | -7 | 0.000012019 |\n| -2 | -2 | -2 | 0.064341377 |\n| 0 | 0 | 0 | 0 |\n| 2 | 2 | 2 | 5.806975869 |\n| 7 | 7 | 7 | 55.999625026 |\n| 9 | 7 | 7 | 55.999625026 |\n\nAt $z=-9$, the gate is not lower-clipped and its sigmoid nearly suppresses it, but the up branch is still changed to $-7$ and enters as $u+1=-6$. The output is small because of the gate, not because the clip is irrelevant. At 7 and 9, both used branches are identical, so the outputs match.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
-      "title": "E4. Batch union for Kimi K3",
-      "prompt": "Compute the expected touched fraction for $E=896$, $k=16$ at $N=16$ and $N=64$ under independent uniform routing.",
-      "answer": "*Solution.* A particular expert is missed by one token with probability $1-k/E$. Under independent routing it is missed by all $N$ tokens with probability $(1-k/E)^N$, so the expected touched fraction is\n\n$$1-(1-k/E)^N.$$\n\nSubstitution gives $1-(1-16/896)^{16}=0.25046$ and $1-(1-16/896)^{64}=0.68437$. Trained routing may differ because expert choices are skewed and correlated.",
-      "answerKind": "solution"
+      "title": "E4 [project]",
+      "prompt": "Compare RMSNorm, DyT, and DyISRU on one small language model with matched seeds, optimizer, data order, and a learning-rate sweep. Do not extrapolate one run to 100B scale.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 6](/downloads/modern-llms/project_demos/en/module_06_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
     },
     {
       "id": "exercise-05",
-      "title": "E5. LatentMoE payload",
-      "prompt": "With hidden width 7168 and latent width 3584, by what factor does the idealized routed representation shrink?",
-      "answer": "*Solution.* Idealized one-way dispatch sends $Tkd b$ bytes. With $T=2048$, $k=16$, and bf16,\n\n$$2048\\cdot16\\cdot7168\\cdot2=448\\ \\text{MiB}$$\n\nin hidden space and **224 MiB** in latent space. The reduction is therefore $7168/3584=\\mathbf{2\\times}$. Counting a return/combine path doubles both values to 896 and 448 MiB without changing the ratio. Metadata, route indices, projections, padding, and network protocol are additional costs.",
-      "answerKind": "solution"
+      "title": "E5 [project]",
+      "prompt": "Compare Q/K score distributions for two open models with different stabilization mechanisms. Record the exact code path; do not merge L2 normalization, Q/K RMSNorm, and logit soft-capping into one label.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 6](/downloads/modern-llms/project_demos/en/module_06_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
+      "answerKind": "guidance"
     },
     {
       "id": "exercise-06",
-      "title": "E6 [project]",
-      "prompt": "Collect routing logs from an open MoE across several domains. Plot frequency and co-activation, then add interventions before assigning semantic labels.",
-      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 7](/downloads/modern-llms/project_demos/en/module_07_project_demo.ipynb), sections “Demo 1” and “Demo 2” as starting points for this module’s projects. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
-      "answerKind": "guidance"
+      "title": "E6. Scaling and reduction axes",
+      "prompt": "Why does fixed positive epsilon break exact scale invariance? How does changing one head affect per-head and whole-projection RMSNorm?",
+      "answer": "*Solution.* For a positive scale $c$, factor it out of the denominator:\n\n$$\n\\frac{cx}{\\sqrt{c^2\\operatorname{mean}(x^2)+\\epsilon}}\n=\\frac{x}{\\sqrt{\\operatorname{mean}(x^2)+\\epsilon/c^2}}.\n$$\n\nKeeping $\\epsilon>0$ fixed therefore changes the normalization. With a single value $x=10^{-3}$, $\\epsilon=10^{-6}$, and unit learned scale, the output is $1/\\sqrt2\\approx0.7071$. Doubling the input gives $2/\\sqrt5\\approx0.8944$. The stabilizer is comparable to the squared signal, so the difference is substantial.\n\nWhen RMS is reduced over all heads together, scaling one head changes the shared denominator and hence the untouched heads too. Separate head-wise reductions keep their denominators independent. Predict which heads will change before comparing the two notebook calculations.",
+      "answerKind": "solution"
+    },
+    {
+      "id": "exercise-07",
+      "title": "E7. Doubly stochastic does not mean identity",
+      "prompt": "Verify the example in §12. Does satisfying both sum constraints imply $AX=X$?",
+      "answer": "*Solution.* Each row and column of the matrix in §12 sums to $0.75+0.25=1$. Its first output is $0.75\\cdot2+0.25\\cdot6=3$; its second is $0.25\\cdot2+0.75\\cdot6=5$. Thus $AX=(3,5)^\\top\\ne X$.\n\nNonnegative entries and unit row sums make each output a convex combination, bounded between 2 and 6. The output range can shrink: here it is 3 to 5. Unit column sums additionally preserve the sum across streams: $3+5=2+6$. Neither property preserves each stream separately. After a finite number of Sinkhorn–Knopp iterations, check both sum residuals before treating these properties as exact.",
+      "answerKind": "solution"
     }
   ],
   "bundle": {

@@ -7,37 +7,37 @@
   "items": [
     {
       "id": "exercise-01",
-      "title": "E1. Loss gap at a fixed training budget",
-      "prompt": "Under the fitted law used in this module, evaluate the 8.03B-parameter, 15T-token scenario. Compare it with the analytic optimum at the same compute budget.",
-      "answer": "*Solution.* The budget is\n\n$$\nC=6\\cdot8.03\\cdot10^9\\cdot15\\cdot10^{12}\n=7.227\\cdot10^{23}\\ \\text{FLOP}.\n$$\n\nThe scenario gives\n\n$$\nL(8.03\\text{B},15\\text{T})=1.948310.\n$$\n\nThe fitted optimum is\n\n$$\nN^*=35.663\\text{B},\\qquad D^*=3.377\\text{T},\n$$\n\nwith\n\n$$\nL^*=1.922505.\n$$\n\nTherefore\n\n$$\n\\Delta L=L(8.03\\text{B},15\\text{T})-L(N^*,D^*)\\approx\\mathbf{0.025804}.\n$$\n\nThe difference uses unrounded loss values. This is arithmetic inside the stated approximation, not a claim about the realized quality of a particular 8B or 36B model. The notebook reproduces the calculation in **“1. Scaling law and the exact compute-optimal split.”**",
+      "title": "E1. Approximation threshold",
+      "prompt": "For $a=-1$, solve for the step at which replacing the exact ZOH input coefficient with $\\Delta$ creates ten-percent relative error.",
+      "answer": "*Solution.*\n\nFor $\\dot h=ah+Bx$, exact ZOH discretization gives input coefficient $(e^{a\\Delta}-1)B/a$. With $a=-1$ and $B=1$, this is $1-e^{-\\Delta}$, whereas the small-step approximation uses $\\Delta$. Hence relative error against the exact coefficient is\n\n$$\n\\frac{\\Delta}{1-e^{-\\Delta}}-1=0.1\n\\quad\\Rightarrow\\quad\n\\Delta\\approx0.193747558.\n$$\n\nSubstitution gives $\\Delta/(1-e^{-\\Delta})\\approx1.1$. The small-$\\Delta$ expansion starts with error $\\Delta/2$, so a root near 0.2 is also a useful magnitude check.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
-      "title": "E2. Inference-aware break-even",
-      "prompt": "The 8.03B model from E1 used $7.227\\cdot10^{23}$ training FLOP. A 70B model reaches the same fitted loss with less training. If dense decoding costs approximately $2N$ FLOP per generated token, find the lifetime output volume at which the smaller model becomes cheaper in total compute.",
-      "answer": "*Solution.* Solving\n\n$$\nL(70\\text{B},D_{70})=1.948310\n$$\n\ngives\n\n$$\nD_{70}=1.094026\\cdot10^{12}\n$$\n\nand\n\n$$\nC_{70}=6\\cdot70\\text{B}\\cdot D_{70}\n=4.59491\\cdot10^{23}\\ \\text{FLOP}.\n$$\n\nThe large model saves\n\n$$\n\\Delta C=2.63209\\cdot10^{23}\\ \\text{FLOP}\n$$\n\nin pretraining, while each generated token costs an extra\n\n$$\n2(70-8.03)\\text{B}=1.2394\\cdot10^{11}\\ \\text{FLOP}.\n$$\n\nThus\n\n$$\nT^*=\\frac{\\Delta C}{2(N_{70}-N_8)}\n=\\mathbf{2.12368\\cdot10^{12}}\\ \\text{tokens}.\n$$\n\nBelow that volume, the 70B alternative wins in this simplified total-compute objective; above it, the smaller model does. See **“2. Equal-quality break-even and a training-time scenario.”**",
+      "title": "E2. Complete recurrent cache",
+      "prompt": "For 32 layers, $d_{inner}=8192$, $d_{state}=16$, $d_{conv}=4$, and bf16, compute the two state components and the crossover against 128 KiB/token.",
+      "answer": "*Solution.* One layer's SSM state has $d_{inner}d_{state}$ bf16 elements:\n\n$$8192\\cdot16\\cdot2=262144\\ \\text{bytes}=0.25\\ \\text{MiB}.$$\n\nAcross 32 layers this is 8 MiB. Convolution state uses $d_{inner}d_{conv}$ elements: $8192\\cdot4\\cdot2=65536$ bytes per layer, or 2 MiB total. Complete recurrent cache is **10 MiB** and does not grow with sequence length. At 128 KiB/token, KV reaches it at $10\\text{ MiB}/128\\text{ KiB}=\\mathbf{80}$ tokens and exceeds it afterward.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
-      "title": "E3. Training-state memory and the 1F1B bubble",
-      "prompt": "Assume 16 bytes per parameter for a 7B model, 64 ranks, and ideal ZeRO-3. Then compute the pipeline bubble for eight stages with 32 and 128 microbatches.",
-      "answer": "*Solution.* The fully replicated state is\n\n$$\n7\\cdot10^9\\cdot16=112\\cdot10^9\\ \\text{bytes}\n=112\\ \\text{GB}=104.308\\ \\text{GiB}.\n$$\n\nIdeal ZeRO-3 over 64 ranks gives\n\n$$\n1.75\\ \\text{GB}=1.630\\ \\text{GiB per rank}.\n$$\n\nFor the pipeline,\n\n$$\nf(8,32)=\\frac{7}{39}=\\mathbf{17.9\\%},\n$$\n\nand\n\n$$\nf(8,128)=\\frac{7}{135}=\\mathbf{5.2\\%}.\n$$\n\nAt least 134 microbatches are required to fall strictly below 5% under this formula. The notebook contains the full tables and negative tests.",
+      "title": "E3. Mamba-2-like cache",
+      "prompt": "Set $d_{state}=128$ and convolution channels to $8192+2\\cdot128$. Find the complete cache and the first integer token beyond crossover.",
+      "answer": "*Solution.* The SSM component is\n\n$$32\\cdot8192\\cdot128\\cdot2=64\\ \\text{MiB}.$$\n\nConvolution has $8192+2\\cdot128=8448$ channels, so its state uses $32\\cdot8448\\cdot4\\cdot2=2.0625$ MiB. Total is **66.0625 MiB**. Dividing by 0.125 MiB of KV per token gives 528.5: KV is still smaller at 528 tokens and first becomes strictly larger at **529**.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-04",
       "title": "E4 [project]",
-      "prompt": "Start with the eight synthetic documents in Demo 1. Explain every retention or rejection decision and report survival relative both to the initial pool and to each stage’s input. Change the filter order and similarity threshold, then distinguish changes in rejection attribution from changes in the retained set. Language and quality labels are supplied. An optional extension uses a small pinned, licensed external sample with actual classifiers and timings; a 100 GB download is unnecessary.",
-      "answer": "> **Project demo:** [English Module 9 project-demo notebook](/downloads/modern-llms/project_demos/en/module_09_project_demo.ipynb), section “Demo 1.” It supplies the starting experiment; the exercise asks you to change its conditions and explain the outcome.",
+      "prompt": "Compare sequential and chunked scans at a sequence length not divisible by the chunk size. The partial final chunk must agree with the reference recurrence.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 8](/downloads/modern-llms/project_demos/en/module_08_project_demo.ipynb), section “Demo 1”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
     },
     {
       "id": "exercise-05",
       "title": "E5 [project]",
-      "prompt": "Run the CPU mechanism in Demo 2: gather a matrix from two owned shards, average equal-sized local-batch gradients, and update each shard. Check parity with an unsharded update over several steps. Separately tabulate a hypothetical 1B model under ZeRO stages 0–3 at 1, 2, and 8 ranks using the 16-byte policy. Add a specified gather buffer and activation reserve. Explain why total peak memory no longer scales as one number divided by rank count. No distributed runtime is required.",
-      "answer": "> **Project demo:** [English Module 9 project-demo notebook](/downloads/modern-llms/project_demos/en/module_09_project_demo.ipynb), section “Demo 2.” It supplies the matrix experiment and a separate hypothetical memory ledger.",
+      "prompt": "Compare additive, delta, and gated-delta memory on a synthetic task. Use identical keys, values, and state dimensions to compare interference, rewriting, and forgetting. Report current-key error separately from error over all previously written keys.",
+      "answer": "> **Demo for this project exercise:** [English project-demo notebook for Module 8](/downloads/modern-llms/project_demos/en/module_08_project_demo.ipynb), section “Demo 2”. It shows a compact reproducible example on small inputs, not a completed solution to the full-scale project.",
       "answerKind": "guidance"
     }
   ],

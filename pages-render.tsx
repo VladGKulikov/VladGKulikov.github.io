@@ -17,6 +17,7 @@ export const routes: PageRoute[] = (["en", "ru"] as const).flatMap(language => [
 ]);
 export { courses, buildLocation, pageMetadata };
 export { parseUrl } from "./app/site";
+export { progressModuleKey } from './app/module-progress';
 export { quizModules, gradeQuestion, parseNumericAnswer } from './app/quizzes';
 export { practiceModules } from './app/practice';
 export { highlightPython } from './app/CodeBlock';

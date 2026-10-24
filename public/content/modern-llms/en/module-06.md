@@ -1,245 +1,326 @@
-# Module 7. Mixture of Experts
+# Module 6. Normalization, activations, and the anatomy of a Transformer block
 
-*“Modern LLMs” course · Module 7 lecture · edition 2026.10.25*
+*Modern LLMs · revised October 11, 2026*
 
-> **What this module is about.** In M6, the feed-forward network accounted for most of the parameters in our example Transformer block. A **Mixture of Experts (MoE)** replaces that single network with a bank of separate FFNs, called experts. Each token uses only a few of them, allowing stored capacity to grow without evaluating the entire bank on every token.
->
-> A small learned network, the **router**, decides which experts to use. We will follow its scores through selection and the weighted output, then ask how to keep the workload balanced. Explicit counts for gpt-oss and DeepSeek-V3 connect the mechanism to parameter storage and communication. More elaborate routing designs build on this foundation on the reference route.
->
-> **Prerequisites.** Modules 1, 5, and 6 provide the useful background: total versus active parameters, attention geometry, and the parameter cost of a SwiGLU feed-forward network. All notation needed for the calculations is introduced again here.
+Attention lets tokens exchange information. To turn it into a useful block, we also need a state that persists between layers, a way to control numerical scale, and a network that transforms each token's features. This module puts those pieces together and accounts for their parameters.
 
-> **Reading routes.** To understand the mechanism, read §1, then §§4–10 while skipping the B09/B10 implementation details, and finish with §19 apart from the LatentMoE point. Use Q1–Q5 and Q7 in §17, then E1 and E3–E4 in §18. Q6 and E5 follow §11; E2 and E6 extend the reference and project routes. Follow one token and keep track of selection, mixture weights, and system cost. For the implementation pass, revisit §§6–7, work through §§12–14, and run the notebook. Use §§2–3, 11, and 15–16 as a reference for history, alternative routers, and model-specific contracts. M5 attention and M6 feed-forward blocks are the required background.
+**Before you start.** You need projections and residual connections from M3, and attention heads and GQA from M5. Equations use column vectors; NumPy stores tokens as rows, so projection matrices multiply on the right.
 
----
+**Reading routes**
 
-## 1. The bargain: capacity without activating the whole bank
+- **First pass:** §1 → §§4–10, skipping expandable implementations → §§14–15 → §20. Check Q1–Q6 in §18 and E1–E3 in §19; Q7 and E7 depend on the mHC discussion in §12 and belong to a return visit. Follow the shapes in §10 to the model total. This route prepares you for M7.
+- **Second pass:** bridges B07/B08 in §§5/9, code in §13, and the notebook. Test reduction axes, near-zero inputs, low precision, and gradients; solve exercises 1–3 and 6–7.
+- **Reference pass:** §§2–3 give history and classical connections; §§11–12 introduce element-wise alternatives and multiple streams; §§16–17 help you inspect real architectures. Projects 4–5 extend the experiments.
 
-A dense feed-forward network applies every one of its matrices to every token. If we enlarge that network, stored capacity and token-level arithmetic rise together. MoE changes the unit of conditional execution. A layer stores $E$ complete feed-forward experts. A small router scores them using the token's hidden vector, then selects the $k$ largest scores: **top-k routing**. The input to this decision is the vector representation, not the vocabulary ID.
+## 1. The three jobs surrounding attention
 
-This creates two related but non-interchangeable quantities:
+At each token position, the block receives a state $h\in\mathbb R^d$. The model width $d$ is the number of features in that state. A **residual stream** carries it through successive layers. Each residual connection adds a learned update of the same shape: $h+F(h)$.
 
-- **total parameters** describe the full bank that the serving system must make available;
-- **active parameters** describe the parameters charged under a stated per-token counting convention.
+Attention reads across positions. The **feed-forward network (FFN)** transforms each position separately, sharing its weights across tokens. Normalization controls the scale at which these operations read or write features. Neither an FFN nor a normalizer moves a token to a different position.
 
-Neither quantity is a direct measurement of intelligence or latency. Total size does not uniquely determine knowledge, and active size omits communication, attention, the output head, memory traffic, and hardware utilization unless the convention explicitly includes them. It is nevertheless a useful first decomposition.
+We measure scale using the root mean square:
 
-The range is already wide among documented open models. gpt-oss-120b publishes 117B total and 5.1B active parameters with 128 experts and top-4 routing. DeepSeek-V3 reports 671B/37B. Kimi K3 reaches 2.8T/104B while selecting 16 of 896 routed experts. Those headlines come from different architectures and sometimes different counting rules. A responsible comparison therefore asks what is common, what is routed, and which vocabulary matrices or auxiliary modules are included.
+$$\operatorname{RMS}(h)=\sqrt{\frac1d\sum_{i=1}^d h_i^2}.$$
 
-The compute bargain also creates a systems bill. The expert bank must be stored somewhere, route decisions must become efficient batches, and devices must exchange token representations. At large distributed scale, architecture and runtime must be designed together. Our task here is to understand their interaction and calculate the associated costs; implementing a distributed runtime is outside the course.
+The vector $(1,-1)$ has mean zero but RMS one. Squaring prevents opposite signs from hiding the size of the coordinates.
 
-## 2. From local specialists to trillion-parameter sparse models
+Three questions guide the module: what transformation does a norm perform, where does it sit relative to residual addition, and what does a gated FFN cost? A four-coordinate example, a 36-step linear stack, and the Llama-3.1-8B parameter ledger will make the answers concrete.
 
-![VIZ m7/01 — the history of Mixture of Experts](assets/modern-llms/en/module-06/m7_01_moe_timeline.svg)
-*The evolution of MoE as a sequence of bottlenecks: learned gating, sparse top-k, expert parallelism and capacity, fine-grained/shared experts, auxiliary-loss-free balancing, and latent routed representations.*
+## 2. How the block evolved
 
-The statistical ancestor is the adaptive mixture of local experts introduced by Jacobs and Jordan. A gating network assigned examples to local predictors, allowing them to specialize. Modern MoE keeps that division of labor but changes both the scale and the computational shape.
+This historical section is optional on a first reading. The equations for the named designs follow in §§5–12.
 
-Shazeer et al. brought sparsely gated experts to very large neural networks in 2017. Top-k routing made the parameter count enormous without evaluating every expert, but it also made expert collapse visible: a slightly favored expert receives more data, improves faster, and attracts still more tokens.
+LayerNorm (2016) normalized an example's features without collecting batch statistics. The original Transformer placed it after the residual addition: **Post-LN**. Moving it to the sublayer input gives **Pre-LN**. Xiong et al. connected the resulting initial gradient behavior to learning-rate warmup in their setting. Their findings do not prohibit every Post-LN training run without warmup. [Paper](https://arxiv.org/abs/2002.04745).
 
-GShard and Switch Transformer turned sparse experts into a distributed Transformer component. Expert parallelism, capacity factors, all-to-all traffic, and token dropping became first-class concerns. Switch simplified routing to top-1; ST-MoE introduced router z-loss as one of its stabilization mechanisms.
+RMSNorm (2019) removed mean subtraction. Its authors reported comparable quality and runtime reductions of 7–64% across their tested systems. That range is not an estimate for a current decoder: the saving depends on the workload and implementation. [RMSNorm](https://arxiv.org/abs/1910.07467).
 
-Mixtral made top-2 MoE broadly inspectable in an open model. DeepSeekMoE then proposed finer expert segmentation and always-on shared experts. DeepSeek-V3 combined a large fine-grained bank with sigmoid scores, group preselection, and balancing biases updated outside the language-model objective.
+GLU variants introduced two FFN projections whose outputs multiply. DeepNorm changed residual scaling and initialization for deep networks. Peri-LN places norms on both sides of a sublayer; OLMo2 normalizes its output before addition. DyT and DyISRU investigate element-wise alternatives to feature normalization, while mHC changes connections between residual streams. These choices affect different parts of the graph and can coexist.
 
-Research through 11 October 2026 follows several different directions. LatentMoE compresses the routed representation and expert width. ReMoE and later differentiable methods modify top-k itself. Routing-free proposals remove a separate central router. The enduring idea is conditional expert compute; the exact routing and runtime contracts remain open design choices.
+## 3. Three useful classical analogies
 
-## 3. Three older ideas hiding inside modern MoE
+LayerNorm resembles per-example standardization, but it is not whitening: it neither estimates a full covariance matrix nor rotates the feature basis. RMSNorm retains only scale control. The preconditioning analogy is therefore local and practical—normalizers keep the numerical range seen by later matrices more predictable.
 
-### A mixture model
+Residual updates resemble Euler steps:
 
-The familiar form is
+$$h_{l+1}=h_l+F_l(h_l).$$
 
-$$
-y(x)=\sum_{i=1}^{E}g_i(x)f_i(x).
-$$
+This viewpoint is useful for asking how large an update is and how errors accumulate with depth. It is not an exact continuous-time model because the functions change from layer to layer and the step size need not be small.
 
-Sparse MoE makes most $g_i(x)$ exactly zero through top-k selection. The experts are large dense FFNs, so selected work still maps well to matrix multiplication hardware.
+Gated FFNs illustrate a third idea: multiplicative interaction. Two separately learned projections are multiplied element-wise, so the input controls both what is represented and how strongly it passes. Without a nonlinearity, the product of two linear projections would be quadratic in the input. A SiLU gate makes this a nonlinear, input-dependent interaction; its cost includes a third projection. This explains the mechanism without assuming a universal advantage at every width or parameter budget.
 
-### Conditional computation
+## 4. A block makes two successive residual updates
 
-MoE is structured conditional execution. It differs from arbitrary weight sparsity because the active units are large blocks. A chosen expert can be evaluated by dense GEMM; the challenge is assembling enough tokens for each expert to make that GEMM efficient.
+In Pre-LN, attention reads a normalized state. The FFN then reads the state **after** the attention update:
 
-### A distributed dispatcher
+$$\tilde h_l=h_l+\operatorname{Attn}(N_{l,1}(h_l)),$$
+$$h_{l+1}=\tilde h_l+\operatorname{FFN}(N_{l,2}(\tilde h_l)).$$
 
-The router is also a scheduler. If one expert receives twice the load of its peers, the step may be limited by the device hosting that expert. A good probability model is therefore not enough: capacity, placement, networking, and queue behavior all matter.
+Here $l$ identifies the layer, and $N_{l,1},N_{l,2}$ are its two normalizers. Attention and FFN are sequential branches, not two independent functions of the original $h_l$.
 
-These views explain why the module needs both equations and systems arithmetic. The mixture formula explains the output; conditional computation explains total versus active parameters; the dispatcher view explains load balancing and expert parallelism.
+![VIZ m6/01 — Attention updates the state first; the FFN reads that updated state.](assets/modern-llms/en/module-06/m6_01_block_bus.svg)
+*Attention updates the state first; the FFN reads that updated state.*
 
-## 4. A typed contract for routing and parameter accounting
+For a vector-valued function, the **Jacobian** collects all partial derivatives: its entry $J_{ij}$ tells us how output coordinate $i$ changes when input coordinate $j$ changes. With $h,F(h)\in\mathbb R^d$, this is a $d\times d$ matrix. Differentiating a residual step $h^+=h+F(h)$ gives $J=I+J_F(h)$, where $I$ is the identity matrix and $J_F$ is the branch Jacobian. This direct path is useful, but the sum need not be well conditioned. Taking $F(h)=-h$ gives $J=0$. Nor does a bypass make a trained branch disposable. Removing it changes a learned function and requires a quality check.
 
-Separate two kinds of expert first. A **routed expert** runs only when selected; a **shared expert** runs for every token. Let the token vector be $x\in\mathbb{R}^h$. The router's vector $w_i$ produces a logit $z_i=w_i^\top x$. Applying the sigmoid $\sigma(z)=1/(1+e^{-z})$ gives an independent score:
+## 5. What LayerNorm and RMSNorm compute
 
-$$
-s_i=\sigma(w_i^\top x).
-$$
+For a token vector $x\in\mathbb R^d$, define its feature mean and variance:
 
-A balancing controller can add an expert-wise **selection bias** $b_i$. This is separate from a bias inside the linear projection. The selected index set is
+$$\mu=\frac1d\sum_i x_i,\qquad \sigma^2=\frac1d\sum_i(x_i-\mu)^2.$$
 
-$$
-\mathcal T(x)=\operatorname{TopK}(s_i+b_i,k).
-$$
+Computing one statistic from several coordinates is a **reduction**. The divisor is $d$, not the $d-1$ sample-variance correction. The two norms are
 
-A model may then normalize gates from the clean scores rather than the biased selection values:
+$$\operatorname{LN}(x)_i=\gamma_i\frac{x_i-\mu}{\sqrt{\sigma^2+\epsilon}}+\beta_i,$$
+$$\operatorname{RMSNorm}(x)_i=\gamma_i\frac{x_i}{\sqrt{d^{-1}\sum_jx_j^2+\epsilon}}.$$
 
-$$
-g_i=\rho\,\frac{s_i}{\sum_{j\in\mathcal T(x)}s_j},
-\qquad i\in\mathcal T(x).
-$$
+The learned vectors $\gamma,\beta$ rescale and shift features; $\epsilon>0$ keeps the denominator away from zero. Our RMSNorm definition has a scale and no bias. Both reductions operate on features of one token, not across tokens or the batch.
 
-The scale $\rho>0$ is an architecture setting: selected gates sum to $\rho$. With $S$ shared experts, the expert branch returns
+For $x=(2,-1,3,0)$, $\gamma=1$, $\beta=0$, and $\epsilon=10^{-6}$, we have $\mu=1$, $\sigma^2=2.5$, and $\operatorname{RMS}(x)=\sqrt{3.5}$. The outputs are approximately
 
-$$
-\operatorname{MoE}(x)
-=
-\sum_{i\in\mathcal T(x)}g_i\operatorname{FFN}_i(x)
-+
-\sum_{j=1}^{S}\operatorname{FFN}^{\text{shared}}_j(x).
-$$
+$$\operatorname{LN}(x)=(0.632,-1.265,1.265,-0.632),$$
+$$\operatorname{RMSNorm}(x)=(1.069,-0.535,1.604,0).$$
 
-Both sums return vectors of width $h$, ready to be added to the residual stream as in M6. A gate controls an output contribution; it need not be a calibrated probability of expertise. This sigmoid example is distinct from the selected-logit softmax used by gpt-oss in §14.
+Before its learned scale, RMSNorm preserves signs and coordinate ratios but does not enforce zero mean. A constant nonzero vector distinguishes the norms: centered LayerNorm returns zero before its affine step, whereas RMSNorm does not.
 
-![VIZ m7/02 — anatomy of an MoE layer](assets/modern-llms/en/module-06/m7_02_moe_block.svg)
-*Residual state, router, top-k routed experts, always-on shared experts, and the distinction between the stored bank and one token's active path.*
+### Epsilon matters near zero
 
-A SwiGLU expert with hidden width $h$ and expert intermediate width $i_{\text{exp}}$ contains
+Before multiplication by $\gamma$, the normalization gain is at most $1/\sqrt\epsilon$. At input RMS $10^{-3}$ it is 707.1 with $\epsilon=10^{-6}$ and 301.5 with $10^{-5}$. This bounds the multiplier, not all learned output coordinates.
+
+Exact invariance to positive scaling requires $\epsilon=0$ and a nonzero vector. With fixed positive epsilon,
 
 $$
-3h\,i_{\text{exp}}
+\frac{cx}{\sqrt{c^2\operatorname{RMS}(x)^2+\epsilon}}
+=\frac{x}{\sqrt{\operatorname{RMS}(x)^2+\epsilon/c^2}},\qquad c>0.
 $$
 
-matrix parameters. If all three projections have biases, the complete count is
+Approximate invariance requires both $\operatorname{mean}(x^2)\gg\epsilon$ and $c^2\operatorname{mean}(x^2)\gg\epsilon$. A very small positive $c$ can violate the second condition even when the original input is large. The notebook includes a near-zero counterexample.
 
-$$
-3h\,i_{\text{exp}}+2i_{\text{exp}}+h.
-$$
+FP16 squaring can overflow or underflow **before** reduction. Promoting only the mean cannot restore lost information; promote the input before squaring. Our bridge works in at least FP32 and preserves FP64 inputs. A model implementation may choose a different contract: gpt-oss explicitly uses FP32.
 
-No single total/active formula covers every model. A real count must state:
+**Second pass: RMSNorm from NumPy to PyTorch, including gradients**
 
-- how many layers are dense versus MoE;
-- the number and width of routed and shared experts;
-- whether embeddings are tied;
-- which projections have biases;
-- whether MTP or auxiliary modules are present;
-- which full vocabulary matrices enter the active convention;
-- the attention architecture and any extra normalization parameters.
+### NumPy → PyTorch · B07 — RMSNorm: reduction, dtype, and autograd
 
-For that reason, the numerical code uses a typed `MoEModelSpec`. It makes assumptions data rather than hiding them in algebra. In the gpt-oss examples, active parameters include one full vocabulary projection—the output head—but do not charge an indexed input embedding lookup as if every row had been multiplied.
+Compare finite floating inputs `[..., D]`, `D>0`, and an optional weight `[D]`, with finite `eps>0`. API comparisons use a common floating dtype and device for input and weight. Squares, their sum, and the output must fit the working format; merely being finite in FP64 does not ensure this. NumPy exposes the reduction, while PyTorch adds autograd.
 
-## 5. Rebuilding both gpt-oss models from open code
-
-The open implementation exposes details that a short configuration summary does not: QKV and output biases, router bias, expert biases, learned attention sinks, untied embeddings, and packed expert matrices.
-
-Shared geometry for the two models:
-
-- vocabulary size 201,088;
-- hidden and expert intermediate width 2,880;
-- 64 query heads, 8 KV heads, head width 64;
-- two vocabulary matrices;
-- biased attention projections, router, and experts.
-
-### gpt-oss-120b
-
-With 36 layers, 128 experts, and top-4 routing, the complete reconstruction is:
-
-| Component | Parameters |
-|---|---:|
-| two vocabulary matrices | 1,158,266,880 |
-| attention, including biases | 955,802,880 |
-| all expert weights and biases | 114,701,598,720 |
-| routers | 13,275,648 |
-| normalization scales | 210,240 |
-| learned sinks | 2,304 |
-| **Total** | **116,829,156,672** |
-
-Under the declared active convention:
-
-$$
-P_{\text{active}}=5,132,849,472,
-$$
-
-and
-
-$$
-P_{\text{total}}/P_{\text{active}}=22.761.
-$$
-
-The published 117B/5.1B values are appropriate rounded headlines. The course number is a reproducible count with its convention attached.
-
-### gpt-oss-20b
-
-For 24 layers, 32 experts, and the same top-4:
-
-$$
-P_{\text{total}}=20,914,757,184,
-$$
-
-$$
-P_{\text{active}}=3,608,307,264,
-$$
-
-$$
-P_{\text{total}}/P_{\text{active}}=5.796.
-$$
-
-Top-4 selects a much larger fraction of a 32-expert bank than of a 128-expert bank. The two models therefore have different sparsity factors despite sharing the same $k$.
-
-![VIZ m7/03 — total and active parameters](assets/modern-llms/en/module-06/m7_03_total_active.png)
-*Total and active counts for the two gpt-oss models and the course reconstruction of DeepSeek-V3. A logarithmic plot does not erase differences in counting convention.*
-
-The rough estimate $2P_{\text{active}}$ covers part of the weight-matmul arithmetic. It does not turn the 22.76 ratio into a latency multiplier: weight placement, expert batching, attention, and communication remain.
-
-## 6. A numerical router trace
-
-Take one token with router logits
-
-```text
-[1.2, -0.3, 2.1, 0.4, 1.7, -1.0, 0.9, 2.5]
+```python
+import numpy as np
+import torch
+import torch.nn.functional as F
 ```
 
-The sigmoid scores are
+#### 1. Explicit NumPy implementation
 
-```text
-[0.7685, 0.4256, 0.8909, 0.5987,
- 0.8455, 0.2689, 0.7109, 0.9241].
+```python
+def numpy_rms_norm(x: np.ndarray, weight: np.ndarray | None = None, *, eps: float = 1e-6) -> np.ndarray:
+    x = np.asarray(x)
+    if x.ndim == 0 or x.shape[-1] == 0 or not np.isfinite(x).all() or not np.isfinite(eps) or eps <= 0:
+        raise ValueError("x must be finite and eps positive")
+    work = x.astype(np.float64, copy=False)
+    y = work / np.sqrt(np.mean(work * work, axis=-1, keepdims=True) + eps)
+    if weight is not None:
+        w = np.asarray(weight, dtype=np.float64)
+        if w.shape != (x.shape[-1],) or not np.isfinite(w).all():
+            raise ValueError("weight must be finite with shape [D]")
+        y = y * w
+    return y.astype(x.dtype, copy=False) if np.issubdtype(x.dtype, np.floating) else y
 ```
 
-Top-4 selects experts
+The NumPy reference exposes the last-dimension mean square, $\epsilon$, reciprocal square root, and the learned per-coordinate scale.
 
-```text
-[7, 2, 4, 0]
+#### 2. The same mathematics as explicit PyTorch operations
+
+```python
+def torch_rms_norm_explicit(
+    x: torch.Tensor,
+    weight: torch.Tensor | None = None,
+    *,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    if not x.is_floating_point() or x.ndim == 0 or x.shape[-1] == 0:
+        raise ValueError("x must be floating with a nonempty last axis")
+    if not np.isfinite(eps) or eps <= 0:
+        raise ValueError("eps must be finite and positive")
+    work = x.to(torch.float32) if x.dtype in (torch.float16, torch.bfloat16) else x
+    rms_inv = torch.rsqrt(work.square().mean(dim=-1, keepdim=True) + eps)
+    y = work * rms_inv
+    if weight is not None:
+        if weight.shape != (x.shape[-1],):
+            raise ValueError("weight must have shape [D]")
+        y = y * weight.to(work.dtype)
+    return y.to(x.dtype)
 ```
 
-with normalized gates
+The explicit path widens FP16/BF16 to FP32 **before squaring** and restores the input dtype after the gain. FP64 stays FP64 for derivative checks.
 
-```text
-[0.2695, 0.2598, 0.2466, 0.2241].
+#### 3. Optimized or library PyTorch API
+
+```python
+def torch_rms_norm(x: torch.Tensor, weight: torch.Tensor | None = None, *, eps: float = 1e-6) -> torch.Tensor:
+    return F.rms_norm(x, [x.shape[-1]], weight=weight, eps=eps)
 ```
 
-Now give expert 3 a selection bias of $+0.35$. The selected set changes to
+`F.rms_norm` moves the reduction into a library operator that may use an optimized implementation.
 
-```text
-[3, 7, 2, 4].
+| Aspect | NumPy | PyTorch |
+|---|---|---|
+| Reduction | `np.mean(..., axis=-1)` | `mean(dim=-1)` |
+| Reciprocal root | `1 / np.sqrt` | `torch.rsqrt` |
+| Weight | broadcast array `[D]` | learned parameter `[D]` |
+| Accumulation | float64 reference | explicit path: at least FP32; check API separately |
+| Gradient | none | checked with `gradcheck` |
+
+**Executable parity and edge-case check**
+
+```python
+rng = np.random.default_rng(7)
+x_np = rng.standard_normal((3, 5)); w_np = rng.standard_normal(5)
+np_out = numpy_rms_norm(x_np, w_np, eps=1e-6)
+x = torch.tensor(x_np, dtype=torch.float64, requires_grad=True)
+w = torch.tensor(w_np, dtype=torch.float64, requires_grad=True)
+explicit = torch_rms_norm_explicit(x, w, eps=1e-6)
+api = torch_rms_norm(x, w, eps=1e-6)
+np.testing.assert_allclose(np_out, explicit.detach().numpy(), rtol=1e-10, atol=1e-10)
+torch.testing.assert_close(api, explicit, rtol=1e-10, atol=1e-10)
+assert torch.autograd.gradcheck(lambda a, b: torch_rms_norm_explicit(a, b, eps=1e-6), (x, w))
+for a, b in zip(torch.autograd.grad(explicit.square().sum(), (x, w)),
+                torch.autograd.grad(api.square().sum(), (x, w))):
+    torch.testing.assert_close(a, b, rtol=1e-9, atol=1e-10)
+for dtype in (torch.float16, torch.bfloat16):
+    large = torch.full((2, 8), 1000.0, dtype=dtype)
+    torch.testing.assert_close(torch_rms_norm_explicit(large), torch.ones_like(large))
+print("B07 explicit NumPy / PyTorch / F.rms_norm: PASS")
 ```
 
-The gate for expert 3 is still based on its clean score 0.5987, not on 0.9487. The gates become
+Complete executable file: `m06_block_bridges.py`
 
-```text
-[0.1837, 0.2835, 0.2733, 0.2594].
-```
+Official API: [PyTorch `rms_norm`](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.rms_norm.html).
 
-![VIZ m7/04 — router trace](assets/modern-llms/en/module-06/m7_04_router_trace.svg)
-*Clean scores, biased selection scores, selected experts, and gates. The balancing bias changes membership without entering the expert mixture weights.*
+## 6. Placement changes the computation graph
 
-DeepSeek-V3 adds a group stage. Its 256 routed experts are divided into eight groups; a token first retains four groups and then chooses eight experts from those groups. With balancing bias enabled, the group score is built from the two strongest adjusted scores in each group. Gates are then formed from clean scores and multiplied by the model's routed scaling factor.
+Let $F$ be an attention or FFN sublayer and $N$ a normalizer.
 
-This separation is broadly useful: a system can have one quantity for *who is eligible* and another for *how much the selected output contributes*.
+| Placement | Residual step | What is normalized? |
+|---|---|---|
+| Post-LN | $h^+=N(h+F(h))$ | The updated state |
+| Pre-LN | $h^+=h+F(N(h))$ | The branch input |
+| Peri-LN | $h^+=h+N_{out}(F(N_{in}(h)))$ | Both ends of the branch |
+| OLMo2-style | $h^+=h+N_{out}(F(h))$ | The branch output only |
 
-Top-k indices are discrete. While membership stays fixed, selected mixture weights can carry gradients. With renormalized top-1, the single gate is identically one and this path cannot train the router. Gate normalization and other learning signals must therefore be inspected together; not every top-1 architecture renormalizes its selected gate to one.
+![VIZ m6/02 — Locate each norm relative to F and the residual addition.](assets/modern-llms/en/module-06/m6_02_norm_placements.svg)
+*Locate each norm relative to F and the residual addition.*
 
-**Implementation and checks: B09**
+Post-LN has Jacobian $J_N(I+J_F)$, so even the residual path passes through normalization. For Pre-LN, apply the chain rule: $J_{F\circ N}(h)=J_F(N(h))J_N(h)$. Its complete Jacobian is therefore $I+J_F(N(h))J_N(h)$: the direct identity term remains outside the product. Neither expression guarantees good optimization under every initialization and optimizer.
 
-### NumPy → PyTorch · B09 — Top-k MoE: expert selection and mixture weights
+Peri-LN controls the contribution being added, although learned output scales can change its size. The paper reports experiments up to 3.2B parameters. OLMo2 lacks the paired input norm, so its output-only arrangement should not be labeled Peri-LN. [Peri-LN](https://arxiv.org/abs/2502.02732); [OLMo2 code](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py).
 
-A selection bias may change expert choice while mixture weights still come from clean scores. NumPy makes the boundary explicit; PyTorch uses `topk` and `gather`.
+### A controlled forward-scale experiment
+
+Using seed 5, draw the 256 coordinates of $h_0$ independently from a standard normal distribution and generate 36 independent matrices $W_l$ with entries from $\mathcal N(0,1/256)$. Reuse the same input and matrices in three recurrences:
+
+$$
+\begin{aligned}
+\text{none: }&h_{l+1}=h_l+W_lh_l,\\
+\text{pre: }&h_{l+1}=h_l+W_lU(h_l),\\
+\text{post: }&h_{l+1}=U(h_l+W_lh_l).
+\end{aligned}
+$$
+
+Here $U(x)=x/\max(\operatorname{RMS}(x),10^{-12})$. It has no learned scale and uses a denominator floor, rather than additive epsilon. At step 36, RMS is approximately **412,442**, **6.423**, and **1**, respectively.
+
+![VIZ m6/03 — One input and weight stack isolate placement; the vertical axis is logarithmic.](assets/modern-llms/en/module-06/m6_03_depth_variance.png)
+*One input and weight stack isolate placement; the vertical axis is logarithmic.*
+
+This measures forward scale in a linear residual system. There is no loss or training update. Post has unit RMS by construction; pre still accumulates updates. The notebook also compares Pre-LN and Peri-LN on one frozen attention–FFN stack.
+
+## 7. Q/K normalization: check the equation and the axis
+
+An attention score is $s_{ij}=q_i^\top k_j/\sqrt{d_h}$, with head width $d_h$. Scaling both vectors by $c$ scales the score by $c^2$ and can concentrate softmax on very few keys.
+
+Original **QKNorm** uses L2-normalized vectors and a learned scale $\tau$:
+
+$$
+s_{ij}=\tau\left(\frac{q_i}{\|q_i\|_2}\right)^\top
+\left(\frac{k_j}{\|k_j\|_2}\right).
+$$
+
+The scale replaces the usual $1/\sqrt{d_h}$ factor. Practical implementations guard a zero length with a stabilizer. The authors reported an average gain of 0.928 BLEU across five low-resource translation pairs under their protocol. BLEU is a translation metric based on overlap with reference translations; this reported gain concerns that evaluation setting. [QKNorm](https://arxiv.org/abs/2010.04245).
+
+Per-head RMSNorm is different. Ignoring epsilon and learned scales, normalized vectors have length $\sqrt{d_h}$. With the usual attention denominator the score becomes $\sqrt{d_h}\cos\theta_{ij}$, rather than a unit-vector dot product.
+
+The axis also matters. Qwen3 normalizes within each head. OLMo2 normalizes the entire Q projection, and separately the entire K projection, before splitting heads. Changing one head can therefore change other heads' denominators in OLMo2. The notebook demonstrates this with two heads of width two. [Qwen3](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3/modeling_qwen3.py); [OLMo2](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py).
+
+Logit **soft-capping** instead transforms computed scores as $s\mapsto c\tanh(s/c)$ for $c>0$. It bounds scores without normalizing Q or K. Gradient clipping belongs to optimization and does not replace any of these forward operations.
+
+## 8. Why a gate adds a matrix
+
+A conventional FFN widens a token vector, applies a nonlinearity, and projects back:
+
+$$
+\operatorname{FFN}(x)=W_2\phi(W_1x),\qquad
+W_1\in\mathbb R^{d_{ff}\times d},\quad W_2\in\mathbb R^{d\times d_{ff}}.
+$$
+
+The intermediate width is $d_{ff}$; biases are omitted here. Removing the nonlinearity would collapse the two matrices into one linear map. Common nonlinearities are
+
+$$
+\operatorname{ReLU}(z)=\max(0,z),\quad
+\operatorname{GELU}(z)=z\Phi(z),\quad
+\operatorname{SiLU}(z)=z\sigma(z),
+$$
+
+where $\Phi$ is the standard-normal cumulative distribution function and $\sigma(z)=1/(1+e^{-z})$. GELU and SiLU suppress negative inputs smoothly instead of zeroing the entire negative half-line.
+
+The approximation $z\sigma(1.702z)$ has maximum absolute error **0.020335** against exact GELU on 4,001 evenly spaced points in $[-6,6]$. This is a measured approximation on a specified grid, not equality of functions.
+
+![VIZ m6/04 — Shared axes compare activations; a separate panel shows the GELU approximation error.](assets/modern-llms/en/module-06/m6_04_activations.png)
+*Shared axes compare activations; a separate panel shows the GELU approximation error.*
+
+A gated FFN learns two projections, $g=W_gx$ and $u=W_ux$, then multiplies their transformed outputs coordinate by coordinate. SwiGLU is
+
+$$\operatorname{SwiGLU}(x)=W_d\bigl(\operatorname{SiLU}(W_gx)\odot W_ux\bigr).$$
+
+Here $\odot$ means element-wise multiplication. Although the gate depends on the input, $\operatorname{SiLU}(g)$ is not a probability or a value restricted to $[0,1]$. The third matrix $W_d$ restores width $d$ for residual addition. ReGLU and GEGLU use ReLU and GELU gates instead; Shazeer compared these variants under matched budgets. [GLU Variants](https://arxiv.org/abs/2002.05202).
+
+## 9. Budgeting SwiGLU and reading its variants
+
+Two bias-free FFN matrices cost $2dd_{ff}$ parameters; SwiGLU costs $3dd_{ff}$. Matching a conventional FFN of width $4d$ gives
+
+$$3dd_{ff}=2d(4d)\quad\Rightarrow\quad d_{ff}=\frac83d.$$
+
+Real models may choose another width or round it for implementation reasons. $8d/3$ is a budget match, not part of SwiGLU's definition.
+
+![VIZ m6/05 — The gate projection passes through SiLU, multiplies the up branch, then feeds the down projection.](assets/modern-llms/en/module-06/m6_05_swiglu_gate.svg)
+*The gate projection passes through SiLU, multiplies the up branch, then feeds the down projection.*
+
+The gpt-oss reference uses a specific variant:
+
+$$\bar g=\min(g,7),\qquad\bar u=\operatorname{clip}(u,-7,7),$$
+$$a=\bar g\,\sigma(1.702\bar g)\odot(\bar u+1).$$
+
+Only the upper gate tail is clamped; the up branch is clamped at both ends. This defines the checkpoint's activation. Its training motivation cannot be established from a function body alone. [Pinned implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py).
+
+For the diagnostic slice $g=u=z$, the product before the down projection is:
+
+| $z$ | $a$ |
+|---:|---:|
+| -9 | 0.000012019 |
+| -2 | 0.064341377 |
+| 0 | 0 |
+| 2 | 5.806975869 |
+| 7 | 55.999625026 |
+| 9 | 55.999625026 |
+
+![VIZ m6/06 — On this slice the gate factor saturates near 7; the complete product approaches 56.](assets/modern-llms/en/module-06/m6_06_clamp_curve.png)
+*On this slice the gate factor saturates near 7; the complete product approaches 56.*
+
+A gate-factor curve alone cannot reproduce the product table. At $z=-9$, a small negative gate factor multiplies $-6$, giving a small positive product. At 7 and 9 the two clamped inputs coincide exactly.
+
+**Second pass: stable activation code and gradient checks**
+
+### NumPy → PyTorch · B08 — SwiGLU and a bounded variant
+
+Both implementations keep the gate and up branches explicit. `alpha`, optional clipping, and the up-branch shift are visible parameters.
 
 ```python
 import numpy as np
@@ -249,520 +330,364 @@ import torch
 #### 1. Explicit NumPy implementation
 
 ```python
-def numpy_topk_router_explicit(
-    logits: np.ndarray,
-    top_k: int,
+def numpy_swiglu(
+    gate: np.ndarray,
+    up: np.ndarray,
     *,
-    selection_bias: np.ndarray | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
-    logits = np.asarray(logits, dtype=np.float64)
-    if logits.ndim != 2 or not logits.size or not np.isfinite(logits).all():
-        raise ValueError("expected non-empty finite logits[T,E]")
-    if isinstance(top_k, (bool, np.bool_)) or not isinstance(top_k, (int, np.integer)) or not 1 <= top_k <= logits.shape[1]:
-        raise ValueError("top_k must be an integer in [1,E]")
-    log_scores = -np.logaddexp(0.0, -logits)
-    clean = np.exp(log_scores)
-    # Without bias, monotonic sigmoid permits ranking logits before saturation.
-    selection = logits if selection_bias is None else clean + selection_bias
-    if selection.shape != logits.shape or not np.isfinite(selection).all():
-        raise ValueError("selection_bias must broadcast to [T,E] and be finite")
-    indices = np.argsort(-selection, axis=-1, kind="stable")[:, :top_k]
-    selected_log = np.take_along_axis(log_scores, indices, axis=-1)
-    weights = np.exp(selected_log - selected_log.max(axis=-1, keepdims=True))
-    weights = weights / weights.sum(axis=-1, keepdims=True)
-    return indices, weights
+    alpha: float = 1.0,
+    gate_limit: float | None = None,
+    up_limit: float | None = None,
+    shift_up: float = 0.0,
+) -> np.ndarray:
+    gate, up = np.asarray(gate), np.asarray(up)
+    if gate.shape != up.shape or not np.isfinite(gate).all() or not np.isfinite(up).all():
+        raise ValueError("gate and up must be finite arrays of the same shape")
+    if not np.isfinite(alpha) or not np.isfinite(shift_up):
+        raise ValueError("alpha and shift_up must be finite")
+    if any(v is not None and (not np.isfinite(v) or v <= 0) for v in (gate_limit, up_limit)):
+        raise ValueError("limits must be finite and positive")
+    g = gate.astype(np.float64, copy=False)
+    u = up.astype(np.float64, copy=False)
+    if gate_limit is not None:
+        g = np.minimum(g, gate_limit)
+    if up_limit is not None:
+        u = np.clip(u, -up_limit, up_limit)
+    sigmoid = np.exp(-np.logaddexp(0.0, -alpha * g))
+    y = g * sigmoid * (u + shift_up)
+    dtype = np.result_type(gate.dtype, up.dtype)
+    return y.astype(dtype, copy=False) if np.issubdtype(dtype, np.floating) else y
 ```
 
-Clean scores, selection priorities, and gates remain separate. Log-space normalization avoids 0/0 at very negative logits. Without bias, ranking logits avoids artificial ties caused by sigmoid saturation.
+Both branches remain visible: the gate passes through a SiLU-like nonlinearity and multiplies the up branch. `alpha`, clipping, and the shift are explicit parameters.
 
 #### 2. The same mathematics as explicit PyTorch operations
 
 ```python
-def torch_topk_router_explicit(
-    logits: torch.Tensor,
-    top_k: int,
+def torch_swiglu(
+    gate: torch.Tensor,
+    up: torch.Tensor,
     *,
-    selection_bias: torch.Tensor | None = None,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    if logits.ndim != 2 or not logits.numel() or not logits.is_floating_point() or not torch.isfinite(logits).all():
-        raise ValueError("expected non-empty finite floating logits[T,E]")
-    if isinstance(top_k, bool) or not isinstance(top_k, int) or not 1 <= top_k <= logits.shape[1]:
-        raise ValueError("top_k must be an integer in [1,E]")
-    z = logits.float() if logits.dtype in (torch.float16, torch.bfloat16) else logits
-    log_scores = -torch.logaddexp(torch.zeros_like(z), -z)
-    selection = z if selection_bias is None else log_scores.exp() + selection_bias
-    if selection.shape != logits.shape or not torch.isfinite(selection).all():
-        raise ValueError("selection_bias must broadcast to [T,E] and be finite")
-    _, indices = torch.topk(selection, top_k, dim=-1)
-    selected_log = log_scores.gather(-1, indices)
-    weights = selected_log.softmax(dim=-1)
-    return indices, weights
+    alpha: float = 1.0,
+    gate_limit: float | None = None,
+    up_limit: float | None = None,
+    shift_up: float = 0.0,
+) -> torch.Tensor:
+    if gate.shape != up.shape:
+        raise ValueError("gate and up must have the same shape")
+    if gate.dtype != up.dtype or not gate.is_floating_point() or gate.device != up.device:
+        raise ValueError("gate and up must share a floating dtype and device")
+    if not np.isfinite(alpha) or not np.isfinite(shift_up):
+        raise ValueError("alpha and shift_up must be finite")
+    if any(v is not None and (not np.isfinite(v) or v <= 0) for v in (gate_limit, up_limit)):
+        raise ValueError("limits must be finite and positive")
+    dtype = torch.float32 if gate.dtype in (torch.float16, torch.bfloat16) else gate.dtype
+    g, u = gate.to(dtype), up.to(dtype)
+    if gate_limit is not None:
+        g = g.clamp(max=gate_limit)
+    if up_limit is not None:
+        u = u.clamp(min=-up_limit, max=up_limit)
+    return (g * torch.sigmoid(alpha * g) * (u + shift_up)).to(gate.dtype)
 ```
 
-PyTorch uses log-sigmoid, topk, and gather, promoting FP16/BF16 to FP32. Gradients pass through selected gates, not discrete indices; topk tie order is unspecified. A renormalized top-1 gate is identically one and supplies no router gradient through this path.
+NumPy uses `logaddexp` for a stable sigmoid; PyTorch uses `torch.sigmoid`, retains autograd, and widens half-precision intermediates. Clamp has no ordinary derivative at its kinks, so finite-difference checks use points on either side.
 
 | Aspect | NumPy | PyTorch |
 |---|---|---|
-| Clean scores | log-sigmoid → exp | log-sigmoid → exp |
-| Selection | stable `argsort` | `torch.topk` |
-| Selected weight | `take_along_axis` | `gather` |
-| Bias | selection only | same contract |
-| Ties | stable reference sort | ordering is not guaranteed |
+| Nonlinearity | explicit sigmoid | `torch.sigmoid` |
+| Gate bound | `np.minimum` | `Tensor.clamp(max=...)` |
+| Up bound | `np.clip` | `Tensor.clamp(min=..., max=...)` |
+| Standard SwiGLU | no limits, `shift_up=0` | same contract |
+| Gradients | none | autograd; clamp kinks are tested separately |
 
 **Executable parity and edge-case check**
 
 ```python
-logits_np = np.array([[2.1, -0.4, 0.8, 1.3], [0.2, 1.9, -1.1, 0.7]])
-bias_np = np.array([0.0, 0.08, -0.03, 0.02])
-i_np, w_np = numpy_topk_router_explicit(logits_np, 2, selection_bias=bias_np)
-i_t, w_t = torch_topk_router_explicit(torch.tensor(logits_np), 2, selection_bias=torch.tensor(bias_np))
-np.testing.assert_array_equal(i_np, i_t.numpy())
-np.testing.assert_allclose(w_np, w_t.numpy())
-extreme = np.array([[-1002., -1000., -1001., -1003.]])
-with np.errstate(over="raise", invalid="raise", divide="raise"):
-    ei, ew = numpy_topk_router_explicit(extreme, 2)
-ti, tw = torch_topk_router_explicit(torch.tensor(extreme), 2)
-np.testing.assert_array_equal(ei, [[1, 2]])
-np.testing.assert_array_equal(ei, ti.numpy())
-np.testing.assert_allclose(ew, tw.numpy(), rtol=1e-12, atol=1e-12)
-z = torch.tensor(logits_np, requires_grad=True)
-assert torch.autograd.gradcheck(lambda x: torch_topk_router_explicit(x, 2)[1], (z,))
-one = torch_topk_router_explicit(z, 1)[1]
-np.testing.assert_allclose(torch.autograd.grad(one.sum(), z)[0].numpy(), 0., atol=1e-12)
-print("B09 routing, extreme logits, and selected-gate gradients: PASS")
+rng = np.random.default_rng(8)
+g_np = rng.uniform(-4, 4, (3, 5)); u_np = rng.uniform(-4, 4, (3, 5))
+kwargs = dict(alpha=1.702, gate_limit=7.0, up_limit=7.0, shift_up=1.0)
+np_out = numpy_swiglu(g_np, u_np, **kwargs)
+g = torch.tensor(g_np, dtype=torch.float64, requires_grad=True); u = torch.tensor(u_np, dtype=torch.float64, requires_grad=True)
+t_out = torch_swiglu(g, u, **kwargs)
+np.testing.assert_allclose(np_out, t_out.detach().numpy(), rtol=1e-10, atol=1e-10)
+assert torch.autograd.gradcheck(lambda a, b: torch_swiglu(a, b, **kwargs), (g, u))
+extreme = np.array([-1000., -9., 0., 9., 1000.])
+with np.errstate(over='raise', invalid='raise'):
+    stable = numpy_swiglu(extreme, np.ones_like(extreme), **kwargs)
+np.testing.assert_allclose(stable, torch_swiglu(torch.tensor(extreme), torch.ones(5, dtype=torch.float64), **kwargs))
+outside = torch.tensor([-9., 9.], dtype=torch.float64, requires_grad=True)
+assert torch.autograd.gradcheck(lambda a: torch_swiglu(a, a, **kwargs), (outside,))
+print("B08 forward + gradient: PASS")
 ```
 
-Complete executable file: `m07_moe_bridges.py`
+Complete executable file: `m06_block_bridges.py`
 
-Tie-breaking contract: [PyTorch `topk`](https://docs.pytorch.org/docs/stable/generated/torch.topk.html).
+## 10. From tensor shapes to 8,030,261,248 parameters
 
-## 7. Load balancing without conflating three mechanisms
+Take $V=128256$, $d=4096$, 32 layers, $d_{ff}=14336$, 32 query heads, 8 KV heads, and head dimension 128. The model is bias-free and uses separate input and output embeddings.
 
-A router can collapse through positive feedback. An early favorite receives more examples, learns faster, and becomes an even stronger favorite. Different mechanisms address different parts of that loop.
+Q and O each have $dH_qd_h$ entries; K and V each have $dH_{kv}d_h$. In general,
 
-### Auxiliary load-balancing loss
+$$P_{attn}=2dH_qd_h+2dH_{kv}d_h.$$
 
-Take a batch of $T$ tokens and $E$ experts. The router assigns a softmax probability $p_{t,i}$ to expert $i$ for token $t$. For top-1 routing, let $f_i$ be the fraction of tokens actually sent to that expert, and let $P_i=T^{-1}\sum_t p_{t,i}$ be its mean probability before selection. These measure different objects: hard assignments and the router's continuous scores.
+The Llama 3 report lists the principal dimensions and rounds the vocabulary to 128K. The exact $V=128256$ above is part of our frozen counting contract. [Report, Table 3](https://arxiv.org/html/2407.21783v3).
 
-The Switch auxiliary term, before its external coefficient, is
+With this geometry the attention matrices cost
 
-$$L_{\text{aux}}=E\sum_i f_iP_i.$$
+$$P_{attn}=2.5d^2=41{,}943{,}040.$$
 
-If both distributions are uniform, each product is $1/E^2$; summing $E$ terms and multiplying by $E$ gives 1. During differentiation, the discrete assignments in $f_i$ are treated as fixed. Gradients pass through $P_i$, providing a learning signal that reflects the observed load.
+The SwiGLU matrices cost
 
-Training adds $\lambda L_{\text{aux}}$ to the language-model objective. The coefficient $\lambda$ sets the strength of this competing preference. In the notebook's top-k generalization, an expert receives $c_i$ assignments out of $Tk$, so we define $f_i=c_i/(Tk)$. The assignment fractions still sum to one; this normalization must be stated when comparing implementations.
+$$P_{ffn}=3d\,d_{ff}=176{,}160{,}768.$$
 
-### Router z-loss
+Two RMSNorm scales add $2d=8192$. Therefore
 
-ST-MoE uses
+$$P_{matrix}=13d^2=218{,}103{,}808,$$
 
-$$
-L_z=\frac1T\sum_{t=1}^{T}\left(\log\sum_{i=1}^{E}e^{z_{t,i}}\right)^2
-$$
+but the complete block is
 
-where $z_{t,i}$ is the router logit for token $t$ and expert $i$. Squaring happens before averaging across tokens. This penalizes each token's log-partition value, rather than bounding every logit individually. A separate coefficient sets its weight in the training loss; controlling numerical scale does not by itself balance expert assignments.
+$$P_{block}=13d^2+2d=218{,}112{,}000.$$
 
-### Auxiliary-loss-free balancing
+With two embedding tables and one final norm:
 
-An expert-wise bias is added before top-k and updated from recent loads outside backpropagation. The main rule in the paper is
+$$2Vd+32P_{block}+d=8{,}030{,}261{,}248.$$
 
-$$
-b_i\leftarrow b_i+u\,\operatorname{sign}(\bar c-c_i).
-$$
+![VIZ m6/07 — exact parameter ledger](assets/modern-llms/en/module-06/m6_07_param_budget.svg)
+*The $13d^2$ matrix estimate and the exact $13d^2+2d$ block are shown separately.*
 
-Here $c_i$ counts assignments, $\bar c$ is the expert average, and $u>0$ is the step size. An overloaded expert loses priority; an underused one gains it. This controller contributes no auxiliary gradient of its own, although changing assignments changes which experts learn from each token.
+The FFN accounts for about 80.8% of the full block. The final $d$ term is the last RMSNorm scale. Small norm vectors still belong in an exact parameter count.
 
-DeepSeek-V3 combines this batch-level controller with a small **sequence-wise auxiliary loss** to prevent extreme imbalance within an individual sequence. Auxiliary-loss-free balancing is the name of one mechanism, not a claim that the entire model has no auxiliary losses ([report, §2.1.2](https://arxiv.org/html/2412.19437v2#S2.SS1.SSS2)).
+Activations, masks, caches, and rotary buffers are not learned parameters in this ledger. Tying the input and output weights would replace $2Vd$ by $Vd$. The notebook checks the formula against a small block's actual arrays. The repository validator also sums the 8B geometry as PyTorch meta tensors without allocating its weights.
 
-![VIZ m7/05 — load-balancing traces](assets/modern-llms/en/module-06/m7_05_balance.png)
-*The paper-style sign update and a proportional teaching controller applied to the same deterministic score population.*
+## 11. Element-wise alternatives: DyT and DyISRU
 
-We measure imbalance by the coefficient of variation, $\mathrm{CV}=\mathrm{std}(c_i)/\mathrm{mean}(c_i)$; equal loads give zero. This experiment freezes router scores and updates only the biases, without training experts. It starts at CV 0.6506. After 400 updates:
+On the reference route, we can ask whether the feature reduction itself is necessary. **Dynamic Tanh (DyT)** computes
 
-- the sign rule with step 0.001 reaches 0.0393;
-- the proportional teaching controller with rate 0.15 reaches 0.0193.
+$$\operatorname{DyT}(x)=\gamma\odot\tanh(\alpha x)+\beta,$$
 
-The smoother curve is not presented as the exact DeepSeek algorithm. It is an interpretable control-law experiment; the paper also analyzes a proportional variant in a separate setting.
+with a learned scalar $\alpha$ and feature vectors $\gamma,\beta$. It has no shared denominator: a coordinate's output is independent of neighboring coordinates. The paper reports competitive results in several vision and language settings. [DyT](https://arxiv.org/abs/2503.10622).
 
-An expert buffer has a separate limit. For $T$ tokens, $k$ assignments per token, and $E$ experts, the average is $Tk/E$. A capacity factor $c>0$ allocates
+For the construction behind **DyISRU**, set aside epsilon and affine parameters and write RMS normalization as
 
-$$
-C_e=\left\lceil c\frac{Tk}{E}\right\rceil
-$$
+$$\frac{\sqrt d\,x_i}{\sqrt{\sum_{j\ne i}x_j^2+x_i^2}}.$$
 
-slots per expert. The notebook accepts assignments in token order (FIFO), so earlier tokens can receive preferential treatment. Surviving gates are renormalized by course convention. Production implementations may reroute, allocate larger buffers, drop without renormalization, or use dropless grouped GEMM.
+Replace the sum over other coordinates by a positive learned parameter $b$ and absorb $\sqrt d$ into the scale:
 
-A token that loses every routed assignment does not vanish. Its routed branch is zero in that layer; any shared experts and the residual path continue.
+$$\operatorname{DyISRU}(x)=\gamma\odot\frac{x}{\sqrt{b+x^2}}+\beta,\qquad b>0.$$
 
-## 8. Fine-grained experts and always-on shared capacity
+This is the paper's decoupled construction, not equality to vector RMSNorm on arbitrary inputs. One way to learn a positive $b$ is to optimize an unconstrained scalar $r$ and set $b=\operatorname{softplus}(r)=\log(1+e^r)$. This function is positive for every finite real $r$ in exact arithmetic. The notebook uses a stable library implementation and adds a small floor for finite precision. [DyISRU analysis, version 4](https://arxiv.org/html/2503.21708v4).
 
-Suppose an architecture replaces a small number of wide experts with a larger number of narrower ones while increasing $k$ proportionally. The active expert arithmetic can remain of similar order, while the router gains more ways to combine sub-blocks.
+With unit gain and zero bias, the slopes at zero are $\alpha$ for DyT and $1/\sqrt b$ for DyISRU. Choosing $\alpha=0.5$ and $b=4$ matches those slopes. It does not transfer a fitted coefficient from one function to another.
 
-For a controlled example, replace 8 experts of width $i$ with 32 of width $i/4$, and change top-2 to top-8. Expert matrix storage and active matrix arithmetic stay constant because $8i=32(i/4)$ and $2i=8(i/4)$. The number of possible subsets rises from 28 to $\binom{32}{8}=10,518,300$, while routing and communication costs may rise.
+![VIZ m6/08 — Matched slopes compare shapes; the separate scalar fit has its own objective.](assets/modern-llms/en/module-06/m6_08_dyt_family.png)
+*Matched slopes compare shapes; the separate scalar fit has its own objective.*
 
-Another illustrative pair of bank sizes is
+Separately, draw 200,000 standard-normal values with seed 5 and fit $\tanh(\alpha x)$ to $x/\operatorname{RMS}(x)$. The grid has 171 coefficients from 0.3 to 2.0; gain stays one and bias zero. Its best point is $\alpha\approx1.43$, with MSE **0.161704**. This is a teaching approximation, not a paper-reported constant or a trained Transformer result.
 
-$$
-\binom{8}{2}=28,
-\qquad
-\binom{128}{4}=10,668,000.
-$$
+A later study of 1B models over 1,000 steps found a strong adverse interaction between Dynamic Erf and Muon; DyT did not show the same penalty. This limited experiment motivates checking optimizer and activation together rather than establishing a universal ranking. [Study](https://arxiv.org/abs/2604.01563).
 
-The latter 8/top-2 versus 128/top-4 comparison has no matched-budget claim. These numbers count unordered subsets, not learned skills. Continuous gate weights, correlated routing, and group constraints matter. For DeepSeek-V3, $\binom{256}{8}$ is only an unconstrained upper bound because group preselection rules out many subsets.
+## 12. Several residual streams: what mHC constrains
 
-A shared expert follows a different path: it runs for every token. DeepSeekMoE motivates shared capacity as a place for common information and a way to reduce redundancy across routed experts. That motivation does not identify the content of one trained shared expert. Claims such as “this expert stores grammar” need intervention evidence, not just architecture diagrams.
+Hyper-Connections carry $n$ streams. Put their states in the rows of $X\in\mathbb R^{n\times d}$; a residual matrix $A\in\mathbb R^{n\times n}$ mixes them as $AX$. Separate maps combine streams before a sublayer and distribute its output afterward.
 
-![VIZ m7/06 — fine-grained and shared experts](assets/modern-llms/en/module-06/m7_06_fine_grained.svg)
-*Coarse and fine-grained expert banks. More possible routing patterns increase flexibility, but the combinatorial count is not a semantic inventory.*
+Manifold-Constrained Hyper-Connections (**mHC**) constrain the residual matrix to be **doubly stochastic**:
 
-### DeepSeek-V3 reconstruction
+$$A_{ij}\ge0,\qquad\sum_jA_{ij}=1,\qquad\sum_iA_{ij}=1.$$
 
-Under the course's explicit convention:
+This set is the Birkhoff polytope. Each output row is a convex combination of input rows. For a fixed exact matrix, each feature stays between the smallest and largest input-stream values. That does not preserve every stream:
 
 $$
-P_{\text{total}}=671,026,419,200,
+A=\begin{pmatrix}0.75&0.25\\0.25&0.75\end{pmatrix},\quad
+X=\begin{pmatrix}2\\6\end{pmatrix},\quad AX=\begin{pmatrix}3\\5\end{pmatrix}.
 $$
 
-$$
-P_{\text{active}}=36,625,618,432.
-$$
+Sinkhorn iterations alternate row and column normalization of a positive matrix. Their limit is doubly stochastic under suitable conditions; a finite result is approximate. The paper uses 20 iterations. Our log-domain exercise compares 1, 20, and 100 and measures **both** sum residuals. It illustrates constrained mixing, not a complete mHC layer. [mHC](https://arxiv.org/html/2512.24880v2).
 
-These are consistent with the published 671B/37B headline. The Hugging Face package is about 685B when the 14B MTP module is included. A model passport should keep the main model, auxiliary modules, and active convention separate.
+The constraint applies to connections, not to a low-dimensional manifold of hidden states. If $A$ depends on $X$, the full derivative includes the derivative of $A(X)$; a fixed-matrix bound alone does not bound that Jacobian. The pre/post mixing maps have their own parameterizations and are not all doubly stochastic.
 
-![VIZ m7/07 — DeepSeek-V3 budget](assets/modern-llms/en/module-06/m7_07_v3_budget.svg)
-*DeepSeek-V3: three dense layers, 58 MoE layers, 256 routed plus one shared expert, top-8, MLA, and a separately reported MTP module.*
+DeepSeek-V4 is a public model example. Peri-LN controls branch contributions in an ordinary residual graph; mHC changes how several streams connect around the branch. [Model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash).
 
-## 9. What expert specialization evidence can actually support
+## 13. A small implementation to inspect
 
-Routing statistics are easy to collect; semantic conclusions are harder.
+On a second pass, follow an input matrix `x[T, d]` through this listing. The gate and up matrices have shape `[d, d_ff]`, and the down matrix has shape `[d_ff, d]`. Because tokens are stored as rows, these arrays are transposes of the column-vector matrices in §9.
 
-Reliable observables include:
+RMSNorm promotes low-precision values before squaring, and the sigmoid is evaluated in a stable form. The two FFN functions differ only in the activation between the projections: ordinary SwiGLU or the clamped gpt-oss variant. `PreNormStep` receives an attention function that must return the input shape; the notebook supplies the full GQA implementation.
 
-- expert frequencies by layer, language, or domain;
-- co-activation matrices;
-- changes after ablating or replacing an expert;
-- router sensitivity to syntactic and semantic features;
-- stability of a routing pattern across corpora.
-
-A useful interpretation ladder is:
-
-1. **routing preference:** which inputs select an expert more often;
-2. **functional effect:** what changes under intervention;
-3. **semantic label:** a human summary that may be incomplete.
-
-Experts often align with narrower operations or linguistic patterns rather than clean topics such as “mathematics” or “Chinese.” Several experts may be partly substitutable. The role of a shared expert can change across depth.
-
-Supervised fine-tuning (SFT) updates model weights using training examples; M13 develops that process. To study its effect on experts, compare routing preferences and intervention results before and after the update. Evaluate language quality on held-out data as a separate measurement: a shift in expert frequency alone does not determine whether a language improved or degraded.
-
-Serving systems care about a different pattern: hot experts under the actual product workload. Training-time balance does not guarantee balanced traffic after deployment. Per-expert utilization therefore belongs in production telemetry.
-
-## 10. Inference: the expert bank, all-to-all, and batch union
-
-The full bank must be available to the system, but it need not reside on one GPU or be replicated everywhere. Options include expert parallelism, CPU or NVMe tiers, weight streaming, hot-expert replication, and sharded caches.
-
-### Expert parallelism
-
-**Expert parallelism (EP)** assigns experts to devices. **Dispatch** packs and sends their token vectors; **combine** returns and sums their outputs. An **all-to-all** exchange allows each device to send to every other, while grouped GEMM executes multiple expert matrix multiplications together.
-
-Suppose every assignment moves a full vector of width $h$ and returns one of the same size, with $b$ bytes per coordinate. For one layer and the entire $T$-token batch, the logical round-trip payload is
-
-$$
-M_{\text{comm}}=2Thkb
-$$
-
-bytes. With $T=2048$, $h=7168$, $k=8$, and bf16 ($b=2$), this is 448 MiB across the batch, not per device. Actual network traffic can be lower because of local routes or destination-level aggregation, or higher because of padding and protocol overhead. This is assignment payload, not a universal network lower bound.
-
-### How many experts does a batch touch?
-
-Under independent uniform routing, the expected fraction of experts touched by $N$ tokens is
-
-$$
-f_{\text{touched}}
-=1-\left(1-\frac{k}{E}\right)^N.
-$$
-
-For 128/top-4 and 256/top-8, $k/E$ is the same, so the theoretical curve is the same: at 64 tokens, the expected touched fraction is about 86.9%.
-
-For Kimi K3's 896/top-16 routed bank:
-
-- 16 tokens touch about 25.0% in expectation;
-- 64 tokens touch about 68.4%.
-
-![VIZ m7/08 — the systems side of MoE](assets/modern-llms/en/module-06/m7_08_expert_parallel.svg)
-*Dispatch, all-to-all, grouped expert computation, and return. The batch-union formula is shown with its independence and uniformity assumptions.*
-
-Actual routes can be correlated and skewed, and shared experts are always active. Group restrictions alone do not invalidate the law if each expert still has marginal selection probability $k/E$ and token choices remain independent. The formula is a baseline against which telemetry can be compared.
-
-To assess expert offloading, measure popularity skew, temporal reuse, prefetching, and transport latency for the workload. A batch may need many more than the $k$ experts selected by one isolated token; useful prefetching must deliver their weights before the corresponding computation needs them.
-
-## 11. LatentMoE and alternatives to fixed discrete top-k
-
-LatentMoE keeps a discrete expert bank but reduces the width of the routed path. A hidden state of width $d$ is projected into a latent vector of width $\ell$:
-
-$$
-z=P_{\text{down}}x,
-\qquad \ell<d.
-$$
-
-Dispatch, expert FFNs, and combination operate in that latent space. The result is projected back:
-
-$$
-y=P_{\text{up}}\operatorname{MoE}_{\ell}(z).
-$$
-
-The router can still consume the original hidden representation and choose top-k experts. The two shared projections add $2d\ell$ matrix parameters. NVIDIA's shared experts, when present, stay in the original hidden width; the equation describes only the routed branch. Halving routed width therefore does not halve the whole model.
-
-Kimi K3 uses hidden width 7168 and latent expert width 3584, giving a twofold idealized reduction in routed activation width. It retains 896 routed experts, top-16, and two shared experts. NVIDIA uses LatentMoE in Nemotron 3 Super and Ultra.
-
-Several other branches change routing more directly:
-
-| Method | Routing mechanism | Adaptive active count | Original evaluation domain |
-|---|---|---:|---|
-| Soft MoE (2023) | soft token-to-slot and slot-to-token mixtures | fixed slot layout | vision Transformers |
-| ReMoE | differentiable ReLU routing | effective dynamic sparsity | language models |
-| SoftMoE (2026) | differentiable truncated soft top-k | yes, under a global budget | LLMs |
-| Routing-Free MoE | removes a separate central router | method-dependent | research models |
-
-These methods do not form one simple succession. They trade off differentiability, predictable kernel shapes, load balance, and adaptive compute.
-
-## 12. Level-one code: policies should be visible
-
-The educational implementation is intentionally small enough to inspect. It makes four choices explicit:
-
-- selection scores and clean gate scores are separate;
-- ties have a deterministic lower-index rule;
-- capacity overflow is not silent;
-- parameter counting is driven by a typed architecture specification.
-
-This kernel exposes the order of operations in z-loss. B09 already gives the router; the notebook adds capacity, SwiGLU experts, and the shared branch.
+**Second pass: RMSNorm, two FFNs, and sequential residual updates**
 
 ```python
-from typing import Any
+import math
 import numpy as np
 
-def _finite_array(name: str, value: Any, *, ndim: int | None = None) -> np.ndarray:
-    """Return ``value`` as a finite float64 array with an optional rank contract."""
+def _floating_array(x: np.ndarray) -> np.ndarray:
+    """Validate and return a floating NumPy array without changing its shape."""
 
-    array = np.asarray(value, dtype=np.float64)
-    if ndim is not None and array.ndim != ndim:
-        raise ValueError(f"{name} must have rank {ndim}; got shape {array.shape}")
-    if array.size == 0:
-        raise ValueError(f"{name} must be non-empty")
-    if not np.all(np.isfinite(array)):
-        raise ValueError(f"{name} must contain only finite values")
+    array = np.asarray(x)
+    if not np.issubdtype(array.dtype, np.floating):
+        raise TypeError("normalization expects a floating-point array")
+    if array.ndim == 0 or array.shape[-1] == 0:
+        raise ValueError("the normalized last axis must be non-empty")
+    if not np.isfinite(array).all():
+        raise ValueError("inputs must be finite")
     return array
 
-def router_z_loss(logits: Any) -> float:
-    """Compute the ST-MoE router z-loss ``mean(logsumexp(logits)^2)``."""
+def _statistics_dtype(dtype: np.dtype) -> np.dtype:
+    """Use at least float32 for reductions while preserving float64 inputs."""
 
-    raw = _finite_array("logits", logits)
-    if raw.ndim != 2:
-        raise ValueError("logits must have shape [T,E]")
-    maximum = np.max(raw, axis=1, keepdims=True)
-    log_partition = maximum[:, 0] + np.log(np.exp(raw - maximum).sum(axis=1))
-    return float(np.mean(log_partition**2))
-```
+    return np.dtype(np.float32) if np.dtype(dtype).itemsize < 4 else np.dtype(dtype)
 
-**Implementation and checks: B10**
-
-### NumPy → PyTorch · B10 — MoE dispatch and combine
-
-Use hidden `[T,D]`, indices and gates `[T,K]`, and expert weights `[E,D,F]` and `[E,F,D]`. Indices are integers from 0 through E−1; repeated assignments are allowed and their contributions add. Floating arrays are finite with compatible dtypes; PyTorch tensors share a device. The minimal bridge validates indices before exposing dispatch and combination, without a capacity limit.
-
-```python
-import numpy as np
-import torch
-```
-
-#### 1. Explicit NumPy implementation
-
-```python
-def numpy_expert_dispatch_explicit(
-    hidden: np.ndarray,
-    expert_indices: np.ndarray,
-    gates: np.ndarray,
-    w_in: np.ndarray,
-    w_out: np.ndarray,
+def rms_norm(
+    x: np.ndarray,
+    gamma: np.ndarray | float = 1.0,
+    eps: float = 1e-6,
 ) -> np.ndarray:
-    if expert_indices.ndim != 2 or expert_indices.shape != gates.shape or expert_indices.shape[0] != hidden.shape[0]:
-        raise ValueError("indices and gates must have matching shape [T,K]")
-    if not np.issubdtype(expert_indices.dtype, np.integer):
-        raise ValueError("expert indices must be integers")
-    if np.any(expert_indices < 0) or np.any(expert_indices >= w_in.shape[0]):
-        raise ValueError("expert index out of range")
-    output = np.zeros_like(hidden)
-    for token in range(hidden.shape[0]):
-        for slot in range(expert_indices.shape[1]):
-            expert = int(expert_indices[token, slot])
-            mid = np.tanh(hidden[token] @ w_in[expert])
-            output[token] += gates[token, slot] * (mid @ w_out[expert])
-    return output
+    """RMS-normalize `[..., d_model]` over the last axis and preserve dtype."""
+
+    if eps <= 0 or not math.isfinite(eps):
+        raise ValueError("eps must be finite and positive")
+    array = _floating_array(x)
+    work_dtype = _statistics_dtype(array.dtype)
+    work = array.astype(work_dtype, copy=False)
+    mean_square = np.mean(work * work, axis=-1, keepdims=True)
+    result = work / np.sqrt(mean_square + eps)
+    if np.shape(gamma) not in ((), (array.shape[-1],)) or not np.isfinite(gamma).all():
+        raise ValueError("gamma must be a finite scalar or [D] vector")
+    result = result * np.asarray(gamma, dtype=work_dtype)
+    return result.astype(array.dtype, copy=False)
+
+def stable_sigmoid(x: np.ndarray | float) -> np.ndarray:
+    """Compute sigmoid without `exp` overflow on large negative inputs."""
+
+    z = np.asarray(x, dtype=np.float64)
+    return np.exp(-np.logaddexp(0.0, -z))
+
+def silu(x: np.ndarray | float) -> np.ndarray:
+    """Return SiLU/Swish: x * sigmoid(x)."""
+
+    z = np.asarray(x, dtype=np.float64)
+    return z * stable_sigmoid(z)
+
+def gpt_oss_swiglu(
+    gate: np.ndarray | float,
+    up: np.ndarray | float,
+    *,
+    alpha: float = 1.702,
+    limit: float = 7.0,
+) -> np.ndarray:
+    """Apply the public gpt-oss gate clamp, up clamp, and `(up + 1)` shift."""
+
+    if limit <= 0 or not math.isfinite(limit):
+        raise ValueError("limit must be finite and positive")
+    if not math.isfinite(alpha):
+        raise ValueError("alpha must be finite")
+    g = np.minimum(np.asarray(gate, dtype=np.float64), limit)
+    u = np.clip(np.asarray(up, dtype=np.float64), -limit, limit)
+    return g * stable_sigmoid(alpha * g) * (u + 1.0)
+
+def swiglu_mlp(x, w_gate, w_up, w_down):
+    """Row-vector SwiGLU: two projections, product, then output projection."""
+    return (silu(x @ w_gate) * (x @ w_up)) @ w_down
+
+def swiglu_oss_mlp(x, w_gate, w_up, w_down, alpha=1.702, limit=7.0):
+    """Apply the gpt-oss activation before the down projection."""
+    return gpt_oss_swiglu(x @ w_gate, x @ w_up, alpha=alpha, limit=limit) @ w_down
+
+class PreNormStep:
+    """Inspect two sequential residual updates; attention accepts a mask."""
+    def __init__(self, norm1, norm2, attention, ffn):
+        self.norm1, self.norm2 = norm1, norm2
+        self.attention, self.ffn = attention, ffn
+
+    def __call__(self, x, mask):
+        h = x + self.attention(self.norm1(x), mask)
+        return h + self.ffn(self.norm2(h))
 ```
 
-Two-matrix tanh experts keep this bridge focused on dispatch/combine. The token/slot loop adds each weighted expert output. The main notebook layer separately implements SwiGLU.
+`PreNormStep` accepts attention as a function with an explicit mask. The notebook supplies GQA and tests causality. This small block isolates normalization and FFN mechanics; positional encoding and a KV cache are outside the experiment.
 
-#### 2. The same mathematics as explicit PyTorch operations
+## 15. Reading gpt-oss from code rather than from a guessed config field
 
-```python
-def torch_expert_dispatch_explicit(
-    hidden: torch.Tensor,
-    expert_indices: torch.Tensor,
-    gates: torch.Tensor,
-    w_in: torch.Tensor,
-    w_out: torch.Tensor,
-) -> torch.Tensor:
-    if expert_indices.ndim != 2 or expert_indices.shape != gates.shape or expert_indices.shape[0] != hidden.shape[0]:
-        raise ValueError("indices and gates must have matching shape [T,K]")
-    if expert_indices.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8):
-        raise ValueError("expert indices must be integers")
-    if torch.any(expert_indices < 0) or torch.any(expert_indices >= w_in.shape[0]):
-        raise ValueError("expert index out of range")
-    output = torch.zeros_like(hidden)
-    for expert in range(w_in.shape[0]):
-        token_ids, slots = torch.where(expert_indices == expert)
-        if token_ids.numel() == 0:
-            continue
-        mid = torch.tanh(hidden[token_ids] @ w_in[expert])
-        expert_out = (mid @ w_out[expert]) * gates[token_ids, slots, None]
-        output.index_add_(0, token_ids, expert_out)
-    return output
+The pinned reference makes three design choices visible.
+
+First, RMSNorm converts inputs to FP32 before squaring, uses $\epsilon=10^{-5}$, and returns the original dtype. Second, `swiglu` implements the 1.702 coefficient, asymmetric gate/up clamps, and the $+1$ value shift. Third, both attention and MLP use Pre-LN residual updates.
+
+The model configuration exposes sizes, experts, top-k, and the clamp limit. This original schema has no `hidden_act` field; a converted library schema may have one. The executed function remains the activation contract.
+
+```json
+{
+  "hidden_size": 2880,
+  "intermediate_size": 2880,
+  "num_experts": 128,
+  "experts_per_token": 4,
+  "swiglu_limit": 7.0
+}
 ```
 
-PyTorch changes the execution order: assignments are batched per expert, then results are returned to tokens with `index_add_`.
+![VIZ m6/09 — gpt-oss block passport](assets/modern-llms/en/module-06/m6_09_config_block.svg)
+*Configuration fields on one side, code-defined behavior on the other.*
 
-| Aspect | NumPy | PyTorch |
-|---|---|---|
-| Order | token → slot | expert → assigned tokens |
-| Expert batch | none | indexed `hidden[token_ids]` |
-| Combine | `output[token] += ...` | `output.index_add_` |
-| Autograd | none | through expert matmul and combine |
-| CUDA determinism | CPU reference | `index_add_` may depend on atomic-add ordering |
+The intermediate width describes one expert. Total and active parameter accounting therefore depends on routing and belongs in Module 7.
 
-**Executable parity and edge-case check**
+The packed expert projection is interleaved: `x[..., ::2]` supplies the gate and `x[..., 1::2]` supplies the up values. Splitting into contiguous halves preserves shapes but changes the function. The repository validator compares our RMSNorm and packed activation against these two functions in the [pinned source](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py).
 
-```python
-rng = np.random.default_rng(10)
-x_np = rng.standard_normal((6, 4))
-idx_np = np.array([[0,1],[1,2],[2,0],[0,2],[1,0],[2,1]])
-gates_np = np.full((6,2), 0.5)
-w1_np = rng.standard_normal((3,4,5)); w2_np = rng.standard_normal((3,5,4))
-np_out = numpy_expert_dispatch_explicit(x_np, idx_np, gates_np, w1_np, w2_np)
-t_out = torch_expert_dispatch_explicit(torch.tensor(x_np), torch.tensor(idx_np), torch.tensor(gates_np), torch.tensor(w1_np), torch.tensor(w2_np))
-np.testing.assert_allclose(np_out, t_out.numpy(), rtol=1e-10, atol=1e-10)
-args = [torch.tensor(x_np, requires_grad=True), torch.tensor(idx_np),
-        torch.tensor(gates_np, requires_grad=True), torch.tensor(w1_np, requires_grad=True),
-        torch.tensor(w2_np, requires_grad=True)]
-assert torch.autograd.gradcheck(
-    lambda x, g, a, b: torch_expert_dispatch_explicit(x, args[1], g, a, b),
-    (args[0], args[2], args[3], args[4]))
-for invalid in (-1, w1_np.shape[0], .5, np.nan, True):
-    bad = np.full(idx_np.shape, invalid)
-    for dispatch, values in (
-        (numpy_expert_dispatch_explicit, (x_np,bad,gates_np,w1_np,w2_np)),
-        (torch_expert_dispatch_explicit, tuple(torch.tensor(a) for a in (x_np,bad,gates_np,w1_np,w2_np))),
-    ):
-        try: dispatch(*values)
-        except ValueError: pass
-        else: raise AssertionError("invalid expert index accepted")
-duplicate = np.zeros_like(idx_np)
-expected = idx_np.shape[1] * (np.tanh(x_np @ w1_np[0]) @ w2_np[0])
-actual = numpy_expert_dispatch_explicit(x_np,duplicate,np.ones_like(gates_np),w1_np,w2_np)
-np.testing.assert_allclose(actual,expected)
-actual_t = torch_expert_dispatch_explicit(torch.tensor(x_np),torch.tensor(duplicate),
-    torch.ones_like(torch.tensor(gates_np)),torch.tensor(w1_np),torch.tensor(w2_np))
-np.testing.assert_allclose(actual_t.numpy(),expected)
-print("B10 values, gradients, repeated assignments, and invalid indices: PASS")
-```
+The source manifest records revisions and hashes; M6 stores the original configuration. Dimensions and operations must be read together.
 
-Complete executable file: `m07_moe_bridges.py`
+## 16. A block reference table, as of October 10, 2026
 
-Accumulation contract: [PyTorch `index_add_`](https://docs.pytorch.org/docs/stable/generated/torch.Tensor.index_add_.html).
+This is a guide to reading open implementations, not an exhaustive model catalog. Expert branches are separate FFNs selected for a token; M7 explains the routing mechanism. A family name never replaces checkpoint flags. The inspected revision and hashes are in the source manifest.
 
-## 14. Reading the gpt-oss implementation
+| Family | Block normalization | FFN | Q/K or score treatment |
+|---|---|---|---|
+| Llama 3.x | Pre-LN RMSNorm | SwiGLU | No separate Q/K norm in inspected code |
+| Llama 4 | Pre-LN RMSNorm | Gated dense/expert branches | L2 Q/K on RoPE layers when `use_qk_norm` is enabled |
+| Gemma 2 | RMSNorm at sublayer inputs and outputs | Gated GELU-tanh | Configured attention-logit soft-cap |
+| Gemma 3 | RMSNorm at sublayer inputs and outputs | Gated GELU-tanh | Per-head Q/K RMSNorm; soft-cap follows config |
+| Gemma 4 text | Input/output RMSNorm plus norms in optional branches | Gated dense/expert branches | Per-head Q/K norms on corresponding projection paths |
+| OLMo2 | Post-sublayer RMSNorm before addition | SiLU-gated MLP | Whole Q/K projection RMSNorm before head splitting |
+| gpt-oss | Pre-LN RMSNorm | Clamped SwiGLU with $(u+1)$ | Learned sinks; no Q/K norm in reference |
+| DeepSeek-V4 | Sublayer norms and mHC residual mixing | Clamped expert FFN | Depends on attention path |
+| Qwen3 | Pre-LN RMSNorm | SiLU-gated MLP | RMSNorm within each Q/K head |
 
-The open reference code makes its routing contract unusually clear.
+Inspect placement, reduction axis, FFN function, and optional flags in that order. Then verify dimensions and parameter sharing. Unpublished architecture details of a closed model should remain unspecified.
 
-`MLPBlock.gate` has a weight matrix and a bias, takes top-k router logits, and applies softmax over the selected logits. That is not the sigmoid-plus-selection-bias contract used by DeepSeek-V3.
+## 17. Applying the method to vision blocks
 
-The expert implementation stores packed gate/up weights, corresponding biases, down weights, and down biases. The linear-layer biases contribute 40,105,728 parameters to the 120b model. In the original implementation, the packed gate and up columns alternate; a split into two contiguous halves would change the activation.
+A vision Transformer also has norms, attention, an MLP, and residual additions. Its ledger follows from matrix shapes, intermediate width, and bias policy. An encoder may use a noncausal mask, so the language decoder's mask should not be copied automatically.
 
-The original reference path gathers the selected expert tensors and uses `einsum` for both expert projections and the weighted sum. Bridge B10 uses a different, deliberately transparent execution order: a loop over experts and indexed addition. Serving implementations can instead use fused dispatch and grouped matrix multiplications across devices; the routing mathematics must still agree.
+QKNorm was introduced for low-resource translation in 2020. ViT-22B later used Q/K normalization at large vision scale. These are related applications, not evidence of one universal formula. [QKNorm](https://arxiv.org/abs/2010.04245); [ViT-22B](https://arxiv.org/abs/2302.05442).
 
-![VIZ m7/09 — gpt-oss from source](assets/modern-llms/en/module-06/m7_09_config_moe.svg)
-*The gpt-oss-120b contract recovered from code: biased router, 128 routed experts, top-4, packed expert tensors, and an explicit active-count convention.*
+Multimodal configurations frequently separate text and vision towers. Read each independently: activations, epsilon, widths, and placement may differ even within one checkpoint.
 
-The general reading lesson is portable: inspect the score function, selection bias, gate normalization, shared capacity, expert tensor shapes, overflow policy, and distributed execution path. “MoE” alone specifies none of them.
+## 20. A practical order for reading an unfamiliar block
 
-## 15. A source-aware snapshot of current MoE architectures
+![VIZ m6/10 — Trace the residual graph, locate the norms, inspect the FFN, then count parameters.](assets/modern-llms/en/module-06/m6_10_cheatsheet.svg)
+*Trace the residual graph, locate the norms, inspect the FFN, then count parameters.*
 
-The table is dated 11 October 2026 and records evidence rather than ranking models.
+Start with the residual additions: identify the tensors and check their shapes. Locate every norm and record its axis, affine parameters, and working dtype. Follow both gate branches through their product to the output projection. Finally, sum entries in each distinct learned tensor.
 
-| Model | Total / active | Expert contract | Routing or related design | Evidence |
-|---|---:|---|---|---|
-| gpt-oss-120b | 117B / 5.1B | 128 routed, top-4, no shared expert | softmax over selected logits | official announcement, config, and code |
-| DeepSeek-V3 | 671B / 37B | 256 routed + 1 shared, top-8 | sigmoid, group preselection, loss-free bias | technical report and inference code |
-| Qwen3.5-35B-A3B | 35B / 3B | 256 routed + 1 shared, top-8 | hybrid DeltaNet/attention, MTP | official model card and config |
-| Kimi K3 | 2.8T / 104B | 896 routed + 2 shared, top-16 | Stable LatentMoE, latent width 3584 | official report and weights |
-| Nemotron 3 Ultra | 550B / 55B | LatentMoE | hybrid Mamba–Attention, MTP, NVFP4 | official technical material |
-| GLM-5 | 744B / 40B | 256 routed + 1 shared, top-8 | sigmoid/no-aux routing; DSA in attention | official model card and config |
-| DeepSeek-V4 Pro / Flash | 1.6T / 49B; 284B / 13B | report-specific MoE | hybrid attention and MoE | technical report |
+These steps explain where information flows, how its scale changes, what transformation is learned, and how many parameters it costs. For the Llama-3.1-8B geometry, each block has $13d^2$ matrix entries and another $2d$ in norms. M7 extends this accounting to routed experts.
 
-The active ratios are not directly comparable performance predictors. Models differ in dense prefixes, attention, MTP, modality towers, output heads, and counting conventions.
+On a reference pass, add two distinctions. DyT/DyISRU replace a shared feature statistic with element-wise functions. mHC changes connections between several residual streams. Assess their claims and experiments at those respective levels.
 
-Qwen3.5-35B-A3B is a useful configuration-reading example. Its language model has hidden width 2048, 40 layers, 256 routed experts, top-8 plus one shared expert, expert intermediate width 512, and an MTP layer. Its block pattern interleaves Gated DeltaNet and full attention. A separate sigmoid gate scales the shared expert output. The presence of MTP in the configuration does not mean that ordinary autoregressive decoding runs it on every step: active accounting must specify the execution path.
-
-## 16. Multimodal MoE is not one architecture
-
-Multimodality can meet sparse experts in several ways.
-
-A unified residual stream may send text and visual tokens through one routed bank. That enables mixed functional specialization but can widen the expert union touched by a batch. Kimi K3 is a current documented example of a native multimodal MoE system.
-
-Another architecture can reserve modality-specific experts, trading simpler specialization for more complex balance and placement. A third can keep a separate vision encoder and route only the projected visual tokens through the language backbone.
-
-If every token still chooses $k$ experts, expert compute per token does not rise merely because the token is visual. What can rise is the number of distinct experts touched across the mixed batch and therefore communication diversity. A multimodal MoE must be evaluated with routing and all-to-all telemetry, not only a total/active headline.
-
-## 19. Key takeaways
-
-![VIZ m7/10 — Mixture of Experts cheat sheet](assets/modern-llms/en/module-06/m7_10_cheatsheet.svg)
-*One-page map: declared total/active accounting, router and selection bias, load control, shared/fine-grained experts, expert parallelism, batch union, and LatentMoE.*
-
-- MoE grows stored capacity faster than per-token expert compute, but storage and communication remain.
-- Total and active counts are meaningful only with a declared convention.
-- A selection bias can alter top-k without becoming an expert mixture weight.
-- Auxiliary-loss-free balancing removes a direct auxiliary gradient, not the effect of routing on training.
-- Fine-grained banks create more routing flexibility; combinatorial subsets are not semantic skills.
-- Shared experts reduce pressure to duplicate common computation, but their contents must be measured.
-- Batch union can touch a large part of the bank; the uniform formula is a baseline.
-- LatentMoE keeps discrete top-k while compressing the routed path.
-- Current model tables should cite configs, reports, or code rather than inherit properties across families.
-
-## 20. primary sources
+## 21. primary sources
 
 **Primary sources:**
 
-- Jacobs et al., *Adaptive Mixtures of Local Experts* — [paper](https://www.cs.toronto.edu/~hinton/absps/jjnh91.pdf)
-- Shazeer et al., *Outrageously Large Neural Networks* — [arXiv:1701.06538](https://arxiv.org/abs/1701.06538)
-- GShard — [arXiv:2006.16668](https://arxiv.org/abs/2006.16668)
-- Switch Transformer — [arXiv:2101.03961](https://arxiv.org/abs/2101.03961)
-- ST-MoE — [arXiv:2202.08906](https://arxiv.org/abs/2202.08906)
-- DeepSeekMoE — [arXiv:2401.06066](https://arxiv.org/abs/2401.06066)
-- Auxiliary-Loss-Free Load Balancing — [arXiv:2408.15664](https://arxiv.org/abs/2408.15664)
-- DeepSeek-V3 — [technical report](https://arxiv.org/abs/2412.19437) and [official repository](https://github.com/deepseek-ai/DeepSeek-V3)
-- gpt-oss — [official announcement](https://openai.com/index/introducing-gpt-oss/) and [open implementation](https://github.com/openai/gpt-oss)
-- LatentMoE — [NVIDIA Research](https://research.nvidia.com/labs/nemotron/LatentMoE/)
-- Nemotron 3 Ultra — [official page](https://research.nvidia.com/labs/nemotron/Nemotron-3-Ultra/)
-- Kimi K3 — [official repository and report](https://github.com/MoonshotAI/Kimi-K3)
-- Qwen3.5-35B-A3B — [official model card](https://huggingface.co/Qwen/Qwen3.5-35B-A3B-Base)
-- GLM-5 — [official model card and config](https://huggingface.co/zai-org/GLM-5)
-- Soft MoE — [arXiv:2308.00951](https://arxiv.org/abs/2308.00951)
-- ReMoE — [arXiv:2412.14711](https://arxiv.org/abs/2412.14711)
-- SoftMoE 2026 — [arXiv:2606.17952](https://arxiv.org/abs/2606.17952)
+- Ba, Kiros, Hinton, [Layer Normalization](https://arxiv.org/abs/1607.06450)
+- Zhang and Sennrich, [Root Mean Square Layer Normalization](https://arxiv.org/abs/1910.07467)
+- Xiong et al., [On Layer Normalization in the Transformer Architecture](https://arxiv.org/abs/2002.04745)
+- Wang et al., [DeepNet](https://arxiv.org/abs/2203.00555)
+- Kim et al., [Peri-LN](https://arxiv.org/abs/2502.02732)
+- Henry et al., [Query-Key Normalization](https://arxiv.org/abs/2010.04245)
+- Shazeer, [GLU Variants Improve Transformer](https://arxiv.org/abs/2002.05202)
+- Zhu et al., [Transformers without Normalization](https://arxiv.org/abs/2503.10622)
+- Stollenwerk, [Layer Normalization and Dynamic Activation Functions](https://arxiv.org/abs/2503.21708)
+- Xie et al., [Manifold-Constrained Hyper-Connections](https://arxiv.org/abs/2512.24880)
+- [OpenAI gpt-oss reference implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py)
+- Hugging Face documentation for [OLMo2](https://huggingface.co/docs/transformers/model_doc/olmo2), [Llama 4](https://huggingface.co/docs/transformers/model_doc/llama4), [Gemma 2](https://huggingface.co/docs/transformers/model_doc/gemma2), [Gemma 3](https://huggingface.co/docs/transformers/model_doc/gemma3), [Qwen3](https://huggingface.co/docs/transformers/model_doc/qwen3), and [DeepSeek-V4](https://huggingface.co/docs/transformers/model_doc/deepseek_v4)
+- Official Transformers implementations for [OLMo2](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py), [Llama 4](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/llama4/modeling_llama4.py), [Gemma 3](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/gemma3/modeling_gemma3.py), and [Qwen3](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3/modeling_qwen3.py)
 
-- Routing-Free MoE — [arXiv:2604.00801](https://arxiv.org/abs/2604.00801)
-- DeepSeek-V4 — [model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro)
-
-**Next:** Module 8 changes the other large component of the block. Instead of routing among feed-forward experts, it asks whether sequence information must always move through attention, or whether recurrent state and state-space models can carry part of the load.
+**Next:** Module 7 turns the narrow gpt-oss expert into a full Mixture-of-Experts calculation: total versus active parameters, routing, and load balancing.
 
 ---
 
-*Landscape verified: 11 October 2026. Course reconstructions are separated from rounded developer headlines, and reported research results retain their original experimental scope.*
+*Sources checked October 10, 2026. Numerical examples use the module-owned fixture; empirical findings retain their source conditions.*
