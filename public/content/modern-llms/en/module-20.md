@@ -1,6 +1,6 @@
 # Module 20. The complete LLM: from tokens to training and generation
 
-*Modern LLMs · additional synthesis module · revision 2026.10.31*
+*Modern LLMs · additional synthesis module · revision 2026.10.25*
 
 By this point, we have studied language models through several different lenses. Attention explained communication between positions; optimization explained how weights change; inference introduced state and token selection; evaluation asked whether the resulting behavior was useful. It is time to put those views together. What, exactly, lies between a token ID and the probability of its continuation? Which parts of that computation learn, and which parts merely organize its execution?
 
@@ -8,7 +8,7 @@ We will construct a complete mathematical description of a particular MiniLLM co
 
 ### Reading routes
 
-For a first reading, you need matrix multiplication, conditional probability, and the meaning of a gradient. [Module 3](module-03.md) provides a refresher; Modules 4–6 develop positions, attention, and the Transformer block. Read Sections 1–10, then 13–14 and 17–20. On this pass, Sections 11–12 can be read for the connection between prediction error and changing weights. Complete Exercises 1–3 and 6 in Section 18; the required material is included in this route.
+For a first reading, you need matrix multiplication, conditional probability, and the meaning of a gradient. [Module 3](module-03.md) provides a refresher; Modules 4–6 develop positions, attention, and the Transformer block. Read Sections 1–10, then 13–14, the [Section 17 practical](/courses/modern-llms/module-20/notebooks/), the [Section 18 exercises](/courses/modern-llms/module-20/exercises/), and Sections 19–20. On this pass, Sections 11–12 can be read for the connection between prediction error and changing weights. Complete [Exercises 1–3 and 6 in Section 18](/courses/modern-llms/module-20/exercises/); the required material is included in this route.
 
 ## 1. Three computations that should not be conflated
 
@@ -96,6 +96,8 @@ Queries equal keys here only because we chose equal projection matrices. Nothing
 
 GQA lets several query heads read the same key/value head. Number heads from zero and define $g(j)=\lfloor j/(h_q/h_{kv})\rfloor$. Sharing K/V does not average the queries: each head still has its own $W^Q_j$ and can attend differently. The shared projections and their cached activations are where the saving occurs.
 
+The running numerical example has just one query head and one K/V head. It makes the full computation small enough to inspect, but cannot itself demonstrate savings from several query heads sharing K/V. The general notation still covers that case; Section 8 will isolate its effect in a separate parameter-count comparison.
+
 Position $i$ may read key position $r$ only when $r\le i$. Encode that condition as an additive mask:
 
 $$M_{ir}=\begin{cases}0,&r\le i,\\-\infty,&r\gt i.\end{cases}$$
@@ -158,6 +160,8 @@ $$P=n_E Vd+L\big(2d^2+2d h_{kv}d_h+3dm+2d\big)+d,\qquad n_E=\begin{cases}1,&U=E^
 
 The terms have direct counterparts in the graph. Query and attention-output projections contribute $2d^2$; keys and values contribute $2dh_{kv}d_h$; the three FFN matrices contribute $3dm$. There are $2d$ normalization gains per block and $d$ final gains. Our example has $16+16+12+4+2=50$ parameters. Tying embeddings reduces the count to 42. A second configuration with $d=4,m=3,h_q=2,h_{kv}=1,V=4,L=1$ and independent tables has 128 parameters; using two K/V heads instead gives 144.
 
+The latter two counts hold the query-head count fixed and change the number of K/V heads. They isolate the projections saved by sharing. This is a comparison between configurations, not a change to the dimensions halfway through our one-layer forward pass.
+
 Thus $\theta$ includes embedding and output weights, linear projections, and normalization gains. Token IDs, the causal mask, and fixed RoPE frequencies are not learned. Activations, gradients, caches, and optimizer moments occupy memory but are not additional model parameters. The distinction connects this equation to the memory budgets in Modules 9–10.
 
 ## 9. Finish the numerical forward pass
@@ -167,6 +171,8 @@ Set the output matrix to
 $$U=\begin{bmatrix}0&0.5&-0.5&0.25\\0&-0.25&0.5&-0.5\end{bmatrix}.$$
 
 Final RMSNorm gives rows of $R$ approximately equal to $(1.413953,-0.027120)$, $(0.024071,1.414008)$, and $(0.927561,1.067535)$. Multiplication by $U$ and a row softmax yield the following results. Every four-entry vector uses the order BOS, A, B, EOS.
+
+The first column identifies the context available to each row. All three rows can be computed in one causally masked pass: the first cannot read A or B, the second cannot read B, and the last can use the complete input BOS A B. The table does not require three independent runs. Section 10 will connect this property to teacher forcing.
 
 | Available prefix | Logits | Probabilities | Target |
 |---|---|---|---|
@@ -196,33 +202,65 @@ In the example, all three targets are selected. Their losses are $0.889986$, $0.
 
 ## 11. Backpropagation reaches every learned part
 
-Writing $\nabla_\theta\mathcal L$ is concise, but it should not conceal how the derivative reaches a matrix. Start with one logit row $\lambda$ and target ID $y$. Softmax followed by cross-entropy gives
+Writing $\nabla_\theta\mathcal L$ is concise, but it should not conceal how the derivative reaches a matrix. The forward pass left a graph of intermediate values. We now follow its dependencies backward, asking how a change at each earlier point would affect the loss. This is not an attempt to reconstruct an input by inverting the network. The weights remain fixed while we compute their derivatives; Section 12 will perform the update.
+
+Start with one logit row $\lambda$ and target ID $y$. Softmax followed by cross-entropy gives
 
 $$\frac{\partial\mathcal L}{\partial\lambda_v}=\frac{b}{n}\big(p_v-\mathbf1[v=y]\big).$$
 
 For the final row of our example, this is approximately $(0.082722,0.100724,0.088719,-0.272166)$. The components sum to zero, consistent with the invariance to a common logit shift. The negative derivative of the target logit means that increasing that logit alone would decrease the loss.
 
-Use $G$ to denote an incoming gradient. For a linear operation $Y=XW$, the chain rule gives $G_X=G_YW^\top$ and $G_W=X^\top G_Y$. For a residual operation $Z=H+F(H)$, flattening the arrays into vectors gives $G_H=G_Z+J_F(H)^\top G_Z$. The identity branch provides a direct gradient path; the transformation branch still contributes its own derivative.
+These numbers are not yet weight updates. They describe sensitivity to intermediate vocabulary scores. Backpropagation must carry that sensitivity to the matrices that produced the scores. An activation gradient keeps the calculation moving through the graph; a parameter gradient is retained for the optimizer. Each gradient has the shape of the quantity being differentiated.
+
+Use $G$ to denote an incoming gradient. For a linear operation $Y=XW$, the chain rule gives $G_X=G_YW^\top$ and $G_W=X^\top G_Y$.
+
+Apply the linear rule to the actual last operation, $\Lambda=RU$. Collect the row derivatives in $G_\Lambda$. Then $G_U=R^\top G_\Lambda$ accumulates the contribution of all selected predictions to the shared output matrix, while $G_R=G_\Lambda U^\top$ carries sensitivity back to the representation before that projection. Computing the derivative of the vocabulary head does not finish the job: the second result is what connects the loss to the rest of the network.
+
+The next operation on this backward route is final RMSNorm. The same local rule will be needed for both normalizations inside every block, so it is worth understanding here. A row was divided by a scale computed from that very row. Changing one coordinate therefore changes both its numerator and the denominator shared by all coordinates. Merely dividing the incoming gradient by the stored scale would miss the second effect.
+
+For RMSNorm on one row, first define $v=G_{N(h)}\odot\gamma$. The derivatives are
+
+$$G_h=\frac{v}{\rho}-\frac{h\,(v\cdot h)}{d\rho^3},\qquad G_\gamma=G_{N(h)}\odot\frac{h}{\rho}.$$
+
+The first term of the input derivative accounts for the numerator changing with the scale held fixed. The second accounts for the scale changing as well. This couples coordinates within a row, not positions across the sequence. The gain derivative answers a separate question: how would changing the learned amplification of a normalized coordinate affect the loss?
+
+Sum the gain derivatives over rows. The denominator is the same $\rho$ used in the forward pass, including $\varepsilon$. Dropping that term during differentiation would produce a derivative of a different function.
+
+Applying this rule to final RMSNorm gives a derivative for its own gain vector and a gradient to pass into the final block. We now retrace Section 7. The block ended by adding the FFN output to a skip connection. The representation before that addition affected the result through both routes, so both must contribute to its derivative.
+
+For a residual operation $Z=H+F(H)$, flattening the arrays into vectors gives $G_H=G_Z+J_F(H)^\top G_Z$. The identity branch provides a direct gradient path; the transformation branch still contributes its own derivative.
+
+The skip route passes the incoming gradient straight through. Along the FFN route, the first backward operation is the down projection. The linear rule supplies its parameter derivative and the gradient with respect to the product of the two internal branches. Only then do we split that contribution between gate and up.
 
 For SwiGLU, set $a=YW^{\rm gate}$, $u=YW^{\rm up}$, and $c=\operatorname{SiLU}(a)\odot u$. Then
 
 $$G_a=G_c\odot u\odot\big[\sigma(a)+a\sigma(a)(1-\sigma(a))\big],\qquad G_u=G_c\odot\operatorname{SiLU}(a).$$
 
-Backpropagate through both projections and add their contributions at $Y$. For RMSNorm on one row, first define $v=G_{N(h)}\odot\gamma$. The derivatives are
+For either factor in an elementwise product, the derivative uses the other factor's forward value. The gate branch also includes the derivative of SiLU; the up branch has no corresponding nonlinearity. Applying the linear rule to the two projections then yields their parameter derivatives.
 
-$$G_h=\frac{v}{\rho}-\frac{h\,(v\cdot h)}{d\rho^3},\qquad G_\gamma=G_{N(h)}\odot\frac{h}{\rho}.$$
+Backpropagate through both projections and add their contributions at $Y$. That common input is the output of pre-FFN normalization, not the residual representation itself. Use the RMSNorm rule with this sublayer's own gain vector, return to the representation before the FFN, and add the contribution that traveled along the skip route. Only at this point have both paths from that representation been accounted for.
 
-Sum the gain derivatives over rows. The denominator is the same $\rho$ used in the forward pass, including $\varepsilon$. Dropping that term during differentiation would produce a derivative of a different function.
+Continuing backward reaches the earlier residual addition, the one surrounding attention. Again there is a direct route to the block input and a route through the transformation. On the attention route, differentiate the output projection and split the gradient of the concatenated heads into the corresponding coordinate groups. Each head receives its own slice, not a copy of the whole concatenated gradient.
 
-Attention also decomposes into familiar operations. From $O=A\mathsf V$, obtain $G_A=G_O\mathsf V^\top$ and $G_{\mathsf V}=A^\top G_O$. If $a$ is a row of softmax outputs, its backward pass can be written without materializing a full Jacobian:
+Attention also decomposes into familiar operations. From $O=A\mathsf V$, obtain $G_A=G_O\mathsf V^\top$ and $G_{\mathsf V}=A^\top G_O$.
+
+A weighted sum can change because its values change or because their mixing weights change. The value derivative proceeds toward the V projection. The derivative of the mixing weights still has to pass through softmax and the query–key comparison.
+
+If $a$ is a row of softmax outputs, its backward pass can be written without materializing a full Jacobian:
 
 $$G_s=a\odot\big(G_a-(G_a\cdot a)\mathbf1\big).$$
+
+Here $a$ denotes a row of attention probabilities, not the gate activation used earlier for SwiGLU. The dot-product correction captures the dependence between normalized weights: raising one score affects the other weights in the same row. Softmax is not a set of independent scalar normalizations.
 
 Masked entries have zero derivative. For the allowed scores in $S=\widetilde Q\widetilde K^\top/\sqrt{d_h}+M$,
 
 $$G_{\widetilde Q}=G_S\widetilde K/\sqrt{d_h},\qquad G_{\widetilde K}=G_S^\top\widetilde Q/\sqrt{d_h}.$$
 
-RoPE sends the derivative through the inverse rotation. Under GQA, contributions from all query heads sharing a K/V head are added. Embedding lookup accumulates gradients into the selected table rows, adding contributions when an ID occurs more than once. If $U=E^\top$, the output projection contributes another gradient to that same table. This accounts for every trainable component listed in Section 8.
+The rotated query and key derivatives next pass through RoPE to their unrotated projections. An inverse rotation is appropriate for this particular linear map; it does not mean that backpropagation inverts the network as a whole. The linear rule then gives derivatives for the Q/K/V matrices and contributions to their common normalized input. Add those contributions, differentiate pre-attention normalization, and add the skip-route gradient. That completes one block. A stack is traversed from the last block to the first.
+
+Under GQA, contributions from all query heads sharing a K/V head are added. Embedding lookup accumulates gradients into the selected table rows, adding contributions when an ID occurs more than once. If $U=E^\top$, the output projection contributes another gradient to that same table. This accounts for every trainable component listed in Section 8.
+
+The common principle is accumulation across uses. Shared K/V heads, repeated token IDs, and a table used at both input and output all reuse a learned quantity along several computational paths. Its derivative collects every path's contribution. Once the route reaches the embedding rows, the optimizer has derivatives for all participating parameters. No matrix has been updated halfway through this calculation.
 
 The notebook checks the complete path in two ways. PyTorch differentiates its graph automatically; NumPy estimates each of the 50 derivatives through the central difference $(\mathcal L(\theta_i+h)-\mathcal L(\theta_i-h))/(2h)$ with $h=10^{-5}$. A separate run ties embeddings and checks all 42 remaining parameters. This validates the selected smooth configuration in float64, rather than proving correctness for arbitrary architecture changes.
 
@@ -232,12 +270,14 @@ A gradient specifies local sensitivity, not a complete update rule. AdamW also n
 
 $$\widetilde g_s=g_s\min\left(1,\frac{c}{\lVert g_s\rVert_2}\right).$$
 
-Define the factor as one when the gradient is zero. The norm covers all trainable scalars; this is not independent clipping of each entry. AdamW then updates two moment estimates:
+Define the factor as one when the gradient is zero. The norm covers all trainable scalars; this is not independent clipping of each entry. AdamW next uses a history of gradients. One accumulator keeps a smoothed signed direction; the other keeps smoothed squared coordinates for scaling the update. These are not extra learned layers. They are the optimizer state that determines how the derivatives will be used. The two moment estimates are updated as follows:
 
 $$m_s=\beta_1m_{s-1}+(1-\beta_1)\widetilde g_s,\qquad v_s=\beta_2v_{s-1}+(1-\beta_2)\widetilde g_s^2,$$
 $$\widehat m_s=\frac{m_s}{1-\beta_1^s},\quad\widehat v_s=\frac{v_s}{1-\beta_2^s},\quad\theta_s=(1-\eta_s\lambda)\theta_{s-1}-\eta_s\frac{\widehat m_s}{\sqrt{\widehat v_s}+\varepsilon_{\rm opt}}.$$
 
 Squares, square roots, and divisions are elementwise. The learning rate is $\eta_s$; weight decay $\lambda$ may differ between parameter groups. Our experiment assigns $\lambda=0.1$ to matrices and zero to normalization gains. That grouping is an experimental choice, not a universal property of AdamW. Its numerical stabilizer, $\varepsilon_{\rm opt}=10^{-8}$, is separate from the RMSNorm epsilon.
+
+The final equation separates two operations. Weight decay contracts the old parameter directly, while the adaptive term applies a direction scaled by gradient history. Adding a penalty to the loss and feeding its derivative into the moment estimates would generally produce a different update under Adam. That distinction is why decay appears beside the old weight rather than inside the gradient.
 
 Start with zero moments, $\beta_1=0.9$, $\beta_2=0.95$, $\eta_1=0.01$, and $c=1$. The gradient norm is **0.587186334**, so clipping is inactive. Bias correction on the first step gives $\widehat m_1=g_1$ and $\widehat v_1=g_1^2$. After this update, loss on the same sequence falls from **1.109373924** to **1.084831548**.
 
@@ -248,6 +288,8 @@ This is a result for one specified step, not a guarantee of monotonic improvemen
 *Figure 4. These are the same three predictions from Section 9. The bars show their target probabilities; a uniform distribution over four tokens would assign 0.25.*
 
 ## 13. Generation adds a selection rule
+
+For this decoding example, **return to the original weights and logits in Section 9, before the AdamW update**. Training has shown how the model itself changes. We now hold its distribution fixed to isolate a different choice: the rule used to select a token. The probabilities below therefore belong to the original table, not the updated checkpoint.
 
 At inference time, fix $\theta$ and begin with a known prefix. Greedy decoding selects a maximum-probability token. Sampling instead draws from a distribution, which a decoder may modify. With temperature $\tau\gt0$ and a nonempty candidate set $K$, define
 
@@ -323,9 +365,13 @@ $$\boxed{p_\theta(z^{(0)}\mid c)=\sum_{z^{(1)},\ldots,z^{(S)}}p_S(z^{(S)}\mid c)
 
 The product describes a single refinement trajectory. The sum accounts for all hidden intermediate sequences that could lead to the same clean result. Continuous-noise versions use corresponding integrals. If length is also generated, its distribution must be modeled separately.
 
+Marginalizing every path defines the probability of a specified result; it is not an instruction to enumerate every path when generating one sample. Sampling can draw the initial noisy sequence, draw the next state from each specified reverse transition, and return the final string. One run realizes one random trajectory. The sum above describes the distribution of its endpoint. Evaluating the probability of a particular string and drawing a string are different computational tasks.
+
 A denoiser often predicts clean-token probabilities, while the transition $K$ additionally depends on the corruption process and schedule. We therefore cannot automatically identify $K$ with a single token softmax. Attention may also become bidirectional: positions can read the available noisy state across the sequence. Simply removing a causal mask while asking a network to copy visible correct tokens would leak targets rather than define a valid diffusion task. In [Module 12](module-12.md), training reconstructs hidden tokens from corrupted inputs; more generally, the objective follows the chosen forward corruption process and reverse-model formulation. [D3PM](https://arxiv.org/abs/2107.03006) develops this discrete setting.
 
 To make marginalization tangible, consider a **hand-specified reverse chain**, not a trained denoiser. Two binary positions have four possible strings: 00, 01, 10, 11. From two MASK symbols, the first transition produces $r=(0.18,0.42,0.12,0.28)$. The second transition independently keeps each bit with probability 0.8 and flips it with probability 0.2. For strings differing in $h$ positions, the transition probability is $0.8^{2-h}0.2^h$. Multiplying $rK$ gives $(0.2128,0.3472,0.1672,0.2728)$. For instance, the probability of 00 is $0.18\cdot0.64+0.42\cdot0.16+0.12\cdot0.16+0.28\cdot0.04=0.2128$. This adds four possible paths; it is not a prediction of the first bit followed by a prediction of the second.
+
+The distinction is concrete in this small chain. To calculate the probability of 00, we added the contributions from all four intermediate strings. To generate a sample, we would instead draw one intermediate string from the first transition and apply the second transition to that chosen state. Repeating this procedure produces the endpoint distribution without enumerating all paths in each run.
 
 ![Attention, state-space recurrence, and sequence refinement retain different state and advance different kinds of step](assets/modern-llms/en/module-20/m20_families.svg)
 
@@ -335,7 +381,7 @@ Any normalized joint distribution admits a chain-rule factorization into token c
 
 ## 20. The final expression, with its meaning intact
 
-Return to the dense MiniLLM configuration. Write $\mathcal T_G(H)=H+G(H)$ for residual addition. A block is then $\mathcal B_\ell=\mathcal T_{\mathcal F_\ell\circ N_{\gamma_{f,\ell}}}\circ\mathcal T_{\mathcal A_\ell\circ N_{\gamma_{a,\ell}}}$. Sections 5–7 have already expanded every operation inside $\mathcal A$ and $\mathcal F$. The conditional distribution is
+Return to the dense MiniLLM configuration. Write $\mathcal T_G(H)=H+G(H)$ for residual addition. This is shorthand for the skip connection already analyzed, not an additional layer; G here denotes a transformation rather than a gradient from Section 11. A block is then $\mathcal B_\ell=\mathcal T_{\mathcal F_\ell\circ N_{\gamma_{f,\ell}}}\circ\mathcal T_{\mathcal A_\ell\circ N_{\gamma_{a,\ell}}}$. Sections 5–7 have already expanded every operation inside $\mathcal A$ and $\mathcal F$. The conditional distribution is
 
 $$\boxed{p_\theta(x_t=v\mid x_{\lt t})=\left[\operatorname{softmax}\!\left(\left[N_{\gamma_o}\!\left((\mathcal B_L\circ\cdots\circ\mathcal B_1)(E[x_{\lt t}])\right)\right]_{t-1,:}U\right)\right]_v.}$$
 
@@ -347,10 +393,12 @@ $$\boxed{\begin{aligned}p_\theta(x_{1:N}\mid x_0)&=\prod_{t=1}^{N}p_\theta(x_t\m
 
 The AdamW operator here includes the clipping rule, learning-rate schedule, and decay groups defined in Section 12. The last line describes sampling; greedy decoding substitutes argmax. These lines are not executed simultaneously: training produces new weights, while generation uses a chosen checkpoint.
 
+These compact lines still describe the numerical route we followed: Section 9 supplied probabilities, Section 10 a loss, Section 11 its derivatives, and Section 12 new weights. Generation in Section 13 closes a different loop, appending a selected token without updating those matrices. The final notation collects these relationships rather than replacing the explanation of how they work.
+
 The expression now has a precise scope. MoE replaces $\mathcal F$ and adds routing. An SSM changes a block and its carried state while retaining the autoregressive objective when that objective is chosen. Diffusion uses a different generation trajectory and a distribution over hidden refinement states. Architecture specifies a computation; scale, data, and optimization determine what its parameters learn. The equation does not predict a model's capability level on its own, but it does let us locate every operation, learned quantity, and surrounding algorithm.
 
 ### Sources and the next practical step
 
 Modules 3–9 and 12–14 contain the detailed treatments of individual mechanisms. Primary descriptions include [Attention Is All You Need](https://arxiv.org/abs/1706.03762), [RMSNorm](https://arxiv.org/abs/1910.07467), [RoFormer](https://arxiv.org/abs/2104.09864), [GQA](https://arxiv.org/abs/2305.13245), [AdamW](https://arxiv.org/abs/1711.05101), and [DPO](https://arxiv.org/abs/2305.18290). This module specifies a particular educational MiniLLM configuration; its numerical matrices were created for the running example.
 
-Finish with the [self-check questions](/courses/modern-llms/module-20/tests/). The first route includes the 13 unlabelled questions; return to **20.11.1** after the detailed backward pass in Section 11 and to **20.15.1** after the router in Section 15. Then revisit the MiniLLM capstone and map its `config.json` to the equation. A change in head count, embedding tying, or FFN type should now correspond to an explicit change in dimensions, operations, and parameters that you can verify computationally.
+Finish with the [self-check questions](/courses/modern-llms/module-20/tests/). The first route includes the 13 unlabelled questions; return to **20.11.1** after the detailed backward pass in Section 11 and to **20.15.1** after the router in Section 15. Then revisit the [MiniLLM capstone](/courses/modern-llms/module-20/notebooks/) and map its `config.json` to the equation. A change in head count, embedding tying, or FFN type should now correspond to an explicit change in dimensions, operations, and parameters that you can verify computationally.

@@ -6,7 +6,7 @@
 >
 > Public benchmarks will provide orientation, but the decision will eventually depend on paired outcomes, a private golden set, judge calibration, long-context diagnostics, operational cost, and continuous regression testing. Six numerical scenarios make those ideas concrete: assumed probabilities 95.5% and 95.0% at N=500, finite-sample `pass@k`, a position-biased judge, confidence and selective answering, a synthetic working-context curve, and a costed private evaluation run.
 >
-> **Prerequisites.** Module 18 introduced agent scaffolds and trajectory logging; Modules 10 and 17 covered long context and retrieval; Module 15 introduced verifiers and test-time sampling. Every formula needed here is derived again, so the module can also be read on its own.
+> **Prerequisites.** Module 18 introduced agent scaffolds and trajectory logging; Modules 10 and 17 covered long context and retrieval; Module 15 introduced verifiers and test-time sampling. The necessary definitions, formulas, and assumptions are introduced where they are used, so the module can also be read on its own.
 
 ---
 
@@ -14,7 +14,7 @@
 
 On a first pass, read Sections 1–6, 13, and 15. They connect a release decision to an inspectable report. In Section 6, work through the integer-outcome table before returning to the formulas; the small harness in Section 13 runs on its own.
 
-On a second pass, examine how measurements fail: multiple attempts in Section 8, judges in Section 10, and context position in Section 12. Use Section 14 as a map of these experiments. Run both notebooks, change one assumption, and explain the resulting change in interpretation. Sections 7, 9, 11, 16, and 17 provide a reference for benchmark families and experiment passports. In Section 19, E1 completes the first route; E2–E3 use Sections 8, 10, and 12 and complete the second.
+On a second pass, examine how measurements fail: multiple attempts in Section 8, judges in Section 10, and context position in Section 12. Use the [Section 14 notebooks](/courses/modern-llms/module-19/notebooks/) as a map of these experiments. Run both notebooks, change one assumption, and explain the resulting change in interpretation. Sections 7, 9, 11, 16, and 17 provide a reference for benchmark families and experiment passports. In the [Section 19 exercises](/courses/modern-llms/module-19/exercises/), E1 completes the first route; E2–E3 use Sections 8, 10, and 12 and complete the second.
 
 ## 1. Evaluation is an instrument for a decision
 
@@ -168,6 +168,8 @@ The output is a decision dossier rather than one universal score.
 
 ### Confidence, calibration, and the option to abstain
 
+The evaluation map tells us what to measure when comparing the two assistants. Deployment introduces a more local decision: which responses may the system deliver on its own, and which should go to review? Overall accuracy cannot make that distinction. We need a signal that separates cases within the same stream of requests, rather than another average over the stream.
+
 A document assistant needs more than an average accuracy figure. It may be useful to send a difficult question to a person rather than return an incorrect instruction. To design that choice, first specify what confidence refers to. The token probability from Module 3 describes the next piece of text given its context. A familiar sequence can be highly probable and factually wrong. Likewise, “I am certain” is a generated statement until its reliability has been tested.
 
 Let $q_i\in[0,1]$ estimate the probability that the **complete response** to item $i$ will pass a declared correctness check. The check supplies an outcome $y_i\in\{0,1\}$. A verifier, agreement among attempts, or a trained predictor might supply $q_i$; none is automatically a trustworthy probability estimator. Assess the estimates on data kept out of their construction and tuning.
@@ -193,13 +195,30 @@ Coverage here is the fraction of tasks answered; it is distinct from the probabi
 
 The notebook uses 20 authored records: four successes out of four at confidence 0.95, six out of ten at 0.8, and three out of six at 0.6. Overall accuracy is 13/20 and Brier score is 0.2185. Threshold 0.8 accepts 14 responses, including four errors: coverage is 70% and risk is $4/14\approx28.6\%$. Threshold 0.9 accepts four correct responses. Its observed risk is zero, but four cases establish little about future failures, and 80% of requests now need another route. Choose a threshold on separate development data, accounting for both errors and handoffs; evaluate it on held-out data and critical slices. Calibration and abstention also leave the authorization checks from Module 18 fully necessary.
 
+Notice what the higher threshold achieved. None of the stored responses was rewritten, and none of the model’s mistakes was repaired. What changed was **which responses the system allowed through to the user**. That can be a valuable system improvement, but it is not evidence that the underlying model became more accurate.
+
+The risk figure must therefore travel with coverage. An assistant that answers almost every request and one that answers only a small selected subset are not being scored on the same set of cases. Compare operating points under a declared coverage or service policy, and account for what happens to the remaining requests: who handles them, how long that takes, and how often that route fails. A handoff continues the service; it does not remove the user’s task from the evaluation.
+
 ![Confidence and selective answering on an authored dataset](assets/modern-llms/en/module-19/m19_09_calibration.png)
 
 ## 6. Worked example A: what does half a percentage point mean?
 
+There are four questions to keep apart. How much variation should we expect before an experiment has run? What changes when both systems answer the same items? How many items should we collect for a desired precision? And how should we report one observed success rate from a small sample? We will follow them in that order. Planning an experiment and interpreting its recorded outcomes are related tasks, not interchangeable calculations.
+
 Start with a planning assumption, not an observed leaderboard result. Suppose success probabilities are $p_1=0.955$ and $p_2=0.950$, and we plan $N=500$ binary tasks per system. These are valid probabilities, but 95.5% cannot be the accuracy of a single 500-item binary run: the resolution is $1/500=0.002$, or 0.2 percentage points. It would require 477.5 successes. Actual counts of 478 and 475 would give 95.6% and 95.0%, a 0.6-point difference.
 
-The tasks selected for an evaluation introduce sampling variation. A **standard error (SE)** describes the typical spread of an estimate across repeated samples. For independent binary outcomes, the standard error of a proportion is $\sqrt{p(1-p)/N}$. Planning uses an assumed probability $p$; analysis often substitutes the observed proportion $\hat p$.
+In a simple model, each independently sampled task produces a binary outcome $X_i$: one for success and zero for failure. Assume that these trials share the same success probability. Accuracy is their average. A single outcome has variance $p(1-p)$; independence lets us add those variances, while averaging divides the variance of their sum by the square of the sample size:
+
+$$
+\operatorname{Var}(\hat p)
+=\operatorname{Var}\!\left(\frac1N\sum_{i=1}^N X_i\right)
+=\frac1{N^2}\sum_{i=1}^N p(1-p)
+=\frac{p(1-p)}{N}.
+$$
+
+Taking the square root puts the spread back on the scale of accuracy itself. A **standard error (SE)** describes that typical spread of the estimate across repeated samples. For independent binary outcomes, the standard error of a proportion is $\sqrt{p(1-p)/N}$. Planning uses an assumed probability $p$; analysis often substitutes the observed proportion $\hat p$.
+
+This explains the pace at which more data helps. At the same success probability, four times as many independent items halve the standard error. The improvement concerns sampling variation; averaging does not remove incorrect labels or make an unrepresentative task set representative.
 
 For two independent samples, variances add:
 
@@ -218,14 +237,16 @@ standard errors. A normal 95% confidence interval uses an estimate plus or minus
 
 ### Keep the task pairs
 
-Usually both systems answer the same tasks, so their outcomes are related. The independent formula cannot recover that relationship. Store the counts for both correct, A only, B only, and both wrong.
+Now change the experimental setup: both systems answer the same tasks. An easy item may be easy for both; a particular obstacle may defeat both. Two aggregate accuracies do not retain that relationship, and the independent-sample formula does not account for it. Store the counts for both correct, A only, B only, and both wrong.
 
 | Paired scenario, N=200 | Both correct | A only | B only | Both wrong | Accuracy A / B |
 |---|---:|---:|---:|---:|---:|
 | I | 150 | 20 | 10 | 20 | 85% / 80% |
 | II | 160 | 10 | 0 | 30 | 85% / 80% |
 
-The **null hypothesis** of exact McNemar inference gives equal probability to the two directions of disagreement. Scenario I has 30 disagreements, 20 favoring A. Its two-sided value is
+Read each row as a comparison on the same task. A shared success raises both accuracies; a shared failure lowers both. Neither favors one system over the other. The difference comes from disagreements: in the first scenario, A’s twenty gains are accompanied by ten losses relative to B; in the second, its ten gains have no corresponding loss. Shared outcomes still matter for absolute quality, but the conditional test of which system has the advantage focuses on the discordant rows.
+
+The **null hypothesis** of exact McNemar inference gives equal probability to the two directions of disagreement. Scenario I has 30 disagreements, 20 favoring A. Conditioning on that disagreement count, we ask how unusual the imbalance of directions would be under equal odds. At most ten outcomes favoring A is as far from balance as at least twenty, so the two-sided value is
 
 $$p_{\mathrm{test}}=2P[\operatorname{Bin}(30,0.5)\le10]\approx0.098737.$$
 
@@ -233,7 +254,11 @@ Here $\operatorname{Bin}(n,p)$ counts successes in $n$ independent trials with p
 
 A **paired bootstrap** can estimate an interval for the difference: repeatedly sample whole rows, each containing both outcomes, with replacement; recompute the difference; take, for example, the 2.5th and 97.5th percentiles. The project notebook does this from saved responses. When multiple rows share a document or session, resample independent groups rather than pretending every row is independent.
 
+Keeping each pair together preserves the observed relationship between the two outcomes. Resampling the A and B columns separately could create combinations that never belonged to the same task and discard the pairing. This bootstrap makes no new model calls: it studies variation in the estimate using the saved sample. It does not, by itself, test a future change in traffic, API revision, or external-tool behavior.
+
 ### Plan the precision you need
+
+We now return to a decision made before collecting data: how large should the experiment be to achieve a chosen precision? For a transparent planning calculation, return to independent samples. That simplification estimates the cost of precision; it does not replace the paired protocol when both systems will face the same items.
 
 For two independent proportions near $p$, targeting an interval half-width $\delta$ gives
 
@@ -241,7 +266,16 @@ $$N\approx2p(1-p)\left(\frac{1.96}{\delta}\right)^2.$$
 
 At $p=0.95$, rounding up gives 146, 913, 3650, and 14,599 tasks **per system** for half-widths of 5, 2, 1, and 0.5 points. This does not guarantee 80% or 90% power to detect an effect of that size. **Power** is the probability of rejecting the null under a specified true alternative; planning it is a separate calculation that must also account for pairing. The useful lesson here is the precision cost: $N$ grows as $1/\delta^2$.
 
-For a single observed proportion on a small dataset, we use a Wilson interval. With $s$ successes out of $N$, $\hat p=s/N$, and $z=1.96$, its endpoints are
+One narrower question remains: how should we report **one system’s success rate** when observations are scarce? We are no longer comparing two accuracies. A simple symmetric interval around the observed rate can extend beyond the allowed probability range. If no errors were observed, plugging that rate into its estimated variance gives zero and an unjustified appearance of certainty.
+
+For a single observed proportion on a small dataset, we use a Wilson interval. Rather than assigning all plausible probabilities the variance estimated at the observed rate, it asks which candidate probabilities remain compatible with the observation under the corresponding test. With $s$ successes out of $N$, $\hat p=s/N$, and $z=1.96$, the condition for a candidate probability $p_0$ is
+
+$$
+(\hat p-p_0)^2\le z^2\frac{p_0(1-p_0)}{N},
+\qquad 0\le p_0\le1.
+$$
+
+The left side measures the observed discrepancy; the right side supplies its permitted scale under the probability being tested. Solving for that probability gives an interval that need not be centered on the observed proportion. This construction, described in the [NIST handbook](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm), is an inversion of the test. The resulting endpoints are
 
 $$
 \frac{\hat p+z^2/(2N)\ \pm\ z\sqrt{\hat p(1-\hat p)/N+z^2/(4N^2)}}{1+z^2/N}.
@@ -274,6 +308,8 @@ Hard benchmarks also introduce measurement costs:
 A serious report pairs the score with item count, private/public split, verification procedure, allowed tools, cost limits, and retry policy.
 
 ## 8. `pass@k`: finding one solution is not the same as being reliable
+
+The number of generations we store and the attempt budget we want to evaluate have different jobs. One determines how much evidence we collected; the other defines the operating regime under study. A stored pool can support estimates at several budgets, but the entire pool is not a single user-facing answer obtained without generation or selection cost.
 
 When tasks are automatically verifiable, a system may generate several candidates. Given $n$ stored samples of which $c$ are correct, the finite-sample unbiased estimator for at least one success among $k$ draws is
 
@@ -341,13 +377,19 @@ If A is always shown first, the report says A wins 65% to 35%—a false 30-point
 
 ![VIZ m19/05 — an auditable judge protocol](assets/modern-llms/en/module-19/m19_05_judge.png)
 
+So far we have balanced the **average bias** in a deliberately specified judge model. The return to 50% is an expectation; a finite run can still differ. Balanced totals do not tell us whether the judge held the same view of any particular pair. To answer that question, we must move from aggregate votes to two linked records for each comparison.
+
 A robust swap protocol maps positional labels back to candidate identity.
 
 - If the same candidate wins in both orders, the preference is consistent.
 - If the judge always chooses the first position, the identity-level verdict conflicts and the pair becomes an abstention.
-- If one ordering produces a tie, the protocol preserves both outcomes and applies a predeclared rule.
+- If only one ordering produces a tie, the protocol used here also assigns `abstain` and retains both original verdicts.
 
 Two ties produce `tie`; conflicting verdicts or a tie in only one order produce `abstain`. Report these separately. The aggregate counts 650 and 350 cannot reconstruct agreement for individual pairs. Returning to 50% is an expectation under this pure position-bias model, not a general cure.
+
+The denominator now matters. A win rate computed only over consistent winner verdicts describes that selected subset, not every comparison submitted to the judge. Excluded pairs may be the most ambiguous ones rather than a random slice. Report the total number of pairs, the shares of consistent decisions, ties, and abstentions, and the rule for counting ties in the final score. Otherwise a more cautious evaluator can make a victory look more decisive simply by declining the difficult comparisons.
+
+This is not the abstention from Section 5. There, the evaluated assistant decided whether to deliver a response; here, the measuring system decides whether its own judgments are consistent enough to retain. Consistency is useful but does not establish correctness: the judge can favor verbosity in both orders or miss the same factual error twice.
 
 Swapping diagnoses dependence on position. A stronger protocol also includes:
 
@@ -393,19 +435,36 @@ A context-window specification tells us that a system accepts an input. It does 
 
 Position also matters. *Lost in the Middle* found that relevant evidence placed near the beginning or end was often used more effectively than evidence in the middle.
 
-The module’s numerical example is a synthetic profile, not a measurement of a named model:
+The module’s numerical example is a synthetic profile, not a measurement of a named model. Let $x$ be the normalized location of the evidence, with zero at the start of the context and one at the end. Hold the task and input length fixed and define
 
 $$
 a(x)=0.95-0.35\sin^2(\pi x),\qquad x\in[0,1].
 $$
 
-Accuracy is 0.95 at both edges and 0.60 in the center. Mean accuracy is
+Accuracy is 0.95 at both edges and 0.60 in the center. An average over positions also needs a distribution over positions: this example weights every location equally. The mean of the squared sine on the unit interval is one half. Using $\sin^2(\pi x)=(1-\cos(2\pi x))/2$, the cosine term integrates to zero over its full period, giving
+
+$$
+\int_0^1\sin^2(\pi x)\,dx=\frac12,
+\qquad 0.95-0.35\cdot\frac12=0.775.
+$$
+
+Mean accuracy is
 
 $$
 \bar a=0.775.
 $$
 
-Define the above-threshold position share as the share of positions satisfying $a(x)\ge0.9$. Then
+Define the above-threshold position share as the share of positions satisfying $a(x)\ge0.9$. This asks a different question from mean accuracy: where is the requirement met? Rearranging the inequality gives the boundary of the first interval:
+
+$$
+\begin{aligned}
+\sin^2(\pi x)&\le\frac{0.95-0.9}{0.35}=\frac17,\\
+x_*&=\frac1\pi\arcsin\!\left(\frac1{\sqrt7}\right),
+\qquad \text{working share}=2x_*.
+\end{aligned}
+$$
+
+The sine rises from zero toward the center, then falls symmetrically. The condition therefore holds near both edges, with each admissible interval as long as the boundary value just computed. We add those lengths, not the accuracy values within them. Then
 
 $$
 \text{working share}=0.246752.
@@ -496,6 +555,10 @@ def evaluate(
 
 This is not yet a production platform, but it already preserves unique item IDs, raw predictions, slices, multiple metrics over one output, and the call count. This minimal kernel stops on a model or metric error. The full notebook distinguishes a declared model-failure score of zero from a metric implementation error, which invalidates the aggregate (`None`). An evaluator bug must not silently become a model-quality result.
 
+A technical failure or a missing required result is not the same as an appropriate refusal. If an item tests whether the system respects a prohibition, refusing the action may be the successful outcome. The task criterion determines the label, not the mere presence of a refusal phrase.
+
+The aggregate has a separate limitation. This function weights every row equally. Recording a `slice` field does not change that average. If rare cases were deliberately oversampled, the result describes the constructed test set; estimating ordinary traffic requires combining slice results with their traffic proportions. Section 15 returns to that reporting decision.
+
 A mature harness adds model and prompt versions, sampling parameters, latency, cost, failures, traces, and budgets.
 
 ### Planning the golden-set size
@@ -540,9 +603,13 @@ Public benchmarks position a system in the general landscape. A private **golden
 
 Is the result selecting a model, approving a prompt revision, gating a release, or tuning a router? The unit may be a response, a conversation, an agent trajectory, a document, or a user session.
 
+For the support assistant, distinguish demonstrating a capability from justifying a replacement of the current system. If the goal is to resolve a customer request, several messages from one conversation are not several independent successful customer outcomes. The unit of analysis should match the result the deployment decision is meant to improve.
+
 ### Step 2: sample the product distribution
 
 Include common requests and deliberately oversample rare critical cases. Report both natural-weighted performance and slice results. A set made only of adversarial examples is valuable for red teaming but does not estimate normal user experience.
+
+Oversampling buys a clearer view of rare cases; it should not silently redefine the product population. Estimate performance within each declared slice, then use the corresponding traffic proportions when forming an overall traffic-weighted result. Keep critical slices visible in their own right. If those proportions are unknown, state the chosen weighting scheme rather than presenting the unweighted row average as measured user experience.
 
 ### Step 3: choose a metric that matches the task
 
@@ -551,6 +618,8 @@ Classification can use accuracy or F1. Structured outputs need schema and semant
 ### Step 4: freeze the protocol before seeing the outcome
 
 Record the model revision, system prompt, tools, temperature, retry policy, reasoning budget, judge rubric, and failure handling. Otherwise protocol tuning can silently choose the winner.
+
+Record what will count as sufficient evidence for the choice, too. Statistical persuasiveness and practical value are different questions. A small but well-established gain on routine answers need not compensate for a refund-policy violation or unacceptable latency. Conversely, an inconclusive comparison does not establish equal quality and automatically justify the cheaper candidate: the uncertainty interval may still allow a deterioration the product cannot accept.
 
 ### Step 5: protect the held-out data
 
@@ -567,6 +636,10 @@ For agents, final success is too coarse. Save tool calls, intermediate state, re
 **CI/CD — Continuous Integration and Continuous Delivery** can run a fast subset on every change and a full suite before release. Prompt edits, retrieval-index changes, tool updates, and dependency upgrades can regress behavior independently of the weights.
 
 The platform is secondary to the contracts. `lm-evaluation-harness` is widely used for academic tasks; Inspect AI supports configurable and safety-oriented evaluations; OpenAI Evals provides programmable eval patterns; LangSmith, Langfuse, and Phoenix support trajectory observability. Whatever the stack, preserve versions, raw records, and reproducible reports.
+
+We can now return to the two assistants from the opening. The first system’s public rank does not settle the choice; the second system’s lower price does not settle it either. Bring together paired outcomes on relevant requests, the size and uncertainty of the difference, critical-slice failures, and measured service cost. If the policy uses the threshold from Section 5, include the handoff rate and the performance of that route. These observations should describe one declared configuration, not a convenient collection of the best numbers from different operating modes.
+
+A release decision follows when that evidence is compared with the conditions set in advance. The study may support a change, reveal why a candidate is unacceptable, or leave a specific uncertainty that warrants a more informative check. The last outcome is not an evaluation failure. It means the measurement did not claim more certainty than the evidence permits. The chain from requests to saved responses, metrics, and intervals ends in an engineering decision—not an obligation to name a winner.
 
 ## 16. Eight directions shaping evaluation as of 10 October 2026
 

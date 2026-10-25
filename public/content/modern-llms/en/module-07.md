@@ -8,7 +8,9 @@
 >
 > **Prerequisites.** Modules 1, 5, and 6 provide the useful background: total versus active parameters, attention geometry, and the parameter cost of a SwiGLU feed-forward network. All notation needed for the calculations is introduced again here.
 
-> **Reading routes.** To understand the mechanism, read §1, then §§4–10 while skipping the B09/B10 implementation details, and finish with §19 apart from the LatentMoE point. Use Q1–Q5 and Q7 in §17, then E1 and E3–E4 in §18. Q6 and E5 follow §11; E2 and E6 extend the reference and project routes. Follow one token and keep track of selection, mixture weights, and system cost. For the implementation pass, revisit §§6–7, work through §§12–14, and run the notebook. Use §§2–3, 11, and 15–16 as a reference for history, alternative routers, and model-specific contracts. M5 attention and M6 feed-forward blocks are the required background.
+**Reading routes.** To understand the mechanism, read §1, then §§4–10 while skipping the B09/B10 implementation details, and finish with §19 apart from the LatentMoE point. Use [questions Q1–Q5 and Q7](/courses/modern-llms/module-07/tests/), then [exercises E1 and E3–E4](/courses/modern-llms/module-07/exercises/). Q6 and E5 follow §11; E2 and E6 extend the reference and project routes. Follow one token and keep track of selection, mixture weights, and system cost.
+
+For the implementation pass, revisit §§6–7, work through §§12 and 14, and use the [module notebook](/courses/modern-llms/module-07/notebooks/). Use §§2–3, 11, and 15–16 as a reference for history, alternative routers, and model-specific contracts. M5 attention and M6 feed-forward blocks are the required background.
 
 ---
 
@@ -21,7 +23,7 @@ This creates two related but non-interchangeable quantities:
 - **total parameters** describe the full bank that the serving system must make available;
 - **active parameters** describe the parameters charged under a stated per-token counting convention.
 
-Neither quantity is a direct measurement of intelligence or latency. Total size does not uniquely determine knowledge, and active size omits communication, attention, the output head, memory traffic, and hardware utilization unless the convention explicitly includes them. It is nevertheless a useful first decomposition.
+These are counts of weights, not direct measurements of knowledge or latency. An active-count convention must say how it treats attention, shared layers, and the output head. Even a complete count of participating weights does not describe data movement, expert batch sizes, or hardware utilization. Quality also depends on training. The total/active distinction is therefore a useful starting point: it separates what the system stores from what one token uses, without pretending that either number settles every other question.
 
 The range is already wide among documented open models. gpt-oss-120b publishes 117B total and 5.1B active parameters with 128 experts and top-4 routing. DeepSeek-V3 reports 671B/37B. Kimi K3 reaches 2.8T/104B while selecting 16 of 896 routed experts. Those headlines come from different architectures and sometimes different counting rules. A responsible comparison therefore asks what is common, what is routed, and which vocabulary matrices or auxiliary modules are included.
 
@@ -66,11 +68,17 @@ These views explain why the module needs both equations and systems arithmetic. 
 
 ## 4. A typed contract for routing and parameter accounting
 
+Begin with the computation that the variants have in common. In M6, one FFN read a token's state and returned an update for residual addition. An MoE branch first chooses which FFNs to run. Each chosen expert reads the same input state, transforms it independently, and returns a vector. Their weighted outputs form one update; they are not a chain in which one expert feeds the next.
+
+Two decisions are involved: **which experts run**, and **how much their outputs contribute**. We will make the distinction concrete with sigmoid scores and a selection bias, the design revisited in the DeepSeek examples. This is one routing rule, not the definition of every MoE layer.
+
 Separate two kinds of expert first. A **routed expert** runs only when selected; a **shared expert** runs for every token. Let the token vector be $x\in\mathbb{R}^h$. The router's vector $w_i$ produces a logit $z_i=w_i^\top x$. Applying the sigmoid $\sigma(z)=1/(1+e^{-z})$ gives an independent score:
 
 $$
 s_i=\sigma(w_i^\top x).
 $$
+
+These scores are computed independently. We have not yet distributed a unit amount of probability mass across the bank. Scoring supplies quantities to compare; selection and output weighting still have to be specified.
 
 A balancing controller can add an expert-wise **selection bias** $b_i$. This is separate from a bias inside the linear projection. The selected index set is
 
@@ -78,7 +86,7 @@ $$
 \mathcal T(x)=\operatorname{TopK}(s_i+b_i,k).
 $$
 
-A model may then normalize gates from the clean scores rather than the biased selection values:
+After top-k, we know which experts will run, but not yet how strongly each result will enter the output. The selection bias helped determine membership. It need not also amplify the selected expert's contribution. In this design, mixture weights are normalized from the clean scores rather than from the biased selection values:
 
 $$
 g_i=\rho\,\frac{s_i}{\sum_{j\in\mathcal T(x)}s_j},
@@ -97,8 +105,12 @@ $$
 
 Both sums return vectors of width $h$, ready to be added to the residual stream as in M6. A gate controls an output contribution; it need not be a calibrated probability of expertise. This sigmoid example is distinct from the selected-logit softmax used by gpt-oss in §14.
 
+From outside the branch, its job remains familiar: read the current state and produce an update of the right width. Inside, a bank of candidate transformations and an input-dependent choice have replaced the single FFN. Keeping these two views separate makes it easier to compare routers without losing the surrounding block.
+
 ![VIZ m7/02 — anatomy of an MoE layer](assets/modern-llms/en/module-07/m7_02_moe_block.svg)
 *Residual state, router, top-k routed experts, always-on shared experts, and the distinction between the stored bank and one token's active path.*
+
+Now separate the computation of an output from the inventory of weights. The token uses its chosen experts and the common parts of the model; the system must also store experts that this token does not select. We can account for both quantities by starting with one expert and then stating how many copies are stored and used.
 
 A SwiGLU expert with hidden width $h$ and expert intermediate width $i_{\text{exp}}$ contains
 
@@ -189,6 +201,8 @@ The rough estimate $2P_{\text{active}}$ covers part of the weight-matmul arithme
 
 ## 6. A numerical router trace
 
+The gpt-oss ledger told us how many weights are stored and charged to a token. To examine a routing decision itself, return to the sigmoid rule from §4. The following trace illustrates that rule, not the selected-logit softmax used by gpt-oss; we will inspect the latter in §14.
+
 Take one token with router logits
 
 ```text
@@ -229,11 +243,19 @@ The gate for expert 3 is still based on its clean score 0.5987, not on 0.9487. T
 ![VIZ m7/04 — router trace](assets/modern-llms/en/module-07/m7_04_router_trace.svg)
 *Clean scores, biased selection scores, selected experts, and gates. The balancing bias changes membership without entering the expert mixture weights.*
 
+The favored expert has entered the set without automatically receiving its largest gate. Changing membership also changes the normalization denominator, so the other selected experts receive new weights as well. Separating selection from weighting means that the bias is not added directly to the mixture scores; it does not make the final output independent of the bias.
+
+A larger bank introduces a further constraint. We may want to limit not just the number of experts, but also the number of destinations receiving the token. Selecting groups before selecting individual experts provides that extra control.
+
 DeepSeek-V3 adds a group stage. Its 256 routed experts are divided into eight groups; a token first retains four groups and then chooses eight experts from those groups. With balancing bias enabled, the group score is built from the two strongest adjusted scores in each group. Gates are then formed from clean scores and multiplied by the model's routed scaling factor.
 
 This separation is broadly useful: a system can have one quantity for *who is eligible* and another for *how much the selected output contributes*.
 
-Top-k indices are discrete. While membership stays fixed, selected mixture weights can carry gradients. With renormalized top-1, the single gate is identically one and this path cannot train the router. Gate normalization and other learning signals must therefore be inspected together; not every top-1 architecture renormalizes its selected gate to one.
+We can now compute the output. How does the router learn whether its decision was useful? Membership and weighting again lead to different answers. Top-k indices are discrete: a small score change usually leaves the selected set alone, until a boundary is crossed and one expert replaces another. Ordinary differentiation does not pass a smooth instruction through those indices about which alternative should have been chosen.
+
+While membership stays fixed, selected mixture weights can carry gradients. Changing a gate changes the output vector and, through later layers, the language-model loss. This gives the router a learning path within the current selection. With renormalized top-1, however, the single gate is identically one. Its value no longer depends on the selected score, so this path cannot train the router. Gate normalization and other learning signals must therefore be inspected together; not every top-1 architecture renormalizes its selected gate to one.
+
+Selection biases offer another way to influence routing. They can change membership without being added directly to the mixture scores. That distinction will let us control workload from assignment counts in the next section.
 
 **Implementation and checks: B09**
 
@@ -340,7 +362,11 @@ Tie-breaking contract: [PyTorch `topk`](https://docs.pytorch.org/docs/stable/gen
 
 A router can collapse through positive feedback. An early favorite receives more examples, learns faster, and becomes an even stronger favorite. Different mechanisms address different parts of that loop.
 
+Uneven routing can leave part of the bank undertrained and make a heavily loaded device hold up the others. Yet workload is not the only concern. Router calculations also need a manageable numerical scale, and a finite buffer needs a policy for assignments it cannot accept. These problems are related, but their remedies act on different objects.
+
 ### Auxiliary load-balancing loss
+
+For this example, switch to the softmax, top-1 router used in the Switch loss. We are not extending the sigmoid trace mechanically; we are examining another way to address the same workload problem. The useful distinction is between how often an expert was actually selected and how much probability the router assigned to it before selection.
 
 Take a batch of $T$ tokens and $E$ experts. The router assigns a softmax probability $p_{t,i}$ to expert $i$ for token $t$. For top-1 routing, let $f_i$ be the fraction of tokens actually sent to that expert, and let $P_i=T^{-1}\sum_t p_{t,i}$ be its mean probability before selection. These measure different objects: hard assignments and the router's continuous scores.
 
@@ -350,9 +376,13 @@ $$L_{\text{aux}}=E\sum_i f_iP_i.$$
 
 If both distributions are uniform, each product is $1/E^2$; summing $E$ terms and multiplying by $E$ gives 1. During differentiation, the discrete assignments in $f_i$ are treated as fixed. Gradients pass through $P_i$, providing a learning signal that reflects the observed load.
 
+An expert with a high observed assignment fraction therefore makes an increase in its mean router probability more costly to this term. The continuous scores receive load-dependent feedback even though the discrete assignment counts themselves are not differentiated.
+
 Training adds $\lambda L_{\text{aux}}$ to the language-model objective. The coefficient $\lambda$ sets the strength of this competing preference. In the notebook's top-k generalization, an expert receives $c_i$ assignments out of $Tk$, so we define $f_i=c_i/(Tk)$. The assignment fractions still sum to one; this normalization must be stated when comparing implementations.
 
 ### Router z-loss
+
+Even balanced assignments can coexist with an inconvenient logit scale. We now change what is being controlled: not the number of tokens arriving at an expert, but a numerical quantity associated with the softmax normalizer.
 
 ST-MoE uses
 
@@ -363,6 +393,8 @@ $$
 where $z_{t,i}$ is the router logit for token $t$ and expert $i$. Squaring happens before averaging across tokens. This penalizes each token's log-partition value, rather than bounding every logit individually. A separate coefficient sets its weight in the training loss; controlling numerical scale does not by itself balance expert assignments.
 
 ### Auxiliary-loss-free balancing
+
+Return to workload and the distinction between selection and weighting. A controller need not express every preference as an additional differentiable objective. It can observe assignments and adjust the quantities that determine who enters the selected set.
 
 An expert-wise bias is added before top-k and updated from recent loads outside backpropagation. The main rule in the paper is
 
@@ -384,7 +416,11 @@ We measure imbalance by the coefficient of variation, $\mathrm{CV}=\mathrm{std}(
 
 The smoother curve is not presented as the exact DeepSeek algorithm. It is an interpretable control-law experiment; the paper also analyzes a proportional variant in a separate setting.
 
-An expert buffer has a separate limit. For $T$ tokens, $k$ assignments per token, and $E$ experts, the average is $Tk/E$. A capacity factor $c>0$ allocates
+Here the controller redistributes assignments while the underlying preferences stay fixed. In a training run, both those preferences and the experts would change. A smaller residual imbalance in this experiment explains the controller's behavior; it does not by itself identify the best way to train the model.
+
+There is still a decision that cannot wait for improved balance: what should happen to the current batch? Its assignments need not match the average exactly. Buffer capacity provides room for these fluctuations, while an overflow policy specifies what to do once that room runs out. Neither is itself another router-training objective.
+
+For $T$ tokens, $k$ assignments per token, and $E$ experts, the average is $Tk/E$. A capacity factor $c>0$ allocates
 
 $$
 C_e=\left\lceil c\frac{Tk}{E}\right\rceil
@@ -398,7 +434,9 @@ A token that loses every routed assignment does not vanish. Its routed branch is
 
 Suppose an architecture replaces a small number of wide experts with a larger number of narrower ones while increasing $k$ proportionally. The active expert arithmetic can remain of similar order, while the router gains more ways to combine sub-blocks.
 
-For a controlled example, replace 8 experts of width $i$ with 32 of width $i/4$, and change top-2 to top-8. Expert matrix storage and active matrix arithmetic stay constant because $8i=32(i/4)$ and $2i=8(i/4)$. The number of possible subsets rises from 28 to $\binom{32}{8}=10,518,300$, while routing and communication costs may rise.
+Compare two ways to allocate the same expert-matrix budget. One has 8 experts of width $i$ and top-2 routing; the other has 32 of width $i/4$ and top-8. Expert matrix storage and active matrix arithmetic stay constant because $8i=32(i/4)$ and $2i=8(i/4)$. The number of possible subsets rises from 28 to $\binom{32}{8}=10,518,300$, while routing and communication costs may rise.
+
+This is a comparison of architectures, not a promise that cutting up a trained FFN preserves its function. The finer bank gives the router more freedom to combine narrow transformations rather than selecting only the original wide groups. Matching the budget makes that change in flexibility visible; it does not establish equal outputs or equal quality.
 
 Another illustrative pair of bank sizes is
 
@@ -409,6 +447,8 @@ $$
 $$
 
 The latter 8/top-2 versus 128/top-4 comparison has no matched-budget claim. These numbers count unordered subsets, not learned skills. Continuous gate weights, correlated routing, and group constraints matter. For DeepSeek-V3, $\binom{256}{8}$ is only an unconstrained upper bound because group preselection rules out many subsets.
+
+Fine-grained segmentation changes the size of the pieces available for selection. A separate design decision asks whether all expert work should be selected at all. Some capacity can remain common to every token, alongside the routed branch.
 
 A shared expert follows a different path: it runs for every token. DeepSeekMoE motivates shared capacity as a place for common information and a way to reduce redundancy across routed experts. That motivation does not identify the content of one trained shared expert. Claims such as “this expert stores grammar” need intervention evidence, not just architecture diagrams.
 
@@ -458,11 +498,15 @@ Serving systems care about a different pattern: hot experts under the actual pro
 
 ## 10. Inference: the expert bank, all-to-all, and batch union
 
+So far, we have mostly followed one token through selection, expert evaluation, and output mixing. A runtime benefits from turning that view around: which tokens need the same expert matrices, and can they be processed together? The assignments are unchanged, but organizing them by expert changes the sizes of the matrix operations and the transfers between devices.
+
 The full bank must be available to the system, but it need not reside on one GPU or be replicated everywhere. Options include expert parallelism, CPU or NVMe tiers, weight streaming, hot-expert replication, and sharded caches.
 
 ### Expert parallelism
 
 **Expert parallelism (EP)** assigns experts to devices. **Dispatch** packs and sends their token vectors; **combine** returns and sums their outputs. An **all-to-all** exchange allows each device to send to every other, while grouped GEMM executes multiple expert matrix multiplications together.
+
+Dispatch groups representations by the transformation they need. Combination must then restore their relationship to the original tokens and accumulate the correctly weighted outputs. Because one token can have several assignments, this return path is more than an inverse permutation: several contributions may belong to the same output row. Bridge B10 will expose both traversal orders for the same calculation.
 
 Suppose every assignment moves a full vector of width $h$ and returns one of the same size, with $b$ bytes per coordinate. For one layer and the entire $T$-token batch, the logical round-trip payload is
 
@@ -474,12 +518,16 @@ bytes. With $T=2048$, $h=7168$, $k=8$, and bf16 ($b=2$), this is 448 MiB across 
 
 ### How many experts does a batch touch?
 
+Per-token sparsity does not tell us how many distinct expert matrices a batch will need. Each token selects a small set, but those sets need not coincide. The object to count now is their union. For a simple baseline, ask whether a given expert escapes selection by every token, then subtract that probability from one.
+
 Under independent uniform routing, the expected fraction of experts touched by $N$ tokens is
 
 $$
 f_{\text{touched}}
 =1-\left(1-\frac{k}{E}\right)^N.
 $$
+
+The complement counts experts needed at least once. That is the question a system faces when preparing weights for a batch, rather than charging weights to one token. A batch touching much of the bank is therefore compatible with every individual token using only a small routed subset.
 
 For 128/top-4 and 256/top-8, $k/E$ is the same, so the theoretical curve is the same: at 64 tokens, the expected touched fraction is about 86.9%.
 
@@ -497,6 +545,8 @@ To assess expert offloading, measure popularity skew, temporal reuse, prefetchin
 
 ## 11. LatentMoE and alternatives to fixed discrete top-k
 
+The communication calculation suggests another place to save work. We have considered how many assignments to make and where to send them. Must each assignment carry the full-width representation? We can keep discrete expert selection while moving the routed branch into a narrower space.
+
 LatentMoE keeps a discrete expert bank but reduces the width of the routed path. A hidden state of width $d$ is projected into a latent vector of width $\ell$:
 
 $$
@@ -510,11 +560,13 @@ $$
 y=P_{\text{up}}\operatorname{MoE}_{\ell}(z).
 $$
 
+The surrounding residual stream keeps its width; compression and expansion occur inside the expert-update path. This is not MLA from M5 under another name. MLA changed the retained key/value representation inside attention. LatentMoE changes routed activation width and the space in which the selected FFNs operate. Both use an intermediate representation, but they compress different objects for different computations.
+
 The router can still consume the original hidden representation and choose top-k experts. The two shared projections add $2d\ell$ matrix parameters. NVIDIA's shared experts, when present, stay in the original hidden width; the equation describes only the routed branch. Halving routed width therefore does not halve the whole model.
 
 Kimi K3 uses hidden width 7168 and latent expert width 3584, giving a twofold idealized reduction in routed activation width. It retains 896 routed experts, top-16, and two shared experts. NVIDIA uses LatentMoE in Nemotron 3 Super and Ultra.
 
-Several other branches change routing more directly:
+LatentMoE retains discrete selection and changes what the selected path computes on. Other proposals revisit selection itself or the way gradients reach it. Several branches change routing more directly:
 
 | Method | Routing mechanism | Adaptive active count | Original evaluation domain |
 |---|---|---:|---|
@@ -527,10 +579,12 @@ These methods do not form one simple succession. They trade off differentiabilit
 
 ## 12. Level-one code: policies should be visible
 
+Return now from the architectural alternatives to a calculation small enough to inspect. B09 produced assignments and mixture weights. The next function isolates the order of operations in z-loss, and B10 evaluates given assignments and combines their outputs. These are complementary pieces of the construction, not competing definitions of an MoE layer.
+
 The educational implementation is intentionally small enough to inspect. It makes four choices explicit:
 
 - selection scores and clean gate scores are separate;
-- ties have a deterministic lower-index rule;
+- the NumPy routing reference resolves ties by lower index; PyTorch top-k has the separate tie-order behavior stated in B09;
 - capacity overflow is not silent;
 - parameter counting is driven by a typed architecture specification.
 

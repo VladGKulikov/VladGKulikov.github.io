@@ -1,9 +1,10 @@
 {
   "schema": "course-publication.local-content-build.v2",
-  "content_updated": "2026-10-15",
+  "content_updated": "2026-10-25",
   "source_repositories": {
     "modern-llms": {
-      "commit": "ddbc44877ef6b1ee08ea87447c553848b5ec385e"
+      "commit": "5d98f6d95612e94893f3f6cca7c3a0ecf60392ca",
+      "working_tree_changes": false
     },
     "rl-for-llm": {
       "commit": "02e9235baf5dbb55e04d78e7df1e702d8cd427dc"
@@ -141,166 +142,6 @@
       "path": "Module_16/Module_16__Course_reference_RU.md",
       "sha256": "1b9d5cb92f1f6d23c90cdf1fe3c0b8bbe485c07958dbe0b1849d4302036001ed"
     },
-    "modern-llms:en:module-01": {
-      "path": "modules/module-01/en/module_01_lecture_EN.md",
-      "sha256": "054925b7db5ded06944c496a959edf1a812b639491db66d37eef0c03359fd906"
-    },
-    "modern-llms:en:module-02": {
-      "path": "modules/module-02/en/module_02_lecture_EN.md",
-      "sha256": "32741c71b9627fbfbd4a4d4c7d0b6cb720653a989ef5aca93585cb76214056fe"
-    },
-    "modern-llms:en:module-18": {
-      "path": "modules/module-03/en/module_03_lecture_EN.md",
-      "sha256": "944878e4c841505cb4aedfa5233f8e072a5ba2918291f6a1c4112aa7ef0d1c75"
-    },
-    "modern-llms:en:module-03": {
-      "path": "modules/module-04/en/module_04_lecture_EN.md",
-      "sha256": "7b5226b4469d8fcdb18cf50f5c5372e8a2d4ef8c216383d2dcb74f5e21362802"
-    },
-    "modern-llms:en:module-04": {
-      "path": "modules/module-05/en/module_05_lecture_EN.md",
-      "sha256": "be0a1eee9002b437d7e1e38086b85178bf8fe5fb6e3ecd5bbe238333b077a3ac"
-    },
-    "modern-llms:en:module-05": {
-      "path": "modules/module-06/en/module_06_lecture_EN.md",
-      "sha256": "19918d5ddeeb78aec0e506c38fa397a76c310b97925d95b1f73d93931f0268ba"
-    },
-    "modern-llms:en:module-06": {
-      "path": "modules/module-07/en/module_07_lecture_EN.md",
-      "sha256": "97cd2cbc94c2ea9f1d3a3fafd65d378627bbe912d35f1bdf4a7b5046e25cb3de"
-    },
-    "modern-llms:en:module-07": {
-      "path": "modules/module-08/en/module_08_lecture_EN.md",
-      "sha256": "88eb938e64f374a6d093ce11d26ce5fb88b744e9314538509e27907b54469e33"
-    },
-    "modern-llms:en:module-08": {
-      "path": "modules/module-09/en/module_09_lecture_EN.md",
-      "sha256": "6be0d82a5d9f939dffe2b6840259eb555532647ad7996948d80e619bf50cd8a7"
-    },
-    "modern-llms:en:module-09": {
-      "path": "modules/module-10/en/module_10_lecture_EN.md",
-      "sha256": "ea32e5c31fd079e9274e37951fcc46273ed7e7fd32fb4db41b3328743daa98b2"
-    },
-    "modern-llms:en:module-10": {
-      "path": "modules/module-11/en/module_11_lecture_EN.md",
-      "sha256": "2318ea4825cfc3352d0680f28f6446df01de53a311ade338a624450dfc6ade7f"
-    },
-    "modern-llms:en:module-07b": {
-      "path": "modules/module-12/en/module_12_lecture_EN.md",
-      "sha256": "c5562fb090934bebb01140b973efc562368911dbb35e1015db3a85bfaabd22c0"
-    },
-    "modern-llms:en:module-11": {
-      "path": "modules/module-13/en/module_13_lecture_EN.md",
-      "sha256": "375045da9c03d811ef904550989f4bdd4ad06b4e10cc9468148f1039890ee81e"
-    },
-    "modern-llms:en:module-12": {
-      "path": "modules/module-14/en/module_14_lecture_EN.md",
-      "sha256": "f5f9cb04e6fb2b48b2d0018a5a5b6b67c363d3b252baaa37138ea26059a2892e"
-    },
-    "modern-llms:en:module-13": {
-      "path": "modules/module-15/en/module_15_lecture_EN.md",
-      "sha256": "ed0f564f451a4a2f6a817695eccfc16381e71b1d3c1bfc604b532a38d38cf96f"
-    },
-    "modern-llms:en:module-14": {
-      "path": "modules/module-16/en/module_16_lecture_EN.md",
-      "sha256": "5609a74b46497a92c03dc6556f699dee502841c5f62ff05ba851338ca7b10a08"
-    },
-    "modern-llms:en:module-15": {
-      "path": "modules/module-17/en/module_17_lecture_EN.md",
-      "sha256": "a0c6a27fff5898fd15152e2d442c56ed7a03a1c49484e01eba26f8727d081d0f"
-    },
-    "modern-llms:en:module-16": {
-      "path": "modules/module-18/en/module_18_lecture_EN.md",
-      "sha256": "5b2c28a90ac87e65ded386e982566cd9c9d7eaa936d82fb59a2a82c4a011dc66"
-    },
-    "modern-llms:en:module-17": {
-      "path": "modules/module-19/en/module_19_lecture_EN.md",
-      "sha256": "81bdd7243286042672300c3b0d11fa98c25ccf9d644921c4c027638f7f7d676f"
-    },
-    "modern-llms:en:module-20": {
-      "path": "modules/module-20/en/module_20_lecture_EN.md",
-      "sha256": "5dc3c7c1e2caaf2dfdd08aba5920ad6c7842bfb177b100e46d5abd876e846812"
-    },
-    "modern-llms:ru:module-01": {
-      "path": "modules/module-01/ru/module_01_lecture_RU.md",
-      "sha256": "06da6e2054ca2db31004fd7b8101b81226bba985bc84ede221e31d4f7c830c94"
-    },
-    "modern-llms:ru:module-02": {
-      "path": "modules/module-02/ru/module_02_lecture_RU.md",
-      "sha256": "b16374cbccf23c87f463dab74380396320c7e7d023486509c8cac27c527de22f"
-    },
-    "modern-llms:ru:module-18": {
-      "path": "modules/module-03/ru/module_03_lecture_RU.md",
-      "sha256": "5b6c1f9e80c10c17176d6048b8066ec552c0ebb5e7f5f3b0bae3b77d52434f67"
-    },
-    "modern-llms:ru:module-03": {
-      "path": "modules/module-04/ru/module_04_lecture_RU.md",
-      "sha256": "abbbb2cd2acb677c8e681d7b66b71ef44e518a5e78b2e68005c6336b0829ba29"
-    },
-    "modern-llms:ru:module-04": {
-      "path": "modules/module-05/ru/module_05_lecture_RU.md",
-      "sha256": "6215563453f33c6ded180b5766878441ec0f50d63505497e86ac4b77c3265069"
-    },
-    "modern-llms:ru:module-05": {
-      "path": "modules/module-06/ru/module_06_lecture_RU.md",
-      "sha256": "71110cae4852fed9cf9c308aedd061321e42b3c38b87aed81893edb738d90e00"
-    },
-    "modern-llms:ru:module-06": {
-      "path": "modules/module-07/ru/module_07_lecture_RU.md",
-      "sha256": "9ae689abd4736713974231c63052681d88d27873f3ba187cd19be1ba5c5dbd82"
-    },
-    "modern-llms:ru:module-07": {
-      "path": "modules/module-08/ru/module_08_lecture_RU.md",
-      "sha256": "cfe16e110c1f8d5f3f3a14404a84472908a57c462a27224d4db792ecacc4672c"
-    },
-    "modern-llms:ru:module-08": {
-      "path": "modules/module-09/ru/module_09_lecture_RU.md",
-      "sha256": "00a2580e787d69b2d56e61fada9634dd784c75c6c551f8c1bc1d9b6ad7f1803f"
-    },
-    "modern-llms:ru:module-09": {
-      "path": "modules/module-10/ru/module_10_lecture_RU.md",
-      "sha256": "d6873531547bc8841abde6dc86d89fdcace71f8f7a765a1e7e65128695f7b69b"
-    },
-    "modern-llms:ru:module-10": {
-      "path": "modules/module-11/ru/module_11_lecture_RU.md",
-      "sha256": "11bcc884c0e1c6d317aa1873685f7991b029a8ca99a7d7c546f5c20b9939a168"
-    },
-    "modern-llms:ru:module-07b": {
-      "path": "modules/module-12/ru/module_12_lecture_RU.md",
-      "sha256": "69a068737db6e48a61092df4f5e7b513ba143c4e0b4f6ea8acfdf98009b10ed6"
-    },
-    "modern-llms:ru:module-11": {
-      "path": "modules/module-13/ru/module_13_lecture_RU.md",
-      "sha256": "c53b476e7a4bb7f9013830f2352d899ea8936287bbe2005f57805e6a0c9de2cd"
-    },
-    "modern-llms:ru:module-12": {
-      "path": "modules/module-14/ru/module_14_lecture_RU.md",
-      "sha256": "d600c5424c057e89b54f9d4ec70b0809c6089bd230724d973eeb540f4bfbe856"
-    },
-    "modern-llms:ru:module-13": {
-      "path": "modules/module-15/ru/module_15_lecture_RU.md",
-      "sha256": "19c180984eabe27604bef1d1bea397521d5e6ea45ef0217db9e5b38fbc9bd602"
-    },
-    "modern-llms:ru:module-14": {
-      "path": "modules/module-16/ru/module_16_lecture_RU.md",
-      "sha256": "7ef216e21a29bab5476d26b7034496efba5e9c20863363b29fb1a73f20e2610d"
-    },
-    "modern-llms:ru:module-15": {
-      "path": "modules/module-17/ru/module_17_lecture_RU.md",
-      "sha256": "7fb55dfcbe1e869dab3b50c4f9db308a76d4395c000186dea934d57b708fcc3c"
-    },
-    "modern-llms:ru:module-16": {
-      "path": "modules/module-18/ru/module_18_lecture_RU.md",
-      "sha256": "9b92889805b66a389ff8c2108f95ffccea4c595db5dbfc780bfc0840e50447fb"
-    },
-    "modern-llms:ru:module-17": {
-      "path": "modules/module-19/ru/module_19_lecture_RU.md",
-      "sha256": "b67aec9abe39364dce967a574b205266c48a19e1760191358809b5df7c46d155"
-    },
-    "modern-llms:ru:module-20": {
-      "path": "modules/module-20/ru/module_20_lecture_RU.md",
-      "sha256": "c8f336ff0744888cb281474954d2e44d6125f6dd09681e265468ad73ddc4c8b0"
-    },
     "rl-for-llm:en:module-01": {
       "path": "modules/module-01/Module_1_EN.md",
       "sha256": "28a0793726e5466acc76a649cb18c7b66cadc91590621a0fb9d540db357616ec"
@@ -404,6 +245,166 @@
     "rl-for-llm:ru:module-13": {
       "path": "modules/module-13/Module_13_RU.md",
       "sha256": "5e50842673d59e76fa05c40c2b7228c5db937ad20a054ece0ed4387b589bbd6e"
+    },
+    "modern-llms:ru:module-01": {
+      "path": "modules/module-01/ru/module_01_lecture_RU.md",
+      "sha256": "c212b5037a5109a7d17491e367aea1271765fee062f70a10e279bb0cbe1fa694"
+    },
+    "modern-llms:ru:module-02": {
+      "path": "modules/module-02/ru/module_02_lecture_RU.md",
+      "sha256": "0496c6183ae21713b9cef1419ed48379e1362141d040a9602caa16d74d5b5d4d"
+    },
+    "modern-llms:ru:module-03": {
+      "path": "modules/module-03/ru/module_03_lecture_RU.md",
+      "sha256": "ea0adb3c031d67c8db45b3fdbcc0bca11360c0612748aa52231222c83b504185"
+    },
+    "modern-llms:ru:module-04": {
+      "path": "modules/module-04/ru/module_04_lecture_RU.md",
+      "sha256": "994e407331a46d0936dabe400a869aa53f44052c45b15244b45285967d09c9ec"
+    },
+    "modern-llms:ru:module-05": {
+      "path": "modules/module-05/ru/module_05_lecture_RU.md",
+      "sha256": "ee4aabe918cc5fcfa66bb1d82844bd3c2053dc5211b0105b1e530a8b069e3b38"
+    },
+    "modern-llms:ru:module-06": {
+      "path": "modules/module-06/ru/module_06_lecture_RU.md",
+      "sha256": "3d55f0c44ce9548b89188ac31f3e1165c4adcb9dc40f3857bfa2fb9ac3e5e505"
+    },
+    "modern-llms:ru:module-07": {
+      "path": "modules/module-07/ru/module_07_lecture_RU.md",
+      "sha256": "df4bb2a53a41ffd65a7013c4cc66b355dbe6afa51d97a514b36ff052646ef7a6"
+    },
+    "modern-llms:ru:module-08": {
+      "path": "modules/module-08/ru/module_08_lecture_RU.md",
+      "sha256": "0e4775042db0c09f53d36ae9cc832b891d1cf8fc563f322ec655ba7dd000ba14"
+    },
+    "modern-llms:ru:module-09": {
+      "path": "modules/module-09/ru/module_09_lecture_RU.md",
+      "sha256": "917b07a3b051d6cf167f7202dfe85c6cfab2625cd89963531d2a6cf16be2b162"
+    },
+    "modern-llms:ru:module-10": {
+      "path": "modules/module-10/ru/module_10_lecture_RU.md",
+      "sha256": "121d4925ba4d9f90da33281d9cd31e2ae5b5b7c3e29e98eeb82cdbaa093bff60"
+    },
+    "modern-llms:ru:module-11": {
+      "path": "modules/module-11/ru/module_11_lecture_RU.md",
+      "sha256": "f57d2f5135c6bc5a02fa0fa73b11bd0fb45308ffe460fedfc8e3a3b7ed304779"
+    },
+    "modern-llms:ru:module-12": {
+      "path": "modules/module-12/ru/module_12_lecture_RU.md",
+      "sha256": "f6c5665b115e425ac0e97a53af42f7ad8fbdc4f1aa34d0db4359c5473c7ac3c3"
+    },
+    "modern-llms:ru:module-13": {
+      "path": "modules/module-13/ru/module_13_lecture_RU.md",
+      "sha256": "1d496985b411265e9da3961ea7965f29078d3ac971457bf0f750a82b5f0beca7"
+    },
+    "modern-llms:ru:module-14": {
+      "path": "modules/module-14/ru/module_14_lecture_RU.md",
+      "sha256": "efba4d58a87bae44e7b94cdbdc1056f572f3c9386e918fa019216af1776a8748"
+    },
+    "modern-llms:ru:module-15": {
+      "path": "modules/module-15/ru/module_15_lecture_RU.md",
+      "sha256": "7b6bcd732c9c6dc3a3109f5162db81b720e3ed95cc909e0a9f4944968e5b1c04"
+    },
+    "modern-llms:ru:module-16": {
+      "path": "modules/module-16/ru/module_16_lecture_RU.md",
+      "sha256": "4cf8cd38203e88222fee4788f48a06ee435fd6cdc4c0180515302006829ee19a"
+    },
+    "modern-llms:ru:module-17": {
+      "path": "modules/module-17/ru/module_17_lecture_RU.md",
+      "sha256": "4c0bd17a32a05a0ce5e3895aaf4b241dc108b3c65cee18bcc429270e89a9e46c"
+    },
+    "modern-llms:ru:module-18": {
+      "path": "modules/module-18/ru/module_18_lecture_RU.md",
+      "sha256": "034a1acd2a47bfb45d2c7716edad24a4633cae77253068173c5b6a8d74f4981d"
+    },
+    "modern-llms:ru:module-19": {
+      "path": "modules/module-19/ru/module_19_lecture_RU.md",
+      "sha256": "ee8a0de30972a7d0427770a976e9c1d8066dde2c6b1dd48b89f56b754c89873a"
+    },
+    "modern-llms:ru:module-20": {
+      "path": "modules/module-20/ru/module_20_lecture_RU.md",
+      "sha256": "e3f1c46fbe717ac3be0fbaba3ecf9917ad9297524bc6c3021a84b9803802416a"
+    },
+    "modern-llms:en:module-01": {
+      "path": "modules/module-01/en/module_01_lecture_EN.md",
+      "sha256": "02e5fe09fb461828bebe2658a8e1c50d8505947395b55f586e06f0ddd1a4633d"
+    },
+    "modern-llms:en:module-02": {
+      "path": "modules/module-02/en/module_02_lecture_EN.md",
+      "sha256": "eb51225a693cf8ddf9517b3e750333bc34e8deb145bb5fd906b0822266322ca2"
+    },
+    "modern-llms:en:module-03": {
+      "path": "modules/module-03/en/module_03_lecture_EN.md",
+      "sha256": "79327b33bc62ebc9835a6bdcd0db9069762b62112a078cb4c062e454d1b5e2df"
+    },
+    "modern-llms:en:module-04": {
+      "path": "modules/module-04/en/module_04_lecture_EN.md",
+      "sha256": "114b2df017276608a7473c519655970b685199c25e747be61c24900dd47a8cb4"
+    },
+    "modern-llms:en:module-05": {
+      "path": "modules/module-05/en/module_05_lecture_EN.md",
+      "sha256": "dbb53c569f83c17b9e4f25fb3862f11bf2d0fa5c7efc5074bdc43ef46d236160"
+    },
+    "modern-llms:en:module-06": {
+      "path": "modules/module-06/en/module_06_lecture_EN.md",
+      "sha256": "e062b3ff37f31c84f15fdc0a61b37b5544e6675cbb98cf450156f5e9dae33160"
+    },
+    "modern-llms:en:module-07": {
+      "path": "modules/module-07/en/module_07_lecture_EN.md",
+      "sha256": "64827f9734f5d936dc0a894295dbe412becadf138896e59211e4c5f5bbcd9226"
+    },
+    "modern-llms:en:module-08": {
+      "path": "modules/module-08/en/module_08_lecture_EN.md",
+      "sha256": "538cae05f5a40b028ed985c7b3d7ae4ec24dfb971631dc63afe8c9cd685f52bb"
+    },
+    "modern-llms:en:module-09": {
+      "path": "modules/module-09/en/module_09_lecture_EN.md",
+      "sha256": "f06cc4feadcc8aa17f945e4c63b47972c59126df3e4ec4bdc6879e087bb6e330"
+    },
+    "modern-llms:en:module-10": {
+      "path": "modules/module-10/en/module_10_lecture_EN.md",
+      "sha256": "757c4bb936de77d512c96be6c49b4ae5683f025f4f365c81516f3583ee218629"
+    },
+    "modern-llms:en:module-11": {
+      "path": "modules/module-11/en/module_11_lecture_EN.md",
+      "sha256": "44094b86adc69754946471f577866126c2c756ebefc98f5454ba160bed7c8050"
+    },
+    "modern-llms:en:module-12": {
+      "path": "modules/module-12/en/module_12_lecture_EN.md",
+      "sha256": "0b01438eadbd3d508307d11339a8576469633ae153f3355f3aed2f5f14ca72bb"
+    },
+    "modern-llms:en:module-13": {
+      "path": "modules/module-13/en/module_13_lecture_EN.md",
+      "sha256": "e15b4bb63208cd152676ea355885c92d9f9482f1a87fde426d6561987d5f8219"
+    },
+    "modern-llms:en:module-14": {
+      "path": "modules/module-14/en/module_14_lecture_EN.md",
+      "sha256": "9b7d757f141109e8bccfe762b55b2429319cd7f7da91a22927e5109c9e343c97"
+    },
+    "modern-llms:en:module-15": {
+      "path": "modules/module-15/en/module_15_lecture_EN.md",
+      "sha256": "e8207da11871db0006b6cf6cce886ee63338a5b3235003e89ef0c292f0e1201e"
+    },
+    "modern-llms:en:module-16": {
+      "path": "modules/module-16/en/module_16_lecture_EN.md",
+      "sha256": "5aa137efa8d75ecaef7c498c38c50a30ec7f904403a7b7bc7a72a173f6b7cdd2"
+    },
+    "modern-llms:en:module-17": {
+      "path": "modules/module-17/en/module_17_lecture_EN.md",
+      "sha256": "200f3e9907a3e3ca49e16a8a139dceffad33c7ecf1739039b80cedbec2137f25"
+    },
+    "modern-llms:en:module-18": {
+      "path": "modules/module-18/en/module_18_lecture_EN.md",
+      "sha256": "34f69c8ad3d8e95ca663f01b4473b497bfaf2912c26e4f2a71ef6a3e4ce115aa"
+    },
+    "modern-llms:en:module-19": {
+      "path": "modules/module-19/en/module_19_lecture_EN.md",
+      "sha256": "010d7fc2e92e67c73ce7de90dc02c26f305487f93f20af9fa59db213fdd153cb"
+    },
+    "modern-llms:en:module-20": {
+      "path": "modules/module-20/en/module_20_lecture_EN.md",
+      "sha256": "fd3943bd66ea06d06da32242151608e6802a6d2ff27b8ce0669022b4d19a0a37"
     }
   },
   "validation": {
@@ -426,7 +427,7 @@
       "description": "Архитектура, обучение, инференс, агенты и оценивание современных языковых моделей.",
       "stepik_url": "https://stepik.org/297275",
       "module_count": 20,
-      "characters": 1062415,
+      "characters": 1291042,
       "modules": [
         {
           "id": "modern-llms:ru:module-01",
@@ -434,9 +435,9 @@
           "position": 1.0,
           "title": "Модуль 1. Современный ландшафт LLM",
           "content_file": "modern-llms/ru/module-01.md",
-          "content_hash": "35356108c51acb3fe6a0b0d39e74926f305c880a10b67d630c67642bc3a182cb",
-          "characters": 79659,
-          "image_count": 11
+          "content_hash": "04d1da0d5242972cf704322b95ade3e64978ced3358f48af61afb27b4d8d1dba",
+          "characters": 80504,
+          "image_count": 0
         },
         {
           "id": "modern-llms:ru:module-02",
@@ -444,178 +445,178 @@
           "position": 2.0,
           "title": "Модуль 2. Токенизация и эмбеддинги",
           "content_file": "modern-llms/ru/module-02.md",
-          "content_hash": "801f8aa7ae19e8d308d6f1ee4787ae44ec5102ff73fcec9e0c35022a5a8d8887",
-          "characters": 49038,
-          "image_count": 10
-        },
-        {
-          "id": "modern-llms:ru:module-18",
-          "module_key": "module-18",
-          "position": 3.0,
-          "title": "Модуль 3. Базовый Transformer",
-          "content_file": "modern-llms/ru/module-18.md",
-          "content_hash": "ddfdb659f7a4cfbe56b4b46b73d56950011a73d5a8166d9b6f45e5268973fa66",
-          "characters": 56333,
-          "image_count": 12
+          "content_hash": "9bfced3b3736f43f1ff9afed8e3af107cd991cb5326f75fa14c7f7541da1cf2b",
+          "characters": 88303,
+          "image_count": 0
         },
         {
           "id": "modern-llms:ru:module-03",
           "module_key": "module-03",
-          "position": 4.0,
-          "title": "Модуль 4. Позиционные представления: от синусоид к нескольким осям",
+          "position": 3.0,
+          "title": "Модуль 3. Базовый Transformer",
           "content_file": "modern-llms/ru/module-03.md",
-          "content_hash": "c04f8d700c29b6289377d7ba7c9e72e668e258c961e1eb61c712b78f44b09541",
-          "characters": 44217,
-          "image_count": 11
+          "content_hash": "8c6f529c15efdbe201571b9f9674375f9690c8ce97596e2b27142685ccfab929",
+          "characters": 64497,
+          "image_count": 12
         },
         {
           "id": "modern-llms:ru:module-04",
           "module_key": "module-04",
-          "position": 5.0,
-          "title": "Модуль 5. Современные механизмы внимания",
+          "position": 4.0,
+          "title": "Модуль 4. Позиционные представления: от синусоид к нескольким осям",
           "content_file": "modern-llms/ru/module-04.md",
-          "content_hash": "3f5883926bdd97955d97fae5f4875dd3ade05c67ea2ddbed7604ea289d337c08",
-          "characters": 53015,
-          "image_count": 10
+          "content_hash": "0c704f5504d8b70f7f369fca215ef21c65279bb5ec4506af9a7e58b15987d11b",
+          "characters": 52408,
+          "image_count": 11
         },
         {
           "id": "modern-llms:ru:module-05",
           "module_key": "module-05",
-          "position": 6.0,
-          "title": "Модуль 6. Нормализация, активации и анатомия блока",
+          "position": 5.0,
+          "title": "Модуль 5. Современные механизмы внимания",
           "content_file": "modern-llms/ru/module-05.md",
-          "content_hash": "ee0d96306781a85100a847b2c3369e1fa3a5726a7ff889a79d021e053fe1bfcf",
-          "characters": 47299,
+          "content_hash": "f20f93ef39c244b7979206cae0ae52f5a55d3a56580011fcd009ec52387f4aed",
+          "characters": 62695,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-06",
           "module_key": "module-06",
-          "position": 7.0,
-          "title": "Модуль 7. Mixture of Experts",
+          "position": 6.0,
+          "title": "Модуль 6. Нормализация, активации и анатомия блока",
           "content_file": "modern-llms/ru/module-06.md",
-          "content_hash": "489c4549aa2eb083f8e3ad05eb496bd1edd12d3fffe2a31a21835dacf19ac94c",
-          "characters": 48729,
+          "content_hash": "14b751cd615e05af0a4ddeff34cd9455fac792eb6250a8d0958c95ec7b431f0c",
+          "characters": 56665,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-07",
           "module_key": "module-07",
-          "position": 8.0,
-          "title": "Модуль 8. Альтернативы Transformer: SSM, Mamba и гибриды",
+          "position": 7.0,
+          "title": "Модуль 7. Mixture of Experts",
           "content_file": "modern-llms/ru/module-07.md",
-          "content_hash": "7db2be621f1b22b9c00d1d593e77bde144193dc99b4af3e21b433e43ad983f55",
-          "characters": 31344,
+          "content_hash": "fa69e2a949a78d66960991fe684092b55ea50115a9124c0108adb30ebcd24799",
+          "characters": 58622,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-08",
           "module_key": "module-08",
-          "position": 9.0,
-          "title": "Модуль 9. Претрейн: данные, законы масштабирования, оптимизаторы",
+          "position": 8.0,
+          "title": "Модуль 8. Альтернативы Transformer: SSM, Mamba и гибриды",
           "content_file": "modern-llms/ru/module-08.md",
-          "content_hash": "c1cd93dec263d67171a3139af3ef5adbd041aba48e811e85154eaf182edb7808",
-          "characters": 75553,
+          "content_hash": "c55d9c8fca84cb75c2a5b996c9f2dc41903bb66cd39569f2a55f45224e00d24e",
+          "characters": 41219,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-09",
           "module_key": "module-09",
-          "position": 10.0,
-          "title": "Модуль 10. KV-кэши и эффективный инференс",
+          "position": 9.0,
+          "title": "Модуль 9. Претрейн: данные, законы масштабирования, оптимизаторы",
           "content_file": "modern-llms/ru/module-09.md",
-          "content_hash": "fd5893a2c6e401b31c673a122e2ea5b5e061e43a049a027d760d6335386b2ca1",
-          "characters": 58436,
+          "content_hash": "94476566098f32bfddbf735844692724919d2c9f6ade8ba3fcf9e5da1d0c9a25",
+          "characters": 82126,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-10",
           "module_key": "module-10",
-          "position": 11.0,
-          "title": "Модуль 11. Спекулятивное декодирование и квантизация",
+          "position": 10.0,
+          "title": "Модуль 10. KV-кэши и эффективный инференс",
           "content_file": "modern-llms/ru/module-10.md",
-          "content_hash": "e757d52b7ad49d2768ad4fc86b68702ef9e577f2f12bd59aa93b4d21b571bf79",
-          "characters": 52829,
-          "image_count": 10
-        },
-        {
-          "id": "modern-llms:ru:module-07b",
-          "module_key": "module-07b",
-          "position": 12.0,
-          "title": "Модуль 12. Диффузионные LLM",
-          "content_file": "modern-llms/ru/module-07b.md",
-          "content_hash": "0968a9201652896316d55fc43460eb480ec31e0f5e17221b1ff0e88a19865720",
-          "characters": 43114,
+          "content_hash": "1ba411b3ae20dba433839aa6cbf6476966377a1403ec4f9bdcb82fb638337afe",
+          "characters": 66495,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-11",
           "module_key": "module-11",
-          "position": 13.0,
-          "title": "Модуль 13. SFT и работа с данными",
+          "position": 11.0,
+          "title": "Модуль 11. Спекулятивное декодирование и квантизация",
           "content_file": "modern-llms/ru/module-11.md",
-          "content_hash": "241ba13ff6fbad34ed196ca9d897e09b10c313c27d4a3f92291fb3e52c6582b1",
-          "characters": 62667,
+          "content_hash": "78a644cfdd79d551cc430f46b838c66ccd53d4ea9b22f4f981299cce37b2eb7b",
+          "characters": 60646,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-12",
           "module_key": "module-12",
-          "position": 14.0,
-          "title": "Модуль 14. Обучение по обратной связи: RLHF, DPO, RLOO и GRPO",
+          "position": 12.0,
+          "title": "Модуль 12. Диффузионные LLM",
           "content_file": "modern-llms/ru/module-12.md",
-          "content_hash": "b37fcb888f799894558870c7ea319aff21d54b1ffd0559445c6c01c96b32bc18",
-          "characters": 47005,
+          "content_hash": "4e54854102d37c19e8d5fca4f4fbed0ebc5a45e1cfd0e39e84b2c3681a2518ab",
+          "characters": 59152,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-13",
           "module_key": "module-13",
-          "position": 15.0,
-          "title": "Модуль 15. Модели рассуждения и вычисления во время инференса (test-time compute)",
+          "position": 13.0,
+          "title": "Модуль 13. SFT и работа с данными",
           "content_file": "modern-llms/ru/module-13.md",
-          "content_hash": "4eb8614d8261137f3e82ff0ee94b74406793ad760c17b9a8e23187c4da55c727",
-          "characters": 46771,
+          "content_hash": "4bd4d759512a481cdef8779fdbb95391f2c05420628bbc3887b1b82b7b22c361",
+          "characters": 74443,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-14",
           "module_key": "module-14",
-          "position": 16.0,
-          "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
+          "position": 14.0,
+          "title": "Модуль 14. Обучение по обратной связи: RLHF, DPO, RLOO и GRPO",
           "content_file": "modern-llms/ru/module-14.md",
-          "content_hash": "0ec80d1e3078d3c8ec032dbe6d301c1195a4c312f461f85ef4ddaa463d88690d",
-          "characters": 61296,
-          "image_count": 11
+          "content_hash": "9809775c963ac43a4bae9d0a9d9fb8fea0cba42cb6f0a8f437b7964f7a4a6598",
+          "characters": 61842,
+          "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-15",
           "module_key": "module-15",
-          "position": 17.0,
-          "title": "Модуль 17. Эмбеддинги, поиск и RAG",
+          "position": 15.0,
+          "title": "Модуль 15. Модели рассуждения и вычисления во время инференса (test-time compute)",
           "content_file": "modern-llms/ru/module-15.md",
-          "content_hash": "8c2e54f3ceae044602ebeab143891499f6c057c99629a6c05fbfe9613c6f064c",
-          "characters": 51961,
+          "content_hash": "00a734bd07bf48b012511bb3194c18741e952b1298f64e0bc4b0567656cca5b0",
+          "characters": 59105,
           "image_count": 10
         },
         {
           "id": "modern-llms:ru:module-16",
           "module_key": "module-16",
-          "position": 18.0,
-          "title": "Модуль 18. Агенты и работа с инструментами",
+          "position": 16.0,
+          "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
           "content_file": "modern-llms/ru/module-16.md",
-          "content_hash": "5267059f7075abe6aca3c2a7c6450dac1d81fa14655a47a5c67949815f2042dc",
-          "characters": 54792,
+          "content_hash": "67c9b32083b0990bc16eee2fb4646ff518ec63a6a5eaf67fedf009cf58a6ce05",
+          "characters": 72607,
           "image_count": 11
         },
         {
           "id": "modern-llms:ru:module-17",
           "module_key": "module-17",
+          "position": 17.0,
+          "title": "Модуль 17. Эмбеддинги, поиск и RAG",
+          "content_file": "modern-llms/ru/module-17.md",
+          "content_hash": "125f3e327ec6061553e405c92a0459b8fd4dbfa3f5f1ee95a50503ee401b4e77",
+          "characters": 65952,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:ru:module-18",
+          "module_key": "module-18",
+          "position": 18.0,
+          "title": "Модуль 18. Агенты и работа с инструментами",
+          "content_file": "modern-llms/ru/module-18.md",
+          "content_hash": "10fbf347b6de0bd71c84c6d1031064193f81c61358a8d943977fddf0a6f07d90",
+          "characters": 65366,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:ru:module-19",
+          "module_key": "module-19",
           "position": 19.0,
           "title": "Модуль 19. Оценка современных LLM: от бенчмарка к инженерному решению",
-          "content_file": "modern-llms/ru/module-17.md",
-          "content_hash": "f534b94b55e3a7448514d4ae7d1d98d4c33d915f51399ab7ff92df8d46bef201",
-          "characters": 59959,
+          "content_file": "modern-llms/ru/module-19.md",
+          "content_hash": "47046d7cf82dcf9386a2bb39d7b942416c050404d44a6c3d8abb8f971297914f",
+          "characters": 71290,
           "image_count": 9
         },
         {
@@ -624,8 +625,8 @@
           "position": 20.0,
           "title": "Модуль 20. LLM целиком: от токенов до обучения и генерации",
           "content_file": "modern-llms/ru/module-20.md",
-          "content_hash": "144af1260cd67c0e90bd120325238ed611b510a7176b7a57927629bacaae46af",
-          "characters": 38398,
+          "content_hash": "6f78a6f342f16bdcf48bb927706250c62d982cf3390d0031acdfe6ab29585576",
+          "characters": 47105,
           "image_count": 6
         }
       ]
@@ -637,7 +638,7 @@
       "description": "Architecture, training, inference, agents, and evaluation of modern language-model systems.",
       "stepik_url": "https://stepik.org/297276",
       "module_count": 20,
-      "characters": 978968,
+      "characters": 1205641,
       "modules": [
         {
           "id": "modern-llms:en:module-01",
@@ -645,9 +646,9 @@
           "position": 1.0,
           "title": "Module 1. The Modern LLM Landscape",
           "content_file": "modern-llms/en/module-01.md",
-          "content_hash": "f9b769ea587e67bcce5ce37e332f831777f18a8346990e13ba193873ca6bd3c2",
-          "characters": 74776,
-          "image_count": 11
+          "content_hash": "aefe2decca924d69935e6beb9321631e46e93e2af526334d6d65ae5ea7da4898",
+          "characters": 81640,
+          "image_count": 0
         },
         {
           "id": "modern-llms:en:module-02",
@@ -655,178 +656,178 @@
           "position": 2.0,
           "title": "Module 2. Tokenization and Embeddings",
           "content_file": "modern-llms/en/module-02.md",
-          "content_hash": "f9d154a7775407c6b0faf029290a9a837afe50800cb8cc88471bd5d079d1c4fa",
-          "characters": 46437,
-          "image_count": 10
-        },
-        {
-          "id": "modern-llms:en:module-18",
-          "module_key": "module-18",
-          "position": 3.0,
-          "title": "Module 3. The Basic Transformer",
-          "content_file": "modern-llms/en/module-18.md",
-          "content_hash": "fc30b09238513a7b126023c189a46355fe2451b9552dbca364d36bdb95c60805",
-          "characters": 55336,
-          "image_count": 12
+          "content_hash": "e0c18110b1cf8268eac2fc7b7429dcace4b4dab5cf895761a4321384361003ee",
+          "characters": 86457,
+          "image_count": 0
         },
         {
           "id": "modern-llms:en:module-03",
           "module_key": "module-03",
-          "position": 4.0,
-          "title": "Module 4. Positional representations: from sinusoids to multiple axes",
+          "position": 3.0,
+          "title": "Module 3. The Basic Transformer",
           "content_file": "modern-llms/en/module-03.md",
-          "content_hash": "538e5bd445da8731e0a97826ce67ab2e3f99e347c0ec9bde60413a03fd779f28",
-          "characters": 41612,
-          "image_count": 11
+          "content_hash": "03a15cf2fa4f1b786df468adfed0aa64046f82ac9bb326ee27b98c85bb4bf5d5",
+          "characters": 63297,
+          "image_count": 12
         },
         {
           "id": "modern-llms:en:module-04",
           "module_key": "module-04",
-          "position": 5.0,
-          "title": "Module 5. Modern Attention Mechanisms",
+          "position": 4.0,
+          "title": "Module 4. Positional representations: from sinusoids to multiple axes",
           "content_file": "modern-llms/en/module-04.md",
-          "content_hash": "7480eafb42994d1e4d9da16129cb480bbe2a95871dae5c46afc8762b619f68ff",
-          "characters": 50182,
-          "image_count": 10
+          "content_hash": "becc23bec92993d6240994f8cdb8c6613300791d5524c9c9849453eeea754860",
+          "characters": 49397,
+          "image_count": 11
         },
         {
           "id": "modern-llms:en:module-05",
           "module_key": "module-05",
-          "position": 6.0,
-          "title": "Module 6. Normalization, activations, and the anatomy of a Transformer block",
+          "position": 5.0,
+          "title": "Module 5. Modern Attention Mechanisms",
           "content_file": "modern-llms/en/module-05.md",
-          "content_hash": "1a77eff321cf1e1e1a0da17998739586b3d9a626dab5d974c66b1bcfe0a27f16",
-          "characters": 43242,
+          "content_hash": "9eb527a795ce41009be1d8fd3003a76cd269e3dbc9c6b50af9b7eb78eff1f28c",
+          "characters": 59443,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-06",
           "module_key": "module-06",
-          "position": 7.0,
-          "title": "Module 7. Mixture of Experts",
+          "position": 6.0,
+          "title": "Module 6. Normalization, activations, and the anatomy of a Transformer block",
           "content_file": "modern-llms/en/module-06.md",
-          "content_hash": "b35caf9ca7ff9dfb3f12209d768c64f26bd0f339a0e05fd8de56867b221ac165",
-          "characters": 44681,
+          "content_hash": "0efde58702d75cbe1c83f5548e8a44cfd6623e383d0d3b2ecfc8aa148a9c38cd",
+          "characters": 52160,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-07",
           "module_key": "module-07",
-          "position": 8.0,
-          "title": "Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models",
+          "position": 7.0,
+          "title": "Module 7. Mixture of Experts",
           "content_file": "modern-llms/en/module-07.md",
-          "content_hash": "61e0e7f2542fbc0df7a3bb4a7c822bf6f4f54f60c4c91a5b9a05c333b0c13764",
-          "characters": 29528,
+          "content_hash": "ed8aba0d0be3e403faafce294ac37294107870461a879ca7cb65aa6f2ef6d771",
+          "characters": 53956,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-08",
           "module_key": "module-08",
-          "position": 9.0,
-          "title": "Module 9. Pretraining: Data, Scaling Laws, and Optimizers",
+          "position": 8.0,
+          "title": "Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models",
           "content_file": "modern-llms/en/module-08.md",
-          "content_hash": "71b2332a679648605c4d999178b1028ce06aa6883dbe43b28890fe8711b4f17a",
-          "characters": 62180,
+          "content_hash": "d55916b6f77aa684f1dc636b97ef541f0833a57eaea18d574ca26cadd42105c6",
+          "characters": 39100,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-09",
           "module_key": "module-09",
-          "position": 10.0,
-          "title": "Module 10. KV Caches and Efficient Inference",
+          "position": 9.0,
+          "title": "Module 9. Pretraining: Data, Scaling Laws, and Optimizers",
           "content_file": "modern-llms/en/module-09.md",
-          "content_hash": "947e149194b6a2b0b63d038672e30053c29a4dc939c5f54067ef48d65a04a351",
-          "characters": 56325,
+          "content_hash": "a7e8eae648ec8217c7e6e6329710770e18571d8143be10fd4b67b0f700d4a220",
+          "characters": 68334,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-10",
           "module_key": "module-10",
-          "position": 11.0,
-          "title": "Module 11. Speculative Decoding and Quantization",
+          "position": 10.0,
+          "title": "Module 10. KV Caches and Efficient Inference",
           "content_file": "modern-llms/en/module-10.md",
-          "content_hash": "2c320c469563b2be87ec7021a6620e0306669863ed9fa102d6e2423c5b596376",
-          "characters": 48806,
-          "image_count": 10
-        },
-        {
-          "id": "modern-llms:en:module-07b",
-          "module_key": "module-07b",
-          "position": 12.0,
-          "title": "Module 12. Diffusion Language Models",
-          "content_file": "modern-llms/en/module-07b.md",
-          "content_hash": "de6033975ce6e25e6c0008420cd0d7f3fc48d23292e42fb112144fe826c7597c",
-          "characters": 39137,
+          "content_hash": "b9d7f0ee3c3c0d22d36c79fe47d4f8c45fe0804e8a9c329516297d330c30ef96",
+          "characters": 63551,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-11",
           "module_key": "module-11",
-          "position": 13.0,
-          "title": "Module 13. Supervised Fine-Tuning and Data Work",
+          "position": 11.0,
+          "title": "Module 11. Speculative Decoding and Quantization",
           "content_file": "modern-llms/en/module-11.md",
-          "content_hash": "32b7b7a117f4b543e0147395ea9b22236be3aa7c9dc27824ed318c47db6229d6",
-          "characters": 55022,
+          "content_hash": "cc3a3d884e2416b18ed10b4d61181c05ce1ce77205d4d569ff7473681e9e0236",
+          "characters": 56453,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-12",
           "module_key": "module-12",
-          "position": 14.0,
-          "title": "Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO",
+          "position": 12.0,
+          "title": "Module 12. Diffusion Language Models",
           "content_file": "modern-llms/en/module-12.md",
-          "content_hash": "2928e37081e7278aa0129bffb97091f4b79c8d35fbc60cd73a20872f250001d4",
-          "characters": 44097,
+          "content_hash": "9e0c3d75311e8bfe14f34c5f75800f8aaf0543fb5ea872d0a02e08b9df19e053",
+          "characters": 53753,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-13",
           "module_key": "module-13",
-          "position": 15.0,
-          "title": "Module 15. Reasoning Models and Test-Time Compute",
+          "position": 13.0,
+          "title": "Module 13. Supervised Fine-Tuning and Data Work",
           "content_file": "modern-llms/en/module-13.md",
-          "content_hash": "6948b57826926ed7b7349c4a3048caec0bd6138eeb6ad5dee0eee3b3cc3db15f",
-          "characters": 42069,
+          "content_hash": "57d4e08260ab576bf4a3e9d44d75e37c0af53e97dd990c588e70c07183cfbb04",
+          "characters": 66835,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-14",
           "module_key": "module-14",
-          "position": 16.0,
-          "title": "Module 16. Multimodal LLMs: Vision, Audio, and Video",
+          "position": 14.0,
+          "title": "Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO",
           "content_file": "modern-llms/en/module-14.md",
-          "content_hash": "59b3c68148e5dc3a52745c001a7e3cd50a82fdf5f6fe650fe2941d0f75d59ca9",
-          "characters": 53136,
-          "image_count": 11
+          "content_hash": "210872fe0b06e0deafe2e9f841a5eac19956f3a2120484a6fcc3c484929e0a59",
+          "characters": 58515,
+          "image_count": 10
         },
         {
           "id": "modern-llms:en:module-15",
           "module_key": "module-15",
-          "position": 17.0,
-          "title": "Module 17. Embeddings, Retrieval, and RAG",
+          "position": 15.0,
+          "title": "Module 15. Reasoning Models and Test-Time Compute",
           "content_file": "modern-llms/en/module-15.md",
-          "content_hash": "ad65840ee03540053aed88a5427b223a35dc68aea4d9b3574cfce2235384a575",
-          "characters": 50081,
+          "content_hash": "8da6ef1e8adc5148be583a8a6f1c7a175af56c395939012f00782781cb827344",
+          "characters": 53068,
           "image_count": 10
         },
         {
           "id": "modern-llms:en:module-16",
           "module_key": "module-16",
-          "position": 18.0,
-          "title": "Module 18. Agents and Tool Use",
+          "position": 16.0,
+          "title": "Module 16. Multimodal LLMs: Vision, Audio, and Video",
           "content_file": "modern-llms/en/module-16.md",
-          "content_hash": "65459be01d5772937bbafd01d4b7b70b0cba22bec56dd05021075968898188ca",
-          "characters": 49025,
+          "content_hash": "af7a70e848964c8fe18f4fb58a9a2502bd44dc909adbe26058acbe05e0682636",
+          "characters": 63869,
           "image_count": 11
         },
         {
           "id": "modern-llms:en:module-17",
           "module_key": "module-17",
+          "position": 17.0,
+          "title": "Module 17. Embeddings, Retrieval, and RAG",
+          "content_file": "modern-llms/en/module-17.md",
+          "content_hash": "2c2f173e9f234827cd6af7b87405cd4ac1bfb7d4f266768d9b0aeae244cb9488",
+          "characters": 63405,
+          "image_count": 10
+        },
+        {
+          "id": "modern-llms:en:module-18",
+          "module_key": "module-18",
+          "position": 18.0,
+          "title": "Module 18. Agents and Tool Use",
+          "content_file": "modern-llms/en/module-18.md",
+          "content_hash": "e596eb20b7c0c748047319635b2d4bd2f9e1fc6078feeebff9987652e3783e39",
+          "characters": 59406,
+          "image_count": 11
+        },
+        {
+          "id": "modern-llms:en:module-19",
+          "module_key": "module-19",
           "position": 19.0,
           "title": "Module 19. Evaluating Modern LLM Systems: From Benchmarks to Decisions",
-          "content_file": "modern-llms/en/module-17.md",
-          "content_hash": "61648d2d65ded7e180c84eaff26558205dc83a8cde90b9a3f44a79fb90f10e3e",
-          "characters": 53926,
+          "content_file": "modern-llms/en/module-19.md",
+          "content_hash": "87017db4db957c53251abb14717f04ddd43b65763f10ca15eca8c0dd3a4a10bf",
+          "characters": 64876,
           "image_count": 9
         },
         {
@@ -835,8 +836,8 @@
           "position": 20.0,
           "title": "Module 20. The complete LLM: from tokens to training and generation",
           "content_file": "modern-llms/en/module-20.md",
-          "content_hash": "84da267377115771d68d2a184a8e82d345dbd1a24953dc1852ae5a4942ecac22",
-          "characters": 39370,
+          "content_hash": "c3fc75f14fcf4160760dcfbe51cfcdd461fe7d4413390f02cfc7261e4873a9f3",
+          "characters": 48126,
           "image_count": 6
         }
       ]
@@ -1468,419 +1469,6 @@
   ],
   "omitted_sections": [
     {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-01",
-      "title": "18. Уровень 2: что в ноутбуке модуля",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-01",
-      "title": "20. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-01",
-      "title": "21. Упражнения с решениями",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-02",
-      "title": "7. Что добавляет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-02",
-      "title": "14. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-02",
-      "title": "15. Упражнения с решениями",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-18",
-      "title": "18. Самопроверка",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-18",
-      "title": "19. Упражнения с решениями",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-18",
-      "title": "20. Ноутбук модуля",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-03",
-      "title": "12. Второй уровень: что проверяет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-03",
-      "title": "15. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-03",
-      "title": "16. Упражнения с решениями",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-04",
-      "title": "13. Что проверить в ноутбуке",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-04",
-      "title": "17. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-04",
-      "title": "18. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-05",
-      "title": "14. Практический маршрут в ноутбуке",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-05",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-05",
-      "title": "19. Упражнения с решениями",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-06",
-      "title": "13. Второй уровень: что проверяет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-06",
-      "title": "17. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-06",
-      "title": "18. Упражнения с решениями",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-07",
-      "title": "13. Что проверяет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-07",
-      "title": "17. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-07",
-      "title": "18. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-08",
-      "title": "13. Уровень 2: как читать ноутбук модуля",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-08",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-08",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-09",
-      "title": "13. Уровень 2: что проверяет ноутбук модуля",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-09",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-09",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-10",
-      "title": "14. Что проверяет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-10",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-10",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-07b",
-      "title": "13. Что проверяет notebook",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-07b",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-07b",
-      "title": "19. Упражнения с решениями",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-11",
-      "title": "14. Второй уровень: что проверяет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-11",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-11",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-12",
-      "title": "14. Второй уровень: что делает ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-12",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-12",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-13",
-      "title": "14. Уровень 2: что находится в Jupyter-ноутбуке модуля",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-13",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-13",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-14",
-      "title": "14. Второй уровень: что проверяет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-14",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-14",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-15",
-      "title": "14. Второй уровень: что проверяет ноутбук",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-15",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-15",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-16",
-      "title": "14. Практика: от наблюдения к исправлению, затем к восстановлению",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-16",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-16",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-17",
-      "title": "14. Что делает ноутбук второго уровня",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-17",
-      "title": "18. Вопросы для самопроверки",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-17",
-      "title": "19. Упражнения",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-20",
-      "title": "17. Практика: повторяем вычисление и меняем одно условие",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "ru",
-      "module_key": "module-20",
-      "title": "18. Упражнения и разбор решений",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
       "course_key": "information-theory-for-ml",
       "language": "ru",
       "module_key": "module-02",
@@ -1977,419 +1565,6 @@
       "module_key": "module-15",
       "title": "15.10. Упражнения",
       "reason": "reviewed_private_exercise_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-01",
-      "title": "18. Level 2: what the notebook adds",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-01",
-      "title": "20. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-01",
-      "title": "21. Exercises with solutions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-02",
-      "title": "7. What the notebook adds",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-02",
-      "title": "14. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-02",
-      "title": "15. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-18",
-      "title": "18. Self-check",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-18",
-      "title": "19. Exercises with solutions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-18",
-      "title": "20. The module notebook",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-03",
-      "title": "12. What the notebook validates",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-03",
-      "title": "15. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-03",
-      "title": "16. Exercises with solutions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-04",
-      "title": "13. What to verify in the notebook",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-04",
-      "title": "17. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-04",
-      "title": "18. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-05",
-      "title": "14. What to run in the notebook",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-05",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-05",
-      "title": "19. Exercises with solutions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-06",
-      "title": "13. What the notebook verifies",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-06",
-      "title": "17. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-06",
-      "title": "18. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-07",
-      "title": "13. What the notebook verifies",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-07",
-      "title": "17. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-07",
-      "title": "18. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-08",
-      "title": "13. Level 2: how to use the module notebook",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-08",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-08",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-09",
-      "title": "13. Level 2: what the notebook makes reproducible",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-09",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-09",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-10",
-      "title": "14. The notebook as an executable contract",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-10",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-10",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-07b",
-      "title": "13. What the notebook verifies",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-07b",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-07b",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-11",
-      "title": "14. What the notebook adds",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-11",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-11",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-12",
-      "title": "14. Level two: the executable notebook",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-12",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-12",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-13",
-      "title": "14. Level 2: the module notebook",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-13",
-      "title": "18. Self-check",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-13",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-14",
-      "title": "14. Level 2: what the notebook makes reproducible",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-14",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-14",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-15",
-      "title": "14. Level 2: what the notebook makes reproducible",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-15",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-15",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-16",
-      "title": "14. Practice: repair from an observation, then recover after failure",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-16",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-16",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-17",
-      "title": "14. What the level-2 notebook makes observable",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-17",
-      "title": "18. Self-check questions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-17",
-      "title": "19. Exercises",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-20",
-      "title": "17. Practice: reproduce the path, then change an assumption",
-      "reason": "reviewed_private_assessment_or_notebook_section"
-    },
-    {
-      "course_key": "modern-llms",
-      "language": "en",
-      "module_key": "module-20",
-      "title": "18. Exercises with worked solutions",
-      "reason": "reviewed_private_assessment_or_notebook_section"
     },
     {
       "course_key": "information-theory-for-ml",
@@ -2489,5 +1664,12 @@
       "title": "15.10. Exercises",
       "reason": "reviewed_private_exercise_section"
     }
-  ]
+  ],
+  "latest_refresh": {
+    "scope": "Modern LLMs only",
+    "lecture_edition": "2026-10-25",
+    "inventory": "LECTURE_EDITION_2026-10-25.json",
+    "practice": "unchanged",
+    "other_courses": "unchanged"
+  }
 }

@@ -1,6 +1,6 @@
 # Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO
 
-*Modern LLMs · Module 14 lecture · revision 2026.10.28*
+*Modern LLMs · Module 14 lecture · revision 2026.10.25*
 
 > **What this module is about.** Module 13 taught a model to imitate demonstrations. That is enough when the target behaviour can be expressed as a strong reference answer. Many alignment goals are different: two responses may both be valid yet differ in usefulness, calibration, tone, or safety. Other tasks admit a direct signal from unit tests, a theorem checker, a simulator, or an interactive environment.
 >
@@ -11,7 +11,7 @@
 > **Further study.** The module is self-contained. The author's companion course *RL for LLM* develops policy gradients, reward models, PPO, DPO, RLOO, GRPO/RLVR, interactive environments, rollout infrastructure, and reward hacking in substantially greater depth.
 >
 > **Prerequisites.** You should be comfortable with SFT from Module 13, the parameter-state memory estimates used in Modules 9 and 13, and the prefill/decode distinction from Module 10. Everything required for the derivations below is restated here, so the module remains self-contained.
-> **Reading routes.** On a first pass, follow §§1, 3–7 and 9: identify the feedback signal, then trace how it changes the probability of an answer. In §8, focus on the data each method needs. Use §§10–11 to interpret the costs, then read §15 on verifiable rewards and checker limitations. Run §14 and answer Q1–Q4 in §18; Q5 follows the reference discussion in §17. On a second pass, work through the DPO derivation, the weighting and bias questions in §§9 and 12, and the projects in §19. Treat §§2, 8 and 16–17 as a reference map; learning the method names can wait until the mechanics are clear.
+> **Reading routes.** On a first pass, follow §§1, 3–7 and 9: identify the feedback signal, then trace how it changes the probability of an answer. In §8, focus on the data each method needs. Use §§10–11 to interpret the costs, then read §15 on verifiable rewards and checker limitations. Run the [§14 notebook](/courses/modern-llms/module-14/notebooks/) and answer Q1–Q4 in [§18](/courses/modern-llms/module-14/tests/); Q5 follows the reference discussion in §17. On a second pass, work through the DPO derivation, the weighting and bias questions in §§9 and 12, and the [§19 projects](/courses/modern-llms/module-14/exercises/). Treat §§2, 8 and 16–17 as a reference map; learning the method names can wait until the mechanics are clear.
 
 ---
 
@@ -77,23 +77,67 @@ Here $\sigma(u)=1/(1+e^{-u})$ is the sigmoid, which maps a real score gap to a p
 
 ### REINFORCE: reduce variance without changing the expectation
 
-Let $J(\theta)$ be the expected reward under parameters $\theta$. For a one-step task, $J(\theta)=\mathbb E_{s,a\sim\pi_\theta}[R]$; in a multi-step task, $R$ denotes the future return. The score-function estimator gives
+Module 13 supplied a target token and a differentiable loss. Here the model first samples an answer, and a checker evaluates what it produced. The checker may run a unit test or inspect a completed task. Neither the discrete sample nor the test result needs to be differentiable. What we can differentiate is the probability of producing that answer again.
+
+Start with one fixed prompt and treat a complete response as one action. Hold the reward assigned to each possible response fixed during the policy update. A stochastic checker can be represented by its conditional expected reward. For clarity, take a finite response space, as with a length limit, and positive policy probabilities. An infinite space additionally requires conditions that justify differentiating through the sum.
+
+Let $J(\theta)$ be the expected reward under parameters $\theta$. For a one-step task, $J(\theta)=\mathbb E_{s,a\sim\pi_\theta}[R]$; in a multi-step task, $R$ denotes the future return. Before averaging across prompts, write the objective for a single fixed prompt:
+
+$$
+\begin{aligned}
+J_x(\theta)&=\sum_y\pi_\theta(y\mid x)R(x,y),\\
+\nabla_\theta J_x(\theta)
+&=\sum_y R(x,y)\nabla_\theta\pi_\theta(y\mid x)\\
+&=\sum_y\pi_\theta(y\mid x)R(x,y)\nabla_\theta\log\pi_\theta(y\mid x).
+\end{aligned}
+$$
+
+The second line differentiates the probability, not the reward. The last line uses the derivative of a logarithm: the derivative of a probability is the probability multiplied by its log derivative. That puts the result back into expectation form. Instead of enumerating every possible answer, we can sample from the current policy and average the resulting reward-weighted gradients.
+
+This is the essential route around the nondifferentiable checker. Its output becomes a coefficient on a differentiable log probability. A learned evaluator is held fixed during this update too. If a reward has an explicit dependence on the policy parameters being optimized, its derivative requires separate treatment; the argument does not license silently dropping that term.
+
+Restoring the average over a fixed prompt distribution and the general state–action notation gives
 
 $$
 \nabla J(\theta)
 =\mathbb E\left[R\,\nabla\log\pi_\theta(a\mid s)\right].
 $$
 
-Its variance can be reduced by subtracting a baseline that does not depend on the sampled action:
+A sampled answer supplies a noisy direction, not a diagnosis of which token caused success. A positive coefficient contributes in the direction that increases that answer's log probability; a negative coefficient reverses the contribution. This describes one term in a gradient. Shared parameters and other terms mean that a complete optimizer step need not change every answer's probability independently.
+
+Different samples can produce very different gradient estimates. A natural way to reduce this variation is to judge a response relative to what is normally attainable for its prompt. But subtracting a reference level seems, at first, to change the objective. Why can it be allowed?
+
+The answer comes from probability normalization. For a fixed prompt, the mean log-probability gradient is zero:
+
+$$
+\sum_y\pi_\theta(y\mid x)\nabla_\theta\log\pi_\theta(y\mid x)
+=\nabla_\theta\sum_y\pi_\theta(y\mid x)
+=\nabla_\theta 1=0.
+$$
+
+A baseline that depends on the prompt but not on the sampled answer can be taken outside that sum:
+
+$$
+\mathbb E_{y\sim\pi_\theta(\cdot\mid x)}
+\left[b(x)\nabla_\theta\log\pi_\theta(y\mid x)\right]=0.
+$$
+
+Its contribution vanishes in expectation, so subtracting an action-independent baseline leaves the expected gradient unchanged:
 
 $$
 \nabla J(\theta)
 =\mathbb E\left[(R-b)\,\nabla\log\pi_\theta(a\mid s)\right].
 $$
 
+A useful baseline can reduce the estimator's variance without moving its mean. An arbitrary baseline need not reduce variance: the identity establishes unbiasedness, not the quality of every possible reference level.
+
+Two conditions must not be confused. Action independence is a statistical property. Stopping gradients through the baseline is an implementation choice. Calling `detach` supplies the latter, not the former. If the baseline already contains the sampled answer's own reward, removing it from the differentiation graph does not remove that dependence.
+
 RLOO forms $b$ from the other completions sampled for the same prompt. GRPO uses statistics of the entire group. The latter is convenient, but it is not automatically an unbiased substitute for a value function.
 
 In these equations, $s$ is the context before an action, $a$ is the sampled action and $R$ is its reward. An action can be a complete answer or one token; in the latter interpretation, the context includes the generated prefix. The residual $A=R-b$ is called an **advantage**. Treat the baseline as a constant when taking this policy gradient. Rewards of the other responses provide an action-independent baseline when responses are conditionally independent draws from the same frozen sampler for that prompt.
+
+For a multi-step trajectory, the same reasoning is applied to actions in visited contexts, using their future return. We do not need that full machinery yet: the complete-response case already shows how a programmatic test can train a policy and why sibling responses can help. [Spinning Up: Policy Optimization](https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html) develops the general derivation and baseline conditions.
 
 ### Prospect theory: utility relative to a reference point
 
@@ -116,6 +160,8 @@ $$
 =-\log\sigma\left(r_\phi(x,y_w)-r_\phi(x,y_l)\right).
 $$
 
+The annotator has not supplied two numeric rewards. The label identifies the winner, and the model learns scores whose difference makes that outcome likely. Adding the same constant to both scores leaves the comparison unchanged. The signal therefore identifies relative differences rather than an absolute unit of usefulness. Once fitted, the evaluator can score fresh answers, but its judgments remain subject to generalization error.
+
 **Stage 3: policy optimization with PPO (Proximal Policy Optimization).** The current policy samples completions and is optimized against the learned reward while remaining close to the reference:
 
 $$
@@ -135,6 +181,8 @@ $$
 The sum runs over complete responses, with the log ratio averaged under the current policy. This is a soft incentive to stay near a fixed reference, not a bound on the size or speed of each update. PPO also modifies the objective relative to the policy that collected the current batch; §9 treats that mechanism separately. Neither mechanism repairs an incorrect reward or guarantees safe behaviour.
 
 **The critic** predicts expected future reward from the current context. Comparing the observed return with this prediction helps estimate advantage: how much better the action turned out than expected. The reward model has a different role: it scores a response using learned preferences.
+
+The critic is thus a learned reference level for the construction in §3: what should have been expected before the continuation was known? Accurately evaluating a completed answer is not the same task as predicting the return from a partial context. When we later remove the separate critic, sibling-response statistics will take over this reference-level role.
 
 The canonical pipeline contains four logical roles: policy, reference policy, reward model, and critic/value model. A production implementation may share backbones, shard states, quantize frozen models, or place the roles on separate machines. “Four models” is therefore an algorithmic description, not a claim that four independent full checkpoints must remain resident on every accelerator.
 
@@ -167,7 +215,16 @@ This does not reveal an objective human utility. It maps an empirical win rate i
 
 ## 6. DPO: eliminate the explicit reward model
 
-**DPO (Direct Preference Optimization)** starts from the KL-regularized objective in §4. For that objective, the optimal policy has the form
+**DPO (Direct Preference Optimization)** starts from the KL-regularized objective in §4. Its first useful observation is a relationship between a reward and the policy that would optimize it. Establish that relationship before trying to remove the reward model.
+
+Fix the prompt, reward function and reference policy. For the moment, allow any response distribution rather than restricting the choice to a particular neural network. With a positive regularization coefficient, the fixed-prompt objective is
+
+$$
+J_x(\pi)=\sum_y\pi(y\mid x)
+\left[r(x,y)-\beta\log\frac{\pi(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}\right].
+$$
+
+The reward term favors high-scoring responses; the second term charges for departing from the reference. We can solve this problem by rewriting the entire expression as a single KL plus a constant. Begin with a candidate distribution, then verify its optimality:
 
 $$
 \pi^*(y\mid x)
@@ -182,7 +239,27 @@ $$
 Z(x)=\sum_y\pi_{\mathrm{ref}}(y\mid x)\exp\!\left(\frac{r(x,y)}{\beta}\right).
 $$
 
-Assume this sum is finite and the reference assigns positive probability to the responses under consideration. Rearranging then gives
+Assume the normalizer is finite and the reference is positive on the responses under consideration. Insert the normalized candidate into the second argument of KL. For any admissible policy,
+
+$$
+\begin{aligned}
+\mathrm{KL}(\pi\|\pi^*\mid x)
+&=\sum_y\pi(y\mid x)
+\left[\log\frac{\pi(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}
+-\frac{r(x,y)}{\beta}+\log Z(x)\right]\\
+&=\log Z(x)-\frac{J_x(\pi)}{\beta}.
+\end{aligned}
+$$
+
+The log normalizer is common to every response, so summing its contribution multiplies it by one. Rearranging gives
+
+$$
+J_x(\pi)=\beta\log Z(x)-\beta\,\mathrm{KL}(\pi\|\pi^*\mid x).
+$$
+
+The first term is constant with respect to the policy being chosen. The second is nonpositive and reaches zero when the distributions match. This proves that the candidate maximizes the original objective. Exponentiating the reward is not an extra heuristic: it follows from combining a linear reward with a logarithmic penalty relative to the reference.
+
+This is an optimum over response distributions for a specified reward. It does not establish that a finite network trained on limited comparisons will attain it. What it supplies is the algebraic relationship we need. Solve that relationship for the reward:
 
 $$
 r(x,y)
@@ -190,7 +267,11 @@ r(x,y)
 +\beta\log Z(x).
 $$
 
-The partition term depends on the prompt but not on the completion. It cancels in a pairwise reward difference. Substituting into Bradley–Terry yields
+The partition term depends on the prompt, not on the response. It cancels in a reward difference, just as a common score offset cancels in Bradley–Terry. The preference probability can therefore be written using policy ratios without computing that normalizer.
+
+We now cross from an analytic solution to a trainable model. The ideal policy is unknown. Rather than fit a reward first and run RL to find its optimum, use the parameterized policy in the derived comparison model and fit its parameters to the observed winners. The network is not assumed to be optimal already; agreement with the comparisons is what training will seek.
+
+Taking the negative log probability of the observed choice gives the pairwise loss:
 
 $$
 \mathcal L_{\mathrm{DPO}}
@@ -230,6 +311,8 @@ $$
 z=0.1\,[1.0-(-0.7)]=0.170.
 $$
 
+Notice what the current policy itself says: the preferred answer has log probability −12, below the rejected answer's −11.5. The preferred answer is still less likely in that absolute comparison. The positive DPO margin concerns a different ordering—how much each answer's probability has changed relative to the reference. Keeping those comparisons separate is essential to reading the example.
+
 The pair loss and the derivative with respect to $z$ are
 
 $$
@@ -242,6 +325,17 @@ $$
 For pair II, keep the policy values and use reference log probabilities $(-12.8,-11.65)$ for the preferred and rejected answers. The log ratios are $0.8$ and $0.15$, a gap of $0.65$. Thus $z=0.065$ and the derivative magnitude is 0.4838. At the decision boundary $z=0$, the magnitude is 0.5; for a misordered pair with $z<0$, it exceeds 0.5 and approaches 1 as $z$ becomes very negative. A near-boundary pair therefore pulls harder than an already well-ordered pair, while a strongly misordered pair receives an even larger local weight.
 
 If pair I is evaluated with $\beta=0.5$, then $z=0.85$, the loss falls to 0.356, and $\sigma(-z)$ becomes 0.299. This number alone does not say that training has become weaker. The gradient with respect to model parameters also carries the factor $\beta$, and $\beta$ changes the scale at which policy movement is judged relative to the reference. In practice it should be tuned with KL drift, response quality, and the distribution of pair margins in view.
+
+The last link is from the scalar margin to network weights. Since the reference is fixed, the chain rule gives
+
+$$
+\nabla_\theta\mathcal L_{\mathrm{DPO}}
+=-\beta\sigma(-z)
+\left[\nabla_\theta\log\pi_\theta(y_w\mid x)
+-\nabla_\theta\log\pi_\theta(y_l\mid x)\right].
+$$
+
+Minimizing the loss moves against this gradient. A pair contributes pressure in favor of the preferred response relative to the rejected one; the scalar outside the brackets weights that pressure. Both roles of the coefficient are now visible: it multiplies the gradient directly and changes the sigmoid's argument. Shared parameters, other pairs and a finite optimizer step prevent a guarantee of independently increasing one probability while decreasing the other. What the equation does reveal is the complete learning path: comparison, reference-relative margin, pair weight, and log-probability gradients.
 
 ![VIZ m14/04 — one sigmoid, two interpretations](assets/modern-llms/en/module-14/m14_04_bt_dpo.png)
 
@@ -283,6 +377,8 @@ DPO remains a strong reproducible baseline. KTO is attractive for pointwise feed
 
 Offline pairs cannot follow the policy indefinitely. For verifiable tasks, it is often preferable to sample fresh completions from the current policy and score them immediately.
 
+The reward already says how each response performed. The group supplies a second comparison: how did this result differ from other attempts at the same prompt? This is not a vote that replaces the external checker. It is a way to construct a reference level for weighting gradients, using repeated draws from one policy under the same conditions.
+
 **REINFORCE Leave-One-Out (RLOO)** samples $G$ completions for one prompt. Completion $i$ uses the mean reward of the other $G-1$ completions as its baseline:
 
 $$
@@ -292,6 +388,8 @@ A_i=r_i-b_i.
 $$
 
 Under the usual conditional-independence assumptions, the baseline does not depend on completion $i$ and preserves the expectation of the REINFORCE gradient.
+
+The condition from §3 now has a concrete form. Hold the prompt fixed and draw the responses independently from the same frozen policy. The sibling average is random, but it contains no reward from the response whose gradient it weights and is conditionally independent of that response. Its mean gradient contribution is therefore zero. If an additional mechanism couples the samples, the words leave-one-out alone do not establish independence.
 
 **Group Relative Policy Optimization (GRPO)** instead standardizes rewards with statistics from the entire group:
 
@@ -322,6 +420,8 @@ $$
 
 The advantages sum to zero. That is a within-group centering identity, not a proof that the estimator equals the true expected advantage. Because each sample contributes to the statistics used to normalize itself, group-relative methods can introduce difficulty- and length-dependent biases.
 
+A zero sum also does not imply a zero weight update. Each advantage multiplies a different log-probability gradient vector. Scalar coefficients can cancel while their weighted vectors do not. The purpose of centering is not to say “change nothing,” but to distinguish which sampled responses should gain relative to the others.
+
 A group with identical rewards has zero variance. If rewards are Bernoulli with success probability 0.3 and $G=8$, the probability of an all-success or all-failure group is
 
 $$
@@ -332,7 +432,22 @@ Such a group contains no relative ranking signal. Skipping it, resampling it, or
 
 Our arithmetic uses the population standard deviation, `ddof=0`. Switching to `ddof=1` multiplies the advantages by $\sqrt{(G-1)/G}$, changing the update scale at the same learning rate. Equal rewards produce zero policy-gradient advantages, but a separate KL penalty can still update the model. Dropping a group also changes the averaging denominator; collecting a replacement costs additional rollouts.
 
-**Turning an advantage into an update.** Freeze the sampling policy $\pi_{\mathrm{old}}$ for a batch of trajectories. It is distinct from $\pi_{\mathrm{ref}}$: the former follows successive rollout batches, whereas the latter supplies a longer-term anchor. For completion token $t$ in answer $i$, define
+**Turning an advantage into an update.** So far we have scored complete answers, while the network produces a distribution at every token position. Autoregressive factorization connects the two: a response log probability is a sum of token log probabilities. Before introducing clipping or choosing length weights, the underlying weighted-gradient form is
+
+$$
+\begin{aligned}
+\hat g&=\frac1G\sum_{i=1}^G A_i\nabla_\theta\log\pi_\theta(y_i\mid x),\\
+\nabla_\theta\log\pi_\theta(y_i\mid x)
+&=\sum_{t=1}^{|y_i|}\nabla_\theta
+\log\pi_\theta(y_{i,t}\mid x,y_{i,<t}).
+\end{aligned}
+$$
+
+In this starting form, one response-level result weights every token contribution. That does not establish that each token caused success or deserves the same local score. The checker judged the completed result; the equation explains how that result can reach the parameters of an autoregressive model. The estimator's statistical properties still depend on how advantages were constructed. The length normalization below introduces a further choice of response weights.
+
+Freeze the sampling policy $\pi_{\mathrm{old}}$ for a batch of trajectories. It is distinct from $\pi_{\mathrm{ref}}$: the former follows successive rollout batches, whereas the latter supplies a longer-term anchor. The trainable policy initially matches the one that collected the answers. If the batch is reused for several optimizer steps, the probabilities of its recorded tokens begin to change.
+
+Compare each recorded token's new probability with its old probability at the same prefix. The ratio starts at one and measures how much that particular continuation has been strengthened or weakened. It enters a PPO-style local surrogate. It is not a full-trajectory likelihood ratio: one token ratio cannot correct arbitrary changes in the distribution of all recorded prefixes. For completion token $t$ in answer $i$, define
 $$
 \rho_{i,t}=\frac{\pi_\theta(y_{i,t}\mid x,y_{i,<t})}
 {\pi_{\mathrm{old}}(y_{i,t}\mid x,y_{i,<t})},
@@ -340,7 +455,21 @@ $$
 q_{i,t}=\min\!\left(\rho_{i,t}A_i,\,
 \operatorname{clip}(\rho_{i,t},1-\epsilon_{\mathrm{low}},1+\epsilon_{\mathrm{high}})A_i\right).
 $$
-Maximize an average of $q$, or minimize its negative, treating the old probabilities and advantages as constants. For positive advantage, increasing the ratio past its upper threshold stops improving this term; negative advantage produces the corresponding limit on decreasing the ratio. Clipping shapes the objective. It does not guarantee that every probability ratio after an optimizer step stays inside the interval.
+Maximize an average of $q$, or minimize its negative, treating the old probabilities and advantages as constants. Read the unclipped term first. Its gradient is
+
+$$
+\nabla_\theta(\rho_{i,t}A_i)
+=\rho_{i,t}A_i\nabla_\theta
+\log\pi_\theta(y_{i,t}\mid x,y_{i,<t}).
+$$
+
+When the current and old policies coincide, the ratio is one, recovering the familiar weighted-gradient direction for that token. As optimization proceeds, the ratio reflects the changed probability. Clipping then limits the extra benefit from moving too far in the direction encouraged by the advantage.
+
+For positive advantage, raising the probability improves the unclipped term. Once the ratio exceeds the upper threshold, the clipped branch stays fixed and the minimum selects it. Increasing the probability further supplies no additional benefit from this term. Movement in the wrong direction is different: if the probability falls, the minimum retains the worsening unclipped value rather than hiding it behind a lower cap.
+
+For negative advantage, reducing the probability makes the negative contribution less negative and therefore improves the maximized objective. Below the lower threshold, the clipped branch caps that improvement. Increasing the probability of the disfavored token continues to hurt. The minimum is not a symmetric limit on every change; it restricts optimistic improvement while retaining the penalty for adverse movement.
+
+Clipping shapes the objective. It does not guarantee that every probability ratio after an optimizer step stays inside the interval. Shared weights change many probabilities at once, including ones whose individual terms have already reached a plateau. [Spinning Up: PPO-Clip](https://spinningup.openai.com/en/latest/algorithms/ppo.html) develops the same two-sign interpretation.
 
 The denominator is part of the algorithm. Original GRPO averages tokens within each response, then responses: $G^{-1}\sum_i |y_i|^{-1}\sum_t q_{i,t}$. A token mean divides $\sum_{i,t}q_{i,t}$ by $\sum_i|y_i|$; the notebook's numerical example uses this normalization, as in that component of DAPO. If responses have lengths 1 and 3 and constant per-token values 2 and 0, these averages are 1 and 0.5 respectively. Padding enters neither sum. If KL regularization is used, specify its coefficient and normalization separately.
 
@@ -458,7 +587,32 @@ A serious implementation must document at least six choices:
 - freshness of rollout data;
 - evolution of prompt difficulty and completion length.
 
-A small exact example exposes one source of bias. Let $a$ be Bernoulli with $p=\sigma(\theta)$ and reward $a$. The true reward gradient is $p(1-p)$. Subtracting the full-group mean, which includes the sample itself, gives expectation $(G-1)p(1-p)/G$; a leave-one-out baseline preserves $p(1-p)$. At $p=0.3$ and $G=8$, these are 0.18375 and 0.21. This calculation does not divide by standard deviation; doing so introduces another dependence on the sampled group. The notebook enumerates all $2^8$ groups before comparing the result with simulation.
+A small exact example exposes one source of bias. Let $a$ be Bernoulli with $p=\sigma(\theta)$ and reward $a$. The true reward gradient is $p(1-p)$. Subtracting the full-group mean, which includes the sample itself, gives expectation $(G-1)p(1-p)/G$; a leave-one-out baseline preserves $p(1-p)$.
+
+To see where the factor comes from, fix the prompt and take independent responses from one policy. Their average reward is the average binary outcome. The log-probability derivative for a single outcome has a simple form:
+
+$$
+\bar a=\frac1G\sum_{j=1}^G a_j,
+\qquad
+\frac{\partial}{\partial\theta}\log\pi_\theta(a_i)=a_i-p.
+$$
+
+It is positive for success, negative for failure, and zero in expectation. The full-group mean subtracts part of the current answer's own reward, with weight equal to the reciprocal group size. All the other rewards are independent of this outcome. Separating those terms gives
+
+$$
+\begin{aligned}
+\mathbb E[(a_i-\bar a)(a_i-p)]
+&=\left(1-\frac1G\right)\mathbb E[a_i(a_i-p)]
+-\frac1G\sum_{j\ne i}\mathbb E[a_j]\mathbb E[a_i-p]\\
+&=\frac{G-1}{G}\,p(1-p).
+\end{aligned}
+$$
+
+The sibling terms vanish for exactly the baseline reason established in §3. The self-term cannot vanish: an answer's reward is related to its own score gradient. Leave-one-out excludes that reward from the baseline and therefore preserves the full expected gradient. Averaging the contributions across the group leaves these expectations unchanged.
+
+At $p=0.3$ and $G=8$, these are 0.18375 and 0.21. This calculation does not divide by standard deviation; doing so introduces another dependence on the sampled group. The notebook enumerates all $2^8$ groups before comparing the result with simulation.
+
+With a fixed group size, this narrow example changes only a constant scale. It does not show that a learning-rate adjustment repairs every difference introduced by GRPO. A random standard deviation, group selection and length normalization can change the relative weights of prompts and responses. It is worth separating two questions: whether an estimator matches the gradient of the original objective, and which objective the chosen weighting actually defines.
 
 Dr. GRPO uses a constant token denominator $G L_{\max}$ and removes group-standard-deviation reward scaling. A constant denominator differs from both a response mean and a mean over the actual number of generated tokens. Consequently, “GRPO” alone is not enough information to reproduce a training run.
 

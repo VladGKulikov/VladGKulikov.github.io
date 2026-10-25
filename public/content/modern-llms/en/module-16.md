@@ -14,7 +14,7 @@
 
 **First reading.** Follow the system in Sections 1–4, count the cost of one image in Sections 6–7, then connect resolution, video, and speech in Sections 9–12. Finish with Sections 15–17 and 20. Model names in the historical overview are signposts; their mechanisms are introduced later. At this stage, a contrastive encoder means an encoder trained to give matching images and captions nearby vectors.
 
-**Second reading.** Work through the loss in Section 5, connector training in Section 8, and the executable experiments in Sections 13–14. Use Section 19 to check whether you can explain each result from its assumptions, including the complete pixels-to-answer experiment.
+**Second reading.** Work through the loss in Section 5, connector training in Section 8, and the code in Section 13 together with the [Section 14 notebook](/courses/modern-llms/module-16/notebooks/). Use the [Section 19 exercises](/courses/modern-llms/module-16/exercises/) to check whether you can explain each result from its assumptions, including the complete pixels-to-answer experiment.
 
 **Reference use.** Sections 6–8 and 11 hold the numerical examples, Section 16 records dated source evidence, and Section 17 provides a configuration-reading procedure. The teaching video budget uses exactly 256,000 positions; a vendor's “256K” label may refer to a different exact limit.
 
@@ -109,6 +109,8 @@ The connector’s location determines where the visual cost appears.
 
 Modules 2–3 used “token” for a discrete ID that selects a row from an embedding table. A visual token often means a continuous feature vector occupying one sequence position. The projector can supply that vector directly, without assigning it an ID in the text vocabulary. Both occupy positions, but their representations are obtained differently. Section 10 will introduce visual codecs that do produce discrete indices.
 
+Matching the vector width makes the tensors connectable; it does not make the information usable. An independently trained vision encoder and LLM need not organize their representations in compatible ways. The connector must learn to supply evidence that this particular decoder can use, not merely an array of the right shape. For now, separate that learning problem from the architectural choice of where to connect the components. Section 8 will follow the training signal through the connection.
+
 **Decoder-stream insertion.** Projected visual vectors become ordinary positions next to text embeddings. The design is simple and uses the decoder’s existing self-attention machinery, but every visual position lengthens the sequence and may create K/V state in every layer. Section 7 uses this contract.
 
 **External visual memory.** Flamingo-style cross-attention keeps visual features outside the text stream. The language stack periodically reads them. Sequence length pressure is reduced, but the model now carries a second attention path and a separate visual memory.
@@ -119,7 +121,9 @@ The modular design also changes deployment choices. The vision encoder can be re
 
 ## 5. CLIP, SigLIP, and worked example C: reading InfoNCE numerically
 
-A small connector can work because the vision encoder has already been shaped by language supervision. InfoNCE makes that statement precise.
+A small connector has a useful starting point when its vision encoder already represents meaningful content rather than raw pixel values. CLIP supplies one way of learning such representations. To understand what it supplies—and what it does not—start with the task before the loss.
+
+Each training image comes with a known caption. The image must identify that caption among all the captions in the batch; the caption must identify its image among all the images. These are two classification problems whose alternatives are supplied by the batch itself. Neither problem asks the model to generate a caption. The immediate goal is to distinguish a matched pair from the other combinations.
 
 Let normalized image embeddings form matrix $I$, normalized text embeddings form $T$, and define
 
@@ -166,7 +170,11 @@ SigLIP assigns each pair a label $y_{ij}\in\{-1,+1\}$ and a logit $z_{ij}=t\,s_{
 
 The temperature experiment also has a condition worth testing: the matched pair must already rank first. If a wrong caption has the highest score, lowering the temperature makes the error more confident and raises the loss. Semantically equivalent captions can become false negatives, so supervision quality remains part of the mechanism.
 
-Contrastive learning explains semantic compatibility. It does not determine how many visual features reach the decoder. That is the next accounting step.
+There are two boundaries to keep in view. First, CLIP aligns its vision tower with its own text tower. That text encoder is not automatically the LLM we intend to attach. A useful image–caption geometry does not establish compatibility with an arbitrary language decoder's internal representations; the new connection still has to be learned.
+
+Second, each row of $I$ above represents a whole image for contrastive matching. The visual Transformer also contains a sequence of spatial features. A LLaVA-style connector can take those features from a chosen encoder layer rather than repeat the single pooled image vector. Self-attention lets a spatial feature incorporate its surroundings, so it is not an isolated patch with a word label attached. One image vector in the contrastive loss and hundreds of visual positions in the language model are therefore different uses of the encoder, not inconsistent counts. [LLaVA architecture](https://arxiv.org/abs/2304.08485)
+
+Contrastive learning helps explain why the representations carry useful semantics. The chosen encoder output and processor determine how many representations continue downstream. We can now turn image resolution into an explicit position count.
 
 ## 6. Worked example A: three ways to spend visual tokens
 
@@ -258,9 +266,15 @@ parameters are trainable in the projector. The MLP changes feature space, not se
 
 Keeping position count does not guarantee preserving all information: the MLP is a learned transformation, not necessarily an invertible map. It transfers the full position count into the language stack.
 
+The same MLP acts at every spatial position. It does not look up the nearest word or assign a required verbal label to each patch. Its output remains a continuous vector for the decoder's attention layers to use. The projector's layer widths determine its parameter count; the image determines how many positions must pass through those parameters.
+
 ### Q-Former or resampler: purchase compression before the decoder
 
 BLIP-2 uses learned queries that cross-attend to a larger visual feature set. The number of output queries becomes an explicit information bottleneck. A high-resolution image can still produce a short decoder sequence.
+
+Here a query is a learned vector, not a natural-language question from the user. Cross-attention compares it with keys derived from the visual features and incorporates a weighted combination of their values. The architecture fixes how many queries begin this process, but the resulting representations depend on the image. A fixed output length therefore says nothing about the output being fixed in content.
+
+Nor is this simply a rule that keeps a few patches and discards the rest. One output position can combine evidence from many input positions. It need not represent exactly one object or a predetermined region; training determines which combinations help the downstream task. [BLIP-2's Q-Former](https://arxiv.org/abs/2301.12597)
 
 The saved decoder cost is paid in two ways: extra connector computation and the risk that a small query set omits a fine detail needed by the task. Query count is therefore both a systems parameter and an assumption about evidence complexity.
 
@@ -268,7 +282,29 @@ The saved decoder cost is paid in two ways: extra connector computation and the 
 
 Flamingo leaves visual features in a separate memory and inserts gated cross-attention into the language stack. This avoids treating every image feature as an ordinary text position, but introduces a second state path and modifies the decoder architecture.
 
-Now consider the module’s LLaVA-style training scenario:
+We can now count connector parameters and locate their cost, but one question remains: **what makes the connector carry information that helps the answer?** Follow a single training demonstration through the MLP route. This is the LLaVA-style case, not a common training recipe for all three architectures above.
+
+The demonstration supplies an image, a text request, and a reference answer. The encoder produces visual features, the projector transforms them, and the LLM consumes the projected positions alongside the request. Training then uses the autoregressive task from Module 13. The prediction at each answer position is conditioned on earlier reference tokens, not on the target token itself, and is scored against that known target.
+
+Let $X$ be the image, $q$ the request, and $y$ the answer. Write the vision encoder as $E_\psi$, the projector as $P_\phi$, and the LLM parameters as $\theta$. For an answer with $T_y$ target tokens, the path is
+
+$$
+\begin{aligned}
+V&=E_\psi(X),\qquad Z=P_\phi(V),\\
+\mathcal L(\phi;\theta,\psi)
+&=-\sum_{t=1}^{T_y}\log p_\theta(y_t\mid Z,q,y_{<t}).
+\end{aligned}
+$$
+
+$V$ is the encoder's feature sequence and $Z$ is the representation supplied to the language model. System markers and serialization order are suppressed only to keep the notation readable; the implementation still obeys Module 13's template contract. The expression sums the losses at answer targets. Token or example averaging is then an explicit choice. Image positions and the request provide conditioning information; they do not need target IDs in the text vocabulary.
+
+During projector-only alignment, $\theta$ and $\psi$ are fixed while the optimizer updates $\phi$. The answer loss still backpropagates through the LLM's computations to its visual input $Z$, and from there into the projector. The decoder remains the same function; the projector learns to give that function a more useful input. Freezing a weight prevents its update, not differentiation with respect to the input passing through it. This is the same distinction that mattered when gradients crossed frozen layers to reach a LoRA adapter.
+
+No one has supplied a target embedding for every image patch. The target is the answer, and the connector is learned through the effect its output has on predicting that answer. In this recipe, **feature alignment** is therefore not another name for CLIP's contrastive objective. It is compatibility learned through conditional text prediction. A falling loss alone still does not establish that the system uses visual evidence rather than textual shortcuts; that requires evaluation where the image matters. [LLaVA training](https://arxiv.org/abs/2304.08485)
+
+The two training stages now have distinct purposes. Image–description pairs first establish a usable connection between frozen components. Multimodal instructions then teach the system to use the connection in response to requests rather than only describe an image. In the LLaVA-style recipe, the latter stage updates the projector and the language model while leaving the vision encoder frozen. Other systems can make different choices about which components to train. [LLaVA-1.5](https://arxiv.org/abs/2310.03744)
+
+With those roles clear, we can price the two stages in the module's teaching scenario:
 
 - 558K alignment pairs at an assumed 600 tokens each;
 - 665K multimodal instruction examples at an assumed 1,000 tokens each.
@@ -277,7 +313,7 @@ In $C\approx6ND$, $N$ is the language-model parameter count, $D$ is the number o
 
 For one common accounting convention, apply $6ND$ to a 7B model in both phases and divide by 990 TFLOP/s at MFU 0.4. The two estimates round to 9.864 and 19.592 hours. Adding before rounding gives a total of 29.455 H100-equivalent hours.
 
-That number is a **dense-equivalent teaching scenario**, not measured LLaVA wall time. Frozen LLM weights need neither weight gradients nor optimizer state during alignment, but backward computation through input activations is still required to train the projector. Wrapping the whole LLM in `no_grad()` would sever that path. Counting only the projector's 21 million parameters therefore also understates the work. Conversely, real training includes data loading, communication, and imperfect utilization.
+That number is a **dense-equivalent teaching scenario**, not measured LLaVA wall time. The gradient path above explains why alignment is not identical to full fine-tuning: it avoids weight gradients and optimizer state for the frozen LLM, but still needs backward computation through its input activations. Wrapping the whole LLM in `no_grad()` would sever the projector's connection to the loss. Counting only the projector's 21 million parameters therefore also understates the work. Conversely, real training includes data loading, communication, and imperfect utilization.
 
 The calculation answers a narrower architectural question: why can attaching trained components be orders of magnitude cheaper than multimodal pretraining from scratch?
 
@@ -307,6 +343,8 @@ This also prepares the next question. A semantic encoder can discard nuisance de
 Image understanding rewards invariance. To answer “what is in the scene?”, the representation should ignore many pixel-level changes. Image generation and editing reward the opposite property: texture, layout, and high-frequency details must remain recoverable.
 
 The term **unified** therefore needs a qualifier. Are tokens unified? Is the Transformer shared? Is training joint? Or is only the product interface unified?
+
+What counts as nuisance detail depends on the question. The tiny text in Section 9 may be the entire point of an understanding task, and moving one symbol can change a table's meaning. The conflict is not that understanding always tolerates a coarse image. An understanding representation must retain distinctions relevant to the request; a generative representation must also support reconstructing details of the output itself. Those demands overlap, but they are not identical.
 
 ### Chameleon: one discrete stream
 
@@ -371,6 +409,8 @@ Whole frames do not necessarily fill the allocation. With 437 frames, actual vis
 
 The real question is not merely whether the context is large enough. It is which events deserve representation. Uniform sparse sampling can miss a short but critical event. Dense sampling preserves it while displacing other evidence. Practical systems therefore combine variable frame rate, temporal patching, near-duplicate removal, key-event selection, local temporal attention, hierarchical summaries, or external memory.
 
+These techniques change different terms in the cost. Frame selection determines which moments are represented at all. Spatial or temporal compression reduces how many positions describe the retained evidence. Local attention limits interactions between positions; it does not by itself remove those positions, and its KV consequences depend on the implementation. Summaries and external memory change how and where the history is retained. A claimed saving therefore needs an object: fewer input positions, fewer interactions, or less persistent state.
+
 A context-window number does not tell us what survived the selection policy. The Qwen3.5-Omni report, for example, states more than ten hours of audio but 400 seconds of 720p video at one frame per second. Different modalities run at different effective token rates even within one system.
 
 Video therefore introduces an **evidence-selection obligation**. Images ask how much detail to preserve; video first asks which moments should receive tokens at all. Streaming speech adds a second clock: the signal keeps arriving while output audio advances at its own rate.
@@ -388,11 +428,21 @@ A **neural audio codec** provides a route back to sound. Its encoder produces ve
 
 Qwen2.5-Omni offers a clear division of labor.
 
+Follow the path to the first playable chunk rather than imagine the whole response appearing at once. The system first needs enough input evidence to begin an answer. The language component develops its content, the speech component creates an acoustic representation, and waveform reconstruction turns that representation into samples ready for playback. Later parts of the answer may still be under construction. Streaming overlaps work on successive portions; it does not remove the dependencies between components.
+
 The **Thinker** consumes text, images, video, and audio and produces text tokens and hidden representations. Its visual and audio encoders can process blocks for streaming input. **TMRoPE (Time-aligned Multimodal RoPE)** addresses the input clock by assigning compatible temporal coordinates to audio and video while preserving visual spatial coordinates.
+
+Processing order and event time are not the same coordinate. A video fragment and its accompanying sound can produce different numbers of representations and enter computation in separate blocks. Compatible timestamps let the model relate them to the same moment in the recording. They do not prescribe how many acoustic codes are needed to speak the next word; that belongs to the output path.
 
 The **Talker** addresses output. It consumes Thinker representations and autoregressively produces discrete audio-codec tokens. A sliding-window Diffusion Transformer (DiT) reconstructs waveform chunks without waiting for the entire response, reducing time to first audio.
 
+A Talker output token is not yet playable sound. It is a code, not a sequence of amplitudes. To produce the first packet, waveform reconstruction needs enough codes for that chunk and whatever local context the reconstruction method requires. A bounded window allows that work to finish before all later codes exist. Playback can then proceed while the system generates the continuation. This is why the Talker and the waveform renderer are distinct computational responsibilities. [Qwen2.5-Omni](https://arxiv.org/abs/2503.20215)
+
+The connection to the Thinker is not simply “wait for a complete text, then read it aloud.” Hidden representations let speech production begin as content becomes available. Early output must still stay grounded in that available content. Time to first sound therefore follows the dependencies across the pipeline, not just the rate at which the Talker predicts codes.
+
 Qwen3.5-Omni retains the Thinker–Talker split, scales both components with Hybrid-Attention MoE, and adds **ARIA (Adaptive Rate Interleave Alignment)**. ARIA is not another name for temporal position encoding. It coordinates text and speech streams whose tokenizers advance at different and changing rates. TMRoPE locates input events; ARIA synchronizes output production.
+
+The need for alignment follows from what the units represent. Text tokenization divides a written form; audio codes describe sound over time. A text token can be part of a word, while the duration of speech also depends on content, pace, and pauses. There is no general rule assigning a fixed number of speech codes to every text token. The output path must relate progress through the text to progress through its acoustic realization without forcing both streams to advance at one rate. ARIA addresses that relationship within the answer, not the timestamp of an input event. [Qwen3.5-Omni speech generation](https://arxiv.org/abs/2604.15804)
 
 Follow the waveform path all the way through the version boundary. Qwen2.5-Omni uses sliding-window diffusion reconstruction. Qwen3.5-Omni instead uses residual vector quantization (RVQ): successive codebooks approximate what earlier books have left unexplained. A multi-token prediction (MTP) module predicts the residual codes, and a causal Code2Wav convolutional network reconstructs the waveform. It also supplements temporal position encoding with explicit timestamp strings. A shared Thinker–Talker name does not make those implementations identical.
 
@@ -408,7 +458,7 @@ That design determines what must be measured. Voice interaction needs more than 
 - audio–video synchronization;
 - voice similarity where cloning is supported.
 
-Sections 13 and 14 now freeze the minimal mechanics—patch geometry, KV cost, and frame capacity—before we return to audio as a general temporal modality and compare public architectures.
+Section 13 and the [Section 14 lab](/courses/modern-llms/module-16/notebooks/) now freeze the minimal mechanics—patch geometry, KV cost, and frame capacity—before we return to audio as a general temporal modality and compare public architectures.
 
 ## 13. Code level 1: geometry before frameworks
 
@@ -488,6 +538,8 @@ F=\left\lceil\frac{L}{h}\right\rceil=600.
 $$
 
 Windows overlap, so multiplying their count by their width does not recover the original signal length. A real-input Fourier transform provides 201 frequency components per window. Keeping their magnitudes produces a $600\times201$ feature matrix. This small spectral front end is inspectable; it is not a replica of Whisper's or Qwen's encoder.
+
+The number 201 comes from spectral symmetry, not from another learned compression stage. For a real signal, positive- and negative-frequency components form complex-conjugate pairs. With an even window length, the non-redundant half includes both zero frequency and the Nyquist frequency, giving $400/2+1=201$ components. Keeping only their magnitudes is a separate front-end choice: it discards the phase information in the complex spectrum. [NumPy's real-input transform](https://numpy.org/doc/stable/reference/generated/numpy.fft.rfft.html)
 
 Average successive groups of four frame vectors. The result has $\lceil600/4\rceil=150$ positions, each of width 201. For another input length, a final short group is averaged over its existing frames only. Position count and feature width are separate axes. If those positions are projected into the Section 7 decoder, their KV costs $150\cdot128/1024=18.75$ MiB, excluding front-end and projector work.
 

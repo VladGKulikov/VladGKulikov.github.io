@@ -573,6 +573,9 @@ def module_document(
         module_key=module_key,
         context=context,
     )
+    if course_key == "modern-llms":
+        # Lecture navigation must stay on the current host, including mirrors.
+        markdown = re.sub(r"\]\(https://vladkulikov\.com/((?:ru/)?courses/)", r"](/\1", markdown)
     relative_path = Path(course_key) / language / f"{module_key}.md"
     destination = context.content_root / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -617,6 +620,16 @@ def build_modern(boundary: dict[str, Any], language: str, context: BuildContext)
         number = int(module["number"])
         source_file = root / module["lectures"][language]
         raw = source_file.read_text(encoding="utf-8")
+        if module.get('lecture_layout') == 'standalone-2026-10-25':
+            # This edition separates unchanged practice into manifest-listed sources.
+            # Its chapter/appendix headings must not be filtered by old section numbers.
+            h1 = H1_RE.search(raw)
+            documents.append(module_document(
+                course_key=course_key, language=language, module_key=f"module-{module['id']}",
+                position=float(number), title=h1.group(1), source_file=source_file,
+                source_root=root, markdown=raw, context=context,
+            ))
+            continue
         preamble, sections = split_h2(raw)
         expected = MODERN_EXPECTED_SECTIONS.get(number, 20)
         if len(sections) != expected:

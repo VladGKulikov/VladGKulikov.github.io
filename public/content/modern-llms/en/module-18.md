@@ -9,7 +9,7 @@
 > The module’s frozen examples quantify the costs of these choices: 345,000 reprocessed prompt tokens versus 31,500 with prefix reuse; a 778.5 ms illustrative step; a twenty-step reliability of $0.98^{20}=0.668$; and two legitimate but different speedups—8.89× and 9.44×—for the same multi-agent schedule, depending on the denominator.
 >
 > **Prerequisites.** Module 10 supplies prefill and KV-cache economics, Module 11 supplies generation acceleration, Module 15 supplies inference-time effort, and Module 16 supplies multimodal computer interaction. Every concept required for the argument is restated here.
-> **Reading routes.** On a first pass, follow §§1–6, then §§9, 11, and 13–14. This route takes a task through the loop to a verified result and a small executable experiment. Section 11 derives the probability calculation rather than assuming prior reliability engineering. On a second pass, work through context and latency (§§7–8), the implementation case study (§10), delegation (§12), and E1–E3. When building a system, return to §§15–17 for environments, evaluation, and the run passport; E4–E5 extend the notebook into projects. Figures organize the argument; the surrounding prose supplies the assumptions and limitations.
+> **Reading routes.** On a first pass, follow §§1–6, then §§9, 11, 13, and [the practice in §14](/courses/modern-llms/module-18/notebooks/). This route takes a task through the loop to a verified result and a small executable experiment. Section 11 derives the probability calculation rather than assuming prior reliability engineering. On a second pass, work through context and latency (§§7–8), the implementation case study (§10), delegation (§12), and [E1–E3](/courses/modern-llms/module-18/exercises/). When building a system, return to §§15–17 for environments, evaluation, and the run passport; [E4–E5](/courses/modern-llms/module-18/exercises/) extend the notebook into projects. Figures organize the argument; the surrounding prose supplies the assumptions and limitations.
 
 ---
 
@@ -62,7 +62,7 @@ The cost of that flexibility is uncertainty. A natural-language plan may omit a 
 
 ### An agent is a closed-loop controller
 
-A fixed workflow follows a predefined graph. An agent chooses the next action after observing the result of the previous one:
+A plan executed without looking at intermediate results can drift away from the world it was meant to change. Feedback closes that gap: an observation informs the next decision. Ordinary programs can do this too, using checks, branches, and retries. The distinction here is not that agents alone have feedback, but that the model selects part of the next step rather than leaving every choice to predefined rules. The loop can be written as:
 
 $$
 \text{state}_t \xrightarrow{\pi_\theta} a_t
@@ -71,6 +71,8 @@ $$
 $$
 
 The LLM implements only part of the policy. Validation, authorization, execution, state storage, and stopping rules sit outside it. This is why model capability and system reliability must be measured separately.
+
+Here `state` denotes the controller’s working state, not a complete copy of the world. The model receives a context assembled from that state. Following one turn of the build-repair task will show what an action actually changes and what the next model call gets to see.
 
 ### Capability security and distributed systems still apply
 
@@ -85,6 +87,18 @@ Two terms will matter throughout the loop. **Idempotency** means that replaying 
 ## 4. Anatomy of an agent loop
 
 It helps to separate the model from the **agent harness**. The model proposes what to do next. The harness decides whether the proposal is admissible, executes it, records the outcome, and constructs the next state.
+
+Return to the repository with the failing build. Before attempting a repair, the agent needs to establish which failure can be reproduced. The step context contains the user’s goal, project information already inspected, and the available test-running tool. The model uses that context to propose a call. No tests have run yet: the output is a description of an intended operation, not its execution.
+
+The harness checks that the proposal can be parsed, that its arguments satisfy the schema, and that the command is permitted in the chosen working directory. A rejected proposal must not reach the executor. The next observation should describe the rejection rather than pretend that the requested work occurred. An admissible call is executed under the specified limits and produces a result.
+
+There are now two outcomes to distinguish. The tool may have launched the test process correctly while the tests reveal a defect in the program. For a build investigation, that can be useful evidence rather than a malfunctioning tool. The harness stores the output together with the command and the file state it tested. A concise failure report and a reference to the full log may enter the next context. Merely retaining a log on disk does not make its contents visible to the model.
+
+The next decision is made from a different information state. The model can inspect the code named in the failure, compare dependency versions, or revise its explanation of the problem. An observation changes the basis for a hypothesis; it does not make the hypothesis true. The resulting proposal still needs execution and verification. This is how feedback affects the trajectory, rather than merely lengthening the transcript.
+
+Keep three objects separate: **the environment, an observation of it, and the agent’s working representation**. Files, dependencies, and processes belong to the environment. A log reports part of what happened. The selected history and plan determine what information the next decision receives. A plan can be stale and an observation incomplete. A sentence saying “the tests passed” therefore cannot substitute for evidence about the version of the code that was actually tested.
+
+The following map records responsibilities along that path. It does not require eight separate model calls.
 
 A minimal loop contains eight distinct responsibilities.
 
@@ -103,15 +117,19 @@ This decomposition turns an opaque failure into a diagnosable one. Selecting the
 
 For that reason, an agent trace should contain typed events, schema versions, budgets, permissions, and stop states—not merely a concatenated transcript.
 
+Stopping needs a reason of its own. `completed` means that the declared completion criterion was met, not merely that the model ended its answer. `blocked` can indicate an unavailable resource or a prohibited operation; `needs_user` can signal a decision that only the user may supply. Exhausting the budget ends this run without proving that the problem is unsolvable. A harness chooses its own status names, but should preserve these distinctions. Correctly denying an unsafe operation can protect the system even while leaving the user’s task unfinished.
+
 ## 5. Function calling and guided generation: syntax is only the first boundary
 
 A function-calling interface normally gives the model a name, description, and argument schema. The model emits a structured object; the client validates it, executes the handler, and returns the observation.
 
 Three layers of correctness must remain separate.
 
-**Syntax.** Guided generation masks tokens that cannot extend a string in the permitted language. A finite-state machine is sufficient for a regular language. General context-free grammars require richer parser state, such as a stack; an arbitrary grammar cannot simply be compiled into a finite-state machine. Outlines connects language constraints to the tokenizer vocabulary. Implementations support a particular subset of JSON Schema, and a token-limit interruption may leave an unfinished prefix. The returned object still needs validation.
+**Syntax.** Ordinary decoding scores possible next tokens and then selects a continuation. Guided generation inserts a constraint check between those steps. Given the prefix already produced, the constraint mechanism determines which tokens can still lead to a permitted string. It masks the other choices before selection. This is not a reminder in the prompt to “please return JSON”; an inadmissible continuation is excluded by the decoding procedure.
 
-**Semantic schema.** Valid JSON may still contain the wrong type, an unknown field, or a missing argument. A validator enforces the application contract.
+The constraint must operate on the actual tokenizer vocabulary. A token can contain several characters, and its validity depends on the prefix. The decoder therefore tracks parsing state rather than consulting one permanent list of allowed characters. A finite-state machine is sufficient for a regular language. General context-free grammars require richer parser state, such as a stack; an arbitrary grammar cannot simply be compiled into a finite-state machine. Outlines connects language constraints to the tokenizer vocabulary. Implementations support a particular subset of JSON Schema, and a token-limit interruption may leave an unfinished prefix. The returned object still needs validation.
+
+**Semantic schema.** Here the schema specifies a contract for structure and values; it does not establish the purpose of the operation. Valid JSON may still contain the wrong type, an unknown field, or a missing argument. A validator enforces that contract. Yet a correctly typed string may name the wrong file. Passing validation does not prove that the model selected the intended object or an action that advances the task.
 
 **Execution policy.** A perfectly valid `delete_file` request may be forbidden for this user or this directory. Authorization, confirmation, and side-effect policy belong outside the model.
 
@@ -152,6 +170,10 @@ $$
 $$
 
 ![VIZ m18/03 — three action representations](assets/modern-llms/en/module-18/m18_03_action.svg)
+
+What has disappeared is not the five underlying operations. It is the need to ask the model for another decision between each pair. When the dependencies and response-handling rules can already be expressed in a program, the interpreter can carry them out inside one call. Intermediate values stay in variables, and anticipated contingencies become branches.
+
+An unexpected observation may still require a new model decision. If the program does not express the appropriate continuation, control must return to the model rather than treating a longer script as a substitute for reconsideration. CodeAct supports precisely this multi-turn pattern: execution supplies feedback, and the model can revise its code or take a different action. The ratios above describe the chosen composition of operations, not a guarantee that every agent trajectory can be collapsed into one script. [CodeAct](https://arxiv.org/abs/2402.01030)
 
 CodeAct’s compactness expands the security surface. General code requires a real sandbox, not `eval` in the orchestrator process. A practical system often combines the patterns: typed calls for external side effects, sandboxed code for local computation, and a plan that can be revised after verification.
 
@@ -225,6 +247,8 @@ The value of the breakdown is diagnostic. Faster decoding does little when a slo
 
 ![VIZ m18/05 — MCP and trust boundaries](assets/modern-llms/en/module-18/m18_05_mcp.svg)
 
+Follow one exchange through the diagram. The host obtains a capability description through its client and decides whether to expose that capability to the model for this task. The model proposes a tool name and arguments; the proposal does not itself grant access. The host checks it and routes an admissible request through the appropriate client to the server. The reply comes back to the harness, which associates it with the call, records the result, and prepares the next observation. The server need not receive the entire conversation: the host controls that context boundary too. MCP connects parts of the loop without deciding the application’s goal or whether it has been achieved. [MCP architecture](https://modelcontextprotocol.io/specification/2026-07-28/architecture)
+
 The protocol reduces bespoke integration work. A capability server can be reused by multiple compatible hosts, and clients can discover descriptions dynamically.
 
 What it does **not** do is decide that a tool should be called or that its description is trustworthy. A remote server may expose a destructive operation, return untrusted text, or ask for more authority than the user intended. The host still has to enforce origin trust, scopes, read/write separation, human confirmation, audit, and the handling of server-provided instructions.
@@ -263,6 +287,8 @@ Before a model call, the client resolves settings, assembles several context sou
 
 ### Step 2. Context degrades through a ladder, not one summary button
 
+Connect this problem to Section 7 before considering the implementation. A cache makes an unchanged prefix cheaper to process. Compaction changes the input the model receives. A durable log preserves access to information left out of that input. These are separate responsibilities: keeping a full transcript does not enlarge the context window, and retaining KV does not decide which facts are safe to omit.
+
 A long coding session cannot be managed by a single instruction to “summarize the conversation.” The source-level study describes five ordered compaction stages, moving from cheap local reduction to more destructive transformation:
 
 1. **Budget Reduction** replaces oversized tool outputs with references to stored content.
@@ -272,6 +298,10 @@ A long coding session cannot be managed by a single instruction to “summarize 
 5. **Auto-Compact** asks a model to create a summary continuation as the last resort.
 
 The ordering is the design. If replacing an oversized tool result with a reference is sufficient, a full model-written summary is unnecessary. If the durable log can remain intact while the next call receives a smaller projection, audit and recovery become easier.
+
+In the build task, losing one distinction can be more damaging than losing a large block of text. A passing test may belong to the code before the latest edit. A suspected cause may be compressed into a statement that the cause is known. The next context must preserve the difference between work performed, claims checked, and obligations still open. Otherwise the model can continue a coherent narrative that no longer describes the repository.
+
+A reference to a retained log preserves access, not immediate visibility. When the next decision needs a detail, the relevant portion must be retrieved and included in the model input, just as an identifier in Module 17 did not replace the evidence text. Compaction quality therefore cannot be judged by freed tokens alone. The useful question is whether the run can resume its unfinished checks and recover the grounds for earlier conclusions.
 
 Current product documentation exposes the outer part of the same hierarchy. Root `CLAUDE.md` instructions are reintroduced after `/compact`; auto memory uses a concise `MEMORY.md` index plus topic files; details are read on demand. The source-level analysis further describes an LLM scan over memory-file headers that selects a small set of relevant files. No vector database is required for this mechanism: in the analyzed version, the core memory path was file-based, inspectable, and editable.
 
@@ -297,6 +327,8 @@ State is split by lifetime. `CLAUDE.md` carries durable project instructions. `M
 
 File edits receive checkpoints, but rollback has scope. Changes made through the tracked file tools can be restored; arbitrary shell side effects, external services, and work performed in another process require Git, idempotency, or domain-specific compensation.
 
+Rewinding the conversation does not, by itself, rewind the files. Restoring files does not make an old test result evidence for every subsequent edit. Recovery must reconcile the agent’s working representation with the actual environment and establish which earlier observations still apply. Checkpoint documentation accordingly distinguishes restoring code, restoring conversation, and restoring both; summarization does not change files on disk. These act on different states rather than providing one universal undo operation. [Checkpointing](https://code.claude.com/docs/en/checkpointing)
+
 Subagents receive separate context windows, prompts, tools, and permissions. The parent receives a compact result rather than all of the side transcript. This is not free parallelism: it introduces another authority boundary, another context budget, and a merge step. It does show that multi-context orchestration belongs to the harness rather than to one mysterious hidden state inside the LLM.
 
 ![VIZ m18/06 — the production harness](assets/modern-llms/en/module-18/m18_06_harness.svg)
@@ -317,6 +349,8 @@ Experimental branches and feature flags found in the exposed tree should not be 
 That conclusion leads directly to the next section. Without verification, idempotency, recovery, and bounded retries in the harness, a modest local error rate compounds into poor reliability over a long trajectory.
 
 ## 11. Worked example C: reliability over a long trajectory
+
+In the build task, a command can run correctly and a patch can apply cleanly without completing the user’s goal. Evidence must concern the right property of the right version: an unrelated test, or one run before the final edit, does not verify the repair. Verification also has a scope. Passing the specified tests does not prove the absence of every defect. The calculation below separates those issues: it first assumes recognizable success for required steps, then explicitly relaxes failure detection.
 
 First define success. This calculation requires every one of the $n$ steps to succeed and assumes that a verifier can distinguish success from failure. Let $S_t$ denote success on step $t$. The chain rule gives
 
@@ -366,11 +400,17 @@ This is why verification, bounded repair, checkpoints, and escalation are struct
 
 A more general one-retry expression is $p_{\mathrm{step}}=p+(1-p)q$, where $q$ is retry success **conditional on the first attempt having failed**. The earlier formula sets $q=p$. With $p=0.98$ but $q=0.2$ for a repeated bad strategy, step success is 0.984 and twenty-step success is about 0.7243. If only a fraction $d$ of failures is detected and undetected failures terminate the task, the step expression becomes $p+(1-p)dq$. With incomplete detection, $q$ here is conditional on a **detected** failure; detected cases may differ in difficulty from other failures. At $d=0.9$ and $q=0.98$, it is 0.99764, or about 0.9538 over twenty steps. This model omits false alarms.
 
-With one independent retry, expected attempts are $1+(1-p)$: the second attempt is paid for only after failure. At $p=0.95$, that is 1.05 attempts per reached step. Reliability thus has a cost, and retrying a write after a lost response may duplicate its effect. The project notebook reproduces that precise failure window.
+With one independent retry, expected attempts are $1+(1-p)$: the second attempt is paid for only after failure. At $p=0.95$, that is 1.05 attempts per reached step. Reliability thus has a cost, and retrying a write after a lost response may duplicate its effect. The [project notebook](/courses/modern-llms/module-18/notebooks/) reproduces that precise failure window.
 
 ## 12. Subagents and Amdahl’s law
 
 A **subagent** is a separately scoped worker with its own task, context, and limits whose result returns to an orchestrator. Delegation is useful when work can proceed independently—different repository modules, sources, or candidate solutions.
+
+In the repository task, independence means more than assigning different worker names. One subagent can investigate the dependency change while another examines the affected module, provided neither needs the other’s unfinished result to make progress. Each worker still needs enough initial context to know what to inspect and which actions are allowed. A brief instruction to “handle your part” does not automatically transfer the parent’s information state.
+
+The return path matters just as much. The orchestrator does not need every side-conversation, but “done” is not sufficient either. It needs the findings, the files or checks supporting them, and the claims that remain tentative. That evidence determines whether the results can be combined or whether a disagreement requires investigation. If workers propose edits, agreement between their reports does not establish compatibility between the patches. Verification must also apply to the merged repository state.
+
+Planning and merging in the following calculation stand for this work. Their durations are fixed by the scenario, not by a law that coordination always costs the same amount. In a real run they depend on task coupling and the quality of the returned results.
 
 Use the module’s scenario:
 
@@ -416,6 +456,8 @@ Current agent SDKs and products expose subagents and workflow orchestration, but
 The loop below assembles the boundaries introduced so far. Its `toolbox` contains trusted local handlers selected in advance. Each `Tool` pairs a handler with exact scalar argument types: the string “13.96” is not silently coerced to a number, and `True` is not accepted as an integer. Parsing rejects duplicate keys and numeric overflow, including valid JSON notation such as `1e309`.
 
 The separate `verify` callback checks the task criterion. An `Answer:` prefix proposes termination; only a successful check produces `completed`. A failed check enters the history for the next decision. `max_attempts` counts all action proposals, including invalid ones, while `max_steps` also bounds repeated non-action responses.
+
+This separates the model’s decision to stop from the task’s acceptance criterion. Moving the check into another function does not make it infallible: its result is only as informative as the properties it tests. The repository task would need evidence about the applied edit and the checks relevant to that edit. The compact loop below exposes the completion boundary; it is not a ready-made verifier for arbitrary software repairs.
 
 ```python
 import json
@@ -496,7 +538,7 @@ def react_loop(model, toolbox, query, verify, max_steps=10, max_attempts=6):
     return {"status": "max_steps", "events": events}
 ```
 
-The sketch assumes trusted, short-running local handlers. Checking result length after a call cannot stop a hung handler or excessive allocation. External code needs process isolation, resource limits, and timeouts; writes need authorization and a replay contract. This compact version has no durable state or aggregate history limit. The full teaching runtime adds schema-owned tool definitions, separate response and history budgets, and typed events.
+The sketch assumes trusted, short-running local handlers. Checking result length after a call cannot stop a hung handler or excessive allocation. External code needs process isolation, resource limits, and timeouts; writes need authorization and a replay contract. This compact version has no durable state or aggregate history limit. The full teaching runtime in [the §14 practice](/courses/modern-llms/module-18/notebooks/) adds schema-owned tool definitions, separate response and history budgets, and typed events.
 
 ## 15. System landscape: compare action surfaces, not logos
 

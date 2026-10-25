@@ -10,9 +10,9 @@
 
 ## Reading routes
 
-**First pass.** Follow §§1–5, then read §§6–7 for the distinction between finding a correct candidate and selecting it. Continue through §§8–12 and §§15–17. The tables initially serve to show what changes as the budget grows. Use §18 to check that you can identify the generator, the verifier, and the cost of their work.
+**First pass.** Follow §§1–5, then read §§6–7 for the distinction between finding a correct candidate and selecting it. Continue through §§8–12 and §§15–17. The tables initially serve to show what changes as the budget grows. Use [§18](/courses/modern-llms/module-15/tests/) to check that you can identify the generator, the verifier, and the cost of their work.
 
-**Second pass.** Derive the probabilities in §§6–7, reproduce the accounting in §§10–12, and run §13 together with the notebook in §14. Work through §19 with particular attention to tie policies, independence, and the difference between a budget cap and actual consumption.
+**Second pass.** Derive the probabilities in §§6–7, reproduce the accounting in §§10–12, and run §13 together with the [notebook in §14](/courses/modern-llms/module-15/notebooks/). Work through [§19](/courses/modern-llms/module-15/exercises/) with particular attention to tie policies, independence, and the difference between a budget cap and actual consumption.
 
 **Reference pass.** §§4 and 17 provide an API comparison checklist; §15 compares verification contracts. The API examples are dated observations, not a permanent model ranking.
 
@@ -99,6 +99,8 @@ The phrase can easily be overinterpreted. A visible chain of text is not guarant
 
 > A **reasoning model** is trained or deployed so that additional computation before the final answer can be used productively.
 
+The useful distinction is between a trained model and the procedure that uses it. The weights determine the continuations available for a given context. The inference procedure determines which context the next step receives, how many attempts are made, and what evidence selects the result. An allowance of extra time specifies none of those decisions by itself. Section 8 will follow this distinction through a single evolving trajectory.
+
 That property has several separable dimensions.
 
 **Representation.** Intermediate work may be exposed, hidden, summarized, placed in a dedicated message field, or represented by opaque signatures needed for continuity. A `<think>` token in a chat template establishes a format, not a capability guarantee.
@@ -118,6 +120,8 @@ A proper comparison therefore needs more than an effort label. It needs the dept
 ## 5. What DeepSeek-R1 teaches us about training reasoning
 
 DeepSeek-R1 is useful because its report separates an exploratory RL result from a deployable multi-stage system.
+
+Module 14 used this recipe to explain how training changes a policy. Here it serves a different purpose: what behavior must training make available before extra inference steps become useful? Raising a limit permits more work; it does not, on its own, teach the model to check a result or choose another route.
 
 ### R1-Zero as a controlled experiment
 
@@ -147,6 +151,8 @@ This is a good antidote to the false choice between SFT and RL. Supervised data 
 
 ## 6. Parallel scaling, worked example A: voting can get worse first
 
+Before counting votes, decide what a vote refers to. Two completions may reach the same result through entirely different reasoning paths. Self-consistency aggregates their final answers, not identical copies of their full reasoning text. We therefore extract an answer from each trajectory and normalize equivalent forms before counting them. The paths can be diverse even when their conclusions agree. [Wang et al., 2022](https://arxiv.org/abs/2203.11171)
+
 Assume that one independent completion is correct with probability
 
 $$
@@ -154,6 +160,8 @@ p=0.4.
 $$
 
 When it is wrong, the answer is uniformly distributed across six distinct distractors. We draw $N$ completions and return the most frequent normalized answer.
+
+The correct option is less likely than all errors combined, yet more likely than any one incorrect option. Voting compares those separate options; it does not merge every error into a single opposing class. That is why an individual success rate below one half does not, by itself, rule out a useful plurality vote.
 
 The procedure is still underspecified. What happens when several answers share the top count? We compare two exact policies:
 
@@ -231,13 +239,24 @@ a=p\,\mathrm{TPR}+(1-p)\,\mathrm{FPR},\qquad
 q=\frac{p\,\mathrm{TPR}}{a}.
 $$
 
-For $a>0$, the selection policy has the closed form
+The selector has two mutually exclusive routes to its output. When acceptance probability lies strictly between zero and one, all candidates are rejected with probability $(1-a)^N$. Otherwise at least one passes. Since the attempts are independent and follow the same law, a uniform choice from the accepted pool is correct with probability $q$. The filter changes the composition of that pool; the selector does no further ranking within it.
+
+If every candidate is rejected, the fallback selects a rejected candidate. Its correctness probability is $p(1-\mathrm{TPR})/(1-a)$, not the original $p$: rejection is now part of the information available. Weighting the two routes gives
+
+$$
+S_N
+=q\left[1-(1-a)^N\right]
++\frac{p(1-\mathrm{TPR})}{1-a}(1-a)^N,
+\qquad 0<a<1.
+$$
+
+The total probability of a correct candidate is the sum of its accepted and rejected parts. Using that decomposition and simplifying produces the compact expression for $a>0$:
 
 $$
 S_N=q+(p-q)(1-a)^{N-1}.
 $$
 
-When at least one candidate is accepted, a uniform accepted candidate is correct with probability $q$. If every candidate is rejected, a random rejected candidate is correct with probability $p(1-\mathrm{TPR})/(1-a)$. Weighting the two events yields the expression above. The boundary $a=1$ is read directly from the selection rule; if $a=0$, nothing is ever accepted and $S_N=p$.
+The exponent drops by one because of the conditional-probability simplification, not because one candidate escaped verification. Read $a=1$ directly from the rule: all candidates pass, so a uniform choice retains the original success probability. If $a=0$, nothing is ever accepted and $S_N=p$.
 
 Here $a=0.39$ and $q=0.36/0.39=12/13\approx0.92308$. A single candidate gives $S_1=p$; a large pool approaches $q$. TPR is the probability of acceptance given correctness, whereas $q$ reverses that conditioning. Confusing them changes the predicted limit.
 
@@ -261,6 +280,12 @@ An LLM judge should not replace a compiler or proof kernel merely because it is 
 
 Parallel inference restarts the search. Sequential inference gives one trajectory more room to evolve.
 
+Why should another step help if the model's parameters have not changed? Recall the autoregressive computation from Module 3. The next prediction depends on the prompt and the continuation already produced. An intermediate result, a chosen decomposition, or a detected contradiction becomes part of the context for later work. The same learned function is now applied to a different input.
+
+The sequence can therefore act as a working record: later steps can use results produced earlier. This does not make the record correct, or turn its wording into a faithful account of every internal computation. Section 4's qualification still applies. It does explain where a benefit can come from: a useful extra step works with an evolving state rather than merely restating an earlier conclusion.
+
+Continuing a solution and checking a completed solution consequently buy different things. Continuation develops the current assumptions. A checking call receives the candidate and a different task—test it against the question or against tool evidence. The same model may perform both calls, but their inputs and roles differ. More room in the output limit is not a substitute for choosing that organization.
+
 The s1 paper provides a clean demonstration. The authors curated 1,000 difficult, diverse, high-quality reasoning examples, fine-tuned Qwen2.5-32B-Instruct, and then controlled the length of its reasoning without another weight update. Their **budget forcing** procedure could:
 
 - extend a trace by appending `Wait` when the model attempted to finish;
@@ -268,9 +293,13 @@ The s1 paper provides a clean demonstration. The authors curated 1,000 difficult
 
 Under the reported AIME 2024 setup, increasing the budget raised s1-32B from 50% to 57%. That is evidence for one model and evaluation protocol, not a law that every task improves with every extra token. [Muennighoff et al., 2025](https://arxiv.org/abs/2501.19393)
 
-The intervention changes decoding while leaving weights fixed. Extra steps may let existing operations produce a new deduction or find a missed solution. They do not guarantee recovery of a missing fact; consulting a tool or an external source adds information through a separate mechanism.
+The intervention changes decoding while leaving weights fixed. Instead of terminating, the model gets another opportunity to apply its learned operations. It may derive something new or find a previously missed solution. The word `Wait`, however, supplies no missing external fact and does not guarantee productive continuation. A tool call or retrieved source changes the evidence in the context through a separate mechanism.
 
-Sequential compute can support several policies: continue the current derivation, insert explicit checks, revisit a branch point, alternate planning with tool execution, or stop early once evidence is sufficient. A mature system needs the last operation as much as the first. Scaling inference includes learning when *not* to continue.
+Sequential compute can support several policies: continue the current derivation, insert explicit checks, revisit a branch point, alternate planning with tool execution, or stop early once evidence is sufficient.
+
+Revisiting a branch does not necessarily erase previously emitted tokens. A single trajectory can reject an earlier assumption in text and proceed differently; an external controller can instead start another branch from a saved state. Either way, the procedure must specify the context of the next attempt and what it retains from the previous result. A larger allowance alone does not arrange that revision.
+
+A mature system needs stopping as much as continuation. Scaling inference includes learning when *not* to continue.
 
 ---
 
@@ -282,13 +311,15 @@ Extra tokens are useful only if they change the computation in a productive dire
 
 Length and correctness can correlate because harder tasks induce longer attempts. Comparing trajectories for the same prompt reduces that confounding, but still does not randomly assign length: the model partly chooses when to stop. To estimate the effect of additional budget, assign different budgets to the same prompts, repeat sampling, and hold the selection protocol fixed.
 
+This is where the anytime idea from §3 becomes useful. The newest candidate need not replace the best one checked so far. Retaining a result allows an unproductive continuation to stop without losing the earlier answer. The protection is only as sound as the comparison rule, though: if a verifier incorrectly prefers the revision, merely keeping the old answer cannot guarantee that it will be returned.
+
 **Redundant continuation.** The model may restate the same hypothesis without creating new search state.
 
 **Error accumulation.** An early false premise becomes part of the context and shapes every later step. Fluency can increase even as correctness falls.
 
 **Verifier exploitation.** A search process can optimize whatever signal it sees. If the verifier rewards persuasive form, more search may find more persuasive errors.
 
-The module notebook contains a deliberately synthetic illustration: difficult tasks improve with additional budget, while easy-task accuracy eventually declines. The curves demonstrate a possible mechanism; they are not measurements of a deployed model.
+The [module notebook (§14)](/courses/modern-llms/module-15/notebooks/) contains a deliberately synthetic illustration: difficult tasks improve with additional budget, while easy-task accuracy eventually declines. The curves demonstrate a possible mechanism; they are not measurements of a deployed model.
 
 ![VIZ m15/05 — stopping executable search](assets/modern-llms/en/module-15/m15_05_paradigms.svg)
 *Executable polynomial search: actual calls and the cost of two stopping rules; the lab is explained in §14.*
@@ -332,6 +363,8 @@ $$
 The factor of two counts a multiplication and an addition as two operations. The $2N_pT$ approximation is useful when weight-matrix multiplications dominate. It omits prompt processing, attention products over a growing context, tools, and verification. Architecture also affects which parameters do work; a MoE model's total stored parameter count cannot simply be substituted here.
 
 Linear latency follows from the assumed constant 209.4-token/s rate. Actual decode throughput depends on context length, batching, and load, with queueing and prefill added to the request. A multi-candidate system must count discarded attempts as well. The calculation still conveys the scale of the tradeoff: five seconds and five minutes support different interactions.
+
+Depth and breadth must therefore be compared under a named budget. Concurrent attempts can reduce the wait relative to running them one after another, but their work still adds up and several continuations need live state. A single long chain retains its sequential dependencies. Matching generated-token counts consequently matches neither response latency nor peak memory. The next section isolates that memory cost rather than treating it as another measure of speed.
 
 Extending a trajectory from 2K to 8K tokens adds
 
@@ -380,6 +413,8 @@ This is why the serving techniques from Module 10—paged allocation, KV quantiz
 
 ## 12. Worked example E: why adaptive allocation matters
 
+So far we have compared ways of spending a given allowance. Must every request receive the same allowance in the first place? Begin with an ideal case in which the necessary budget is known in advance. Its arithmetic will expose the opportunity; the rest of the section asks what a real controller would need to know to realize it.
+
 Suppose a workload has three classes:
 
 - 70% easy requests needing about 500 tokens;
@@ -402,13 +437,25 @@ $$
 
 This calculation assumes a perfect router and full consumption of each assigned budget. A cap is not consumption: a model allowed 32,000 tokens may stop much earlier. A real comparison must measure actual tokens and quality, including the work needed to determine the route.
 
-Possible routing signals include a cheap difficulty classifier, uncertainty after a short first pass, agreement between samples, a verifier threshold, or a signal from the environment such as passing tests.
+A deployed controller does not observe the hidden class used in the arithmetic. It can make two different kinds of decision. **Upfront routing** chooses a mode from the prompt and inexpensive features before solving begins. **Sequential control** starts with limited work and then reassesses: a candidate, a tool response, or a check supplies evidence that was unavailable at the start.
+
+Difficulty is relative to the model and the procedure at its disposal. An unfinished answer may need a longer derivation, but it may instead be trapped by an initial assumption or missing evidence. Continuing, starting another attempt, and consulting an available tool address different obstacles. Calling all of them “hard” does not tell the controller which action to buy. The distinction among sequential revisions, independent attempts, and verifier-guided search also matters in the study that opened this module. [Snell et al., 2024](https://arxiv.org/abs/2408.03314)
+
+Possible signals include a cheap difficulty classifier, uncertainty after a short first pass, agreement between samples, a verifier threshold, or a signal from the environment such as passing tests. Some can guide the initial route; others only exist once the system has done some work.
 
 The first notebook simulation precomputes all candidate labels and scores. It then asks how many entries a policy would inspect before reaching a score of 0.82 or exhausting 16 attempts. On this fixed mixture, it inspects 4.02 candidates on average and achieves 0.886 accuracy, versus 0.632 for one shot and 0.940 for selecting from all sixteen. These are policy comparisons on shared data; the vectorized simulation itself saves no generator calls.
 
-A separate program-search lab then generates candidates inside the loop and actually stops further calls. §14 explains the experiment. Choose thresholds or budgets on a calibration split and evaluate the frozen policy on held-out tasks. Tuning them using the final test answers would bias the comparison.
+The threshold 0.82 belongs to the verifier's score scale. Writing that number does not establish an equally large probability that the accepted answer is correct. That interpretation would require evidence relating scores to outcomes on suitable data. A useful threshold can also behave differently when the task mix or candidate generator changes.
+
+Read the three results as a trade rather than a free improvement. Early stopping uses fewer candidates and beats one shot, yet falls short of selection from the entire pool. It stops on evidence judged sufficient by its rule even though an unseen candidate might be better. Whether that exchange is worthwhile depends on the permitted error, latency, and cost—not on the average number of attempts alone.
+
+A separate program-search lab then generates candidates inside the loop and actually stops further calls. [§14](/courses/modern-llms/module-15/notebooks/) explains the experiment. The distinction determines what is saved: inspection of already computed entries, or generation that never happens. In the latter case, verification and the stopping decision still cost time and belong in the end-to-end accounting.
+
+Choose thresholds or budgets on a calibration split and evaluate the frozen policy on held-out tasks. The first split helps select a tradeoff; the second tests that fixed choice. Tuning the rule using the final test answers would make the comparison optimistic.
 
 Adaptive inference is therefore a classification-and-control problem under noise. A router can waste compute on easy inputs or prematurely stop hard ones. Its error costs belong in the evaluation.
+
+The budget is now more than an initial cap. Each new piece of evidence can change the choice among stopping, continuing, trying another candidate, and checking an existing one more carefully. The next useful call need not generate another solution: sometimes selection, rather than generation, is the bottleneck. That is why we next look more closely at the verifier itself.
 
 ---
 
@@ -498,13 +545,21 @@ The cost object separates newly generated KV from total KV including the prompt.
 
 A verifier is not a single architectural object. Different tasks support different evidence.
 
+Sections 6–7 fixed a selection rule; §12 then used a score to decide when to stop. We now need to ask when the score becomes available and which decisions it can support. A verdict on a completed answer helps select a finished result. Feedback on an intermediate step can redirect the search before the whole attempt has been paid for.
+
+The names below classify different aspects of verification. Outcome versus process describes what is assessed. Generative describes how the verdict is produced—possibly through an analysis before a verdict token. Reasoning inside the evaluator is another property of that procedure. These categories can overlap; they are not mutually exclusive generations of reward models.
+
 ### Exact executable checks
 
 A compiler, unit-test suite, symbolic algebra system, proof kernel, or environment simulator can give a transparent signal. Such checks may still be incomplete—tests do not cover every behavior—but their semantics are usually clearer than a learned judge.
 
+The result certifies the property actually checked. Successful compilation is not the same as satisfying the user's requirement, and passing a finite suite does not prove behavior on every input. Executable checks are valuable because the condition is explicit; whether it covers the whole task is a separate question.
+
 ### Outcome reward models
 
 An outcome model scores a complete solution. Labels are relatively cheap, but the feedback is sparse: a poor score does not identify the failing step.
+
+That fits a simple best-of-N procedure: the candidates already exist, and the system needs to choose among them. A long failed attempt has already consumed its generation budget, however. An outcome score can keep it from being returned without recovering the work spent producing it.
 
 ### Process reward models
 
@@ -512,9 +567,13 @@ A PRM scores intermediate steps. *Let's Verify Step by Step* released PRM800K, c
 
 Human annotation is not a defining requirement of a PRM. Math-Shepherd, for example, constructs process-supervision labels automatically. Changing their source does not remove the need to assess whether those labels track valid reasoning steps and generalize to new problems. [Wang et al., 2024](https://arxiv.org/abs/2312.08935)
 
+When search consults the PRM before completion, the score can help decide which branch receives further work. The benefit is not simply more detailed feedback; the decision arrives early enough to alter expenditure. A score still does not choose the action on its own. The controller must decide how strongly to trust it: a false rejection can prune a useful route, and frequent checks add cost. A PRM can also rank finished solutions, so step-level scoring alone does not specify a search algorithm. [Snell et al., 2024](https://arxiv.org/abs/2408.03314)
+
 ### Generative verifiers
 
 GenRM casts verification as next-token prediction. The model may produce a critique, while the probability of a verdict token supplies a score. This makes chain-of-thought and repeated sampling available to the verifier itself. The published experiments improved Best-of-N selection over several discriminative baselines under the paper's protocols; that result should not be universalized to every domain. [Zhang et al., 2024](https://arxiv.org/abs/2408.15240)
+
+The extra sequence is now spent checking a proposed solution rather than solving the original problem. Repeated sampling can widen the candidate pool, or it can produce several assessments of the same candidate. The latter spends computation even though the answer generator has made no new attempt. Its cost belongs beside generation cost, and its benefit should be judged by the final selected answer—not by the length or persuasiveness of the critique.
 
 ### Reasoning reward models
 
@@ -524,6 +583,8 @@ RM-R1 treats judging as a reasoning task. It generates rubrics or analyses befor
 *Verifier contracts: executable rules, outcome and process models, generative judges, and reasoning reward models.*
 
 Reasoning RL is most straightforward when rewards are objectively checkable. Creative writing, advice, and aesthetics do not have a unique ground truth; there, a learned verifier represents a preference or rubric rather than mathematical correctness.
+
+This brings us back to adaptive allocation. If the system rarely proposes a usable candidate, further generation may help. If good candidates already appear but selection loses them, additional verification deserves consideration instead. Neither expenditure is preferable by definition. Compare the complete procedure: the quality it returns and the calls paid for in both components.
 
 ---
 
@@ -605,6 +666,8 @@ This passport separates model capability from serving policy. It also prevents a
 - [Meta — Muse Spark 1.1](https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/)
 
 **Snapshot for current API details:** 11 October 2026.
+
+**Next:** [Module 16 turns to multimodal LLMs](/courses/modern-llms/module-16/). Here extra attempts, checks, and reasoning tokens consumed the budget. Next we ask how image, audio, and video representations consume it before the system begins its answer.
 
 ---
 

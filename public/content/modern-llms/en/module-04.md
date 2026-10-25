@@ -1,16 +1,20 @@
 # Module 4. Positional representations: from sinusoids to multiple axes
 
-*Modern LLMs · Module 4 lecture · 2026.10.6 edition · 10 October 2026*
+*Modern LLMs · Module 4 lecture*
 
-Module 3 explained how a query retrieves a weighted mixture of values. Here we hold the query and key content fixed and change their positions. What should happen when the tokens move together? What if the gap between them grows? Working through those questions gives us sinusoidal encoding, RoPE, context extension, and spatial or temporal coordinates for multimodal inputs.
+Module 3 followed a query as it compared itself with keys and gathered a weighted mixture of values. We now isolate one more part of that computation. Keep the content of the query and key fixed, but move their positions. What should happen if both tokens move together? What changes if the gap between them grows? Holding content steady lets us see exactly what the positional mechanism contributes.
+
+We will first answer those questions using sinusoidal coordinates and RoPE rotations. Then we will ask why being able to compute a rotation at a large position index is not the same as knowing how to use a long context. That distinction leads to frequency scaling and, eventually, to the spatial and temporal coordinates of images, video, and audio.
 
 You need dot products and the attention mechanism from M3. We will introduce rotation using a pair of coordinates; complex numbers provide an optional shorthand for the same operation.
 
 **Reading routes**
 
-- **First pass: follow the geometry.** Read §§1–10, using §2 as a map. The historical detail and the implementation in §4 are expandable. In §7, focus on which frequencies each method changes; return to the boundary derivation later. Finish with §§13 and 17, then try §15 without looking back.
-- **Implementation pass: reproduce the result.** Work through the numbers in §5, the ramp in §7, and the code in §§4 and 11. Run the notebook described in §12, including its cache and precision checks, and tackle §16.
-- **Reference pass.** Shapes and coordinate pairing: §4. Frequencies: §6. Scaling methods: §7. Configuration fields: §10. Multiple axes: §13. Verified implementation examples: §14. Module 5 then develops attention architecture and execution.
+**On a first reading**, follow §§1–10 in order. Use §2 as a map; the historical detail and the implementation in §4 can be opened later. The main argument runs through the geometry of rotation, the numerical example in §5, and the frequency changes in §§6–7. For YaRN, first follow which parts of the spectrum are preserved and which are slowed, then work through the transition boundaries. Finish with multimodal coordinates in §13 and the takeaways in §17.
+
+**To reproduce the computation**, return to the example in §5, the ramp in §7, and the code in §§4 and 11. The module's existing [notebooks](/courses/modern-llms/module-04/notebooks/) include cache and position-precision checks. The separate [exercises](/courses/modern-llms/module-04/exercises/) and [tests](/courses/modern-llms/module-04/tests/) provide independent practice and review.
+
+**For later reference**, use §4 for shapes and coordinate layouts, §6 for the spectrum, §7 for scaling, §10 for configuration fields, and §13 for multiple axes. The implementation map remains in §14. Module 5 then turns to attention architecture and execution.
 
 ## 1. Motivation: content attention is not an ordering mechanism
 
@@ -40,7 +44,7 @@ The history of positional encoding is largely a history of deciding where this i
 
 **Positional encoding (PE)** introduces token coordinates into the computation. **RoPE (Rotary Position Embedding)** does so by rotating pairs of coordinates.
 
-Position can change the input embedding, the projected query and key, or the score just before softmax. The last quantity is an attention logit: one number controlling a query–key connection. Each approach modifies a different step of the computation from M3.
+Recall the computation from M3. A token starts with an input vector; hidden states are projected into queries and keys; their comparison produces a logit before softmax. Position can enter at any of these points. It can be added to the input, used to transform the projected vectors, or introduced as a separate bias in the score. The table distinguishes these entry points. It is a map of design choices, not a ranking of successive generations.
 
 | Entry point | Operation | Example and section |
 |---|---|---|
@@ -49,7 +53,7 @@ Position can change the input embedding, the projected query and key, or the sco
 | Attention logit | add a distance-dependent bias | ALiBi, §8 |
 | No separate positional term | learn order-sensitive behavior from the causal mask and layers | NoPE, §9 |
 
-PI, NTK-aware scaling, and YaRN modify the RoPE frequency spectrum (§7). M-RoPE assigns coordinate pairs to several axes (§13). Treat these names as destinations on the map; you do not need their formulas yet.
+We will begin with one route through this map: how sinusoidal coordinates lead to rotating queries and keys in RoPE. Once the rotation itself is clear, choosing its frequencies becomes the next question. PI, NTK-aware scaling, and YaRN address that question in §7. M-RoPE returns to the same operation with several coordinate axes in §13. For now, the names mark questions we will reach, rather than formulas to learn in advance.
 
 ![VIZ m4/02 — branches of positional representation](assets/modern-llms/en/module-04/m4_02_pe_timeline.svg)
 *The branches differ in where and how they introduce position. A later method does not replace every earlier one.*
@@ -87,9 +91,9 @@ $$
 \cos((m-n)\theta).
 $$
 
-This identity concerns the positional vectors themselves. To understand its effect on attention, we also need to know where they enter the computation. In additive positional encoding, content and position are summed before learned projections. Cross-terms appear, so the final attention score need not be a pure function of $m-n$.
+The identity shows that absolute sinusoidal coordinates can be compared in a way that depends on relative displacement. So far, however, we have compared only positional vectors. Additive positional encoding mixes them with content embeddings before the learned projections. The resulting dot product contains content–position cross-terms, so the final attention score need not be a pure function of $m-n$. Choosing sines and cosines is only part of the design; where they enter the computation matters just as much.
 
-RoPE rotates the projected queries and keys. Picture each coordinate pair as an arrow in a plane: turning both arrows by the same angle leaves their dot product unchanged.
+RoPE changes that point of entry. It first projects the hidden states into queries and keys, then rotates their coordinate pairs. Picture each pair as an arrow in a plane. Turning both arrows through the same angle preserves their lengths and the angle between them, hence their dot product. What matters to the comparison is the difference between the applied rotations, not either arrow's orientation relative to a fixed external axis. This geometric observation is the basis of the notation that follows.
 
 **Optional complex notation.** Write the pair as $z=x_1+ix_2$, with $i$ now denoting the imaginary unit. Rotation is multiplication by
 
@@ -102,6 +106,8 @@ The common phase cancels in the inner product, leaving a rotation by the relativ
 The Fourier-features analogy remains valuable, but it should not be read too literally. Random Fourier Features sample frequencies to approximate a chosen kernel. Transformer sinusoidal and rotary frequencies are deterministic and geometrically spaced; they are an architectural basis, not a random kernel estimator.
 
 ## 4. Formalism: the frequency ladder and the rotary identity
+
+The geometry is now clear for one coordinate pair. A query or key contains many coordinates, though, and we need a rotation for every pair. RoPE does not turn them all at the same rate: some angles change quickly with position, others slowly. We will now specify that set of frequencies and connect it to the sinusoidal encoding already introduced.
 
 Here $D$ is an even number of rotated coordinates, not the residual width $d_{model}$. Full-head RoPE has $D=d_k$; additive PE uses the same frequency construction at the input-vector width. Code often calls these values `inv_freq`, because they are reciprocals of the phase denominators. A base greater than one controls how quickly frequency falls across pairs.
 
@@ -169,7 +175,7 @@ The rotation preserves pairwise norms and leaves the tensor shape unchanged. It 
 
 ### NumPy → PyTorch · B02 — RoPE: rotating coordinate pairs
 
-Implementation route. Assume a validated, nonempty floating tensor `x[..., T, D]`, even D, nonnegative integer IDs `[T]`, and a finite base greater than one. Adjacent coordinates form pairs. The notebook adds input validation (§12).
+Implementation route. Assume a validated, nonempty floating tensor `x[..., T, D]`, even D, nonnegative integer IDs `[T]`, and a finite base greater than one. Adjacent coordinates form pairs. The existing [module notebook](/courses/modern-llms/module-04/notebooks/) adds input validation.
 
 ```python
 import numpy as np
@@ -297,7 +303,7 @@ The identity is exact for fixed $q$ and $k$. In a network, those vectors still d
 
 ## 6. Reading the RoPE frequency spectrum
 
-The base parameter controls a geometric spectrum. The fastest pair is always
+The worked example showed that a common shift preserves the dot product. We now examine a different property: how quickly each pair's angle changes as distance increases. That collection of rates is the frequency spectrum. Fast pairs vary noticeably over short distances; slow pairs change over longer scales. The base parameter sets a geometric ladder of frequencies. The fastest pair is always
 
 $$
 \theta_0=1,
@@ -305,9 +311,9 @@ $$
 \lambda_0=2\pi,
 $$
 
-regardless of base. Increasing `rope_theta` therefore does not remove the fastest local phase. It mainly slows the higher-index pairs, allocating more of the spectrum to long wavelengths.
+regardless of base. Increasing `rope_theta` therefore does not slow every pair equally. The fastest pair stays fixed, while higher-index pairs slow more strongly and acquire longer wavelengths. The number of pairs does not change: we redistribute the scales represented by existing coordinates rather than introduce new ones.
 
-The diagnostic is $L\theta_i/(2\pi)$: turns across a **span of L position steps**, following the YaRN convention. A sequence indexed from 0 to L−1 has endpoint separation L−1. These are different quantities. Wavelengths below are measured in position steps.
+To relate this spectrum to context length, ask how many turns each pair completes over the interval of interest. The diagnostic is $L\theta_i/(2\pi)$: turns across a **span of L position steps**, following the YaRN convention. A sequence indexed from 0 to L−1 has endpoint separation L−1. These quantities must be kept distinct. Wavelengths below are measured in position steps.
 
 For $D=64$:
 
@@ -320,27 +326,29 @@ For $D=64$:
 ![VIZ m4/06 — the wavelength spectrum](assets/modern-llms/en/module-04/m4_06_wavelength_spectrum.png)
 *Wavelengths show how a base redistributes phases. Context-length guide lines are diagnostics, not a global period for the full positional vector.*
 
-Each coordinate pair is periodic. The complete representation combines many different periods. One pair returning to a similar angle does not make two full positional vectors identical. Consequently, the largest wavelength of one pair is not a hard context limit, and a small base does not imply that every position beyond that wavelength becomes indistinguishable.
+The table shows how one setting changes a whole collection of scales. Each quantity nevertheless answers a limited question. An individual coordinate pair is periodic, but the full RoPE representation combines many different periods. One pair returning to a similar angle does not make the entire positional code repeat. The largest wavelength is therefore not a hard context limit, and a turn count is not a guarantee that particular positions will be distinguishable to the model.
 
-Turn counts still convey useful information. Fast pairs sweep through many phases during training; slow pairs may cover only a small arc. Extrapolating those slow coordinates sends the model into new phase regions. That is an out-of-distribution geometry, not a mathematical prohibition. Whether the model uses it successfully is empirical.
+The picture is still useful for understanding training. Within the training range, fast pairs may sweep through many turns while slow pairs cover only a small arc. At longer distances, those slow components reach angles absent from that range. The formula remains computable, but the model encounters different combinations of positional features. Whether those combinations are useful depends on the spectrum as a whole, the training, the attention pattern, and the task. This is where context extension becomes a modeling problem rather than merely an evaluation of sine and cosine.
 
 ## 7. Context extension changes a spectrum, not just one number
+
+Computing a rotation at a large index is straightforward. Preserving a useful relationship between content and distance is harder. We can keep the frequencies and move beyond familiar phase ranges. Or we can slow the rotations so that a longer interval fits inside the old range, at the cost of changing short-distance geometry as well. The following methods make different choices within this trade-off.
 
 Let $L_0$ be the reference length used to set the frequencies, and let $s\ge1$ be an extension factor. We want to process $sL_0$ tokens. In a research experiment, $L_0$ is often the training length; a configuration field alone does not establish the full training history (§10).
 
 ### Position Interpolation
 
-Position Interpolation maps $m$ to $m/s$. Equivalently,
+The most direct choice is to compress the entire position scale. Position Interpolation maps $m$ to $m/s$. The token retains its place in the sequence, but receives a smaller rotation angle. Equivalently,
 
 $$
 \theta'_i=\frac{\theta_i}{s}.
 $$
 
-The new range stays inside familiar angular values. The cost is that all local phases are compressed as well. Fine-tuning is normally used to help the model adapt to this altered geometry.
+The longer interval now fits inside the previous angular range. No tokens have been removed and the sequence has not become shorter; only the scale used to construct rotations has changed. Neighboring positions are closer in phase in every rotary pair. We gain range by altering local geometry too. The original method uses fine-tuning to help the model adapt to that change.
 
 ### Static NTK-aware scaling
 
-A widely used static heuristic changes the base to
+Uniform compression raises a natural question: must fast pairs be changed as strongly as slow ones? Section 6 showed that increasing the base affects them differently. A widely used static NTK-aware heuristic exploits that property by changing the base to
 
 $$
 \mathrm{base}'
@@ -348,29 +356,29 @@ $$
 \mathrm{base}\,s^{D/(D-2)}.
 $$
 
-This leaves the fastest end of the spectrum less changed and slows the low-frequency end more aggressively. “NTK-aware” describes the motivation, not a general theorem guaranteeing safe zero-shot extension.
+Instead of one reduction factor for every frequency, we obtain a nonuniform change: fast components are affected less and slow components more. This preserves more of the original local geometry than uniform PI. The name “NTK-aware” describes the motivation, not a theorem guaranteeing safe zero-shot extension. The result still depends on the model and the chosen length and must be evaluated.
 
 Assume $s\ge1$ and $D>2$. Substituting the new base gives $\theta_i^\prime/\theta_i=s^{-2i/(D-2)}$: pair zero is unchanged, while the final pair slows by exactly s. The expression is undefined at D=2. NTK stands for Neural Tangent Kernel, a theoretical description of wide networks; this calculation uses only the stated base-change rule.
 
 ### YaRN
 
-YaRN builds an original spectrum and a fully interpolated spectrum, then blends them through a frequency-dependent ramp. A diagnostic number of rotations within the reference context determines the ramp boundaries.
+YaRN makes the distinction between frequency bands explicit. Some pairs should keep their original frequency, others should use full interpolation, and pairs between them should change gradually. The method therefore constructs both the original spectrum and the fully interpolated one, then blends them according to frequency. The number of rotations within the reference interval determines where the transition begins and ends.
 
-Define $r_i=L_0\theta_i/(2\pi)$, the number of turns over the reference span. Two thresholds, $\beta_{fast}>\beta_{slow}>0$, select the transition: fast pairs keep their original frequencies, while slow pairs use interpolation. Solving $r_i=\beta$ gives a fractional pair index:
+To decide where each pair belongs, we return to the turn count from §6. Define $r_i=L_0\theta_i/(2\pi)$, the number of turns over the reference span. Two thresholds, $\beta_{fast}>\beta_{slow}>0$, select the transition: fast pairs retain their original frequencies, while slow pairs use interpolation. To apply this rule to a frequency vector, we need boundaries in pair indices rather than in turns. Solving $r_i=\beta$ gives a fractional index:
 
 $$
 b(\beta)=\frac{D\ln[L_0/(2\pi\beta)]}{2\ln(\mathrm{base})},\qquad
 \mathrm{low}=b(\beta_{fast}),\quad \mathrm{high}=b(\beta_{slow}).
 $$
 
-A **ramp** is a linear transition clipped to the interval [0,1]:
+We can now assign each pair index a degree of movement from its original frequency toward the interpolated one. A **ramp** makes that transition linear between the boundaries and clips it to the interval [0,1]:
 
 $$
 w_i=\operatorname{clip}\!\left(\frac{i-\mathrm{low}}{\mathrm{high}-\mathrm{low}},0,1\right),\qquad
 \theta_i^\prime=(1-w_i)\theta_i+w_i\frac{\theta_i}{s}.
 $$
 
-Zero selects the original frequency; one selects full interpolation. Intermediate weights blend the two. Our example has distinct boundaries inside the spectrum; the teaching implementation rejects a collapsed range.
+Zero selects the original frequency; one selects full interpolation. Intermediate weights blend the two values. The coordinate pairs themselves are unchanged—what changes is the rotation rate assigned to each. Our example has distinct boundaries inside the spectrum; the teaching implementation rejects a collapsed range.
 
 For the module scenario
 
@@ -397,20 +405,20 @@ Those values still divide the integer-indexed pairs into three groups:
 - 9 pairs occupy the transition ramp;
 - 14 pairs are fully interpolated.
 
-The generic Hugging Face YaRN utility also offers `truncate=True`, which rounds the boundaries to `low=8`, `high=18`. `GptOssConfig` sets `truncate=False`, so the continuous values are the faithful default for this model.
+Once the ramp is understood, its implementation convention can be considered separately. Boundaries may be fractional even though pair indices are integers: the formula simply evaluates a transition weight at each integer index. The generic Hugging Face YaRN utility also offers `truncate=True`, which rounds the boundaries to `low=8`, `high=18`. `GptOssConfig` sets `truncate=False`, so the continuous values are the faithful default for this model. Both conventions express the same transition idea, but their intermediate weights differ.
 
 In this particular configuration, the fully interpolated set coincides with pairs that complete less than one turn in the reference context. That is a property of the chosen boundary formula and hyperparameters, not a universal rule that one full turn makes extrapolation “safe.”
 
 ![VIZ m4/07 — diagnostic YaRN zones](assets/modern-llms/en/module-04/m4_07_rotations_zones.png)
 *Turn counts help define the teaching YaRN ramp. The zones mean original, transition, and interpolated—not mathematically allowed and forbidden.*
 
-YaRN also adjusts attention concentration. **Temperature** divides logits before softmax; lowering it makes a fixed set of scores more uneven. An `attention_factor` can implement this by scaling the rotated vectors. The original gpt-oss implementation and its Hugging Face adaptation use this approach. For $s>1$, both checked paths use
+So far we have changed angles: how far each coordinate pair turns. YaRN also has a separate adjustment to the scale of the scores entering softmax. Recall **temperature** from M3: it divides the logits, and a lower temperature makes a fixed set of scores produce a more concentrated distribution. An `attention_factor` can implement such a change by scaling the rotated vectors. The original gpt-oss implementation and its Hugging Face adaptation take this approach. For $s>1$, both checked paths use
 
 $$
 a=1+0.1\ln s.
 $$
 
-At $s=32$, $a=1.346574$. Both checked implementations apply this factor to computed rotary cosines and sines. If both rotated queries and keys therefore receive the same factor, their dot product is scaled by
+At $s=32$, $a=1.346574$. To understand what this number does, follow it through the computation. Both checked implementations multiply the rotary cosines and sines by it. The operation is now a rotation with an additional scale, not a pure rotation alone. If queries and keys both receive that factor, it enters their dot product twice, giving the score multiplier
 
 $$
 a^2=1.813260.
@@ -422,12 +430,16 @@ Another runtime may move the equivalent scaling into queries, keys, or the atten
 
 ### Beyond one scaling recipe
 
+PI, the static NTK-aware rule, and YaRN illustrate three ways to reshape one starting spectrum. They do not exhaust the choices. Scaling factors can be selected more flexibly, and positional adjustments can be combined with different attention patterns. The methods below continue that exploration of trade-offs rather than form a single ladder of mandatory upgrades.
+
 LongRoPE searches per-dimension factors and can use different regimes for different lengths. LongRoPE2 incorporates training-aware criteria. Llama3-style scaling divides the spectrum into wavelength bands. Other models use partial RoPE, interleaved RoPE/NoPE, local attention, or length-dependent attention temperature.
 
 ![VIZ m4/08 — three spectrum transformations](assets/modern-llms/en/module-04/m4_08_scaling_methods.png)
 *PI, static NTK-aware scaling, and YaRN reshape the same starting spectrum differently. The figure compares geometry, not guaranteed downstream quality.*
 
 ## 8. ALiBi: a distance prior in the logits
+
+Until now, position has entered the comparison by rotating vectors. Return to the map in §2: distance can also enter later, after the content comparison, as a direct change to the logit. That route needs no frequency spectrum. It is an alternative answer to the original positional question, not another RoPE scaling recipe.
 
 ALiBi—Attention with Linear Biases—leaves queries and keys untouched. Head $h$ receives a slope $m_h$, and causal attention uses
 
@@ -451,6 +463,8 @@ ALiBi's strength is structural simplicity and a bias that continues to any dista
 One common measure of next-token prediction is **perplexity**, $\mathrm{PPL}=\exp(\overline{\mathrm{NLL}})$, using M3's mean negative log-likelihood in nats per evaluated token. On the same data, with the same tokenizer and evaluation mask, lower perplexity means that the model assigns higher probability, on average, to the observed continuations. Maintaining this score at longer lengths does not establish reliable retrieval from the middle of a document or reasoning across distant evidence. Those require separate evaluations.
 
 ## 9. NoPE and hybrid position mechanisms
+
+We can take the question one step further. What order information remains if neither rotations nor positional biases are supplied? The answer depends on the attention structure itself. At the start of the chapter, we distinguished unmasked bidirectional attention from a causal model whose access to the future is restricted. That distinction now becomes central.
 
 NoPE—No Positional Encoding—removes an explicit positional term. A causal model is not deprived of all order information: the mask, depth, and recursively constructed hidden states expose asymmetries tied to prefix length.
 
@@ -499,7 +513,9 @@ Converted Hugging Face configurations may express the same information through a
 
 ## 11. Level-one code: explicit shapes and explicit scaling placement
 
-The following NumPy code is designed for inspection rather than fused execution. It validates head width, positions, frequency shape, and the YaRN ramp. The pairing convention is the split-half `rotate_half` layout used by Llama-like implementations.
+We can now bring frequencies, positions, and rotations together in one computation. The following NumPy code is designed for inspection rather than fused execution. It validates head width, positions, frequency shape, and the YaRN ramp.
+
+Notice the coordinate-layout convention before reading the code. Section 4 and the worked example in §5 used adjacent pairs. Here we use the other layout already discussed: split-half `rotate_half`, as found in Llama-like implementations. The first half of the vector is paired with the second. The rotation mathematics is unchanged, but comparing both layouts requires the corresponding coordinate permutation.
 
 The compact `apply_rope` below requires equal Q/K shapes and one shared position vector. It represents a full sequence block; the notebook rotates queries and cached keys separately when their lengths differ. This core calculates in float64 and returns the YaRN amplitude for the caller to apply. It covers the declared scenario, not every library variant.
 
@@ -599,6 +615,10 @@ The last function returns both the rotary factor and the score factor implied wh
 
 ## 13. M-RoPE and time-aligned multimodal position
 
+So far, a position has been one number: the token's place in a text sequence. An image needs more. Its elements may be processed in a one-dimensional order, but their spatial locations have both a row and a column. Video adds time. We need to preserve those relationships without confusing an element's place in the processing stream with its coordinates in the original data.
+
+The familiar rotation can accommodate this distinction. Rather than give every coordinate pair the same text index, we can assign different groups of pairs to different axes. An angle still comes from a position and a frequency; what changes is which position each group uses.
+
 M-RoPE—Multimodal Rotary Position Embedding—assigns different sections of rotary channels to temporal, height, and width coordinates. A single attention operation can therefore represent text and visual geometry without switching to a separate positional mechanism.
 
 Text uses the same ID on all three axes:
@@ -624,7 +644,7 @@ $$
 (0,1,1).
 $$
 
-Video changes all three axes. Qwen2.5-VL can space temporal IDs according to real time between grid elements rather than treating frame number as the only clock.
+The small grid shows why separate coordinates are useful: moving along a row and moving along a column change different spatial axes. Video adds change along a third axis, time. Qwen2.5-VL can space temporal IDs according to real time between grid elements rather than treating frame number as the only clock. When audio accompanies the video, the time coordinate must also have a consistent meaning across the two streams.
 
 TMRoPE—Time-aligned Multimodal Rotary Position Embedding—was documented in the Qwen2.5-Omni technical report in March 2025. It aligns audio and video timestamps. In that model, one temporal ID corresponds to 40 ms. This is a model-specific time grid, not a universal definition of TMRoPE.
 
@@ -666,7 +686,7 @@ A context-window number does not identify the positional mechanism, and it does 
 
 - Bidirectional self-attention without position is permutation-equivariant. A causal mask supplies access order, not a complete distance geometry.
 - Pure sinusoidal pairs already have an exact relative dot product. RoPE inserts relative phase directly into the projected query-key score.
-- `rope_theta` redistributes a frequency ladder. A larger base introduces slower components without removing the fastest pair.
+- `rope_theta` redistributes a frequency ladder. A larger base slows some existing components while preserving the fastest pair and the number of coordinates.
 - A single wavelength or turn count is not a hard context boundary.
 - PI compresses every frequency; static NTK-aware scaling is a heuristic; YaRN blends original and interpolated spectra; other long-context families make different trade-offs.
 - `attention_factor` must be interpreted at the point where the runtime applies it.

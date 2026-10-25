@@ -13,9 +13,9 @@ abstract: >-
   a static website and its source. Code execution is not required or provided
   by the website. Course content is CC BY-NC-SA 4.0; standalone code and
   publication tooling are Apache-2.0 unless a more specific notice applies.
-version: "2026.2"
-date-released: 2026-10-16
-doi: "10.5281/zenodo.23420794"
+version: "2026.3"
+date-released: 2026-10-25
+doi: "10.5281/zenodo.23649045"
 url: "https://vladkulikov.com/"
 repository-code: "https://github.com/VladGKulikov/VladGKulikov.github.io"
 license: CC-BY-NC-SA-4.0

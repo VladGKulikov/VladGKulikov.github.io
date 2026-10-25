@@ -1,8 +1,8 @@
 {
-  "edition": "2026.2",
-  "release_date": "2026-10-16",
+  "edition": "2026.3",
+  "release_date": "2026-10-25",
   "concept_doi": "10.5281/zenodo.21877456",
-  "version_doi": "10.5281/zenodo.23420794",
+  "version_doi": "10.5281/zenodo.23649045",
   "status": "public",
   "courses": 3,
   "languages": [
@@ -11,8 +11,8 @@
   ],
   "content_license": "CC-BY-NC-SA-4.0",
   "code_license": "Apache-2.0",
-  "content_updated": "2026-10-15",
-  "archived_edition_note": "The version DOI identifies the complete bilingual 2026.2 release. Live website updates may continue independently.",
+  "content_updated": "2026-10-25",
+  "archived_edition_note": "The version DOI identifies collection 2026.3. Modern LLMs lectures and books use the October 25 text edition; the other two courses and all practice materials are unchanged from 2026.2.",
   "archive_scope": [
     "lectures",
     "illustrations",
@@ -31,6 +31,17 @@
       "release_date": "2026-08-10",
       "version_doi": "10.5281/zenodo.21877457",
       "scope": "Archived lecture texts and illustrations"
+    },
+    {
+      "edition": "2026.2",
+      "release_date": "2026-10-16",
+      "version_doi": "10.5281/zenodo.23420794",
+      "scope": "Complete bilingual collection before the October 25 Modern LLMs text revision"
     }
-  ]
+  ],
+  "book_editions": {
+    "modern-llms": "2026.3",
+    "information-theory-for-ml": "2026.2",
+    "rl-for-llm": "2026.2"
+  }
 }

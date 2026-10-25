@@ -1,26 +1,32 @@
 # Module 5. Modern Attention Mechanisms
 
-*Modern LLMs · October 2026 revision · sources checked on October 10, 2026*
+*Modern LLMs · Module 5 lecture*
 
-Module 3 built a Transformer; Module 4 supplied its sense of position. We now ask **how attention can use a long context within a limited memory and compute budget**. Three decisions matter: what to retain from past tokens, how to compute interactions with it, and which positions a query may use.
+Module 3 followed the computation that turns token vectors into contextual representations. Module 4 explained how position and distance enter that computation. We now know what attention does. The next question is what happens when it must do that work over a much longer sequence: **how can attention use a long context within a limited memory and compute budget?**
+
+There are three places to intervene. We can change what is retained from past tokens, change how the retained data is processed, or let each query use only some of the available positions. These choices organize the chapter. For each method, we will ask what becomes smaller, what is computed differently, and whether the attention result itself is meant to stay the same.
 
 **Prerequisites.** Matrix multiplication, softmax, and attention heads from M3; rotary positional embeddings (RoPE) from M4 for the MLA discussion. GPU memory terminology is introduced here.
 
 **Reading routes**
 
-- **First pass:** §§1–2 → §4 up to the implementation panel → §§5–11 → §§15–19. In §7, establish what is cached before following the algebra. Use §17 and exercises 1–4 to check that you can explain which resource each method changes.
-- **Implementation pass:** return to the expandable B04/B05 panels in §§4/6, §§12–14, and the notebook. Compare direct and streaming execution and reproduce mask and head-order errors. Exercises 6–7 connect these experiments to the derivations.
+- **First pass:** §§1–2 → §4 up to the implementation panel → §§5–11 → §§15–16 and §19. In §7, establish what is cached before following the algebra. Use the existing [module tests](/courses/modern-llms/module-05/tests/) and [exercises 1–4](/courses/modern-llms/module-05/exercises/) to check that you can explain which resource each method changes.
+- **Implementation pass:** return to the expandable B04/B05 panels in §§4/6, §§12 and 14, and the [module notebook](/courses/modern-llms/module-05/notebooks/). Compare direct and streaming execution and reproduce mask and head-order errors. Exercises 6–7 connect these experiments to the derivations.
 - **Reference pass:** §3 provides statistical connections; §§5, 9, 11, and 15 help you read unfamiliar architectures. Exercise 5 is an optional GPU project. Sources and the transition to M6 close the module.
 
 ## 1. What grows with the context?
 
 Suppose a model has processed a prompt and is generating its next token. A **query** $q$ is compared with the **keys** $k_j$ of visible positions; the resulting weights mix their **values** $v_j$. An attention head performs this operation in its own feature space. Write $H_q$ for the number of query heads and $H_{kv}$ for the number of K/V heads. Several query heads can share one set of keys and values.
 
+Notice where we have paused the model. The prompt has already been processed, but the continuation is still being built. The next step can reuse features of the earlier prefix instead of computing them all again. Reuse saves work, but requires those features to remain in memory. We begin by accounting for that persistent state.
+
 Previously computed K/V can be retained in a **KV cache**. For one sequence, $L$ identical layers, and equal key/value width $d_h$, one retained token costs
 
 $$b_{KV}=2LH_{kv}d_hb,$$
 
 where $b$ is bytes per element; the factor 2 counts both keys and values. With $L=36$, $H_{kv}=8$, $d_h=64$, and BF16 ($b=2$), this is 73,728 bytes, or **72 KiB per token**. If every layer retains all 131,072 positions, the K/V payload is **9 GiB**. Here $1\text{ KiB}=2^{10}$ bytes and $1\text{ GiB}=2^{30}$ bytes. Windows and heterogeneous layers require the layer-by-layer sum in §5.
+
+That figure describes data kept for later generation steps. The computation also creates temporary arrays: they may be discarded after a step, yet they still occupy space and have to move through the memory hierarchy. Persistent state and temporary workspace are different costs, so reducing one need not reduce the other.
 
 A second cost appears during **prefill**, processing the input sequence. A simple implementation materializes an $N\times N$ score matrix per head. At $N=8192$, one FP32 matrix occupies $8192^2\cdot4=256$ MiB. This temporary array serves a different purpose from the cache that survives into later steps. During single-token **decode**, the new query usually compares with $N$ retained keys: its score row has $N$ entries, not $N^2$.
 
@@ -30,6 +36,8 @@ MQA, GQA, and MLA change the retained representation. FlashAttention reduces mov
 *State compression, execution scheduling, and position selection solve different parts of the problem.*
 
 ## 2. Three directions in attention design
+
+Start with storage. Ordinary multi-head attention gives each query head its own keys and values. Could we retain several different queries while keeping fewer sets of features for them to read? MQA and GQA explore different degrees of that sharing.
 
 **Multi-Head Attention (MHA)** gives every query head its own K/V projections. At fixed query-head count, this is the largest of the following three cache layouts.
 
@@ -42,6 +50,8 @@ MQA, GQA, and MLA change the retained representation. FlashAttention reduces mov
 The second direction changes execution. **FlashAttention** processes small array blocks, or **tiles**, in fast accelerator memory. **HBM (High Bandwidth Memory)** is GPU main memory; **SRAM (Static Random-Access Memory)** is smaller, fast on-chip storage. Tiled execution updates softmax incrementally instead of writing the entire probability matrix to HBM, while preserving the mathematical attention operation. [FlashAttention](https://arxiv.org/abs/2205.14135).
 
 The third direction changes available interactions. Sliding windows retain nearby positions. StreamingLLM also keeps a few initial real tokens; §10 explains their role. MoBA, NSA, and DSA use query/key content to select blocks or tokens (§11). Selection can reduce the main attention calculation without making every unselected cache entry disposable: a later query may need it.
+
+These are not successive generations of one technique. Cache representation, execution order, and connectivity are separate design choices, and a single model may combine them. Keeping that distinction in view will help us identify exactly what each later section changes.
 
 ## 3. Classical connections: smoothing, distributions, and state
 
@@ -69,6 +79,8 @@ At fixed weights and position rules, the KV cache retains past features needed b
 
 ## 4. SDPA, masks, and the square-root scale
 
+Before changing storage or execution, return to the operation from Module 3. There, the equation explained how a query acquires a mixture of values. Here it also tells us what data must be available at a particular step. With a cached prefix, there may be very few queries but many keys; the familiar square diagram is only one case.
+
 **SDPA—Scaled Dot-Product Attention** is
 
 $$
@@ -82,6 +94,8 @@ $$
 Here $Q\in\mathbb R^{T_q\times d_h}$, $K\in\mathbb R^{T_k\times d_h}$, and $V\in\mathbb R^{T_k\times d_v}$. An additive mask $M$ uses zero for an allowed edge and $-\infty$ for a forbidden one.
 
 Softmax normalizes each query row across keys. Causality compares **token positions**, $p_k\le p_q$; only aligned Q/K origins reduce this to $j\le i$. A window of $W$ positions, including the current one, requires $0\le p_q-p_k<W$.
+
+A position in the text is not necessarily a row number in the current array. They often agree when an entire sequence is processed at once. During decoding, however, the new query may occupy row zero of a small array while belonging at the end of a long prefix. The mask must follow the token position, not the incidental array layout.
 
 A query at position 5 can see keys 0–5. But `tril(ones(1, 6))` keeps only key 0: row number has been mistaken for token position. After a prefix of length $P$, query row $i$ has position $P+i$. PyTorch SDPA uses an upper-left causal mask for rectangular inputs with `is_causal=True`; here we pass an explicit position-aware mask and `is_causal=False`. SDPA boolean masks use `True = allowed`, unlike `MultiheadAttention.key_padding_mask`. Set `dropout_p=0.0` when testing without random weight dropping. [PyTorch contract](https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html).
 
@@ -251,7 +265,7 @@ Official contract: [PyTorch `scaled_dot_product_attention`](https://docs.pytorch
 
 ## 5. Worked storage arithmetic: four head layouts and one hybrid model
 
-Keep the depth and head dimension fixed at 36 and 64, respectively, and vary only the number of KV heads:
+First isolate the effect of sharing K/V. Keep the depth and head dimension fixed at 36 and 64, respectively, and retain the same number of positions in the same numerical format. Vary only the number of KV heads. This gives a controlled storage comparison rather than a ranking of unrelated models:
 
 | Layout | $H_{kv}$ | Group size $g$ | All-full bf16 cache per token |
 |---|---:|---:|---:|
@@ -261,6 +275,8 @@ Keep the depth and head dimension fixed at 36 and 64, respectively, and vary onl
 
 At 131,072 tokens these become 72 GiB, 9 GiB, and 1.125 GiB. The first and third rows are hypothetical versions of the same depth and head size; they are not claims about released gpt-oss checkpoints.
 
+The next comparison changes a different quantity. Keep the GQA representation, but stop treating every layer as global. Local layers may retain fewer positions, so the saving now comes from the length of the stored sequence rather than the number of KV heads.
+
 Now restore the actual gpt-oss layer schedule. Each GQA layer needs $2\cdot8\cdot64\cdot2=2048$ bytes per retained position. If the runtime caps each local cache at 128 positions, 18 full layers cost $18\cdot131072\cdot2048=4.5$ GiB and 18 local layers cost $18\cdot128\cdot2048=4.5$ MiB. The total is **4.50439453125 GiB**. A window mask alone does not prove that old entries are freed.
 
 For ordinary K/V, $B$ equal-length sequences and heterogeneous layers, use
@@ -269,7 +285,7 @@ $$M_{KV}=B\sum_{\ell=1}^L n_\ell H_{kv,\ell}(d_{k,\ell}+d_{v,\ell})b_\ell.$$
 
 Here $n_\ell=N$ for a full layer and $n_\ell=\min(N,W_\ell)$ for a bounded local cache. Sum over sequences when their lengths differ. This is array payload: it excludes alignment, paging, replication, and quantization metadata. MLA stores a different object and needs its own formula.
 
-In the educational DeepSeek-like MLA geometry, 61 layers retain a 512-dimensional latent and a 64-dimensional decoupled RoPE component:
+For MLA, we must change the object being counted. Substituting a smaller KV-head count into the previous formula is not enough: the cache holds a shared intermediate representation rather than expanded per-head keys and values. Section 7 explains how it is used. For now, consider a separate educational DeepSeek-like geometry: 61 layers retain a 512-dimensional latent and a 64-dimensional decoupled RoPE component:
 
 $$
 b_{\text{MLA}}=(512+64)\cdot61\cdot2=68.625\ \text{KiB/token}.
@@ -288,6 +304,8 @@ The raw storage ratio is 56.8889×. This number should not be confused with the 
 *KV memory at 131,072 positions: all-full MHA/GQA/MQA, the gpt-oss layout with window-capped local caches, and a separate MLA geometry.*
 
 ## 6. GQA is a grouping invariant, not a quality guarantee
+
+Sharing keys and values does not force the query heads to produce the same output. Each head still has its own query. It compares that query with the shared keys, obtains its own attention weights, and forms its own mixture of the shared values. The saving is on the side of the features that must be retained and read; the queries need not agree on what matters.
 
 Let $g=H_q/H_{kv}$ be an integer group size. Query head $h$, counted from zero, uses KV head $j(h)=\lfloor h/g\rfloor$, so
 
@@ -314,6 +332,8 @@ kv0, kv0, ..., kv0, kv1, kv1, ..., kv1.
 ```
 
 Repeating the complete KV block instead produces a tensor of the right shape with the wrong head assignment. This is a classic silent bug and is covered by a negative notebook test.
+
+The repeated tensors are a reference construction, not the source of the memory saving. They make head assignment explicit so that the familiar MHA operator can check it. An efficient implementation can use the shared K/V directly rather than materializing all those copies.
 
 Functionally, correct GQA equals MHA with repeated K/V heads. Different fused kernels can still differ by floating-point rounding, so bitwise equality is not a portable promise.
 
@@ -429,34 +449,44 @@ Official contract: [PyTorch SDPA GQA](https://docs.pytorch.org/docs/stable/gener
 
 ## 7. MLA: cache a shared latent and move the projections
 
-**Multi-head Latent Attention (MLA)** retains a compact vector $c_t=W^{DKV}h_t$ shared across heads, together with a small positional component. Here a **latent** is an intermediate representation from which linear maps produce key and value features. Why can inference avoid reconstructing the full K/V cache?
+MQA and GQA reduced the number of key/value sets. MLA takes a different step: avoid storing the expanded K/V in the first place. At first this sounds like moving a cost from memory into computation. If every new query had to expand every cached key and value again, the compact state would be little more than a storage format. The important idea is to perform the required operations without reconstructing the full cache.
+
+**Multi-head Latent Attention (MLA)** retains a compact vector $c_t=W^{DKV}h_t$ shared across heads, together with a small positional component. Here a **latent** is an intermediate representation from which linear maps produce key and value features. Set the positional component aside for a moment and consider the content computation for one head. It has two jobs: compare a query with the keys, then combine the values using the resulting weights.
 
 For one head, write $k_t=A c_t$ and $v_t=B c_t$, with $c_t\in\mathbb R^{d_c}$, $A\in\mathbb R^{d_k\times d_c}$, and $B\in\mathbb R^{d_v\times d_c}$. Then
 
 $$q^\top k_t=q^\top A c_t=(A^\top q)^\top c_t.$$
 
-Moving $A$ to the query side produces one transformed query that can be compared with every cached latent. Once attention weights $p_t$ are available, value computation can be rearranged too:
+Read the two sides as different execution plans. The left side expands a key before taking its dot product with the query. Moving $A$ to the query side instead produces one transformed query that can be compared with every cached latent. Rather than expanding each stored key, we transform the current query once per head and reuse that result across positions. The dot products are unchanged.
+
+The values offer a related opportunity. The output needs their weighted sum, not each expanded value in isolation. Because expansion is linear, we can combine the compact representations first and expand only the resulting aggregate. Once attention weights $p_t$ are available,
 
 $$\sum_t p_t v_t=B\left(\sum_t p_t c_t\right).$$
 
+The projection now acts on one accumulated vector rather than on every stored value before aggregation. Both rearrangements apply to keys and values already defined through the shared latent. They do not say that any arbitrary MHA cache can be replaced losslessly by a smaller vector: the factorized construction is part of the MLA architecture.
+
 If an output projection $W^O$ follows, the product $W^OB$ can be combined in advance. For multiple heads, apply the argument to each head's $A_h$, $B_h$, and corresponding output-projection block. This **matrix absorption** changes the stored representation and dimensions of the computation; the remaining projections still have a cost.
 
-**Where does position enter?** RoPE is linear at a fixed position. But rotating reconstructed keys gives, for query position $m$ and key position $n$,
+**Where does position enter?** The useful step above was to compute one transformed query and reuse it for all keys. Bring back RoPE from Module 4 and ask whether that step still works. A rotation is linear at a fixed position, but its angle changes with position. Rotating reconstructed keys therefore gives, for query position $m$ and key position $n$,
 
 $$(R_mq)^\top R_n A c_n=q^\top R_{n-m}A c_n.$$
 
 The effective query $A^\top R_{n-m}^\top q$ now depends on $n$. It cannot be computed once and reused for all keys as before. Comparing $RA$ with $AR$ would also be ill-formed in general: $A$ is rectangular.
 
-DeepSeek-V2 therefore uses a separate small RoPE branch. Content and positional terms are added to form the logit. Content projections can still be absorbed, while the positional key is cached alongside the latent. The notebook verifies both score terms and the projected output. This is an algebraic equivalence; model quality requires separate empirical evaluation. [DeepSeek-V2, §2.1](https://arxiv.org/html/2405.04434v5).
+DeepSeek-V2 separates the two jobs. The content branch keeps the linear structure that permits absorption; a separate small RoPE branch supplies position. The two terms are added to form the logit. Content projections can still be absorbed, while the positional key is cached alongside the latent. The notebook verifies both score terms and the projected output. This is an algebraic equivalence; model quality requires separate empirical evaluation. [DeepSeek-V2, §2.1](https://arxiv.org/html/2405.04434v5).
 
 ![VIZ m5/04 — computing in latent space](assets/modern-llms/en/module-05/m5_04_mla_latent.svg)
 *Key expansion moves to the query side; value expansion moves after aggregation. The positional branch remains separate.*
 
 ## 8. FlashAttention: dense attention without the quadratic HBM object
 
+We now change execution rather than the cache representation. Suppose Q, K, and V are already given, and we want every allowed interaction to contribute. Can we produce the same result without keeping the entire large table of intermediate scores? FlashAttention addresses that question.
+
 For complexity estimates here, take equal key/value width $d=d_h=d_v$. Write $P$ for the matrix of attention probabilities.
 
 A materializing implementation often writes the score matrix, reads it for softmax, writes probabilities, and reads them again for the value product. The arithmetic is not the only cost; the memory path is expensive.
+
+Processing keys in small blocks sounds straightforward until we reach softmax. Its denominator covers all available keys, so the weight of one key depends on scores outside its block. Normalizing each block independently and adding the outputs would compute a different function. Instead, we need to carry an unfinished global computation from one block to the next.
 
 FlashAttention tiles Q, K, and V so that the active blocks fit in on-chip **SRAM—Static Random-Access Memory**. Each query row carries three online-softmax quantities across key tiles:
 
@@ -464,14 +494,18 @@ FlashAttention tiles Q, K, and V so that the active blocks fit in on-chip **SRAM
 - the running normalizer $\ell$;
 - the running value numerator or output accumulator $n$.
 
+The normalizer records the sum of unnormalized exponential weights accumulated so far, while the numerator records the value vectors combined with those same weights. The maximum keeps the exponentials numerically well scaled. Together, these quantities summarize the part of the row already processed without requiring us to retain every individual attention weight.
+
 When a later tile raises the maximum, earlier state is multiplied by $e^{m_{old}-m_{new}}$. The final output is $n/\ell$.
+
+Both accumulated sums must be rescaled together. Earlier exponentials were expressed relative to the old maximum; the new tile may require a larger reference. Applying the same correction to the numerator and denominator leaves their ratio unchanged, but puts the old and new contributions on a common scale. We can then add the new tile without revisiting earlier keys merely to change that reference.
 
 For one query, let $x_j$ be scores of allowed keys in the new tile and $v_j$ their values. Update the running state as follows:
 
 $$m'=\max(m,\max_j x_j),\quad \alpha=e^{m-m'},\quad \widetilde p_j=e^{x_j-m'},$$
 $$\ell'=\alpha\ell+\sum_j\widetilde p_j,\qquad n'=\alpha n+\sum_j\widetilde p_jv_j,\qquad O=n'/\ell'.$$
 
-Initialize $m=-\infty$, $\ell=0$, $n=0$. Set $\alpha=0$ for the first nonempty tile and skip fully masked tiles. If every tile is empty, apply the explicit policy from §4. This avoids $-\infty-(-\infty)$. Section 18 and the notebook work through numerical updates.
+Initialize $m=-\infty$, $\ell=0$, $n=0$. Set $\alpha=0$ for the first nonempty tile and skip fully masked tiles. If every tile is empty, apply the explicit policy from §4. This avoids $-\infty-(-\infty)$. The existing [exercises](/courses/modern-llms/module-05/exercises/) and [module notebook](/courses/modern-llms/module-05/notebooks/) work through numerical updates.
 
 A linear-memory claim must include **all** arrays: prebuilding a dense $N\times N$ mask keeps a quadratic allocation. Our streaming code can generate a causal mask for each tile. It is a transparent CPU reference, not a performance implementation of FlashAttention.
 
@@ -489,12 +523,16 @@ It is important to state the complexity precisely.
 
 The IO analysis is parameterized by fast-memory capacity $M$; it is not a universal reduction to $O(Nd)$ traffic. FlashAttention is called exact because it computes every dense interaction rather than selecting a subset. Floating-point order and kernel approximations may still cause small numerical differences from a naive reference.
 
+The algorithm explains where the saving comes from; it does not supply a hardware-independent speedup factor. Measured throughput also depends on the kernel, device, workload, and baseline. The following figures describe a particular implementation study, not a consequence of the online-softmax identity alone.
+
 FlashAttention-4 reports up to 1,613 TFLOP/s in BF16 on B200, approximately 71% of peak, with up to 1.3× speedup over cuDNN 9.13 and 2.7× over Triton in the authors' configurations. [Primary paper](https://arxiv.org/abs/2603.05451).
 
 ![VIZ m5/06 — tiled IO](assets/modern-llms/en/module-05/m5_06_tiling_memory.svg)
 *Tiling removes the quadratic HBM intermediate, not the quadratic dense-attention arithmetic.*
 
 ## 9. Windowed attention and layer schedules
+
+FlashAttention kept the allowed interactions and changed their execution. We now consider reducing the interactions themselves. The simplest rule ignores query content and uses distance: retain a recent part of the prefix.
 
 A sliding-window layer allows each query to see only the most recent $W$ keys. Its decode cache can stop growing after $W$ positions if old storage is discarded or reused. A stack of local layers can propagate information farther than one window; the reach discussed below is a dependency bound. It does not guarantee that a fact survives many transformations or match a direct global edge.
 
@@ -516,9 +554,13 @@ The window includes the current position. With $L$ consecutive local layers, equ
 
 ## 10. “Attention sink” refers to two different objects
 
+A rolling window raises another question: are all old positions equally expendable? A position can matter to attention normalization even when it carries little of the information currently being sought. The term *attention sink* arises here, but it names two different constructions that should be kept separate.
+
 StreamingLLM observed that trained models often place large attention mass on initial real tokens even when those tokens are not semantically important. Dropping their K/V state from a rolling window can destabilize the model. Keeping a few initial tokens alongside the recent window restores behavior. This is an empirical property of existing attention maps. [StreamingLLM](https://arxiv.org/abs/2309.17453).
 
 gpt-oss implements a different mechanism. Each query head owns a learned scalar $s_h$. The scalar is appended as an extra score column before softmax. After normalization, that column is removed before multiplying by V, so it receives probability mass but contributes no value vector.
+
+Softmax still produces a unit-sum distribution over the expanded row, including the extra slot. Only the real-token values contribute to the output, however. The complete normalized distribution and the coefficients used to mix those real values are therefore no longer the same set: some mass belongs to the zero-valued slot.
 
 For 128 token scores all equal to zero,
 
@@ -537,11 +579,15 @@ A useful check: shifting only token logits while leaving the sink fixed changes 
 
 ## 11. Sparse attention: selecting a subset of positions
 
+A window is cheap to specify, but relevant information need not be nearby. A global layer restores access to the entire prefix at the cost of all its interactions. A third option is to identify a small set of candidates cheaply, then reserve the main attention computation for that set.
+
 A window selects keys by distance. **Content-based selection** estimates relevance from query and key features. Given a selected set $I(q)$, the main attention operation is
 
 $$O(q)=\operatorname{softmax}\left(qK_{I(q)}^\top/\sqrt{d_h}\right)V_{I(q)}.$$
 
 This is exact attention on the selected subset, but generally differs from attention on every visible position. A cheaper selector can miss information the main operation needs.
+
+Unlike FlashAttention, this approach does more than schedule the same work differently: some interactions are never evaluated. Correctly implementing attention on the chosen set is only part of the requirement. The selection procedure must also retain the information the task needs. The following methods differ chiefly in how they construct that set.
 
 | Mechanism | Selection unit | Rule and conditions |
 |---|---|---|
@@ -556,13 +602,15 @@ This is exact attention on the selected subset, but generally differs from atten
 
 **DSA** debuted in DeepSeek-V3.2-Exp on September 29, 2025 and continued in DeepSeek-V3.2. The indexer is a smaller relevance-scoring mechanism that proposes positions for the more expensive main attention. Its computation, memory, and training must be counted too. An indexer that scans every key may still perform quadratic prefill work, even when each comparison is cheap. [V3.2 technical report](https://arxiv.org/abs/2512.02556).
 
+Selection also has a cost of its own. The main attention may read a short list, but the indexer may have had to scan the entire prefix to produce it. The saving comes from balancing two stages: inexpensive candidate scoring and more expensive processing of the selected positions.
+
 For one query, $N$ keys, main comparison width $d$, and indexer width $r$, a simple two-stage dot-product count is $Nr+kd$. Relative to $Nd$, this is $r/d+k/N$, **not just $k/N$**. It still excludes indexer projections, top-k selection, softmax, value aggregation, and data movement. The project demo separates shortlist recall, final retrieval, and attention-output error.
 
 As of October 10, 2026, this direction also includes compressing several positions into one cache entry. DeepSeek-V4 combines **Compressed Sparse Attention (CSA)** and **Heavily Compressed Attention (HCA)**. The DeepSeek-V4.1-Flash report adds CSA2, cross-layer KV reuse, and FP4 caching. These combine storage, selection, and memory placement in new ways; our MLA byte counts do not transfer to them. A claim of subquadratic execution needs to cover the whole pipeline. [V4 developer model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash), [V4.1-Flash report](https://arxiv.org/abs/2609.19969).
 
 ## 12. A transparent NumPy reference
 
-The reference uses an additive mask: 0 allows a pair and `-inf` forbids it. It makes shapes and empty-row behavior explicit on small inputs. Section 13 and the notebook add streaming execution and MLA experiments.
+The reference uses an additive mask: 0 allows a pair and `-inf` forbids it. It makes shapes and empty-row behavior explicit on small inputs. The existing [module notebook](/courses/modern-llms/module-05/notebooks/) adds streaming execution and MLA experiments.
 
 **Open the SDPA and GQA implementation**
 
@@ -805,6 +853,8 @@ The connection between modalities determines both projection shapes and where st
 - **Context length is not an attention passport.** State, connectivity, dtype, workload, and implementation determine cost.
 
 **Next: M6.** Attention mixes information across positions. We next examine how normalization, nonlinearities, and residual connections control its scale and transformation within a block.
+
+[Module 6 — Normalization, Activations, and Block Anatomy](/courses/modern-llms/module-06/).
 
 ## 20. primary sources
 

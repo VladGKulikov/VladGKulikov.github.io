@@ -12,7 +12,7 @@
 
 ## 1. Why next-token prediction is not yet an assistant
 
-**Reading routes.** For a first pass, follow §§1–6, read the interpretation of the cost calculation in §7, then continue through §§8–12 and the explanations of distillation and LoRA in §§15–16. The NumPy → PyTorch checks can wait; the surrounding prose supplies the concepts. On a second pass, reproduce the numerical scenarios and work through §§13–14 with the notebook. Sections 2, 8, 16.1 and 17 also provide a reference route for papers and checkpoint files.
+**Reading routes.** For a first pass, follow §§1–6, read the interpretation of the cost calculation in §7, then continue through §§8–12 and the explanations of distillation and LoRA in §§15–16. The NumPy → PyTorch checks can wait; the surrounding prose supplies the concepts. On a second pass, reproduce the numerical scenarios, work through the code in §13, and complete the [notebook (§14)](/courses/modern-llms/module-13/notebooks/). The [quiz](/courses/modern-llms/module-13/tests/) and [worked exercises](/courses/modern-llms/module-13/exercises/) have their own pages. Sections 2, 8, 16.1 and 17 also provide a reference route for papers and checkpoint files.
 
 We return here to an autoregressive Transformer after Module 12's diffusion models. SFT names a demonstration-based training stage, not an architecture. A diffusion model can learn from demonstrations using conditional denoising, but the next-token label shift developed below is specific to the autoregressive path.
 
@@ -114,23 +114,27 @@ Harmony makes channel structure explicit. A message has a role and content, whil
 
 A wrong template can produce a deceptively healthy training run. Loss decreases because the model learns the supplied sequence distribution, but deployment uses a different distribution. The safe workflow is simple: render examples with the official tokenizer, inspect token IDs around every boundary, and compare them with the model card and generation configuration.
 
+Serialization tells us which tokens enter the network. It does not yet decide which predictions will be scored: the same stored sequence can support different objectives. We now separate the context made available to the model from the continuation we want it to learn.
+
 ## 5. Label masking: a 56-token example
 
-Two masks serve different purposes. An attention mask controls which context a position may use; a loss mask chooses which predictions are scored. Removing prompt tokens from the loss does not remove their representations from the computation. Gradients from the answer can still flow through the processing of those prompt tokens.
+Follow one demonstration before building the arrays. Its prompt and complete answer are already known. That lets us train on many response positions in one forward pass, but it does not let a prediction see its own target. The first answer token is predicted from the prompt and assistant header; the next is predicted from that context plus the first demonstrated answer token. Each later target receives a longer demonstrated prefix. At deployment, the model must supply those preceding tokens itself. During SFT, the example supplies them—the distinction behind the distribution shift discussed in Section 3.
+
+Our `labels[t]` stores a target at its own position, while `logits[t-1]` predicts it. The preceding hidden state has not seen that target, so the task remains prediction rather than copying. Either the model or the caller performs this causal alignment, exactly once. Keeping labels next to their source tokens is a storage convention; shifting establishes the prediction–target pairs.
+
+Two masks then serve different purposes. An attention mask controls which context a position may use; a loss mask chooses which predictions are scored. Removing prompt tokens from the loss does not remove their representations from the computation. Gradients from the answer can still flow through the processing of those prompt tokens. We stop asking the model to reproduce the prompt, not to use it.
+
+Causal language modeling normally predicts the next token at every position. SFT often modifies the labels so that only assistant-generated tokens contribute directly to the cross-entropy loss. PyTorch uses `-100` as the conventional `ignore_index`. A system or user token remains in the input and affects the hidden state, but its label is ignored. This produces an **assistant-only loss**. At supervised positions, the label remains the actual token ID, not a binary flag saying that the position should be trained.
+
+Assistant-only masking is common, not mandatory. Full-sequence loss may be appropriate in continued pretraining or in a deliberately chosen instruction-tuning recipe. The mask should express the objective rather than imitate a framework default.
 
 Let $x_0,\ldots,x_{T-1}$ be the stored tokens and let $m_t$ indicate that $x_t$ is a supervised target. Token-averaged training minimizes
 
 $$L=-\frac{\sum_{t=1}^{T-1}m_t\log p_\theta(x_t\mid x_{<t})}{\sum_{t=1}^{T-1}m_t}.$$
 
-Our `labels[t]` stores the target at its own position. We compare it with `logits[t-1]`; either the model or the caller performs that shift, exactly once. A batch with no active shifted targets has no defined mean loss and needs an explicit filtering or skip rule. The example below has 21 supervised tokens among 56 stored tokens. There are 55 next-token pairs after excluding the unpredicted BOS, of which 21 are scored.
+The numerator adds the errors we have chosen to supervise; the denominator counts those same targets after alignment. A batch with no active shifted targets has no defined mean loss and needs an explicit filtering or skip rule. The example below has 21 supervised tokens among 56 stored tokens. There are 55 next-token pairs after excluding the unpredicted BOS, of which 21 are scored.
 
-The denominator also decides how examples are weighted. Pooling token losses gives longer answers more influence. Averaging each example's mean gives equal weight to examples. An answer with one loss of 2 and another with three losses of 1 produce a pooled mean of 1.25 but an example mean of 1.5. Both objectives are possible; gradient accumulation across microbatches must preserve whichever one was chosen.
-
-Causal language modeling normally predicts the next token at every position. SFT often modifies the labels so that only assistant-generated tokens contribute directly to the cross-entropy loss.
-
-PyTorch uses `-100` as the conventional `ignore_index`. A system or user token remains in the input and affects the hidden state, but its label is ignored. This produces an **assistant-only loss**.
-
-Assistant-only masking is common, not mandatory. Full-sequence loss may be appropriate in continued pretraining or in a deliberately chosen instruction-tuning recipe. The mask should express the objective rather than imitate a framework default.
+Once one dialogue is clear, we can ask how to combine several. Pooling token losses gives longer answers more influence. Averaging each example's mean gives equal weight to examples. An answer with one loss of 2 and another with three losses of 1 produce a pooled mean of 1.25 but an example mean of 1.5. Both objectives are possible; gradient accumulation across microbatches must preserve whichever one was chosen. Rearranging the data for execution should not quietly change its weight in the objective.
 
 Consider the frozen accounting scenario used throughout this module:
 
@@ -256,6 +260,8 @@ $$
 $$
 
 The number of fixed-length rows falls from 24 to five, a factor of 4.8. That factor is not a throughput guarantee. Real speed depends on kernel support, batch shape, attention implementation, device occupancy, and the distribution of sequence lengths. The calculation quantifies removed padding.
+
+The next question is whether changing the layout has changed the task. A packed dialogue should have the same available context and the same targets as it would have in separate execution. We want to remove empty slots, not the independence of demonstrations.
 
 Correctness is the harder part. If two examples are merely concatenated under an ordinary causal mask, later examples can attend to earlier ones. An EOS separator marks a boundary semantically but does not remove those attention edges.
 
@@ -519,6 +525,8 @@ With $p_{\mathrm{correct}}=0.3$, $s=0.9$, and $f=0.1$, the accepted mass is $0.2
 
 The table's final column measures retained examples per generation when at most one answer is kept. It divides coverage by the $N$ generations paid for; it does not estimate the correctness of the selected answer.
 
+Selection is followed by a different operation. The verifier decides which response enters the dataset; the student then sees a demonstration and learns to predict its target tokens. In this SFT recipe, the score is not a separate reward in the parameter update—it has already shaped the retained data. A false acceptance therefore becomes more than a filtering error: it becomes behavior we ask the student to imitate.
+
 **Second pass: pairwise correlation does not determine coverage**
 
 Take three candidates and assign their success count $K$ the probabilities $P(K=0,1,2,3)=(0.1,0.5,0.2,0.2)$. Conditional on $K$, choose successful positions uniformly. Every candidate then has success probability $E[K]/3=0.5$. Each pair succeeds jointly with probability $E[K(K-1)]/6=4/15>1/4$, so pairwise correlations are positive. Yet coverage is 0.9, **above** the independent value $1-0.5^3=0.875$. The complete joint law matters. At the other extreme, perfectly identical outcomes leave coverage unchanged as candidates are added. The notebook checks both cases.
@@ -531,7 +539,9 @@ A reasoning dataset supervises a sequence of intermediate steps rather than only
 
 The DeepSeek-R1 report provides a clear empirical reference. The authors fine-tuned smaller Qwen and Llama models on about 800,000 curated examples. Under their evaluation protocol, DeepSeek-R1-Distill-Qwen-7B scored 55.5% pass@1 on AIME 2024. The 32B model scored 72.6% on AIME 2024 and 94.3% on MATH-500. These are author-reported benchmark results, not architecture-independent guarantees.
 
-The **s1** project explored data efficiency. It selected 1,000 questions and reasoning traces, fine-tuned Qwen2.5-32B-Instruct for five epochs, and reported 26 minutes of training on 16 H100 GPUs. The paper also introduced **budget forcing**: when the model attempts to terminate its reasoning, appending `Wait` can extend the trajectory. In the reported experiment, AIME 2024 accuracy increased from 50% to 57%.
+The **s1** project explored data efficiency. It selected 1,000 questions and reasoning traces, fine-tuned Qwen2.5-32B-Instruct for five epochs, and reported 26 minutes of training on 16 H100 GPUs. Separately, the paper introduced an inference-time intervention, **budget forcing**: when the model attempts to terminate its reasoning, appending `Wait` can extend the trajectory. In the reported experiment, AIME 2024 accuracy increased from 50% to 57%.
+
+That intervention does not update the trained model's weights. It changes the conditions and budget of the ongoing generation. Learning from reasoning demonstrations and extending reasoning at deployment are therefore distinct effects.
 
 The module's compute calculation answers a narrower question. For 1,000 traces averaging 9,000 tokens, one pass contains nine million tokens:
 
@@ -568,6 +578,8 @@ A training trajectory therefore contains two distinct kinds of machine-readable 
 
 In this recipe, tool observations supply evidence for the next assistant action. Masking them expresses that objective; other training schemes can model observations deliberately, provided that execution still supplies the real result at inference.
 
+This is the distinction from Section 5 in a new setting. An observation masked out of the loss remains visible as evidence for the next response. The mask separates what the assistant should produce from what it should receive and use; it does not remove the latter from the computation.
+
 A useful curriculum covers at least five decisions:
 
 1. whether to call any tool;
@@ -585,7 +597,7 @@ The Berkeley Function-Calling Leaderboard has evolved from single-call syntax te
 
 ## 13. Level-one code: labels and traceable bins
 
-The following code exposes the two structures that trainers often hide: target token IDs and the membership of each packed container.
+Bridges B20 and B21 isolated label selection and independent attention. The following primitives connect those operations to data preparation: serialized messages supply the target IDs, and traceable bins preserve the membership needed to build segment boundaries. A final helper counts the adapters whose construction we will examine in Section 16.
 
 ```python
 import numpy as np
@@ -657,17 +669,21 @@ The labels contain actual target token IDs. A boolean “train here” mask is n
 
 ## 15. Distillation channels
 
-“Distillation” can mean several different supervision signals.
+The synthetic-data and reasoning sections have already used a teacher to provide examples. We can now ask how much of its decision reaches the student. “Distillation” can mean several different supervision signals: a realized response, or the probability distribution from which a response could be drawn.
 
 ### Hard targets
 
 The teacher generates a response and the student trains on that response with ordinary cross-entropy. This works through an API and does not require teacher logits. It is also lossy: the student sees one sampled path, not the teacher's uncertainty over alternatives.
 
+Mechanically, this remains the SFT objective developed earlier. The teacher changes where the demonstrations come from, not how their tokens are predicted. No teacher weights or gradients need to pass to the student.
+
 Hard-target distillation benefits from candidate diversity, executable verification, and careful metadata. A polished response from a powerful model is not automatically a trustworthy label.
 
 ### Soft targets
 
-Classical knowledge distillation trains the student to match a softened teacher distribution:
+Classical **soft-target distillation** asks the student to match a softened teacher distribution. The supervision now contains more than the token that happened to be selected: at a particular prefix, it describes the teacher's preferences over the available continuations. Alternatives that would disappear from a single sampled answer remain visible. The comparison must concern the same token events at the same history, not two continuations whose prefixes have already diverged.
+
+One objective combines this distributional signal with ordinary demonstrated targets:
 
 $$
 L=(1-\lambda)L_{\text{CE}}
@@ -675,9 +691,58 @@ L=(1-\lambda)L_{\text{CE}}
 \left(p_{\text{teacher}}^{(T)}\Vert p_{\text{student}}^{(T)}\right).
 $$
 
-Temperature $T>0$ divides the logits before softmax, and $\lambda\in[0,1]$ sets the distillation weight. The KL direction is teacher-to-student: it penalizes the student for assigning little probability to events supported by the teacher. Multiplying by $T^2$ compensates for a change in gradient scale caused by softening; it does not make all temperatures equivalent. A softer distribution exposes relative preferences among alternatives, while $T$ and $\lambda$ remain experimental choices.
+Temperature $T>0$ divides the logits before softmax, and $\lambda\in[0,1]$ sets the distillation weight. The ordinary cross-entropy term still uses the selected demonstration token as its hard label and evaluates the student at temperature one. The soft term uses the same temperature for teacher and student. Without hard labels, the distillation weight can be set to one and only the soft term retained. The teacher is held fixed throughout this update; we are training the student, not moving both distributions toward each other.
 
-For discrete distributions, $\mathrm{KL}(p\Vert q)=\sum_i p_i\log(p_i/q_i)$ over shared events, here tokens. A zero $p_i$ contributes zero; positive $p_i$ with zero $q_i$ gives infinite divergence. Matching distributions gives zero, and reversing the arguments generally changes the value. The objective requires teacher probabilities, available either directly or through logits. Tokenizer mismatch complicates the objective because the two models may not define probabilities over the same token events.
+The KL direction is teacher-to-student: it penalizes the student for assigning little probability to events supported by the teacher. For discrete distributions, $\mathrm{KL}(p\Vert q)=\sum_i p_i\log(p_i/q_i)$ over shared events, here tokens. A zero $p_i$ contributes zero; positive $p_i$ with zero $q_i$ gives infinite divergence. Matching distributions gives zero, and reversing the arguments generally changes the value.
+
+To connect this with familiar supervised learning, write the teacher distribution as $p$ and the student's as $q$, then expand the logarithm:
+
+$$
+\mathrm{KL}(p\Vert q)
+=-\sum_i p_i\log q_i+\sum_i p_i\log p_i.
+$$
+
+The second term is constant with respect to the student's parameters. Its update therefore follows a cross-entropy in which the teacher assigns the target weights. A hard label puts all target mass on one token; a soft label distributes that mass among alternatives. The teacher's uncertainty is not a certificate of correctness, but it is additional information that a single realized response does not preserve.
+
+**Why the temperature is squared.** Multiplying by $T^2$ compensates for a change in gradient scale caused by softening; it does not make all temperatures equivalent. We can see where the square comes from by examining one supervised position. Let $v_i$ be the fixed teacher logits, $z_i$ the student logits, and $V$ the shared vocabulary size:
+
+$$
+p_i^{(T)}=\frac{e^{v_i/T}}{\sum_j e^{v_j/T}},
+\qquad
+q_i^{(T)}=\frac{e^{z_i/T}}{\sum_j e^{z_j/T}}.
+$$
+
+Differentiating the soft cross-entropy produces two contributions. The log normalizer supplies the student's probability; the linear logit term supplies the target probability. Their difference gives
+
+$$
+\frac{\partial}{\partial z_i}
+\mathrm{KL}\bigl(p^{(T)}\Vert q^{(T)}\bigr)
+=\frac{q_i^{(T)}-p_i^{(T)}}{T}.
+$$
+
+This identity is exact for a fixed teacher and any positive temperature. One inverse-temperature factor is already explicit: the input to softmax is a logit divided by temperature. There is also an effect inside the numerator. At sufficiently high temperatures, both distributions approach uniform, so their differences shrink as well.
+
+The next step is an approximation, so its condition matters. Center each logit vector separately: $\tilde z_i=z_i-\bar z$ and $\tilde v_i=v_i-\bar v$. Subtracting a common constant does not change softmax. When temperature is large relative to the spread of the centered logits, use $e^{\tilde z_i/T}\approx1+\tilde z_i/T$, and likewise for the teacher. The first-order terms sum to zero, leaving
+
+$$
+q_i^{(T)}\approx\frac1V+\frac{\tilde z_i}{VT},
+\qquad
+p_i^{(T)}\approx\frac1V+\frac{\tilde v_i}{VT}.
+$$
+
+The difference of the probabilities now supplies the second inverse-temperature factor. Substitution into the exact gradient gives
+
+$$
+\frac{\partial\mathrm{KL}}{\partial z_i}
+\approx\frac{\tilde z_i-\tilde v_i}{VT^2},
+\qquad
+\frac{\partial(T^2\mathrm{KL})}{\partial z_i}
+\approx\frac{\tilde z_i-\tilde v_i}{V}.
+$$
+
+The two factors thus have different origins: differentiating through the scaled logits, and flattening the probability differences themselves. Squaring the temperature in the loss removes this leading attenuation, so changing temperature does not weaken the soft term merely by changing its scale. The final approximations require the high-temperature regime; the earlier gradient identity does not. At moderate temperatures, the relative treatment of alternatives genuinely changes, and $T$ and $\lambda$ remain experimental choices. This is the reasoning behind the scaling convention in [Hinton, Vinyals, and Dean's distillation formulation](https://arxiv.org/abs/1503.02531).
+
+The objective requires teacher probabilities, available either directly or through logits. Tokenizer mismatch complicates the objective because the two models may not define probabilities over the same token events. Open weights alone do not align those events, input histories, or context limits. In ordinary tokenwise distillation, establish a common history and comparable outputs first, then reduce the losses over the selected supervised positions.
 
 > **Further study.** Cross-entropy, KL divergence, temperature, and the information content of a full distribution are covered in depth in *Information Theory for ML*.
 
@@ -689,6 +754,8 @@ The engineering decision begins with the signal that is actually accessible. An 
 
 ## 16. LoRA and a concrete parameter count
 
+So far we have chosen the supervision: demonstrated tokens or a teacher's distribution. Now keep that objective and change a different decision: **which parameters will be allowed to move?** The same demonstrations can support full fine-tuning or an adapter. The source of the learning signal and the parameterization of the update are separate choices.
+
 Parameter-efficient fine-tuning (PEFT) updates a restricted parameter set. To make the memory calculation unambiguous, allocate 16 bytes per trainable parameter: 2 for its bf16 weight, 2 for its gradient, 4 for an fp32 master copy, and 4 for each of Adam's two moments. Implementations can store these objects differently. The adapter weight is already included in these 16 bytes.
 
 Full fine-tuning stores trainable weights, gradients, and optimizer state for every updated parameter. Under the module's 16-byte-per-parameter accounting, an 8.03B model requires
@@ -699,17 +766,52 @@ $$
 
 for parameter-related training state alone.
 
-**Low-Rank Adaptation (LoRA)** freezes the base matrix $W$ and learns
+Instead of relearning every coordinate of that large transformation, could we keep it and learn a comparatively small correction? **Low-Rank Adaptation (LoRA)** freezes the base matrix $W$ and learns
 
 $$
 \Delta W=\frac{\alpha}{r}BA,
 $$
 
-with $A\in\mathbb R^{r\times d_{in}}$ and $B\in\mathbb R^{d_{out}\times r}$. The chosen scale $\alpha$ controls the update through the multiplier $\alpha/r$. The adapter uses $r(d_{in}+d_{out})$ parameters for one target matrix.
+with $A\in\mathbb R^{r\times d_{in}}$ and $B\in\mathbb R^{d_{out}\times r}$. The chosen scale $\alpha$ controls the update through the multiplier $\alpha/r$.
 
-Rank $r$ bounds the rank of the update $BA$, not of the complete matrix $W+BA$. Initializing one factor randomly and the other to zero preserves the starting model while allowing learning to begin. Initializing both to zero can leave both gradients zero. Frozen weights need no weight-gradient update, but backward propagation through them can still be needed to reach earlier adapters. Parameter savings therefore do not translate directly into the same FLOP savings.
+Read the factorization as a forward computation. These matrix shapes use a column input $h\in\mathbb R^{d_{in}}$; a row-batched convention expresses the same operation with transposed weights. The layer produces
 
-For a 32-layer GQA model with $d=4096$, $d_{kv}=1024$, rank 16, and adapters on q/k/v/o, the total is
+$$
+y=(W+\Delta W)h
+=Wh+\frac{\alpha}{r}B(Ah).
+$$
+
+The first branch still applies the full pretrained transformation. The second forms a small set of learned combinations of the input features, then maps those coefficients into an output correction. Both factors are learned. Their narrow intermediate space need not be a decomposition computed from the base matrix in advance.
+
+This is where parameter efficiency comes from. Rather than storing every entry of a large correction independently, we describe it through two smaller factors. The adapter uses $r(d_{in}+d_{out})$ parameters for one target matrix: one factor connects the input to the narrow space, and the other connects that space to the output.
+
+Rank $r$ bounds the rank of the update $BA$, not of the complete matrix $W+BA$. The fixed scale does not change that distinction. LoRA therefore does not replace the pretrained matrix with a low-rank approximation. The original transformation remains available; the restriction concerns how we adapt it.
+
+Why might a restricted correction be enough? The working hypothesis is that some useful adaptations have a more compact structure than the weights they modify. The [original LoRA paper](https://arxiv.org/abs/2106.09685) motivates this through low intrinsic rank and investigates it empirically. The factorization is not a proof that every new task admits a good low-rank update. Increasing rank or adapting more projections expands the available changes at a higher cost.
+
+**How a zero update begins to learn.** Ideally the adapter should leave the pretrained model unchanged before the first optimization step. A common initialization makes the first factor random and the second zero. Their product is zero, but its sensitivity to the second factor need not be: the first factor has already formed intermediate features that the second can learn to use.
+
+The derivatives make this distinction explicit. Let $\ell$ be the final loss for the example and $g=\partial\ell/\partial y$ the gradient arriving at the layer's output. For one application of the linear adapter shown above, with no additional operations in its branch,
+
+$$
+\nabla_B\ell=\frac{\alpha}{r}\,g(Ah)^\top,
+\qquad
+\nabla_A\ell=\frac{\alpha}{r}\,B^\top g h^\top.
+$$
+
+When several positions share these matrices, their gradient contributions are added. With the second factor zero, the first initially receives zero gradient through this branch. The second can nevertheless receive a nonzero gradient from the intermediate features and output error. Once it moves, the first can begin receiving a signal as well. This does not promise a nonzero gradient for every individual example; it explains why a zero initial correction need not freeze the entire branch. If both factors start at zero, both displayed derivatives vanish: each factor lacks a nonzero partner through which to begin learning.
+
+Freezing the base matrix is a different operation. We do not update its weights or retain Adam moments for them, but its effect on the input remains part of the network. When that input depends on an earlier trainable adapter, backward propagation must still determine how an input change would affect the loss. **Not differentiating for a weight update is different from not differentiating through the input.** The reduction in trainable parameters therefore does not translate directly into the same FLOP reduction.
+
+Now apply the count to the existing 32-layer GQA scenario, with $d=4096$, $d_{kv}=1024$, rank 16, and adapters on q/k/v/o. Q and O each map between two 4096-wide spaces, so each adapter has 131,072 parameters. K and V map from width 4096 to width 1024, giving 81,920 parameters per adapter. One layer contributes
+
+$$
+n_{\mathrm{layer}}
+=2\cdot16(4096+4096)+2\cdot16(4096+1024)
+=425\,984.
+$$
+
+Multiplying by the 32 layers gives
 
 $$
 13,631,488\ \text{parameters},
@@ -717,7 +819,7 @@ $$
 
 or 0.1698% of the 8.03B base. At 16 bytes of training state per adapter parameter, that is 208 MiB. Dividing the full-state estimate by the adapter-state estimate gives approximately 589.
 
-The ratio is deliberately narrow: it compares parameter-related state under one accounting convention. It is not a 589-fold reduction in total GPU memory.
+The ratio is deliberately narrow: it compares parameter-related state under one accounting convention. It is not a 589-fold reduction in total GPU memory. Ordinary LoRA still stores the frozen base, whose weight payload must be added to the 208 MiB. The base model's update state disappears; its weights do not.
 
 QLoRA stores the frozen base in 4-bit form while backpropagating into LoRA adapters. The simplified floor in this module is:
 

@@ -1,34 +1,42 @@
 # Module 3. The Basic Transformer
 
-*Modern LLMs · Module 3 lecture · revision 2026.10.25 · 11 October 2026*
+*Modern LLMs · Module 3 lecture*
 
-An embedding lookup gives a token the same starting vector wherever it occurs. A Transformer turns that vector into a **contextual representation**: one that depends on the surrounding tokens. This chapter follows the computation all the way to a distribution over the next token.
+Module 2 brought text to the entrance of the neural network: a tokenizer assigned identifiers to pieces of the string, and an embedding lookup selected the corresponding rows of a learned table. At that point, the same token receives the same starting vector wherever it occurs. Predicting a continuation, however, requires more than recognizing the token. It requires knowing what surrounds it.
 
-Bring matrix multiplication, matrix shapes, and embeddings from Module 2. Section 2 introduces tensors as multidimensional arrays. The chapter introduces the remaining concepts as they become useful. By the end, you will be able to trace the original encoder–decoder design and build a small causal language model.
+This chapter follows the computation that makes that dependence possible. A Transformer builds **contextual representations**: positions exchange information, transform the features they have gathered, and pass the result to later layers. At the far end is the vocabulary projection we met in Module 2. Our task is to understand the computation connecting those two ends of the model.
+
+The prerequisites are matrix multiplication, an understanding of shapes, and the embeddings introduced in Module 2. Section 2 introduces a tensor simply as a multidimensional array; the remaining concepts appear as the computation calls for them. We will first study the operations and assemble the original encoder–decoder Transformer, then turn to the code for a small causal block—the core of a decoder-only language model.
 
 **Choose a reading route**
 
-- **First pass: follow the information.** Read §§1–12 in order; collapsed reference blocks can wait. In §2, focus on the input shape, and in §4.3, on what scaling accomplishes. Work through §4.5, then make sure the distinction between training and generation in §§11–12 is clear. Finish with §§16, 18, and 22. Save the longer code listings for the next pass.
-- **Second pass: make it run.** Expand the shape reference in §2, revisit the argument in §4.3, and study §§13–15. Use the notebook in §20 and the exercises in §19 to reproduce the results and test the computation.
-- **Reference pass: locate a contract.** Shapes are in §§2 and 15, masks in §5, normalization order in §8, and training versus generation in §§11–12. Section 17 collects common mistakes. If you can reconstruct the graph and answer §18 unaided, continue to Module 4.
+**On a first reading,** follow §§1–12 in order. In §2, concentrate on the input tensor: the full shape reference is expandable and can wait until attention is familiar. In §4.3, focus first on what scaling accomplishes; in §4.5, take time to work through the small matrices. Compare training with generation in §§11–12, then complete the account with §§16 and 22.
+
+**To reproduce the computation,** return to the shape reference, the argument in §4.3, and the code in §§13–15. The module’s separate [exercises](/courses/modern-llms/module-03/exercises/) and [notebooks](/courses/modern-llms/module-03/notebooks/) let you follow the same path yourself.
+
+**For later reference,** shapes are collected in §§2 and 15, masks in §5, normalization order in §8, and common confusions in §17. The separate [tests](/courses/modern-llms/module-03/tests/) provide a check on your understanding.
 
 ![VIZ m3/01 — three routes through the Transformer foundations](assets/modern-llms/en/module-03/m3_01_learning_route.svg)
 *Start by following the information, then reproduce the computation, and keep the shape and mask contracts nearby as a reference.*
 
 ## 1. Why the Transformer was needed
 
-Start with the engineering problem rather than the equation. A model that translates a sentence, summarizes a document, or predicts the next token must combine two kinds of information at every position:
+Suppose the model already has its input vectors. Each describes the content at one position, but that alone is not enough to translate a sentence, summarize a document, or predict what comes next. At every position, the model must bring together two kinds of information:
 
 1. the local content of the current token;
 2. information from other positions, where the useful positions depend on context.
 
 In “the bank raised the rate,” the meaning of “rate” is constrained by “bank.” In code, a closing delimiter may depend on a construct opened many lines earlier. During translation, each target token must use both the generated target prefix and the complete source sequence.
 
-A recurrent network computes state $t$ from state $t-1$, creating a chain across positions. A Transformer instead uses **attention**: it builds a weighted mixture of vectors from accessible positions. When the requesting position and the vectors it reads belong to the same sequence, the operation is **self-attention**. A **feed-forward network (FFN)** then transforms each position’s features. Layers still depend on previous layers, but positions within a layer can be processed together.
+One way to carry context is to update a state in sequence. A recurrent network computes state $t$ from state $t-1$, so each step must wait for the preceding one. A Transformer organizes the exchange differently. Through **attention**, each position builds a weighted mixture of vectors from the positions it can access. When the requesting position and its sources belong to the same sequence, the operation is **self-attention**.
 
-Two mechanisms will make that computation respect sequence structure. A **positional signal** represents where a token occurs. A **causal mask** forbids a position from reading later tokens, which would reveal the answer during next-token training. Sections 3 and 5 make these ideas concrete.
+A **feed-forward network (FFN)** then transforms the features at each position. Two distinct jobs are taking shape: gather information from the context, and process the representation that results. Layers still depend on preceding layers, but positions within a layer can be computed together. Later we will see why this is compatible with generating tokens one at a time.
 
-The [original Transformer paper (Vaswani et al., 2017)](https://arxiv.org/abs/1706.03762) addresses translation. Its **encoder** turns the source text into contextual vectors, collectively called encoder memory. Its **decoder** builds the translation while reading both the available translation prefix and that memory. Attention that reads a different stream is called **cross-attention**. A **decoder-only** language model has no separate encoder: prompt and continuation occupy one sequence. Treat the next diagram as a map; the chapter will unpack its components.
+Being able to read other positions does not mean that every position is available. In next-token prediction, the future is unknown; a **causal mask** enforces that restriction by forbidding access to later positions. A **positional signal** has a different purpose: it represents where a token occurs. Sections 3 and 5 show how location and permission to read work together.
+
+The same operations can be connected in different ways. The [original Transformer paper (Vaswani et al., 2017)](https://arxiv.org/abs/1706.03762) addresses translation, with two streams: the source text and the translation being produced. Its **encoder** turns the source into contextual vectors, collectively called encoder memory. Its **decoder** builds the translation by reading both the available target prefix and that memory. Attention that reads from another stream is called **cross-attention**.
+
+A **decoder-only** language model has no separate encoder: prompt and continuation occupy a single sequence. For now, keep the two designs distinct rather than trying to memorize every component. We will learn the shared operations first, assemble the translation model, and then return to causal language modeling. The diagram below is a view of the whole whose parts will gradually become familiar.
 
 ![VIZ m3/02 — the complete encoder–decoder Transformer](assets/modern-llms/en/module-03/m3_02_transformer_overview.svg)
 *The source branch produces contextual vectors. The decoder uses them through cross-attention while building the translation. Sections 8–10 expand the sublayers and residual paths inside each branch.*
@@ -46,9 +54,9 @@ This chapter is self-contained. Those links deepen the subject but are not prere
 
 ## 2. Notation and tensor shapes
 
-Start with three axes. One token has $d_{model}$ features. A sequence has $T$ positions. A **batch** holds $B$ examples processed together. Their vectors form a tensor—a multidimensional array—of shape $B\times T\times d_{model}$. Reading the axes as “example, position, feature” will prevent many shape errors.
+Before transforming the vectors, establish how to read the array that holds them. A token representation contains $d_{model}$ coordinates; a sequence contains $T$ positions. A **batch** groups $B$ examples to be processed together. Their vectors occupy a tensor—a multidimensional array—of shape $B\times T\times d_{model}$. Each axis answers a separate question: which example, which position, and which coordinate of its representation?
 
-For the first pass, keep $X\in\mathbb R^{B\times T\times d_{model}}$ in mind. Sections 4 and 6 introduce queries, keys, values, and heads; use the full index below once those concepts are familiar.
+For now, keep $X\in\mathbb R^{B\times T\times d_{model}}$ and the meaning of its three axes in view. Other shapes will arrive with the operations that require them: queries, keys, and values in §4, and heads in §6. The reference below collects those shapes for later use. On a first reading, it is enough to continue to the residual stream.
 
 **Full shape index — second pass and reference**
 
@@ -95,19 +103,19 @@ That is the first useful invariant. The second is that concatenated heads and th
 
 ### 2.1. The residual stream as the main route
 
-The main representation keeps shape $B\times T\times d_{model}$ as layers refine it. This is the **residual stream**. Each sublayer computes an update of the same shape, and a **residual connection** adds that update to the input:
+As a representation passes through the layers, its contents change while the main tensor keeps shape $B\times T\times d_{model}$. This main path is the **residual stream**. A sublayer—attention or an FFN—does not have to recreate the entire representation. It computes an update of the same shape, and a **residual connection** adds that update to the input:
 
 $$
 x \leftarrow x + \operatorname{Sublayer}(x).
 $$
 
-If the last dimension unexpectedly changes inside a basic block, that is almost never a subtle Transformer property. It is usually a shape bug or a missing output projection.
+This expression shows the addition alone; §8 will place normalization around it. Addition requires compatible shapes for the input and the update. An unexpected change in the last dimension of such a block therefore usually points to a shape error or a missing output projection, rather than to a special property of the Transformer.
 
 ## 3. Step 1: tokens, embeddings, and positions
 
 For this teaching model, IDs form the dense range $0,\ldots,|\mathcal V|-1$, and the table has exactly $|\mathcal V|$ rows. Real artifacts may distinguish defined IDs, the ID range, and allocated rows, as Module 2 explains.
 
-A neural network does not receive a string directly. A tokenizer maps text to integer identifiers
+Return now to the beginning of the forward pass. As Module 2 established, a neural network does not receive a string directly: a tokenizer first maps text to integer identifiers
 
 $$
 (t_1,t_2,\ldots,t_T), \qquad t_i \in \{0,\ldots,|\mathcal V|-1\}.
@@ -167,7 +175,11 @@ The positional table does not need a batch axis. The same coordinate $pos$ is us
 
 ## 4. Step 2: scaled dot-product attention
 
-Imagine one position requesting context. Its **query** describes what to match. Each available position supplies a **key** for matching and a **value** to contribute to the result. Attention turns query–key scores into weights and uses them to mix the values. One such computation is an **attention head**. The matrices $Q$, $K$, and $V$ collect the respective vectors as rows. Queries and keys have width $d_k$ per head; values have width $d_v$. There are $T_q$ queries and $T_k$ keys and values.
+Each position now has a vector, but information from other positions still needs a way to enter it. Simply averaging every available vector would give every position the same rule for gathering context. Attention instead separates two questions: **which sources should this position match**, and **what should those sources contribute**?
+
+A **query** represents the requesting side of the match. Each available source supplies a **key**, which is compared with the query to obtain a compatibility score. The source also supplies a **value**: the vector that will enter the resulting mixture. Keys help determine the weights; values determine what is mixed. The language of requests and searches is a guide to the computation, not a claim that these vectors implement hand-written retrieval rules. Their projections are learned.
+
+One such computation is an **attention head**. The matrices $Q$, $K$, and $V$ collect queries, keys, and values as rows. Queries and keys have width $d_k$ per head; values have width $d_v$. There are $T_q$ queries and $T_k$ keys and values. Keys and values come in equal numbers because each source supplies one of each.
 
 The computation for one head is
 
@@ -219,7 +231,9 @@ W_Q,W_K \in \mathbb{R}^{d_{model}\times d_k}, \qquad
 W_V \in \mathbb{R}^{d_{model}\times d_v}.
 $$
 
-The projections let the model learn different features for “what I am looking for,” “how I should be found,” and “what I transmit.” A token may have a key that is useful for a syntactic match while its value carries semantic or positional content.
+A linear projection is multiplication by a learned matrix. It lets the same representation serve different purposes: matching a request, making a source available for matching, and providing the information to transmit. A position can request information from others while also acting as a source for them. We need three transformations of its representation, not three different kinds of token.
+
+The projection matrices are model parameters learned during training. The queries, keys, and values themselves are computed from the current input. The transformation rules therefore persist across requests, while the particular pattern of interactions changes with the text.
 
 In cross-attention, the sources differ:
 
@@ -243,7 +257,7 @@ A larger score receives a larger weight, all else equal. The sign alone does not
 
 ### 4.3. Why divide by $\sqrt{d_k}$
 
-Assume for intuition that coordinates $q_r$ and $k_r$ are independent, zero-mean, and unit-variance. Then
+There is still a question of scale. A dot product adds contributions from every coordinate, so increasing the width can increase the spread of the sum. To see why division helps, take a simple case: coordinates $q_r$ and $k_r$ are independent, zero-mean, and unit-variance. Then
 
 $$
 q^\top k=\sum_{r=1}^{d_k}q_rk_r,
@@ -354,7 +368,9 @@ This example also exposes a crucial distinction: an **attention weight is a rout
 
 ## 5. Masks: who is allowed to see whom
 
-The word *mask* is used for two related but distinct objects: a Boolean visibility matrix and a numerical bias added to logits. Rather than hide the operation inside “scores + mask,” begin with a Boolean matrix
+The numerical example has already prohibited access to future positions. We can now separate that access rule from the operation that enforces it. First decide which connections are allowed; then ensure that forbidden sources contribute nothing to the mixture.
+
+This gives the word *mask* two related meanings: a Boolean visibility matrix and a numerical bias applied to logits. Begin with the more direct description, a Boolean matrix
 
 $$
 C_{ij}\in\{0,1\},
@@ -443,7 +459,9 @@ Under the `zero` policy the row sum of the weights is zero, not one. This is not
 
 ## 6. Multi-head attention
 
-One head produces one pattern of mixing weights. Multiple heads can produce different mixtures for the same position. Keep the notation explicit: $X_q,X_k,X_v$ are inputs before projection, while $Q_i,K_i,V_i$ are projected vectors for head $i$:
+So far, each position has received one mixture of values. It may be useful to compare that position with its context in several ways at once. Multi-head attention provides that capacity: each head builds its own projections and computes a mixture, and the results are then brought together.
+
+These are parallel computations within a sublayer, not successive layers. To distinguish source representations from projected vectors, write $X_q,X_k,X_v$ for the inputs and $Q_i,K_i,V_i$ for the projected vectors of head $i$:
 
 $$
 Q_i=X_qW_Q^{(i)},\quad K_i=X_kW_K^{(i)},\quad V_i=X_vW_V^{(i)},
@@ -493,7 +511,11 @@ At $d_{model}=512$, this is $1\,048\,576$ weights. With fixed total width, chang
 
 ## 7. The FFN: nonlinear processing at each position
 
-Attention brings information across positions. The **position-wise FFN** then transforms the features of each position using two linear maps with a nonlinearity between them. Keeping the chapter’s row-vector convention,
+Attention has allowed a position to gather information from its context. Gathering is not the whole job of a layer, however: the resulting features must also be transformed and combined. That is the role of the **position-wise FFN**.
+
+Unlike attention, the FFN does not read other positions directly. This does not return us to an isolated token: its input representation has already been changed by the exchange of context. The distinction concerns the current operation—whether it mixes positions or transforms the coordinates within each one.
+
+The basic FFN uses two linear maps with a nonlinearity between them. Keeping the chapter’s row-vector convention,
 
 $$
 \operatorname{FFN}(x)=\sigma(xW_1+b_1)W_2+b_2.
@@ -526,7 +548,9 @@ Module 6 introduces **gating**, where one computed signal controls how much of a
 
 ## 8. Residual connections and LayerNorm
 
-A deep network must add transformations while preserving a path for signals and gradients—the loss derivatives used to update weights during training. The Transformer wraps every sublayer with a residual connection and normalization.
+We have now studied the layer’s two main transformations: attention exchanges information across positions, and the FFN processes features. Repeating these transformations in a deep network also requires a rule for combining each sublayer’s result with the representation already present.
+
+Two mechanisms have different jobs here. A **residual connection** adds the computed update to the input, retaining an additional route for signals and gradients—the loss derivatives used to update weights during training. **Normalization** transforms a vector’s coordinates with reference to their scale. The two often sit beside each other in a diagram, but they are not one operation: changing their order changes the computation. We will first examine normalization itself, then the two ways of placing it around a residual branch.
 
 ### 8.1. LayerNorm over the final axis
 
@@ -565,7 +589,7 @@ $$
 y=\operatorname{LN}(x+\operatorname{Sublayer}(x)).
 $$
 
-The sublayer runs first, residual addition follows, and LayerNorm comes last. The paper’s diagram labels this `Add & Norm`.
+The sublayer first computes an update. That update is added to the input, and LayerNorm acts on the resulting sum. Normalization therefore processes the combined result of both branches. This is the ordering labeled `Add & Norm` in the paper’s diagram.
 
 ### 8.3. Pre-norm in modern LLMs
 
@@ -575,7 +599,7 @@ $$
 y=x+\operatorname{Sublayer}(\operatorname{Norm}(x)).
 $$
 
-Now the input $x$ reaches the addition directly, while normalization lies inside the update branch. Moving the norm therefore changes both the signal and gradient paths. Module 6 also introduces RMSNorm, which normalizes using the mean square of the coordinates.
+Now the input $x$ reaches the addition directly. Normalization lies inside the update branch: the sublayer reads a normalized representation, but its result is added to the original input. Moving the norm therefore changes the signal and gradient paths, not just the arrangement of labels in a diagram. The code in §14 will use this ordering. Module 6 studies modern blocks in more detail and compares LayerNorm with RMSNorm, which normalizes using the mean square of the coordinates.
 
 ![VIZ m3/08 — post-norm and pre-norm](assets/modern-llms/en/module-03/m3_08_block_order.svg)
 *Each wrapper applies to one sublayer F, either attention or an FFN. The norm sits after residual addition on the left and inside the update branch on the right.*
@@ -585,6 +609,8 @@ Now the input $x$ reaches the addition directly, while normalization lies inside
 **Dropout** randomly zeros some values during training and rescales the retained values; ordinary generation disables it. The original Transformer applies it to sublayer outputs before residual addition and to the sum of token and positional embeddings. We omit it from the equations above to keep the paths visible.
 
 ## 9. The encoder layer and encoder stack
+
+The components can now be assembled. First return to the Transformer’s original task, translation. The source text is available in full, so its encoder can let every position read all content-bearing positions in that text.
 
 One encoder layer performs two operations:
 
@@ -607,7 +633,7 @@ $$
 H_{enc}\in\mathbb{R}^{B\times T_{src}\times d_{model}}.
 $$
 
-Every source vector is now contextual: it can incorporate any unmasked source position.
+Every source vector is now contextual: it can incorporate any unmasked source position. Here, “memory” means the tensor computed for this particular input, not a separate long-term store of knowledge. The decoder will consult it while constructing the translation.
 
 ### 9.1. When an encoder is useful
 
@@ -615,7 +641,7 @@ An encoder is useful when all input tokens are available, as in classification o
 
 ## 10. The decoder layer and cross-attention
 
-The original decoder layer contains three sublayers:
+The decoder faces a different situation. The source text is already represented by encoder memory, while the translation is available only as a prefix. It must use the complete source without looking ahead in the translation. These two requirements explain why the original decoder layer has two attention sublayers rather than one. Its three sublayers are:
 
 1. masked self-attention over the target prefix;
 2. cross-attention to encoder memory;
@@ -661,7 +687,7 @@ Treat each word as one toy token here; a real tokenizer may split it further. `<
 
 ### 10.2. Linear projection and softmax
 
-Each final position vector $h_t$, or **hidden state**, is multiplied by $W_{vocab}\in\mathbb R^{d_{model}\times|\mathcal V|}$. This produces one unnormalized score, called a **logit**, for each vocabulary item:
+In Module 2, the output projection followed a contextual computation that was still a black box. That gap is now filled: attention and FFN layers have produced representations from which a continuation can be predicted. Each final position vector $h_t$, or **hidden state**, is multiplied by $W_{vocab}\in\mathbb R^{d_{model}\times|\mathcal V|}$. This produces one unnormalized score, called a **logit**, for each vocabulary item:
 
 $$
 \ell_t=h_tW_{vocab}+b, \qquad
@@ -678,7 +704,9 @@ Some models tie the output matrix to the input embedding matrix. Weight tying sa
 
 ## 11. Training: teacher forcing and cross-entropy
 
-**Teacher forcing** supplies the known target sequence shifted by one position. The model is scored using the **negative log-likelihood (NLL)** of the correct next token. Summing over a sequence gives
+The forward pass already supplies probabilities. Training requires comparing them with the correct continuation. Because that continuation is available in a training example, we do not have to generate it using the model’s own predictions first. Instead, we feed in the correct sequence shifted by one position. This is **teacher forcing**.
+
+The shift and causal mask work together: each scored position receives the correct prefix, but not the token it must predict. The penalty for that prediction is the **negative log-likelihood (NLL)** of the correct token. Summing over the sequence gives
 
 $$
 \mathcal L
@@ -731,7 +759,7 @@ Padding targets are excluded. Training on prompt–answer pairs may also score o
 
 ## 12. Generation: the same forward pass in a different loop
 
-During generation, the next target token is not provided. The algorithm is:
+During generation, the model’s operations stay the same, but the supply of known correct prefixes disappears. Until the next token has been selected, it cannot become part of the next input. A sequential loop is therefore built around the forward pass:
 
 1. pass the current prefix to the model;
 2. read logits at the final position;
@@ -787,7 +815,9 @@ Module 10 develops KV-cache memory and request serving. For an optional connecti
 
 ## 13. A minimal scaled dot-product attention implementation
 
-Run the code blocks in §§13–14 in order. This teaching version exposes the calculation and its main input checks: finite floating-point tensors with nonempty axes on one device, and a Boolean mask broadcastable to the score shape. It computes in float32 or float64 and returns `(output, weights)`. The notebook adds diagnostic fields and padding support.
+We can now turn the written computation into an implementation. The same steps should remain recognizable in the code: compare queries with keys, apply the mask before softmax, and mix values. Input checks make explicit the assumptions used in the equations.
+
+Run the blocks in §§13–14 in order. The inputs are finite floating-point tensors with nonempty axes on one device, with a Boolean mask broadcastable to the score shape. This version computes in float32 or float64 and returns `(output, weights)`. The notebook adds diagnostic fields and padding support.
 
 ```python
 from __future__ import annotations
@@ -930,7 +960,11 @@ Once the explicit computation is clear, compare it with `torch.nn.functional.sca
 
 ## 14. A minimal Transformer block
 
-We now assemble a small decoder-only block with normalization before each sublayer. Its FFN uses **GELU**, the smooth nonlinearity $x\Phi(x)$, where $\Phi$ is the standard normal cumulative distribution function. This teaching variant uses pre-norm and GELU; the 2017 architecture uses post-norm and ReLU.
+Return now from translation to a single stream of text. A minimal **decoder-only** block needs no separate encoder memory: the available context is already in the same sequence. Causal self-attention and an FFN remain, while cross-attention is absent.
+
+For this implementation, place normalization before each sublayer—the pre-norm arrangement from §8.3. The FFN uses **GELU**, the smooth nonlinearity $x\Phi(x)$, where $\Phi$ is the standard normal cumulative distribution function. This is a teaching decoder-only variant, not a reproduction of the 2017 block: the original uses post-norm and ReLU.
+
+The organizing principle is familiar. Each sublayer computes an update, a residual connection adds it to the main stream, and the representation keeps its width. The following code makes those paths explicit.
 
 ```python
 class FeedForward(nn.Module):
@@ -1021,7 +1055,7 @@ These counts are exact under the stated exclusions. A complete layer also has bi
 
 ## 16. The 2017 original and a modern LLM: what survived
 
-The word “Transformer” can misleadingly suggest one fixed architecture. In practice it names a family.
+We have followed the shared operations into two concrete designs: the original translation model and a small decoder-only block. Their differences can now be read as changes to a computation we understand, rather than as another list of architectural names. This is the useful sense in which “Transformer” names a family, not one fixed design: recognizable components can be connected and modified in different ways.
 
 ![VIZ m3/10 — encoder-only, decoder-only, and encoder–decoder](assets/modern-llms/en/module-03/m3_10_family_map.svg)
 *All three families use the same construction kit but differ in masks and information flow. Modern LLMs center the decoder-only branch, while encoders and cross-attention remain important for understanding the origin of the architecture and many multimodal systems.*
@@ -1119,7 +1153,7 @@ A useful route for a newcomer is: this lesson → Alammar → the notebook → F
 ![VIZ m3/11 — the basic Transformer in 60 seconds](assets/modern-llms/en/module-03/m3_11_cheatsheet.svg)
 *Four panels to reconstruct from memory: tensor shapes, one attention head, the role of each sublayer, and correctness checks.*
 
-The complete route is now compact:
+At the start of the chapter, our vectors were rows selected from an embedding table. We can now trace how a position receives information from the available context, how layers transform that information, and how the final representation becomes a prediction. The complete route is:
 
 1. a tokenizer produces ids; embeddings and positions turn them into $B\times T\times d_{model}$;
 2. $QK^\top/\sqrt{d_k}$ produces connection logits, a mask removes forbidden links, and softmax normalizes over keys;

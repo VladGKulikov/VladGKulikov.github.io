@@ -10,9 +10,9 @@
 
 ### Reading routes
 
-**First pass:** §1 → §§3–4 → §§6–11 → §§17 and 19. In §4, first understand the discrete recurrence and its matrices; save the exact-coefficient derivation and E1 in §18 for the second pass. E2–E3 provide the first memory calculations. Follow the change from a list of past tokens to a fixed state, then study writing, forgetting, and hybrids. Return to the opening memory figures when you reach §10.
+**First pass:** §1 → §§3–4 → §§6–11 → §19, followed by the [existing module tests](/courses/modern-llms/module-08/tests/). In §4, first understand the discrete recurrence and its matrices; save the exact-coefficient derivation and [exercise E1](/courses/modern-llms/module-08/exercises/) for the second pass. Exercises E2–E3 on the same page provide the first memory calculations. Follow the change from a list of past tokens to a fixed state, then study writing, forgetting, and hybrids. Return to the opening memory figures when you reach §10.
 
-**Second pass:** §§4–5, §7, and §§12–14 with the notebook. Derive the discrete update and test composition, chunk boundaries, and numerical limits.
+**Second pass:** §§4–5, §7, and §§12 and 14 with the [module notebook](/courses/modern-llms/module-08/notebooks/). Derive the discrete update and test composition, chunk boundaries, and numerical limits.
 
 **Reference pass:** §2, §15, and §20 provide history, model specifications, and sources. They introduce names as pointers; the mechanisms are developed in §§3–11.
 
@@ -20,13 +20,15 @@
 
 A Transformer pays for length in two related but different places. During dense prefill, attention considers token pairs and its central arithmetic is quadratic in sequence length. During autoregressive decode, each new query reads the accumulated keys and values, so both per-step work and cache size grow with the preceding context.
 
+In the preceding modules, we usually followed a token representation through the depth of the network. Each block read the residual stream and added an update. Here we look in a different direction: hold one layer fixed and ask what it carries from one token to the next. This state across sequence positions is distinct from the representation passed between layers.
+
 An SSM stores history in another form:
 
 $$
 h_t=f(h_{t-1},x_t),
 $$
 
-where $h_t$ has a fixed shape. Processing a sequence remains linear in length, and the recurrent cache does not expand as the conversation continues.
+where $h_t$ has a fixed shape. Each new token changes the contents of this state instead of appending a separately stored record. With the layer dimensions held fixed, the sequence takes linear work to process, and the recurrent cache does not expand as the conversation continues. This is an inference-state claim; retaining intermediate computations for training is a separate memory question.
 
 That resource win is not free. A KV cache resembles an indexed collection: a later query can point back to a specific record. A recurrent state is closer to a continuously rewritten summary. It can preserve the statistics that training makes useful, but independent facts may interfere, and arbitrary exact retrieval does not come for free.
 
@@ -51,7 +53,11 @@ Large systems then converged on hybrids rather than one universal replacement. J
 
 ## 3. Three readings of the same recurrence
 
+There are three useful ways to examine a compact memory. We can specify how its state evolves, ask which time scales that evolution preserves, or organize the state to store associations. The first two views describe the same linear system. The third introduces a related matrix-memory construction; SSD will later tell us when a precise correspondence is available.
+
 ### A dynamical system
+
+Continuous time may seem an odd starting point for a stream of tokens. Its value is that it gives us a language for rates of change and decay. We can specify those rates first, then ask what they do over one discrete step. This is a model of internal dynamics, not an assumption that the gaps between written words are physical time intervals.
 
 A continuous linear SSM is
 
@@ -63,13 +69,19 @@ $$
 
 $A$ controls internal evolution, $B$ writes the input, $C$ reads the state, and $D$ provides a direct input-to-output path.
 
+Updating the memory and reading an output from it are separate operations. Previously stored information can evolve even when no new input arrives. The current input contributes to that evolution, while the readout determines what part of the resulting state is exposed. The direct path also lets the current input affect the output without first being stored.
+
 The state $h\in\mathbb R^n$, input $x\in\mathbb R^p$, and output $y\in\mathbb R^r$ fix the matrix shapes: $A:n\times n$, $B:n\times p$, $C:r\times n$, and $D:r\times p$. The dot denotes a continuous-time derivative; tokens will instead index discrete updates.
 
 ### A bank of temporal filters
 
 If every eigenvalue of $A$ has a negative real part, the unforced state tends to zero over time: the system is asymptotically stable. This does not require each coordinate to decrease monotonically; a general matrix can produce transient growth. In the diagonal examples below, individual negative coefficients directly set different decay times. The system can then be read as a bank of fast and slow temporal filters.
 
+The filter view is not an additional mechanism attached to the dynamics. It describes the same computation in terms of how long an input continues to influence the output. Different decay rates let a single state respond to recent changes while retaining traces of a longer history.
+
 ### An associative memory
+
+Now ask a more specific memory question: how can a state retain a relationship between a key and a value? A matrix provides one answer. Instead of allocating a new row in an expanding KV table, each write changes the same array that already represents earlier associations.
 
 A linear-attention memory is often written as
 
@@ -78,7 +90,7 @@ S_t=S_{t-1}+v_tk_t^\top,
 \qquad y_t=S_tq_t.
 $$
 
-The key selects a write direction, the value provides the content, and the query reads from the resulting matrix. Unlike an explicit KV table, the matrix has fixed size, so independent associations eventually interfere.
+The key selects a write direction, the value provides the content, and the query reads from the resulting matrix. That read combines contributions stored in a shared object rather than retrieving an isolated row. Non-orthogonal key directions can therefore interfere with one another. Section 9 will examine this interference explicitly.
 
 For the associative form, $k_t,q_t\in\mathbb R^{d_k}$, $v_t\in\mathbb R^{d_v}$, and $S_t\in\mathbb R^{d_v\times d_k}$. The outer product writes one association; multiplication by the query reads a value-sized vector. This is unnormalized linear attention, with no softmax.
 
@@ -86,13 +98,15 @@ These views are complementary. Dynamics explains stability and forgetting; filte
 
 ## 4. Discretization with Zero-Order Hold
 
-Language arrives at discrete positions, so a continuous system must be discretized. Under **Zero-Order Hold (ZOH)**, the input is treated as constant for an interval of duration $\Delta$:
+Having chosen a continuous description, we need to turn it into an operation performed once per input element. We could have defined a discrete recurrence directly; deriving one from a continuous system instead makes its coefficients interpretable. The question is what happens to the existing state, and how much the new input contributes, during a single step. Under **Zero-Order Hold (ZOH)**, the input is treated as constant for an interval of duration $\Delta$.
+
+This duration is a step in the model’s internal dynamics. Holding the input fixed does not freeze the state: the state keeps evolving throughout the interval, under both its previous dynamics and the sustained input. At the end of the interval, the update separates into two terms:
 
 $$
 h_t=\bar A h_{t-1}+\bar Bx_t,
 $$
 
-The bars distinguish one-step discrete matrices from the continuous system: $\bar A$ propagates the previous state, while $\bar B$ adds the current input. This recurrence is the starting point for reading Mamba. The following equations derive its coefficients for a specified continuous-time system.
+The bars distinguish one-step discrete matrices from the continuous system: $\bar A$ propagates the previous state, while $\bar B$ adds the current input. The first term carries the past; the second accounts for the present input. But that input is not applied only at the final instant. A contribution introduced early in the interval also evolves before the interval ends. The exact write coefficient must collect all of those contributions. The recurrence is enough for a first reading of Mamba; the following equations explain where its coefficients come from:
 
 $$
 \bar A=e^{\Delta A},
@@ -103,6 +117,8 @@ $$
 
 For invertible $A$, the integral equals $A^{-1}(e^{\Delta A}-I)B$. The integral also covers singular matrices. The numerical examples set the direct path $D$ to zero.
 
+The matrix exponential propagates the existing state across the whole interval. The integral accumulates the held input, allowing each contribution its remaining time to evolve. Thus the write coefficient depends on the dynamics as well as the step length; it is not merely the input map multiplied by a duration.
+
 For diagonal $A$, the calculation is elementwise. When one diagonal entry is zero, the expression for $\bar B$ looks singular, but the limit is well defined:
 
 $$
@@ -112,6 +128,8 @@ $$
 The module code handles that limit explicitly so a rare zero mode cannot create a hidden `NaN`.
 
 The exact ZOH formula and a production Mamba parameterization are not the same object. In the open Mamba-2 implementation, the input update uses a term of the form $\Delta Bx$ inside its efficient formulation rather than materializing the exact ZOH input matrix above. The continuous model supplies intuition; the architecture chooses a trainable discrete update that can be implemented efficiently.
+
+Accuracy relative to a prescribed continuous system is therefore a different question from the quality of a trained language model. A model with another discrete update is trained with that update in place. The next example isolates the first question: how far two input coefficients differ when the original continuous dynamics and step are held fixed.
 
 ## 5. Worked example: the cost of replacing exact ZOH by $\Delta B$
 
@@ -159,7 +177,7 @@ The point is not that every selective SSM must implement full ZOH. It is that $\
 
 ## 6. What selectivity changes in Mamba
 
-A time-invariant linear system applies the same write and forgetting law to every symbol. Language needs content-dependent control. Mamba predicts write and read maps and a positive step from the current input. Here $\operatorname{softplus}(u)=\log(1+e^u)$ ensures a positive step; the expression is schematic:
+A time-invariant linear system already responds to content: different input vectors produce different updates. What stays fixed is the rule that writes the input, carries the old state forward, and reads the result. Selectivity lets the content influence those rules themselves. A name, a closing bracket, and a frequent article may call for different treatment of memory, not just different vectors passed through the same treatment. Mamba predicts write and read maps and a positive step from the current input. Here $\operatorname{softplus}(u)=\log(1+e^u)$ ensures a positive step; the expression is schematic:
 
 $$
 B_t=B(x_t),
@@ -167,7 +185,9 @@ B_t=B(x_t),
 \qquad \Delta_t=\operatorname{softplus}(W_\Delta x_t).
 $$
 
-$B_t$ controls writing, $C_t$ controls reading, and $\Delta_t$ changes the effective rate at which the state moves. A token can therefore preserve the previous state, overwrite part of it, or expose a different projection to the next block.
+$B_t$ controls writing, $C_t$ controls reading, and $\Delta_t$ sets how far the system advances through its internal dynamics. For the stable diagonal modes considered here, a larger step attenuates the previous state more strongly; a smaller one leaves it closer to its earlier value. The size of the final change also depends on the new input, so a larger step need not mean a larger update norm. Changing the read map can expose different features of the same memory without first rewriting all of it.
+
+The three roles from the linear model—carry, write, and read—are still recognizable, but their use is now content-dependent. The recurrence is only the central operation of the neural block, however: its input must also be prepared and its output passed onward.
 
 A short depthwise causal convolution appears before the selective recurrence. It is best understood as an explicit local inductive bias, not as evidence that recurrence cannot represent order. The convolution handles nearby patterns cheaply; the SSM carries longer dynamics.
 
@@ -178,11 +198,15 @@ That local path also owns persistent state at decode time. A serving implementat
 
 ## 7. Mamba-2 and the scope of State Space Duality
 
-Mamba-2 focuses on a structured class of state transitions whose sequence matrix is semiseparable. The same operator can then be evaluated as:
+During generation, recurrence fits the workload: a new token arrives, the state is updated, and an output is read. During training, the layer already has input representations for the whole sequence. Must its states still be evaluated one at a time, or can the same dependence on the past be organized differently?
+
+Mamba-1 already uses a parallel selective scan. Mamba-2 does not introduce parallel recurrence from scratch; it connects a particular transition structure to an especially useful matrix computation. Its sequence matrix is semiseparable, a property we will interpret by following how one input reaches a later output. The same structured operator can be evaluated as:
 
 1. a sequential recurrence;
 2. an associative parallel scan;
 3. a chunked matrix computation resembling masked linear attention.
+
+The apparent obstacle is that each state needs the preceding one. But a state and the description of a transformation are different objects. Once transition coefficients have been computed from the input sequence, two neighboring transformations can be composed without knowing the state that will enter them. Their composition is another transformation, with exactly the effect of applying the first and then the second.
 
 A *scan* computes every prefix state, not just the final state. Represent the affine step $h\mapsto ah+b$ by $(a,b)$. Composition gives
 $$
@@ -190,11 +214,19 @@ $$
 $$
 Associativity permits regrouping, not reordering: $(2,1)$ followed by $(3,4)$ yields $(6,7)$, whereas the reverse order yields $(6,9)$.
 
+We can therefore combine neighboring pairs, then larger stretches, to obtain the transformation associated with every prefix. Applying each prefix transformation to the initial state gives the corresponding state. The dependence on the past has not disappeared. What changed is the schedule for composing transformations, allowing parallel work while preserving token order.
+
+A second view asks how much each input contributes to each later output. Expanding the recurrence produces a matrix of connections between sequence positions. For this calculation, treat the coefficients for the current sequence as already given. This does not make the complete selective model linear in the original input: the coefficients themselves may be input-dependent.
+
 For this representation, take scalar input $x_t$ and output $y_t$, state $h_t\in\mathbb R^n$, and vectors $B_t,C_t\in\mathbb R^n$. Readout is $y_t=C_t^\top h_t$; the vector $C_t$ represents the readout row used in §3. With transition $a_tI$ and zero initial state, the coefficient mapping input $j$ to output $i\ge j$ is
 $$
 M_{ij}=C_i^\top B_j\prod_{r=j+1}^{i}a_r.
 $$
-The transition product carries the write forward. Off-diagonal blocks factor through the compact state; this low-rank structure is the useful meaning of *semiseparable*. Matrix operations handle a chunk internally, and only the boundary state must cross to the next chunk.
+Read the equation as the journey of a single contribution. The write vector at the earlier position puts the scalar input into the state. Each intervening transition carries or attenuates it. The read vector at the later position determines what reaches the output. The product of transitions accounts for that entire journey between writing and reading.
+
+Now place a boundary between an earlier stretch and a later one. Everything the earlier inputs can contribute to later outputs passes through the state at that boundary. Those inputs need not cross as separate records. Consequently, the corresponding block below the diagonal factors through a fixed-dimensional space. This bounded rank of cross-boundary blocks is the useful meaning of *semiseparable* here; it does not require the entire sequence matrix to have low rank.
+
+This suggests the chunked computation. Dense matrix operations handle interactions inside a short stretch. Contributions from previous stretches arrive through a boundary state, and the current stretch prepares a state for those that follow. Different parts of the work use different computational forms, without changing the operator or materializing an arbitrary full interaction matrix.
 
 ![VIZ m8/02 — the scope of SSD](assets/modern-llms/en/module-08/m8_02_duality.svg)
 *One structured operator, three execution forms. SSD is a duality for a defined class, not an identity between every SSM and every linear-attention method.*
@@ -206,6 +238,8 @@ Nor should numerical equivalence be confused with bitwise equality. A recurrence
 The systems advantage is phase-dependent. Chunked dense work is attractive during training; recurrence is attractive during decode. The cited 2–8× improvement concerns the Mamba-2 core layer in the paper’s measured settings, not the total latency of every model built around it.
 
 ## 8. Delta-rule memory and adaptive forgetting
+
+So far we have asked how to carry a state through the sequence and compute the result efficiently. Now return to the write operation itself. What should happen when new information corrects an existing association? A faster implementation of the old computation cannot answer that question; the memory needs an appropriate update rule.
 
 An additive memory writes
 
@@ -246,7 +280,7 @@ For a unit key the readout is $(1-\beta_t)\gamma_t S_{t-1}k_t+\beta_t v_t$, so $
 
 ## 9. What a fixed state can and cannot preserve
 
-Consider a deliberately simple associative memory:
+The delta rule showed that the write policy matters. To isolate interference in a shared state, we now return deliberately to the simplest additive memory. The next experiment is not a benchmark of the DeltaNet update just described. It examines one source of error: overlapping associations in a single matrix:
 
 $$
 S=\sum_{i=1}^{m}v_i k_i^\top,
@@ -268,9 +302,13 @@ Newer models such as Mamba-3 increase recurrent expressivity and improve state t
 
 The plotted methods share the same random keys and values at each load. For independent isotropic unit keys in $d_k$ dimensions and independent zero-mean, unit-variance value coordinates, expected additive-memory MSE per coordinate is $(m-1)/d_k$. The dashed line shows that expectation, not a claim that one seeded sample must equal it.
 
+The dependence has a direct interpretation. When one pair is read, all the other pairs contribute cross terms. More stored pairs create more of these terms; a wider random-key space weakens their average overlap. The formula describes that mechanism under the stated assumptions, rather than a universal quality curve for recurrent models.
+
 ## 10. Memory accounting and core-only arithmetic
 
 ### Complete recurrent cache
+
+We can now return to the opening memory figures with a clearer inventory of what must survive between tokens. The comparison is between explicitly chosen cache geometries, not between models already known to deliver equal quality.
 
 All sizes below cover one sequence and the stated layer stack, excluding model weights and workspaces. Let $L$ count layers, $H_{kv}$ count KV heads, $d_h$ be head width, and $b$ be bytes per value. Use $L=32$, $H_{kv}=8$, $d_h=128$, and $b=2$. The recurrent geometry uses $d_{inner}=8192$ channels, $d_{state}$ state coordinates per channel, and a stored convolution width $d_{conv}=4$. Here K=1024 and M=1024² tokens.
 
@@ -298,11 +336,15 @@ $$
 M_{recurrent}=66.0625\text{ MiB}.
 $$
 
+The difference between these recurrent examples comes from state geometry, not from how much text has already been read. The second state is wider, and its convolution cache includes additional channels. Fixed size means independent of sequence length; it does not mean that every SSM uses the same number of bytes.
+
 The exact crossover is 528.5 tokens, and the first integer position after it is 529.
 
 A 32-layer hybrid with four attention layers at 256K context retains 4 GiB of KV cache plus 8.75 MiB of recurrent state in the other 28 layers. The memory remains $O(N)$ because some layers still keep token-addressable records; the coefficient is simply much smaller.
 
 ### Central operator arithmetic
+
+So far we have counted what remains in memory between steps. We now change the question to the arithmetic needed for one new input, specifying dimensions and the boundary of the counted operation separately.
 
 Count one layer at one decode step. Set $d_{model}=4096$, $d_{inner}=8192$, and $d_{state}=16$, returning to the Mamba-1-like state width for this separate arithmetic example. Let $N$ be the number of visible keys. Count a multiplication and an addition as two operations, even if hardware fuses them.
 
@@ -322,6 +364,8 @@ giving ratios of 25.6× at 1K, 819.2× at 32K, and 26,214.4× at 1M. An exact sc
 The Mamba-2 example assumes one B/C group and all 8192 channels assigned to the SSM. More generally, convolution has $d_{ssm}+2g d_{state}$ channels for $g$ groups. SSM and convolution states may use different dtypes; using bf16 for both is a scenario assumption.
 
 ## 11. Three hybrid patterns
+
+We can now see both sides of the trade-off. Compact state makes continuation cheaper, but does not replace individually addressable records for every task. A hybrid keeps both mechanisms. Its design depends not only on their proportions, but also on where they meet: at different depths or inside the same block.
 
 ### Interleaved layers
 

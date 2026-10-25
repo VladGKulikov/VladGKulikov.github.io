@@ -1,0 +1,169 @@
+{
+  "date": "2026-10-25",
+  "status": "PASS",
+  "lectures": 40,
+  "source_files": {
+    "modern-llms:ru:module-01": {
+      "path": "modules/module-01/ru/module_01_lecture_RU.md",
+      "sha256": "c212b5037a5109a7d17491e367aea1271765fee062f70a10e279bb0cbe1fa694"
+    },
+    "modern-llms:ru:module-02": {
+      "path": "modules/module-02/ru/module_02_lecture_RU.md",
+      "sha256": "0496c6183ae21713b9cef1419ed48379e1362141d040a9602caa16d74d5b5d4d"
+    },
+    "modern-llms:ru:module-03": {
+      "path": "modules/module-03/ru/module_03_lecture_RU.md",
+      "sha256": "ea0adb3c031d67c8db45b3fdbcc0bca11360c0612748aa52231222c83b504185"
+    },
+    "modern-llms:ru:module-04": {
+      "path": "modules/module-04/ru/module_04_lecture_RU.md",
+      "sha256": "994e407331a46d0936dabe400a869aa53f44052c45b15244b45285967d09c9ec"
+    },
+    "modern-llms:ru:module-05": {
+      "path": "modules/module-05/ru/module_05_lecture_RU.md",
+      "sha256": "ee4aabe918cc5fcfa66bb1d82844bd3c2053dc5211b0105b1e530a8b069e3b38"
+    },
+    "modern-llms:ru:module-06": {
+      "path": "modules/module-06/ru/module_06_lecture_RU.md",
+      "sha256": "3d55f0c44ce9548b89188ac31f3e1165c4adcb9dc40f3857bfa2fb9ac3e5e505"
+    },
+    "modern-llms:ru:module-07": {
+      "path": "modules/module-07/ru/module_07_lecture_RU.md",
+      "sha256": "df4bb2a53a41ffd65a7013c4cc66b355dbe6afa51d97a514b36ff052646ef7a6"
+    },
+    "modern-llms:ru:module-08": {
+      "path": "modules/module-08/ru/module_08_lecture_RU.md",
+      "sha256": "0e4775042db0c09f53d36ae9cc832b891d1cf8fc563f322ec655ba7dd000ba14"
+    },
+    "modern-llms:ru:module-09": {
+      "path": "modules/module-09/ru/module_09_lecture_RU.md",
+      "sha256": "917b07a3b051d6cf167f7202dfe85c6cfab2625cd89963531d2a6cf16be2b162"
+    },
+    "modern-llms:ru:module-10": {
+      "path": "modules/module-10/ru/module_10_lecture_RU.md",
+      "sha256": "121d4925ba4d9f90da33281d9cd31e2ae5b5b7c3e29e98eeb82cdbaa093bff60"
+    },
+    "modern-llms:ru:module-11": {
+      "path": "modules/module-11/ru/module_11_lecture_RU.md",
+      "sha256": "f57d2f5135c6bc5a02fa0fa73b11bd0fb45308ffe460fedfc8e3a3b7ed304779"
+    },
+    "modern-llms:ru:module-12": {
+      "path": "modules/module-12/ru/module_12_lecture_RU.md",
+      "sha256": "f6c5665b115e425ac0e97a53af42f7ad8fbdc4f1aa34d0db4359c5473c7ac3c3"
+    },
+    "modern-llms:ru:module-13": {
+      "path": "modules/module-13/ru/module_13_lecture_RU.md",
+      "sha256": "1d496985b411265e9da3961ea7965f29078d3ac971457bf0f750a82b5f0beca7"
+    },
+    "modern-llms:ru:module-14": {
+      "path": "modules/module-14/ru/module_14_lecture_RU.md",
+      "sha256": "efba4d58a87bae44e7b94cdbdc1056f572f3c9386e918fa019216af1776a8748"
+    },
+    "modern-llms:ru:module-15": {
+      "path": "modules/module-15/ru/module_15_lecture_RU.md",
+      "sha256": "7b6bcd732c9c6dc3a3109f5162db81b720e3ed95cc909e0a9f4944968e5b1c04"
+    },
+    "modern-llms:ru:module-16": {
+      "path": "modules/module-16/ru/module_16_lecture_RU.md",
+      "sha256": "4cf8cd38203e88222fee4788f48a06ee435fd6cdc4c0180515302006829ee19a"
+    },
+    "modern-llms:ru:module-17": {
+      "path": "modules/module-17/ru/module_17_lecture_RU.md",
+      "sha256": "4c0bd17a32a05a0ce5e3895aaf4b241dc108b3c65cee18bcc429270e89a9e46c"
+    },
+    "modern-llms:ru:module-18": {
+      "path": "modules/module-18/ru/module_18_lecture_RU.md",
+      "sha256": "034a1acd2a47bfb45d2c7716edad24a4633cae77253068173c5b6a8d74f4981d"
+    },
+    "modern-llms:ru:module-19": {
+      "path": "modules/module-19/ru/module_19_lecture_RU.md",
+      "sha256": "ee8a0de30972a7d0427770a976e9c1d8066dde2c6b1dd48b89f56b754c89873a"
+    },
+    "modern-llms:ru:module-20": {
+      "path": "modules/module-20/ru/module_20_lecture_RU.md",
+      "sha256": "e3f1c46fbe717ac3be0fbaba3ecf9917ad9297524bc6c3021a84b9803802416a"
+    },
+    "modern-llms:en:module-01": {
+      "path": "modules/module-01/en/module_01_lecture_EN.md",
+      "sha256": "02e5fe09fb461828bebe2658a8e1c50d8505947395b55f586e06f0ddd1a4633d"
+    },
+    "modern-llms:en:module-02": {
+      "path": "modules/module-02/en/module_02_lecture_EN.md",
+      "sha256": "eb51225a693cf8ddf9517b3e750333bc34e8deb145bb5fd906b0822266322ca2"
+    },
+    "modern-llms:en:module-03": {
+      "path": "modules/module-03/en/module_03_lecture_EN.md",
+      "sha256": "79327b33bc62ebc9835a6bdcd0db9069762b62112a078cb4c062e454d1b5e2df"
+    },
+    "modern-llms:en:module-04": {
+      "path": "modules/module-04/en/module_04_lecture_EN.md",
+      "sha256": "114b2df017276608a7473c519655970b685199c25e747be61c24900dd47a8cb4"
+    },
+    "modern-llms:en:module-05": {
+      "path": "modules/module-05/en/module_05_lecture_EN.md",
+      "sha256": "dbb53c569f83c17b9e4f25fb3862f11bf2d0fa5c7efc5074bdc43ef46d236160"
+    },
+    "modern-llms:en:module-06": {
+      "path": "modules/module-06/en/module_06_lecture_EN.md",
+      "sha256": "e062b3ff37f31c84f15fdc0a61b37b5544e6675cbb98cf450156f5e9dae33160"
+    },
+    "modern-llms:en:module-07": {
+      "path": "modules/module-07/en/module_07_lecture_EN.md",
+      "sha256": "64827f9734f5d936dc0a894295dbe412becadf138896e59211e4c5f5bbcd9226"
+    },
+    "modern-llms:en:module-08": {
+      "path": "modules/module-08/en/module_08_lecture_EN.md",
+      "sha256": "538cae05f5a40b028ed985c7b3d7ae4ec24dfb971631dc63afe8c9cd685f52bb"
+    },
+    "modern-llms:en:module-09": {
+      "path": "modules/module-09/en/module_09_lecture_EN.md",
+      "sha256": "f06cc4feadcc8aa17f945e4c63b47972c59126df3e4ec4bdc6879e087bb6e330"
+    },
+    "modern-llms:en:module-10": {
+      "path": "modules/module-10/en/module_10_lecture_EN.md",
+      "sha256": "757c4bb936de77d512c96be6c49b4ae5683f025f4f365c81516f3583ee218629"
+    },
+    "modern-llms:en:module-11": {
+      "path": "modules/module-11/en/module_11_lecture_EN.md",
+      "sha256": "44094b86adc69754946471f577866126c2c756ebefc98f5454ba160bed7c8050"
+    },
+    "modern-llms:en:module-12": {
+      "path": "modules/module-12/en/module_12_lecture_EN.md",
+      "sha256": "0b01438eadbd3d508307d11339a8576469633ae153f3355f3aed2f5f14ca72bb"
+    },
+    "modern-llms:en:module-13": {
+      "path": "modules/module-13/en/module_13_lecture_EN.md",
+      "sha256": "e15b4bb63208cd152676ea355885c92d9f9482f1a87fde426d6561987d5f8219"
+    },
+    "modern-llms:en:module-14": {
+      "path": "modules/module-14/en/module_14_lecture_EN.md",
+      "sha256": "9b7d757f141109e8bccfe762b55b2429319cd7f7da91a22927e5109c9e343c97"
+    },
+    "modern-llms:en:module-15": {
+      "path": "modules/module-15/en/module_15_lecture_EN.md",
+      "sha256": "e8207da11871db0006b6cf6cce886ee63338a5b3235003e89ef0c292f0e1201e"
+    },
+    "modern-llms:en:module-16": {
+      "path": "modules/module-16/en/module_16_lecture_EN.md",
+      "sha256": "5aa137efa8d75ecaef7c498c38c50a30ec7f904403a7b7bc7a72a173f6b7cdd2"
+    },
+    "modern-llms:en:module-17": {
+      "path": "modules/module-17/en/module_17_lecture_EN.md",
+      "sha256": "200f3e9907a3e3ca49e16a8a139dceffad33c7ecf1739039b80cedbec2137f25"
+    },
+    "modern-llms:en:module-18": {
+      "path": "modules/module-18/en/module_18_lecture_EN.md",
+      "sha256": "34f69c8ad3d8e95ca663f01b4473b497bfaf2912c26e4f2a71ef6a3e4ce115aa"
+    },
+    "modern-llms:en:module-19": {
+      "path": "modules/module-19/en/module_19_lecture_EN.md",
+      "sha256": "010d7fc2e92e67c73ce7de90dc02c26f305487f93f20af9fa59db213fdd153cb"
+    },
+    "modern-llms:en:module-20": {
+      "path": "modules/module-20/en/module_20_lecture_EN.md",
+      "sha256": "fd3943bd66ea06d06da32242151608e6802a6d2ff27b8ce0669022b4d19a0a37"
+    }
+  },
+  "images": 360,
+  "practice": "unchanged"
+}

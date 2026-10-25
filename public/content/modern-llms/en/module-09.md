@@ -12,8 +12,8 @@
 
 ### Reading routes
 
-- **First pass:** read §§1–3 and 5 for the problem and the data pipeline. In §4, focus on the variables and final allocation formula; continue with §§6–11 and 15, then try Q1–Q7 in §18 and E1–E3. Return to Q8 after reading the run passports in §17.
-- **Second pass:** work through the derivation in §4 and execute the code and notebooks in §§12–13. Follow with hyperparameter transfer (§14), precision (§16), and selected run reports (§17).
+- **First pass:** read §§1–3 and 5 for the problem and the data pipeline. In §4, focus on the variables and final allocation formula; continue with §§6–11 and 15, then try Q1–Q7 in the [module tests](/courses/modern-llms/module-09/tests/) and [exercises E1–E3](/courses/modern-llms/module-09/exercises/). Return to Q8 after reading the run passports in §17.
+- **Second pass:** work through the derivation in §4, the code in §12, and the [module notebooks](/courses/modern-llms/module-09/notebooks/). Follow with hyperparameter transfer (§14), precision (§16), and selected run reports (§17).
 - **Reference:** use §4 for equations, §§10–11 for optimizer mechanics, §15 for state accounting, and §20 for sources. The run reports can be read independently.
 
 Pretraining builds a base model from a large data mixture, usually through next-token prediction. Later training that shapes its behavior is a separate stage.
@@ -210,6 +210,8 @@ Several public artifacts should not be compared as though they were the same obj
 
 Code, mathematics, scientific documents, and multimodal data usually require specialized branches: parser-aware extraction, license checks, execution or formal verification, perceptual deduplication, and image–text alignment.
 
+So far, the checks have concerned the documents: what they contain, whether they are useful, and whether they may enter the corpus. The procedure that produces the collection deserves a separate inspection. A trustworthy-looking output does not by itself establish that the code which loaded and transformed the data was safe to run.
+
 The preprocessing system is also a software supply chain. Dataset loaders and conversion tools execute code and may access external storage. A July 2026 Hugging Face incident demonstrated that a data-processing path could become an intrusion path. Immutable images, allow-listed loaders, restricted network egress, secret isolation, pinned versions, and configuration review therefore belong to corpus engineering as surely as quality filters do.
 
 ![VIZ m9/02 — a corpus is a pipeline](assets/modern-llms/en/module-09/m9_02_pipeline.svg)
@@ -217,7 +219,7 @@ The preprocessing system is also a software supply chain. Dataset loaders and co
 
 ## 6. Worked example A: two budgets and the cost of a mnemonic
 
-The analytic expression in §4 and the popular rule $D=20N$ answer similar-looking questions in different ways. Let us compare them explicitly.
+Having followed the construction of the corpus, return to the allocation problem. The training budget is fixed; the question is how to divide it between model size and token presentations. The analytic expression in §4 and the popular rule $D=20N$ answer that question in different ways. Let us compare them explicitly.
 
 If we impose $D=20N$ and combine it with $C=6ND$, then
 
@@ -299,11 +301,11 @@ $$
 
 This number is a counterfactual inside the selected fit. It is not a measured penalty of Llama 3 8B and does not claim that the real team “paid 0.0258 loss.” The architecture, data mixture, and training recipe differ from the experiments behind the coefficients. The calculation says only: if we take this fitted surface literally, moving from 35.7B/3.38T to 8.03B/15T raises fitted loss by 0.0258 while making the model about 4.4 times smaller.
 
-That exchange cannot be judged from training alone. The smaller model keeps saving compute after release; the next section asks when those savings repay the additional pretraining.
+That exchange cannot be judged from training alone. The smaller model keeps saving compute after release. In the comparison just completed, however, both configurations spent the same amount on training. To ask when extra pretraining repays itself, we must change what is held equal: the next section fixes the fitted target and allows training costs to differ.
 
 ## 8. Inference-aware allocation: when does the smaller model repay its training?
 
-Change the comparison. Instead of asking for the lowest fitted loss at a fixed training budget, ask for two models that reach the same fitted target.
+We previously held training compute constant and compared the fitted losses it could buy. Now hold the target constant and compare what it costs to reach it. The two configurations may spend different amounts during training, and deployment will add to each running total. The fitted surface has not changed; the comparison has.
 
 Use the 8.03B/15T value
 
@@ -352,6 +354,8 @@ $$
 
 Beyond roughly 2.12T generated tokens, the 8.03B configuration becomes cheaper in the sum of training compute plus this simple dense-decode estimate.
 
+Here “repays” means a crossing in the operation count under the stated cost model. We have not yet converted that count into a bill or a serving latency. Those depend on how efficiently each system executes the work and moves its data.
+
 ![VIZ m9/04 — the lifecycle crossing and the data wall](assets/modern-llms/en/module-09/m9_04_inference_wall.png)
 *Lifecycle compute for two equal-fitted-loss configurations, and the token demand implied by extrapolating the selected fit to larger budgets.*
 
@@ -360,6 +364,8 @@ The simplification omits batching, memory bandwidth, KV cache, quantization, spe
 Inference-aware scaling does not refute Chinchilla. It changes the objective from “minimize fitted loss under a training budget” to “minimize lifecycle cost under a quality target and an expected usage volume.”
 
 ## 9. The data wall: token counts stop being interchangeable
+
+Section 5 asked how to build a usable corpus. The question now is how far that material can sustain a training run. The amount of unique text and the number of token presentations are different quantities: replaying a document adds training work without adding another document to the collection. What matters is how much useful signal the next exposure provides.
 
 Extrapolating the fitted optimum produces about 14.3T tokens at $C=10^{25}$ and about 50.4T at $C=10^{26}$. These are not forecasts of a frontier recipe. They illustrate a structural tension: compute can grow faster than the supply of high-quality, sufficiently independent, legally usable data.
 
@@ -399,6 +405,8 @@ The notebook makes repetition concrete. A 15T-token run with a 15% mathematics s
 
 ## 10. Muon: change the spectrum of a matrix update
 
+The model size, data mixture, and training horizon have now been chosen. Zoom in from that plan to a single training step. The quantities changing here are the weight values, not the number of parameters or the planned token count. The fitted surface in §4 compared training runs; the gradient now comes from the loss of a particular network on its current batch. Choosing a run and updating its weights are different optimization problems.
+
 AdamW remains a strong and well-understood baseline. Its practical advantage is coordinate-wise adaptation: parameters with different gradient histories receive different effective step sizes.
 
 The learning rate $\eta_t$ controls the overall step size. Momentum carries a decaying history of gradients, smoothing changes in direction. Weight decay shrinks the parameters themselves. AdamW applies that shrinkage separately from its adaptive gradient scaling, so adding an L2 penalty to the loss generally produces a different update.
@@ -415,33 +423,37 @@ The hats correct for initializing the averages at zero. Here $\lambda\ge0$ contr
 
 For $\theta_0=(1,-2)$, $g_1=(0.2,-0.4)$, $\eta_1=0.01$, $\lambda=0.1$, $\beta_1=0.9$, $\beta_2=0.999$, and $\varepsilon=10^{-8}$, the first result is approximately $(0.989,-1.988)$. Decay alone gives $(0.999,-1.998)$; the adaptive term contributes roughly $(-0.01,+0.01)$. The notebook follows another step after the gradient changes sign, exposing the role of history. [AdamW](https://arxiv.org/abs/1711.05101).
 
-Large Transformer parameters, however, are naturally matrices. Attention and MLP projections are not merely long vectors with arbitrary reshaping. Suppose a matrix update has a few dominant singular directions and many weak ones. A step can then concentrate most of its effect in a narrow subspace.
+AdamW adapts the step coordinate by coordinate. Many Transformer parameters also have a natural matrix structure: an attention or MLP projection maps one feature space into another. Its gradient and accumulated update have the same shape. Viewed as matrices, they reveal not only the size of individual entries but also how strongly the update acts along different directions.
 
-Muon begins with a momentum-like update
+A few large singular values and many small ones mean that much of this action is concentrated in a narrow subspace. Multiplying the entire update by a single scalar changes its overall size without changing that imbalance. Muon instead transforms the relative strengths of the update’s singular directions.
+
+The object to be transformed is first assembled from the gradient history. Muon begins with a momentum-like update
 
 $$
 M_t=\mu M_{t-1}+g_t.
 $$
 
-For a two-dimensional parameter, it then approximates a polar factor
+This stage produces a prepared update, not a new weight matrix. It is the update that will be transformed; the model weights themselves are not required to become orthogonal. The mathematical target is a polar factor, which separates singular-vector directions from their original magnitudes. For a two-dimensional parameter, Muon approximates that factor:
 
 $$
 O\approx(MM^\top)^{-1/2}M.
 $$
 
-Here $M$ is the update matrix and SVD means singular value decomposition. The inverse-square-root expression requires full row rank; a tall matrix has singular $MM^\top$. In general, use the pseudoinverse square root and retain zeros in null directions. The expression $UV^\top$ uses the compact SVD on the nonzero singular subspace. The code transposes tall inputs so the Gram matrix is only $\min(m,n)\times\min(m,n)$.
+Here $M$ is the update matrix and SVD means singular value decomposition. Before treating the expression as a computational recipe, check its domain. The ordinary inverse square root requires full row rank; a tall matrix has singular $MM^\top$. In general, the pseudoinverse square root leaves null directions at zero rather than inventing an update in them. The expression $UV^\top$ below uses the compact SVD on the nonzero singular subspace. The code transposes tall inputs so the Gram matrix is only $\min(m,n)\times\min(m,n)$. This keeps the matrix work on the smaller side of a rectangular update.
 
-If $M=U\Sigma V^\top$, the ideal polar factor is $UV^\top$. The singular-vector directions remain; the nonzero singular values are replaced by ones. In practical terms, Muon narrows the spread of singular values and makes the update more isotropic in matrix geometry.
+The SVD makes the intended change easier to see. If $M=U\Sigma V^\top$, the ideal polar factor is $UV^\top$. The corresponding input and output directions remain, while the nonzero singular values are replaced by ones.
 
-The momentum equation isolates accumulation. A complete implementation also chooses momentum normalization, optional Nesterov mixing, shape-dependent step scaling, and weight decay. The notebook starts with a prepared update matrix. GEMM means matrix multiplication; the five iterations below are only one part of an optimizer step.
+This is not uniform shrinkage of all entries. Directions that previously acted with very different strengths now have equal strength in the ideal transformation. Practical Muon approximates that idea by narrowing the singular-value spread, making the update more isotropic within its nonzero subspace. The overall step magnitude remains a separate optimizer choice.
 
-Computing an SVD for every large matrix on every step would be too expensive. Muon therefore uses a small number of Newton–Schulz matrix iterations implemented through GEMM. The teaching trace uses the quintic coefficients
+Keep the complete sequence in view: prepare an update from gradient history, transform its matrix geometry, then use it to change the weights. The momentum equation isolates the first stage. A complete implementation also chooses momentum normalization, optional Nesterov mixing, shape-dependent step scaling, and weight decay. The notebook starts with a prepared update matrix. GEMM means matrix multiplication; the five iterations below perform the transformation stage, not the entire optimizer step.
+
+The remaining question is computational: how can we approximate this transformation without paying for a full SVD of every large matrix at every step? Muon uses a small number of Newton–Schulz matrix iterations implemented through GEMM. The SVD explains the target; it need not be performed literally inside the training loop. The teaching trace uses the quintic coefficients
 
 $$
 (a,b,c)=(3.4445,-4.7750,2.0315)
 $$
 
-and the normalized recurrence
+and, after normalizing the matrix, the following inner iteration:
 
 $$
 X_{k+1}=aX_k+b(X_kX_k^\top)X_k+c(X_kX_k^\top)^2X_k.
@@ -450,6 +462,8 @@ $$
 For the fixed $64\times32$ matrix in the notebook, the initial singular-value spread is about 5.1 ($13.81/2.70$). After five quintic iterations, the spectrum lies roughly in $[0.682,1.133]$.
 
 This is not an exact orthogonal factor. $\|O^\top O-I\|$ remains nonzero. Three additional classical cubic iterations can move the band to approximately $[0.998968,1.0]$, but exactness costs more GEMM work. An optimizer needs a useful geometric transformation, not a perfect numerical linear-algebra result.
+
+Two judgments must therefore remain separate. We can measure how closely the inner algorithm approximates the polar factor of this matrix. Whether the resulting update improves model training is an empirical question about the training run. Solving the first problem more accurately does not, by itself, settle the second.
 
 ![VIZ m9/05 — flattening the update spectrum](assets/modern-llms/en/module-09/m9_05_muon.svg)
 *Momentum update → five Newton–Schulz quintic iterations → a much narrower singular-value band. The inset contrasts the practical approximation with near-exact orthogonalization.*
@@ -460,9 +474,11 @@ Public large-scale recipes are usually hybrid. Large matrices may use Muon, whil
 
 ## 11. MuonClip: correct the parameter source of unstable attention logits
 
-Spectral normalization of the update does not prevent every instability. During Kimi K2 scaling, the developers observed attention heads whose query–key logits grew over time. Large-magnitude $QK^\top$ values drive softmax toward saturation and can turn a local head-level problem into a loss spike.
+Spectral normalization of the update does not prevent every instability. During Kimi K2 scaling, the developers observed attention heads whose query–key logits grew over time. When growth in $QK^\top$ produces large gaps between key scores within a row, softmax becomes concentrated on very few positions. It is this relative scale, not a common shift of every logit, that changes the concentration. In the reported failure mode, unstable head-level behavior could develop into a loss spike.
 
-Clipping the logits in one forward pass treats the symptom. The matrices $W_Q$ and $W_K$ that produced the extreme value remain unchanged and may recreate it on the next step. QK-Clip instead rescales those parameters after the optimizer step.
+Module 6 distinguished normalization of queries and keys from a transformation of the logits already computed from them. Both act in the forward computation, but on different objects. We now consider another intervention point: the parameters that will generate queries and keys on later steps.
+
+Capping a forward-pass logit does not itself rescale the matrices $W_Q$ and $W_K$ that generated the uncapped score. It can still affect subsequent learning through the gradients; it simply acts through a different mechanism. QK-Clip uses an observed head statistic to rescale the projection parameters after the optimizer update when the threshold is exceeded. The distinction is where and when the intervention acts, not a universal ranking of the methods.
 
 Let $m_h$ be the maximum positive, unmasked, scaled attention logit for head $h$, clamped below at zero and let $\tau$ be the threshold. Define
 
@@ -605,6 +621,8 @@ One temporal detail matters as well. The returned Q/K scales correct the state o
 
 ## 14. µP and MetaP: make small-model tuning informative
 
+Small models have already served one purpose in this chapter: they make it affordable to estimate how quality changes with scale. Once a scale is chosen, another question remains. Can a small experiment also identify training settings that remain useful for the larger model? Predicting an outcome across scales and transferring a hyperparameter setting are related planning tools, but they are not the same task.
+
 Suppose the target model has 100B parameters and the learning rate is still unknown. A sweep that would be routine on a 100M proxy is financially absurd at the target scale. The obvious plan is to tune the small model and reuse the result. Standard parameterization makes that plan unreliable because width changes activation scales, gradient scales, and the relative size of updates across parameter classes.
 
 **Maximal Update Parametrization (µP)** addresses this transfer problem by choosing width-dependent initialization and learning-rate rules that preserve a nontrivial limiting training dynamics as width grows. When the proxy and target belong to a correctly constructed µP family, useful hyperparameters can transfer across widths far better than under standard parameterization.
@@ -617,7 +635,9 @@ Meta has described **MetaP** in the public account of Llama 4 as a related trans
 
 ## 15. Parallelism: fitting the training state before optimizing communication
 
-A perfect corpus and optimizer are irrelevant if the training state does not fit in memory. Start with a deliberately simple mixed-precision AdamW accounting:
+An optimizer is not only a rule for computing an update; it also creates objects that must be kept between steps. The moment estimates in §10 persist so that the next gradient can be interpreted in light of earlier ones. Alongside them sit the parameters, gradients, and, in some mixed-precision schemes, a higher-precision master copy of the weights.
+
+Fitting the weights for inference is therefore a different problem from fitting the training state. Start with a deliberately simple mixed-precision AdamW accounting:
 
 - bf16 parameter: 2 bytes;
 - bf16 gradient: 2 bytes;
@@ -639,6 +659,8 @@ per fully replicated data-parallel rank. Adding GPUs increases aggregate through
 A distributed process is called a **rank**; the example maps one rank to one device. **ZeRO** means Zero Redundancy Optimizer; **FSDP**, Fully Sharded Data Parallel, denotes implementations that distribute parameters, gradients, and optimizer state. A recipe that stores gradients in fp32 needs a different byte accounting from the 16-byte policy here.
 
 ### ZeRO and FSDP: shard duplicated state
+
+Must every process permanently hold a complete copy of every array? An operation needs access to its inputs, but that does not require all training state to remain replicated on every device. Sharding divides responsibility for storage among processes and supplies the required pieces through communication when they are needed.
 
 ZeRO removes duplication in stages: optimizer state first, then gradients, then parameters. Under an idealized ZeRO-3 split across 64 ranks, the listed 112 GB becomes
 
@@ -686,6 +708,8 @@ Frontier runs combine these axes: data or FSDP sharding, tensor parallelism, pip
 Distributed training deserves its own course. The next layer includes topology-aware placement, context parallelism, bidirectional pipeline schedules, NCCL/RCCL behavior, asynchronous checkpointing, fault recovery, silent data corruption, and elastic response to failed nodes. The arithmetic here is enough to read a training passport and to understand why a run combines several forms of parallelism; it is not a substitute for operating a 10,000-GPU cluster.
 
 ## 16. Four directions in contemporary pretraining
+
+We can now put the mechanisms back onto the timeline of a training run. Section 5 followed corpus construction; §9 examined the value of further exposures. This section asks when the mixture, context length, learning signal, and numerical policy should change as the run progresses. It is a coordinated view of the choices already introduced.
 
 A list of isolated tricks hides the larger pattern. Recent pretraining systems have been changing four parts of the training problem: the data schedule, the route to long context, the density of the learning signal, and the numerical representation of the run.
 

@@ -168,8 +168,8 @@ sources: 20 Modern LLMs modules, 13 RL for LLM modules, and 16 Information Theor
 modules per language. Existing module URLs retain their subjects, while the
 Modern LLMs reading order follows the revised course.
 
-The archived complete collection is **2026.2**, released on 2026-10-16:
-<https://doi.org/10.5281/zenodo.23420794>. It includes the bilingual lectures, illustrations,
+The archived complete collection is **2026.3**, released on 2026-10-25:
+<https://doi.org/10.5281/zenodo.23649045>. It includes the bilingual lectures, illustrations,
 quizzes and answer checker, exercises and worked solutions, existing notebooks
 and original files, six PDF and six EPUB books, the static website and source.
 The previous 2026.1 lecture archive remains available at
@@ -217,8 +217,8 @@ covered by these licenses.
 ## Citation
 
 GitHub-compatible citation metadata is provided in
-[`CITATION.cff`](CITATION.cff). Cite the complete bilingual **2026.2** collection
-using <https://doi.org/10.5281/zenodo.23420794>. This DOI identifies the collection, including
+[`CITATION.cff`](CITATION.cff). Cite the complete bilingual **2026.3** collection
+using <https://doi.org/10.5281/zenodo.23649045>. This DOI identifies the collection, including
 all six books; it is not a separate DOI for each individual book. Use
 <https://doi.org/10.5281/zenodo.21877456> when referring to the evolving collection
 without specifying an edition.
@@ -230,3 +230,13 @@ I am a Lead AI/ML specialist focused on LLMs in FinTech. I have worked in ML sin
 - [Stepik profile](https://stepik.org/users/29821475)
 - [LinkedIn](https://www.linkedin.com/in/vlad-g-kulikoff/)
 - [GitHub](https://github.com/VladGKulikov)
+
+## Modern LLMs text edition — 25 October 2026
+
+All 40 lecture texts were replaced with the author's new RU/EN edition.
+Practice, quizzes, notebooks and their downloadable packages are unchanged.
+Module numbers in links and illustration paths were mapped by content: the
+supplied M1–M8 used legacy routes, whereas M9–M20 already used current routes.
+The source inventory is in `LECTURE_EDITION_2026-10-25.json`. For a bounded
+refresh run `python scripts/refresh-modern-edition.py <course-source-root>`.
+The other courses and their 2026.2 PDF/EPUB books remain unchanged.

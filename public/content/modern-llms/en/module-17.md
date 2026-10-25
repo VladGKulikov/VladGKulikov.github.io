@@ -2,9 +2,11 @@
 
 *“Modern LLMs” course · Module 17 lecture · edition 2026.10.25*
 
-> **What this module is about.** A language model cannot keep every private document, recent policy update, source citation, and access rule inside its parameters. Retrieval-Augmented Generation, or **RAG**, gives the model an external evidence path. Yet RAG is not one search call followed by one prompt. A query moves through a sequence of compressions: documents become chunks, chunks become representations, an index keeps only a candidate set, a reranker keeps an even smaller set, and a context builder decides which evidence reaches the generator. Each compression saves time or memory, and each can discard the answer. We will use one query as the thread through the module and ask four questions at every stage: what information is retained, what is lost, how the stage is measured, and what the next stage can still repair.
+> **What this module is about.** A user asks an internal assistant: “Why does build 4.7.3 fail with TS-999, and which fix has already been approved?” The answer may be spread across documentation, an incident log, a pull-request discussion, and a recent internal instruction. Keeping every change and access rule inside model parameters is not a practical way to maintain this evidence. Retrieval-Augmented Generation, or **RAG**, provides another route: find a small, useful part of the corpus and give it to the generator.
 >
-> **Prerequisites.** Module 2 develops tokenization and embeddings; Module 10 provides the prefill/decode cost model; Module 13 provides the data-engineering discipline used for examples and evaluation. All retrieval definitions, formulas, and numerical scenarios are developed here, so the lecture remains self-contained.
+> Yet RAG is not one search call followed by one prompt. Documents become chunks, chunks become representations, an index limits the candidates, a reranker orders a bounded set, and a context builder decides what the generator will read. Each reduction can make evidence unavailable to the remaining stages of that pass. We will follow the build question through the module and ask what survives, what is lost, how the stage is measured, and what would require another visit to the source.
+>
+> **Prerequisites.** Module 2 develops tokenization and embeddings; Module 10 provides the prefill/decode and KV cost models; Module 16 introduces the contrastive objective that we will now use for retrieval. The data discipline from Module 13 remains useful when preparing examples and evaluation. The necessary retrieval definitions, formulas, and numerical scenarios are developed here, so the lecture remains self-contained.
 
 ---
 
@@ -12,25 +14,27 @@
 
 **First reading:** follow Sections 1, 4–5, 7, 10–12, and 15–17, then the conclusion. Keep asking which stage can discard the evidence. Section 10 defines the three metrics before presenting results, so the index internals can wait.
 
-**Second reading:** add the history in 2–3, storage and search arithmetic in 6 and 8, index design in 9, and implementation in 13–14. Work through 18–19. Trace one saved query through every ranking, predict what a smaller context budget will remove, and then run the change.
+**Second reading:** add the history in 2–3, storage and search arithmetic in 6 and 8, index design in 9, and the code in Section 13 with the [notebook in Section 14](/courses/modern-llms/module-17/notebooks/). Work through the [tests in Section 18](/courses/modern-llms/module-17/tests/) and [exercises in Section 19](/courses/modern-llms/module-17/exercises/). Trace one saved query through every ranking, predict what a smaller context budget will remove, and then run the change.
 
 **Reference reading:** return to the resource tables, the embedder passport in 17, metric equations, and primary sources. Timing numbers describe a specified scenario and must be replaced by measurements when choosing a deployed system.
 
 ## 1. Motivation: one query, four opportunities to lose the answer
 
-Suppose a user asks a precise question about a large internal corpus. The relevant passage exists, but the generator cannot read every document on every request. A retrieval system therefore compresses the corpus repeatedly.
+The build question has two parts: explain the failure and establish which remedy has been approved. A passage can help with one part without answering the other. Even when the necessary evidence exists somewhere in the internal corpus, the generator cannot read every document on every request. The retrieval system has to reduce the available material without losing what the answer depends on.
 
 The first compression is **chunking**. A long document is divided into retrievable units. If the boundary falls between a definition and the sentence that uses it, neither chunk may be sufficient.
 
 The second compression is **representation**. A sparse index keeps terms and their frequencies; a dense encoder maps a passage into a vector; a late-interaction system keeps several token vectors. Each representation preserves different evidence and discards different detail.
 
-The third compression is **candidate search**. Exact search compares the query with every stored representation. Approximate nearest-neighbor search inspects only part of the index, gaining speed at the risk of missing a relevant item.
+The third compression is **candidate search**. Exact search compares the query with every stored representation. Approximate nearest-neighbor search can inspect fewer objects or compare compressed representations, gaining efficiency at the risk of missing a useful neighbor.
 
 The fourth compression is **context assembly**. Even a good candidate list cannot be sent to the model without limits. The system removes duplicates, applies permissions, chooses an order, and fits the selected passages into a token budget.
 
 The generator sees only what survives all four stages. If the answer is wrong, “the RAG system failed” is not yet a diagnosis. The chunk may never have contained the evidence; the representation may have hidden it; approximate nearest-neighbor (ANN) search may have missed it; fusion may have ranked it too low; or the context builder may have dropped it at the budget boundary.
 
 This viewpoint gives the module its central discipline: **evaluate every irreversible reduction at the point where it occurs**. Retrieval quality is not a property of the embedding model alone, and answer quality is not a sufficient diagnostic for retrieval.
+
+“Irreversible” is local to the remainder of a pass. The source document may still be in storage, but a reranker cannot recover a passage absent from its candidate list, and a generator cannot read a paragraph omitted from its context. A new retrieval call can revisit the source. Section 15 will use that possibility to turn the one-pass cascade into a search loop.
 
 ## 2. Historical progression: each generation restored a signal that the previous one had compressed away
 
@@ -117,7 +121,9 @@ $$
 
 The decisive engineering advantage is precomputation. Document vectors are built once and stored in an index. At request time the system encodes only the query and searches the stored geometry.
 
-A common contrastive objective places the positive document above negatives in the same batch:
+The geometry must nevertheless serve a particular information need. A general article about failed upgrades may be thematically close to our build question while saying nothing about TS-999 in version 4.7.3 or an approved remedy. Relevance is not simply “about the same subject.” Positive pairs and plausible but insufficient negatives teach the encoder which distinctions matter for the retrieval task.
+
+The learning task now resembles the one in Module 16. An image previously had to identify its matching caption; a query now has to distinguish a relevant passage from alternatives. The encoder is learning relative scores, not generating the answer itself. A common contrastive objective places the positive document above negatives in the same batch:
 
 $$
 \mathcal L_i
@@ -131,6 +137,8 @@ The temperature $\tau>0$ controls sharpness: reducing it emphasizes the largest 
 The denominator converts other documents in the batch into negatives. This makes large batches attractive, but it also creates a data-quality question: another query's positive document may be relevant to $q_i$ as well. Treating it as negative produces a false-negative signal.
 
 Hard negatives are usually more informative. A lexical or earlier dense retriever finds passages that look plausible but are not judged relevant. They force the model to separate near misses—two similar policies, two software versions, or two entities with related names. Yet hard-negative mining must be audited: the better the retriever, the more likely it is to surface unlabeled positives.
+
+For the build question, the useful boundary may lie within one topic: a similar incident on another version does not establish the cause of this failure. That is why a hard negative can teach more than an unrelated passage. But “not labeled relevant” is weaker than “known to be irrelevant”; mining must not silently turn a second valid source into an example the model is trained to suppress.
 
 Instruction-aware embedding models add another conditioning channel. A query prefix such as “retrieve passages that answer the question” distinguishes search from clustering or semantic similarity. E5 popularized explicit input prefixes; more recent families expose task instructions or a `prompt_name` interface. This means the exact text given to the encoder is part of the retrieval contract, not a harmless wrapper.
 
@@ -194,7 +202,13 @@ $$
 s(q,d)=\sum_{i\in q}\max_{j\in d} q_i^\top d_j.
 $$
 
-Document token vectors are indexed in advance, while matching remains token-aware. Late interaction therefore occupies a middle point: more expressive than one-vector search and more indexable than a full cross-encoder, but with a substantially larger index.
+Read MaxSim row by row. Form a matrix whose rows are query positions and whose columns are document positions. For each query row, keep its strongest document match; then add those contributions. A local match no longer has to survive being folded into a single whole-document vector before the query arrives.
+
+The vectors are already contextualized within their own sequences. A query position has seen the rest of the query, and a document position has seen its document context. What is delayed is **interaction across the query–document boundary**. There is no joint Transformer pass over the pair at this stage, which is why the document vectors can be computed and indexed in advance. [ColBERT](https://arxiv.org/abs/2004.12832)
+
+Each row chooses its maximum independently. Several query positions may select the same document position; the score does not impose a one-to-one alignment. This is a lightweight aggregation rule, not a reconstruction of every relationship a joint encoder could model. It preserves finer local evidence than a single-vector representation without becoming equivalent to a cross-encoder.
+
+The intermediate position now has a concrete meaning. We retain a richer, reusable document representation and pay for it in index size and matching work, rather than recomputing a joint representation for every pair.
 
 ColPali applies late interaction to rendered document pages, retaining visual features that OCR and text parsing may discard. Its authors evaluated this approach on ViDoRe, a collection of page-retrieval tasks. Their results do not make text extraction unnecessary: exact strings, copyable content, metadata filtering, and accessibility still benefit from a text path. The visual branch provides another candidate source with its own storage and indexing costs.
 
@@ -228,7 +242,7 @@ $$
 
 or 0.4096 ms at the same rate. The ratio of distance arithmetic is 5000.
 
-This is deliberately **not** an HNSW (Hierarchical Navigable Small World) latency claim. ANN (Approximate Nearest Neighbor) search also performs graph or centroid navigation, random memory access, decompression, filtering, and candidate maintenance. Its central trade-off is not “exact search but faster”; it is **less inspected state in exchange for a nonzero miss probability**.
+This is deliberately **not** an HNSW (Hierarchical Navigable Small World) latency claim. ANN (Approximate Nearest Neighbor) search also performs graph or centroid navigation, random memory access, decompression, filtering, and candidate maintenance. In this scenario, efficiency comes from inspecting fewer full vectors, at the risk of missing a neighbor. Other approximate indexes also save work by comparing lossy codes. We must distinguish the number of objects examined from the accuracy of each comparison.
 
 The correct benchmark therefore has at least four axes:
 
@@ -239,21 +253,37 @@ The correct benchmark therefore has at least four axes:
 
 A speed number without recall is incomplete. A recall number without a latency and memory budget is equally incomplete.
 
+The number 2000 was an accounting assumption, not an explanation of how useful candidates were found. How can the system know where to look without first comparing everything? The answer lies in work performed before the query: building links, organizing regions, or encoding vectors for cheaper comparison. We can now follow how those preparations guide one search.
+
 ## 9. ANN under the hood: three indexes for three resource constraints
 
-Approximate nearest-neighbor methods reduce the part of the vector space examined per query, but they do so in different ways.
+An exhaustive scan needs no guess about where a good neighbor lies: it checks everything. Approximate search replaces some of that work with a prepared structure or a cheaper representation. The saving may come from examining fewer objects, estimating their distances less expensively, or both. Those choices should be understood before tuning an index.
 
 ### HNSW (Hierarchical Navigable Small World): spend memory on navigable links
 
-Hierarchical Navigable Small World graphs connect each vector to neighbors at several levels. Search begins in a sparse upper layer and descends toward denser local neighborhoods. Parameters such as construction degree and `efSearch` trade graph memory and query work for recall.
+HNSW builds a graph before serving queries. The bottom layer contains every indexed object; higher layers contain progressively sparser subsets. This is not a tree assigning each document a unique branch. An object may appear at several levels, and graph links provide routes between candidates. [HNSW](https://arxiv.org/abs/1603.09320)
+
+Imagine the query arriving at the entry point of the highest layer. The search compares available neighbors and moves to a closer one, repeating while it can improve at that level. It then descends, carrying the current location into the next layer. Coarse navigation supplies a better starting point for finer search instead of restarting from an arbitrary object.
+
+At the bottom, committing to one route would be fragile. The search therefore retains several promising candidates and a frontier of vertices whose links remain worth exploring. Visiting a vertex exposes its neighbors; their distances update the best set found so far. The stopping condition ends this bounded exploration. It does not prove that no better object exists elsewhere in the collection. A useful neighbor can still lie beyond a route the search did not explore. [hnswlib search implementation](https://github.com/nmslib/hnswlib/blob/master/hnswlib/hnswalg.h)
+
+The parameters now have distinct jobs. `M` influences the links built for each object and the graph's memory cost. `efConstruction` controls search breadth while building those links. `efSearch` controls the size of the best-candidate list maintained at query time. A wider search usually allows more opportunities to recover from an early poor choice, but costs more work. **`efSearch` is neither an exact distance-computation count nor the requested result count**: many visited candidates may never appear in the final result. [hnswlib parameters](https://github.com/nmslib/hnswlib/blob/master/ALGO_PARAMS.md)
 
 HNSW is attractive for low-latency in-memory search and incremental insertion. Its main tax is the graph itself: edges can occupy memory comparable to or larger than compressed vectors. Filtering and deletions also require careful implementation because the graph was built without necessarily knowing the request-time predicate.
 
 ### IVF-PQ (Inverted File + Product Quantization): partition first, compress second
 
-An inverted file index assigns vectors to coarse centroids. A query probes only several nearby lists. Product Quantization then splits a vector into subspaces and stores a small code per subvector.
+IVF first organizes vectors around coarse centroids and stores a list of objects assigned to each centroid. A query is compared with the centroids; only selected lists are then searched. Instead of walking a graph, the system narrows the regions to inspect.
 
-`nprobe` controls how many coarse lists are examined; code length controls the memory/error trade-off. IVF-PQ is compelling when vector payload dominates the system budget, but it introduces centroid training, quantization error, and a more involved update path.
+That decision introduces one possible miss. A good neighbor can belong to a list that was not selected. `nprobe` controls the number of lists examined. Even perfectly accurate distances inside the chosen lists cannot reveal an object in an unvisited list.
+
+Product Quantization addresses a separate expense: retaining and comparing the vectors themselves. It divides a representation into subvectors and replaces each with the index of a nearby centroid in its codebook. The resulting short code specifies a set of representative pieces. A common IVF-PQ construction encodes the residual from the coarse centroid, so coarse partitioning and finer quantization work together. [Faiss index structures](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes)
+
+The code is useful for search, not just storage. For Euclidean comparison, for example, distances from query pieces to codebook entries can be prepared once and combined through each candidate's indices. This avoids repeating full-coordinate work for every original vector. But the represented vector is only an approximation, so close candidates can change order. [Compressed storage in Faiss](https://github.com/facebookresearch/faiss/wiki/Lower-memory-footprint)
+
+There are therefore **two different sources of error**: IVF may omit a region, while PQ may misestimate distances within the region that was searched. Raising `nprobe` changes coverage; changing the PQ code changes representation accuracy. Neither is a substitute for the other. PQ can also be used in an exhaustive scan of all codes, where approximation remains even though no list is skipped.
+
+IVF-PQ is compelling when vector payload dominates the system budget, but it introduces centroid training, quantization error, and a more involved update path.
 
 ### DiskANN: keep the large body of the index on SSD
 
@@ -278,11 +308,15 @@ where $r_b(d)$ is the one-based rank of document $d$ in branch $b$. A missing do
 
 RRF can recover a document that appears high in either branch, but it cannot create evidence absent from both lists. It also does not inspect the query-document pair again. That is the job of a reranker.
 
+It helps to separate a set from an ordering. The union makes an item available if either branch retrieved it. Fusion assigns an order to the available items. Truncating that order creates another boundary: a document can survive the union and still be excluded from the reranker's input. A larger union is therefore not a guarantee of a better top-ranked prefix.
+
+The limits at these boundaries are separate choices. The RRF smoothing constant is not a list length. Branch result counts, reranker candidate count, metric cutoff, and the number of chunks packed for generation need not be equal. The letter used in Recall@k does not tie its cutoff to the constant in the fusion formula.
+
 The table uses three different views of a ranking. **Recall@k** is the fraction of the relevant set retrieved in the first $k$ positions: retrieving one of two relevant documents gives $1/2$, even if that document ranks first. **MRR** averages the reciprocal position of the first relevant result, using zero when none is found. **nDCG@k** compares the graded value of the returned order with an ideal order. A value of one is ideal under the supplied judgments; Section 17 develops the discount and gain functions.
 
 The offline dense branch uses Latent Semantic Analysis (LSA). It constructs a document–term TF-IDF matrix $X$ and uses singular value decomposition (SVD) to approximate it as $X\approx U_k\Sigma_kV_k^\top$. The retained $k$ directions have the largest singular values: they capture strong co-occurrence patterns in this matrix, rather than predefined semantic topics. Both documents and queries are projected as $xV_k$ and normalized for cosine comparison. The resulting geometry is learned from word co-occurrence in this collection. It is a linear model without the pretrained knowledge of a large neural encoder, so paraphrase understanding is not guaranteed.
 
-The frozen thirteen-document, seven-query English teaching collection produces these metrics:
+The experiment below isolates the cascade rather than benchmarking a pretrained neural retriever. Its dense branch is LSA, and its interaction reranker is an untrained lexical scorer, described just after the table. The frozen thirteen-document, seven-query English teaching collection produces these metrics:
 
 | Method | MRR (Mean Reciprocal Rank) | Recall@5 | nDCG@5 (Normalized Discounted Cumulative Gain) |
 |---|---:|---:|---:|
@@ -294,6 +328,8 @@ The frozen thirteen-document, seven-query English teaching collection produces t
 These are authored diagnostic documents and development queries, frozen outside the lecture. LSA is fitted to the indexed corpus without query labels. The untrained reranker averages each query word's best character-trigram Jaccard match: it does not run a neural cross-encoder or ColBERT. Since the RU and EN wording differs, the two tables do not estimate a language effect.
 
 Here the lexical branch is already extremely strong. Adding the weaker dense ranking through RRF lowers nDCG, and the reranker mostly restores the original ordering rather than surpassing it. The Russian frozen collection shows a different pattern, where the dense branch contributes additional recall and reranking improves nDCG substantially.
+
+A rise in Recall@5 after reranking does not mean the reranker searched the corpus again. Its input contains more candidates than the five evaluated positions. A relevant item already in that input can move from below the cutoff into the top five. The prefix improves while the available candidate set stays the same. An item absent from that set cannot be recovered by reordering it.
 
 The contrast is the lesson: hybrid retrieval is not guaranteed to beat every branch on every metric. Its value depends on whether branches fail on different query classes. Fusion broadens or stabilizes the candidate set; reranking re-evaluates individual pairs. They solve different problems.
 
@@ -318,9 +354,13 @@ Headings, paragraphs, table regions, code blocks, and page boundaries may provid
 
 Late chunking runs a long document through a long-context encoder first and pools contextualized token representations only afterward. A short chunk can retain information from earlier text, including antecedents and section context. The cost is a more expensive indexing pass and dependence on the encoder's maximum length. The described method needs token states and mean pooling within each chunk; a last-token-only embedding interface cannot be substituted unchanged. The authors separately study overlapping windows for longer documents, and report that gains depend on chunk size and task.
 
+Notice which object has changed: **the retrieval representation, not the words of the original chunk**. A vector may reflect the antecedent of a pronoun from an earlier paragraph. If the generator later receives only the short paragraph containing that pronoun, the earlier sentence does not automatically accompany it. Better retrieval and sufficient reading context remain separate responsibilities. [Late Chunking](https://arxiv.org/abs/2409.04701v3)
+
 ### Contextual Retrieval
 
 Anthropic's Contextual Retrieval prepends a short generated description of where a chunk sits within its source document before embedding and lexical indexing. In the company's reported experiments, contextual embeddings reduced top-20 retrieval failure by 35%; combining contextual embeddings with contextual BM25 reduced it by 49%; adding reranking yielded a 67% reduction. These are results for the stated models, corpora, and protocol, not universal multipliers.
+
+Unlike late chunking, this creates an explicit addition to the indexed text. The addition can affect both vector and lexical retrieval because it contributes words as well as context. The application must still decide whether to send that addition to the generator and preserve its connection to the original passage. A generated explanation is not a verbatim source quotation; its faithfulness to the document needs checking too. [Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval)
 
 Now take a 20-million-token corpus, chunk size 400, and overlap 64. The stride is 336, so the exact chunk count is
 
@@ -335,6 +375,8 @@ The frozen scenario estimates encoding with a 0.6B model at $2.86\cdot10^{16}$ F
 
 The raw vectors occupy 232.52 MiB in fp32, 58.13 MiB in int8, and 7.27 MiB in binary form. At this corpus size, metadata, access rules, update logic, and chunk quality may dominate the vector payload itself.
 
+These are the representations used to find passages. The next question is what to give the generator after a passage is found. A boundary convenient for indexing is not necessarily the boundary of a sufficient piece of evidence.
+
 ## 12. The full cascade and worked example D: where request latency lives
 
 Access-control lists (ACLs) must constrain visible data before text reaches any reranker or generator that lacks permission to read it. With post-filtered search, measure candidate count and recall after filtering; restricted metadata must not leak through the response.
@@ -348,6 +390,16 @@ We can now follow one request through a realistic cascade.
 5. Remove duplicates from authorized evidence, preserve citations, and pack evidence into a token budget.
 6. Run generator prefill and decode.
 7. If evidence remains insufficient, reformulate and search again.
+
+Now follow the objects passed along that route. In the text-based RAG pipeline studied here, vector search yields candidate identifiers and scores. Those identifiers lead back to authorized source passages and metadata. The reranker sees the query together with selected texts and judges their fit more closely. The context builder decides which passages, surrounding material, and source references will enter the generator's request. **The embedding helps locate evidence; it is not a replacement for that evidence.**
+
+This differs from the path in Module 16. There, a trained connector supplied visual feature vectors directly to the language model. Here, the search embedding is not inserted in place of a paragraph. The generator reads a text context using its own tokenizer and forward computation. Retrieval geometry and the generator's internal representation serve different stages.
+
+Return to the question about build 4.7.3 and TS-999. Several near-duplicate incident reports may establish that a failure occurred without identifying an approved fix. A proposed patch may be relevant without proving either the cause of this particular failure or the approval status of the remedy. Context assembly must ask which parts of the question the surviving evidence actually supports, not merely whether the passages have high retrieval scores.
+
+Packing is therefore more than concatenating the first results until the token limit is reached. Repeated reports can crowd out a complementary source. An isolated sentence may need a heading, a version label, or a nearby definition to remain interpretable. Any surrounding material included must retain its provenance and access restrictions; shortening a passage must not silently remove a condition on which its claim depends. The aim is not to reconstruct the entire corpus, but to preserve enough context for this answer to be warranted.
+
+Finally, an addressable source is not the same as a supported claim. An identifier lets the system return to a document; reading the relevant passage establishes whether it supports a particular statement. If approval evidence is missing, the system can search again or explicitly leave that part unresolved. A full candidate list is not proof that the information need has been met.
 
 The assembled context crosses a trust boundary. Retrieved passages supply **evidence**, not authority to issue new commands. A highly ranked, correctly cited document may still contain an instruction planted by someone else. Its position in the results does not authorize a tool action. Module 18 develops this distinction in an agent loop.
 
@@ -476,6 +528,10 @@ A router can use cheap features—document count, requested scope, retrieval con
 
 A RAG evaluation should identify the stage that failed.
 
+Start by distinguishing two reference sets. In Section 8, ANN recall was measured against exact search over the same vectors under the same similarity function. That asks whether the faster index reproduces the neighbors found by an exhaustive scan. It does not establish that those neighbors answer the user's question.
+
+Relevance recall instead uses human or task-specific judgments about useful documents. An index can reproduce the exact neighbors of a weak representation almost perfectly while returning poor evidence. Conversely, disagreement with exact top-k does not by itself establish that an answer-critical document was lost. The two comparisons diagnose different problems. Index comparisons should also hold permissions, retrieval units, and tie rules constant.
+
 ### Retrieval metrics
 
 - **Recall@k** asks whether the relevant set survived candidate generation.
@@ -502,7 +558,9 @@ The notebook rejects a query with no positive judgments instead of silently repo
 - answer relevance and task success;
 - refusal behavior when evidence is insufficient.
 
-A high retrieval recall with poor groundedness points toward generation or context assembly. A polished answer with low retrieval recall may be unsupported even if it sounds correct.
+The measurements become diagnostic when connected to the saved query path. Compare exact neighbors with ANN results; then inspect judged relevance in the wider pool, the reranked prefix, and the actual text left after context assembly. High recall in a candidate list does not prove that the same evidence reached the final prompt.
+
+If sufficient evidence arrived but the answer does not follow from it, a missed ANN neighbor alone cannot explain the failure. If recall is low but one surviving source fully answers the question, the metric alone does not disprove the response. Keep candidate lists, the final context, and claim-level checks together: a single aggregate score cannot reveal where the connection to the source broke.
 
 ### System metrics
 
@@ -542,7 +600,7 @@ A RAG request passes through a cascade in which every stage reduces information.
 
 **MRL and quantization** control storage. MRL trains useful prefixes of one vector (Section 6); quantization reduces bits per retained coordinate. Ten million 1024-dimensional vectors range from 38.15 GiB in fp32 to 1.19 GiB as a raw binary payload, before index metadata.
 
-**ANN** reduces inspected state and introduces miss probability. HNSW, IVF-PQ, and DiskANN spend memory and storage differently; none is selected by corpus size alone.
+**ANN** reduces the number of inspected objects and/or the cost of comparing them. Limited exploration and approximate distances can each lose an exact neighbor. HNSW, IVF-PQ, and DiskANN spend memory and storage differently; none is selected by corpus size alone.
 
 **Fusion and reranking** have different responsibilities. RRF combines positions without score calibration; a reranker revisits actual pairs. On the frozen teaching set, fusion does not beat BM25 on nDCG, while reranking improves the final order.
 

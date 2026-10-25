@@ -199,7 +199,8 @@ def main():
             mk=module['module_key'];n=int(module['position']);items=[];intro='';books=[]
             if key=='modern-llms':
                 current=modern_ids[mk];folder=root/f'modules/module-{current}/{language}'
-                source=next(folder.glob(f'*lecture_{language.upper()}.md'))
+                record=next(m for m in modern if m['id']==current)
+                source=root/record['practice_sources'][language] if record.get('practice_sources') else next(folder.glob(f'*lecture_{language.upper()}.md'))
                 intro,items=modern_exercises(source,key,root)
                 nb=list(folder.glob('*.ipynb'));assert len(nb)==1,(folder,nb)
                 books.append(notebook(nb[0],key,root,'main',language,'main'))

@@ -7,7 +7,7 @@
       "description": "Архитектура, обучение, инференс, агенты и оценивание современных языковых моделей.",
       "stepik_url": "https://stepik.org/297275",
       "module_count": 20,
-      "characters": 1062401,
+      "characters": 1291042,
       "modules": [
         {
           "id": "modern-llms:ru:module-01",
@@ -15,9 +15,9 @@
           "position": 1.0,
           "title": "Модуль 1. Современный ландшафт LLM",
           "content_file": "modern-llms/ru/module-01.md",
-          "content_hash": "60532156715553e9fbd7dda3fc513aba0a39f87de70abd928fe6ef3ec16a555e",
-          "characters": 79659,
-          "image_count": 11
+          "content_hash": "04d1da0d5242972cf704322b95ade3e64978ced3358f48af61afb27b4d8d1dba",
+          "characters": 80504,
+          "image_count": 0
         },
         {
           "id": "modern-llms:ru:module-02",
@@ -25,9 +25,9 @@
           "position": 2.0,
           "title": "Модуль 2. Токенизация и эмбеддинги",
           "content_file": "modern-llms/ru/module-02.md",
-          "content_hash": "871ab666642a3a859229ab540846df26a8ce0a1da36d0fd2ba00b2992365c5c6",
-          "characters": 49038,
-          "image_count": 10
+          "content_hash": "9bfced3b3736f43f1ff9afed8e3af107cd991cb5326f75fa14c7f7541da1cf2b",
+          "characters": 88303,
+          "image_count": 0
         },
         {
           "id": "modern-llms:ru:module-03",
@@ -35,8 +35,8 @@
           "position": 3.0,
           "title": "Модуль 3. Базовый Transformer",
           "content_file": "modern-llms/ru/module-03.md",
-          "content_hash": "e404a8071cca6698fe1e5e84adb5d3321c19978f3424b9c4aa31eaddd0718429",
-          "characters": 56333,
+          "content_hash": "8c6f529c15efdbe201571b9f9674375f9690c8ce97596e2b27142685ccfab929",
+          "characters": 64497,
           "image_count": 12
         },
         {
@@ -45,8 +45,8 @@
           "position": 4.0,
           "title": "Модуль 4. Позиционные представления: от синусоид к нескольким осям",
           "content_file": "modern-llms/ru/module-04.md",
-          "content_hash": "32737210ce3bce06f525460a4cfc511a907e5df6d5716e7b6cece7592d7a3a92",
-          "characters": 44217,
+          "content_hash": "0c704f5504d8b70f7f369fca215ef21c65279bb5ec4506af9a7e58b15987d11b",
+          "characters": 52408,
           "image_count": 11
         },
         {
@@ -55,8 +55,8 @@
           "position": 5.0,
           "title": "Модуль 5. Современные механизмы внимания",
           "content_file": "modern-llms/ru/module-05.md",
-          "content_hash": "8ea9b2de9c02bd8b83b7b808d725f00352939e4ad9dd8017e2094ea0ba116e3c",
-          "characters": 53015,
+          "content_hash": "f20f93ef39c244b7979206cae0ae52f5a55d3a56580011fcd009ec52387f4aed",
+          "characters": 62695,
           "image_count": 10
         },
         {
@@ -65,8 +65,8 @@
           "position": 6.0,
           "title": "Модуль 6. Нормализация, активации и анатомия блока",
           "content_file": "modern-llms/ru/module-06.md",
-          "content_hash": "87bbb30d1e3f8f971d43677a9830b0acfc9e14b4d162b6eb6a4d9e669464f8b7",
-          "characters": 47299,
+          "content_hash": "14b751cd615e05af0a4ddeff34cd9455fac792eb6250a8d0958c95ec7b431f0c",
+          "characters": 56665,
           "image_count": 10
         },
         {
@@ -75,8 +75,8 @@
           "position": 7.0,
           "title": "Модуль 7. Mixture of Experts",
           "content_file": "modern-llms/ru/module-07.md",
-          "content_hash": "d6f191cb00704edfaecd03a403ea8deba3c60afdb6d0ce303a2c2e59ebf95284",
-          "characters": 48729,
+          "content_hash": "fa69e2a949a78d66960991fe684092b55ea50115a9124c0108adb30ebcd24799",
+          "characters": 58622,
           "image_count": 10
         },
         {
@@ -85,8 +85,8 @@
           "position": 8.0,
           "title": "Модуль 8. Альтернативы Transformer: SSM, Mamba и гибриды",
           "content_file": "modern-llms/ru/module-08.md",
-          "content_hash": "cdf748c2a43dcec1dc00a2048b251ebf2fd349b3dac52a7ab182b5a4195fc05c",
-          "characters": 31344,
+          "content_hash": "c55d9c8fca84cb75c2a5b996c9f2dc41903bb66cd39569f2a55f45224e00d24e",
+          "characters": 41219,
           "image_count": 10
         },
         {
@@ -95,8 +95,8 @@
           "position": 9.0,
           "title": "Модуль 9. Претрейн: данные, законы масштабирования, оптимизаторы",
           "content_file": "modern-llms/ru/module-09.md",
-          "content_hash": "17658275540a61c277a40f9e131b64b8ddda2d5c84fd136271077acbe616f0a7",
-          "characters": 75553,
+          "content_hash": "94476566098f32bfddbf735844692724919d2c9f6ade8ba3fcf9e5da1d0c9a25",
+          "characters": 82126,
           "image_count": 10
         },
         {
@@ -105,8 +105,8 @@
           "position": 10.0,
           "title": "Модуль 10. KV-кэши и эффективный инференс",
           "content_file": "modern-llms/ru/module-10.md",
-          "content_hash": "76ac4da858620ae0eab2978e625734e5032235fae1276ff1335f6ba242d2d678",
-          "characters": 58436,
+          "content_hash": "1ba411b3ae20dba433839aa6cbf6476966377a1403ec4f9bdcb82fb638337afe",
+          "characters": 66495,
           "image_count": 10
         },
         {
@@ -115,8 +115,8 @@
           "position": 11.0,
           "title": "Модуль 11. Спекулятивное декодирование и квантизация",
           "content_file": "modern-llms/ru/module-11.md",
-          "content_hash": "388d32a0acd3af3da42bc3ae47f37782aeef446dcf0a339c617fd1acb2960f31",
-          "characters": 52829,
+          "content_hash": "78a644cfdd79d551cc430f46b838c66ccd53d4ea9b22f4f981299cce37b2eb7b",
+          "characters": 60646,
           "image_count": 10
         },
         {
@@ -125,8 +125,8 @@
           "position": 12.0,
           "title": "Модуль 12. Диффузионные LLM",
           "content_file": "modern-llms/ru/module-12.md",
-          "content_hash": "4cd858ac8ffad22259b179b64b6e8efdfa1dc8a4949e8871f5f06af5d3e9c7ad",
-          "characters": 43101,
+          "content_hash": "4e54854102d37c19e8d5fca4f4fbed0ebc5a45e1cfd0e39e84b2c3681a2518ab",
+          "characters": 59152,
           "image_count": 10
         },
         {
@@ -135,8 +135,8 @@
           "position": 13.0,
           "title": "Модуль 13. SFT и работа с данными",
           "content_file": "modern-llms/ru/module-13.md",
-          "content_hash": "76c0f12bf544e041fe69869871669f52d9304a2866ee88bbbf508097bb8619c6",
-          "characters": 62667,
+          "content_hash": "4bd4d759512a481cdef8779fdbb95391f2c05420628bbc3887b1b82b7b22c361",
+          "characters": 74443,
           "image_count": 10
         },
         {
@@ -145,8 +145,8 @@
           "position": 14.0,
           "title": "Модуль 14. Обучение по обратной связи: RLHF, DPO, RLOO и GRPO",
           "content_file": "modern-llms/ru/module-14.md",
-          "content_hash": "28347020efae6d6b6c16b87f42e7972b709ea0f73fc63e0fc0d49392c300a4b1",
-          "characters": 47005,
+          "content_hash": "9809775c963ac43a4bae9d0a9d9fb8fea0cba42cb6f0a8f437b7964f7a4a6598",
+          "characters": 61842,
           "image_count": 10
         },
         {
@@ -155,8 +155,8 @@
           "position": 15.0,
           "title": "Модуль 15. Модели рассуждения и вычисления во время инференса (test-time compute)",
           "content_file": "modern-llms/ru/module-15.md",
-          "content_hash": "2c74068587d4864d3c981d78f51df0489a591672ba50475b3e2f763ccb61153a",
-          "characters": 46771,
+          "content_hash": "00a734bd07bf48b012511bb3194c18741e952b1298f64e0bc4b0567656cca5b0",
+          "characters": 59105,
           "image_count": 10
         },
         {
@@ -165,8 +165,8 @@
           "position": 16.0,
           "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
           "content_file": "modern-llms/ru/module-16.md",
-          "content_hash": "c21f6e3beab4deae6e98cc005fbc1829b244a678c9a01ae413d582553c8c1c2b",
-          "characters": 61296,
+          "content_hash": "67c9b32083b0990bc16eee2fb4646ff518ec63a6a5eaf67fedf009cf58a6ce05",
+          "characters": 72607,
           "image_count": 11
         },
         {
@@ -175,8 +175,8 @@
           "position": 17.0,
           "title": "Модуль 17. Эмбеддинги, поиск и RAG",
           "content_file": "modern-llms/ru/module-17.md",
-          "content_hash": "ac62a8038d9a9b6f88d5d09a2619e1ff6dc7c7414978b5171a76dd94a76aa7b5",
-          "characters": 51961,
+          "content_hash": "125f3e327ec6061553e405c92a0459b8fd4dbfa3f5f1ee95a50503ee401b4e77",
+          "characters": 65952,
           "image_count": 10
         },
         {
@@ -185,8 +185,8 @@
           "position": 18.0,
           "title": "Модуль 18. Агенты и работа с инструментами",
           "content_file": "modern-llms/ru/module-18.md",
-          "content_hash": "88e0454f1427e5aa19bd9595e3e50da692be9a2aa27c94c77be71cf104d78c26",
-          "characters": 54792,
+          "content_hash": "10fbf347b6de0bd71c84c6d1031064193f81c61358a8d943977fddf0a6f07d90",
+          "characters": 65366,
           "image_count": 11
         },
         {
@@ -195,8 +195,8 @@
           "position": 19.0,
           "title": "Модуль 19. Оценка современных LLM: от бенчмарка к инженерному решению",
           "content_file": "modern-llms/ru/module-19.md",
-          "content_hash": "3d9b444a5052d2a4075e3632978e03c9dc15991765777e3b6f93f38181bea25a",
-          "characters": 59959,
+          "content_hash": "47046d7cf82dcf9386a2bb39d7b942416c050404d44a6c3d8abb8f971297914f",
+          "characters": 71290,
           "image_count": 9
         },
         {
@@ -205,8 +205,8 @@
           "position": 20.0,
           "title": "Модуль 20. LLM целиком: от токенов до обучения и генерации",
           "content_file": "modern-llms/ru/module-20.md",
-          "content_hash": "cac094a858bd63458c302ab067fafc30145b2f31d2719f5727dfb7493223a098",
-          "characters": 38397,
+          "content_hash": "6f78a6f342f16bdcf48bb927706250c62d982cf3390d0031acdfe6ab29585576",
+          "characters": 47105,
           "image_count": 6
         }
       ]
@@ -218,7 +218,7 @@
       "description": "Architecture, training, inference, agents, and evaluation of modern language-model systems.",
       "stepik_url": "https://stepik.org/297276",
       "module_count": 20,
-      "characters": 978954,
+      "characters": 1205641,
       "modules": [
         {
           "id": "modern-llms:en:module-01",
@@ -226,9 +226,9 @@
           "position": 1.0,
           "title": "Module 1. The Modern LLM Landscape",
           "content_file": "modern-llms/en/module-01.md",
-          "content_hash": "34d917a47a0368433fe19699cf7eff5335f28d49be67c1a199759da06bbdaec1",
-          "characters": 74776,
-          "image_count": 11
+          "content_hash": "aefe2decca924d69935e6beb9321631e46e93e2af526334d6d65ae5ea7da4898",
+          "characters": 81640,
+          "image_count": 0
         },
         {
           "id": "modern-llms:en:module-02",
@@ -236,9 +236,9 @@
           "position": 2.0,
           "title": "Module 2. Tokenization and Embeddings",
           "content_file": "modern-llms/en/module-02.md",
-          "content_hash": "fa7404bbd48b244076d95ba5bbd3bf88cf8f7cf2f2b6bd6cdae2d481eb959b5d",
-          "characters": 46437,
-          "image_count": 10
+          "content_hash": "e0c18110b1cf8268eac2fc7b7429dcace4b4dab5cf895761a4321384361003ee",
+          "characters": 86457,
+          "image_count": 0
         },
         {
           "id": "modern-llms:en:module-03",
@@ -246,8 +246,8 @@
           "position": 3.0,
           "title": "Module 3. The Basic Transformer",
           "content_file": "modern-llms/en/module-03.md",
-          "content_hash": "3ac5bd9291d5a19de1f1d30f0f6905aab3087f7bbea326ab84255f0b49e004eb",
-          "characters": 55336,
+          "content_hash": "03a15cf2fa4f1b786df468adfed0aa64046f82ac9bb326ee27b98c85bb4bf5d5",
+          "characters": 63297,
           "image_count": 12
         },
         {
@@ -256,8 +256,8 @@
           "position": 4.0,
           "title": "Module 4. Positional representations: from sinusoids to multiple axes",
           "content_file": "modern-llms/en/module-04.md",
-          "content_hash": "89abd61bb3aa9b12a94afee5f765738120480fbbf261357ca9e79cab4f91c7ec",
-          "characters": 41612,
+          "content_hash": "becc23bec92993d6240994f8cdb8c6613300791d5524c9c9849453eeea754860",
+          "characters": 49397,
           "image_count": 11
         },
         {
@@ -266,8 +266,8 @@
           "position": 5.0,
           "title": "Module 5. Modern Attention Mechanisms",
           "content_file": "modern-llms/en/module-05.md",
-          "content_hash": "5c3e8a60ce92f8109a09b3c0439507729252d7c091d6a84d4b9560f2055e7d6d",
-          "characters": 50182,
+          "content_hash": "9eb527a795ce41009be1d8fd3003a76cd269e3dbc9c6b50af9b7eb78eff1f28c",
+          "characters": 59443,
           "image_count": 10
         },
         {
@@ -276,8 +276,8 @@
           "position": 6.0,
           "title": "Module 6. Normalization, activations, and the anatomy of a Transformer block",
           "content_file": "modern-llms/en/module-06.md",
-          "content_hash": "d7d4725a9d018608f364d4677a8d3349868a7b37eff9403646869523888db6a8",
-          "characters": 43242,
+          "content_hash": "0efde58702d75cbe1c83f5548e8a44cfd6623e383d0d3b2ecfc8aa148a9c38cd",
+          "characters": 52160,
           "image_count": 10
         },
         {
@@ -286,8 +286,8 @@
           "position": 7.0,
           "title": "Module 7. Mixture of Experts",
           "content_file": "modern-llms/en/module-07.md",
-          "content_hash": "993c2d0a125ae25a9c4c858a77ae3b71f4872afa8bfa676da5e4394d3c6b11fe",
-          "characters": 44681,
+          "content_hash": "ed8aba0d0be3e403faafce294ac37294107870461a879ca7cb65aa6f2ef6d771",
+          "characters": 53956,
           "image_count": 10
         },
         {
@@ -296,8 +296,8 @@
           "position": 8.0,
           "title": "Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models",
           "content_file": "modern-llms/en/module-08.md",
-          "content_hash": "13be4ffe46dc787897b2f0e4f112896b4ae5e2882a8594b770b3a67780470fd9",
-          "characters": 29528,
+          "content_hash": "d55916b6f77aa684f1dc636b97ef541f0833a57eaea18d574ca26cadd42105c6",
+          "characters": 39100,
           "image_count": 10
         },
         {
@@ -306,8 +306,8 @@
           "position": 9.0,
           "title": "Module 9. Pretraining: Data, Scaling Laws, and Optimizers",
           "content_file": "modern-llms/en/module-09.md",
-          "content_hash": "6f0566b11e8c4a38d74fa219e6c2989456d853308fc210dff522f40f3c0bd90a",
-          "characters": 62180,
+          "content_hash": "a7e8eae648ec8217c7e6e6329710770e18571d8143be10fd4b67b0f700d4a220",
+          "characters": 68334,
           "image_count": 10
         },
         {
@@ -316,8 +316,8 @@
           "position": 10.0,
           "title": "Module 10. KV Caches and Efficient Inference",
           "content_file": "modern-llms/en/module-10.md",
-          "content_hash": "78beb87579930d1bb5d6b3817501e3a1ca1eaccc9c78d17db5f212c3569294ce",
-          "characters": 56325,
+          "content_hash": "b9d7f0ee3c3c0d22d36c79fe47d4f8c45fe0804e8a9c329516297d330c30ef96",
+          "characters": 63551,
           "image_count": 10
         },
         {
@@ -326,8 +326,8 @@
           "position": 11.0,
           "title": "Module 11. Speculative Decoding and Quantization",
           "content_file": "modern-llms/en/module-11.md",
-          "content_hash": "e6c67eee161e8be46ffa38c2edfeceec2dd236389c02069e03d30264ea237cc8",
-          "characters": 48806,
+          "content_hash": "cc3a3d884e2416b18ed10b4d61181c05ce1ce77205d4d569ff7473681e9e0236",
+          "characters": 56453,
           "image_count": 10
         },
         {
@@ -336,8 +336,8 @@
           "position": 12.0,
           "title": "Module 12. Diffusion Language Models",
           "content_file": "modern-llms/en/module-12.md",
-          "content_hash": "0cc9d2596bb68c0b4f68289e1e1567518dd0578a1240fd02f27a074e1c020cbb",
-          "characters": 39124,
+          "content_hash": "9e0c3d75311e8bfe14f34c5f75800f8aaf0543fb5ea872d0a02e08b9df19e053",
+          "characters": 53753,
           "image_count": 10
         },
         {
@@ -346,8 +346,8 @@
           "position": 13.0,
           "title": "Module 13. Supervised Fine-Tuning and Data Work",
           "content_file": "modern-llms/en/module-13.md",
-          "content_hash": "a276c2593f84656058584ba1570f49f402dbe0c328f3177e1ffddf8126c5ef8a",
-          "characters": 55022,
+          "content_hash": "57d4e08260ab576bf4a3e9d44d75e37c0af53e97dd990c588e70c07183cfbb04",
+          "characters": 66835,
           "image_count": 10
         },
         {
@@ -356,8 +356,8 @@
           "position": 14.0,
           "title": "Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO",
           "content_file": "modern-llms/en/module-14.md",
-          "content_hash": "8b24169665f98ab0fbb7569455121e2383b8435f06f46f98469bb4f61586b850",
-          "characters": 44097,
+          "content_hash": "210872fe0b06e0deafe2e9f841a5eac19956f3a2120484a6fcc3c484929e0a59",
+          "characters": 58515,
           "image_count": 10
         },
         {
@@ -366,8 +366,8 @@
           "position": 15.0,
           "title": "Module 15. Reasoning Models and Test-Time Compute",
           "content_file": "modern-llms/en/module-15.md",
-          "content_hash": "34f4a65f1785711577d0463e968bbee11f1783629853750174bf3d03ac1f54bb",
-          "characters": 42069,
+          "content_hash": "8da6ef1e8adc5148be583a8a6f1c7a175af56c395939012f00782781cb827344",
+          "characters": 53068,
           "image_count": 10
         },
         {
@@ -376,8 +376,8 @@
           "position": 16.0,
           "title": "Module 16. Multimodal LLMs: Vision, Audio, and Video",
           "content_file": "modern-llms/en/module-16.md",
-          "content_hash": "d0310dc3259ca3981fc84e934365185a58e3f7662ce039efa179130ba3663496",
-          "characters": 53136,
+          "content_hash": "af7a70e848964c8fe18f4fb58a9a2502bd44dc909adbe26058acbe05e0682636",
+          "characters": 63869,
           "image_count": 11
         },
         {
@@ -386,8 +386,8 @@
           "position": 17.0,
           "title": "Module 17. Embeddings, Retrieval, and RAG",
           "content_file": "modern-llms/en/module-17.md",
-          "content_hash": "a611595affa19dc021fabe4c1b40835dec621964439bc41842ccc653494d67d6",
-          "characters": 50081,
+          "content_hash": "2c2f173e9f234827cd6af7b87405cd4ac1bfb7d4f266768d9b0aeae244cb9488",
+          "characters": 63405,
           "image_count": 10
         },
         {
@@ -396,8 +396,8 @@
           "position": 18.0,
           "title": "Module 18. Agents and Tool Use",
           "content_file": "modern-llms/en/module-18.md",
-          "content_hash": "6690ddd577c389479f7574dff7702208c8e72da3f151a5839f13c2bff2fdf8d6",
-          "characters": 49025,
+          "content_hash": "e596eb20b7c0c748047319635b2d4bd2f9e1fc6078feeebff9987652e3783e39",
+          "characters": 59406,
           "image_count": 11
         },
         {
@@ -406,8 +406,8 @@
           "position": 19.0,
           "title": "Module 19. Evaluating Modern LLM Systems: From Benchmarks to Decisions",
           "content_file": "modern-llms/en/module-19.md",
-          "content_hash": "f4b854f1bea83f42703e0ee1a4ab5e4a20605df8483d29d03741ef220122f3a9",
-          "characters": 53926,
+          "content_hash": "87017db4db957c53251abb14717f04ddd43b65763f10ca15eca8c0dd3a4a10bf",
+          "characters": 64876,
           "image_count": 9
         },
         {
@@ -416,8 +416,8 @@
           "position": 20.0,
           "title": "Module 20. The complete LLM: from tokens to training and generation",
           "content_file": "modern-llms/en/module-20.md",
-          "content_hash": "2fdcc0feb5448cd2f8bf69ef1a35f289815a1b8a46f683865e6301d44feed6f0",
-          "characters": 39369,
+          "content_hash": "c3fc75f14fcf4160760dcfbe51cfcdd461fe7d4413390f02cfc7261e4873a9f3",
+          "characters": 48126,
           "image_count": 6
         }
       ]
@@ -1440,9 +1440,9 @@
       "position": 1.0,
       "title": "Module 1. The Modern LLM Landscape",
       "content_file": "modern-llms/en/module-01.md",
-      "content_hash": "34d917a47a0368433fe19699cf7eff5335f28d49be67c1a199759da06bbdaec1",
-      "characters": 74776,
-      "image_count": 11
+      "content_hash": "aefe2decca924d69935e6beb9321631e46e93e2af526334d6d65ae5ea7da4898",
+      "characters": 81640,
+      "image_count": 0
     },
     {
       "id": "modern-llms:en:module-02",
@@ -1452,9 +1452,9 @@
       "position": 2.0,
       "title": "Module 2. Tokenization and Embeddings",
       "content_file": "modern-llms/en/module-02.md",
-      "content_hash": "fa7404bbd48b244076d95ba5bbd3bf88cf8f7cf2f2b6bd6cdae2d481eb959b5d",
-      "characters": 46437,
-      "image_count": 10
+      "content_hash": "e0c18110b1cf8268eac2fc7b7429dcace4b4dab5cf895761a4321384361003ee",
+      "characters": 86457,
+      "image_count": 0
     },
     {
       "id": "modern-llms:en:module-03",
@@ -1464,8 +1464,8 @@
       "position": 3.0,
       "title": "Module 3. The Basic Transformer",
       "content_file": "modern-llms/en/module-03.md",
-      "content_hash": "3ac5bd9291d5a19de1f1d30f0f6905aab3087f7bbea326ab84255f0b49e004eb",
-      "characters": 55336,
+      "content_hash": "03a15cf2fa4f1b786df468adfed0aa64046f82ac9bb326ee27b98c85bb4bf5d5",
+      "characters": 63297,
       "image_count": 12
     },
     {
@@ -1476,8 +1476,8 @@
       "position": 4.0,
       "title": "Module 4. Positional representations: from sinusoids to multiple axes",
       "content_file": "modern-llms/en/module-04.md",
-      "content_hash": "89abd61bb3aa9b12a94afee5f765738120480fbbf261357ca9e79cab4f91c7ec",
-      "characters": 41612,
+      "content_hash": "becc23bec92993d6240994f8cdb8c6613300791d5524c9c9849453eeea754860",
+      "characters": 49397,
       "image_count": 11
     },
     {
@@ -1488,8 +1488,8 @@
       "position": 5.0,
       "title": "Module 5. Modern Attention Mechanisms",
       "content_file": "modern-llms/en/module-05.md",
-      "content_hash": "5c3e8a60ce92f8109a09b3c0439507729252d7c091d6a84d4b9560f2055e7d6d",
-      "characters": 50182,
+      "content_hash": "9eb527a795ce41009be1d8fd3003a76cd269e3dbc9c6b50af9b7eb78eff1f28c",
+      "characters": 59443,
       "image_count": 10
     },
     {
@@ -1500,8 +1500,8 @@
       "position": 6.0,
       "title": "Module 6. Normalization, activations, and the anatomy of a Transformer block",
       "content_file": "modern-llms/en/module-06.md",
-      "content_hash": "d7d4725a9d018608f364d4677a8d3349868a7b37eff9403646869523888db6a8",
-      "characters": 43242,
+      "content_hash": "0efde58702d75cbe1c83f5548e8a44cfd6623e383d0d3b2ecfc8aa148a9c38cd",
+      "characters": 52160,
       "image_count": 10
     },
     {
@@ -1512,8 +1512,8 @@
       "position": 7.0,
       "title": "Module 7. Mixture of Experts",
       "content_file": "modern-llms/en/module-07.md",
-      "content_hash": "993c2d0a125ae25a9c4c858a77ae3b71f4872afa8bfa676da5e4394d3c6b11fe",
-      "characters": 44681,
+      "content_hash": "ed8aba0d0be3e403faafce294ac37294107870461a879ca7cb65aa6f2ef6d771",
+      "characters": 53956,
       "image_count": 10
     },
     {
@@ -1524,8 +1524,8 @@
       "position": 8.0,
       "title": "Module 8. Beyond the Transformer: SSMs, Mamba, and Hybrid Sequence Models",
       "content_file": "modern-llms/en/module-08.md",
-      "content_hash": "13be4ffe46dc787897b2f0e4f112896b4ae5e2882a8594b770b3a67780470fd9",
-      "characters": 29528,
+      "content_hash": "d55916b6f77aa684f1dc636b97ef541f0833a57eaea18d574ca26cadd42105c6",
+      "characters": 39100,
       "image_count": 10
     },
     {
@@ -1536,8 +1536,8 @@
       "position": 9.0,
       "title": "Module 9. Pretraining: Data, Scaling Laws, and Optimizers",
       "content_file": "modern-llms/en/module-09.md",
-      "content_hash": "6f0566b11e8c4a38d74fa219e6c2989456d853308fc210dff522f40f3c0bd90a",
-      "characters": 62180,
+      "content_hash": "a7e8eae648ec8217c7e6e6329710770e18571d8143be10fd4b67b0f700d4a220",
+      "characters": 68334,
       "image_count": 10
     },
     {
@@ -1548,8 +1548,8 @@
       "position": 10.0,
       "title": "Module 10. KV Caches and Efficient Inference",
       "content_file": "modern-llms/en/module-10.md",
-      "content_hash": "78beb87579930d1bb5d6b3817501e3a1ca1eaccc9c78d17db5f212c3569294ce",
-      "characters": 56325,
+      "content_hash": "b9d7f0ee3c3c0d22d36c79fe47d4f8c45fe0804e8a9c329516297d330c30ef96",
+      "characters": 63551,
       "image_count": 10
     },
     {
@@ -1560,8 +1560,8 @@
       "position": 11.0,
       "title": "Module 11. Speculative Decoding and Quantization",
       "content_file": "modern-llms/en/module-11.md",
-      "content_hash": "e6c67eee161e8be46ffa38c2edfeceec2dd236389c02069e03d30264ea237cc8",
-      "characters": 48806,
+      "content_hash": "cc3a3d884e2416b18ed10b4d61181c05ce1ce77205d4d569ff7473681e9e0236",
+      "characters": 56453,
       "image_count": 10
     },
     {
@@ -1572,8 +1572,8 @@
       "position": 12.0,
       "title": "Module 12. Diffusion Language Models",
       "content_file": "modern-llms/en/module-12.md",
-      "content_hash": "0cc9d2596bb68c0b4f68289e1e1567518dd0578a1240fd02f27a074e1c020cbb",
-      "characters": 39124,
+      "content_hash": "9e0c3d75311e8bfe14f34c5f75800f8aaf0543fb5ea872d0a02e08b9df19e053",
+      "characters": 53753,
       "image_count": 10
     },
     {
@@ -1584,8 +1584,8 @@
       "position": 13.0,
       "title": "Module 13. Supervised Fine-Tuning and Data Work",
       "content_file": "modern-llms/en/module-13.md",
-      "content_hash": "a276c2593f84656058584ba1570f49f402dbe0c328f3177e1ffddf8126c5ef8a",
-      "characters": 55022,
+      "content_hash": "57d4e08260ab576bf4a3e9d44d75e37c0af53e97dd990c588e70c07183cfbb04",
+      "characters": 66835,
       "image_count": 10
     },
     {
@@ -1596,8 +1596,8 @@
       "position": 14.0,
       "title": "Module 14. Learning from Feedback: RLHF, DPO, RLOO, and GRPO",
       "content_file": "modern-llms/en/module-14.md",
-      "content_hash": "8b24169665f98ab0fbb7569455121e2383b8435f06f46f98469bb4f61586b850",
-      "characters": 44097,
+      "content_hash": "210872fe0b06e0deafe2e9f841a5eac19956f3a2120484a6fcc3c484929e0a59",
+      "characters": 58515,
       "image_count": 10
     },
     {
@@ -1608,8 +1608,8 @@
       "position": 15.0,
       "title": "Module 15. Reasoning Models and Test-Time Compute",
       "content_file": "modern-llms/en/module-15.md",
-      "content_hash": "34f4a65f1785711577d0463e968bbee11f1783629853750174bf3d03ac1f54bb",
-      "characters": 42069,
+      "content_hash": "8da6ef1e8adc5148be583a8a6f1c7a175af56c395939012f00782781cb827344",
+      "characters": 53068,
       "image_count": 10
     },
     {
@@ -1620,8 +1620,8 @@
       "position": 16.0,
       "title": "Module 16. Multimodal LLMs: Vision, Audio, and Video",
       "content_file": "modern-llms/en/module-16.md",
-      "content_hash": "d0310dc3259ca3981fc84e934365185a58e3f7662ce039efa179130ba3663496",
-      "characters": 53136,
+      "content_hash": "af7a70e848964c8fe18f4fb58a9a2502bd44dc909adbe26058acbe05e0682636",
+      "characters": 63869,
       "image_count": 11
     },
     {
@@ -1632,8 +1632,8 @@
       "position": 17.0,
       "title": "Module 17. Embeddings, Retrieval, and RAG",
       "content_file": "modern-llms/en/module-17.md",
-      "content_hash": "a611595affa19dc021fabe4c1b40835dec621964439bc41842ccc653494d67d6",
-      "characters": 50081,
+      "content_hash": "2c2f173e9f234827cd6af7b87405cd4ac1bfb7d4f266768d9b0aeae244cb9488",
+      "characters": 63405,
       "image_count": 10
     },
     {
@@ -1644,8 +1644,8 @@
       "position": 18.0,
       "title": "Module 18. Agents and Tool Use",
       "content_file": "modern-llms/en/module-18.md",
-      "content_hash": "6690ddd577c389479f7574dff7702208c8e72da3f151a5839f13c2bff2fdf8d6",
-      "characters": 49025,
+      "content_hash": "e596eb20b7c0c748047319635b2d4bd2f9e1fc6078feeebff9987652e3783e39",
+      "characters": 59406,
       "image_count": 11
     },
     {
@@ -1656,8 +1656,8 @@
       "position": 19.0,
       "title": "Module 19. Evaluating Modern LLM Systems: From Benchmarks to Decisions",
       "content_file": "modern-llms/en/module-19.md",
-      "content_hash": "f4b854f1bea83f42703e0ee1a4ab5e4a20605df8483d29d03741ef220122f3a9",
-      "characters": 53926,
+      "content_hash": "87017db4db957c53251abb14717f04ddd43b65763f10ca15eca8c0dd3a4a10bf",
+      "characters": 64876,
       "image_count": 9
     },
     {
@@ -1668,8 +1668,8 @@
       "position": 20.0,
       "title": "Module 20. The complete LLM: from tokens to training and generation",
       "content_file": "modern-llms/en/module-20.md",
-      "content_hash": "2fdcc0feb5448cd2f8bf69ef1a35f289815a1b8a46f683865e6301d44feed6f0",
-      "characters": 39369,
+      "content_hash": "c3fc75f14fcf4160760dcfbe51cfcdd461fe7d4413390f02cfc7261e4873a9f3",
+      "characters": 48126,
       "image_count": 6
     },
     {
@@ -1680,9 +1680,9 @@
       "position": 1.0,
       "title": "Модуль 1. Современный ландшафт LLM",
       "content_file": "modern-llms/ru/module-01.md",
-      "content_hash": "60532156715553e9fbd7dda3fc513aba0a39f87de70abd928fe6ef3ec16a555e",
-      "characters": 79659,
-      "image_count": 11
+      "content_hash": "04d1da0d5242972cf704322b95ade3e64978ced3358f48af61afb27b4d8d1dba",
+      "characters": 80504,
+      "image_count": 0
     },
     {
       "id": "modern-llms:ru:module-02",
@@ -1692,9 +1692,9 @@
       "position": 2.0,
       "title": "Модуль 2. Токенизация и эмбеддинги",
       "content_file": "modern-llms/ru/module-02.md",
-      "content_hash": "871ab666642a3a859229ab540846df26a8ce0a1da36d0fd2ba00b2992365c5c6",
-      "characters": 49038,
-      "image_count": 10
+      "content_hash": "9bfced3b3736f43f1ff9afed8e3af107cd991cb5326f75fa14c7f7541da1cf2b",
+      "characters": 88303,
+      "image_count": 0
     },
     {
       "id": "modern-llms:ru:module-03",
@@ -1704,8 +1704,8 @@
       "position": 3.0,
       "title": "Модуль 3. Базовый Transformer",
       "content_file": "modern-llms/ru/module-03.md",
-      "content_hash": "e404a8071cca6698fe1e5e84adb5d3321c19978f3424b9c4aa31eaddd0718429",
-      "characters": 56333,
+      "content_hash": "8c6f529c15efdbe201571b9f9674375f9690c8ce97596e2b27142685ccfab929",
+      "characters": 64497,
       "image_count": 12
     },
     {
@@ -1716,8 +1716,8 @@
       "position": 4.0,
       "title": "Модуль 4. Позиционные представления: от синусоид к нескольким осям",
       "content_file": "modern-llms/ru/module-04.md",
-      "content_hash": "32737210ce3bce06f525460a4cfc511a907e5df6d5716e7b6cece7592d7a3a92",
-      "characters": 44217,
+      "content_hash": "0c704f5504d8b70f7f369fca215ef21c65279bb5ec4506af9a7e58b15987d11b",
+      "characters": 52408,
       "image_count": 11
     },
     {
@@ -1728,8 +1728,8 @@
       "position": 5.0,
       "title": "Модуль 5. Современные механизмы внимания",
       "content_file": "modern-llms/ru/module-05.md",
-      "content_hash": "8ea9b2de9c02bd8b83b7b808d725f00352939e4ad9dd8017e2094ea0ba116e3c",
-      "characters": 53015,
+      "content_hash": "f20f93ef39c244b7979206cae0ae52f5a55d3a56580011fcd009ec52387f4aed",
+      "characters": 62695,
       "image_count": 10
     },
     {
@@ -1740,8 +1740,8 @@
       "position": 6.0,
       "title": "Модуль 6. Нормализация, активации и анатомия блока",
       "content_file": "modern-llms/ru/module-06.md",
-      "content_hash": "87bbb30d1e3f8f971d43677a9830b0acfc9e14b4d162b6eb6a4d9e669464f8b7",
-      "characters": 47299,
+      "content_hash": "14b751cd615e05af0a4ddeff34cd9455fac792eb6250a8d0958c95ec7b431f0c",
+      "characters": 56665,
       "image_count": 10
     },
     {
@@ -1752,8 +1752,8 @@
       "position": 7.0,
       "title": "Модуль 7. Mixture of Experts",
       "content_file": "modern-llms/ru/module-07.md",
-      "content_hash": "d6f191cb00704edfaecd03a403ea8deba3c60afdb6d0ce303a2c2e59ebf95284",
-      "characters": 48729,
+      "content_hash": "fa69e2a949a78d66960991fe684092b55ea50115a9124c0108adb30ebcd24799",
+      "characters": 58622,
       "image_count": 10
     },
     {
@@ -1764,8 +1764,8 @@
       "position": 8.0,
       "title": "Модуль 8. Альтернативы Transformer: SSM, Mamba и гибриды",
       "content_file": "modern-llms/ru/module-08.md",
-      "content_hash": "cdf748c2a43dcec1dc00a2048b251ebf2fd349b3dac52a7ab182b5a4195fc05c",
-      "characters": 31344,
+      "content_hash": "c55d9c8fca84cb75c2a5b996c9f2dc41903bb66cd39569f2a55f45224e00d24e",
+      "characters": 41219,
       "image_count": 10
     },
     {
@@ -1776,8 +1776,8 @@
       "position": 9.0,
       "title": "Модуль 9. Претрейн: данные, законы масштабирования, оптимизаторы",
       "content_file": "modern-llms/ru/module-09.md",
-      "content_hash": "17658275540a61c277a40f9e131b64b8ddda2d5c84fd136271077acbe616f0a7",
-      "characters": 75553,
+      "content_hash": "94476566098f32bfddbf735844692724919d2c9f6ade8ba3fcf9e5da1d0c9a25",
+      "characters": 82126,
       "image_count": 10
     },
     {
@@ -1788,8 +1788,8 @@
       "position": 10.0,
       "title": "Модуль 10. KV-кэши и эффективный инференс",
       "content_file": "modern-llms/ru/module-10.md",
-      "content_hash": "76ac4da858620ae0eab2978e625734e5032235fae1276ff1335f6ba242d2d678",
-      "characters": 58436,
+      "content_hash": "1ba411b3ae20dba433839aa6cbf6476966377a1403ec4f9bdcb82fb638337afe",
+      "characters": 66495,
       "image_count": 10
     },
     {
@@ -1800,8 +1800,8 @@
       "position": 11.0,
       "title": "Модуль 11. Спекулятивное декодирование и квантизация",
       "content_file": "modern-llms/ru/module-11.md",
-      "content_hash": "388d32a0acd3af3da42bc3ae47f37782aeef446dcf0a339c617fd1acb2960f31",
-      "characters": 52829,
+      "content_hash": "78a644cfdd79d551cc430f46b838c66ccd53d4ea9b22f4f981299cce37b2eb7b",
+      "characters": 60646,
       "image_count": 10
     },
     {
@@ -1812,8 +1812,8 @@
       "position": 12.0,
       "title": "Модуль 12. Диффузионные LLM",
       "content_file": "modern-llms/ru/module-12.md",
-      "content_hash": "4cd858ac8ffad22259b179b64b6e8efdfa1dc8a4949e8871f5f06af5d3e9c7ad",
-      "characters": 43101,
+      "content_hash": "4e54854102d37c19e8d5fca4f4fbed0ebc5a45e1cfd0e39e84b2c3681a2518ab",
+      "characters": 59152,
       "image_count": 10
     },
     {
@@ -1824,8 +1824,8 @@
       "position": 13.0,
       "title": "Модуль 13. SFT и работа с данными",
       "content_file": "modern-llms/ru/module-13.md",
-      "content_hash": "76c0f12bf544e041fe69869871669f52d9304a2866ee88bbbf508097bb8619c6",
-      "characters": 62667,
+      "content_hash": "4bd4d759512a481cdef8779fdbb95391f2c05420628bbc3887b1b82b7b22c361",
+      "characters": 74443,
       "image_count": 10
     },
     {
@@ -1836,8 +1836,8 @@
       "position": 14.0,
       "title": "Модуль 14. Обучение по обратной связи: RLHF, DPO, RLOO и GRPO",
       "content_file": "modern-llms/ru/module-14.md",
-      "content_hash": "28347020efae6d6b6c16b87f42e7972b709ea0f73fc63e0fc0d49392c300a4b1",
-      "characters": 47005,
+      "content_hash": "9809775c963ac43a4bae9d0a9d9fb8fea0cba42cb6f0a8f437b7964f7a4a6598",
+      "characters": 61842,
       "image_count": 10
     },
     {
@@ -1848,8 +1848,8 @@
       "position": 15.0,
       "title": "Модуль 15. Модели рассуждения и вычисления во время инференса (test-time compute)",
       "content_file": "modern-llms/ru/module-15.md",
-      "content_hash": "2c74068587d4864d3c981d78f51df0489a591672ba50475b3e2f763ccb61153a",
-      "characters": 46771,
+      "content_hash": "00a734bd07bf48b012511bb3194c18741e952b1298f64e0bc4b0567656cca5b0",
+      "characters": 59105,
       "image_count": 10
     },
     {
@@ -1860,8 +1860,8 @@
       "position": 16.0,
       "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
       "content_file": "modern-llms/ru/module-16.md",
-      "content_hash": "c21f6e3beab4deae6e98cc005fbc1829b244a678c9a01ae413d582553c8c1c2b",
-      "characters": 61296,
+      "content_hash": "67c9b32083b0990bc16eee2fb4646ff518ec63a6a5eaf67fedf009cf58a6ce05",
+      "characters": 72607,
       "image_count": 11
     },
     {
@@ -1872,8 +1872,8 @@
       "position": 17.0,
       "title": "Модуль 17. Эмбеддинги, поиск и RAG",
       "content_file": "modern-llms/ru/module-17.md",
-      "content_hash": "ac62a8038d9a9b6f88d5d09a2619e1ff6dc7c7414978b5171a76dd94a76aa7b5",
-      "characters": 51961,
+      "content_hash": "125f3e327ec6061553e405c92a0459b8fd4dbfa3f5f1ee95a50503ee401b4e77",
+      "characters": 65952,
       "image_count": 10
     },
     {
@@ -1884,8 +1884,8 @@
       "position": 18.0,
       "title": "Модуль 18. Агенты и работа с инструментами",
       "content_file": "modern-llms/ru/module-18.md",
-      "content_hash": "88e0454f1427e5aa19bd9595e3e50da692be9a2aa27c94c77be71cf104d78c26",
-      "characters": 54792,
+      "content_hash": "10fbf347b6de0bd71c84c6d1031064193f81c61358a8d943977fddf0a6f07d90",
+      "characters": 65366,
       "image_count": 11
     },
     {
@@ -1896,8 +1896,8 @@
       "position": 19.0,
       "title": "Модуль 19. Оценка современных LLM: от бенчмарка к инженерному решению",
       "content_file": "modern-llms/ru/module-19.md",
-      "content_hash": "3d9b444a5052d2a4075e3632978e03c9dc15991765777e3b6f93f38181bea25a",
-      "characters": 59959,
+      "content_hash": "47046d7cf82dcf9386a2bb39d7b942416c050404d44a6c3d8abb8f971297914f",
+      "characters": 71290,
       "image_count": 9
     },
     {
@@ -1908,8 +1908,8 @@
       "position": 20.0,
       "title": "Модуль 20. LLM целиком: от токенов до обучения и генерации",
       "content_file": "modern-llms/ru/module-20.md",
-      "content_hash": "cac094a858bd63458c302ab067fafc30145b2f31d2719f5727dfb7493223a098",
-      "characters": 38397,
+      "content_hash": "6f78a6f342f16bdcf48bb927706250c62d982cf3390d0031acdfe6ab29585576",
+      "characters": 47105,
       "image_count": 6
     },
     {

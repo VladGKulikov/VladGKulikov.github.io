@@ -1,836 +1,641 @@
 # Module 1. The Modern LLM Landscape
 
-*Modern LLMs · revision 2026.10.23 · release survey dated 11 October 2026*
+From a language model to a working system
 
-A release announcement gives you specifications, claims, and unanswered questions. This module turns them into a decision you can check. We will build a **model passport**, recording the model's properties and available evidence, and a **system passport**, recording how it is used and evaluated. Resource estimates will help us test those descriptions. The running example is an assistant that answers questions about internal documents and cites its sources.
+We usually meet a language model at the moment it begins to answer. An explanation appears on the screen, or a piece of code, a translation, a solution. The interface makes the exchange feel simple. Almost everything that made it possible remains out of sight: training on large datasets, computation inside the network, the choice of each continuation, the preparation of the input and, sometimes, an entire program coordinating searches and tools.
 
-You should have a broad idea of how neural networks learn from examples and how language models generate text from a prompt. You do not need to know Transformer internals. We will explain new terms when they become useful, then develop the mechanisms across the course: Module 2 introduces tokenization and embeddings, and [Module 3](module-03.md) connects them to the Transformer computation. The calculations use algebra and powers of two; the exercises use Python functions and dictionaries.
+This course will gradually bring those hidden parts into view. We will trace how text becomes numbers, how those numbers become a probability distribution, how training changes a model, and why the same weights can produce different results under different conditions. We will read equations, write code, and build a small model of our own. Before examining the individual mechanisms, however, we need a sense of the whole: which questions concern the neural network itself, which concern its training, and which concern the system that puts it to work.
 
-**Choose a route**
+Let us begin with a task that requires no prior knowledge of the Transformer. As we examine it, it will lead us to almost every major theme of the course.
 
-| Pass | Read | What it enables |
-|---|---|---|
-| First: understand the task and its checks | Sections 1–2 → 4–6 → 8–12 → 15 → 19–22; E1, E5, and E6 | Explain the model's role, estimate weight storage, and distinguish an answer from its supporting evidence |
-| Second: reproduce the estimates | The optional details in 5–6 and 8 → Section 7 → Sections 16–18; E2 and the full notebook | Interpret a configuration, reproduce parameter and resource estimates, and state their assumptions |
-| Reference: examine a release | Section 3, Sections 13–14 and 23; projects E3–E4 | Separate artefact properties, provider claims, and unknowns |
+**How to read this chapter.** The main text forms a continuous argument, introducing each concept as it becomes useful. Resource estimates, a worked example using an open model, and the MiniLLM configurations follow in the technical appendices. They extend the discussion; you do not need to read them to understand the next section of the main chapter.
 
-On the first pass, skip only blocks labelled **Second pass** or **Optional case**. Read the remaining prose of the selected sections in order. Section 22 marks training compute separately as second-pass material. Architecture tables are an index to later explanations; you do not need to memorize their acronyms.
+A general understanding of a neural network as a trainable function is enough to begin. The calculations in the appendices assume algebra and conditional probability. No knowledge of Transformer internals is required.
 
-The notebook starts with three short, self-contained sections: an answer and its evidence, weight storage, and cost per accepted task. The later sections expose the detailed accounting and validation. `Run all` executes the required path in order without calling a model API.
+## 1. One answer, several problems to solve
 
----
+Suppose we are building an assistant for an organization’s internal documents. An employee asks, “How many days should we retain an experiment log after the experiment ends?” The assistant must find the relevant rule, answer the question, and identify the document that supports its answer.
 
-## 1. Start with a decision
+To begin, let us keep just two documents in the collection. These are invented examples, not real data-retention requirements.
 
-A **document assistant** is a program that finds information in a defined document collection and uses it to answer questions with citations. An employee might ask how long a report must be retained; the assistant locates the relevant policy and explains the requirement. That task spans retrieval, language generation, and checking that the cited passage supports the answer.
+**Document A · Experiment logs**
 
-You could build it around a remote service, accessed through an **API**—an application programming interface—or run a model on your own hardware using downloadable **weights**, the numerical parameters learned during training. Either route offers models with different capabilities and costs. Some also let you control the amount of computation spent on a response. Availability and price per call are useful facts, but neither tells you whether the assistant will solve the task.
+An experiment log must be retained for 30 days after the experiment ends.
 
-To compare the options, we need a more precise account of the model's role. A **large language model (LLM)** processes text as **tokens**, units that may represent words, word fragments, punctuation, or other pieces. In the usual **autoregressive** setup, the model scores the next token from the text available to it; the program selects a token, appends it, and repeats. Applying a trained model is called **inference**. This generation order is the course's main setting; Module 12 develops an alternative.
+**Document B · Temporary exports**
 
-The model and the system therefore have different responsibilities. The model computes token scores. The system retrieves documents, prepares the input, supplies tools, and checks the result. The same weights can give different task outcomes in a bare chat interface and in a program with retrieval. Even a correct answer can cite a passage that does not support it. Section 12 makes this distinction concrete; Module 17 develops document retrieval, and Module 19 examines evaluation.
+A temporary export must be deleted 7 days after it is created.
 
-We will organize the comparison around six questions: how much memory the weights need, how much text the model can use, which data types it accepts and produces, how computation is allocated to an answer, which artefacts and usage rights are available, and how much an accepted result costs. Model properties and their evidence belong in the model passport. Runtime settings, measurements, and acceptance rules belong in the system passport.
+The answer seems obvious: “30 days, according to Document A.” But what, exactly, have we just judged to be correct?
 
-Fill in both records as you read. Keep unpublished or unmeasured fields marked as unknown. Section 12 connects expenditure to accepted answers, and Section 15 examines the evidence behind comparisons. Product names will change; the method remains useful.
+The assistant first had to distinguish an experiment log from a temporary export. Both documents concern stored data, and both contain a number of days. Matching a few familiar words would not be enough: the object in the question has to be matched to the object governed by the rule. The event that starts the clock matters too. The end of an experiment and the creation of a file are not the same event. Finally, the citation must support the claim. “30 days, according to Document B” contains the right number but the wrong evidence.
 
-## 2. From a small calculation to an implementation you can read
+There is an earlier requirement as well: the assistant must have access to the documents. If the program failed to retrieve Document A, or never passed it to the model, an instruction to “answer from the source” cannot supply the missing source. The model might decline to answer, ask for more information, or produce a plausible continuation. None of these is equivalent to extracting a rule from a document it cannot see.
 
-The course asks you to understand models as well as compare them. We will revisit mechanisms in several forms: a short calculation, a controlled experiment, a passage of existing source code, and a small model assembled from the pieces. Each form has a different learning purpose. Running on physical hardware is common to all of them; it is not a certificate of operational readiness.
+Even this small example contains several distinct ways to fail. The relevant material may not be found. It may be found but misread. The rule may be read correctly but applied under the wrong conditions. The answer may be right while its citation is wrong. From the outside, all of these can look like the same thing—a poor answer from the assistant. Yet each calls for a different repair.
 
-| Form of work | Question | Result to aim for |
-|---|---|---|
-| 1. Minimal implementation | How does the formula become a computation? | A short program with each essential step visible |
-| 2. Practical notebook | Does the calculation remain meaningful on different inputs? | A reproducible experiment with shape, unit, and boundary checks |
-| 3. Reading an open implementation | Where does the familiar mechanism appear in an existing model? | A comparison of the formula, configuration, and selected source code |
-| 4. Integrated final project | How do the mechanisms work together? | A compact MiniLLM model that can be trained, modified, and tested |
+We have reached our first distinction, one that will recur throughout the course: **a language model is not the same object as the program that uses it**. The neural network performs a particular computation. The program decides what to supply as input, how to arrange a sequence of calls, and what counts as success. Improving the system requires understanding both, without crediting one for work done by the other.
 
-**The minimal version** makes the idea inspectable. **A practical notebook** adds enough discipline to reproduce and change the experiment: a weight-storage calculation should reject a negative parameter count or zero bits per weight. Input checks turn the formula's assumptions into an explicit part of the program.
+For now, let us set retrieval and source verification aside. Assume that the question and both passages have already reached the neural network. What happens next?
 
-**Reading an open implementation** means locating operations such as a matrix projection, activation, or expert selection and relating them to the teaching version. The same repository may also contain specialized kernels and code for multiple devices. Developing those components is outside this course. We use resource and communication estimates to understand constraints; we do not teach the implementation of distributed training, kernel development, or the operational work required to deliver a production service.
+## 2. What a language model predicts
 
-A few model families recur as reading examples. **gpt-oss** provides configurations that can be compared with open implementation code. **DeepSeek** supplies detailed architecture reports, and **OLMo** exposes more of the training process. **Inkling and Tinker** illustrate downloadable weights combined with a managed adaptation service. Section 14 introduces their technical signatures after the comparison questions have acquired meaning.
+The input text is first converted into a sequence of **tokens**. A token might be a word, part of a word, a punctuation mark, or another unit defined by the tokenizer. Each token is assigned an integer identifier. What reaches the model is no longer a string in the ordinary human sense, but a sequence of numerical identifiers. Module 2 will explain how these units are chosen and why the same text can have different token counts for different models.
 
-**The fourth form of work** is the **final project**. It brings the studied mechanisms together in **MiniLLM**, a small trainable model with saved state, configurable variants, and executable checks. You can investigate how a change affects its behaviour at an accessible scale. Turning that reference implementation into a reliable service for users would require a separate engineering project and further study.
+Our main subject will be the autoregressive language model. At each step, it estimates the probabilities of the next token given the preceding content available to it. “Autoregressive” refers to this order of construction: the sequence already in place supplies the condition for its own continuation.
 
-**How large is MiniLLM?** The same implementation supports three sizes, S, M, and L, with two architecture choices at each size. A **dense** model sends every token through the same computational blocks. A **Mixture of Experts (MoE)** model replaces some of those blocks with collections of subnetworks called experts, selecting only a few experts for each token. It therefore has two useful parameter counts: all the parameters it stores, and the **active parameters** attributed to processing one token. Module 7 develops expert selection; here the distinction gives us a first view of the project's scale.
-
-The table also shows the dimensions behind each size. Layers are repeated processing stages; width is the number of components in a token's internal vector. Vocabulary size counts the distinct tokens, while context is the maximum sequence length configured for the profile, in tokens. Modules 2–5 explain these dimensions in detail. Parameter counts below are in millions, rounded to two decimal places.
-
-| Size | Layers × width | Vocabulary | Context | Dense: parameters, million | MoE: total, million | MoE: active, million |
-|---|---:|---:|---:|---:|---:|---:|
-| **S** | 6 × 256 | 8 192 | 512 | **6.33** | **20.36** | **6.59** |
-| **M** | 8 × 512 | 16 384 | 1 024 | **30.94** | **174.88** | **30.37** |
-| **L** | 20 × 2 048 | 32 768 | 2 048 | **1 020.35** | **10 020.54** | **1 055.21** |
-
-*Source: the six `MiniLLMConfig.profile()` presets in the capstone implementation. Each dense/MoE pair shares its depth, width, vocabulary, and context. The capstone's active-count convention includes shared matrices in full, including vocabulary matrices, and only the selected experts from each routed bank. For a dense model, this convention gives the total parameter count. Section 6 explains the limits of this accounting.*
-
-S supports short experiments and checks of the complete workflow; M provides a larger setting for learning experiments. L is an optional move into the billion-parameter range: about 1.02 billion parameters for dense and 10.02 billion for MoE. Required exercises reduce the configurations further. Training L needs a separate compute budget, and L-MoE serves primarily as a resource-accounting example. Similar active counts do not imply equal speed, and the MoE model still needs storage for all its weights.
-
-These profiles let us study architectural choices through a complete training workflow at several scales. The quality of the resulting text depends on training data, training budget, and evaluation on held-out tasks; model dimensions alone cannot establish what the model can do. The capstone guide explains how to choose a manageable run.
-
-**Across all four forms of work, we need to know where a model's weights are stored and how its design is documented.** A saved set of weights is a **checkpoint**. A `config.json` file usually specifies architectural dimensions and choices, while a **model card** describes training, intended use, and limitations. The checkpoint holds parameter values; the configuration supplies dimensions; the code defines operations; and the card adds provenance and usage conditions. We will use these complementary sources together to build a verifiable model passport.
-
-## 3. Nine years in fifteen minutes: 2017 → 2026
-
-![VIZ m1/01 — LLM evolution, 2017–2026](assets/modern-llms/en/module-01/m1_01_timeline_2017_2026.svg)
-*Six eras: architecture, scale, data, inference, post-training, and system orchestration. Release names stay in the table so the timeline remains readable.*
-
-A useful history of LLMs is not a parade of release names. It is a history of changing bottlenecks.
-
-**2017–2019: architecture.** The Transformer enabled parallel training across sequence positions. GPT and BERT established pretraining followed by adaptation as a general approach. The immediate challenge was to build an architecture that could learn from large corpora.
-
-**2020–2021: scale and in-context learning.** GPT-3 demonstrated broad task adaptation through instructions and examples without weight updates. Scaling laws helped turn model size and training compute into quantities that could be budgeted.
-
-**2022: data and alignment.** Chinchilla showed why parameter count and training-token count must be chosen together. InstructGPT and ChatGPT highlighted the roles of supervised fine-tuning, preferences, reward, and the user interface in turning a language model into an assistant.
-
-**2023–2024: open weights, MoE, and long context.** Llama, Mixtral, and DeepSeek made architecture comparisons widely accessible. GQA, MLA, sparse experts, efficient attention kernels, and longer contexts brought memory and inference bandwidth to the centre of the discussion.
-
-**2024–2025: reasoning and test-time computation.** Reasoning models, reinforcement learning with verifiable rewards (RLVR), verification, distillation, and multi-token prediction expanded the ways compute could be allocated. The budget for an individual request became an explicit design choice.
-
-**2025–2026: systems.** A checkpoint remains the computational core, but tools, memory, code execution, subagents, permissions, sampling, and the evaluation environment increasingly determine the result. These eras overlap: a new constraint adds to the earlier ones rather than replacing them.
-
-A dated snapshot makes the last transition concrete without turning the history section into a news feed.
-
-| Change | Examples as of 11 October 2026 | Passport question |
-|---|---|---|
-| **Several cost and capability tiers** | GPT-6 Astra / Sol / Luna, GPT-6.1 Sol; Claude Opus / Sonnet / Haiku 5.5 | Which version, effort, rate, and request limits apply? |
-| **Long-running agent tasks** | Gemini 3.8 Flash, Grok 4.7 | Which tools, time limits, attempts, and acceptance criteria were used? |
-| **Staged availability** | Gemini 4 Argon: announced, with restricted Fairwind access | Can this workload actually use the product? |
-| **New open architectures** | Qwen3.8-2.4T-A95B; DeepSeek-V4.1-Flash | Which artefacts and licences exist, and does active count differ between prefill and decode? |
-| **The model operates inside a system** | tools, persistent memory, multiple agents | How are permissions, coordination, verification, and total cost controlled? |
-
-Sections 13–14 and 23 provide dates and primary sources for this snapshot.
-
-The stable lesson is not the identity of a temporary leader. It is that each generation turns a formerly hidden cost into an explicit field in the passport.
-
-## 4. Compare mechanisms before names
-
-Begin inside the network. **Attention** combines information across context positions. A **feed-forward network (FFN)** transforms the vector at an individual position. Module 3 puts these operations together into a basic Transformer; Modules 5–7 examine their variants.
-
-Three architecture questions are enough for this overview. Does each token use the same weight bank, or select part of a larger one? Does it consult the full available history, a local window, or a compressed state? What representations enter and leave the network? The first question leads to dense models and experts in Section 6. The second leads to context memory in Section 8.
-
-An open model's `config.json` records some of the answers through dimensions, layer counts, and attention or expert settings. The implementation determines the actual computation. A family name cannot substitute for this evidence.
-
-Architecture also leaves training history unspecified. **Pretraining** learns weights from a large corpus. **Supervised fine-tuning (SFT)** uses examples of desired responses. **Reinforcement learning (RL)** updates the model using signals about the quality of outcomes. Different data and adaptation can produce different behaviour at identical dimensions, so the passport needs training evidence and evaluation as well as a configuration.
-
-## 5. Two passports: model and system
-
-The model passport describes the computational core. The system passport records how it is used. A retrieval tool, for example, provides access to documents; it does not establish that an answer's citations are checked. That is a separate system rule.
-
-![VIZ m1/02 — model and system passports](assets/modern-llms/en/module-01/m1_02_model_passport.svg)
-*The model computes. The surrounding system supplies evidence and tools, controls actions, and checks the result.*
-
-A model property and a workload result have different evidence requirements. Configuration and code can establish a parameter count. Cost per accepted answer and long-context quality require a task, settings, and an acceptance rule. The model passport may link to those measurements, but the system passport records their conditions. A result from one workload must remain attached to that workload.
-
-For the assistant in Section 1, the relevant question is whether it can find the applicable retention policy and support its answer from that policy. Parameter count does not establish either outcome. The system record must therefore specify the document collection and the acceptance check.
-
-### 5.1. Record the model
-
-| Field | Question for the document assistant | Evidence |
-|---|---|---|
-| Parameters | How many weights are stored and how many participate per token? | Configuration, code, card; §6–7 |
-| Context | How much material is accepted, and at what length do answers remain useful? | Documentation and workload evaluation; §8 |
-| Inputs and outputs | Must it read page images, or only text? | Model card and request format; §9 |
-| Reasoning | Can difficult questions receive more computation? | Request controls and measurements; §10 |
-| Access | Are weights and the required usage rights available? | Repository, licence, service terms; §11 |
-| Economics | What do accepted answers cost, and how long do they take? | Rates and measured runs; §12 |
-
-### 5.2. Record the system
-
-| Field | What it establishes |
-|---|---|
-| Model version and mode | The exact variant under evaluation |
-| Retrieval and other tools | The evidence and actions available to the assistant |
-| Permissions, network, isolation | Which documents, files, and services can be affected |
-| Memory across requests | What persists and who can access it |
-| Evaluation protocol | Questions, budgets, and answer acceptance rules |
-| Monitoring and stopping | How errors are detected and execution is ended |
-
-The program coordinating model and tool calls is often called an **agent harness**. Here an **agent** is a system that can select and carry out a sequence of actions. Module 18 develops its design. For now, record the actions it is permitted to take.
-
-### 5.3. First resource estimates
-
-Let $N_{\text{total}}$ count all model parameters and $N_{\text{active}}$ count the parameters on one token's active path. An active count needs an explicit accounting convention (§6). In model sizes, B and T mean $10^9$ and $10^{12}$ parameters.
-
-Weights are numbers, so their storage cost depends on the numerical format. BF16 uses 16 bits, or two bytes, per value. Quantization reduces that precision; effective storage must also include any scales and other format overhead.
-
-For effective precision of $b$ bits per parameter,
+Write the next token as $x_{t}$ and all preceding tokens as $x_{<t}$. The central computation then has a remarkably compact form:
 
 $$
-\operatorname{Mem}_{\text{weights}}
-\approx N_{\text{total}}\frac{b}{8}\ \text{bytes}.
+p_\theta(x_t\mid x_{<t})
 $$
 
-A coarse estimate of weight-matrix arithmetic during generation is
+The subscript $θ$ denotes the model’s parameters: the numerical values obtained through training. Read the expression as “the probability of token $x_{t}$, given the preceding text and the model’s parameters.” That preceding sequence may include an instruction, documents, the user’s question, and the part of the answer generated so far.
+
+Imagine that the assistant has begun, “The experiment log should be retained for…” The model assigns scores to possible continuations. Computing a distribution, however, does not itself append anything to the answer. A **decoding algorithm** chooses the next token. It might select the most probable option, or sample according to a specified rule. The chosen token is appended to the sequence, and the computation repeats. Generation stops when the designated end signal appears or a limit imposed by the program is reached.
+
+1.  **Available sequence**
+
+    Instructions, question, data, answer so far
+
+2.  **Model forward pass**
+
+    Probability estimates for the next token
+
+3.  **Choose a continuation**
+
+    The decoding rule selects a token
+
+4.  **Take another step**
+
+    Append the token and repeat the cycle
+
+Using a trained model is called **inference**. In ordinary inference, the parameters $θ$ remain fixed. The input sequence changes, and with it the internal representations and the distribution of the next token. The same model can therefore give different answers to different questions. With a sampling-based decoding rule, it can also produce different answers to the same input.
+
+This picture reveals what several apparently different tasks have in common. Translation, document question answering, code completion, and problem solving can all be framed as producing suitable text under a given condition. What is shared is the form of the computation—not a promise of equally good performance on every task. Success depends on what the model has learned and whether the input helps it bring those capabilities to bear.
+
+Nor does the brevity of the equation imply that the underlying computation is simple. Predicting continuations of complex text may call for layered representations, long-range dependencies, and substantial transformations of information. “Predicting the next token” describes the output and the training task; by itself, it establishes nothing about the simplicity of the internal algorithm. The opposite inference would be equally mistaken: an ability to continue an argument does not guarantee that the argument is correct.
+
+Above all, a token probability is not a probability that a claim is true. A high value means that the model assigns high probability to that continuation in that context. It is not, without further justification, a statistical estimate that a retention rule is valid, a cited paper exists, or a solution is correct. Those conclusions require their own evidence and checks.
+
+We will study the autoregressive route in detail. It is not the only route available: Module 12 introduces another way to construct text, through successive recovery of masked content. For now, we have identified our first well-defined object—a function that maps an available context to a distribution over continuations. The next question is how that function acquires useful behavior. [\[M20\]](/courses/modern-llms/module-20/)
+
+## 3. How models learn to work with language
+
+Before training, a neural network’s parameters do not yet define a useful language model. Its architecture specifies which operations will be performed and how they connect. It does not supply the rules of English or Russian, the syntax of Python, or the contents of a technical manual. Training must turn regularities in the data into useful structure in the parameters.
+
+**Pretraining** uses a large corpus of text. In the autoregressive setting, the text itself provides many training examples. The beginning of a sequence serves as the input; the next token, already known from the corpus, serves as the target. A single passage can supply a prediction task after its first token, another after its first two, another after its first three, and so on. No person has to label each continuation separately. The supervision comes from the structure of the data.
+
+The model produces probabilities, a loss function measures how well they match the observed continuation, and an optimization algorithm adjusts the parameters. Assigning too little probability to the actual next token incurs a larger penalty. Repeated across many examples, this process aims to improve prediction on text resembling the training data and, where possible, to carry the learned regularities over to new cases. Appendix A gives the mathematical objective; Modules 3 and 9 will show how the computation works.
+
+Knowing the target during training is not the same as allowing the model to see it while making its prediction. The training program knows the correct tokens, but an autoregressive model must not receive the future answer as part of its permitted context. In a Transformer, a special mask enforces this restriction. Many positions in a training sequence can nevertheless be processed in parallel: unlike during generation, the correct input for each position is already available. We will later examine how restricted access to the future and parallel computation fit together.
+
+What can a model gain from this process? Predicting text well takes more than memorizing the frequencies of neighboring words. A continuation depends on grammar, topic, genre, notation, facts, the structure of an argument, and statements made many sentences earlier. Training creates pressure to form representations that capture these dependencies. We do not, however, prescribe a complete inventory of those representations, nor do we receive a guarantee that every useful regularity will be discovered.
+
+It is therefore helpful to think of trained parameters as a distributed representation of learned regularities, not as a neatly indexed document collection. A model can memorize particular sequences—sometimes very precisely—while also generalizing to combinations it has never encountered. The balance depends on the data, the training procedure, and the task. Being able to reproduce a fact does not imply that the model stores a verifiable record of it, complete with a source, a date, and conditions of applicability.
+
+Consider our document assistant again. Pretraining may give it the language skills needed to distinguish “after creation” from “after completion.” Our organization’s particular rule, however, may never have appeared in its training data. The rule might even have changed yesterday. Language competence and access to the current policy solve different problems. We expect the former from the trained model; we must arrange the latter through the way we use it.
+
+Model size affects the space of possible solutions, but does not determine what will actually be learned. The amount, composition, and quality of the data matter, as do the compute budget and optimization procedure. The Chinchilla study made a particularly clear case for choosing parameter count and training-token count together under a fixed compute budget, rather than increasing parameters alone. Its empirical relationships belong to a particular experimental setting; treating them as an eternal ratio for every training run would miss the point. [\[3\]](https://arxiv.org/abs/2203.15556)
+
+Architecture, then, defines a way to compute; training determines the particular parameters of that computational system. But predicting text well is still not the same as being a useful assistant.
+
+## 4. From text prediction to helpful behavior
+
+A text corpus contains many kinds of continuation: explanations, dialogue, fiction, mistakes, arguments, instructions, and examples of behavior we would rather not reproduce. A model trained to continue such a corpus has no obligation to adopt the role of a careful assistant. Given a question, it might continue a list of questions, imitate the surrounding discussion, or produce something that looks like an answer without meeting the user’s intention.
+
+To make the desired behavior more consistent, we can use **supervised fine-tuning**, or SFT, on instructions and suitable responses. Instead of arbitrary passages, the training examples demonstrate how to respond to particular requests. The model learns patterns of interaction: following an instruction, explaining an idea, transforming data, or respecting a requested output structure. This still changes the parameters through training. It is not merely a setting applied to a chat window.
+
+For a document assistant, SFT examples might show how to distinguish a rule from an exception, cite a source, and acknowledge insufficient evidence. Those examples need to demonstrate a real connection between the answer and the supplied material. If every example can be imitated by writing a confident sentence and attaching a plausible document title, the model may learn that surface pattern rather than the behavior we intended.
+
+Demonstrations are not the only source of supervision. Comparing two answers and choosing the better one is often easier than writing an ideal answer from scratch for every request. Preference-based training uses this kind of feedback. In a classic RLHF pipeline, a reward model is first trained to score responses, and reinforcement learning is then used to update the language model. DPO takes a different route: it optimizes the model directly on preference pairs, without a separate policy-optimization stage driven by an explicitly trained reward model. Module 14 will explore why these distinctions matter. [\[4\]](https://arxiv.org/abs/2203.02155), [\[5\]](https://arxiv.org/abs/2305.18290)
+
+Some tasks offer feedback through a verifiable outcome rather than a human preference. A program passes the specified tests or it does not; a numerical answer satisfies the required condition or it does not. Such signals can be valuable, but they also have limits. Passing an incomplete test suite does not establish that a program is correct on every input. Matching a reference answer does not necessarily validate the explanation that accompanies it. Training quality depends not only on the optimization method, but also on how faithfully the check captures the real objective.
+
+**Post-training**—the collective name for stages following the main pretraining run—can therefore change much more than a model’s tone. It may affect instruction following, problem-solving strategies, tool use, responses to uncertainty, and other aspects of behavior. It does not confer infallibility. Even an excellent training signal remains a limited description of what we want.
+
+For our example, the practical distinction is straightforward. Adding “always cite your source” to a prompt and training on verified answers with supporting citations are different interventions. The first changes the current input. The second changes the parameters and may influence many future requests. Checking whether a document actually supports a particular answer is a third task. A helpful style is not a substitute for evidence.
+
+We can now read model release names more carefully. Two models with the same architecture and parameter count may have different training data and training histories. A base model and its fine-tuned counterpart are not simply the same object behind different interface settings. Understanding the difference requires asking both how the model is built and how its weights were obtained.
+
+## 5. What changes during a conversation
+
+Suppose the assistant first answers from Document A. The user then adds, “A special directive applies to the current experiment: retain the log for 60 days.” The next answer may change. A natural question follows: has the model just learned something?
+
+In an ordinary chat interaction, the new information has entered the context while the network’s parameters have remained unchanged. The model is applying an existing ability to take task conditions into account, now to a different input. It helps to distinguish two senses of “learning”: adapting behavior to examples in the current context, and updating parameters through an optimization procedure. These processes can look similar from the outside while working in very different ways.
+
+**In-context learning** is the ability to use examples or a task description supplied in the prompt without updating the weights. We might, for instance, show several examples of document-type labels and ask the model to classify new documents in the same format. The GPT-3 paper made this setting central to the study of large language models: in the reported experiments, new tasks were specified in text, without gradient updates to the model’s parameters. [\[2\]](https://arxiv.org/abs/2005.14165)
+
+But a new sentence in the context is not automatically a valid rule. In our task, the user’s message might be a legitimate clarification, a mistake, or an unsupported assertion. The task specification and the system’s policies determine what counts as an authoritative directive and which source takes precedence. Being able to use information is different from being entitled to treat it as authoritative.
+
+It is also worth distinguishing three places where information can reside. The weights encode the outcome of training. The context contains what has been supplied for the current computation. An external store may hold documents, interaction history, notes, and results of earlier actions. For information in that store to influence an ordinary model call, the program must retrieve it and present it in a form the model can process.
+
+**Weights**
+
+Updated during training. They determine how the model transforms its input.
+
+**Context**
+
+Changes between requests. It supplies the available conditions for the current answer.
+
+**External memory**
+
+Managed by the program. It stores information that can be retrieved and supplied again.
+
+An assistant that appears to “remember the whole conversation” may therefore rely on several different arrangements. The program might pass the entire available history, provide a summary instead, or select a few records from a store. Those choices determine what the model can take into account and what remains out of reach. The distinction will become central when we study RAG and agents.
+
+Updating weights during deployment is possible too, but it requires a deliberately arranged procedure; we should not assume it happens with every message. Along the course’s main path, we will keep parameter-updating training separate from fixed-weight inference. This distinction will spare us considerable ambiguity when we discuss reasoning, memory, and adaptation.
+
+We now know where the parameters come from and what reaches the input. It is time to look inside the computation itself—without yet unpacking every matrix.
+
+## 6. Inside the computation
+
+After tokenization, each identifier is mapped to a numerical vector: an **embedding**. Its coordinates need not have tidy human labels such as “formality,” “date,” or “importance.” An embedding is a learned representation whose meaning depends on how the rest of the network uses it to solve the task.
+
+The initial vector cannot do the whole job. The word “log,” for example, might refer to an experimental record, a file of system events, or a piece of timber. Token representations must therefore be transformed in light of their surroundings. Repeating this contextual transformation at several levels accounts for a substantial part of the network’s work.
+
+In the **Transformer** architecture, attention plays a central role. It allows the representation at one position to draw information from other permitted positions in the sequence. A question about retention may require connecting an object’s name, a number of days, and the event that starts the clock. Attention supplies a computational mechanism for exchanging that information; useful patterns of interaction emerge through training. It is an operation on internal vectors, not a separate document-search program. [\[1\]](https://arxiv.org/abs/1706.03762)
+
+Alongside attention sits a feed-forward network, usually abbreviated **FFN**. In its basic form, it transforms each position’s representation separately, using the same learned matrices across positions. Attention mixes information between positions; the FFN applies a nonlinear transformation to the resulting features. Alternating these operations makes increasingly complex representations possible.
+
+The network also needs a way to represent positions if it is to take order into account. Normalization and residual connections help make deep computation trainable; a residual connection adds the previous representation to the result of a new transformation. For now, understanding the purpose of these components is enough. We will assemble a basic Transformer in Module 3, then examine positions, attention, and block internals separately in Modules 4–6.
+
+At the end of the computation, a representation is converted into scores for the vocabulary’s tokens. Normalizing those scores produces the next-token distribution with which we began. A compact probabilistic expression thus stands for a long but well-defined sequence of operations. Each can be written as an equation, implemented, and checked on a small example.
+
+Why does the Transformer occupy so much of this course? Introduced in 2017, the architecture combined information exchange across positions with convenient parallel training on sequences. That does not make the field a study of one fixed design. Variants change the form of attention, the feed-forward blocks, positional representations, and the organization of computation. Similar names can conceal quite different paths through the data. [\[1\]](https://arxiv.org/abs/1706.03762)
+
+There are deeper alternatives as well. **State space models**, or SSMs, can carry information about the past through an evolving state rather than a full collection of separately accessible representations of earlier positions. That changes the balance between memory, computation, and access to past detail. The Mamba family shows how state updates can depend on the current input; hybrid models combine such mechanisms with attention. We will study them in Module 8. [\[7\]](https://arxiv.org/abs/2312.00752)
+
+A separate design question concerns the order in which an answer is constructed. An autoregressive model extends it sequentially. A diffusion language model may instead start from a partially or entirely masked sequence and refine it over several steps. LLaDA, for example, uses a Transformer to predict masked tokens. “Transformer” and “diffusion model” are therefore not necessarily opposing categories: one describes an internal architecture, the other an important aspect of training and generation. Module 12 will make these levels explicit. [\[8\]](https://arxiv.org/abs/2502.09992)
+
+The point to retain for now is simple. A language model is not one particular machine with a mandatory inventory of parts. It is a class of trainable systems whose architectures make different trade-offs in processing sequences. To compare them meaningfully, we first need to understand which resource a design choice changes.
+
+## 7. Why parameter count is only part of the story
+
+When we first encounter language models, parameter count looks like an appealing summary. It is compact, easy to compare, and seems to express capability in a single number. Yet the distinction between architecture and training already tells us where that intuition breaks down: the same number of parameters can accompany different data, different training procedures, and different computations.
+
+Size still matters. Parameters have to be stored and used. A model with 8 billion parameters, each stored in two bytes, needs 16 billion bytes for the weight values alone: 16 GB, or approximately 14.90 GiB. That is not the full memory requirement of a running model. Context-related state, intermediate results, working buffers, and the runtime itself also take space. Even this first estimate, however, establishes the scale of the problem.
+
+Here and throughout the chapter, B in a model size means billion, or 10⁹ parameters; T means trillion, or 10¹². For storage, we distinguish decimal GB from binary GiB: one GiB is 2³⁰ bytes. The difference may be easy to overlook in conversation, but matters when we are deciding whether a model will fit on a device.
+
+Now consider the feed-forward blocks. In a **dense model**, tokens pass through the same set of these blocks. In a **mixture of experts**, or MoE, some blocks contain a collection of alternative subnetworks. A small learned router chooses only a subset for each token. These subnetworks are called experts. The term is architectural: it does not imply that one expert necessarily handles mathematics, another Russian, and a third programming. [\[6\]](https://arxiv.org/abs/2101.03961)
+
+MoE makes it possible to enlarge the total parameter pool without requiring every token to use all of it. We therefore need two quantities: the **total parameter count**, $N_{total}$, and the **active parameter count**, $N_{active}$, attributed to processing one token under a stated counting convention.
+
+Consider a deliberately simplified model. Its shared part contains 1 billion parameters, while its selectable expert bank contains 16 equal portions of 0.5 billion each. Suppose a token uses two of those portions. The total count is 1 + 16 × 0.5 = 9 billion parameters; the active count is 1 + 2 × 0.5 = 2 billion. In a real multilayer model, routing happens within individual layers, and the shared part has its own structure. The toy calculation isolates the distinction.
+
+These two numbers answer different questions. Total size helps estimate weight storage. Active size gives a first indication of part of the computation per token. We cannot store only the 2 billion selected on one step and declare the rest unnecessary: the next token may follow a different route. Weights can be distributed across devices or loaded on demand, but then moving the data becomes part of the cost.
+
+Even active size is not a direct measure of speed. Runtime depends on memory traffic, communication between devices, batch size, and how effectively the implementation uses the hardware. “Active” also needs a definition. The full input embedding table exists in the model, for example, but a particular token usually selects just one row. The output projection, by contrast, may be used to score the entire vocabulary. Module 7 will examine this distinction in real code. [\[M7\]](/courses/modern-llms/module-07/)
+
+Another way to reduce memory demand is **quantization**: storing weights with fewer bits. Values are represented less precisely, and additional information may be needed to recover their scales. This often reduces storage, but its effect on quality and speed depends on the method and implementation. A four-bit weight format does not justify dividing the memory of an entire BF16-based run by four. Tensors need not all use the same format, and the context state and working buffers have not disappeared. Module 11 is devoted to these questions.
+
+Parameter count, then, should be read alongside architecture and storage format. Quality must be tested separately. A large weight bank, a small active path, a compact checkpoint, and a fast response are different properties. Their relationships can be investigated; none is a universal substitute for the others.
+
+## 8. The cost of reading a long document
+
+Let us return to the assistant. With only two short sentences, length barely entered the discussion. A real collection contains long policies, appendices, tables, and several versions of the same document. It is tempting to supply everything at once and let the model find what matters.
+
+To assess that option, we need the idea of a **context window**. It limits the sequence length that the model and runtime handle in a given mode. In an ordinary autoregressive setting, the sequence includes not just documents but instructions, history, the question, and the generated continuation. An interface may impose separate input and output limits as well, so the documented numbers have to be read together.
+
+Suppose our teaching environment permits a total sequence of 8,192 tokens. Instructions, history, and the question use 1,000; the documents use 6,000; and we want to reserve 1,500 for the answer. The total is 8,500—308 over the limit. Documents shorter than the window do not necessarily leave enough room for the complete request and the desired continuation. We do not yet know how to count tokens in a string accurately; Module 2 will close that gap.
+
+Admissible length is only one aspect of context. Another is how well the model uses the information it receives. A model may accept a sequence yet overlook an important exception, confuse similar passages, or fail to connect distant pieces. In the experiments reported in *Lost in the Middle*, performance on some models and tasks depended substantially on the position of the relevant information. This was an experimental finding, not an immutable law governing all future models. Its wider lesson is to test context use rather than infer it from an advertised token limit. [\[9\]](https://arxiv.org/abs/2307.03172)
+
+A third aspect is processing cost. For an autoregressive Transformer, it is useful to distinguish two phases. First comes **prefill**, which processes the input sequence already available. Its result lets us select the first continuation token. Then comes **decode**, which processes appended tokens in sequence and chooses the continuation that follows. Much of the input can be processed together. Future answer tokens are not yet known, so ordinary generation proceeds one step at a time.
+
+These phases create different kinds of waiting. A user cares both about the delay before the first answer token and about how quickly the rest arrive. The first measure is **time to first token**, or TTFT. It includes not just model computation but potentially queuing, request preparation, and other system delays. The interval between subsequent tokens is **inter-token latency**, or ITL. A short answer emitted quickly after a long document-reading delay is a different performance profile from an answer generated slowly after a short input.
+
+To avoid recomputing all the information it needs from earlier positions, a Transformer usually retains attention-related vectors in a **KV cache**. For now, its role matters more than its details: it is intermediate numerical state that allows computation to continue. It is neither the model’s weights nor an external document database. With full attention, this state grows with the length of the retained sequence. Modules 5 and 10 will explain its geometry and ways to reduce its cost; Appendix B already provides a numerical example. [\[M5\]](/courses/modern-llms/module-05/), [\[M10\]](/courses/modern-llms/module-10/)
+
+Our assistant now faces three independent questions. Does the material fit? Can the model use it reliably for our task? Are the memory, monetary, and time costs acceptable? “Supports a long context” answers only part of the first question.
+
+This gives retrieval a concrete motivation. Supplying every document is not always necessary; finding a few relevant passages may be preferable. Shortening the input has a risk of its own, however: retrieval may leave out a necessary condition or exception. Long context and retrieval are not successive rungs on a ladder from an obsolete solution to a superior one. They are different ways of arranging access to information, often best combined and always worth testing on the task.
+
+## 9. Spending more compute on an answer
+
+Some questions ask for a single explicit statement. Others require several rules to be reconciled, an exception to be considered, or a calculation to be made. Our assistant might be asked, “Can the log be deleted if the general retention period has expired but the experiment’s review is still open?” One retrieved number will not settle that question. We need more information and a way to put it together.
+
+We tend to think of a model’s capabilities as something acquired during training. But the work performed after a particular request arrives also affects the result. The model may develop an intermediate solution. The program may obtain several candidates, check them, perform a calculation with a tool, or retrieve further evidence. These are different ways to spend more **test-time compute**—computation devoted to solving the current task.
+
+This budget should not be confused with training. Training changes parameters, potentially benefiting many future requests. Ordinary fixed-weight problem solving changes the sequence, intermediate state, and results of actions. A model may have been trained to use a productive strategy; applying that strategy to a new question is a different process.
+
+Extra work is useful when it addresses a particular uncertainty. In our example, the system might retrieve the exception policy, compare the conditions, and check whether the retention period applies to the right object. Rephrasing the same sentence indefinitely would accomplish little: repetition cannot conjure up a missing source. More computation and more available information are different resources, even though a system often uses them together.
+
+Nor is improvement guaranteed when the necessary information is available. Several attempts can repeat the same mistake. A checking model can prefer a persuasive but incorrect answer. Extra steps can even turn a correct solution into a wrong one. Research on allocating test-time compute shows that the value of a strategy depends, among other things, on task difficulty and how candidates are assessed. The budget and the evaluation procedure must therefore be chosen together; more computation is not automatically better. [\[10\]](https://arxiv.org/abs/2408.03314)
+
+This gives us a more precise way to discuss “reasoning models.” From an engineering perspective, the important questions are observable: how the result was obtained, which intermediate actions were permitted, how many attempts were made, how much time and computation were spent, and how the final answer was checked. The length of an intermediate explanation is not itself a measure of reasoning depth or correctness. An explanation can be a useful output, but its substance must be evaluated too.
+
+The calling program may allocate part of this budget; the model or another controller may allocate part of it. An interface’s effort setting sometimes requests a particular operating mode. Unless the interface explicitly specifies otherwise, it should not be interpreted as an exact number of operations or seconds. Comparing runs requires recording the actual conditions: output limits, number of attempts, available tools, and stopping criterion.
+
+Module 15 will develop these ideas, including the difference between producing at least one correct candidate and being able to select that candidate. For now, we have another level of explanation: observed quality depends not only on the weights but also on how the system goes about solving the particular task.
+
+## 10. When the document is an image
+
+So far, we have assumed that the documents are already available as text. Now imagine a scanned policy. The retention period is in a table, a qualification appears beneath it, and a note in the margin marks an earlier version as superseded. Accepting the file is not enough. To answer correctly, the system must preserve the relationships among its contents.
+
+A **modality** is a kind of data: text, images, audio, or video. A multimodal system works with more than one. The label alone, however, tells us little about the actual design. A system may accept images but produce only text. It may recognize speech without synthesizing it. It may generate images while lacking the document-analysis capabilities we need. Inputs and outputs should be described separately.
+
+In one common image-processing design, a dedicated encoder converts the image into a sequence of vectors, and a connecting module brings those representations into a form usable by the language component. Other architectures combine modalities differently. Visual representations need not be ordinary words or identifiers from the text vocabulary. A unified interface does not require every kind of data to have the same internal format. Module 16 will examine concrete designs. [\[M16\]](/courses/modern-llms/module-16/)
+
+Our assistant also has another option: a separate program can first recognize the text and then pass the result to a text-only model. Such a pipeline can be convenient, but introduces its own failure modes. Table extraction may lose the relationship between a row and a column. Recognition may confuse a digit or omit a note. The language model then receives information that has already been distorted. Answering confidently from that input cannot repair a loss that occurred upstream.
+
+Direct image input does not remove the need for checks. A critical detail may be too small to resolve; splitting the page into pieces may change which relationships are available; higher resolution usually requires more resources. “Can the model read images?” is therefore only the beginning of the question. Which images, in which operating mode, at what accuracy, and at what cost?
+
+Audio and video introduce time as well. Answering a question about a meeting recording may require not only recognizing words but assigning them to speakers and moments in the recording. Video may require connecting events across frames. Sampling, representation, and compression choices become part of the task conditions, not invisible implementation details.
+
+Additional modalities do not erase the distinctions we have already established. There are still learned parameters, a current input, a processing procedure, and a surrounding system. Some information simply arrives in a form other than text. To understand the route from document to answer, we must trace where and how that information becomes a representation the model can use.
+
+## 11. Building a system around the model
+
+We can now bring back the parts of the task we temporarily set aside. An employee has a question, the organization has a collection of documents, and we have a trained model. A program must connect the three.
+
+In a simple arrangement, the program retrieves relevant passages, adds them to the question and instructions, calls the model, and presents the answer with its sources. This combination of retrieval and generation is commonly called **retrieval-augmented generation**, or RAG. Retrieved information becomes part of the condition under which the answer is produced; using it need not require retraining the generator each time. The original RAG paper studied a specific trainable architecture. Engineering practice also uses the term more broadly for generation systems that retrieve external material. [\[11\]](https://arxiv.org/abs/2005.11401), [\[M17\]](/courses/modern-llms/module-17/)
+
+Our assistant can fail at any point along this route. The current policy may be missing from the collection. Retrieval may return an obsolete version. Splitting a document into passages may separate a rule from its exception. Too many similar fragments may crowd the context. The model may attach the wrong source to its answer. To diagnose the failure, we need enough records to reconstruct what material actually reached the model and where necessary information was lost.
+
+Here the distinction between improving a model and improving a system becomes particularly clear. A stronger model may be better at reconciling the conditions in retrieved passages. But if the current document is absent from the available collection, a desire to answer correctly will not reliably reconstruct its contents. Conversely, better retrieval can improve results substantially without changing the weights when access to the right information was the original bottleneck.
+
+A single predetermined search is not always enough. The assistant might find a general rule, notice a reference to a separate directive, and request that directive next. Or it might obtain the experiment’s end date from another system and calculate the deadline. We then have a sequence of actions: choose the next step, call a tool, receive its result, update the context, and continue.
+
+In this course, an **agent** is a system able to choose and execute actions in such a loop to accomplish a task. The program that coordinates model and tool calls is the **agent harness**. A model’s suggestion to “find the document” does not itself perform a search. The action occurs when the surrounding program recognizes the request, validates it, and invokes the appropriate tool. ReAct is one research example of organizing the interaction between reasoning and action; Module 18 will examine the agent loop in detail. [\[12\]](https://arxiv.org/abs/2210.03629), [\[M18\]](/courses/modern-llms/module-18/)
+
+Permissions belong to the execution system. An assistant intended only to read documents has no reason to receive permission to modify them. When an action affects other people’s data or has irreversible consequences, access controls and required approvals must enforce the limits. A sentence in a prompt is not a security boundary. Instructions can guide behavior; they cannot replace technical restrictions on authority.
+
+The same distinction applies to retrieved content. An external document may contain text that resembles an instruction to the assistant. But the document was supplied as material to analyze, not as a source of new permissions. Keeping data separate from control instructions becomes especially important once the system can act. Module 18 will examine the resulting risks and ways to limit potential harm.
+
+Finally, the system determines when to stop and how to check the outcome. “The model has finished generating” and “the task is complete” are different events. In our example, we still need to establish that the answer concerns the right object, respects the applicable conditions, and is supported by its source. With two invented sentences, we can check this by hand. An unrestricted document collection needs an evaluation procedure of its own.
+
+A single message in the interface may therefore be the product of one model call or a long sequence of searches, calculations, and checks. The quality we observe belongs to that particular arrangement of work. Naming the model alone does not describe it adequately.
+
+## 12. From understanding to choosing
+
+We began with an employee’s question. We can now separate the problem into parts: the language model’s capabilities, the availability of documents, retrieval quality, context length, generation settings, and answer verification. This is the point at which choosing a model for the task becomes meaningful.
+
+Start with an acceptance criterion. In our teaching example, an answer is accepted if it identifies the correct object and retention period, preserves the event that starts the clock, and cites a supporting document. When the available material contains no answer, an accurate statement that the information is missing may also count as success—provided that this is what the task calls for. We are evaluating whether the task was handled correctly, not whether every response contains a confident assertion.
+
+A useful comparison needs more than easy questions. It should include similar-looking objects, exceptions, conflicting document versions, and missing information. The composition of this set determines what the evaluation means. Testing only the extraction of a single number tells us nothing about reconciling several rules. Questions too close to the examples used to tune the system may produce an overly optimistic estimate.
+
+To measure differences between models, keep the surrounding conditions fixed wherever possible: the same document collection, retrieval procedure, questions, comparable limits, and acceptance checks. Changing both the model and its harness is a valid experiment too, but its result compares two complete systems. Module 19 will develop the design of these evaluations. [\[M19\]](/courses/modern-llms/module-19/)
+
+Consider the following invented results for two candidates. Every number is for illustration; none is a measurement of a real model or a current price. Each candidate receives the same 200 questions in the same harness, with one attempt per question.
+
+| Measure                                | Candidate A | Candidate B |
+|----------------------------------------|-------------|-------------|
+| Questions evaluated                    | 200         | 200         |
+| Accepted outcomes                      | 100         | 180         |
+| Acceptance rate                        | 50%         | 90%         |
+| Total evaluation cost, arbitrary units | 40          | 60          |
+| Cost per question                      | 0.20        | 0.30        |
+| Cost per accepted outcome              | 0.40        | ≈ 0.33      |
+
+Candidate B costs more per question but less per accepted outcome. No unusual pricing rule is involved. We have simply changed the unit of comparison: what we need is a successfully completed task, not merely a model call.
+
+In general, the measure is:
 
 $$
-\operatorname{FLOP/token}\approx2N_{\text{active}}.
+C_{\mathrm{accepted}}=\frac{C_{\mathrm{total}}}{n_{\mathrm{accepted}}}
 $$
 
-The factor of two counts one multiplication and one addition per participating matrix weight. It estimates arithmetic, not elapsed time.
+The numerator includes every expense within our chosen accounting boundary: model calls, retrieval, tools, verification, and retries where the procedure allows them. The denominator counts accepted outcomes, not all generated answers. If no outcome is accepted, there is no finite observed cost per accepted outcome. Report that there were no successes; do not report a cost of zero.
 
-It excludes context-dependent attention, routing, normalization, sampling, communication, and poor hardware utilization.
+This measure does not remove the need for a quality requirement. Suppose our teaching pilot sets a target acceptance rate of at least 85%, and both candidates meet the latency limit. On the evidence of this run, we choose B for further testing: A’s success rate is too low, while B has both a higher success rate and a lower cost per accepted outcome. This is not yet a deployment decision. We must still examine performance on other questions, uncertainty in the estimate, and the severity of the remaining errors.
 
-**Second pass: training compute**
+Retries deserve particular caution. We cannot automatically assume that a failed answer will be repaired by an independent second attempt. The same missing document or misunderstood condition may cause the error again. The cost of a reliable system is better estimated from complete observed runs than from a promise to “try once more.”
 
-Training uses a different approximation,
+We can now collect our understanding into two concise records: a **model profile** and a **system profile**. The first identifies the trained artifact: its version, architecture, input and output formats, documented limits, weight availability, and training information. The second records how we use it: available documents and tools, prompt construction, permissions, and the procedures for measuring quality, latency, and cost. Appendix E provides templates for both.
 
-$$
-C_{\text{train}}\approx6ND,
-$$
+Not every field carries the same kind of evidence. A matrix dimension can be read from a configuration and checked against code. A performance claim can be found in the developer’s report. Performance on our documents must be measured under specified conditions. If a closed model’s architecture has not been disclosed, the correct entry is “not published,” not a guess based on the product name. Observing performance does not reveal an otherwise unknown architectural detail.
 
-whose assumptions are developed in Module 9.
+Access also needs a concrete description. Being able to call an API, download weights, inspect code, and reproduce training are different properties. Available weights do not imply access to all the data and procedures used to obtain them. Usage conditions must be checked for the particular release and its components; the broad label “open model” is no substitute for that reading.
 
-Here $N$ is the parameter count under the chosen convention and $D$ the number of training tokens. This approximation includes forward and backward matrix operations.
+Saved model weights are commonly called a **checkpoint**. The configuration records architectural dimensions and settings. The code defines the operations. A **model card** adds information about intended use, training, limitations, and evaluation. None of these sources replaces the others. A repository’s current branch can change, so a reproducible analysis should identify an exact revision, not just a model family.
 
-Generating another token requires reading weights and retained context state. Moving these data can dominate runtime even when the device has a high arithmetic throughput. Modules 10–11 examine that cost.
+The profiles are now the result of an argument rather than a collection of unexplained fields. We know why parameters, context, training, and execution settings matter. We also know why a table of specifications cannot replace an experiment on the task we actually need to solve.
 
-Units matter. Vendors often quote file sizes and bandwidth in decimal GB/TB; accelerator memory is easier to read in binary GiB/TiB. `FLOP` counts operations, while `FLOP/s` is a rate. The course keeps those systems explicit.
+## 13. What we will build
 
-## 6. Axis I up close: dense and MoE
+Understanding existing models is valuable, but descriptions alone can take us only so far. Parts of the mechanism remain abstract until we can inspect and change them ourselves. The course therefore connects its explanations to an implementation of our own: **MiniLLM**, a small trainable language model in which we can follow the entire path from tokens to parameter updates and generation.
 
-In a dense Transformer, every token uses the same feed-forward blocks. In a **Mixture of Experts (MoE)** layer, a learned router selects a few experts from a larger bank. Selecting the $k$ highest-scoring experts is called top-k routing. Some designs also include a shared expert used by every token. The design therefore grows stored parameter capacity faster than the expert computation used by one token.
+We will approach it in several ways. A small calculation will first make an equation tangible. A notebook will then let us vary the input and check array shapes, units, and boundary cases. Reading open code will show how an existing model implements the same mechanism. Finally, the continuing project will bring the pieces together into a working whole. These activities complement one another: a short example isolates an idea; a complete project reveals the agreements between components that make it usable.
 
-![VIZ m1/03 — dense and MoE](assets/modern-llms/en/module-01/m1_03_dense_vs_moe.svg)
-*A dense FFN uses one set of weights. In this toy MoE, the router selects two of four experts; shared experts are omitted to keep the mechanism visible.*
+MiniLLM is not a promise to reproduce a large commercial assistant on a home computer. Its purpose is to make the computation visible and open to experimentation. We will be able to count parameters, train a manageable configuration, save weights, change an architectural detail, and investigate the consequences. The quality we obtain will depend on data and training budget, not merely on assembling familiar blocks.
 
-This is why MoE cards often report two sizes:
+The practical work offers dense and MoE variants in S, M, and L sizes. The small configurations support short experiments; larger ones allow more substantial investigations and resource estimates. The L profiles are optional and require a separate budget. The particularly large L-MoE profile is especially useful for resource planning. Exact dimensions are collected in Appendix D, where they are easy to find without interrupting our first encounter with the project.
 
-- **total parameters**: the full bank that the system must store and make available;
-- **active parameters**: a declared or reconstructed convention for the path used by one token.
+The core final project has a clear scope: an autoregressive text model. Multimodality, document retrieval, and agents are separate topics and possible extensions, not a promise to fit everything into the required MiniLLM implementation. Distributed training, specialized compute kernels, and a fault-tolerant production platform also require preparation of their own. We will learn to understand the associated constraints without presenting a teaching implementation as a production-ready system.
 
-**Second pass: active-count conventions and expert geometry**
+The course sequence can now be read as a route from data representation to a complete working model. Module 2 covers tokens and embeddings; Module 3 assembles a basic Transformer. Modules 4–8 explore positional information, attention, block internals, experts, and alternative ways to retain information about the past. With those pieces in place, Module 9 can give a substantive account of data, optimization, and the training budget.
 
-The active count depends on how operations are charged. An input embedding maps an ID to a vector; the output projection maps a model vector to scores for all next-token IDs. Module 2 develops both operations. Some cards include the full vocabulary projection, others report only the Transformer core; an input embedding may be charged as a row lookup rather than a full active matrix. A precise passport names the convention.
+Modules 10–12 return to the use of a trained model: context-state memory, faster generation, quantization, and an alternative order for constructing text. Modules 13–15 study useful behavior through demonstrations, feedback, and computation at problem-solving time. Modules 16–18 widen the scope of interaction to images, audio and video, external documents, tools, and actions. Module 19 brings these concerns together in an evaluation procedure.
 
-The open gpt-oss implementation makes the issue concrete. Counting visible matrices, biases, and learned attention sinks gives, for gpt-oss-120b,
+The supplementary Module 20 takes the reverse journey, joining the components into a complete mathematical construction. Here, we are learning to recognize the main objects and ask the right questions. There, we will be able to follow every essential transformation: from a token identifier through the network to probabilities, then to a loss, a gradient, a weight update, and the next generation step. [\[M20\]](/courses/modern-llms/module-20/)
 
-$$
-N_{\text{total}}=116\,829\,156\,672,
-\qquad
-N_{\text{active}}=5\,132\,849\,472
-$$
+A new model name or an unfamiliar abbreviation in a technical report will then cease to be an isolated fact to memorize. We will ask what part of a familiar computation has changed, which problem the change addresses, and what trade-off it introduces. That way of reading remains useful even after the products and their positions in comparison tables have changed.
 
-under the course’s compute-oriented convention: the full output projection is included, while the indexed input embedding lookup is not charged as a full GEMM. The card rounds those values to 117B and 5.1B. Both are useful; they answer different questions.
+## 14. What to take forward
 
-MoE geometries vary widely.
+We began with a short answer drawn from a document and gradually uncovered several distinct objects. A language model computes a distribution over continuations. Training shapes the parameters of that computation. Context supplies the information and conditions of the current task. A generation algorithm turns distributions into a sequence of tokens. The surrounding program provides material, manages actions, and determines how the result will be checked.
 
-| Model | Total / active | Routed experts / top-k | Shared path | Evidence |
-|---|---:|---:|---:|---|
-| Llama 4 Scout | about 109B / 17B | 16 / 1 | yes | model card and config |
-| gpt-oss-120b | 117B / 5.1B | 128 / 4 | no | official code and model card |
-| DeepSeek-V4 Pro | 1.6T / 49B | reported in technical material | yes | technical report |
-| Qwen3.8-2.4T-A95B | 2.4T / 95B | 512 / 10 | 1 | official config, checked 11 October |
-| Inkling | 975B / 41B | 256 / 6 | 2 | official model card |
-| Kimi K3 | 2.8T / 104B | 896 / 16 | 2 | official report/model summary |
-| Nemotron 3 Ultra | 550B / 55B | LatentMoE | report-specific | official report |
+These distinctions give us a way to investigate failures rather than merely record them. When an answer is wrong, we can ask whether the necessary information was available, whether it was represented faithfully, whether the model related it correctly, and whether verification caught the error. When an answer is too expensive or too slow, we can examine weight storage, input processing, context state, and the budget for further actions separately. When a new model looks attractive on a specification sheet, we can ask which of those properties actually matter to our task.
 
-Large experts with a small top-k reduce routing combinations but make every selected expert expensive. Fine-grained banks offer more combinations and lower active fractions, at the cost of load balancing, all-to-all traffic, and harder placement. Neither total/active nor expert count predicts quality on its own.
+Choosing a model therefore begins with understanding and ends with testing. Architecture and training history help us form a hypothesis about a candidate’s suitability. Measurement under specified conditions shows how well that hypothesis holds up. A profile records both the object being compared and the conditions of the experiment, so that a successful result does not dissolve into the vague claim that “the model works well.”
 
-The practical reading rule is simple: in `1.6T / 49B`, the first number says **what the system must make available**; the second gives a first estimate of **weight work per token**. The next step is to inspect the counting convention and implementation.
+For the document assistant, we can already state the task, distinguish a correct number from a supported answer, and explain how retrieval, context, and verification affect the outcome. Yet one of our earliest practical questions remains open: how much text will actually fit into the chosen model’s input?
 
-**A phase-dependent example.** Active count can depend on the execution phase. The [DeepSeek-V4.1-Flash card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash) reports 8B active parameters while processing the input (prefill) and 16B while generating subsequent tokens (decode). A passport may therefore need two active-count fields. Also check whether the reported total includes conditional memory and auxiliary components before comparing it with another model's total.
+Counting words or characters will not settle it. We need to understand exactly how a string becomes a sequence of identifiers and then the vectors on which the network operates. That is where the next module begins.
 
-## 7. Worked comparison: gpt-oss-120b and Llama 4 Scout
+Next[Module 2. Tokenization and Embeddings →](/courses/modern-llms/module-02/)
 
-These models have similar total parameter scale but make very different product and architecture choices.
+From human-readable text to the model’s input.
 
-The mechanism names in the table are reference labels for a second pass. The calculations use parameter counts, storage formats, and retained-state dimensions. **Prefill** processes the supplied input; **decode** adds new tokens sequentially.
+------------------------------------------------------------------------
 
-| Passport field | gpt-oss-120b | Llama 4 Scout |
-|---|---|---|
-| Total / active | 117B / 5.1B; course reconstruction 116.829B / 5.133B | about 109B / 17B |
-| MoE | 128 routed, top-4 | 16 experts, top-1 plus shared path |
-| Attention | GQA 64/8; alternating full and 128-token sliding layers; learned sink per head | RoPE/NoPE hybrid, chunked attention, early-fusion multimodality |
-| Context | 128K | up to 10M in the stated Scout mode |
-| Distribution | MXFP4 expert weights; Apache 2.0 | BF16 and quantized paths; Llama Community License |
-| I/O | text → text | text/image → text |
+The appendices can be read independently as the need arises. They collect the calculations, configurations, reference material, and exercises that develop the chapter’s ideas in greater technical detail.
 
-### 7.1. Weight artefact
+## Appendix A. Probability, training, and generation
 
-For the teaching MXFP4 estimate, 32 four-bit weights share an eight-bit scale: $4+8/32=4.25$ bits per weight. Applying that rate uniformly to 117B parameters gives
+A closer look at §§2–5. This appendix provides a first mathematical reading; Modules 3, 9, and 20 connect the notation to the full computation.
+
+### A.1. From token probabilities to a sequence probability
+
+For a sequence $x_{1:T}$, the autoregressive factorization is:
 
 $$
-117\times10^9\frac{4.25}{8}
-=62.15625\ \text{GB}
-=57.89\ \text{GiB}.
+p_\theta(x_{1:T})=\prod_{t=1}^{T}p_\theta(x_t\mid x_{<t})
 $$
 
-The official source-weight index is 65,248,815,744 bytes, about 60.77 GiB. The difference is the lesson: a format name does not fully determine checkpoint size. Tensor precision is heterogeneous, and scales, metadata, and packing also occupy space.
+For the first token, the condition may contain a special start marker or a supplied prefix. When we model only the answer to a request, the available request also conditions every factor. The principle is unchanged: the probability of a sequence is expressed through the probabilities of its successive continuations.
 
-### 7.2. Active arithmetic
+This equation describes the model’s distribution. A generation algorithm can use it in different ways. Sampling directly from the original conditional distributions produces a sample from the corresponding autoregressive distribution. Greedily selecting the most probable token, changing the temperature, or restricting the candidate set defines a different procedure for producing text. We therefore cannot equate a sequence’s probability under the model with its frequency under an arbitrary decoding procedure.
 
-Using the rounded card values,
+### A.2. The training objective
 
-$$
-2\times5.1\text{B}\approx10.2\ \text{GFLOP/token}
-$$
-
-for gpt-oss and
+For $T$ predictions included in the objective, the standard mean negative log-likelihood is:
 
 $$
-2\times17\text{B}\approx34\ \text{GFLOP/token}
+\mathcal{L}(\theta)=-\frac{1}{T}\sum_{t=1}^{T}\log p_\theta(x_t\mid x_{<t})
 $$
 
-for Scout. This is not a promise of a threefold latency gap. Attention layout, expert placement, precision, kernels, and hardware are different.
+We use natural logarithms here. Positions that should not contribute to training are excluded by a mask, and the normalization uses the number of included tokens. In SFT, for example, the masking convention determines which portions of a conversation contribute to the loss.
 
-### 7.3. Context state
+If the observed token receives probability 0.5, its contribution is −ln 0.5 ≈ 0.693. Raising the probability to 0.9 reduces that contribution to −ln 0.9 ≈ 0.105. Minimizing this loss encourages the model to assign more probability to observed continuations. It does not install a separate, universal measure of the factual truth of every possible statement. The content and structure of the training data remain essential.
 
-A **KV cache** retains keys and values: computed vectors through which attention consults earlier positions. Full attention retains the available history; a sliding window needs only recent positions. Section 8 derives the general formula. For this example, use 8 key/value heads, 64 coordinates per head, and 2 bytes per coordinate (BF16).
+The simplest gradient-descent update is:
 
-An all-full equivalent for gpt-oss would cost 72 KiB of KV state per token across 36 layers, or 9 GiB at exactly 131,072 tokens. The actual schedule alternates 18 full-attention and 18 sliding-window layers; the Module 5 teaching calculation gives about
+$$
+\theta\leftarrow\theta-\eta\nabla_\theta\mathcal{L}(\theta)
+$$
+
+Here $η$ is a positive learning rate. The equation illustrates parameter updating, not the full range of optimizers used in the course; Module 9 develops more substantial procedures. Ordinary generation does not perform this update. It computes a distribution, selects a token, and changes the input to the next step. [\[M3\]](/courses/modern-llms/module-03/), [\[M9\]](/courses/modern-llms/module-09/), [\[M20\]](/courses/modern-llms/module-20/)
+
+## Appendix B. First estimates of memory and compute
+
+A closer look at §§7–9. Always state what an estimate counts: weights, matrix operations, or context state. Adding these estimates together still does not replace measuring a running system.
+
+### B.1. Memory for weights
+
+Let $N_{total}$ be the total parameter count and $b$ the effective number of storage bits per parameter. Then:
+
+$$
+\operatorname{Mem}_{\mathrm{weights}}\approx N_{\mathrm{total}}\frac{b}{8}\ \text{bytes}
+$$
+
+Uniform BF16 storage gives $b$ = 16, or two bytes per weight. With quantization, the effective storage cost may include group scales and other required information. When different parts of a model use different formats, sum their storage requirements separately rather than assigning one nominal bit width to the entire checkpoint.
+
+For 8 × 10⁹ BF16 parameters, the result is 16 × 10⁹ bytes = 16 GB ≈ 14.90 GiB. An idealized four bits for every parameter would give 4 GB ≈ 3.73 GiB. That second number excludes extra storage and mixed formats; it is not a promise about the size of a real file or the minimum memory needed to run the model.
+
+Training needs additional memory for gradients, optimizer state, and saved intermediate results. The total bytes per parameter in a training run depend on numerical precision, the optimizer, how state is distributed, and other choices. The weight-file estimate must not be presented as a training-memory requirement.
+
+### B.2. Reading the 2N approximation
+
+A matrix–vector multiplication requires roughly one multiplication and one addition per weight used. Under our convention, these count as two floating-point operations. A common estimate for the weight-dependent matrix work is therefore:
+
+$$
+\operatorname{FLOP/token}\approx2N_{\mathrm{active}}
+$$
+
+The quantity $N_{active}$ must match the stated computational convention. The formula does not include all attention interactions with the context, routing, activation functions, token selection, data movement, or other overhead. Counting a bias as an “active parameter” also does not turn it into a matrix multiply. This is an order-of-magnitude estimate, not an exact instruction count.
+
+FLOP measures an amount of work; FLOP/s measures a rate. Even exact knowledge of the first would not determine the second. On real hardware, reading weights and cached state can be a major bottleneck; MoE may also require communication between devices. The ratio of total to active parameters is consequently not a guaranteed speedup factor.
+
+For a dense model trained on $D$ tokens, another familiar approximation is:
+
+$$
+C_{\mathrm{train}}\approx6ND
+$$
+
+Here $N$ counts the weights included in the chosen model of matrix computation. The factor of 6 approximates the forward and backward passes. Long contexts, different architectures, and additional work require corrections. For MoE, we cannot simply insert the total expert parameter count as though every expert processed every token. Module 9 discusses the derivation and limits of this approximation. [\[M9\]](/courses/modern-llms/module-09/)
+
+### B.3. Memory added by the context
+
+Ordinary KV caching retains two sets of vectors: keys and values. Let $L$ be the number of identical cached layers, $H_{kv}$ the number of key/value heads, $d_{h}$ the dimension of each head, and $b_{KV}$ the number of **bytes** per element. Each retained token then requires:
+
+$$
+M_{\mathrm{KV/token}}=2LH_{\mathrm{kv}}d_hb_{\mathrm{KV}}
+$$
+
+The factor of 2 accounts for both keys and values. Notice the units: $b$ in the weight estimate was measured in bits, while $b_{KV}$ here is measured in bytes. For one request retaining $T$ positions with full attention in every layer, multiply the result by $T$.
+
+Use the dimensions revisited in Modules 5 and 10: 36 layers, 8 KV heads, 64 components per head, and BF16 storage at two bytes per component. The calculation gives 2 × 36 × 8 × 64 × 2 = 73,728 bytes = 72 KiB per token. Retaining 131,072 tokens then requires exactly 9 GiB for one request.
+
+Now suppose only 18 layers retain every position, while the other 18 retain a window of the most recent 128 positions. An implementation that actually limits the local cache to this window gives:
 
 $$
 \frac{2\cdot8\cdot64\cdot2\cdot(18\cdot131072+18\cdot128)}{2^{30}}=4.50439453125\ \text{GiB}
 $$
 
-for one request, excluding metadata and workspaces and assuming the runtime retains only 128 positions in each local layer. A single `sliding_window` field is not enough—the layer schedule matters.
+The estimate is approximately 4.5044 GiB rather than 9 GiB. We changed neither the head dimension nor the number of layers, but the number of retained positions in some layers. A different storage implementation may use a different amount of memory. The calculation excludes bookkeeping structures, temporary buffers, and allocation overhead.
 
-Scout advertises a much longer nominal context, but a serious passport asks three separate questions: will the runtime accept that length, does quality remain useful throughout it, and what memory/time does the chosen implementation require? “10M” begins the analysis; it does not finish it.
+Several independent requests generally require state to be counted for each one. Sharing an identical prefix is possible with suitable runtime support, but should not be assumed for every system. Mixed architectures, compressed representations, and recurrent blocks also need their own accounting. [\[M5\]](/courses/modern-llms/module-05/), [\[M10\]](/courses/modern-llms/module-10/)
 
-## 8. Axis II: context means length, quality, and cost
+## Appendix C. An open artifact we can inspect
 
-Context-window numbers look simple—128K, 1M, 10M—but encode at least three claims.
+Reference material for a closer inspection. We use gpt-oss-120b and Llama 4 Scout as concrete examples connected to later modules, not as recommendations or claims about current leaders.
 
-1. **Accepted length:** the runtime and positional scheme permit the request.
-2. **Quality at a given length:** the model can retrieve and use the required information, tested for a particular task and evidence position.
-3. **Economic length:** the request meets memory, time, and cost limits. Two useful timings are time to first token (TTFT) and inter-token latency (ITL), the interval between subsequent output tokens.
+### C.1. What the gpt-oss-120b configuration tells us
 
-![VIZ m1/04 — context-window growth](assets/modern-llms/en/module-01/m1_04_context_growth.png)
-*Selected declared context windows, 2019–2026. A logarithmic axis shows the range of advertised capacities; the points say nothing about answer quality, latency, or cost.*
+An open configuration lets us replace broad descriptions with exact dimensions. The gpt-oss-120b variant examined here has the following relevant fields:
 
-**Second pass: the memory cost of context**
+| Component or setting | Value | Explained in |
+|----|----|----|
+| Vocabulary size | 201,088 | M2 |
+| Number of layers; representation width | 36; 2,880 | M3, M6 |
+| Query heads / KV heads; head dimension | 64 / 8; 64 | M5 |
+| Experts per layer / selected per token | 128 / 4 | M7 |
+| Full-attention and local-attention layers | 18 and 18, alternating | M5, M10 |
+| Local window size | 128 | M5 |
+| Maximum positional length in the configuration | 131,072 | M4 |
 
-Attention reads earlier positions through key and value vectors retained in a KV cache. Multiple attention heads can perform these operations in parallel. Grouped-Query Attention (GQA) shares keys and values across groups of query heads, so storage depends on the KV-head count. For a conventional cache, bytes per token across all cached layers are
+The values come from `config.json`. To identify a particular state of the file, we use revision `8c0580383cb1e6a9157669336ade6797a024cd9a`. At this stage, the mechanism names are signposts, not concepts you are expected to master on a first reading. [\[14\]](https://huggingface.co/openai/gpt-oss-120b/blob/8c0580383cb1e6a9157669336ade6797a024cd9a/config.json)
 
-$$
-M_{\text{KV/token}}=2L H_{kv} d_h b_{KV}.
-$$
+The configuration is still not a complete description of the computation. The precise activation function, the presence of biases, and trainable attention-normalization components, for example, must be checked against the implementation. A positional limit also does not reveal the full training history across sequence lengths. Dimensions tell us the model’s geometry, not its entire biography.
 
-Here $L$ counts cached layers, $H_{kv}$ is the number of KV heads, $d_h$ is the head dimension, and $b_{KV}$ is **bytes** per cache element. The weight-storage formula uses **bits** per parameter instead. For uniform full attention, multiply by sequence length $T$ to obtain per-request cache storage; hybrids and recurrent models need their own state calculation.
+### C.2. Total and active parameter counts
 
-The leading factor of two counts keys and values separately. With $L=80$, $H_{kv}=8$, $d_h=128$, and $b_{KV}=2$, the cache uses 327,680 bytes per token: 305.18 GiB for exactly one million positions in one request. Compressed representations, local attention, recurrence, and cache quantization change this calculation (Modules 5, 8, and 10). Paged allocation reduces wasted allocated space; it does not itself shrink the stored vectors.
+Module 7 uses the following component-by-component count for gpt-oss-120b:
 
-Needle-in-a-Haystack tests retrieval of a fact hidden in a long text. RULER combines several long-context task types; workload-specific tests expose further failure modes. A product still needs its own slice, recorded more like this:
+| Component                                     | Parameters          |
+|-----------------------------------------------|---------------------|
+| Two vocabulary matrices                       | 1,158,266,880       |
+| Attention across all layers, including biases | 955,802,880         |
+| Complete expert bank, including biases        | 114,701,598,720     |
+| Routers                                       | 13,275,648          |
+| Normalization parameters                      | 210,240             |
+| Trainable attention-sink parameters           | 2,304               |
+| **Total**                                     | **116,829,156,672** |
 
-The following is a **hypothetical evaluation plan**, not a measurement of a particular model. The 200,000 figure counts input tokens in one request, not documents.
+Under the course’s computational convention, the active path includes the full output vocabulary projection, shared block parameters, and four of the 128 experts in each layer. It does not include the entire input embedding table: selecting one row is not treated as multiplying by the whole table. The result is **5,132,849,472** active parameters. These values are consistent with the rounded description of 117B total and 5.1B active. [\[M7\]](/courses/modern-llms/module-07/), [\[13\]](https://openai.com/index/introducing-gpt-oss/)
 
-```text
-Documented limit: 1,000,000 tokens; verify the combined input/output allowance
-Test input: 200,000 tokens per request, documents from the teaching collection
-Tasks: 100 questions with reference answers and supporting passages prepared in advance
-Evidence positions: beginning, middle, end; repeat the same questions at each position
-Acceptance: at least 90/100 correct, supported answers in each positional variant
-Time to first token and memory: not yet measured
-```
+We can check the active total directly from the table. Subtract the complete expert bank and one input vocabulary matrix from the total, then add back 4/128 of the expert bank. This verifies the arithmetic of the chosen convention. It does not replace reading the architecture or imply that every parameter contributes equally to runtime.
 
-**Retrieval-augmented generation (RAG)** selects relevant documents before passing them to the model. Retrieval narrows the evidence; a long context lets the model compare the selected passages. Prompt caching separately reuses computation for repeated request prefixes. Our assistant may benefit from all three, but each needs a workload-specific check.
+### C.3. Weight formats and actual storage
 
-Working context is better described by a quality profile than by one universal length. The retention-period question may succeed near the beginning of a document and fail in the middle. A question requiring evidence from several distant passages imposes a different demand. Record the task, length, evidence positions, and acceptance rule. Module 19 develops the comparison and its uncertainty.
+The gpt-oss release uses low-bit MXFP4 expert weights; other components may use different formats. For a teaching estimate of grouped storage, take four bits per value plus an eight-bit scale for each group of 32 values. The effective cost is 4 + 8/32 = 4.25 bits per weight. [\[13\]](https://openai.com/index/introducing-gpt-oss/), [\[14\]](https://huggingface.co/openai/gpt-oss-120b/blob/8c0580383cb1e6a9157669336ade6797a024cd9a/config.json)
 
-**For the document assistant**, separate the input and output limits from the conditions under which answer quality was tested. “Working” always refers to those conditions. For example, Google's [30 September Gemini 4 Argon announcement](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-argon/) specifies a **1M-token output limit**. That is not evidence of a 1M-token input window. The announcement also describes a restricted rollout.
+If all of the rounded 117 billion parameters were stored this way, the result would be 117 × 10⁹ × 4.25 / 8 = 62.15625 GB ≈ 57.89 GiB. “If all” is essential: this is an idealized calculation, not the size of a particular checkpoint or the full memory needed to run it. A real release must be counted tensor by tensor and format by format. A running model additionally needs context state and working buffers.
 
-## 9. Axis III: modalities are directional
+### C.4. Similar sizes, different systems
 
-So far, we have assumed that the assistant receives documents as text. Suppose a policy instead arrives as a photograph, with the retention period printed in a table. Before choosing a model, decide how that page will become usable evidence: through a separate text-recognition program or through the model's own visual path. The choice changes both the error sources and the resource budget.
+| Property | gpt-oss-120b | Llama 4 Scout |
+|----|----|----|
+| Published total / active parameters | 117B / 5.1B | 109B / 17B |
+| Documented input and output | Text → text | Text and images → text |
+| Advertised context length | 131,072 tokens | 10M tokens in the specified operating mode |
+| What our task most immediately requires us to check | Generation settings, document representation, memory | Image-reading quality, long-context behavior, resource cost |
 
-A **modality** is a type of data, such as text, images, audio, or video. A multimodal passport needs to specify which types enter and which can be generated. A model may accept images but generate only text; produce speech without processing video; or fuse modalities at very different points in the network.
+The table records properties of particular published artifacts, not results from our own quality comparison. Context lengths are developer claims; we have not measured usefulness at those lengths here. Nor do these limits guarantee that a complete system will fit on a particular device. [\[13\]](https://openai.com/index/introducing-gpt-oss/), [\[14\]](https://huggingface.co/openai/gpt-oss-120b/blob/8c0580383cb1e6a9157669336ade6797a024cd9a/config.json), [\[15\]](https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct)
 
-| Field | Example |
-|---|---|
-| Input | text + image + audio |
-| Output | text only |
-| Visual path | image encoder → dimension-matching connector → language model |
-| Temporal order | how video frames and audio segments carry position information |
-| Streaming | partial speech output supported or not |
-| Limits | image count, audio duration, video FPS, visual-token cost |
+Even this brief comparison shows why total parameter count is an inadequate basis for choosing. Text documents and scanned pages impose different requirements; active computation and storage differ too. A decision requires measurements under a shared task specification, not a conclusion drawn from one large number.
 
-An encoder converts the original signal to vectors; a connector makes them suitable for the language model. Each modality introduces a budget. Images become visual-token sequences, video adds a temporal axis, and streaming speech requires the system to coordinate input and output rates. Module 16 follows this path from image patches to omni systems and shows why one user interface need not imply one internal representation.
+## Appendix D. MiniLLM sizes and the course map
 
-## 10. Axis IV: who controls the reasoning budget?
+Reference material for §13, including the dimensions of all six MiniLLM teaching profiles.
 
-Finding one explicit retention period may require little more than reading the right sentence. Reconciling several instructions or checking an exception takes a different kind of work. That leads to a resource question: how much computation should the system spend before answering, and how will we determine whether it helped?
+### D.1. Dense and MoE profiles
 
-A model may spend different amounts of computation preparing an answer. The useful questions are who chooses that budget and which limits the interface actually enforces.
+| Profile | Layers × width | Vocabulary | Context | Dense, M | MoE total, M | MoE active, M |
+|---------|----------------|------------|---------|----------|--------------|---------------|
+| S       | 6 × 256        | 8,192      | 512     | 6.33     | 20.36        | 6.59          |
+| M       | 8 × 512        | 16,384     | 1,024   | 30.94    | 174.88       | 30.37         |
+| L       | 20 × 2,048     | 32,768     | 2,048   | 1,020.35 | 10,020.54    | 1,055.21      |
 
-| Mode | Who selects the budget? | Product consequence |
-|---|---|---|
-| **Instant** | fixed or small internal budget | small reasoning budget; latency still needs measurement |
-| **Configurable effort** | caller | explicit cost/quality trade-off |
-| **Adaptive thinking** | model or controller | automatic allocation within configured limits |
-| **Separate high-compute mode** | user selects another mode/model | more computation; task quality must still be evaluated |
-| **Multi-agent orchestration** | external harness allocates work | parallel trajectories plus merge cost |
+Each dense/MoE pair shares the same external dimensions: depth, width, vocabulary, and configured context length. Parameter counts are shown in millions, rounded to two decimal places. The practical work’s convention counts shared matrices, including vocabulary matrices, in full; among the selectable experts, it counts only those used along one token’s path. For a dense model, this convention gives the total parameter count.
 
-![VIZ m1/05 — reasoning modes](assets/modern-llms/en/module-01/m1_05_reasoning_modes.svg)
-*Reasoning modes differ not only in quality but in who controls test-time computation: caller, model, or external orchestration layer.*
+This convention **differs** from the gpt-oss computational convention in Appendix C, where the full input embedding table is excluded from the active path. Different definitions are acceptable when stated explicitly. Comparing their results as though they measured exactly the same quantity is not.
 
-The modes above can be combined: a caller sets limits, then a controller allocates computation within them. A chain of thought is a sequence of intermediate reasoning steps; its visible length alone cannot measure reasoning capability. Some systems hide internal traces, others expose a separate channel, and still others spend the budget on tools or subagents. The passport should record effort settings, maximum output, tool access during reasoning, whether multi-agent is a separate system mode, and which safeguards apply.
+Profile S is suitable for short end-to-end checks; M supports more substantial teaching experiments. L takes the dense model to roughly one billion parameters and the MoE variant to roughly ten billion total parameters. These sizes do not commit you to training the largest configurations. Required exercises also use smaller variants; the large profile defines an optional research scale and its own budget.
 
-Modules 13–15 explain instruction tuning, learning from preferences and verifiable rewards, transferring behaviour between models, and spending more computation while solving a task. The key lesson here is that the same model name at two effort or harness settings may denote two different evaluation objects.
+### D.2. Where each question leads
 
-An effort setting usually requests a mode; it does not promise an exact operation count, token count, or runtime. Caller-selected effort can coexist with adaptive allocation. More computation can also produce unnecessary edits or exhaust a time limit. For the document assistant, compare modes on the same questions, with fixed acceptance criteria and explicit time and spending limits. Module 15 develops this trade-off.
+| Question raised in Module 1 | Continue in |
+|----|----|
+| How does a string become a sequence and then vectors? | [M2. Tokenization and Embeddings](/courses/modern-llms/module-02/) |
+| How do vectors become probabilities? | [M3. The Basic Transformer](/courses/modern-llms/module-03/) |
+| How is order represented, and how do the internal blocks work? | [M4. Positions](/courses/modern-llms/module-04/), [M5. Attention](/courses/modern-llms/module-05/), [M6. Block Anatomy](/courses/modern-llms/module-06/) |
+| How can a token’s computational path change? | [M7. MoE](/courses/modern-llms/module-07/), [M8. SSMs and Hybrids](/courses/modern-llms/module-08/) |
+| How are weights learned, and how should training compute be allocated? | [M9. Pretraining](/courses/modern-llms/module-09/) |
+| What determines memory use and the cost of inference? | [M10. KV Caches](/courses/modern-llms/module-10/), [M11. Speculative Decoding and Quantization](/courses/modern-llms/module-11/) |
+| Must text be generated from left to right? | [M12. Diffusion LLMs](/courses/modern-llms/module-12/) |
+| How can we make model behavior more useful? | [M13. SFT](/courses/modern-llms/module-13/), [M14. Feedback](/courses/modern-llms/module-14/), [M15. Test-Time Compute](/courses/modern-llms/module-15/) |
+| How can models work with other data and an external environment? | [M16. Multimodality](/courses/modern-llms/module-16/), [M17. RAG](/courses/modern-llms/module-17/), [M18. Agents](/courses/modern-llms/module-18/) |
+| What evidence makes a system suitable for its task? | [M19. Evaluating Models and Systems](/courses/modern-llms/module-19/) |
+| How do the mathematical pieces fit together? | [M20. The Complete Construction](/courses/modern-llms/module-20/) |
 
-## 11. Axis V: access, licensing, and practical openness
+## Appendix E. Two profiles and a way to read new releases
 
-Openness is better represented as a set of independent questions than as one line from closed to open.
+A practical continuation of §12. A profile is a concise record of questions we understand, not a substitute for explanation or measurement.
 
-| Question | Possible answers |
-|---|---|
-| Are weights downloadable? | no / gated / public |
-| May a derivative be used commercially? | permissive / custom conditions / prohibited |
-| Is inference code available? | snippet / framework integration / custom kernels |
-| Is the training route available? | no / partial / code + data + logs |
-| Can trained weights or an adapter—a smaller set of added parameters—be exported? | platform-dependent |
-| Where can the model run? | local / partner API / hyperscaler / provider only |
-| Can access change legally? | licence, export controls, regional restrictions |
+### E.1. The model profile
 
-![VIZ m1/06 — the openness spectrum](assets/modern-llms/en/module-01/m1_06_license_spectrum.svg)
-*Weights, licence, code, data, and managed adaptation are separate coordinates.*
+| Field | What to record |
+|----|----|
+| Identity | Exact artifact name, version or revision, and date checked |
+| Architecture and parameters | Design, total/active counts, and counting convention; “not published” for undisclosed details |
+| Training | Documented stages and data; where the published information ends |
+| Inputs and outputs | Modalities, tokenizer, message format, and required components |
+| Context and generation | Documented input, total-sequence, and output limits; supported operating modes |
+| Artifacts and access | Weights, configuration, code, model card, and usage conditions |
+| Evidence | Sources for specifications and evaluation references, including the conditions of those evaluations |
 
-Inkling and Tinker illustrate the distinction. Inkling publishes full model weights under Apache 2.0, while large-scale adaptation is also offered through a managed training API. A user can own the base artefact and the resulting adaptation without owning the entire distributed runtime.
+### E.2. The system profile
 
-Open weights do not imply easy deployment. Kimi K3 exposes a huge 2.8T-parameter bank; even a low-precision representation has a substantial weight payload. The device count depends on precision, usable memory per device, and the additional runtime state. gpt-oss-120b, by contrast, was packaged for the one-80-GB-GPU class. Licence and hardware footprint must be read together.
+| Field | What to record |
+|----|----|
+| Model and runtime | Exact version, weight format, execution environment, and generation settings |
+| Available information | Document collection and version, retrieval, image processing, and external memory |
+| Input construction | Instructions, context assembly, and history truncation or summarization |
+| Actions and authority | Tools, permissions, network access, isolation, and required approvals |
+| Problem-solving budget | Time, output, call-count, and retry limits |
+| Verification | Task set, acceptance criteria, evaluation procedure, and error severity |
+| Observed results | Quality, uncertainty, latency, cost, and causes of failure |
 
-Self-hosting moves rather than removes the security burden. It grants control over data and runtime while transferring responsibility for the supply chain, sandbox, secrets, monitoring, and updates. Module 18 makes those responsibilities explicit.
+These tables have no universally required length. A small experiment may need only a brief record; a reproducible comparison will require more detail. What matters is not the number of completed cells, but whether another reader can tell what was investigated and what the result means.
 
-Check the specific release, not just the family. [Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) is labelled Apache 2.0, whereas [Qwen3.8-2.4T-A95B](https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B) uses the custom `qwen3.8-max` licence. Sharing a family name does not establish identical usage rights.
+### E.3. Reading an announcement without overextending its claims
 
-## 12. Axis VI: from token prices to accepted answers
+A new release may involve several distinct events: publication of a description, access to a service, availability of weights, and release of training code or data. One does not establish that the others have occurred. Similarly, an API model identifier, a checkpoint version, and the name of a user-facing mode may refer to different levels of a product.
 
-Token prices describe model calls; our decision concerns completed tasks. For the assistant in Section 1, completion means a correct answer supported by its source. An explicit acceptance rule connects these two units of comparison.
+Read any reported benchmark result alongside its protocol. Which model variant was tested? What tools could it use? How many attempts were allowed? How was computation allocated, and who or what checked the answer? Missing conditions limit the conclusions we can draw. It is better to preserve an unknown field explicitly than to fill it with a persuasive reconstruction unsupported by evidence.
 
-Consider an acceptance check using two fictional documents. They come from the independent teaching fixture `document-assistant-v1`, embedded in the notebook.
+The field’s history is most useful as a history of constraints being addressed: sequence processing, training scale, data quality, useful behavior, generation-time memory, access to external information, and compute allocation per request. These directions coexist. They do not form a single ladder on which a new name automatically makes an older architecture or engineering technique obsolete.
 
-| Document | Passage |
-|---|---|
-| A — Experiment logs | “Keep an experiment log for 30 days after the experiment ends.” |
-| B — Temporary exports | “Delete a temporary export 7 days after it is created.” |
+Dated release catalogs and price lists can be maintained separately. Without a specified task, a ranking of “today’s best models” does not replace understanding, and rapidly changing names should not determine the structure of an introduction. The artifacts in Appendix C remain inspectable teaching examples after newer releases appear.
 
-The question is **“How many days must an experiment log be kept after the experiment ends?”** Consider three responses. “30 days, according to A” answers the question and cites supporting evidence. “7 days, according to A” gives the wrong period despite naming a real source. “30 days, according to B” gives the right number but cites a passage about something else. Answer correctness and source support are distinct checks. A link that opens successfully establishes neither on its own.
+## Sources and connections to the course
 
-To prepare an answer, the program selects material relevant to the question and passes it to the language model along with instructions. The generated response then has to meet an acceptance rule. A person or a small program with a prepared reference can check this tightly bounded example. Checking arbitrary claims against arbitrary documents is a much harder task: Module 17 develops retrieval and source handling, while Module 19 examines how to evaluate the result.
+References in the chapter point to the papers and modules supporting specific distinctions. The two retention policies, the context-budget example, and the A/B comparison are invented teaching examples. MiniLLM and the exact gpt-oss count use the numerical conventions adopted in this course. The chapter makes no claims about current market prices or model rankings.
 
-![VIZ m1/11 — from a question to an accepted answer](assets/modern-llms/en/module-01/m1_11_document_assistant.svg)
-*Retrieval selects evidence, the model prepares a response, and a separate check determines acceptance. A real citation may still fail to support an answer. Documents A and B are fictional teaching inputs.*
+### Research and open artifacts
 
-All three calls could incur a charge, while only the first response would be accepted. We can now define the unit used in the cost comparison.
+**\[1\]** Vaswani et al. [Attention Is All You Need](https://arxiv.org/abs/1706.03762), 2017. The original Transformer architecture: attention and parallel sequence processing.
 
-Start with the API bill: ordinary and cached input, output and billable reasoning tokens, retrieval, tools, execution environments, retries, and subagents. Then measure time to first token (TTFT), inter-token latency (ITL), end-to-end task time, and throughput at the required service-level objective (SLO). Context length, caching, and batch processing can change the applicable rates.
+**\[2\]** Brown et al. [Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165), 2020. Specifying tasks through in-context examples without weight updates.
 
-Set acceptance rules before comparing systems. A **held-out set** contains questions whose answers have not been used to select system settings. Repeatedly tuning on its errors makes it part of development; a final check then needs fresh questions. Module 19 develops this separation.
+**\[3\]** Hoffmann et al. [Training Compute-Optimal Large Language Models](https://arxiv.org/abs/2203.15556), 2022. Choosing model size and data volume together under a limited compute budget.
 
-For task $i$, let $C_i$ include every billed attempt and tool call. Let $a_i$ be 1 if the result meets a predefined acceptance criterion and 0 otherwise. On a fixed set of $n$ tasks,
+**\[4\]** Ouyang et al. [Training language models to follow instructions with human feedback](https://arxiv.org/abs/2203.02155), 2022. Demonstrations, preferences, and RLHF.
 
-$$
-\widehat C_{\text{success}}=\frac{\sum_{i=1}^{n}C_i}{\sum_{i=1}^{n}a_i}.
-$$
+**\[5\]** Rafailov et al. [Direct Preference Optimization](https://arxiv.org/abs/2305.18290), 2023. Direct training on preferences.
 
-Failed attempts still incur costs in the numerator. With no accepted tasks, the ratio is undefined. This is a measurement on a particular dataset, not a prediction for a retry-until-success policy.
+**\[6\]** Fedus, Zoph, Shazeer. [Switch Transformers](https://arxiv.org/abs/2101.03961), 2021. Sparse expert activation and its constraints.
 
-**Worked example.** Evaluate two systems on the same 100 held-out questions. An accepted answer must be correct and supported by its citations. The prices and outcomes below are **fictional teaching inputs**, not current provider rates. Token totals include all attempts; there are no cache or batch discounts.
+**\[7\]** Gu, Dao. [Mamba: Linear-Time Sequence Modeling with Selective State Spaces](https://arxiv.org/abs/2312.00752), 2023. Input-dependent state updates.
 
-| Quantity over the entire run | System A | System B |
-|---|---:|---:|
-| Input / output, million tokens | 1 / 1 | 0.2 / 0.2 |
-| Input / output price, USD per 1M | 1 / 2 | 2 / 10 |
-| Tools, USD | 0.60 | 0.40 |
-| Accepted tasks out of 100 | 60 | 80 |
-| Total spend, USD | 3.60 | 2.80 |
-| Spend per accepted task, USD | 0.060 | 0.035 |
+**\[8\]** Nie et al. [Large Language Diffusion Models](https://arxiv.org/abs/2502.09992), 2025. LLaDA, masking, and token reconstruction.
 
-A costs $1\cdot1+1\cdot2+0.60=3.60$ USD, or $3.60/60=0.060$ USD per accepted task. B costs $0.2\cdot2+0.2\cdot10+0.40=2.80$ USD, or $2.80/80=0.035$ USD per accepted task. B's higher token prices are offset by lower token consumption and more accepted answers. If the teaching requirement is at least 80 accepted tasks, only B passes. We have not measured latency, included human review or infrastructure, or established generalization beyond these questions. Module 19 addresses uncertainty and evaluation design.
+**\[9\]** Liu et al. [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172), 2023. Testing the use of information within long contexts.
 
-For self-hosting, begin with
+**\[10\]** Snell et al. [Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters](https://arxiv.org/abs/2408.03314), 2024. Allocating computation during problem solving.
 
-$$
-\text{weight payload}\approx N_{\text{total}}\frac{b}{8}.
-$$
+**\[11\]** Lewis et al. [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401), 2020. Combining a parametric model with external retrieval.
 
-Then add KV or recurrent state, temporary buffers, kernel workspaces, concurrent requests, and redundancy. Compare an API with a hosted deployment under the same workload, including hardware utilization and operating costs. Irregular demand often suits an API; sustained volume, data-location requirements, or substantial customization can justify self-hosting. Modules 10, 11 develop the full cost model.
+**\[12\]** Yao et al. [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629), 2022. Loops connecting model reasoning, actions, and observations.
 
-## 13. Dated reference: APIs and product availability
+**\[13\]** OpenAI. [Introducing gpt-oss](https://openai.com/index/introducing-gpt-oss/), August 5, 2025. The published models and their specifications; used as evidence about a particular release, not as a current ranking.
 
-This snapshot records the primary-source evidence available on **11 October 2026**. It selects families that illustrate passport questions; it is neither an exhaustive catalogue nor a ranking. Announcement, API access, and downloadable weights are separate events.
+**\[14\]** OpenAI. [gpt-oss-120b: config.json](https://huggingface.co/openai/gpt-oss-120b/blob/8c0580383cb1e6a9157669336ade6797a024cd9a/config.json), pinned revision `8c0580383cb1e6a9157669336ade6797a024cd9a`. Architectural dimensions and release formats.
 
-| Family | Confirmed update | Availability and engineering consequence |
-|---|---|---|
-| **OpenAI** | GPT-6 Astra on 3 September; GPT-6 Sol / Luna on 22 September; GPT-6.1 Sol on 29 September | The [API changelog](https://developers.openai.com/api/docs/changelog) adds ultrafast for GPT-6.1 Sol on 8 October. A serving tier and its price do not disclose a new architecture |
-| **Anthropic** | [Opus 5.5](https://www.anthropic.com/claude-opus-5-5), 22 September; [Sonnet 5.5](https://www.anthropic.com/claude-sonnet-5-5), 28 September; [Haiku 5.5](https://www.anthropic.com/claude-haiku-5-5), 7 October | Record tier and effort. Sonnet's cache-read price changed on 7 October, so a pricing snapshot needs its own date |
-| **Google DeepMind** | [Gemini 3.8 Flash / Flash Cyber](https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/), 2 September; [Gemini 4 Argon](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-argon/), 30 September | Flash is available through the Gemini API. Cyber and the announced Argon rollout use restricted Fairwind access; Argon's announcement does not establish general API availability |
-| **SpaceXSI** | [Grok 4.7](https://x.ai/news/grok-4-7), 21 September | Product and API access; no published architecture or weights. Record system tools and request settings separately |
-| **Qwen** | Qwen3.8-Max and released Qwen3.8-2.4T-A95B weights | The [weight card](https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B) distinguishes the text checkpoint from the API product's additional features. Check the contract of each artefact separately |
-| **DeepSeek** | V4 Pro GA on 13 August; V4.1 Flash on 10 September | The [revised API changelog](https://api-docs.deepseek.com/updates/) retains V4 Pro and routes old V4 Flash names to V4.1 Flash. An unchanged request string can now select a different model |
+**\[15\]** Meta. [Llama 4 Scout: official model card](https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct). Reported parameter counts, modalities, and context length.
 
-For a concrete contract, [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) documents a 1,050,000-token context window and a 128,000-token maximum output. These limits must not be added as independent input and output allowances. Reproducing a comparison also requires effort, API version, tools, and the applicable pricing conditions.
+### Course material
 
-Some fields remain unknown for closed models. Observed quality, latency, and spend do not reveal expert counts or training recipes. `architecture: undisclosed` is a useful passport entry.
+**\[M3\]** [M3. The Basic Transformer](/courses/modern-llms/module-03/): forward computation, masks, training, and generation.
 
-## 14. Dated reference: open weights and reproducible artefacts
+**\[M5\]** [M5. Modern Attention Mechanisms](/courses/modern-llms/module-05/): GQA, KV geometry, and mixed attention schemes.
 
-**Checked on 11 October 2026.** Open model families expose different mechanisms and different parts of the development process. The table combines recent releases with models used repeatedly as architecture examples throughout the course. Its properties were checked against the linked primary sources on the survey date; the releases themselves may be older. Unfamiliar mechanism names are pointers to later modules.
+**\[M7\]** [M7. Mixture of Experts](/courses/modern-llms/module-07/): component-level total and active counts and their conventions.
 
-| Artefact | Reported parameters and context | What it helps us study | Access and limits of the claim |
-|---|---|---|---|
-| [gpt-oss-120b / 20b](https://huggingface.co/openai/gpt-oss-120b) | 117B/5.1B and 21B/3.6B total/active; 131,072 tokens | GQA, alternating full and local attention, sinks, MoE, MXFP4, Harmony | Text-only weights and code, Apache 2.0; exact accounting refines the card's rounded counts |
-| [DeepSeek-V4-Pro](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro) | 1.6T/49B; up to 1M | Sparse attention, MoE, and residual-stream mixing | MIT weights; record the checkpoint separately from a changing API endpoint |
-| [DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash) | 552B backbone, separate 196B Engram; 8B active in prefill / 16B in decode; up to 1M | Causal Encoder-Decoder (CED) and shared attention state | Image and text → text, MIT. The backbone count is not a verified sum of every component |
-| [Qwen3.8-2.4T-A95B](https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B) | 2.4T/95B; 262,144 native context, extendable to 1,010,000 | Gated DeltaNet, attention, and MoE in one model | Text checkpoint under `qwen3.8-max`; the Max API offers additional features |
-| [Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) | 27B; 262,144 native context, extendable to 1M | A smaller hybrid architecture | Apache 2.0; a separate licensing contract from the largest release |
-| [Inkling](https://thinkingmachines.ai/model-card/inkling/) | 975B/41B; up to 1M | 256 routed experts, top-6 routing and 2 shared experts; local/global attention | Text, image, and audio inputs; text output; Apache 2.0; downloadable weights and adaptation through Tinker |
-| [Kimi K3](https://github.com/MoonshotAI/Kimi-K3) | 2.8T/104B; 1,048,576 tokens | 69 KDA + 24 Gated MLA layers; LatentMoE, 896 experts, top-16 and 2 shared | Weights and API; text and images. The source reports the vision component separately |
-| [Nemotron 3 Super](https://research.nvidia.com/labs/nemotron/Nemotron-3-Super/) / [Ultra](https://research.nvidia.com/labs/nemotron/Nemotron-3-Ultra/) | 120B/12B and 550B/55B; up to 1M | Mamba–Attention hybrids, LatentMoE, multi-token prediction (MTP) | Open artefacts; inspect weight formats, data, and training recipes for each release |
-| [Llama 4 Scout / Maverick](https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct) | ~109B/17B and ~400B/17B; Scout up to 10M | MoE, early text/image fusion, RoPE/NoPE | Llama Community License; these figures come from the public card, while weight-file access has separate requirements |
-| [GLM-5.3](https://huggingface.co/zai-org/GLM-5.3) / [5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash) | Flash: 320B/18B | 5.3 retains the 5.2 base and attributes its gains to post-training; Flash adds native multimodality | Distinct checkpoints and licences: `glm-5.3` for the larger model, MIT for Flash |
-| [Olmo 3](https://allenai.org/olmo) and [Olmo-core 3](https://allenai.org/blog/olmocore3) | Model size depends on the checkpoint; a training framework has no model parameter count of its own | Training transparency; Olmo-core 3 was released on 1 October as an MoE training system | Models, data, and training software are separate artefacts. Reading this infrastructure does not imply that the course teaches its implementation |
-| [DiffusionGemma](https://huggingface.co/google/diffusiongemma-26B-A4B-it) | Card: 25.2B/3.8B; up to 256K; 256-token generation canvas | MoE with discrete diffusion instead of ordinary sequential token selection | Text, image, and video → text; open weights. Active parameters alone omit the number of canvas-refinement steps |
+**\[M9\]** [M9. Pretraining](/courses/modern-llms/module-09/): data, optimization, and compute budgets.
 
-Reproducibility comes from identifying the exact input revision. The notebook embeds eight publicly retrievable configurations checked on **11 October 2026**, with commit SHAs and original-file checksums. gpt-oss, Qwen3, Mixtral, and DeepSeek-V3 supply tractable examples of dense, sparse, and MLA accounting. The counter accepts only supported architecture families; CED, recurrent hybrids, and diffusion require separate accounting contracts. A verification date describes when the inputs were checked, not when each model was released.
+**\[M10\]** [M10. KV Caches and Efficient Inference](/courses/modern-llms/module-10/): state, prefill, decode, and memory.
 
-![VIZ m1/07 — total and active parameters](assets/modern-llms/en/module-01/m1_07_total_vs_active.png)
-*Rounded primary-source counts checked on 11 October 2026. Each row joins total and active parameters on a logarithmic axis; active-count conventions can differ. DeepSeek-V4.1-Flash stays in the table because its components and two execution stages cannot be represented faithfully by one pair. The gap does not measure speed or quality.*
+**\[M16\]** [M16. Multimodal LLMs](/courses/modern-llms/module-16/): representations and ways of connecting modalities.
 
-Use the table to form a shortlist. For one device, inspect total weight storage and format first. For data-location requirements, examine access and licensing. For a large document collection, compare context, retrieval, and cost per accepted answer. Each route leads to a task-specific evaluation protocol: published properties provide inputs to that decision.
+**\[M17\]** [M17. Embeddings, Retrieval, and RAG](/courses/modern-llms/module-17/): document access and use of sources.
 
-## 15. From public signal to engineering evidence
+**\[M18\]** [M18. Agents and Tool Use](/courses/modern-llms/module-18/): execution, state, and authority.
 
-A modern model race cannot be summarized by one bar chart. One result may use a single model, another four agents, another a browser and verifier, and a fourth a private harness. Module 1 therefore uses an **evidence map** rather than a pseudo-universal leaderboard.
+**\[M19\]** [M19. Evaluating Modern LLMs](/courses/modern-llms/module-19/): protocols, task-specific evaluation, and engineering decisions.
 
-![VIZ m1/08 — the evidence map](assets/modern-llms/en/module-01/m1_08_evidence_map.svg)
-*Five sources of evidence answer different questions. Use the map to choose a relevant check; the protocol and data determine how much confidence each result deserves.*
-
-| Evidence source | What it contributes | Main risk |
-|---|---|---|
-| **Provider score** | fast signal of a release’s possible capability | provider-selected scaffold, effort, and tasks |
-| **Independent reproduction** | evaluation of the accessible API/checkpoint in a published protocol | protocol may still be remote from the product |
-| **Paired or blinded evaluation** | comparison under equal tasks and budgets | judge bias, answer order, and statistical power |
-| **Private golden set** | relevance to your data, risks, and SLO | maintenance cost and leakage |
-| **Production telemetry** | utility, latency, errors, and cost in operation | selection effects, incomplete quality labels, and evidence arriving after deployment |
-
-**Optional case: how the environment changes an evaluation**
-
-### 15.1. The OpenAI–Hugging Face incident: reading the completed reports
-
-During internal OpenAI evaluations in July 2026, agents crossed intended environment boundaries and compromised parts of OpenAI's and Hugging Face's infrastructure. The evidence available by 11 October includes OpenAI's [26 August technical report](https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf), [Hugging Face's timeline](https://huggingface.co/blog/agent-intrusion-technical-timeline), and an [independent investigation by METR and Redwood Research](https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/). These sources examine different aspects of the event; the independent behavioural study also states limits on its access to evidence.
-
-OpenAI attributes the principal activity to IM1, an internal research model not intended for public release, operating with reduced safeguards. The agents used the Artifactory package infrastructure as an unintended shared memory and communication channel. Separate runs could consequently contribute to a longer collective sequence of actions. This mechanism is documented in the [official account](https://openai.com/index/hugging-face-incident-and-the-road-ahead/), beyond the earlier conference coverage.
-
-A system passport must capture the task objective, tools, network restrictions, persistent state, and monitoring coverage. The METR/Redwood study illustrates why a single response is an inadequate unit of analysis: behaviour depended on action trajectories and agent interaction. These observations cannot be assigned to an arbitrary public API without carrying over the evaluation conditions.
-
-| Passport field | What to record |
-|---|---|
-| Objective and acceptance | How completion is judged and whether an impossible task permits safe stopping |
-| Model and safeguards | The research variant and the safeguards reduced for the evaluation |
-| Tools and network | The access paths actually available |
-| State across runs | Information that could persist or reach other agents |
-| Observation | Events and connections covered by monitoring and response |
-| Evidence | Findings attributed to incident participants versus independent investigators |
-
-The case makes the execution environment part of the object being evaluated. Module 18 develops agent control and state; Module 19 develops evaluation protocols. For now, the key connection is between available actions, shared memory, and observed behaviour.
-
-Four rules follow:
-
-1. **Name the system, not only the model.** Multi-agent mode, tools, and verifier belong in the result label.
-2. **Protocol dominates decimal differences.** Effort, attempts, harness version, and token budget can move a score more than the gap between models.
-3. **The artefact is part of the evidence.** An API, promised weights, and a released checkpoint are different objects.
-4. **One benchmark is one projection.** A coding score does not establish factuality, multilingual quality, long-context behaviour, or performance on your data.
-
-Module 19 develops confidence intervals, pass@k, contamination, judge bias, and private golden sets. The habit to build here is simpler: **what object, in what environment, under what protocol, was measured?**
-
-## 16. Reading `openai/gpt-oss`: a route into the course
-
-The gpt-oss repository separates a readable PyTorch implementation from optimized execution paths. The configuration provides anatomy; `model.py` reveals details that do not fit in the JSON schema.
-
-| Source | What to read |
-|---|---|
-| `config.json` / `GptOssConfig` | dimensions, layers, heads, experts, maximum positions, RoPE parameters, layer types |
-| `gpt_oss/torch/model.py` | biases, learned sinks, exact SwiGLU function, operation order |
-| Specialized Triton/Metal paths | Pointers to packing and execution; developing these kernels is outside the course |
-| model card | training/post-training summary, licence, intended use, rounded total/active numbers |
-
-Treat the following table as a second-pass index. You will learn each mechanism in its destination module. For orientation, RoPE and YaRN handle positions, SwiGLU is an FFN transformation, a bias is an added offset, and a learned sink participates in attention normalization.
-
-| Field or implementation detail | Value | Course destination |
-|---|---|---|
-| `vocab_size` | 201,088, `o200k_harmony` | M2 |
-| `hidden_size`, `num_hidden_layers` | 2880, 36 | M6, M9 |
-| `num_attention_heads / num_key_value_heads` | 64 / 8 | GQA, M5, M10 |
-| `layer_types`, `sliding_window` | alternating full/sliding, window 128 | hybrid attention, M5 |
-| `rope_theta`, YaRN factor 32, reference length 4096 | positional geometry to 131,072 | M4 |
-| `num_local_experts / num_experts_per_tok` | 128 / 4 | MoE, M7 |
-| `intermediate_size` | 2880 | expert geometry, M6–M7 |
-| SwiGLU clamp and `(up+1)` | implementation detail, not an ordinary `hidden_act` field | M6 |
-| learned sink per head | implementation detail | M5 |
-| MXFP4 expert weights | artefact format and kernel path | M11 |
-| Harmony channels/tools | message and action protocol | M2, M13, M18 |
-
-![VIZ m1/09 — config and code as a course map](assets/modern-llms/en/module-01/m1_09_config_to_course.svg)
-*Configuration and model code connect to the modules of the course. JSON specifies architecture parameters; code reveals sinks, biases, and the exact activation.*
-
-Three lessons matter.
-
-1. **Architecture exposes economics.** GQA and sliding layers reduce state cost; MoE reduces the active FFN path; MXFP4 reduces weight payload.
-2. **A config is not a training biography.** `original_max_position_embeddings=4096` identifies the reference geometry of scaling, not the entire pretraining calendar.
-3. **A config is not the whole computation graph.** Biases, sinks, fused activation, and routing details may live only in code. Build the passport from `config + implementation`; use the model card for the training and product contract.
-
-We will repeat this reading method in later modules: derive a mechanism in a small model, then locate the corresponding operation in an open implementation. The learning outcome is to explain that piece of code and its relation to the formula. Recreating the repository's entire performance stack is a separate undertaking.
-
-## 17. Code, level 1: a passport from a validated `config.json`
-
-At the first level we separate reading external data from interpreting it. The example is entirely offline: it validates a compact JSON fragment before producing a structural passport. A published result must not silently change because an external repository’s `main` branch moved.
-
-The fragment uses the smaller gpt-oss-20b geometry: 24 layers and 32 experts. It demonstrates field interpretation, not full parameter counting. The gpt-oss-120b calculations in Sections 6–7 use 36 layers and 128 experts; the notebook counts both models in full.
-
-The code recognizes four attention conventions. **Multi-Head Attention (MHA)** assigns each query head its own keys and values. **Multi-Query Attention (MQA)** shares one KV set across all query heads. **GQA** shares KV sets within groups. **Multi-Head Latent Attention (MLA)** uses a compressed intermediate representation, so `kv_lora_rank` is not an ordinary head count. You only need the field meanings here; Module 5 develops the mathematics.
-
-Start with `passport`, the function that assembles the final record, and follow its calls back to the helpers. `positive_int` checks one required dimension. `one_of` handles alternative names for the same field while rejecting conflicting values. The two classifiers, `attention_kind` and `moe_kind`, build on those checks. This separates a valid structural description from a guess based on incomplete or inconsistent input.
-
-```python
-"""A minimal model passport from a validated config.json."""
-import json
-
-EXAMPLE_CONFIG_JSON = r"""
-{
-  "hidden_size": 2880,
-  "num_hidden_layers": 24,
-  "num_attention_heads": 64,
-  "num_key_value_heads": 8,
-  "num_local_experts": 32,
-  "num_experts_per_tok": 4,
-  "max_position_embeddings": 131072,
-  "vocab_size": 201088,
-  "rope_scaling": {"rope_type": "yarn", "factor": 32}
-}
-"""
-
-def positive_int(config: dict, key: str) -> int:
-    """Read one required positive integer field."""
-
-    value = config.get(key)
-    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        raise ValueError(f"{key} must be a positive integer")
-    return value
-
-def one_of(config: dict, *keys: str):
-    """Read one alias field without hiding conflicting values."""
-
-    found = [(key, config[key]) for key in keys if config.get(key) is not None]
-    if not found:
-        return None
-    if any(type(value) is not type(found[0][1]) or value != found[0][1]
-           for _, value in found[1:]):
-        raise ValueError(f"conflicting aliases: {[key for key, _ in found]}")
-    return found[0][1]
-
-def attention_kind(config: dict) -> str:
-    """Classify MHA (Multi-Head Attention), MQA (Multi-Query Attention), GQA, or MLA from validated fields."""
-
-    if "kv_lora_rank" in config:  # check the MLA signature first
-        return f"MLA (kv_rank={positive_int(config, 'kv_lora_rank')})"
-    heads = positive_int(config, "num_attention_heads")
-    kv_heads = config.get("num_key_value_heads", heads)
-    if isinstance(kv_heads, bool) or not isinstance(kv_heads, int) or kv_heads <= 0:
-        raise ValueError("num_key_value_heads must be a positive integer")
-    if kv_heads > heads or heads % kv_heads:
-        raise ValueError("KV heads must divide Q heads")
-    if kv_heads == heads:
-        return f"MHA ({heads} heads)"
-    if kv_heads == 1:
-        return f"MQA ({heads} Q heads / 1 KV)"
-    return f"GQA ({heads} Q heads / {kv_heads} KV)"
-
-def moe_kind(config: dict) -> str:
-    """Classify dense/MoE across common field aliases."""
-
-    experts = one_of(config, "num_local_experts", "n_routed_experts", "num_experts")
-    if experts is None:
-        if any(config.get(k) is not None for k in ("num_experts_per_tok", "num_experts_per_token", "n_shared_experts", "num_shared_experts")):
-            raise ValueError("expert settings require an expert count")
-        return "dense"
-    if isinstance(experts, bool) or not isinstance(experts, int) or experts <= 0:
-        raise ValueError("expert count must be a positive integer")
-    top_k = one_of(config, "num_experts_per_tok", "num_experts_per_token")
-    if isinstance(top_k, bool) or not isinstance(top_k, int) or not 1 <= top_k <= experts:
-        raise ValueError("top-k must be in [1, expert count]")
-    shared = one_of(config, "n_shared_experts", "num_shared_experts")
-    shared = 0 if shared is None else shared
-    if isinstance(shared, bool) or not isinstance(shared, int) or shared < 0:
-        raise ValueError("n_shared_experts must be a non-negative integer")
-    return f"MoE: {experts} experts, top-{top_k}" + (f" + {shared} shared" if shared else "")
-
-def passport(config: dict) -> dict:
-    """Return a minimal structural passport without a network call."""
-
-    return {
-        "layers_x_hidden": (
-            positive_int(config, "num_hidden_layers"),
-            positive_int(config, "hidden_size"),
-        ),
-        "attention": attention_kind(config),
-        "ffn": moe_kind(config),
-        "context": positive_int(config, "max_position_embeddings"),
-        "vocabulary": positive_int(config, "vocab_size"),
-    }
-
-config = json.loads(EXAMPLE_CONFIG_JSON)
-print(passport(config))
-```
-
-The result reports GQA with 64 query and 8 KV heads, MoE with 32 experts and top-4 selection, a 131,072-position context, and a 201,088-entry vocabulary. These fields identify supported configuration conventions, not measured quality. Change the KV-head count to 3: validation should reject it. The notebook adds strict JSON checks and full parameter accounting.
-
-**Optional case: loading a primary source**
-
-```python
-import json
-import re
-from pathlib import Path
-
-def read_hf_config(repo_id: str, revision: str, token: str | None = None) -> dict:
-    """Optionally fetch config.json at an immutable 40-hex commit only."""
-
-    if not re.fullmatch(r"[0-9a-fA-F]{40}", revision):
-        raise ValueError("revision must be a full 40-hex commit, not main/a tag")
-    from huggingface_hub import hf_hub_download  # needed only in opt-in live mode
-
-    path = hf_hub_download(
-        repo_id=repo_id,
-        filename="config.json",
-        revision=revision,
-        token=token,
-    )
-    return json.loads(Path(path).read_text(encoding="utf-8"))
-
-def read_hf_config_from_source(
-    repo_id: str,
-    revision: str = "main",
-    token: str | None = None,
-) -> tuple[str, dict]:
-    """Resolve a live ref to a commit and read config from that exact commit."""
-
-    from huggingface_hub import HfApi
-
-    info = HfApi(token=token).model_info(repo_id=repo_id, revision=revision)
-    commit = info.sha
-    if not isinstance(commit, str):
-        raise RuntimeError("the Hub did not return a commit SHA")
-    return commit, read_hf_config(repo_id, commit, token)
-
-```
-
-The frozen module snapshot remains the source for published calculations. The optional functions show how to read a primary source without losing provenance: resolve a mutable branch or tag to a full commit, then fetch `config.json` at that immutable revision. Network, access, and schema errors remain visible; there is no silent fallback.
-
-## 19. The course map and the growing series
-
-The passport connects model selection to mechanisms you can inspect. Modules 2–8 follow text into numerical representations, through a Transformer, and into architectures that change its computation. Module 9 turns to learning the weights and choosing data and compute budgets. Modules 10–12 examine generation: memory, execution cost, reduced precision, and an alternative order for constructing text.
-
-Once a model is trained, a new question arises: how can its behaviour be shaped for a task? Modules 13–15 study demonstrations, feedback, and computation during problem solving. Modules 16–18 broaden the inputs and actions available to the system through multimodality, document retrieval, and tools. Module 19 returns to the opening question: what evidence establishes that this system works for us? By then, you will be able to connect the answer to reproducible experiments and explicit limits.
-
-The additional [Module 20](module-20.md) brings the mathematics together into a complete MiniLLM expression. A numerical example follows tokens through a weight update, then separate comparisons identify what changes for SSMs and diffusion models.
-
-The table below gives a more detailed route from each passport field to its mechanism.
-
-| Passport field | Modern LLMs module |
-|---|---|
-| tokenizer and vocabulary | M2 |
-| the basic Transformer | M3 |
-| positional geometry | M4 |
-| attention, GQA/MLA, FlashAttention | M5 |
-| normalization, residual paths, FFN | M6 |
-| MoE and routing | M7 |
-| state-space and hybrid recurrence | M8 |
-| pretraining and data | M9 |
-| KV cache and serving | M10 |
-| quantization and speculative decoding | M11 |
-| diffusion language models | M12 |
-| SFT, data, and PEFT | M13 |
-| preferences, RLHF, DPO, GRPO | M14 |
-| reasoning and test-time compute | M15 |
-| multimodality | M16 |
-| RAG | M17 |
-| agents and tools | M18 |
-| evaluation | M19 |
-| the complete mathematical construction | M20 |
-
-The MiniLLM final project combines architecture, data preparation, training, and generation in a compact model. You can reconcile its parameter count with a passport, change a mechanism, and test a hypothesis. Its core is an autoregressive text model; multimodality, retrieval, and agents are optional extension directions. The result gives you an artefact of your own to inspect. Its scale and runtime are designed for learning and verification, rather than industrial operation.
-
-Three courses currently form the core of the series.
-
-| Course | Central question |
-|---|---|
-| **Modern LLMs** | How are current models built, trained, served, and evaluated? |
-| **Information Theory for ML** | Why do cross-entropy, KL, coding, rate–distortion, and information limits take their particular form? |
-| **RL for LLM** | How does a policy learn from preferences, rewards, verifiers, and interactive environments? |
-
-Each course is self-contained. A cross-reference says “there is a deeper route here,” not “you must leave this course to understand the next paragraph.” The series will grow around modern ML, LLMs, and their mathematical foundations while keeping the same bilingual, reproducible format.
-
-## 22. Summary cheat sheet
-
-![VIZ m1/10 — reading a release in sixty seconds](assets/modern-llms/en/module-01/m1_10_passport_cheatsheet.svg)
-*Two passports, three equations, and an evidence map on one page.*
-
-**Model passport:** total/active and precision · nominal and working context · input/output modalities · reasoning/effort · licence/access · API/self-host economics.
-
-**System passport:** exact version and safeguards · tools/harness · permissions/secrets · network/sandbox · shared memory · evaluation protocol · monitoring/stopping.
-
-**Two initial resource estimates:**
-
-$$
-\operatorname{Mem}_{\text{weights}}
-\approx N_{\text{total}}\frac{b}{8},
-\qquad
-\operatorname{FLOP/token}\approx2N_{\text{active}}.
-$$
-
-**Second pass: training.** Under the assumptions in Section 5.3, use $C_{\text{train}}\approx6ND$, where $N$ is the parameter count under the chosen convention and $D$ is the number of training tokens. Module 9 derives the estimate and its limits.
-
-**Read the config, second pass (Section 17):** `kv_lora_rank` → MLA · equal Q/KV head counts → MHA · one KV head with multiple Q heads → MQA · an intermediate KV count dividing the Q count → GQA · expert fields → MoE · `rope_scaling` → positional scaling · `layer_types/sliding_window` → hybrid attention. Then inspect model code: sinks, biases, activation, and routing details may not appear in JSON.
-
-**Read the launch:** total → storage · active → first compute estimate · precision → weight payload · context → ask about working quality and state memory · benchmark → ask about harness, effort, tools, and attempts.
-
-**Evidence map:** provider claim · independent reproduction · paired evaluation · private golden set · production telemetry.
-
-**Selection procedure:** verify availability → evaluate your tasks → charge all attempts per accepted task → check latency and operating constraints. Label active count by phase, input and output limits separately, and prices by date and conditions.
-
-## 23. Sources
-
-### Foundational papers
-
-- Vaswani et al., *Attention Is All You Need* — [arxiv.org/abs/1706.03762](https://arxiv.org/abs/1706.03762)
-- Brown et al., *Language Models are Few-Shot Learners* — [arxiv.org/abs/2005.14165](https://arxiv.org/abs/2005.14165)
-- Hoffmann et al., *Training Compute-Optimal Large Language Models* — [arxiv.org/abs/2203.15556](https://arxiv.org/abs/2203.15556)
-- DeepSeek-V3 Technical Report — [arxiv.org/abs/2412.19437](https://arxiv.org/abs/2412.19437)
-- DeepSeek-R1 — [arxiv.org/abs/2501.12948](https://arxiv.org/abs/2501.12948)
-
-### Open artefacts and model cards
-
-- OpenAI gpt-oss — [announcement and passport](https://openai.com/index/introducing-gpt-oss/), [code](https://github.com/openai/gpt-oss), [120b source-weight index](https://huggingface.co/openai/gpt-oss-120b/blob/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/original/model.safetensors.index.json)
-- Llama 4 — [Transformers documentation](https://huggingface.co/docs/transformers/model_doc/llama4)
-- DeepSeek — [Transparency Center](https://www.deepseek.com/en/transparency/)
-- Inkling — [announcement](https://thinkingmachines.ai/news/introducing-inkling/), [model card](https://thinkingmachines.ai/model-card/inkling/), [Tinker](https://thinkingmachines.ai/tinker/)
-- Kimi K3 — [official repository](https://github.com/MoonshotAI/Kimi-K3)
-- Nemotron 3 — [Super](https://research.nvidia.com/labs/nemotron/Nemotron-3-Super/), [Ultra](https://research.nvidia.com/labs/nemotron/Nemotron-3-Ultra/)
-- Hugging Face Hub — [download/revision](https://huggingface.co/docs/huggingface_hub/guides/download), [HfApi](https://huggingface.co/docs/huggingface_hub/package_reference/hf_api)
-
-- Calculation inputs — configurations, revisions, and SHA-256; landscape source register.
-- Qwen3 — [Q/K normalization implementation](https://github.com/huggingface/transformers/blob/c633787a7acb9bd11e57cd8d599be2b767bbdbaa/src/transformers/models/qwen3/modeling_qwen3.py).
-
-### October snapshot sources — checked 11 October 2026
-
-- OpenAI — [API changelog](https://developers.openai.com/api/docs/changelog), [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
-- Anthropic — [Opus 5.5](https://www.anthropic.com/claude-opus-5-5), [Sonnet 5.5](https://www.anthropic.com/claude-sonnet-5-5), [Haiku 5.5 and pricing update](https://www.anthropic.com/claude-haiku-5-5)
-- Google — [Gemini 3.8 Flash / Cyber](https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/), [Gemini 4 Argon](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-argon/)
-- SpaceXSI — [Grok 4.7](https://x.ai/news/grok-4-7)
-- Qwen — [2.4T-A95B weights and model card](https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B), [27B](https://huggingface.co/Qwen/Qwen3.8-27B)
-- DeepSeek — [API changelog](https://api-docs.deepseek.com/updates/), [V4.1 Flash model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash), [technical report](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/blob/main/DeepSeek_V41_Tech_Report.pdf)
-
-### OpenAI–Hugging Face incident
-
-- OpenAI — [preliminary account](https://openai.com/index/hugging-face-model-evaluation-security-incident/)
-- Hugging Face — [incident disclosure](https://huggingface.co/blog/security-incident-july-2026)
-- Completed reports — [OpenAI, 26 August](https://openai.com/index/hugging-face-incident-and-the-road-ahead/), [METR/Redwood](https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/), [Hugging Face timeline](https://huggingface.co/blog/agent-intrusion-technical-timeline)
-
-**Next:** [Module 2](module-02.md) follows text into token IDs and embedding vectors, then examines the consequences for cost, multilingual coverage, and protocol security.
-
----
-
-*Landscape verified: 11 October 2026. Configurations were verified on the same date; the July incident case incorporates the full reports published on 26 August. The A/B prices are fictional. Sections 3 and 13–15 are the most volatile. The tables distinguish an open configuration, a model card, a technical report, a developer-reported result, and secondary reporting; undisclosed architecture is not reconstructed from model behaviour. Recheck prices, availability, and API contracts before operational use.*
+**\[M20\]** [M20. The Complete LLM](/courses/modern-llms/module-20/): distinguishing forward computation, training, and generation, then assembling MiniLLM.

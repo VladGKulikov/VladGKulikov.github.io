@@ -11,11 +11,11 @@
 > **Useful background.** Module 5 supplies the attention layouts, Module 8 explains recurrent state, and Module 9 introduces lifecycle inference cost. We develop roofline reasoning here: both arithmetic and data movement limit runtime. With ideal overlap, the larger of the two times gives a lower bound.
 
 ### Reading routes
-**First pass — follow a token into the serving system.** Read §§1, 3–9, §11 up to “Implementation examples”, and the main takeaways in §20. Return to the “Compression” and “Storage tiers” paragraphs and the storage-tier parts of the figure after §§10 and 14–15. Follow the chain from retained state to bytes, bandwidth, allocation, and reuse. In §6, start with the throughput equation and table; leave the FLOP refinement for a return visit. Work through E1 and check E2 in the notebook.
+**First pass — follow a token into the serving system.** Read §§1, 3–9, §11 up to “Implementation examples”, and the main takeaways in §20. Return to the “Compression” and “Storage tiers” paragraphs and the storage-tier parts of the figure after §§10 and 14–15. Follow the chain from retained state to bytes, bandwidth, allocation, and reuse. In §6, start with the throughput equation and table; leave the FLOP refinement for a return visit. Work through E1 on the [exercises page](/courses/modern-llms/module-10/exercises/) and check E2 in the [module notebook](/courses/modern-llms/module-10/notebooks/).
 
-**Second pass — implement and challenge the assumptions.** Add the historical context (§2), refined arithmetic (§§6, 9), storage hierarchy (§10), code (§§12–13), and compression (§§14–15). Run every notebook cell, including invalid shapes, page exhaustion, and rollback beyond the retained window. Then solve E3 and run both project demos.
+**Second pass — implement and challenge the assumptions.** Add the historical context (§2), refined arithmetic (§§6, 9), storage hierarchy (§10), code (§12), the [module notebook](/courses/modern-llms/module-10/notebooks/), and compression (§§14–15). Run every notebook cell, including invalid shapes, page exhaustion, and rollback beyond the retained window. Then solve E3 on the [exercises page](/courses/modern-llms/module-10/exercises/) and run both project demos.
 
-**Reference use.** Consult §§16–17 when recording an engine/model configuration, §18 to test your understanding, and §19 for projects. API terms and connector support have a verification date; each calculation has explicit assumptions.
+**Reference use.** Consult §§16–17 when recording an engine/model configuration, use the existing [tests](/courses/modern-llms/module-10/tests/) to check your understanding, and turn to [exercises and projects](/courses/modern-llms/module-10/exercises/) for practice. API terms and connector support have a verification date; each calculation has explicit assumptions.
 
 ---
 
@@ -112,11 +112,13 @@ Beyond that point, a *single* sequence carries more KV state than the model’s 
 
 ## 5. One request, two computational regimes
 
-An inference request has two phases, and treating them as one homogeneous workload hides the central scheduling problem.
+The cache ledger tells us what remains after text has been processed. It does not yet tell us how the accelerator spends its time. To make that connection, follow a request through its two phases. They use the same model, but give its weights and stored state different amounts of work to do.
 
 During **prefill**, the model processes the prompt and constructs its state. Many positions participate in matrix operations at once, so the accelerator can often use its compute units efficiently. The user experiences this phase through **time to first token (TTFT)**.
 
-During **decode**, the model adds one token per active sequence per step. The weights are read again, and attention reads the accumulated KV state. Arithmetic no longer grows in proportion to the amount of data moved, so the phase is often memory-bandwidth bound. The user experiences it through **inter-token latency (ITL)** or the corresponding stream rate after the first token.
+During **decode**, the model adds one token per active sequence per step. Each request therefore supplies only one new position over which to amortize reading the weights, while attention must also read the accumulated KV state. At small batch sizes, the useful arithmetic per byte is often low enough for memory bandwidth to become the limiting resource. The user experiences decode through **inter-token latency (ITL)** or the corresponding stream rate after the first token.
+
+The comparison we need is **arithmetic intensity**: operations performed per byte read. Against it, we place the accelerator’s ratio of peak arithmetic throughput to memory bandwidth. If the workload offers too few operations per byte, the compute units could finish their arithmetic before memory could deliver the required data. Section 6 turns that observation into a bound.
 
 The distinction is workload-dependent, not metaphysical. Very short prompts may not make prefill fully compute-bound; large batches and fused kernels can improve decode utilization; sparse or recurrent architectures alter the state traffic. Nevertheless, the two-regime model is a useful first approximation because it explains why one long prompt can disturb many otherwise smooth decode streams.
 
@@ -126,6 +128,8 @@ A service-level objective may constrain TTFT, ITL, a percentile of end-to-end la
 *Prefill builds the prompt state with high matrix reuse; decode advances one token at a time and repeatedly reads weights plus KV. TTFT and ITL expose the two phases to the user.*
 
 ## 6. Worked example B: the bandwidth ceiling and the KV term
+
+A cache can fit comfortably and still be expensive to use. Capacity asks whether the bytes can remain resident; bandwidth asks how quickly they can be delivered to the next computation. A fixed region of memory may be read repeatedly without growing at all. We now move from the first question to the second.
 
 Take an 8B bf16 model with a 16 GB weight payload, the 128 KiB/token geometry above, and an H100-like memory bandwidth of 3.35 TB/s. We deliberately use a simple model: one decode step reads the weights once and reads the resident KV state once. Ignoring compute and all other traffic gives the aggregate bandwidth ceiling
 
@@ -139,7 +143,9 @@ $$
 Q(1,N)\leq\frac{BW}{W+N b_{KV}}.
 $$
 
-The resulting ceilings are:
+The denominator counts bytes per step under the stated access pattern; dividing bandwidth by that payload gives steps per second. Each step produces one token for every active sequence, which explains the batch factor in the numerator. Stored size becomes traffic here because we have explicitly assumed that the whole resident state is read once per step—not because every cache layout necessarily has that access pattern.
+
+At batch one, the resulting ceilings are:
 
 | Context | Cache traffic per sequence | Ceiling at batch 1 |
 |---:|---:|---:|
@@ -154,6 +160,8 @@ The 0-context row is a weights-only baseline, not a usable prompt. The 1M row re
 
 ### Refinement: context also adds attention FLOPs
 
+The bandwidth estimate has so far asked only how long it takes to supply the data. A longer context also creates more dot products and value accumulation. To identify the limiting resource, we must put the arithmetic and traffic of the same step alongside each other. In the batched expression below, each sequence contributes one new query, while the idealized weight read is shared across the batch.
+
 $$
  F_{\mathrm{decode}}\approx B(2P+4LH_qd_hN),\qquad
  I=\frac{F_{\mathrm{decode}}}{W+BNb_{KV}}.
@@ -164,11 +172,13 @@ Arithmetic intensity $I$ measures operations per byte read. Assume a peak of 990
 
 For the 8B example at $B=1$, $L=32$, $H_q=32$, $d_h=128$, and $N=131072$ give about 84.7195 GFLOP per step and 2.55334 FLOP/B. The roofline ridge is $990/3.35=295.522$ FLOP/B, about 115.74 times higher. Keeping only $2P$ gives 0.48222 FLOP/B and a 612.84 ratio: useful as a **projection-only baseline**, but incomplete as a decode intensity. GQA reduces **KV heads** for storage; attention arithmetic here uses **query heads**.
 
-With ideal overlap, a step takes at least $\max(F/\mathrm{peak},\,(W+BNb_{KV})/BW)$. Actual kernels add work and traffic. The model identifies a scale and a bottleneck; it does not promise latency.
+With ideal overlap, a step takes at least $\max(F/\mathrm{peak},\,(W+BNb_{KV})/BW)$. Both jobs must finish: the arithmetic and the delivery of its inputs. If they overlap perfectly, the slower job sets the lower bound. Adding the two times would instead describe serial execution without overlap. Actual kernels add work and traffic, and a real execution need not achieve perfect overlap. The model identifies a scale and a bottleneck; it does not promise latency.
 
 ## 7. Batch economics: where weight amortization stops being the whole story
 
-Batching helps because several sequences can share one read of the weights. If KV traffic were zero, aggregate throughput would initially grow almost linearly with batch size. The denominator above shows why the gain eventually bends: each additional sequence brings its own context state.
+Batching changes what one pass over the weights buys. Rather than advancing one sequence, the server advances several, producing one token for each during the common step. That can raise aggregate throughput without shortening the interval between tokens for any individual user.
+
+If KV traffic were zero, aggregate throughput would initially grow almost linearly with batch size. Here, however, each sequence has its own context state; shared-prefix reuse is reserved for §9. The weights are shared across requests, but the history read is not. This is why the gain bends as the batch grows.
 
 Set total KV traffic equal to the weight payload:
 
@@ -176,7 +186,7 @@ $$
 B^*=\frac{W}{N b_{KV}}.
 $$
 
-This is not a hard optimum. It marks a useful transition: before $B^*$, reading the weights dominates the denominator; after it, per-request KV traffic increasingly controls the gain.
+This is not a hard optimum or a capacity limit. It marks a useful transition: before $B^*$, reading the weights dominates the denominator; after it, per-request KV traffic increasingly controls the gain. The equality identifies which bytes dominate the step, not how many requests the device can hold or how much latency a user will accept.
 
 For the teaching scenario:
 
@@ -188,7 +198,9 @@ The last value is the striking one. At 128K, one sequence already brings roughly
 
 At batch 32 and 8K, the model predicts 2,128.7 tok/s rather than the 6,700 tok/s one would obtain by multiplying the zero-KV batch-one ceiling by 32. The ratio, about 3.15×, is the “KV tax” in this particular arithmetic scenario.
 
-$Q$ is aggregate throughput. With equal service, each request receives $Q/B$: batch 32 therefore gives 66.52 tok/s per request, corresponding to an ideal 15.03 ms step. Check capacity separately: the hypothetical 80-GiB device, less 16 GB of weights and an 8-GiB reserve, holds at most 57, 14, and 3 requests at 8K, 32K, and 128K; it holds none at 1M. The 80-GiB capacity is an explicit teaching input, not a relabeling of every H100 specification.
+$Q$ is aggregate throughput. With equal service, each request receives $Q/B$: batch 32 therefore gives 66.52 tok/s per request, corresponding to an ideal 15.03 ms step. The server counts all tokens leaving the batch; one user waits for the next token of just one sequence. A batch size is useful only when both that user-facing interval and the aggregate rate fit the service objective.
+
+Check capacity separately: the hypothetical 80-GiB device, less 16 GB of weights and an 8-GiB reserve, holds at most 57, 14, and 3 requests at 8K, 32K, and 128K; it holds none at 1M. The 80-GiB capacity is an explicit teaching input, not a relabeling of every H100 specification.
 
 ![VIZ m10/04 — batch knees under growing context](assets/modern-llms/en/module-10/m10_04_roofline_batch.png)
 *Top: the bandwidth ceiling falls as context grows. Bottom: aggregate throughput rises with batch, but the curve bends earlier for longer contexts. Diamonds mark equal KV and weight traffic; dotted segments exceed the stated memory capacity.*
@@ -198,6 +210,8 @@ $Q$ is aggregate throughput. With equal service, each request receives $Q/B$: ba
 A naïve server can reserve one contiguous KV buffer per request, sized for that request’s maximum allowed context. The policy is simple and usually wasteful. Most requests finish before the limit, sequences grow at different rates, and free regions become fragmented. Worse, a request that needs one more token may be unable to extend even when enough memory exists elsewhere.
 
 PagedAttention replaces the contiguous buffer with a table of fixed-size blocks. The logical token positions remain ordered, but their physical blocks may sit anywhere in the pool. A request receives blocks as it grows, not when it is admitted.
+
+None of this makes an individual key or value shorter. PagedAttention changes when space is allocated and where it is placed, while retaining the chosen attention representation. Its saving is therefore different from GQA’s reduction in KV heads or MLA’s smaller stored latent: here, fewer bytes are reserved for work that has not happened.
 
 The internal waste is then bounded by the unused tail of the final block. With block size $P$, a sequence wastes at most $P-1$ token slots. For a 32K maximum context, a request that currently contains 2K tokens would waste
 
@@ -213,7 +227,7 @@ $$
 
 Each figure belongs to its own assumptions. They are not universal measurements of vLLM. The original PagedAttention work reported near-zero memory waste and 2–4× throughput improvements over its comparison systems, but the realized gain depends on length distribution, block size, scheduler, and hardware.
 
-**Keep the workloads distinct.** A sequence of exactly 2048 tokens fills 16-token blocks with **zero** waste. The 0.365% result assumes varying lengths with mean 2048 and uniform remainders, leaving 7.5 slots unused on average. It divides expected unused slots by expected allocated slots, rather than averaging each request's waste fraction. Dividing by 2048 instead measures overhead relative to useful payload (0.366%).
+**Read the denominator carefully.** The varying-length calculation divides expected unused slots by expected allocated slots; it does not average each request's waste fraction. Dividing by 2048 would measure a different quantity: overhead relative to useful payload (0.366%). The distinction comes from the statistic being reported, not from a different allocator.
 
 Block allocation also enables **copy-on-write**. Two branches can point to the same complete prefix blocks. A physical copy is needed only when a branch must modify a shared partial block. This matters for beam-like branching, speculative decoding, and any workflow that forks a common conversation state.
 
@@ -224,19 +238,31 @@ Block allocation also enables **copy-on-write**. Two branches can point to the s
 
 Many requests begin with the same material: a system instruction, a few-shot demonstration set, a tool schema, a large document, or an earlier part of a conversation. If the token sequence and every computation-relevant setting match, the corresponding KV state can be built once and reused.
 
+The question has changed from where to put the state to whether it needs to be built again. In the causal computation from M3, later text cannot alter the representations of an identical earlier prefix. Its layer-by-layer K/V can therefore be reused. The new suffix still has to construct its own representations, and its attention queries still need to consult the stored prefix.
+
+These are the two pieces to keep apart: rebuilding the known beginning is avoided; computing how the new continuation uses that beginning is not.
+
 Consider 8192 input tokens, with 7680 already cached and 512 left to process. The projection-only estimate $2PN/\mathrm{peak}$ gives 132.396 ms versus 8.275 ms, a ratio of 16. Reusing a prefix does not remove the suffix queries' attention to that prefix. With suffix length $S$ and cached length $C$, causal attention costs:
 
 $$
  F_{\mathrm{prefill}}\approx 2PS+
  2LH_qd_h\big[(C+S)(C+S+1)-C(C+1)\big].
 $$
-There are $\sum_{j=1}^{S}(C+j)=CS+S(S+1)/2$ allowed query–key pairs. The bracket $(C+S)(C+S+1)-C(C+1)$ is **twice** that count. Each pair costs $4LH_qd_h$ FLOPs for QK and AV, leaving the factor $2LH_qd_h$ when applied to the bracket. Softmax and overhead are still excluded. For 32 layers, 32 query heads, dimension 128, and 990 TFLOP/s, full prefill gives 150.168 ms and the cached suffix gives 10.427 ms: a **14.402** ratio. These remain arithmetic estimates. KV transfer, lookup, queues, and achieved FLOP/s determine observed TTFT.
+The first new query can see every cached position and itself. The next can also see the first suffix position, and each later query gains one more visible key. Summing those growing rows gives $\sum_{j=1}^{S}(C+j)=CS+S(S+1)/2$ allowed query–key pairs.
+
+The bracket $(C+S)(C+S+1)-C(C+1)$ is **twice** that count: it removes the already-completed prefix-internal work from the full sequence’s causal attention. Each pair costs $4LH_qd_h$ FLOPs for QK and AV, leaving the factor $2LH_qd_h$ when applied to the bracket. Softmax and overhead are still excluded.
+
+For 32 layers, 32 query heads, dimension 128, and 990 TFLOP/s, full prefill gives 150.168 ms and the cached suffix gives 10.427 ms: a **14.402** ratio. The gain is smaller than the projection-only length ratio because the short suffix still attends to a long prefix. These remain arithmetic estimates. KV transfer, lookup, queues, and achieved FLOP/s determine observed TTFT.
 
 Public APIs now expose caching rules for matching, retention, writes, and reads. Section 16 gives the OpenAI example. [Kimi K3](https://www.kimi.ai/blog/kimi-k3) also prices cache hits separately; Moonshot reports over 90% hits on its coding workloads. That is a service-specific observation, not a forecast for another application's traffic.
 
 Exact-prefix matching leads to a practical prompt-layout rule: place stable instructions and reusable documents first, and put request-specific material later. The rule has limits. A provider or engine may hash blocks differently, include model settings in the cache key, impose a minimum length or time-to-live (TTL), restrict sharing scope, or invalidate entries when images, tools, or model versions change. The relevant documentation must therefore be read as part of the serving contract.
 
-A block is contextual: identical token IDs after different earlier tokens need not produce the same K/V. A cache key must distinguish the model and adapters, positional configuration, and preceding prefix; sharing scope is a separate contract.
+The exact-match requirement follows from the model, not merely from the cache implementation. In M3, each position acquired a contextual representation; later layers then projected that representation into their own keys and values. Identical token IDs after different earlier tokens need not therefore produce the same K/V. Matching the block’s local text is not enough to identify the state being reused.
+
+A cache key must distinguish the model and adapters, positional configuration, and preceding prefix; sharing scope is a separate contract.
+
+Reuse also leaves a reading bill. During subsequent full-attention decode, queries still consult the stored beginning. The KV traffic counted in §§6–7 remains even when the initial state was a cache hit. Prefix caching saves repeated construction; it does not make a long history free to read.
 
 Prefix caching offers little when the common portion is small, tokenization differs, or every request carries unique context. A process-local cache is also bounded by the process’s memory and lifetime. The next step is to make the state portable beyond one engine instance.
 
@@ -245,15 +271,17 @@ Prefix caching offers little when the common portion is small, tokenization diff
 
 ## 10. Tiered placement: when HBM is only the first level
 
-If useful KV state does not fit in HBM, the system can recompute it later or preserve it on a cheaper tier. The second option creates a hierarchy such as
+A useful prefix may outlive the request that created it. Once it is waiting for possible reuse rather than participating in the current step, keeping it in scarce HBM is a separate decision. The system can release it and recompute it later, or preserve it on another tier and restore it when needed. The second option creates a hierarchy such as
 
 $$
 \text{HBM}\rightarrow\text{CPU DRAM}\rightarrow\text{local SSD}\rightarrow\text{remote storage}.
 $$
 
-Capacity rises along the hierarchy, while access latency and transfer cost rise as well. Offloading is therefore not automatically beneficial. Keeping a block is worthwhile when its expected reuse value and recomputation cost exceed the cost of writing, storing, and restoring it.
+Moving outward offers more storage but adds transfer latency and bandwidth cost. For a block waiting for a future request, the relevant comparison is the expected cost of rebuilding it against the cost of writing, keeping, and restoring it. Reuse probability matters because a saved computation has value only when the block is needed again.
 
-**LMCache** separates KV storage and transfer from a particular inference engine. A deployment may use CPU memory or disk on the same node, a separate LMCache server shared by several vLLM instances, or external backends such as Redis/Valkey, Mooncake, S3-compatible storage, NIXL, or GDS. Some configurations reuse exact prefixes; CacheBlend extends the idea to selected blocks that reappear in different positions with partial recomputation. The important abstraction is that KV becomes managed data rather than a private tensor owned by one attention kernel.
+Active context has a different access pattern. If full-attention decode needs a block on every step, a slower storage tier does not remove that demand. The transfer path and any overlap with computation become part of the speed bound. A hierarchy therefore needs a policy for which data stays close and when other data returns; offloading by itself is not an acceleration mechanism.
+
+**LMCache** separates KV storage and transfer from a particular inference engine. A deployment may use CPU memory or disk on the same node, a separate LMCache server shared by several vLLM instances, or external backends such as Redis/Valkey, Mooncake, S3-compatible storage, NIXL, or GDS. Some configurations reuse exact prefixes; CacheBlend extends the idea to selected blocks that reappear in different positions with partial recomputation. This is a broader problem than the exact reuse in §9: the fragment now has a different surrounding context, and some work is needed to reconcile it with that context. The method does not make K/V independent of the preceding history. It combines retained work with selected new computation. The important abstraction is that KV becomes managed data rather than a private tensor owned by one attention kernel.
 
 **Mooncake** applies the idea at distributed-platform scale. In the published Kimi system, prefill and decode are separated, idle CPU memory and storage resources form a global KV pool, and a transfer engine moves state across the network. The scheduler considers service-level objectives and can reject requests early when the available capacity cannot meet them. In the FAST 2025 paper, the authors report 59–498% higher effective serving capacity in their trace-driven experiments while meeting the selected SLOs, operation across thousands of nodes, and more than 100 billion tokens served per day. These are results for the authors’ system and workloads, not generic factors for any cluster.
 
@@ -266,13 +294,15 @@ The systems principle is stable even when products change: a large context state
 
 ## 11. Prefill/decode disaggregation: give each phase its own pool
 
-Return to the phases from §5. A long prefill in a shared queue can delay active decode streams. To isolate scheduling, start with two deliberately limited estimates: projection-only prefill at 132.396 ms and weight-read-only decode at 4.776 ms. Their serial sum, 137.172 ms, bounds the selected work; it is not a predicted interruption.
+Placement decides where the state lives; scheduling decides when a request gets to use the accelerator. Return to the phases from §5. A long prefill in a shared queue can delay active decode streams even when their state is already resident. Those users are waiting for their next output token, not for their own prompts to be processed.
+
+To isolate that scheduling effect, step back from §9’s attention-inclusive estimate to two deliberately limited ones: projection-only prefill at 132.396 ms and weight-read-only decode at 4.776 ms. Their serial sum, 137.172 ms, bounds the selected work; it is not a predicted interruption. We have narrowed the accounting to expose execution order, not found a faster way to perform the same complete calculation.
 
 **Chunked prefill** lets the scheduler insert decode steps between prompt segments. Projections for 512 tokens give 8.275 ms, so the two selected estimates sum to 13.051 ms. Equal-size chunks are not equal-cost once attention is counted: later chunks see more history. The notebook checks that all 16 chunks sum to the full prefill's work; the final chunk's attention-inclusive estimate is 10.427 ms.
 
-The prefill work has not vanished; it has been divided and interleaved so that its tail-latency effect is smaller.
+The prefill work has not vanished; it has been divided and interleaved so that the scheduler can advance other streams between prompt segments. Unlike a prefix-cache hit, chunking does not remove already-known work from the calculation. Its benefit is a different distribution of waiting time: a continuing response need not wait for the entire new prompt to finish.
 
-A more structural remedy is **prefill/decode disaggregation**. Prefill workers can be configured for large prompt matrix operations and throughput; decode workers can be configured for low ITL and memory bandwidth. The KV state is transferred between the pools after prefill. Each pool can use a different tensor-parallel degree, admission policy, and batching strategy.
+A further choice changes where the computation runs, not just the size of the segments: **prefill/decode disaggregation** assigns the phases to separate worker pools. Prefill workers can be configured for large prompt matrix operations and throughput; decode workers can be configured for low ITL and memory bandwidth. The KV state is transferred between the pools after prefill. Each pool can use a different tensor-parallel degree, admission policy, and batching strategy.
 
 The separation is not free. KV transfer joins the critical path, the scheduler must know where each block resides, and network backpressure becomes part of request admission. For small loads or short prompts, one pool with continuous batching and chunked prefill may be simpler and faster.
 
@@ -569,9 +599,11 @@ Eviction reduces the number of positions. Quantization keeps the positions but r
 
 The notebook asks a simpler question: how would ideal three-bit storage change the bandwidth ceiling? Scaling the KV payload by $3/16$ takes 128 KiB per token to 24 KiB. At 128K context, the ceiling rises from about 101 to **174 tokens/s**. This estimate excludes metadata and quantization-kernel overhead and makes no claim about output quality; actual memory use, speed, and quality must be measured together.
 
-Low-rank methods attack another redundancy: the stored vectors may lie near a lower-dimensional subspace. They can be attractive when the projection cost and reconstruction kernels are well optimized, but rank is workload- and layer-dependent.
+Low-rank methods change the size of the representation rather than merely its bits per coordinate: the stored vectors may lie near a lower-dimensional subspace. This describes a different compression mechanism, not a guarantee of unchanged model quality. It can be attractive when the projection cost and reconstruction kernels are well optimized, but rank is workload- and layer-dependent.
 
-The practical order of levers is useful:
+Before choosing a lever, ask which decisions are still open. Architecture can be selected when designing or choosing the model. Once the checkpoint is fixed, ordinary attention cannot simply be replaced by GQA or MLA through a serving flag: execution must respect the structure of the chosen weights. The remaining choices concern supported representations and the handling of the state that model actually produces.
+
+With that boundary in mind, the practical order of levers is useful:
 
 1. **architecture** — reduce the state the model creates, through GQA, MLA, or another mechanism;
 2. **quantization or low rank** — preserve positions while reducing bytes per position;

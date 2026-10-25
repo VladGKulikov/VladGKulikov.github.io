@@ -6,9 +6,9 @@
 >
 > **Prerequisites.** The distinction between prefill and decode from Module 10 is useful, as is the multi-token prediction objective introduced in Module 9. The necessary definitions are restated here, so the lecture can be read on its own.
 
-> **Reading routes.** On a first pass, follow Sections 1, 3–12, and 15–20. Understand why proposals can preserve a distribution and why fewer stored bits do not imply a fixed speedup. Read the probability table and balance proof in Section 5; extended NumPy/PyTorch blocks can wait.
+> **Reading routes.** On a first pass, follow Sections 1, 3–12, 15–17, and 20. Understand why proposals can preserve a distribution and why fewer stored bits do not imply a fixed speedup. Read the probability table and balance proof in Section 5; extended NumPy/PyTorch blocks can wait. Then use the [module quiz](/courses/modern-llms/module-11/tests/) to check your understanding.
 >
-> On a second pass, work through Sections 13–14 and the bridges in Sections 5 and 13, then run the notebook and solve the exercises before opening the answers. The project demos extend local calculations to history-dependent generation and a layer-level quantization experiment.
+> On a second pass, work through Section 13 and the bridges in Sections 5 and 13, then run the [notebook](/courses/modern-llms/module-11/notebooks/) and solve the [exercises](/courses/modern-llms/module-11/exercises/) before opening the answers. The existing project demos on the notebook page extend local calculations to history-dependent generation and a layer-level quantization experiment.
 >
 > For reference, Section 2 provides historical context, Sections 8–9 locate proposer families, Sections 11–12 describe representations, and Section 17 records a reproducible run. This route assumes the sampling argument in Sections 4–5.
 
@@ -65,28 +65,34 @@ The **target** is the model whose sampling law must be preserved. The **draft**,
 
 Module 3, Section 12.1, worked through temperature → top-k → top-p numerically. Here we use the resulting distributions from which tokens are actually sampled. Temperature changes logit sharpness; top-p retains a smallest set of the most probable tokens reaching a chosen cumulative mass; a grammar mask removes forbidden continuations. With these transformations enabled, $q_i$ describes the transformed proposal law and $p_i$ the transformed target law. Using raw probabilities while sampling from a filtered law breaks the proof.
 
-Let $p$ be the target distribution for the next token and $q$ the draft distribution over the same token space. The proposer generates $x_1,\ldots,x_\gamma$ autoregressively. The target then evaluates all proposed positions in a batched forward pass.
+Let $p$ be the target distribution for the next token and $q$ the draft distribution over the same token space. The proposer generates $x_1,\ldots,x_\gamma$ autoregressively, choosing each token in light of the ones it has already proposed. By the time the target is called, the result is a concrete candidate continuation: the tokens along that hypothetical path are known.
 
-At position $i$, the proposed token is accepted with probability
+This is what makes parallel evaluation possible. **Generating an unknown continuation and evaluating a supplied continuation are different computations.** The target need not pause at every position to select the preceding token itself; the draft has temporarily supplied those tokens. A causal forward pass can therefore evaluate the conditional distributions along the whole candidate path at once, just as it can evaluate a known sequence without looking ahead.
+
+The decisions that commit tokens still have to proceed in order. A later target distribution was computed under the assumption that the earlier draft tokens form its prefix. As long as those proposals are accepted, the assumption remains valid for the continuation being produced. At the first rejection, that path is no longer the one we will follow. Its later distributions cannot simply be used as independent predictions. Parallel probability computation and left-to-right acceptance thus play different roles in the same cycle.
+
+Verification here is not a factuality check, nor does it ask whether the draft guessed the target’s single most likely token. The objective is to reproduce a sampling law. At position $i$, the proposed token is accepted with probability
 
 $$a(x_i)=\min\!\left(1,\frac{p(x_i)}{q(x_i)}\right).$$
 
-Verification proceeds from left to right. At the first rejection, the remaining draft suffix is invalidated and a replacement token is sampled from
+The ratio has a direct interpretation. If the draft proposes a token more often than the target distribution allows, some of those appearances must be rejected. If the draft proposes it less often, every appearance can be kept, but additional probability mass is still needed.
+
+Acceptance proceeds from left to right. At the first rejection, the remaining draft suffix is invalidated. Why not now draw a replacement directly from the target distribution? Because the accepted branch already supplies part of the required mass. The correction branch must fill the deficit, not distribute its probability over the full target again. In general, doing the latter would upset the balance. The replacement is therefore sampled from
 
 $$r(t)=\operatorname{norm}\bigl((p(t)-q(t))_+\bigr).$$
 
-The target pass remains causal: the row predicting $x_i$ cannot see later proposals. Aligning inputs and outputs matters because logits at an input position predict the following token. If all proposals survive, the next-position distribution supplies a bonus token. Otherwise, the unaccepted suffix and its cache entries are discarded before continuing from the corrected prefix.
+The target pass remains causal: the row predicting $x_i$ cannot see later proposals. Aligning inputs and outputs matters because logits at an input position predict the following token; the prediction must not already depend on the token it is meant to predict. If all proposals survive, the next-position distribution supplies a bonus token. Otherwise, the unaccepted suffix and its cache entries are discarded before continuing from the corrected prefix. This gives the rollback operation from Module 10 a specific purpose: remove the state of a branch that will no longer be continued.
 
 The notation $(u)_+$ means $\max(u,0)$ entry by entry, and $\operatorname{norm}$ divides by the sum. A positive residual exists whenever rejection is possible. End-of-sequence and output-length limits can terminate a cycle early; the progress formula below first considers a cycle without those stopping events.
 
 ![VIZ m11/02 — one speculative cycle](assets/modern-llms/en/module-11/m11_02_spec_cycle.svg)
 *A draft continuation, one batched target verification, left-to-right acceptance, and residual resampling at the first rejection.*
 
-The proof fits in a mass-balance identity. Define
+To verify the argument, count both routes by which a token can be emitted. The accepted route contributes the probability of proposing that token multiplied by the probability of keeping it. Summing this shared mass over the vocabulary gives the overall chance of acceptance. Define
 
 $$\alpha=\sum_t\min(p_t,q_t).$$
 
-The accepted branch emits token $t$ with mass $\min(p_t,q_t)$. The correction branch is entered with probability $1-\alpha$ and contributes $(1-\alpha)r_t$. Therefore
+The accepted branch emits token $t$ with mass $\min(p_t,q_t)$, the amount that both distributions can supply. The correction branch is entered with probability $1-\alpha$ and contributes $(1-\alpha)r_t$. That contribution goes exactly where the accepted branch left a deficit. Adding the two routes gives
 
 $$\min(p_t,q_t)+(1-\alpha)r_t=p_t.$$
 
@@ -98,7 +104,7 @@ The reference distribution is the target that actually produced $p$. If the depl
 
 ## 5. Worked example A: seeing the balance component by component
 
-Use a five-token vocabulary with
+A small vocabulary lets us follow both routes without hiding them in notation. The overall acceptance rate is only part of the story: we also want to see how much probability reaches each token through acceptance and how much must arrive through correction. Use a five-token vocabulary with
 
 $$p=(0.40,0.30,0.15,0.10,0.05),\qquad q=(0.25,0.35,0.20,0.10,0.10).$$
 
@@ -254,7 +260,7 @@ for $\alpha=1$, the finite sum is simply $\gamma+1$.
 
 At $\alpha=0.7$ and $\gamma=5$, the expectation is 2.94 tokens. At $\alpha=0.9$ and $\gamma=7$, it is 5.70. Assuming the previous example’s $\alpha=0.85$ applies conditionally at every reached position gives 3.71 tokens for $\gamma=4$.
 
-The diminishing return is visible in the limiting value $1/(1-\alpha)$. A longer proposal is useful only if the probability of reaching its later positions is high enough. This is why proposer quality and cost dominate naïve “more speculative tokens” tuning.
+The diminishing return is visible in the limiting value $1/(1-\alpha)$. The target has already evaluated the later proposed positions in its batched pass, but the acceptance procedure reaches them only when every earlier proposal survives. An early rejection turns those later evaluations into work that does not advance the committed sequence. A longer proposal is therefore useful only when the chance of using that extra work justifies its cost. This is why proposer quality and cost dominate naïve “more speculative tokens” tuning.
 
 ## 7. A cost model, an optimum, and an illustrative MTP point
 
@@ -293,6 +299,8 @@ A fixed $\gamma$ is only a baseline. An online system can adapt proposal length 
 
 ## 8. A taxonomy of proposers
 
+The sampling argument separated two jobs: obtaining inexpensive candidates and deciding which ones to commit while preserving the required law. We now vary the first part. A proposal source changes cost, overlap with the target, and memory requirements, but its name does not by itself specify a verifier. For each family, keep two questions in view: how are the candidates constructed, and what acceptance procedure follows the target’s evaluation?
+
 ![VIZ m11/05 — where draft tokens come from](assets/modern-llms/en/module-11/m11_05_drafter_zoo.svg)
 *External draft models, auxiliary-head and EAGLE-style proposers, pattern lookup, and native MTP occupy different points in the cost–overlap–complexity space.*
 
@@ -310,7 +318,7 @@ No universal batch-size cutoff separates winning and losing regimes. Current vLL
 
 ## 9. Native multi-token prediction at inference time
 
-Multi-token prediction is first a training objective. The model is asked to predict more than the immediate next token, which may require auxiliary heads, extra blocks, or shared-weight modules. Whether those components remain available at inference is an architectural and checkpoint decision.
+Among the proposal sources above, MTP has a particularly direct connection to the target’s own training. Module 9 introduced it as a way to provide additional supervision. Here the question is what becomes of that trained capacity at deployment. Multi-token prediction is first a training objective: the model is asked to predict more than the immediate next token, which may require auxiliary heads, extra blocks, or shared-weight modules. Whether those components remain available at inference is an architectural and checkpoint decision.
 
 The DeepSeek-V3 technical report states that its MTP objective can be used for speculative decoding. The report does not turn that sentence into a universal acceptance rate or speedup. A deployment still needs a retained proposer, a compatible runtime implementation, and workload-specific measurements.
 
@@ -325,7 +333,9 @@ Speculation is also relevant inside RL post-training. A **rollout** is a generat
 
 ## 10. Verification as a short, wider decode operation
 
-Ordinary decode evaluates one new position. Verification evaluates several proposed positions together. The matrix operations become wider, so the target performs more useful arithmetic per weight read. Calling this a “mini-prefill” is an intuition about arithmetic intensity, not an identity between the two phases.
+Section 4 explained why a supplied continuation can be evaluated in parallel without removing causal dependencies. We can now revisit that computation from the hardware side. Ordinary decode evaluates one new position. Verification evaluates several proposed positions together, applying the same weight matrices to a wider block of inputs. More arithmetic can therefore be performed per weight read. Calling this a “mini-prefill” is an intuition about arithmetic intensity, not an identity between the two phases.
+
+There is an important difference in what the processed tokens mean. A prompt is already given; a speculative continuation is provisional. Some of the work done on it may be discarded. Wider matrix operations are consequently valuable only to the extent that their cost is repaid by tokens the cycle actually emits.
 
 Using the same simple speed scenario, take $\alpha=0.8$, $\gamma=5$, and $c=0.06$. The multiplier is 2.83790769. Applied to the 209.4 token/s weight-only bf16 ceiling,
 
@@ -337,9 +347,15 @@ The system metric also matters. Speculation may improve inter-token latency for 
 
 ## 11. What low-bit quantization actually changes
 
-Start with a numerical mechanism. For a symmetric integer group, choose $s>0$, store $z_j=\operatorname{clip}(\operatorname{round}(w_j/s),-7,7)$, and reconstruct $\hat w_j=sz_j$. Codes are dimensionless; the scale restores the original units and range. A large scale accommodates outliers but leaves coarse spacing near zero. A small scale resolves common values more finely while clipping extremes.
+So far, we have tried to obtain more accepted tokens from an expensive target pass. The other intervention changes the pass itself: represent the numbers it uses more compactly. That requires more than selecting a shorter datatype. We must decide which values remain representable, how their scale is recovered, and what the approximation changes in the computation.
 
-For a layer $Y=XW$, weight error becomes output error through $\Delta Y=X(\hat W-W)$. An error on a frequently active input channel can matter more than the same error elsewhere. A **calibration set** is a small collection of representative inputs used to estimate that sensitivity before deployment.
+Start with a numerical mechanism. For a symmetric integer group, choose $s>0$, store $z_j=\operatorname{clip}(\operatorname{round}(w_j/s),-7,7)$, and reconstruct $\hat w_j=sz_j$. Codes are dimensionless; the scale restores the original units and range. The code identifies a level, while the scale shared by the group determines the number associated with that level. Rounding makes some distinct original values indistinguishable: they receive the same code and reconstruct to the same number.
+
+Choosing the scale is therefore a trade-off. A large scale accommodates outliers but leaves coarse spacing near zero. A small scale resolves common values more finely while clipping extremes. A fixed, small collection of codes cannot provide arbitrarily wide range and arbitrarily fine resolution at the same time.
+
+Weights are useful because of the transformation they perform, not merely because we can store them accurately. For a layer $Y=XW$, weight error becomes output error through $\Delta Y=X(\hat W-W)$. The input acts on the error matrix just as it acts on the original weights. An error on a frequently active input channel can therefore matter more than the same error elsewhere. Closeness between two weight matrices does not, by itself, describe how similarly they behave on the inputs the model encounters.
+
+This is where activation data becomes informative. A **calibration set** is a small collection of representative inputs used to estimate that sensitivity before deployment. It lets the quantization procedure account for how the weights are used, rather than looking only at their numerical distribution. The choice of inputs matters: a good approximation on the calibration set is not a guarantee for every possible workload.
 
 “Four-bit model” is a marketing shorthand, not a complete numerical specification. A deployment must say which tensors are quantized, how scales are stored, what precision is used for accumulation, and whether the hardware executes the representation natively.
 
@@ -347,7 +363,7 @@ For a layer $Y=XW$, weight error becomes output error through $\Delta Y=X(\hat W
 
 GPTQ quantizes weights while accounting for how local weight error affects a layer’s output. AWQ uses activation statistics to protect channels that matter disproportionately. Neither method should be judged solely by weight MSE: the relevant outcome is the model’s logits, calibration, and downstream quality.
 
-For $N$ parameters at an effective $b_{\text{eff}}$ bits per weight,
+Once we have chosen an approximation, we can return to the storage question that motivated it. Recovering weights requires not only the short codes but also the information describing their scales and layout. For $N$ parameters at an effective $b_{\text{eff}}$ bits per weight,
 
 $$W_{\text{payload}}=N\frac{b_{\text{eff}}}{8}.$$
 
@@ -368,9 +384,15 @@ The table is useful precisely because it is narrow. It says what happens to a we
 
 ## 12. Microscaled FP4, W4A4, and the role of hardware
 
-**E2M1** allocates one sign bit, two exponent bits, and one fraction bit. Its spacing is nonuniform. Available magnitudes are $0,0.5,1,1.5,2,3,4,6$; positive and negative zero give 16 encodings but 15 distinct values. The teaching quantizer stores those 15 values. E4M3 is an eight-bit floating-point format with four exponent bits and three fraction bits. The E8M0 scale in MX encodes a power of two, with no fraction field.
+The integer example placed reconstructed levels at uniform intervals. A short code need not allocate its range that way. A floating-point grid can put levels closer together in some regions and farther apart in others. We should therefore understand two things separately: the available numerical levels and the scale that places them over a particular group of values.
 
-Four bits provide very few numerical levels. A single scale for an entire tensor would either waste resolution around zero or clip outliers. Microscaling assigns a local scale to a small group of low-bit values.
+**E2M1** allocates one sign bit, two exponent bits, and one fraction bit. Its spacing is nonuniform. Available magnitudes are $0,0.5,1,1.5,2,3,4,6$; positive and negative zero give 16 encodings but 15 distinct values. The teaching quantizer stores those 15 values.
+
+The scale assigned to a group needs its own representation. E4M3 is an eight-bit floating-point format with four exponent bits and three fraction bits. The E8M0 scale in MX encodes a power of two, with no fraction field. These names will describe shared scaling metadata; they do not enlarge the bit width of each E2M1 code.
+
+Four bits provide very few numerical levels. With one scale for a large tensor, an outlier in one region can stretch the grid used everywhere else, wasting resolution for much smaller values. Microscaling assigns a local scale to a small group of low-bit values. It does not create more codes within the group; it lets the same code set follow the group’s own range instead of the range of the entire tensor.
+
+That flexibility has a storage cost. More groups require more scales. We can now account directly for the fractional bits per value in the preceding table.
 
 NVIDIA documents NVFP4 as E2M1 values with hierarchical block scaling. In the one-dimensional recipe, a block of 16 values shares an E4M3 scale and the tensor has an additional FP32 global scale. Counting only the local eight-bit scale gives
 
@@ -382,7 +404,7 @@ MXFP4 is commonly represented as 32 E2M1 values sharing an E8M0 scale:
 
 $$\frac{32\cdot4+8}{32}=4.25\ \text{bits/value}.$$
 
-The lower metadata rate does not imply universally better performance. Scale expressiveness, block granularity, calibration, and native kernel support determine the quality–speed tradeoff.
+The lower metadata rate does not imply universally better performance. Both calculations pay for short values and shared scales, but the group geometry and available scale values differ. Those choices affect approximation error. A further question remains after the representation is chosen: can the kernel efficiently execute that particular packing and scale scheme? Scale expressiveness, block granularity, calibration, and native kernel support jointly determine the quality–speed tradeoff.
 
 ![VIZ m11/08 — several meanings of four-bit execution](assets/modern-llms/en/module-11/m11_08_fp4_war.svg)
 *NVFP4 and MXFP4 use different local-scale schemes. W4A4 adds activation quantization; ternary models require a still more specialized training and execution path.*
@@ -397,7 +419,7 @@ BitNet-style ternary weights push the representation much further. Their potenti
 
 ## 13. Code: make the probability contract explicit
 
-The first function below validates the exact mass balance for one speculative position. The second is a grouped E2M1-like teaching quantizer. It is not a bit-exact NVFP4 implementation and contains no packed storage or GPU kernel.
+We can now return to the chapter’s two computational mechanisms. Section 5 exposed the probability balance in NumPy and PyTorch. The first kernel below uses that same balance for one speculative position, but places explicit validation of the input distributions before it: the domain of the calculation becomes part of the interface. The second is a grouped E2M1-like teaching quantizer. It shows level selection and reconstruction, not a bit-exact NVFP4 implementation, packed storage, or a GPU kernel.
 
 ```python
 """M11 minimal probability and grouped-value teaching kernels."""
@@ -570,7 +592,7 @@ A reliable rollout starts from a controlled baseline. Pin the model revision, to
 
 Next, introduce quantization alone. Confirm that the runtime is using the intended kernel rather than merely storing a compressed checkpoint. Re-run quality and performance tests.
 
-Then add speculation alone. Record proposer cost, mean accepted length, rejection rate, verification time, and memory overhead. Finally, combine the two and re-profile from scratch. This sequence reveals which technique moved the bottleneck and prevents crediting one component for another component’s gain.
+For the speculation-only comparison, return to the original, unquantized target and enable the speculative method without quantization. Record proposer cost, mean accepted length, rejection rate, verification time, and memory overhead. Only after these separate comparisons should the two methods be combined and profiled again. This sequence reveals which technique moved the bottleneck and which effects arise specifically from their interaction.
 
 For native MTP, check whether proposal modules are bundled in the target or distributed as a compatible auxiliary artifact; the runtime must recognize that architecture. EAGLE and generic draft-model modes require compatible artifacts. Lookup methods require favorable text structure rather than a neural checkpoint.
 

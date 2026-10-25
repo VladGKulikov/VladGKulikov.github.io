@@ -73,7 +73,7 @@ const copy = {
     bookTitle: "PDF / EPUB",
     bookText: "Скачать бесплатно или поддержать автора на Leanpub",
     modules: "модулей",
-    pages: "страниц в PDF 2026.2",
+    pages: "страниц в PDF",
     illustrations: "иллюстраций",
     library: "Библиотека",
     search: "Найти модуль",
@@ -136,7 +136,7 @@ const copy = {
     bookTitle: "PDF / EPUB",
     bookText: "Download free or support the author on Leanpub",
     modules: "modules",
-    pages: "pages in PDF 2026.2",
+    pages: "pages in PDF",
     illustrations: "illustrations",
     library: "Library",
     search: "Find a module",
@@ -186,8 +186,8 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
 
 const coursePageCounts: Record<CourseKey, Record<Language, number>> = {
   "modern-llms": {
-    ru: 375,
-    en: 336,
+    ru: 504,
+    en: 460,
   },
   "rl-for-llm": {
     ru: 286,
@@ -733,7 +733,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                             </div>
                             <div>
                               <dt>{coursePageCounts[course.course_key][language]}</dt>
-                              <dd>{t.pages}</dd>
+                              <dd>{t.pages} {publication.book_editions[course.course_key]}</dd>
                             </div>
                             <div>
                               <dt>{imageCount}</dt>

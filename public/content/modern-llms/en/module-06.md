@@ -1,24 +1,26 @@
 # Module 6. Normalization, activations, and the anatomy of a Transformer block
 
-*Modern LLMs · revised October 11, 2026*
+*Modern LLMs · Module 6 lecture*
 
-Attention lets tokens exchange information. To turn it into a useful block, we also need a state that persists between layers, a way to control numerical scale, and a network that transforms each token's features. This module puts those pieces together and accounts for their parameters.
+Module 5 examined how attention gathers information across positions and what that work costs. Yet the vector returned by attention is not the block's entire new state. It becomes an update in a residual addition, after which another branch transforms the updated features. Understanding the block means following these handoffs, not just recognizing the operations in isolation.
+
+We will now trace the whole construction: the state carried between layers, the normalized inputs used by its branches, and the gated network that transforms each position. The familiar diagram from Module 3 will acquire a more precise meaning. By the end, we will also be able to account for its parameters, from individual matrix shapes to the complete model.
 
 **Before you start.** You need projections and residual connections from M3, and attention heads and GQA from M5. Equations use column vectors; NumPy stores tokens as rows, so projection matrices multiply on the right.
 
 **Reading routes**
 
-- **First pass:** §1 → §§4–10, skipping expandable implementations → §§14–15 → §20. Check Q1–Q6 in §18 and E1–E3 in §19; Q7 and E7 depend on the mHC discussion in §12 and belong to a return visit. Follow the shapes in §10 to the model total. This route prepares you for M7.
-- **Second pass:** bridges B07/B08 in §§5/9, code in §13, and the notebook. Test reduction axes, near-zero inputs, low precision, and gradients; solve exercises 1–3 and 6–7.
+- **First pass:** §1 → §§4–10, skipping expandable implementations → §15 → §20. Check your understanding with the [module tests](/courses/modern-llms/module-06/tests/) and [exercises 1–3](/courses/modern-llms/module-06/exercises/). Questions and exercises about mHC depend on §12 and belong to a return visit. Follow the shapes in §10 to the model total. This route prepares you for M7.
+- **Second pass:** bridges B07/B08 in §§5/9, code in §13, and the [module notebook](/courses/modern-llms/module-06/notebooks/). Test reduction axes, near-zero inputs, low precision, and gradients; solve [exercises 1–3 and 6–7](/courses/modern-llms/module-06/exercises/).
 - **Reference pass:** §§2–3 give history and classical connections; §§11–12 introduce element-wise alternatives and multiple streams; §§16–17 help you inspect real architectures. Projects 4–5 extend the experiments.
 
 ## 1. The three jobs surrounding attention
 
 At each token position, the block receives a state $h\in\mathbb R^d$. The model width $d$ is the number of features in that state. A **residual stream** carries it through successive layers. Each residual connection adds a learned update of the same shape: $h+F(h)$.
 
-Attention reads across positions. The **feed-forward network (FFN)** transforms each position separately, sharing its weights across tokens. Normalization controls the scale at which these operations read or write features. Neither an FFN nor a normalizer moves a token to a different position.
+Attention reads across positions. The **feed-forward network (FFN)** transforms each position separately, sharing its weights across tokens. Separate processing does not make its input context-free: attention has already contributed information from other accessible positions. Normalization controls the scale at which these operations read or write features. The token stays at the same position, while the numbers representing its content and context change.
 
-We measure scale using the root mean square:
+Each layer adds new vectors to the state. Alongside the information those vectors carry, we therefore need to track the numerical range presented to the next operation. We measure scale using the root mean square:
 
 $$\operatorname{RMS}(h)=\sqrt{\frac1d\sum_{i=1}^d h_i^2}.$$
 
@@ -50,19 +52,25 @@ Gated FFNs illustrate a third idea: multiplicative interaction. Two separately l
 
 ## 4. A block makes two successive residual updates
 
-In Pre-LN, attention reads a normalized state. The FFN then reads the state **after** the attention update:
+At a residual addition, two vectors meet: the incoming state and the update computed by a branch. A normalizer can act at several points along these paths, so it helps to start with one specific arrangement. In **Pre-LN**, attention reads a normalized version of the state, while the original state takes the direct route to the addition. The FFN then reads the state **after** the attention update:
 
 $$\tilde h_l=h_l+\operatorname{Attn}(N_{l,1}(h_l)),$$
 $$h_{l+1}=\tilde h_l+\operatorname{FFN}(N_{l,2}(\tilde h_l)).$$
 
-Here $l$ identifies the layer, and $N_{l,1},N_{l,2}$ are its two normalizers. Attention and FFN are sequential branches, not two independent functions of the original $h_l$.
+Here $l$ identifies the layer, and $N_{l,1},N_{l,2}$ are its two normalizers. Read the first line as two paths through the computation. The direct path carries the state to the addition unchanged. The other path normalizes it and lets attention compute an update. Pre-LN therefore does not replace the residual stream with a normalized stream; it normalizes what the branch reads.
+
+The second line repeats this arrangement after the first addition. Attention and FFN are sequential branches, not two independent functions of the original $h_l$. The FFN can use information that attention has just brought into the state. Its intermediate representation may be wider, but its final update must return to the residual width so that the addition is defined.
 
 ![VIZ m6/01 — Attention updates the state first; the FFN reads that updated state.](assets/modern-llms/en/module-06/m6_01_block_bus.svg)
 *Attention updates the state first; the FFN reads that updated state.*
 
+The same paths matter when we differentiate the block. A small input change reaches the output directly through addition, and also changes the update computed by the branch. Both effects must be included. The residual connection does not remove the branch's dependence on its input.
+
 For a vector-valued function, the **Jacobian** collects all partial derivatives: its entry $J_{ij}$ tells us how output coordinate $i$ changes when input coordinate $j$ changes. With $h,F(h)\in\mathbb R^d$, this is a $d\times d$ matrix. Differentiating a residual step $h^+=h+F(h)$ gives $J=I+J_F(h)$, where $I$ is the identity matrix and $J_F$ is the branch Jacobian. This direct path is useful, but the sum need not be well conditioned. Taking $F(h)=-h$ gives $J=0$. Nor does a bypass make a trained branch disposable. Removing it changes a learned function and requires a quality check.
 
 ## 5. What LayerNorm and RMSNorm compute
+
+Set the residual graph aside for a moment and inspect the normalizer itself. It computes a statistic from the coordinates of the vector it receives. That statistic belongs to the current input: a different token gets a newly computed denominator.
 
 For a token vector $x\in\mathbb R^d$, define its feature mean and variance:
 
@@ -75,12 +83,16 @@ $$\operatorname{RMSNorm}(x)_i=\gamma_i\frac{x_i}{\sqrt{d^{-1}\sum_jx_j^2+\epsilo
 
 The learned vectors $\gamma,\beta$ rescale and shift features; $\epsilon>0$ keeps the denominator away from zero. Our RMSNorm definition has a scale and no bias. Both reductions operate on features of one token, not across tokens or the batch.
 
+There are two distinct sources of variation here. The statistics are calculated from each incoming vector, while the learned coefficients are model parameters shared across tokens in a forward pass. Learning a scale after normalization does not undo the operation. It lets the model choose how to use features after their input-dependent rescaling.
+
 For $x=(2,-1,3,0)$, $\gamma=1$, $\beta=0$, and $\epsilon=10^{-6}$, we have $\mu=1$, $\sigma^2=2.5$, and $\operatorname{RMS}(x)=\sqrt{3.5}$. The outputs are approximately
 
 $$\operatorname{LN}(x)=(0.632,-1.265,1.265,-0.632),$$
 $$\operatorname{RMSNorm}(x)=(1.069,-0.535,1.604,0).$$
 
 Before its learned scale, RMSNorm preserves signs and coordinate ratios but does not enforce zero mean. A constant nonzero vector distinguishes the norms: centered LayerNorm returns zero before its affine step, whereas RMSNorm does not.
+
+The four-coordinate example makes centering and rescaling visible. Another part of the formula can be easy to overlook at ordinary input magnitudes: the small addition to the denominator. Near zero it stops being a minor correction and becomes a major influence on the transformation.
 
 ### Epsilon matters near zero
 
@@ -198,6 +210,8 @@ Official API: [PyTorch `rms_norm`](https://docs.pytorch.org/docs/stable/generate
 
 ## 6. Placement changes the computation graph
 
+Knowing what a normalizer computes is only half the description of a block. We must also identify the vector it acts on. Normalizing a branch input, a completed update, and a residual sum produces different computations even when the normalization formula is identical. The following arrangements separate those choices.
+
 Let $F$ be an attention or FFN sublayer and $N$ a normalizer.
 
 | Placement | Residual step | What is normalized? |
@@ -210,11 +224,15 @@ Let $F$ be an attention or FFN sublayer and $N$ a normalizer.
 ![VIZ m6/02 — Locate each norm relative to F and the residual addition.](assets/modern-llms/en/module-06/m6_02_norm_placements.svg)
 *Locate each norm relative to F and the residual addition.*
 
-Post-LN has Jacobian $J_N(I+J_F)$, so even the residual path passes through normalization. For Pre-LN, apply the chain rule: $J_{F\circ N}(h)=J_F(N(h))J_N(h)$. Its complete Jacobian is therefore $I+J_F(N(h))J_N(h)$: the direct identity term remains outside the product. Neither expression guarantees good optimization under every initialization and optimizer.
+In Post-LN, the state and the update are added first; normalization then acts on their entire sum. Its Jacobian is $J_N(I+J_F)$, so a change arriving through either path passes through the normalizer before reaching the next layer.
 
-Peri-LN controls the contribution being added, although learned output scales can change its size. The paper reports experiments up to 3.2B parameters. OLMo2 lacks the paired input norm, so its output-only arrangement should not be labeled Peri-LN. [Peri-LN](https://arxiv.org/abs/2502.02732); [OLMo2 code](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py).
+Pre-LN instead prepares the branch input and leaves the direct path outside normalization. The magnitude of the new residual sum is not fixed by that input norm. Applying the chain rule gives $J_{F\circ N}(h)=J_F(N(h))J_N(h)$. The complete Jacobian is therefore $I+J_F(N(h))J_N(h)$: the direct identity term remains outside the product. These formulas identify different gradient paths; neither guarantees good optimization under every initialization and optimizer.
+
+Peri-LN leaves the direct residual path intact while normalizing both ends of the branch. The input norm prepares what the sublayer reads; the output norm controls the contribution being added, although learned output scales can change its size. The accumulated state is still a separate term in the sum. The paper reports experiments up to 3.2B parameters. OLMo2 lacks the paired input norm, so its output-only arrangement should not be labeled Peri-LN. [Peri-LN](https://arxiv.org/abs/2502.02732); [OLMo2 code](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py).
 
 ### A controlled forward-scale experiment
+
+We can isolate the effect of placement without training a language model. Keep only a linear map inside the branch and watch the state magnitude over depth. Reusing the input and the weight matrices across arrangements makes this a comparison of computational paths rather than of different random draws.
 
 Using seed 5, draw the 256 coordinates of $h_0$ independently from a standard normal distribution and generate 36 independent matrices $W_l$ with entries from $\mathcal N(0,1/256)$. Reuse the same input and matrices in three recurrences:
 
@@ -231,9 +249,13 @@ Here $U(x)=x/\max(\operatorname{RMS}(x),10^{-12})$. It has no learned scale and 
 ![VIZ m6/03 — One input and weight stack isolate placement; the vertical axis is logarithmic.](assets/modern-llms/en/module-06/m6_03_depth_variance.png)
 *One input and weight stack isolate placement; the vertical axis is logarithmic.*
 
-This measures forward scale in a linear residual system. There is no loss or training update. Post has unit RMS by construction; pre still accumulates updates. The notebook also compares Pre-LN and Peri-LN on one frozen attention–FFN stack.
+Read the curves through their recurrences. With no norm, a larger state is fed directly into the next linear branch and its output is added again. In the pre arrangement, the branch receives a normalized input, but the residual state continues to accumulate updates. Its RMS therefore need not remain one. The post arrangement normalizes the entire sum after every step, giving unit RMS by construction.
+
+The flat curve is not evidence that one arrangement has won a training comparison. This experiment measures forward scale in a residual system with linear branches: there is no loss, learning update, nonlinear branch activation, or learned normalization gain. Keeping state magnitude fixed and making a model easy to train are different questions. The notebook also compares Pre-LN and Peri-LN on one frozen attention–FFN stack.
 
 ## 7. Q/K normalization: check the equation and the axis
+
+So far, normalization has acted on the token state or on a sublayer's update. Queries and keys live farther inside the attention computation. They are produced by learned projections, which can change vector lengths even when their input is normalized. Controlling the state presented to attention does not, by itself, fix the scale of the scores attention will compute.
 
 An attention score is $s_{ij}=q_i^\top k_j/\sqrt{d_h}$, with head width $d_h$. Scaling both vectors by $c$ scales the score by $c^2$ and can concentrate softmax on very few keys.
 
@@ -246,15 +268,17 @@ $$
 
 The scale replaces the usual $1/\sqrt{d_h}$ factor. Practical implementations guard a zero length with a stabilizer. The authors reported an average gain of 0.928 BLEU across five low-resource translation pairs under their protocol. BLEU is a translation metric based on overlap with reference translations; this reported gain concerns that evaluation setting. [QKNorm](https://arxiv.org/abs/2010.04245).
 
-Per-head RMSNorm is different. Ignoring epsilon and learned scales, normalized vectors have length $\sqrt{d_h}$. With the usual attention denominator the score becomes $\sqrt{d_h}\cos\theta_{ij}$, rather than a unit-vector dot product.
+The label “Q/K normalization” is not enough to determine the resulting score scale. Per-head RMSNorm is different from L2 normalization: ignoring epsilon and learned scales, its vectors have length $\sqrt{d_h}$. It sets the mean square of their coordinates to one, rather than setting their vector length to one. With the usual attention denominator the score becomes $\sqrt{d_h}\cos\theta_{ij}$, rather than a unit-vector dot product. Even with the same directions, the score differences passed to softmax can therefore have a different magnitude.
 
 The axis also matters. Qwen3 normalizes within each head. OLMo2 normalizes the entire Q projection, and separately the entire K projection, before splitting heads. Changing one head can therefore change other heads' denominators in OLMo2. The notebook demonstrates this with two heads of width two. [Qwen3](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/qwen3/modeling_qwen3.py); [OLMo2](https://github.com/huggingface/transformers/blob/536ecc007387a50e77603bb5d92100e9b07514cc/src/transformers/models/olmo2/modeling_olmo2.py).
+
+This coupling comes from the shared denominator, not from attention exchanging information. A per-head norm uses only that head's coordinates. A norm over the whole projection lets other heads influence its scale. The reduction axis is consequently part of the operation's definition, not an incidental layout choice.
 
 Logit **soft-capping** instead transforms computed scores as $s\mapsto c\tanh(s/c)$ for $c>0$. It bounds scores without normalizing Q or K. Gradient clipping belongs to optimization and does not replace any of these forward operations.
 
 ## 8. Why a gate adds a matrix
 
-A conventional FFN widens a token vector, applies a nonlinearity, and projects back:
+Return to the residual block after attention. Information from the accessible context has already entered the state at each position. The next job is to transform those features without performing another exchange between tokens. A conventional FFN does this by widening the vector, applying a nonlinearity, and projecting back to the residual width:
 
 $$
 \operatorname{FFN}(x)=W_2\phi(W_1x),\qquad
@@ -276,15 +300,17 @@ The approximation $z\sigma(1.702z)$ has maximum absolute error **0.020335** agai
 ![VIZ m6/04 — Shared axes compare activations; a separate panel shows the GELU approximation error.](assets/modern-llms/en/module-06/m6_04_activations.png)
 *Shared axes compare activations; a separate panel shows the GELU approximation error.*
 
+Choosing a scalar nonlinearity is distinct from choosing the structure of the sublayer. The conventional FFN applies one fixed activation function to each intermediate feature. A gated FFN adds another learned projection to compute input-dependent multipliers for those features. Both the features and their multipliers are therefore recalculated from the current state.
+
 A gated FFN learns two projections, $g=W_gx$ and $u=W_ux$, then multiplies their transformed outputs coordinate by coordinate. SwiGLU is
 
 $$\operatorname{SwiGLU}(x)=W_d\bigl(\operatorname{SiLU}(W_gx)\odot W_ux\bigr).$$
 
-Here $\odot$ means element-wise multiplication. Although the gate depends on the input, $\operatorname{SiLU}(g)$ is not a probability or a value restricted to $[0,1]$. The third matrix $W_d$ restores width $d$ for residual addition. ReGLU and GEGLU use ReLU and GELU gates instead; Shazeer compared these variants under matched budgets. [GLU Variants](https://arxiv.org/abs/2002.05202).
+Here $\odot$ means element-wise multiplication. One branch provides features; the other changes their contribution for this particular input. Although the gate depends on the input, $\operatorname{SiLU}(g)$ is not a probability or a value restricted to $[0,1]$. Only after the two branches have interacted does the third matrix $W_d$ combine their product and restore width $d$ for residual addition. ReGLU and GEGLU use ReLU and GELU gates instead; Shazeer compared these variants under matched budgets. [GLU Variants](https://arxiv.org/abs/2002.05202).
 
 ## 9. Budgeting SwiGLU and reading its variants
 
-Two bias-free FFN matrices cost $2dd_{ff}$ parameters; SwiGLU costs $3dd_{ff}$. Matching a conventional FFN of width $4d$ gives
+The added branch has a concrete parameter cost. Two bias-free FFN matrices cost $2dd_{ff}$ parameters; SwiGLU costs $3dd_{ff}$. Keeping the same intermediate width would therefore increase the matrix budget. A matched-budget comparison adjusts that width rather than treating the new projection as free. Matching a conventional FFN of width $4d$ gives
 
 $$3dd_{ff}=2d(4d)\quad\Rightarrow\quad d_{ff}=\frac83d.$$
 
@@ -293,14 +319,14 @@ Real models may choose another width or round it for implementation reasons. $8d
 ![VIZ m6/05 — The gate projection passes through SiLU, multiplies the up branch, then feeds the down projection.](assets/modern-llms/en/module-06/m6_05_swiglu_gate.svg)
 *The gate projection passes through SiLU, multiplies the up branch, then feeds the down projection.*
 
-The gpt-oss reference uses a specific variant:
+That defines the general SwiGLU construction, but it does not specify every detail of a particular checkpoint. Implementations can change the sigmoid coefficient, constrain a branch's range, or introduce a shift. We now move from the general mechanism to one such recipe, not to an additional requirement for every SwiGLU. The gpt-oss reference uses a specific variant:
 
 $$\bar g=\min(g,7),\qquad\bar u=\operatorname{clip}(u,-7,7),$$
 $$a=\bar g\,\sigma(1.702\bar g)\odot(\bar u+1).$$
 
 Only the upper gate tail is clamped; the up branch is clamped at both ends. This defines the checkpoint's activation. Its training motivation cannot be established from a function body alone. [Pinned implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py).
 
-For the diagnostic slice $g=u=z$, the product before the down projection is:
+In the model, the gate and up branches come from different projections and need not agree. To make the two-input function easy to plot, take the diagnostic slice $g=u=z$. The product before the down projection is:
 
 | $z$ | $a$ |
 |---:|---:|
@@ -460,7 +486,7 @@ Activations, masks, caches, and rotary buffers are not learned parameters in thi
 
 ## 11. Element-wise alternatives: DyT and DyISRU
 
-On the reference route, we can ask whether the feature reduction itself is necessary. **Dynamic Tanh (DyT)** computes
+The main block has now been assembled and counted. On the reference route, we can revisit a choice that has so far remained fixed: computing a shared statistic across a vector's features. Rather than moving a norm to another point in the graph, could we replace that reduction with a function acting independently on each coordinate? **Dynamic Tanh (DyT)** computes
 
 $$\operatorname{DyT}(x)=\gamma\odot\tanh(\alpha x)+\beta,$$
 
@@ -476,16 +502,20 @@ $$\operatorname{DyISRU}(x)=\gamma\odot\frac{x}{\sqrt{b+x^2}}+\beta,\qquad b>0.$$
 
 This is the paper's decoupled construction, not equality to vector RMSNorm on arbitrary inputs. One way to learn a positive $b$ is to optimize an unconstrained scalar $r$ and set $b=\operatorname{softplus}(r)=\log(1+e^r)$. This function is positive for every finite real $r$ in exact arithmetic. The notebook uses a stable library implementation and adds a small floor for finite precision. [DyISRU analysis, version 4](https://arxiv.org/html/2503.21708v4).
 
+The construction above explains how the new function is obtained. Comparing its shape with DyT is a separate task. A useful common reference is their behavior near zero: matching a local slope lets us compare what the functions do away from that point without claiming that the functions are identical.
+
 With unit gain and zero bias, the slopes at zero are $\alpha$ for DyT and $1/\sqrt b$ for DyISRU. Choosing $\alpha=0.5$ and $b=4$ matches those slopes. It does not transfer a fitted coefficient from one function to another.
 
 ![VIZ m6/08 — Matched slopes compare shapes; the separate scalar fit has its own objective.](assets/modern-llms/en/module-06/m6_08_dyt_family.png)
 *Matched slopes compare shapes; the separate scalar fit has its own objective.*
 
-Separately, draw 200,000 standard-normal values with seed 5 and fit $\tanh(\alpha x)$ to $x/\operatorname{RMS}(x)$. The grid has 171 coefficients from 0.3 to 2.0; gain stays one and bias zero. Its best point is $\alpha\approx1.43$, with MSE **0.161704**. This is a teaching approximation, not a paper-reported constant or a trained Transformer result.
+The previous comparison matched local slopes. The following course experiment instead fits one function to a target over a sample; it has its own objective and does not reuse the slope-matching coefficient. Separately, draw 200,000 standard-normal values with seed 5 and fit $\tanh(\alpha x)$ to $x/\operatorname{RMS}(x)$. The grid has 171 coefficients from 0.3 to 2.0; gain stays one and bias zero. Its best point is $\alpha\approx1.43$, with MSE **0.161704**. This is a teaching approximation, not a paper-reported constant or a trained Transformer result.
 
 A later study of 1B models over 1,000 steps found a strong adverse interaction between Dynamic Erf and Muon; DyT did not show the same penalty. This limited experiment motivates checking optimizer and activation together rather than establishing a universal ranking. [Study](https://arxiv.org/abs/2604.01563).
 
 ## 12. Several residual streams: what mHC constrains
+
+The previous alternatives changed a transformation inside the branch while leaving the residual graph in place. We can ask a different question: must each token have only one stream of state between sublayers? Multiple streams change what is connected around a branch, rather than supplying yet another formula for normalizing its input.
 
 Hyper-Connections carry $n$ streams. Put their states in the rows of $X\in\mathbb R^{n\times d}$; a residual matrix $A\in\mathbb R^{n\times n}$ mixes them as $AX$. Separate maps combine streams before a sublayer and distribute its output afterward.
 
@@ -493,7 +523,9 @@ Manifold-Constrained Hyper-Connections (**mHC**) constrain the residual matrix t
 
 $$A_{ij}\ge0,\qquad\sum_jA_{ij}=1,\qquad\sum_iA_{ij}=1.$$
 
-This set is the Birkhoff polytope. Each output row is a convex combination of input rows. For a fixed exact matrix, each feature stays between the smallest and largest input-stream values. That does not preserve every stream:
+This set is the Birkhoff polytope. The row and column conditions do different jobs. Nonnegative entries and unit row sums make each output row a convex combination of input rows. Unit column sums additionally preserve each feature's sum, and hence its mean, across streams during this mixing step. Neither statement yet describes the complete layer with its computed branch update.
+
+For a fixed exact matrix, each feature stays between the smallest and largest input-stream values. That does not preserve every stream:
 
 $$
 A=\begin{pmatrix}0.75&0.25\\0.25&0.75\end{pmatrix},\quad
@@ -507,6 +539,8 @@ The constraint applies to connections, not to a low-dimensional manifold of hidd
 DeepSeek-V4 is a public model example. Peri-LN controls branch contributions in an ordinary residual graph; mHC changes how several streams connect around the branch. [Model card](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash).
 
 ## 13. A small implementation to inspect
+
+After those research branches, return to the ordinary single-stream block. The listing combines the normalization and FFN operations already studied into two successive residual updates. It does not attempt to implement DyT or mHC.
 
 On a second pass, follow an input matrix `x[T, d]` through this listing. The gate and up matrices have shape `[d, d_ff]`, and the down matrix has shape `[d_ff, d]`. Because tokens are stored as rows, these arrays are transposes of the column-vector matrices in §9.
 
