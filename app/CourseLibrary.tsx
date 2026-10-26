@@ -374,6 +374,10 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
       setMarkdown(cached);
       setLoading(false);
     } else {
+      // The route (including language) changes before its content arrives.
+      // Do not render the outgoing text with the destination's math or reader.
+      // Its reading position has already been captured by navigate/popstate.
+      setMarkdown("");
       setLoading(true);
     }
   }, []);
