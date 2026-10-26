@@ -24,6 +24,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import publication from "../PUBLICATION.json";
 import { markdownHeadings } from "./markdown-headings";
+import { module20Equation } from "./module-20-equations";
 import { captureReadingPosition, readingPositionAtAnchor, restoreReadingPosition, type ReadingPosition } from "./reading-position";
 
 import config from "../SITE_CONFIG.json";
@@ -881,7 +882,8 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                   components={{
                     span: ({ node, ...props }) => {
                       const equation = courseKey === 'modern-llms' && moduleKey === 'module-20' && props.className?.split(' ').includes('katex-display');
-                      return <span {...props} {...(equation ? { tabIndex: 0, role: 'group', 'aria-label': language === 'ru' ? 'Формула' : 'Equation' } : {})} />;
+                      if (equation) return <span className="reference-equation" tabIndex={0} role="group" aria-label={language === 'ru' ? 'Формула' : 'Equation'} dangerouslySetInnerHTML={{ __html: module20Equation(node, language) }} />;
+                      return <span {...props} />;
                     },
                     h2: ({ children, node }) => {
                       const Tag = `h${node?.position ? semanticHeadings.get(node.position.start.line) ?? 2 : 2}` as "h2" | "h3" | "h4";

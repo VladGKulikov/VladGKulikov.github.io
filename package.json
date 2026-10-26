@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "build:pages": "vite build --config vite.pages.config.ts && vite build --config vite.prerender.config.ts && node scripts/prerender.mjs && node scripts/validate-static.mjs && node scripts/validate-quizzes.mjs && node scripts/validate-practice.mjs && node scripts/validate-numbering.mjs",
+    "build:pages": "vite build --config vite.pages.config.ts && vite build --config vite.prerender.config.ts && node scripts/prerender.mjs && node scripts/validate-static.mjs && node scripts/validate-quizzes.mjs && node scripts/validate-practice.mjs && node scripts/validate-numbering.mjs && npm run check:math-layout",
     "check:math": "node scripts/validate-math.mjs",
     "check:markup": "node scripts/validate-markup.mjs",
     "check:publication": "node scripts/validate-publication.mjs",
@@ -18,10 +18,11 @@
     "check:quizzes": "node scripts/validate-quizzes.mjs",
     "check:quiz-markup": "node scripts/validate-markup.mjs --quizzes",
     "check:practice-markup": "node scripts/validate-markup.mjs --practice",
-    "check:practice": "node scripts/validate-practice.mjs"
+    "check:practice": "node scripts/validate-practice.mjs",
+    "check:math-layout": "node scripts/validate-math-layout.mjs"
   },
   "dependencies": {
-    "katex": "^0.18.3",
+    "katex": "0.18.3",
     "lucide-react": "^1.31.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
@@ -54,5 +55,8 @@
     "wrangler": "4.92.0",
     "parse5": "7.3.0"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "katex": "$katex"
+  }
 }

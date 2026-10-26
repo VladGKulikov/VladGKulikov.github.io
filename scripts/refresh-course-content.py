@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import urllib.parse
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -617,10 +618,40 @@ MODERN_PRIVATE_SECTIONS = {
 MODERN_EXPECTED_SECTIONS = {1: 23, 2: 17, 3: 22, 4: 18, 5: 20, 6: 21, 15: 21}
 
 
+def export_module20_equations(source_root: Path, project_root: Path) -> None:
+    """Preserve display MathML from the canonical standalone M20 edition."""
+    namespace = "{http://www.w3.org/1998/Math/MathML}"
+    equations = {}
+    for language in ("ru", "en"):
+        source = source_root / f"modules/module-20/{language}/module_20_lecture_{language.upper()}.html"
+        items = {}
+        for markup in re.findall(r"<math\b[^>]*>.*?</math>", source.read_text(encoding="utf-8"), re.DOTALL):
+            math = ET.fromstring(markup)
+            if math.get("display") != "block":
+                continue
+            annotation = math.find(f".//{namespace}annotation[@encoding='application/x-tex']")
+            if annotation is None or not annotation.text:
+                raise ValueError(f"M20 {language}: missing TeX annotation")
+            for node in math.iter():
+                if not node.tag.startswith(namespace) or node.tag[len(namespace):] in {"script", "style", "annotation-xml"}:
+                    raise ValueError(f"Unexpected MathML element: {node.tag}")
+                if any(key.lower().startswith("on") or key in {"href", "src"} for key in node.attrib):
+                    raise ValueError("Interactive content in reference MathML")
+            if annotation.text in items:
+                raise ValueError(f"M20 {language}: duplicate equation")
+            items[annotation.text] = markup
+        if not items:
+            raise ValueError(f"M20 {language}: no display equations")
+        equations[language] = items
+    destination = project_root / "app/generated/module-20-equations.json"
+    destination.write_text(json.dumps(equations, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def build_modern(boundary: dict[str, Any], language: str, context: BuildContext) -> list[dict[str, Any]]:
     del boundary
     course_key = "modern-llms"
     root = context.source_roots[course_key]
+    export_module20_equations(root, context.project_root)
     manifest = json.loads((root / "course_manifest.json").read_text(encoding="utf-8"))
     documents = []
     for module in manifest["modules"]:

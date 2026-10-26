@@ -66,7 +66,7 @@ for (const page of manifest) {
   const ids = nodes.map(node => attr(node, "id")).filter(Boolean);
   check(new Set(ids).size === ids.length, label, "Duplicate HTML IDs");
   for (const node of nodes) {
-    if (hasClass(node, "katex")) counts.formulas++;
+    if (hasClass(node, "katex") || hasClass(node, "reference-equation")) counts.formulas++;
     if (node.tagName === "img") {
       counts.images++;
       const src = attr(node, "src");

@@ -975,24 +975,40 @@ a {
 }
 
 /* Module 20 follows the equation blocks in the standalone 25 October edition. */
-.lecture-prose-equation-cards .katex-display {
+.lecture-prose-equation-cards .katex { font-size: 1em; }
+
+.lecture-prose-equation-cards .reference-equation {
   display: block;
   box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
   margin: 18px 0 25px;
-  padding: 17px 10px 20px;
+  padding: 24px 15px 28px;
   background: #f6f6f1;
   border: 1px solid #e5e6df;
   border-radius: 5px;
-  text-align: center;
 }
 
-.lecture-prose-equation-cards .katex-display > .katex {
+.reference-equation > math {
   display: block;
-  text-align: center;
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+  margin: 0 auto;
+  font: 1.04em/normal "Cambria Math", "STIX Two Math", "Latin Modern Math", "Asana Math", math;
 }
 
-.lecture-prose-equation-cards .katex-display:focus-visible {
+.reference-equation mtable { line-height: 1.5; }
+/* Restore native MathML cell spacing removed by the site's CSS reset. */
+.reference-equation mtd { padding: 0.5ex 0.4em; }
+.reference-equation annotation { display: none; }
+
+.reference-equation:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
