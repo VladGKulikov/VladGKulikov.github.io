@@ -203,6 +203,13 @@ def normalize_math_delimiters(markdown: str) -> str:
 
         if not in_display_math:
             line = re.sub(r"(?<!\\)\\\((.+?)(?<!\\)\\\)", r"$\1$", line)
+            # remark-math treats $$formula$$ on one line as inline math.
+            # Preserve a standalone equation as a display block instead.
+            single_line = re.fullmatch(r"([ \t]*(?:>[ \t]*)*)\$\$(.+?)\$\$[ \t]*", line)
+            if single_line:
+                prefix, formula = single_line.groups()
+                output.extend((f"{prefix}$$", f"{prefix}{formula}", f"{prefix}$$"))
+                continue
             if line.count("$$") % 2 == 1:
                 before, after = line.split("$$", 1)
                 prefix_match = re.fullmatch(r"[ \t]*(?:>[ \t]*)*", before)

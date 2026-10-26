@@ -974,6 +974,29 @@ a {
   min-width: 100%;
 }
 
+/* Module 20 follows the equation blocks in the standalone 25 October edition. */
+.lecture-prose-equation-cards .katex-display {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 18px 0 25px;
+  padding: 17px 10px 20px;
+  background: #f6f6f1;
+  border: 1px solid #e5e6df;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.lecture-prose-equation-cards .katex-display > .katex {
+  display: block;
+  text-align: center;
+}
+
+.lecture-prose-equation-cards .katex-display:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .module-pagination {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -46,13 +46,17 @@ The tokenizer from [Module 2](module-02.md) maps text to IDs before this computa
 
 The input representation is a row lookup:
 
-$$H^{(0)}=E[x_0,\ldots,x_{t-1}].$$
+$$
+H^{(0)}=E[x_0,\ldots,x_{t-1}].
+$$
 
 Repeated occurrences of an ID use the same learned row. They will nevertheless acquire different contextual representations, because each position has a different available prefix. It is useful to distinguish the table $E$, which is a parameter, from the selected matrix $H^{(0)}$, which is an activation produced for this input.
 
 Our running example has vocabulary $(\mathrm{BOS},A,B,\mathrm{EOS})$, assigned IDs $(0,1,2,3)$. The complete example is $(0,1,2,3)$: inputs are $(0,1,2)$ and next-token targets are $(1,2,3)$. Choose $V=4$, $d=m=2$, and $L=h_q=h_{kv}=1$. Both the data and the initial weights are synthetic. The four symbols make the arithmetic readable; this is not a model that has learned the meanings of four words.
 
-$$E=\begin{bmatrix}1&0\\0&1\\1&1\\-1&0\end{bmatrix},\qquad H^{(0)}=\begin{bmatrix}1&0\\0&1\\1&1\end{bmatrix}.$$
+$$
+E=\begin{bmatrix}1&0\\0&1\\1&1\\-1&0\end{bmatrix},\qquad H^{(0)}=\begin{bmatrix}1&0\\0&1\\1&1\end{bmatrix}.
+$$
 
 There are three input positions and three predictions. The first row receives BOS and predicts A. Keeping this one-position shift explicit prevents a surprisingly easy mistake: training a model to reconstruct the token it has already been given.
 
@@ -60,7 +64,9 @@ There are three input positions and three predictions. The first row receives BO
 
 For a row $h$ of width $d$, define
 
-$$\rho(h)=\sqrt{\frac1d\sum_{i=1}^{d}h_i^2+\varepsilon},\qquad N_\gamma(h)=\gamma\odot\frac{h}{\rho(h)}.$$
+$$
+\rho(h)=\sqrt{\frac1d\sum_{i=1}^{d}h_i^2+\varepsilon},\qquad N_\gamma(h)=\gamma\odot\frac{h}{\rho(h)}.
+$$
 
 We use $\varepsilon=10^{-6}$ to keep the denominator positive. RMSNorm does not subtract the mean, as LayerNorm does. Nor does it normalize to unit Euclidean length: with unit gains and negligible $\varepsilon$, it makes the mean square approximately one.
 
@@ -68,7 +74,9 @@ The operation acts independently on each row, so it does not mix positions or re
 
 Initialize all three gains to $(1,1)$. The attention input becomes
 
-$$X=N_{\gamma_a}(H^{(0)})\approx\begin{bmatrix}1.414212&0\\0&1.414212\\1.000000&1.000000\end{bmatrix}.$$
+$$
+X=N_{\gamma_a}(H^{(0)})\approx\begin{bmatrix}1.414212&0\\0&1.414212\\1.000000&1.000000\end{bmatrix}.
+$$
 
 The final row has been rounded for display: both entries are slightly below one because of $\varepsilon$. All later results are computed from full-precision values, not from the rounded matrices printed in the lecture.
 
@@ -76,19 +84,25 @@ The final row has been rounded for display: both entries are slightly below one 
 
 Attention constructs queries, keys, and values from $X$. For query head $j$ and key/value head $g$,
 
-$$Q_j=XW^Q_j,\qquad K_g=XW^K_g,\qquad \mathsf V_g=XW^V_g.$$
+$$
+Q_j=XW^Q_j,\qquad K_g=XW^K_g,\qquad \mathsf V_g=XW^V_g.
+$$
 
 Each projection has shape $d\times d_h$; its result has shape $t\times d_h$. We reserve plain $V$ for vocabulary size and use $\mathsf V_g$ for value activations. Queries and keys determine the weights of an interaction. Values carry the information that those weights will combine.
 
 RoPE rotates queries and keys at each position. In the `rotate_half` convention, coordinate $i$ is paired with coordinate $i+d_h/2$, for $i=0,\ldots,d_h/2-1$. With frequency $\omega_i=10000^{-2i/d_h}$ and position $p$, the pair $(a,b)$ becomes
 
-$$\begin{aligned}a'&=a\cos(p\omega_i)-b\sin(p\omega_i),\\b'&=a\sin(p\omega_i)+b\cos(p\omega_i).\end{aligned}$$
+$$
+\begin{aligned}a'&=a\cos(p\omega_i)-b\sin(p\omega_i),\\b'&=a\sin(p\omega_i)+b\cos(p\omega_i).\end{aligned}
+$$
 
 Call this rotation $\mathcal R_p$. Apply it to the rows of $Q_j$ and $K_g$, producing $\widetilde Q_j$ and $\widetilde K_g$. Values are not rotated in this configuration, and the fixed rotation introduces no trainable parameters. The dot product of two rotated vectors depends on their relative rotation, which is how position differences enter the attention score. The coordinate pairing is part of the model definition; changing it without transforming the weights changes the function.
 
 For the example, set $W^Q=W^K=0.5I_2$ and $W^V=\operatorname{diag}(0.5,1)$. There is only one coordinate pair, with $\omega_0=1$, so positions 0, 1, and 2 use angles 0, 1, and 2 radians:
 
-$$\widetilde Q=\widetilde K\approx\begin{bmatrix}0.707106&0\\-0.595009&0.382051\\-0.662722&0.246575\end{bmatrix},\quad\mathsf V\approx\begin{bmatrix}0.707106&0\\0&1.414212\\0.500000&1.000000\end{bmatrix}.$$
+$$
+\widetilde Q=\widetilde K\approx\begin{bmatrix}0.707106&0\\-0.595009&0.382051\\-0.662722&0.246575\end{bmatrix},\quad\mathsf V\approx\begin{bmatrix}0.707106&0\\0&1.414212\\0.500000&1.000000\end{bmatrix}.
+$$
 
 Queries equal keys here only because we chose equal projection matrices. Nothing in the general construction requires that equality.
 
@@ -100,11 +114,15 @@ The running numerical example has just one query head and one K/V head. It makes
 
 Position $i$ may read key position $r$ only when $r\le i$. Encode that condition as an additive mask:
 
-$$M_{ir}=\begin{cases}0,&r\le i,\\-\infty,&r\gt i.\end{cases}$$
+$$
+M_{ir}=\begin{cases}0,&r\le i,\\-\infty,&r\gt i.\end{cases}
+$$
 
 One attention head is now fully specified:
 
-$$S_j=\frac{\widetilde Q_j\widetilde K_{g(j)}^\top}{\sqrt{d_h}}+M,\qquad A_j=\operatorname{softmax}_{\rm row}(S_j),\qquad O_j=A_j\mathsf V_{g(j)}.$$
+$$
+S_j=\frac{\widetilde Q_j\widetilde K_{g(j)}^\top}{\sqrt{d_h}}+M,\qquad A_j=\operatorname{softmax}_{\rm row}(S_j),\qquad O_j=A_j\mathsf V_{g(j)}.
+$$
 
 The allowed weights in each row sum to one; masked positions have weight zero. Self-attention is allowed, so no row is completely masked in this example. Each output $O_j$ has shape $t\times d_h$. Concatenating heads and multiplying by $W^O\in\mathbb R^{d\times d}$ defines $\mathcal A(X)=\operatorname{Concat}(O_0,\ldots,O_{h_q-1})W^O$.
 
@@ -116,7 +134,9 @@ For the final query in our example, the attention weights are approximately $(0.
 
 Choose $W^O=0.25I_2$. The first residual addition produces
 
-$$Z=H^{(0)}+\mathcal A(X)\approx\begin{bmatrix}1.176777&0\\0.060590&1.232372\\1.085783&1.240658\end{bmatrix}.$$
+$$
+Z=H^{(0)}+\mathcal A(X)\approx\begin{bmatrix}1.176777&0\\0.060590&1.232372\\1.085783&1.240658\end{bmatrix}.
+$$
 
 Notice what travels along the residual branch: it is $H^{(0)}$, not its normalized version $X$. The normalization belongs to the attention branch. This distinction matters again when we differentiate the block.
 
@@ -124,23 +144,31 @@ Notice what travels along the residual branch: it is $H^{(0)}$, not its normaliz
 
 Attention has exchanged information across positions. The FFN now transforms each position independently. Define
 
-$$\mathcal F(Y)=\big[\operatorname{SiLU}(YW^{\rm gate})\odot(YW^{\rm up})\big]W^{\rm down},\qquad\operatorname{SiLU}(a)=a\sigma(a),\quad\sigma(a)=\frac1{1+e^{-a}}.$$
+$$
+\mathcal F(Y)=\big[\operatorname{SiLU}(YW^{\rm gate})\odot(YW^{\rm up})\big]W^{\rm down},\qquad\operatorname{SiLU}(a)=a\sigma(a),\quad\sigma(a)=\frac1{1+e^{-a}}.
+$$
 
 The gate and up matrices have shape $d\times m$; the down matrix has shape $m\times d$. Two projections map the representation to $m$ coordinates, the nonlinear branch modulates an elementwise product, and the final projection returns to width $d$. Usually $m$ is larger than $d$; our small examples do not require that choice. This is the SwiGLU construction developed in [Module 6](module-06.md).
 
 For our numerical block, use
 
-$$W^{\rm gate}=\begin{bmatrix}0.5&-0.25\\0.25&0.5\end{bmatrix},\quad W^{\rm up}=\begin{bmatrix}1&0.5\\-0.5&1\end{bmatrix},\quad W^{\rm down}=0.25I_2.$$
+$$
+W^{\rm gate}=\begin{bmatrix}0.5&-0.25\\0.25&0.5\end{bmatrix},\quad W^{\rm up}=\begin{bmatrix}1&0.5\\-0.5&1\end{bmatrix},\quad W^{\rm down}=0.25I_2.
+$$
 
 The first row of $Y=N_{\gamma_f}(Z)$ is approximately $(1.414213,0)$. Its gate projection is $(0.707106,-0.353553)$ and its up projection is $(1.414213,0.707106)$. Applying SiLU, multiplying the branches, and projecting down gives $(0.167440,-0.025783)$. The negative output is legitimate: SiLU does not discard every negative input.
 
 We can now define a complete block $\mathcal B_\ell$:
 
-$$\boxed{\begin{aligned}Z^{(\ell)}&=H^{(\ell-1)}+\mathcal A_\ell\big(N_{\gamma_{a,\ell}}(H^{(\ell-1)})\big),\\H^{(\ell)}&=Z^{(\ell)}+\mathcal F_\ell\big(N_{\gamma_{f,\ell}}(Z^{(\ell)})\big).\end{aligned}}$$
+$$
+\boxed{\begin{aligned}Z^{(\ell)}&=H^{(\ell-1)}+\mathcal A_\ell\big(N_{\gamma_{a,\ell}}(H^{(\ell-1)})\big),\\H^{(\ell)}&=Z^{(\ell)}+\mathcal F_\ell\big(N_{\gamma_{f,\ell}}(Z^{(\ell)})\big).\end{aligned}}
+$$
 
 Each layer owns separate projections and normalization gains. Our one-layer example ends at
 
-$$H^{(1)}\approx\begin{bmatrix}1.344217&-0.025783\\0.023804&1.398300\\1.135097&1.306390\end{bmatrix}.$$
+$$
+H^{(1)}\approx\begin{bmatrix}1.344217&-0.025783\\0.023804&1.398300\\1.135097&1.306390\end{bmatrix}.
+$$
 
 ![The two normalized branches and two residual additions of a MiniLLM block](assets/modern-llms/en/module-20/m20_block.svg)
 
@@ -150,13 +178,17 @@ $$H^{(1)}\approx\begin{bmatrix}1.344217&-0.025783\\0.023804&1.398300\\1.135097&1
 
 Composition applies the rightmost operator first. Stacking the blocks, normalizing their final output, and projecting to the vocabulary gives
 
-$$H^{(L)}=(\mathcal B_L\circ\cdots\circ\mathcal B_1)(H^{(0)}),\qquad R=N_{\gamma_o}(H^{(L)}),\qquad\Lambda=RU.$$
+$$
+H^{(L)}=(\mathcal B_L\circ\cdots\circ\mathcal B_1)(H^{(0)}),\qquad R=N_{\gamma_o}(H^{(L)}),\qquad\Lambda=RU.
+$$
 
 The entries of $\Lambda$ are logits: unrestricted real scores rather than probabilities. A softmax over the $V$ columns of each row produces the next-token distribution. With **tied embeddings**, $U=E^\top$. That means one parameter has two computational roles, not two equal copies that an optimizer can update independently. Our base example uses an independent $U$.
 
 A parameter count provides a useful completeness check. For identical dense blocks under the assumptions of Section 2,
 
-$$P=n_E Vd+L\big(2d^2+2d h_{kv}d_h+3dm+2d\big)+d,\qquad n_E=\begin{cases}1,&U=E^\top,\\2,&U\text{ is independent.}\end{cases}$$
+$$
+P=n_E Vd+L\big(2d^2+2d h_{kv}d_h+3dm+2d\big)+d,\qquad n_E=\begin{cases}1,&U=E^\top,\\2,&U\text{ is independent.}\end{cases}
+$$
 
 The terms have direct counterparts in the graph. Query and attention-output projections contribute $2d^2$; keys and values contribute $2dh_{kv}d_h$; the three FFN matrices contribute $3dm$. There are $2d$ normalization gains per block and $d$ final gains. Our example has $16+16+12+4+2=50$ parameters. Tying embeddings reduces the count to 42. A second configuration with $d=4,m=3,h_q=2,h_{kv}=1,V=4,L=1$ and independent tables has 128 parameters; using two K/V heads instead gives 144.
 
@@ -168,7 +200,9 @@ Thus $\theta$ includes embedding and output weights, linear projections, and nor
 
 Set the output matrix to
 
-$$U=\begin{bmatrix}0&0.5&-0.5&0.25\\0&-0.25&0.5&-0.5\end{bmatrix}.$$
+$$
+U=\begin{bmatrix}0&0.5&-0.5&0.25\\0&-0.25&0.5&-0.5\end{bmatrix}.
+$$
 
 Final RMSNorm gives rows of $R$ approximately equal to $(1.413953,-0.027120)$, $(0.024071,1.414008)$, and $(0.927561,1.067535)$. Multiplication by $U$ and a row softmax yield the following results. Every four-entry vector uses the order BOS, A, B, EOS.
 
@@ -188,13 +222,17 @@ The implementation subtracts the largest logit in each row before exponentiation
 
 The final row computed on a prefix gives $p_\theta(x_t\mid x_0,\ldots,x_{t-1})$. With a fixed BOS token, the probability of a specified continuation is
 
-$$p_\theta(x_1,\ldots,x_N\mid x_0)=\prod_{t=1}^{N}p_\theta(x_t\mid x_0,\ldots,x_{t-1}).$$
+$$
+p_\theta(x_1,\ldots,x_N\mid x_0)=\prod_{t=1}^{N}p_\theta(x_t\mid x_0,\ldots,x_{t-1}).
+$$
 
 Include EOS when computing the probability of a completed response. Without EOS, the product describes the probability of the given prefix. During training, the correct sequence is available in advance, so one masked forward pass can calculate all these conditionals. This is **teacher forcing**: each position receives the correct preceding tokens, not the model's previous guesses. Computing rows in parallel does not grant them access to future positions.
 
 Let $b_t\in\{0,1\}$ select the target positions and let $n=\sum_t b_t\gt0$. The token-averaged cross-entropy is
 
-$$\mathcal L(\theta)=-\frac1n\sum_{t=1}^{N}b_t\log p_\theta(x_t\mid x_{\lt t}).$$
+$$
+\mathcal L(\theta)=-\frac1n\sum_{t=1}^{N}b_t\log p_\theta(x_t\mid x_{\lt t}).
+$$
 
 Here $x_{\lt t}$ includes BOS and all earlier tokens. For a batch, the sum and its denominator cover all selected targets in that batch. Averaging each response first and then averaging responses would assign different weights; the normalization is part of the objective.
 
@@ -206,7 +244,9 @@ Writing $\nabla_\theta\mathcal L$ is concise, but it should not conceal how the 
 
 Start with one logit row $\lambda$ and target ID $y$. Softmax followed by cross-entropy gives
 
-$$\frac{\partial\mathcal L}{\partial\lambda_v}=\frac{b}{n}\big(p_v-\mathbf1[v=y]\big).$$
+$$
+\frac{\partial\mathcal L}{\partial\lambda_v}=\frac{b}{n}\big(p_v-\mathbf1[v=y]\big).
+$$
 
 For the final row of our example, this is approximately $(0.082722,0.100724,0.088719,-0.272166)$. The components sum to zero, consistent with the invariance to a common logit shift. The negative derivative of the target logit means that increasing that logit alone would decrease the loss.
 
@@ -220,7 +260,9 @@ The next operation on this backward route is final RMSNorm. The same local rule 
 
 For RMSNorm on one row, first define $v=G_{N(h)}\odot\gamma$. The derivatives are
 
-$$G_h=\frac{v}{\rho}-\frac{h\,(v\cdot h)}{d\rho^3},\qquad G_\gamma=G_{N(h)}\odot\frac{h}{\rho}.$$
+$$
+G_h=\frac{v}{\rho}-\frac{h\,(v\cdot h)}{d\rho^3},\qquad G_\gamma=G_{N(h)}\odot\frac{h}{\rho}.
+$$
 
 The first term of the input derivative accounts for the numerator changing with the scale held fixed. The second accounts for the scale changing as well. This couples coordinates within a row, not positions across the sequence. The gain derivative answers a separate question: how would changing the learned amplification of a normalized coordinate affect the loss?
 
@@ -234,7 +276,9 @@ The skip route passes the incoming gradient straight through. Along the FFN rout
 
 For SwiGLU, set $a=YW^{\rm gate}$, $u=YW^{\rm up}$, and $c=\operatorname{SiLU}(a)\odot u$. Then
 
-$$G_a=G_c\odot u\odot\big[\sigma(a)+a\sigma(a)(1-\sigma(a))\big],\qquad G_u=G_c\odot\operatorname{SiLU}(a).$$
+$$
+G_a=G_c\odot u\odot\big[\sigma(a)+a\sigma(a)(1-\sigma(a))\big],\qquad G_u=G_c\odot\operatorname{SiLU}(a).
+$$
 
 For either factor in an elementwise product, the derivative uses the other factor's forward value. The gate branch also includes the derivative of SiLU; the up branch has no corresponding nonlinearity. Applying the linear rule to the two projections then yields their parameter derivatives.
 
@@ -248,13 +292,17 @@ A weighted sum can change because its values change or because their mixing weig
 
 If $a$ is a row of softmax outputs, its backward pass can be written without materializing a full Jacobian:
 
-$$G_s=a\odot\big(G_a-(G_a\cdot a)\mathbf1\big).$$
+$$
+G_s=a\odot\big(G_a-(G_a\cdot a)\mathbf1\big).
+$$
 
 Here $a$ denotes a row of attention probabilities, not the gate activation used earlier for SwiGLU. The dot-product correction captures the dependence between normalized weights: raising one score affects the other weights in the same row. Softmax is not a set of independent scalar normalizations.
 
 Masked entries have zero derivative. For the allowed scores in $S=\widetilde Q\widetilde K^\top/\sqrt{d_h}+M$,
 
-$$G_{\widetilde Q}=G_S\widetilde K/\sqrt{d_h},\qquad G_{\widetilde K}=G_S^\top\widetilde Q/\sqrt{d_h}.$$
+$$
+G_{\widetilde Q}=G_S\widetilde K/\sqrt{d_h},\qquad G_{\widetilde K}=G_S^\top\widetilde Q/\sqrt{d_h}.
+$$
 
 The rotated query and key derivatives next pass through RoPE to their unrotated projections. An inverse rotation is appropriate for this particular linear map; it does not mean that backpropagation inverts the network as a whole. The linear rule then gives derivatives for the Q/K/V matrices and contributions to their common normalized input. Add those contributions, differentiate pre-attention normalization, and add the skip-route gradient. That completes one block. A stack is traversed from the last block to the first.
 
@@ -268,12 +316,18 @@ The notebook checks the complete path in two ways. PyTorch differentiates its gr
 
 A gradient specifies local sensitivity, not a complete update rule. AdamW also needs optimizer state. Let $g_s$ be the gradient on training step $s$. With a global clipping threshold $c$, first compute
 
-$$\widetilde g_s=g_s\min\left(1,\frac{c}{\lVert g_s\rVert_2}\right).$$
+$$
+\widetilde g_s=g_s\min\left(1,\frac{c}{\lVert g_s\rVert_2}\right).
+$$
 
 Define the factor as one when the gradient is zero. The norm covers all trainable scalars; this is not independent clipping of each entry. AdamW next uses a history of gradients. One accumulator keeps a smoothed signed direction; the other keeps smoothed squared coordinates for scaling the update. These are not extra learned layers. They are the optimizer state that determines how the derivatives will be used. The two moment estimates are updated as follows:
 
-$$m_s=\beta_1m_{s-1}+(1-\beta_1)\widetilde g_s,\qquad v_s=\beta_2v_{s-1}+(1-\beta_2)\widetilde g_s^2,$$
-$$\widehat m_s=\frac{m_s}{1-\beta_1^s},\quad\widehat v_s=\frac{v_s}{1-\beta_2^s},\quad\theta_s=(1-\eta_s\lambda)\theta_{s-1}-\eta_s\frac{\widehat m_s}{\sqrt{\widehat v_s}+\varepsilon_{\rm opt}}.$$
+$$
+m_s=\beta_1m_{s-1}+(1-\beta_1)\widetilde g_s,\qquad v_s=\beta_2v_{s-1}+(1-\beta_2)\widetilde g_s^2,
+$$
+$$
+\widehat m_s=\frac{m_s}{1-\beta_1^s},\quad\widehat v_s=\frac{v_s}{1-\beta_2^s},\quad\theta_s=(1-\eta_s\lambda)\theta_{s-1}-\eta_s\frac{\widehat m_s}{\sqrt{\widehat v_s}+\varepsilon_{\rm opt}}.
+$$
 
 Squares, square roots, and divisions are elementwise. The learning rate is $\eta_s$; weight decay $\lambda$ may differ between parameter groups. Our experiment assigns $\lambda=0.1$ to matrices and zero to normalization gains. That grouping is an experimental choice, not a universal property of AdamW. Its numerical stabilizer, $\varepsilon_{\rm opt}=10^{-8}$, is separate from the RMSNorm epsilon.
 
@@ -293,7 +347,9 @@ For this decoding example, **return to the original weights and logits in Sectio
 
 At inference time, fix $\theta$ and begin with a known prefix. Greedy decoding selects a maximum-probability token. Sampling instead draws from a distribution, which a decoder may modify. With temperature $\tau\gt0$ and a nonempty candidate set $K$, define
 
-$$q(v\mid x_{\lt t})=\frac{\mathbf1[v\in K]\exp(\lambda_v/\tau)}{\sum_{u\in K}\exp(\lambda_u/\tau)}.$$
+$$
+q(v\mid x_{\lt t})=\frac{\mathbf1[v\in K]\exp(\lambda_v/\tau)}{\sum_{u\in K}\exp(\lambda_u/\tau)}.
+$$
 
 When $\tau=1$ and $K$ is the whole vocabulary, $q=p_\theta$. Top-k keeps the $k$ largest logits and renormalizes over those candidates. Selection, appending, and stopping belong to the generation algorithm. Argmax should be stated as a separate rule, rather than implemented by substituting zero for temperature in this equation.
 
@@ -321,7 +377,9 @@ A cache is valid for the same prefix, weights, and positional rules. Updating th
 
 Consider MiniLLM's sigmoid router without an expert-capacity limit. With $E_r$ routed experts, the router matrix has shape $W^r\in\mathbb R^{d\times E_r}$. For a normalized row $y$, let $r=yW^r$ and $a_e=\sigma(r_e)$. A balancing offset $b_e$ affects the selected set $S(y)=\operatorname{TopK}_e(a_e+b_e)$, while mixture weights use the original sigmoid scores:
 
-$$w_e(y)=\frac{a_e}{\varepsilon_r+\sum_{j\in S(y)}a_j},\quad e\in S(y),\qquad\mathcal F_{\rm MoE}(y)=\sum_{e\in S(y)}w_e(y)\mathcal F_e(y)+\sum_{e\in\mathcal S_{\rm shared}}\mathcal F_e(y).$$
+$$
+w_e(y)=\frac{a_e}{\varepsilon_r+\sum_{j\in S(y)}a_j},\quad e\in S(y),\qquad\mathcal F_{\rm MoE}(y)=\sum_{e\in S(y)}w_e(y)\mathcal F_e(y)+\sum_{e\in\mathcal S_{\rm shared}}\mathcal F_e(y).
+$$
 
 MiniLLM uses the denominator stabilizer $\varepsilon_r=10^{-9}$. Without it, selected weights would sum exactly to one; with it, their sum is slightly smaller. For ordinary scores this is a small numerical correction, but it matters when all selected sigmoid scores are nearly zero. Each expert is a separate SwiGLU. Shared experts in $\mathcal S_{\rm shared}$ always run and are summed without normalization in this configuration. Other implementations may scale those contributions differently; that scaling belongs in their equations.
 
@@ -335,7 +393,9 @@ SFT can leave the entire forward pass intact while selecting only response targe
 
 Preference learning can change the objective itself. For DPO, define $\ell_\theta(y\mid c)=\sum_i\log p_\theta(y_i\mid c,y_{\lt i})$, the **sum** of response-token log probabilities conditioned on prompt $c$. Let $y^+$ be preferred to $y^-$ and let $\pi_{\rm ref}$ be a fixed reference model. Write $\ell_{\rm ref}$ for the corresponding response log-probability sum under that model. The loss for one pair is
 
-$$\mathcal L_{\rm DPO}=-\log\sigma\!\left(\beta\left[\ell_\theta(y^+\mid c)-\ell_\theta(y^-\mid c)-\ell_{\rm ref}(y^+\mid c)+\ell_{\rm ref}(y^-\mid c)\right]\right).$$
+$$
+\mathcal L_{\rm DPO}=-\log\sigma\!\left(\beta\left[\ell_\theta(y^+\mid c)-\ell_\theta(y^-\mid c)-\ell_{\rm ref}(y^+\mid c)+\ell_{\rm ref}(y^-\mid c)\right]\right).
+$$
 
 Here $\beta\gt0$ sets the scale of the comparison. Replacing response log-probability sums by length-normalized averages would change this objective. [Module 14](module-14.md) develops the derivation and limitations. For the synthesis, the key point is that the same forward distribution can support different learning objectives.
 
@@ -347,7 +407,9 @@ A multimodal model may insert image or audio projections into its input sequence
 
 Attention retains separate key/value records for past positions and reads them according to the current query. A **state space model**, or SSM, carries a state whose shape is fixed by the architecture. A discrete state-space core can be written as
 
-$$s_p=\overline A_p s_{p-1}+\overline B_p u_p,\qquad y_p=C_p s_p+D u_p.$$
+$$
+s_p=\overline A_p s_{p-1}+\overline B_p u_p,\qquad y_p=C_p s_p+D u_p.
+$$
 
 For this local recurrence, use column vectors: input $u_p\in\mathbb R^{d_u}$, state $s_p\in\mathbb R^n$, and output $y_p\in\mathbb R^{d_y}$. The coefficient shapes are $\overline A_p\in\mathbb R^{n\times n}$, $\overline B_p\in\mathbb R^{n\times d_u}$, $C_p\in\mathbb R^{d_y\times n}$, and $D\in\mathbb R^{d_y\times d_u}$. Selective models make some coefficients depend on the current input. The bars indicate coefficients already expressed in discrete time; [Module 8](module-08.md) explains the connection to continuous dynamics.
 
@@ -361,7 +423,9 @@ Diffusion changes more than the way a prefix is represented. Let $z^{(s)}$ denot
 
 Let $K_{\theta,s}(z^{(s-1)}\mid z^{(s)},c)$ be the normalized reverse transition conditioned on prompt $c$. For a fixed sequence length,
 
-$$\boxed{p_\theta(z^{(0)}\mid c)=\sum_{z^{(1)},\ldots,z^{(S)}}p_S(z^{(S)}\mid c)\prod_{s=1}^{S}K_{\theta,s}(z^{(s-1)}\mid z^{(s)},c).}$$
+$$
+\boxed{p_\theta(z^{(0)}\mid c)=\sum_{z^{(1)},\ldots,z^{(S)}}p_S(z^{(S)}\mid c)\prod_{s=1}^{S}K_{\theta,s}(z^{(s-1)}\mid z^{(s)},c).}
+$$
 
 The product describes a single refinement trajectory. The sum accounts for all hidden intermediate sequences that could lead to the same clean result. Continuous-noise versions use corresponding integrals. If length is also generated, its distribution must be modeled separately.
 
@@ -383,13 +447,17 @@ Any normalized joint distribution admits a chain-rule factorization into token c
 
 Return to the dense MiniLLM configuration. Write $\mathcal T_G(H)=H+G(H)$ for residual addition. This is shorthand for the skip connection already analyzed, not an additional layer; G here denotes a transformation rather than a gradient from Section 11. A block is then $\mathcal B_\ell=\mathcal T_{\mathcal F_\ell\circ N_{\gamma_{f,\ell}}}\circ\mathcal T_{\mathcal A_\ell\circ N_{\gamma_{a,\ell}}}$. Sections 5–7 have already expanded every operation inside $\mathcal A$ and $\mathcal F$. The conditional distribution is
 
-$$\boxed{p_\theta(x_t=v\mid x_{\lt t})=\left[\operatorname{softmax}\!\left(\left[N_{\gamma_o}\!\left((\mathcal B_L\circ\cdots\circ\mathcal B_1)(E[x_{\lt t}])\right)\right]_{t-1,:}U\right)\right]_v.}$$
+$$
+\boxed{p_\theta(x_t=v\mid x_{\lt t})=\left[\operatorname{softmax}\!\left(\left[N_{\gamma_o}\!\left((\mathcal B_L\circ\cdots\circ\mathcal B_1)(E[x_{\lt t}])\right)\right]_{t-1,:}U\right)\right]_v.}
+$$
 
 Read it from the inside outward: look up prefix embeddings; apply the fully defined blocks in order; normalize; select the last row; project to vocabulary logits; normalize those logits; take the component for token $v$. A training pass keeps all rows for its target predictions rather than selecting only the last one.
 
 Multiply the conditionals to obtain a sequence probability. Choose a loss and differentiate it to train. Transform the final distribution into $q$ and select a token to generate. The complete procedure is expressed by the following connected equations:
 
-$$\boxed{\begin{aligned}p_\theta(x_{1:N}\mid x_0)&=\prod_{t=1}^{N}p_\theta(x_t\mid x_{\lt t}),\\\mathcal L(\theta)&=-\frac{1}{\sum_t b_t}\sum_t b_t\log p_\theta(x_t\mid x_{\lt t}),\\(\theta_s,m_s,v_s)&=\operatorname{AdamW}_s\!\left(\theta_{s-1},m_{s-1},v_{s-1},\nabla_\theta\mathcal L(\theta_{s-1})\right),\\x_t&\sim q_\theta(\,\cdot\mid x_{\lt t})\quad\text{with weights held fixed.}\end{aligned}}$$
+$$
+\boxed{\begin{aligned}p_\theta(x_{1:N}\mid x_0)&=\prod_{t=1}^{N}p_\theta(x_t\mid x_{\lt t}),\\\mathcal L(\theta)&=-\frac{1}{\sum_t b_t}\sum_t b_t\log p_\theta(x_t\mid x_{\lt t}),\\(\theta_s,m_s,v_s)&=\operatorname{AdamW}_s\!\left(\theta_{s-1},m_{s-1},v_{s-1},\nabla_\theta\mathcal L(\theta_{s-1})\right),\\x_t&\sim q_\theta(\,\cdot\mid x_{\lt t})\quad\text{with weights held fixed.}\end{aligned}}
+$$
 
 The AdamW operator here includes the clipping rule, learning-rate schedule, and decay groups defined in Section 12. The last line describes sampling; greedy decoding substitutes argmax. These lines are not executed simultaneously: training produces new weights, while generation uses a chosen checkpoint.
 

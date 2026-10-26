@@ -427,7 +427,7 @@
       "description": "Архитектура, обучение, инференс, агенты и оценивание современных языковых моделей.",
       "stepik_url": "https://stepik.org/297275",
       "module_count": 20,
-      "characters": 1291042,
+      "characters": 1291110,
       "modules": [
         {
           "id": "modern-llms:ru:module-01",
@@ -625,8 +625,8 @@
           "position": 20.0,
           "title": "Модуль 20. LLM целиком: от токенов до обучения и генерации",
           "content_file": "modern-llms/ru/module-20.md",
-          "content_hash": "6f78a6f342f16bdcf48bb927706250c62d982cf3390d0031acdfe6ab29585576",
-          "characters": 47105,
+          "content_hash": "1dceea647dc1626daa1e484a26c063a738eec512bb7d64981c9e95f0cf1cb130",
+          "characters": 47173,
           "image_count": 6
         }
       ]
@@ -638,7 +638,7 @@
       "description": "Architecture, training, inference, agents, and evaluation of modern language-model systems.",
       "stepik_url": "https://stepik.org/297276",
       "module_count": 20,
-      "characters": 1205641,
+      "characters": 1205709,
       "modules": [
         {
           "id": "modern-llms:en:module-01",
@@ -836,8 +836,8 @@
           "position": 20.0,
           "title": "Module 20. The complete LLM: from tokens to training and generation",
           "content_file": "modern-llms/en/module-20.md",
-          "content_hash": "c3fc75f14fcf4160760dcfbe51cfcdd461fe7d4413390f02cfc7261e4873a9f3",
-          "characters": 48126,
+          "content_hash": "4b8b12de64a01327e81de7678a8ca939ca3a58fd084e9d40a26326ec08b24d99",
+          "characters": 48194,
           "image_count": 6
         }
       ]

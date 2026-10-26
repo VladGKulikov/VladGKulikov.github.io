@@ -874,11 +874,15 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
             {quiz && activeQuiz && !loadError && <QuizReader key={`${courseKey}:${moduleKey}`} quiz={quiz} revision={activeQuiz.revision} />}
             {practice && activePractice && !loadError && <PracticeReader key={`${courseKey}:${moduleKey}:${section}`} page={practice} revision={activePractice.revision} />}
             {markdown && !loadError && !section && (
-              <div className="lecture-prose" aria-busy={loading}>
+              <div className={`lecture-prose${courseKey === 'modern-llms' && moduleKey === 'module-20' ? ' lecture-prose-equation-cards' : ''}`} aria-busy={loading}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkMath]}
                   rehypePlugins={[rehypeKatex]}
                   components={{
+                    span: ({ node, ...props }) => {
+                      const equation = courseKey === 'modern-llms' && moduleKey === 'module-20' && props.className?.split(' ').includes('katex-display');
+                      return <span {...props} {...(equation ? { tabIndex: 0, role: 'group', 'aria-label': language === 'ru' ? 'Формула' : 'Equation' } : {})} />;
+                    },
                     h2: ({ children, node }) => {
                       const Tag = `h${node?.position ? semanticHeadings.get(node.position.start.line) ?? 2 : 2}` as "h2" | "h3" | "h4";
                       return <Tag className="markdown-h2" id={node?.position ? headingIds.get(node.position.start.line) : undefined}>{children}</Tag>;
