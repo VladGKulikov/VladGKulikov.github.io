@@ -21,6 +21,9 @@ function writePage(route) {
   const meta = pageMetadata(route);
   const head = [
     '<meta charset="UTF-8">', '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+    '<link rel="icon" href="/favicon.ico?v=20261026" sizes="16x16 32x32 48x48">',
+    '<link rel="icon" href="/favicon.svg?v=20261026" type="image/svg+xml" sizes="any">',
+    '<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=20261026" sizes="180x180">',
     `<title>${escape(meta.title)}</title>`, `<meta name="description" content="${escape(meta.description)}">`,
     `<meta name="author" content="Vlad Kulikov">`,
     '<noscript><style>.desktop-left-toggle,.desktop-right-toggle,.mobile-menu,.mobile-right-toggle,.lecture-search,.drawer-close,.js-only{display:none!important}</style></noscript>',
