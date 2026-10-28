@@ -1,13 +1,16 @@
 # Module 4. Policy gradients: from REINFORCE to PPO
 
 > **Material version:** 2026.9  
+> **Text revision:** 2026-10-26  
 > **Factual snapshot:** 2026-08-04  
 > **Language:** EN  
 > **Core practice:** browser, Python, and NumPy on a central processing unit (CPU); a separate English notebook joins REINFORCE, GAE, a complete CartPole PPO implementation, and an autoregressive LLM-style example  
 > **Structure:** 5 lessons, 25 steps  
 > **Estimated time:** 9–13 hours, excluding the notebook’s full multi-seed profile
 
-[Module 2](module-02.md) improved behavior through value functions, while [Module 3](module-03.md) studied one-step decisions. We now take a different route: optimize the policy parameters directly. This route is central for LLMs because the final reward may come from a person, an executable verifier, or a non-differentiable scoring model. No gradient passes through that feedback directly.
+[Module 2](/courses/rl-for-llm/module-02/) improved behavior through value functions, while [Module 3](/courses/rl-for-llm/module-03/) studied one-step decisions. We now take a different route: optimize the policy parameters directly. This route is central for LLMs because the final reward may come from a person, an executable verifier, or a non-differentiable scoring model. No gradient passes through that feedback directly.
+
+The missing link is not another score for the answer. A reward tells us how an interaction ended; it does not supply an update to the weights. We first need a way to turn that feedback into an update direction, then a way to reduce the noise in the estimate, and finally a way to decide how far the collected data can support further optimization.
 
 No previous RL course is required. We begin with a gradient estimator for parameterized distributions, then build REINFORCE, baselines, actor–critic methods, generalized advantage estimation, and proximal policy optimization (PPO). Readers with a classical RL background can treat the first two lessons as a precise refresher and focus on finite-group bias, correct time-limit handling, and trajectory versus local probability ratios. Group-based estimators for several responses appear only after the common foundation is in place.
 
@@ -24,23 +27,15 @@ No previous RL course is required. We begin with a gradient estimator for parame
 9. read core PPO diagnostics without mistaking them for universal guarantees;
 10. connect sequence-level REINFORCE to an estimator that leaves the current response out of its baseline, and distinguish that construction from the broader family of group-based methods.
 
-The learning platform places exercises after the relevant ideas and reveals a worked solution after an attempt or in the following step. The executable practice implements the complete path from rollouts and GAE through repeated PPO epochs, then carries the same mechanics into an autoregressive-response example. Verified claims and primary sources are recorded in `Module_4_Sources.md`.
+The learning platform places exercises after the relevant ideas and reveals a worked solution after an attempt or in the following step. The executable practice implements the complete path from rollouts and GAE through repeated PPO epochs, then carries the same mechanics into an autoregressive-response example. Primary-source links appear at the end of the lecture; the registry `Module_4_Sources.md` belongs to the original course package.
 
 ---
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable practice follow the lecture. The explanation remains self-contained.
+> **Practice route.** [Tests](/courses/rl-for-llm/module-04/tests/), [exercises with worked solutions](/courses/rl-for-llm/module-04/exercises/), and [executable practice](/courses/rl-for-llm/module-04/notebooks/) have their own pages. The lecture remains self-contained.
 
 ## Lesson 4.1. Estimating a policy gradient and REINFORCE
 
-> **Lesson 4.1. Estimating a policy gradient and REINFORCE**
->
-> 1. Optimizing the policy directly
-> 2. The log-derivative identity
-> 3. Trajectory probability and the disappearance of the environment model
-> 4. Causality and reward-to-go
-> 5. The policy-gradient theorem and REINFORCE
->
-> then 6 assessment steps
+The first task is to obtain a gradient without differentiating through action sampling or the verifier. We start with one random choice and then apply the same device to an entire trajectory.
 
 ### Step 4.1.1 — Optimizing the policy directly
 
@@ -119,7 +114,9 @@ f_\theta(X)\nabla_\theta\log p_\theta(X)
 }.
 $$
 
-The first term accounts for the changing **distribution** of outcomes; the second accounts for the integrand changing at a fixed outcome. Classical REINFORCE treats environment reward as fixed with respect to policy parameters, so the direct term vanishes. A differentiable regularizer built from the current policy is different: an implementation must either retain its direct derivative or deliberately stop that gradient and thereby define a different computational objective.
+The two terms describe different paths by which the same parameters affect the expectation. The first changes **which outcomes are sampled**. The second changes the quantity evaluated at an outcome that has already been fixed. Classical REINFORCE treats environment reward as independent of policy parameters, so the direct term is absent.
+
+A penalty built from the current policy needs more care. Derive both contributions before choosing an implementation. Applying `stop-gradient` to a coefficient disables its direct derivative; it does not establish that this derivative was unnecessary. For a particular construction the omitted contribution may have zero expectation, or an equivalent formulation may already account for it. In general, dropping it changes the expected update. Step 4.5.1 returns to this distinction when assembling a sequence-level loss.
 
 As usual, differentiation and summation or integration must be interchangeable. This is typically straightforward in a finite action space; continuous spaces require the relevant regularity conditions.
 
@@ -191,6 +188,8 @@ $$
 =0.
 $$
 
+Condition on the history available just before $a_t$ is selected. Every reward already received is then a fixed number. Multiplying such a number by the current score gives a contribution whose conditional mean is zero, and hence whose unconditional mean is also zero. Future rewards are different: their distribution can depend on the action about to be taken.
+
 The full return can therefore be replaced by reward-to-go:
 
 $$
@@ -225,6 +224,18 @@ Textbooks often display the equation without the outer $\gamma^t$. That form gen
 
 ### Step 4.1.5 — The policy-gradient theorem and REINFORCE
 
+So far, a sampled return $G_t$ has weighted each score term. Hold $s_t$ and $a_t$ fixed and average over the remainder of the trajectory. By the definition in Module 2, that conditional mean is $Q^{\pi_\theta}(s_t,a_t)$. The score $\nabla_\theta\log\pi_\theta(a_t\mid s_t)$ is already fixed under this conditioning. Replacing the sampled continuation by its conditional mean therefore leaves the expected gradient unchanged.
+
+We can also reorganize the outer average. Instead of traversing trajectories and adding contributions at every time step, collect their state-visit frequencies and discount weights into an **occupancy distribution**. For $0\le\gamma<1$, one standard normalization is
+
+$$
+d_\gamma^\pi(s)
+=(1-\gamma)\sum_{t=0}^{\infty}\gamma^t
+\Pr_\pi(S_t=s).
+$$
+
+This is an infinite-horizon discounted convention. An episodic process can be extended after termination by a zero-reward absorbing state. The factor $1-\gamma$ normalizes the discounted visit counts into a distribution. A finite-horizon formulation uses its own normalization and may include time in state; at $\gamma=1$, the infinite sum above is not the appropriate definition.
+
 Using a discounted occupancy measure, the policy-gradient theorem can be written as
 
 $$
@@ -237,7 +248,7 @@ Q^{\pi_\theta}(s,a)
 \right].
 $$
 
-The proportionality constant depends on how the occupancy measure is normalized. The practical interpretation is stable: raise an action's probability when its expected continuation is above the reference level, and lower it when it is below.
+The proportionality constant depends on normalization; under the infinite-horizon convention just shown, it is $1/(1-\gamma)$. The compact notation preserves the earlier time weights rather than authorizing an arbitrary uniform average over time steps. Each action's score is weighted by the expected return of its continuation. The next lesson introduces a baseline against which that return can be compared.
 
 REINFORCE, introduced by Ronald Williams, replaces the unknown $Q^\pi$ with a sampled return:
 
@@ -257,7 +268,7 @@ $$
 
 4. take a gradient-ascent step.
 
-Under correct sampling, the estimator is unbiased for the chosen objective, but it may have high variance. “Unbiased” does not mean “learns quickly”: a single batch can point in an almost arbitrary direction. The next lesson develops control variates that reduce noise without changing the expected gradient.
+Under correct sampling, the estimator is unbiased for the chosen objective, but it may have high variance. “Unbiased” does not mean “learns quickly”: a single batch can point in an almost arbitrary direction. The next lesson develops control variates that, when well chosen, reduce noise without changing the expected gradient.
 
 For an LLM, the log-probability of a trajectory becomes the sum of token log-probabilities. We keep the reward at whole-response level for now and return to token-level credit in Lesson 4.5.
 
@@ -265,15 +276,7 @@ For an LLM, the log-probability of a trajectory becomes the sum of token log-pro
 
 ## Lesson 4.2. Baselines and group estimators
 
-> **Lesson 4.2. Baselines and group estimators**
->
-> 1. What can be subtracted without changing the expectation
-> 2. Why the state value is natural but not always variance-minimizing
-> 3. The same-group mean and dependence on the current sample
-> 4. Leaving the current response out of the baseline
-> 5. A reproducible experiment on expectation and variance
->
-> then 4 assessment steps
+A correct expectation does not make an individual batch a reliable update direction. We now keep the objective unchanged while looking for ways to remove avoidable variation from its gradient estimate.
 
 ### Step 4.2.1 — What can be subtracted without changing the expectation
 
@@ -311,9 +314,11 @@ $$
 A^\pi(s,a)=Q^\pi(s,a)-V^\pi(s).
 $$
 
-A positive coefficient now means not merely “the return was positive,” but “the action did better than the usual continuation from this state.” This removes the pointless tendency to reinforce every action in a task where all episodes carry a large positive constant.
+A positive coefficient now means not merely “the return was positive,” but “the action did better than the usual continuation from this state.” Subtracting the common positive component removes sample-level noise that does not distinguish the actions. Their probabilities still belong to one normalized distribution; they cannot all increase together.
 
 Action independence is essential. Subtracting an arbitrary $b(s,a)$ generally changes the expectation. More elaborate action-dependent control variates exist, but they require correction terms and are outside the core route.
+
+Preserving the mean and reducing variance are separate requirements. Independence from the current action establishes the first, not the second: a baseline far from typical returns can make the estimator noisier. A useful baseline removes a predictable common component while retaining differences that matter for action choice. The next step asks which common component is best under a precise variance criterion.
 
 ---
 
@@ -329,7 +334,16 @@ $$
  g(A)=\nabla_\theta\log\pi_\theta(A\mid s).
 $$
 
-Minimizing its second moment with respect to $b$ gives
+Why minimize the second moment? An admissible baseline leaves the mean gradient unchanged. The sum of the coordinate variances therefore differs from the expected squared norm by a constant. With the Euclidean norm, the objective and its stationarity condition are
+
+$$
+\begin{aligned}
+F(b)&=\mathbb E\!\left[(Q(s,A)-b)^2\lVert g(A)\rVert^2\mid s\right],\\
+F'(b)&=-2\mathbb E\!\left[(Q(s,A)-b)\lVert g(A)\rVert^2\mid s\right]=0.
+\end{aligned}
+$$
+
+The quantity being stabilized is the **vector update**, not the reward alone. For the same residual $Q-b$, an action with a larger score norm contributes more to the squared update length. It should therefore count more when choosing the center. Provided the denominator below is positive and the required moments are finite, minimizing with respect to $b$ gives
 
 $$
 \boxed{
@@ -369,7 +383,16 @@ $$
 A_i=R_i-\bar R.
 $$
 
-The advantages sum to zero, but $\bar R$ includes $R_i$ itself. It is therefore not independent of the current sampled action. Under conditional independence, the expectation is
+The advantages sum to zero, but $\bar R$ includes $R_i$ itself. It is therefore not independent of the current sampled action. To see the consequence, fix the prompt $x$ and expand the contribution of the mean. All expectations in the following calculation are conditional on that prompt:
+
+$$
+\mathbb E[\bar R S_i]
+=\frac{1}{G}\mathbb E[R_iS_i]
++\frac{1}{G}\sum_{j\ne i}\mathbb E[R_j]\,\mathbb E[S_i]
+=\frac{1}{G}\mathbb E[RS].
+$$
+
+Conditional independence separates the other responses' rewards from $S_i$, whose mean is zero. It cannot separate the current reward from the current score: both depend on the same response. Subtracting the group mean therefore removes a fraction of the desired signal as well as a reference level. The resulting expectation is
 
 $$
 \mathbb{E}\left[
@@ -380,7 +403,9 @@ $$
 \mathbb{E}[R S].
 $$
 
-The expected direction is preserved, but the magnitude is scaled by $(G-1)/G$. A fixed group size lets the optimizer absorb this factor into the learning rate, yet the estimator should not be called literally unbiased.
+The expected direction is preserved, but the magnitude is scaled by $(G-1)/G$. For this gradient term alone, an ordinary gradient update can absorb a fixed-group factor into the learning rate. That does not automatically rescale other loss terms in the same way, and it does not make the estimator literally unbiased.
+
+There is no contradiction with $\sum_i A_i=0$. The update adds vectors $A_iS_i$, not the coefficients alone, and different responses have different score vectors. Centering the coefficients does not force the vector sum to vanish.
 
 Dividing centered rewards by the sample standard deviation introduces another random normalization. This can stabilize update scale, but it is no longer a simple expectation-preserving control variate. If all rewards are equal, the standard deviation vanishes and practical code returns zero advantages with an $\varepsilon$ safeguard.
 
@@ -388,7 +413,7 @@ Dividing centered rewards by the sample standard deviation introduces another ra
 
 ### Step 4.2.4 — Leaving the current response out of the baseline
 
-Remove the current response from the group mean:
+The calculation itself suggests the repair: remove the one reward that did not separate from the current score. For a group of size $G\ge2$, leave the current response out of the mean:
 
 $$
 b_{-i}
@@ -417,6 +442,8 @@ The assumptions matter:
 - cross-response reward noise should not create complex dependence on the current response;
 - token aggregation and masks must be specified for variable-length responses;
 - RLOO still provides no token-level explanation of which part of a response earned the reward.
+
+A computational instruction cannot replace the statistical condition. Stopping the gradient through a baseline does not remove the current reward from it or make dependent random variables independent. LOO obtains the required independence through how the group is constructed; `detach` then specifies which paths the computational graph differentiates.
 
 ---
 
@@ -458,15 +485,7 @@ The simulation confirms the expected means. It does **not** establish a universa
 
 ## Lesson 4.3. Actor–critic methods and generalized advantage estimation
 
-> **Lesson 4.3. Actor–critic methods and generalized advantage estimation**
->
-> 1. The critic as a learned baseline
-> 2. Temporal-difference residuals and multi-step targets
-> 3. Generalized advantage estimation
-> 4. Termination, time-limit truncation, and rollout boundaries
-> 5. A complete actor–critic cycle
->
-> then 3 assessment steps
+Repeated responses can supply a baseline for one another. A long trajectory needs another way to assess an unseen continuation: a learned critic and a controlled mixture of prediction horizons.
 
 ### Step 4.3.1 — The critic as a learned baseline
 
@@ -513,7 +532,9 @@ r_{t+1}
 V_\phi(s_t).
 $$
 
-If $V_\phi=V^\pi$, its conditional expectation given $(s_t,a_t)$ equals $A^\pi(s_t,a_t)$. With an approximate critic, it is biased but local and often lower-variance.
+If $V_\phi=V^\pi$, the conditional expectation given $(s_t,a_t)$ equals $A^\pi(s_t,a_t)$. Notice that the action, not just the state, is fixed. Expected immediate reward plus true continuation value gives $Q^\pi(s_t,a_t)$; subtracting $V^\pi(s_t)$ leaves the advantage. Averaging once more over actions from the current policy gives zero. This is consistent with the Bellman-residual interpretation in Module 2: the conditioning determines which question the expectation answers.
+
+An approximate critic has two distinct roles. Subtracting $V_\phi(s_t)$ from a **fully observed return** uses it as a baseline. Under the conditions of Lesson 4.2, baseline error alone does not bias the policy gradient. Substituting $V_\phi(s_{t+1})$ **for an unobserved tail** is bootstrapping. Error in that substitution can depend on the selected action through the successor state and need not vanish in the expected gradient. An imperfect critic can therefore produce a biased, although local and often less noisy, advantage estimate.
 
 Looking farther ahead gives
 
@@ -527,7 +548,7 @@ $$
 V_\phi(s_t).
 $$
 
-At $n=1$ this is a TD estimate; extending $n$ to the end of the episode gives a Monte Carlo return minus the value. Increasing $n$ reduces dependence on critic error but adds randomness from future rewards and actions.
+At $n=1$ this is a TD estimate. If the window reaches a true terminal, it becomes a Monte Carlo return minus the baseline. Increasing $n$ moves the boundary at which observations give way to a continuation prediction, whose coefficient is $\gamma^n$. The subtracted baseline $V_\phi(s_t)$ remains. More of the target is now observed, but those additional rewards, actions, and transitions carry their own randomness.
 
 There is no universal rule that longer targets are better. In a deterministic environment, a long target may be nearly noiseless. In a stochastic dialogue or tool-use task, it can have enormous variance. We need a controlled mixture of horizons.
 
@@ -535,7 +556,26 @@ There is no universal rule that longer targets are better. In a deterministic en
 
 ### Step 4.3.3 — Generalized advantage estimation
 
-Generalized advantage estimation (GAE) mixes multi-step estimates with geometric weights. Its convenient backward recursion is
+Generalized advantage estimation (GAE) mixes the multi-step estimates we have just defined. To see how, use the same frozen value predictions throughout a fragment. Adding successive TD residuals cancels the intermediate values, leaving
+
+$$
+\widehat A_t^{(n)}
+=\sum_{l=0}^{n-1}\gamma^l\delta_{t+l}.
+$$
+
+The one-step estimate contains the nearest residual. The two-step estimate includes the next one with weight $\gamma$, and longer estimates continue the pattern. We have a nested family of estimates, not unrelated rules for assigning an action a score.
+
+Suppose $L=L_t\ge1$ consecutive transitions are available from the current time. For $0\le\lambda\le1$, form the finite mixture
+
+$$
+\widehat A_t^{\mathrm{GAE}}
+=(1-\lambda)\sum_{n=1}^{L-1}\lambda^{n-1}\widehat A_t^{(n)}
++\lambda^{L-1}\widehat A_t^{(L)}.
+$$
+
+The shorter targets receive weights $1-\lambda$, $(1-\lambda)\lambda$, and so on. The longest available target receives all remaining mass. The weights sum to one: a finite fragment does not simply discard the missing tail of an infinite mixture. At $L=1$ there is only one target; endpoint values of $\lambda$ are interpreted by continuity.
+
+Substitute the residual sum for each target. Residual $\delta_{t+l}$ appears in every horizon longer than $l$. Those horizons have total weight $\lambda^l$, while the residual already carries a factor $\gamma^l$ within each target. Its combined coefficient is therefore $(\gamma\lambda)^l$. This yields the familiar backward recursion
 
 $$
 \widehat A_t^{\mathrm{GAE}(\gamma,\lambda)}
@@ -576,6 +616,8 @@ V(s_t).
 $$
 
 At a true terminal, the final value is zero and the expression becomes Monte Carlo return minus $V(s_t)$. At the boundary of a collected rollout, the environment may continue, so the bootstrapped tail remains. Short buffers and long conversations make this distinction operational rather than cosmetic.
+
+Although they multiply in the recursion, $\gamma$ and $\lambda$ have different jobs. Under the discounted convention used here, $\gamma$ specifies the weight of distant rewards in the target return. Given that convention, $\lambda$ selects how observed rewards and value predictions are combined to estimate the advantage. Changing $\lambda$ changes the horizon mixture and its statistical behavior; it is not merely another notation for the discount factor.
 
 After advantages are computed, a common critic target is
 
@@ -647,21 +689,17 @@ One on-policy actor–critic iteration is:
 5. update the critic by regression to $\widehat V_t$;
 6. collect fresh data after the policy has changed enough.
 
+Follow one batch through the cycle. Its states, actions, and rewards are observations that have already happened; an optimizer cannot revise them retroactively. Stored log-probabilities and value predictions record the model snapshot associated with those observations. In the version considered here, advantages and critic targets are computed once from that snapshot and kept fixed during subsequent minibatch updates.
+
+The distinction also matters when actor and critic share parameters. A new value prediction is compared with a fixed target rather than silently moving the target after every update. Advantages act as numerical weights in the actor branch; regression trains the value prediction through its own branch. Other recomputation schedules are possible, but they must be specified as algorithmic choices.
+
 A simple method uses each batch once. This is statistically clean but expensive: trajectories are discarded after one optimization step. PPO tries to reuse a batch for several epochs while limiting the local incentive for large changes. “Limiting” is comparative, not a strict guarantee.
 
 ---
 
 ## Lesson 4.4. From an old policy to PPO
 
-> **Lesson 4.4. From an old policy to PPO**
->
-> 1. Why old rollouts become stale
-> 2. Trajectory ratios, a local surrogate, and trust regions
-> 3. The clipped PPO objective
-> 4. The full loss and diagnostics
-> 5. Why implementation details are part of the algorithm
->
-> then 3 assessment steps
+Collecting trajectories is expensive, so it is tempting to use a batch for more than one update. Yet each update changes the policy whose probabilities we compute. This lesson follows that mismatch and identifies what PPO does about it.
 
 ### Step 4.4.1 — Why old rollouts become stale
 
@@ -680,7 +718,17 @@ r_t(\theta)
 \right).
 $$
 
-If $r_t>1$, the new policy makes the observed action more likely; if $r_t<1$, less likely. The local surrogate
+If $r_t>1$, the new policy makes the observed action more likely; if $r_t<1$, less likely. The ratio resembles the reweighting used in Module 3. Here it is part of a policy update, so we also need to track which parts of the data distribution remain fixed.
+
+At the start of an update, numerator and denominator agree: $r_t(\theta_{\text{old}})=1$. Yet the denominator is stored data and the numerator is still a function of the trainable parameters. A value of one does not imply a zero derivative:
+
+$$
+\left.\nabla_\theta r_t(\theta)\right|_{\theta=\theta_{\text{old}}}
+=\left.r_t(\theta)\nabla_\theta\log\pi_\theta(a_t\mid s_t)\right|_{\theta=\theta_{\text{old}}}
+=\left.\nabla_\theta\log\pi_\theta(a_t\mid s_t)\right|_{\theta=\theta_{\text{old}}}.
+$$
+
+Consequently, the local surrogate
 
 $$
 L^{\mathrm{PG}}(\theta)
@@ -689,7 +737,9 @@ L^{\mathrm{PG}}(\theta)
 [r_t(\theta)\widehat A_t]
 $$
 
-has the same policy gradient as the original objective at $\theta=\theta_{\text{old}}$ when advantages are held fixed from the old policy and states are sampled from its occupancy distribution. This is a local gradient match, not equality of objectives: away from that point, the surrogate is not the new expected return. After several optimization epochs, ratios may move far from one and the local approximation becomes unreliable.
+reproduces the chosen policy-gradient estimator at $\theta=\theta_{\text{old}}$ when $\widehat A_t$ is held fixed: each coefficient again multiplies a score term. Matching the **true** gradient of the original objective requires more. The advantages must be exact or give the correct expected product with the score, and state sampling and time weights must agree with the objective in Steps 4.1.4–4.1.5. Merely freezing arbitrary numbers $\widehat A_t$ is insufficient. Multiplying by a probability ratio does not remove bias introduced by GAE or a critic.
+
+Even when those conditions hold, the agreement is between derivatives at the starting point, not between the two functions everywhere. The surrogate retains old states and continuation estimates; the new policy may visit different states more often. Several optimization epochs can move ratios far from one, weakening the local approximation. Improving the surrogate on an old batch is not a substitute for measuring return on fresh rollouts.
 
 Two constructions must not be conflated. The exact full-trajectory importance ratio is a product over all action ratios and, with matching dynamics and support overlap, corrects the whole trajectory distribution. PPO uses local ratios at states from the old batch and a surrogate objective. It is not exact full importance sampling for an arbitrarily distant policy.
 
@@ -709,7 +759,7 @@ The product becomes unstable on long trajectories: small deviations at each step
 
 **Trust region policy optimization** (TRPO) constrains the average Kullback–Leibler divergence (KL) between old and new policies. It is motivated by a monotonic lower bound under specific conditions and approximately solves a constrained second-order problem.
 
-**Optional geometric deepening:** the local KL metric, Fisher information, and natural gradient are developed in *Information Theory for ML*, Module 15 “Information Geometry: Fisher, Natural Gradient, and Distribution Flows” (`it_ml.module_15_information_geometry`). PPO does not require that detour: the working intuition here is simply that equal-sized parameter steps can induce very different changes in a policy distribution.
+**Optional geometric deepening:** the local KL metric, Fisher information, and natural gradient are developed in *Information Theory for ML*, Module 15 “Information Geometry: Fisher, Natural Gradient, and Distribution Flows” ([open module](/courses/information-theory-for-ml/module-15/)). PPO does not require that detour: the working intuition here is simply that equal-sized parameter steps can induce very different changes in a policy distribution.
 
 PPO was proposed as a simpler first-order alternative: instead of explicitly solving a hard constraint, it modifies the surrogate objective. This is convenient, but the exact claim matters:
 
@@ -835,15 +885,7 @@ The figure is generated by the same implementation that trains the notebook poli
 
 ## Lesson 4.5. The bridge to LLM training
 
-> **Lesson 4.5. The bridge to LLM training**
->
-> 1. Sequence-level REINFORCE
-> 2. RLOO for several responses to one prompt
-> 3. Where group-relative policy optimization matches this picture
-> 4. One coefficient for every token does not solve credit assignment
-> 5. The module's final map
->
-> then 3 assessment steps
+We now assemble the pieces around a saved LLM response. The token log-probability sum is only part of the construction; its coefficient, mask, and sampling distribution must retain the meaning established earlier.
 
 ### Step 4.5.1 — Sequence-level REINFORCE
 
@@ -871,6 +913,10 @@ $$
 \log\pi_\theta(y_t\mid x,y_{<t}).
 $$
 
+Follow a response from generation into the update. The policy first samples its tokens; the completed sequence and verifier result are saved. To compute a gradient, the model is evaluated on those saved prefixes and returns log-probabilities for **the tokens that were actually selected**. A causal decoder can compute these values in one pass over the saved sequence: the attention mask prevents a prediction position from seeing its target token in advance.
+
+There is no need to sample a replacement response during this pass. Sampling has already happened, the tokens are data, and their probabilities under the trainable parameters remain differentiable. The original on-policy estimator requires parameters and sampling distribution to match the policy that collected the response. Reuse after a parameter change is a separate case, discussed below.
+
 If a verifier returns one reward $R(x,y)$ for the whole response, a practical masked estimate is
 
 $$
@@ -885,7 +931,7 @@ $$
 
 Set $m_t=1$ for generated response tokens, including a generated EOS token when it is present, and $m_t=0$ for prompt tokens, padding, and positions after EOS. In a causal language model, logits at position $k$ predict the token at position $k+1$; labels, selected log-probabilities, and the response mask must therefore be shifted together. A one-position error can silently train on prompt tokens or remove the first response token.
 
-**Optional model-interface deepening:** tokenization, special tokens, and causal input-label alignment are developed in *Modern LLMs*, Module 2 “Tokenization and Embeddings” (`modern_llms.module_02_tokenization`). The present explanation is sufficient to implement the response mask; the cross-reference supplies the broader language-model context.
+**Optional model-interface deepening:** tokenization, special tokens, and causal input-label alignment are developed in *Modern LLMs*, Module 2 “Tokenization and Embeddings” ([open module](/courses/modern-llms/module-02/)). The present explanation is sufficient to implement the response mask; the cross-reference supplies the broader language-model context.
 
 ![Aligning prompt tokens, response tokens, EOS, and the loss mask](assets/rl-for-llm/en/module-04/M4_response_mask_EN.png)
 
@@ -920,7 +966,9 @@ A non-differentiable reward is no obstacle: gradients flow through model log-pro
 
 Normalization must be explicit. Summing over tokens, averaging within each response, and averaging over every unmasked token in a batch assign different weight to short and long answers. A naturally sampled EOS and a forced `max_tokens` cutoff also have different semantics: in the latter case the response could have continued, so the reward rule and treatment of incompleteness belong in the task specification.
 
-Finally, a penalty that depends directly on the current policy—such as a differentiable KL term—falls under the extended identity in Step 4.1.2. It must either enter the loss through its direct derivative or be deliberately inserted into a stop-gradient reward. Using both paths implicitly can double-count the term or optimize a different objective from the equation on the page.
+Regularization should be assembled from the mathematical objective outward to the computational graph. For a policy-dependent penalty, the extended identity in Step 4.1.2 separates a change in the response distribution from a direct change in the penalty at a fixed response. In general, both contributions are needed. Including two distinct required contributions is not double counting; adding the same contribution twice is.
+
+Stopping the gradient through a reward coefficient specifies one computational path. It does not choose the intended objective for us. In particular KL constructions, a contribution may have zero expectation or may already be represented by an equivalent expression. That must be established for the chosen KL direction, sampling distribution, and aggregation level. Neither differentiating an arbitrary sampled KL estimate nor stopping every derivative through it is a universal solution. Module 6 develops the details; the rule here is to identify where each required part of the derivative is computed.
 
 ---
 
@@ -968,9 +1016,9 @@ The accurate map is:
 - **shared idea:** multiple responses per prompt and a relative signal;
 - **RLOO:** a leave-one-out baseline for whole-response REINFORCE;
 - **GRPO:** a family of critic-free, PPO-like methods using group-relative estimates;
-- **Module 9 of this course:** “RLVR and GRPO: Verifiable Reward, Group-Relative Estimation, and Stability” (`rl_llm.module_09_rlvr_grpo`) — denominator choices, KL terms, token aggregation, and failure modes.
+- **Module 9 of this course:** “RLVR and GRPO: Verifiable Reward, Group-Relative Estimation, and Stability” ([open module](/courses/rl-for-llm/module-09/)) — denominator choices, KL terms, token aggregation, and failure modes.
 
-A broader architecture-level map of RLHF, DPO, RLOO, and GRPO is also available in *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`). The present module remains self-contained and is the series’ canonical derivation of policy gradients and PPO.
+A broader architecture-level map of RLHF, DPO, RLOO, and GRPO is also available in *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)). The present module remains self-contained and is the series’ canonical derivation of policy gradients and PPO.
 
 ![From policy gradients to RLOO, PPO, and GRPO](assets/rl-for-llm/en/module-04/M4_llm_bridge_EN.png)
 
@@ -988,7 +1036,7 @@ $$
 A_t=A(y)
 $$
 
-for each valid response token and multiplies it by the token mask. This is convenient and gives the correct whole-response score-function objective:
+for each valid response token and multiplies it by the token mask. This is convenient and gives the corresponding whole-response score-function gradient contribution:
 
 $$
 A(y)\sum_t\nabla\log\pi(y_t\mid x,y_{<t}).
@@ -1018,7 +1066,7 @@ The module built one continuous chain:
 3. trajectory factorization leaves only parameterized components in the explicit derivative;
 4. causality replaces full return with reward-to-go;
 5. REINFORCE gives a simple but noisy estimator;
-6. a valid baseline reduces noise when it is independent of the current action;
+6. an action-independent baseline preserves the expected gradient and can reduce noise when well chosen;
 7. a critic approximates state value, while GAE mixes horizons and needs separate bootstrap and recursion masks;
 8. PPO reuses a rollout batch through a pessimistic local surrogate;
 9. RLOO uses other responses to the same prompt as a baseline group;
@@ -1036,11 +1084,13 @@ The boundaries are just as important:
 - a correct response mask includes generated EOS, excludes the prompt, and follows the causal label shift;
 - one successful learning curve does not establish implementation robustness.
 
-Later modules use this foundation for preference-based training, verifiable rewards, and interaction with external environments. The full GRPO treatment is deliberately deferred to Module 9 “RLVR and GRPO: Verifiable Reward, Group-Relative Estimation, and Stability” (`rl_llm.module_09_rlvr_grpo`) so that this module can preserve a clean path from score functions to PPO.
+[Module 5](/courses/rl-for-llm/module-05/) makes the next change in assumptions. So far, the policy could collect fresh experience after an update. We will temporarily prohibit new interactions and ask what can be improved from existing demonstrations and logs—and what those records cannot establish.
 
-**Optional mathematical deepening:** *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) — the variational derivation of KL-regularized policies, Gibbs form, and the normalizing constant.
+Later modules use this foundation for preference-based training, verifiable rewards, and interaction with external environments. The full GRPO treatment is deliberately deferred to Module 9 “RLVR and GRPO: Verifiable Reward, Group-Relative Estimation, and Stability” ([open module](/courses/rl-for-llm/module-09/)) so that this module can preserve a clean path from score functions to PPO.
 
-**Architecture context:** *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) — how these methods fit into an end-to-end LLM post-training pipeline. Neither reference is required to understand this module.
+**Optional mathematical deepening:** *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)) — the variational derivation of KL-regularized policies, Gibbs form, and the normalizing constant.
+
+**Architecture context:** *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)) — how these methods fit into an end-to-end LLM post-training pipeline. Neither reference is required to understand this module.
 
 ---
 
@@ -1069,5 +1119,7 @@ CPU is sufficient. `smoke` runs a short end-to-end validation; `full` increases 
 7. [Farama Foundation, “Handling Time Limits”](https://gymnasium.farama.org/tutorials/gymnasium_basics/handling_time_limits/) — official semantics for `terminated` and `truncated`; rollout-buffer boundaries are separated further in this module.
 8. [Ahmadian et al., “Back to Basics: Revisiting REINFORCE Style Optimization for Learning from Human Feedback in LLMs”](https://arxiv.org/abs/2402.14740) — RLOO and sequence-level REINFORCE for LLM post-training.
 9. [Shao et al., “DeepSeekMath”](https://arxiv.org/abs/2402.03300) — the primary GRPO formulation; later variants should not be projected backward onto every detail of that paper.
+10. [Tang and Munos, “On a Few Pitfalls in KL Divergence Gradient Estimation for RL”](https://arxiv.org/abs/2506.09477) — sampling-distribution and direct derivatives in KL regularization; the detailed estimator analysis belongs to Module 6.
+11. [OpenAI Spinning Up, “Intro to Policy Optimization”](https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html) — how saved samples, log-probabilities, and a differentiable loss fit together. Surrogate-loss value is not itself a measure of the updated policy's quality.
 
-`Module_4_Sources.md` contains the full claim registry, evidence classes, and scope limits.
+The original course package includes `Module_4_Sources.md`, a registry of claim status and limitations. Public primary sources for this lecture are listed above.

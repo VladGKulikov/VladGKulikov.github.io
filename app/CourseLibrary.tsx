@@ -187,12 +187,12 @@ const leanpubUrls: Record<CourseKey, Record<Language, string>> = {
 
 const coursePageCounts: Record<CourseKey, Record<Language, number>> = {
   "modern-llms": {
-    ru: 504,
-    en: 460,
+    ru: 510,
+    en: 463,
   },
   "rl-for-llm": {
-    ru: 286,
-    en: 262,
+    ru: 339,
+    en: 306,
   },
   "information-theory-for-ml": {
     ru: 335,
@@ -916,6 +916,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                       return (
                         <a
                           href={href}
+                          download={href?.startsWith("/downloads/") || undefined}
                           target={external ? "_blank" : undefined}
                           rel={external ? "noreferrer" : undefined}
                           {...props}

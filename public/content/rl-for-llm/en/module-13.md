@@ -2,6 +2,7 @@
 
 > **Material version:** 2026.25  
 > **Factual snapshot:** 2026-08-06  
+> **Text revision:** 2026-10-27  
 > **Language:** EN  
 > **Core practice:** tier A — browser and central processing unit (CPU); tier B — free Colab T4 or a local model; a paid API is an optional substitute  
 > **Structure:** 5 lessons, 25 steps  
@@ -40,21 +41,11 @@ After completing the module, you will be able to:
 19. choose among `lm-evaluation-harness`, Inspect, HELM, and custom code by contract;
 20. write an honest final report and move into one of the course capstones.
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable evaluation practice follow this lecture. The explanation here remains self-contained. Verified claims and their inference boundaries are documented in the [English claim and source registry](module-13.md).
+> **Practice route.** The lecture is followed by [exercises](/courses/rl-for-llm/module-13/exercises/), [assessment tasks](/courses/rl-for-llm/module-13/tests/), and [executable practice](/courses/rl-for-llm/module-13/notebooks/). The explanation remains self-contained; primary sources and the limits of their claims are listed at the end of the lecture.
 
 ---
 
 ## Lesson 13.1. Evaluation as a measurement system
-
-> **Lesson 13.1. Evaluation as a measurement system**
->
-> 1. A score belongs to a configuration, not to one weight file
-> 2. Wilson intervals: a proportion without false precision
-> 3. Choose the analysis unit before choosing the formula
-> 4. Paired comparison: which tasks changed outcome?
-> 5. Four sources of randomness and an honest run plan
->
-> then 6 assessment steps
 
 ### Step 13.1.1 — A score belongs to a configuration, not to one weight file
 
@@ -82,11 +73,11 @@ $$
 
 where $M$ is the model and tokenizer; $P$ is the system message and chat template; $D$ is the decoding configuration and compute budget; $A$ is the agent scaffold, including tools, memory, and retries; $E$ is the environment and initial state; and $G$ is the scorer and aggregation rule.
 
-*RL for LLM*, Module 11 “RL for LLM agents: tools, environments, and long trajectories” (`rl_llm.module_11_agentic_rl`) showed that the same LLM can be part of different agent policies. The measurement consequence is immediate: a scaffold can improve outcomes without changing weights, while a scorer change can move a reported number without changing behavior.
+*RL for LLM*, Module 11 “RL for LLM agents: tools, environments, and long trajectories” ([open module](/courses/rl-for-llm/module-11/)) showed that the same LLM can be part of different agent policies. The measurement consequence is immediate: a scaffold can improve outcomes without changing weights, while a scorer change can move a reported number without changing behavior.
 
 This does not prevent checkpoint comparisons. It means the remaining components must be held fixed when the question is about checkpoints. If the question is whether a system can close a ticket end to end, the scaffold is part of the evaluated object and should vary with the system.
 
-> **Further context:** *Modern LLMs*, Module 19 “Evaluating Modern LLM Systems: From Benchmarks to Decisions” (`modern_llms.module_17_evaluation`) provides the broader benchmark landscape and a detailed treatment of scaffold-sensitive evaluation. This module focuses on what happens under statistical and optimization pressure.
+> **Further context:** *Modern LLMs*, Module 19 “Evaluating Modern LLM Systems: From Benchmarks to Decisions” ([open module](/courses/modern-llms/module-19/)) provides the broader benchmark landscape and a detailed treatment of scaffold-sensitive evaluation. This module focuses on what happens under statistical and optimization pressure.
 
 ---
 
@@ -108,7 +99,20 @@ $$
 
 but it behaves poorly near zero and one. At $k=0$, for example, it produces the degenerate interval $[0,0]$, even though twenty failures do not establish a zero success probability.
 
-The course uses the **Wilson score interval** as the default binomial interval. For an approximately 95% interval, set $z=1.96$:
+The difficulty begins with the plug-in estimate of variability. Replacing the unknown probability by the observed proportion makes the estimated variance vanish when no successes are observed. The data are scarce, yet the calculation reports complete certainty.
+
+The **Wilson score interval** reverses the question. Hold the observed $\widehat p$ fixed and consider a candidate value of the unknown probability $p$. Is our observation reasonably close to that value relative to the variability implied by that same $p$? Under the score approximation, the retained values satisfy
+
+$$
+\begin{gathered}
+(\widehat p-p)^2\le z^2\frac{p(1-p)}{n},\\
+(n+z^2)p^2-(2n\widehat p+z^2)p+n\widehat p^2\le0.
+\end{gathered}
+$$
+
+The second line follows by multiplying through by $n$ and collecting terms. It is a quadratic inequality in the unknown probability, not in the already observed proportion. Its roots delimit the values that the chosen score test does not reject. This is the test-inversion construction described in [Wilson's original paper](https://doi.org/10.1080/01621459.1927.10502953) and the [NIST handbook](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm).
+
+We use Wilson as the course's default binomial interval. For an approximately 95% interval, set $z=1.96$. The roots can be written in the following convenient computational form:
 
 $$
 \mathrm{denom}=1+\frac{z^2}{n},
@@ -133,6 +137,10 @@ $$
 
 The interval is `center ± margin`.
 
+Its center need not equal $\widehat p$. We solved a compatibility condition for $p$ rather than moving symmetrically away from the observed proportion. The distinction is especially visible near the boundaries.
+
+The 95% level describes a **procedure**: over repeated samples under the assumed model, how often do the resulting intervals cover the fixed underlying probability? It is not automatically a 95% probability that a particular hypothesis is true. Wilson uses an approximation, so finite-sample coverage need not be exactly 95% for every $n$ and $p$. Nor does the confidence level validate the scorer that supplied the observations.
+
 | Result | 95% Wilson interval |
 |---|---|
 | $62/100$ | approximately $[0.522,0.709]$ |
@@ -148,6 +156,8 @@ $$
 
 where $h$ is the desired half-width. About 1,068 independent tasks are needed for roughly ±3 percentage points, not one hundred.
 
+This plans the precision of **one proportion**. It comes from the approximation $h\approx z\sqrt{p(1-p)/n}$ at the largest possible variance, $p=0.5$. It is not a promise that the same dataset will detect an arbitrarily small improvement between systems. A comparison also depends on the effect one needs to detect, the desired detection probability, and how the two systems' outcomes align on shared tasks.
+
 > **Boundary.** A narrow interval describes sampling uncertainty under the chosen model. It does not validate labels, certify independence, rule out contamination, or establish production transfer.
 
 ---
@@ -162,7 +172,7 @@ A binomial model is appropriate when each task produces one binary outcome and t
 - several judge calls for one response;
 - templated or near-duplicate tasks.
 
-Treating all of these rows as independent makes intervals artificially narrow. One hundred samples for each of ten source tasks do not automatically become one thousand independent tasks. Shared task difficulty induces within-group correlation.
+For a claim about new tasks, treating every such row as an independently sampled task can make the interval artificially narrow. One hundred generations for each of ten source tasks do not become one thousand independent tasks. Generations can be independent conditional on their prompt while still sharing that selected prompt; generalization across prompts introduces another level of randomness through task difficulty.
 
 A useful rule is:
 
@@ -170,7 +180,21 @@ A useful rule is:
 
 If the claim concerns new tasks, aggregate repeated attempts within a task and quantify uncertainty across tasks. If it concerns stochastic decoding on a fixed set, quantify decoding variance separately.
 
-For continuous metrics such as cost or trajectory length, a binomial interval is not appropriate. A **paired bootstrap** repeatedly resamples whole tasks with replacement, computes the system difference on each resample, and reports quantiles of the resulting difference distribution.
+For continuous metrics such as cost or trajectory length, a binomial interval is not appropriate. To compare two systems, a **paired bootstrap** resamples task records rather than the two result columns separately. Each record carries a task identifier and both outcomes. If a task is drawn twice, its A and B values both occur twice. If it is absent, it disappears from both sides of the comparison.
+
+For a difference in means, one resample gives
+
+$$
+\widehat\Delta^{*}
+=\frac1n\sum_{j=1}^{n}
+\left[m_A(I_j)-m_B(I_j)\right],
+\qquad
+I_j\overset{\mathrm{iid}}{\sim}\operatorname{Uniform}\{1,\ldots,n\}.
+$$
+
+Only the resampled indices are random here. The model outputs have already been recorded: bootstrap does not call the models again. Using the same indices for both systems retains the common difficulty of each selected task.
+
+Repeating the procedure produces a distribution of estimated differences. The simple percentile construction uses its quantiles as an approximate interval; other bootstrap intervals modify that final step. More resamples reduce Monte Carlo variation in this calculation, not the uncertainty caused by having only a limited number of independent source tasks. Shared index resampling is precisely the [paired mode documented by SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html).
 
 Bootstrap is not a validity machine. It reproduces the structure of the observed dataset. Dependent clusters must be resampled as clusters, and systematic benchmark bias remains systematic after resampling.
 
@@ -216,7 +240,21 @@ $$
 d_i=m_A(i)-m_B(i),
 $$
 
-and resample or permute those differences. Two independent standard errors discard shared task information.
+rather than treating the two result columns as unrelated samples. Two independent standard errors discard the shared task information.
+
+A paired bootstrap and a paired permutation test use this pairing for different purposes. Bootstrap resamples tasks while keeping the original A and B labels inside each record. A permutation test instead requires a null model under which the labels within a pair are exchangeable. Swapping them changes the sign of the difference:
+
+$$
+T^{*}=\frac1n\sum_{i=1}^{n}\xi_i d_i,
+\qquad
+\xi_i\in\{-1,+1\}.
+$$
+
+An exact calculation enumerates the permitted swaps; a randomized calculation samples them. Under the chosen null model with independent pairs, each sign is equally likely within a pair. Merely reordering the already computed $d_i$ would leave their mean unchanged and would not generate the intended null distribution.
+
+Exchangeability is a substantive assumption. Equality of means alone does not generally justify an exact sign-flip test. These procedures are therefore not interchangeable buttons: the bootstrap here estimates sampling variability, whereas the permutation test measures how unusual the observed statistic is under a declared null model. The [SciPy permutation-test documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.permutation_test.html) distinguishes within-pair label swaps from rearranging the pairings themselves.
+
+A resulting $p$-value is not the probability that the null hypothesis is true. It compares the observation with the statistic's distribution under that hypothesis and the rest of the protocol's assumptions.
 
 Finally, significance is not importance. A 0.2-point difference can become statistically detectable on a huge sample while remaining operationally irrelevant. State a minimum practically important effect before the run.
 
@@ -244,21 +282,13 @@ A reasonable comparison of two training methods might:
 
 A single expensive checkpoint can still be evaluated. The claim must then be narrower: “this checkpoint under this protocol,” not “the method on average.”
 
-Predeclare stopping as well. Repeatedly peeking at the metric and stopping at the first favorable crossing changes the interpretation of a nominal 95% interval. Sequential monitoring needs a planned rule, a correction, or an untouched final set.
+Stopping is part of the design. Repeatedly inspecting the metric and stopping at the first favorable crossing does not automatically preserve the interpretation of an interval designed for one fixed sample size. A prespecified calendar of inspections, by itself, does not account for the multiple opportunities to make a decision.
+
+The inspection schedule and decision rule need a compatible error-control procedure. Alternatives include a method designed for sequential monitoring or an untouched final set that did not influence intermediate selection. Data used to choose when to stop have already participated in the decision. [Work on confidence sequences](https://arxiv.org/abs/1810.08240) studies time-uniform guarantees; this course does not assume that an ordinary fixed-sample interval provides them.
 
 ---
 
 ## Lesson 13.2. pass@k, benchmark life cycles, and contamination
-
-> **Lesson 13.2. pass@k, benchmark life cycles, and contamination**
->
-> 1. pass@k measures coverage, not answer selection
-> 2. Generation budget is part of the metric
-> 3. A benchmark has a life cycle
-> 4. Contamination: a cheap sieve and its boundary
-> 5. Adaptive overfitting: the test becomes part of development
->
-> then 4 assessment steps
 
 ### Step 13.2.1 — pass@k measures coverage, not answer selection
 
@@ -285,9 +315,11 @@ The central interpretation is:
 
 ![Candidate coverage and answer selection](assets/rl-for-llm/en/module-13/M13_passk_selection_EN.png)
 
-A correct answer may exist among 32 candidates while a weak verifier selects a wrong one. pass@32 remains high; delivered quality does not. *RL for LLM*, Module 10 “Search, verification, and test-time compute” (`rl_llm.module_10_test_time_search`) develops this distinction between candidate coverage and actual selection under a fixed compute budget.
+A correct answer may exist among 32 candidates while a weak verifier selects a wrong one. pass@32 remains high; delivered quality does not. *RL for LLM*, Module 10 “Search, verification, and test-time compute” ([open module](/courses/rl-for-llm/module-10/)) develops this distinction between candidate coverage and actual selection under a fixed compute budget.
 
 For $n=k=20$ and $c=1$, finite-sample pass@20 is exactly one because the full set necessarily contains the observed success. Plugging $\widehat p=c/n$ into $1-(1-\widehat p)^k$ gives about 0.642 and describes a different hypothetical experiment.
+
+That value of one does not promise success for every fresh pool of twenty generations. It is exact for the observed pool. Interpreting the statistic as an estimate of generator performance requires the stated pool-sampling protocol; compute it for each task, then aggregate across the declared task set. Pooling answers from unrelated prompts first would change the analysis unit.
 
 Every reported pass@k should include $n$, $k$, the success rule, decoding settings, final-selection rule, and compute cost.
 
@@ -351,7 +383,7 @@ As of the snapshot date, useful evaluation families include:
 
 SWE-bench Verified is a human-validated 500-task subset, but a score still depends on the agent and execution environment. BFCL V4 currently covers agentic components in addition to function-call syntax. These are dated properties of particular releases, not timeless definitions.
 
-The broader benchmark catalog belongs to *Modern LLMs*, Module 19 “Evaluating Modern LLM Systems: From Benchmarks to Decisions” (`modern_llms.module_17_evaluation`). The local rule is enough: select a benchmark by target behavior and measurement risk, not by name recognition.
+The broader benchmark catalog belongs to *Modern LLMs*, Module 19 “Evaluating Modern LLM Systems: From Benchmarks to Decisions” ([open module](/courses/modern-llms/module-19/)). The local rule is enough: select a benchmark by target behavior and measurement risk, not by name recognition.
 
 ---
 
@@ -391,7 +423,7 @@ This catches literal fragments and misses translations, paraphrases, and rearran
 
 A canary string is a unique marker placed in benchmark files so that developers can filter them from training or detect obvious reproduction. Reproducing a canary is strong evidence of access to associated material. Failure to reproduce it is not proof of absence: the data may have appeared without the marker, been reformatted, or simply not been emitted.
 
-A useful report states the accessible corpus, matching method, tokenization, threshold, flagged fraction, score with and without flags, and the detector’s limitations. Recent work on soft contamination highlights exactly this limitation: n-gram deduplication can miss semantically equivalent items.
+A useful report states the accessible corpus, matching method, tokenization, threshold, flagged fraction, score with and without flags, and the detector’s limitations. [*Soft Contamination Means Benchmarks Test Shallow Generalization*](https://arxiv.org/abs/2602.12413) investigates related content that literal filtering can miss. This does not turn every high score into evidence of contamination; it limits what the absence of literal overlap can establish.
 
 ---
 
@@ -405,7 +437,7 @@ $$
 \widehat\mu_j=\mu+\varepsilon_j.
 $$
 
-Selecting the largest $\widehat\mu_j$ produces an optimistically biased estimate. The best noise is mistaken for the best system.
+Even when every prespecified configuration has an unbiased estimate, taking the maximum favors favorable errors. When those errors differ across configurations, the selected result becomes optimistic: the best noise is mistaken for the best system. The set that chose the winner is no longer an untouched confirmation of that winner. If all errors are identical, maximization adds no such selection advantage; their joint structure matters, not just their individual variances.
 
 The same process occurs at ecosystem scale as thousands of teams adapt to one public leaderboard. No deliberate cheating is required; test information still enters development decisions.
 
@@ -427,21 +459,11 @@ A private golden set needs an owner, version, access policy, change log, and ref
 
 ## Lesson 13.3. Reward hacking and judges under pressure
 
-> **Lesson 13.3. Reward hacking and judges under pressure**
->
-> 1. Taxonomy: what component is the policy exploiting?
-> 2. A synthetic judge audit: what sanitization fixes
-> 3. LLM judges: order swapping and structural isolation
-> 4. Three levels of optimization pressure
-> 5. Sycophancy: user preference is not ground truth
->
-> then 5 assessment steps
-
 ### Step 13.3.1 — Taxonomy: what component is the policy exploiting?
 
 Reward hacking is easier to reason about when classified by the exploited component.
 
-*RL for LLM*, Module 7 “Reward models and preference data” (`rl_llm.module_07_reward_models`) introduced reward models and LLM judges as feedback sources. Here the same components are treated as measurement surfaces that an optimized policy can pressure and exploit.
+*RL for LLM*, Module 7 “Reward models and preference data” ([open module](/courses/rl-for-llm/module-07/)) introduced reward models and LLM judges as feedback sources. Here the same components are treated as measurement surfaces that an optimized policy can pressure and exploit.
 
 ![Reward-hacking surface](assets/rl-for-llm/en/module-13/M13_reward_hacking_surface_EN.png)
 
@@ -495,6 +517,8 @@ The example separates three outcomes:
 
 “Clean input” is therefore not “objective judge.” Attack mitigation and evaluator calibration are separate problems.
 
+In the teaching construction, sanitization is defined to remove two added terms while leaving true quality $g$ unchanged. A real transformation has no such automatic guarantee: the removed passage may contain substantive answer content as well as an attempt to influence the judge. A smaller `gap` must therefore be checked alongside meaning preservation and agreement with independent anchors. It is not, on its own, evidence of a more accurate score.
+
 A real audit needs both
 
 $$
@@ -532,13 +556,17 @@ After the reverse-order judgment, first map labels back to **candidate identity*
 
 Preserve the raw `FIRST`, `SECOND`, and `TIE` labels as a separate **screen-position audit**. They answer a different question: how often does the judge select the first slot regardless of which candidate occupies it? Identity consistency and position preference must not be collapsed into one statistic.
 
-Encode the canonicalized result as:
+For example, `FIRST` in both presentations means different candidates won: A in the forward order and B in the reverse order. `FIRST` followed by `SECOND` instead means a stable A win. Keeping both raw and identity-mapped labels makes that distinction inspectable.
+
+A compact summary can use three groups:
 
 - stable A win;
 - stable B win;
-- order-dependent or tied.
+- no stable winner.
 
-The third state is a diagnostic, not noise to be broken randomly.
+The last group must retain its internal causes. `TIE` in both orders is a stable tie, not necessarily inconsistency. A reversal of the winning candidate is disagreement. A tie in only one presentation is another outcome. Combining them for display must not erase the underlying records or turn them into arbitrary wins.
+
+A win rate calculated only over stable decisions is conditional on a **selected subset**. Report the retained fraction and the reasons other pairs were excluded. Otherwise a strong percentage may describe only the comparisons the judge found convenient. Swapping order diagnoses one source of bias; it does not establish that the stable verdict is correct.
 
 **Structural isolation** passes the candidate as clearly delimited data and instructs the judge not to execute commands inside it. This reduces direct prompt injection but does not create a formal security boundary: the model still processes the text and can respond to subtler attacks.
 
@@ -598,23 +626,13 @@ $$
 
 A good system does not merely disagree more often; it discriminates truth better. Otherwise an anti-sycophancy intervention creates stubbornness.
 
-Primary studies documented sycophantic behavior and found evidence that preference judgments can favor responses aligned with user beliefs. This is an empirical mechanism in studied settings, not proof that all human-feedback optimization inevitably creates sycophancy.
+[*Towards Understanding Sycophancy in Language Models*](https://arxiv.org/abs/2310.13548) documents sycophantic behavior and evidence that preference judgments can favor responses aligned with user beliefs. This is an empirical mechanism in the studied settings, not proof that all human-feedback optimization inevitably creates sycophancy.
 
 For RL systems, the practical implication is clear: if the reward model favors confident agreement, stronger optimization can amplify it. Sycophancy tests should therefore run after changes to reward data or preference optimization, not only as a one-time safety benchmark.
 
 ---
 
 ## Lesson 13.4. Safety and the protocol passport
-
-> **Lesson 13.4. Safety and the protocol passport**
->
-> 1. The evaluation passport: a number without a protocol does not transfer
-> 2. Safety is not a refusal rate
-> 3. Red-teaming: ASR and the cost of false alarms
-> 4. From metrics to a release decision
-> 5. Evaluation tools: choose a contract, not a logo
->
-> then 2 assessment steps
 
 ### Step 13.4.1 — The evaluation passport: a number without a protocol does not transfer
 
@@ -674,6 +692,8 @@ $$
 
 with estimated failure frequency $p_h$, severity $s_h$, and context weight $w_h$. This is not a universal regulatory formula; it forces otherwise hidden assumptions into the open.
 
+The distribution behind $p_h$ must also be named. Success frequency on a deliberately selected attack set describes robustness under that test. It is not automatically the frequency of the same event in deployment. That transfer needs assumptions about threat prevalence, user behavior, and attacker resources; the weights $w_h$ cannot supply missing evidence. Until those assumptions are justified, the sum is a chosen comparison measure rather than a measured total deployment risk.
+
 ---
 
 ### Step 13.4.3 — Red-teaming: ASR and the cost of false alarms
@@ -688,6 +708,10 @@ Attack success should be accompanied by the number of valid attempts, a confiden
 
 Once a defense is tuned on a fixed attack catalog, that catalog is a development or validation set. Final evaluation requires fresh phrasings, another attack generator, or an independent red team.
 
+Choose the trial unit before attaching an interval. A successful individual attempt and at least one success in a ten-attempt campaign against one task are different events. If later attempts adapt to earlier responses, ten attempts are not automatically ten independent Bernoulli observations. For a claim about new tasks or campaigns, preserve those groups and quantify uncertainty at the corresponding level.
+
+Define validity in advance as well. A malformed test invocation can be distinguished from a valid attempt, but unsuccessful attacks should not be removed merely because they were weak. This is the rule from Step 13.1.3 applied to adversarial evaluation: define the intended generalization and analysis unit before choosing the statistical procedure.
+
 As of the snapshot, AILuminate v1.1 provides a twelve-category hazard taxonomy and a private official test alongside public practice prompts. It illustrates the development-versus-official-evaluation split, but it does not replace a product-specific threat model.
 
 ---
@@ -695,6 +719,8 @@ As of the snapshot, AILuminate v1.1 provides a twelve-category hazard taxonomy a
 ### Step 13.4.4 — From metrics to a release decision
 
 An evaluation becomes an engineering control only when it is connected to a predeclared action.
+
+Three questions must remain separate: whether any difference was detected, whether a deterioration would matter in practice, and whether the data are adequate for a release decision. Failing to detect regression does not exclude it. A wide interval may allow both improvement and an unacceptable loss. “Meaningful regression” in the table therefore needs a prespecified effect margin and statistical rule, not a convenient $p$-value alone.
 
 | Signal | Threshold | Action |
 |---|---|---|
@@ -707,9 +733,26 @@ An evaluation becomes an engineering control only when it is connected to a pred
 
 Thresholds should not be invented after results are visible.
 
+Suppose larger $Q$ is better and the maximum acceptable deterioration is fixed in advance at $\delta>0$. Construct a confidence interval for the candidate-minus-baseline difference using the declared protocol:
+
+$$
+\begin{gathered}
+\Delta=Q_{\mathrm{candidate}}-Q_{\mathrm{baseline}},\\
+[L,U]\ \text{is an interval for }\Delta,\qquad\delta>0.
+\end{gathered}
+$$
+
+This supports three distinct readings. If $L>-\delta$, the data exclude deterioration beyond the declared margin at the chosen confidence level, so the candidate may pass this gate. If $U<-\delta$, the whole interval lies in the unacceptable-regression region. If it crosses $-\delta$, the data do not establish acceptability. The response is more evidence or a predeclared conservative policy—not an automatic pass.
+
+This is one gate, not the entire release decision. The one-sided or two-sided construction, level, and multiplicity control must be chosen before the run. Ruling out unacceptable deterioration is not the same as establishing equivalence in every respect or proving superiority. [Lakens's primer on equivalence testing](https://doi.org/10.1177/1948550617697177) develops the underlying distinction between a nonsignificant difference and evidence that an important effect is absent.
+
+Rare failures need the same discipline. The earlier $0/20$ example has a Wilson upper bound near 0.161. Observing no violations in that small set therefore does not establish a low violation probability under the assumed model. Threat coverage and deployment transfer remain separate questions.
+
+A contaminated or revised test set also needs a new version. Keep previous reports attached to their original identifiers and publish recomputed values separately. New items without saved outputs need a new run. Revising the historical comparison must not erase the history of how earlier numbers were measured.
+
 The NIST AI RMF and its Generative AI Profile use the broader Govern–Map–Measure–Manage structure: define context, measure risk, assign ownership, and connect findings to action. The course-level lesson is simple: **an evaluation without an owner and a response does not manage risk.**
 
-A training constraint and a release gate solve different problems. *RL for LLM*, Module 8 “RLHF and direct preference optimization” (`rl_llm.module_08_rlhf_dpo`) uses $\mathbb E[C]\le d$ to control expected cost on the training distribution. This module evaluates observed violations on a finite scenario set and may block release. An average constraint does not protect every critical prompt, while a passed test does not prove safety on all future inputs. Serious risks require both constrained optimization and an independent release control.
+A training constraint and a release gate solve different problems. *RL for LLM*, Module 8 “RLHF and direct preference optimization” ([open module](/courses/rl-for-llm/module-08/)) uses $\mathbb E[C]\le d$ to control expected cost on the training distribution. This module evaluates observed violations on a finite scenario set and may block release. An average constraint does not protect every critical prompt, while a passed test does not prove safety on all future inputs. Serious risks require both constrained optimization and an independent release control.
 
 An incident record keeps the input, transcript, model and environment versions, tools and side effects, scorer verdict, expected and observed behavior, severity, root cause if known, remediation, and a new regression test.
 
@@ -740,16 +783,6 @@ Recheck APIs before publication, pin dependencies, and preserve raw artifacts. S
 
 ## Lesson 13.5. A minimal harness and the course finale
 
-> **Lesson 13.5. A minimal harness and the course finale**
->
-> 1. A custom eval has five versioned layers
-> 2. An honest report starts with the decision, not the leaderboard
-> 3. Practice route: from synthetic checks to `lm-eval`
-> 4. Capstone B5: evaluation engineering as a course-wide test
-> 5. Course finale: RL as the discipline of signal design
->
-> then 6 assessment steps
-
 ### Step 13.5.1 — A custom eval has five versioned layers
 
 A minimal evaluation system is easiest to audit when it has five separable layers.
@@ -777,7 +810,7 @@ A minimal evaluation system is easiest to audit when it has five separable layer
 
 Do not hide model calls, dataset loading, extraction, and table printing inside one function. Separation enables caching, rescoring with a new verifier, and incident investigation.
 
-*RL for LLM*, Module 12 “RL infrastructure for LLMs: memory, rollouts, and asynchrony” (`rl_llm.module_12_infrastructure`) provides the infrastructure counterpart: policy, environment, and verifier versions travel through the log as data rather than being reconstructed from memory.
+*RL for LLM*, Module 12 “RL infrastructure for LLMs: memory, rollouts, and asynchrony” ([open module](/courses/rl-for-llm/module-12/)) provides the infrastructure counterpart: policy, environment, and verifier versions travel through the log as data rather than being reconstructed from memory.
 
 A useful invariant is:
 
@@ -795,6 +828,12 @@ A corrected canonicalizer or judge can then rescore existing outputs without exp
 | technical failure rate | 0 | 0.0083 |
 
 The paired `candidate − baseline` difference is 0.2167, with a paired-bootstrap interval of approximately [0.1375, 0.2959]. The candidate alone succeeds on 79 tasks and the baseline alone on 27; the exact McNemar value is about $4.33\times10^{-7}$.
+
+Each number has a distinct job. The two proportions and their intervals describe each system separately. The paired improvement comes from $(79-27)/240=52/240\approx0.2167$: matching outcomes contribute zero to the difference but remain in the evaluation set. Paired bootstrap quantifies uncertainty in the size of the change, while McNemar tests the symmetry of discordant binary outcomes under its null model. A small $p$-value does not determine the cost or safety of the improvement.
+
+In this run, technical failures **remain in the primary denominator**. The scorer preserves a separate infrastructure status while setting `correct = False`; the aggregator computes accuracy and its interval over all 240 records. Paired comparison also uses the complete shared set of sample identifiers. The table therefore measures end-to-end successful, correct completion, not accuracy conditional on a run having completed. Technical-failure rate is reported separately so that an operational failure remains distinguishable from a substantively wrong answer.
+
+This is the declared teaching protocol, not a universal rule for every infrastructure outage. Another exclusion policy can be appropriate if specified in advance, but it must retain comparable denominators and visible failure records.
 
 The same run preserves `dataset.jsonl`, raw records for both systems, `summary.json`, `report.md`, judge and safety audits, and their SHA-256 hashes in `passport.json`. This is a **deterministic synthetic course experiment**, not a benchmark of a real LLM. Its purpose is to make every contract and artifact inspectable.
 
@@ -816,6 +855,8 @@ Recommended structure:
 10. explicit non-claims.
 
 Do not rank systems by a third decimal place when intervals and paired differences cannot distinguish them. The honest conclusion is “insufficient evidence to detect a difference.” Equivalence requires a predeclared acceptable difference margin and a separate test against that margin.
+
+Nor should the comparison be decided solely by overlap between two separate accuracy intervals. Use the paired difference and its uncertainty: they retain the information about which shared tasks changed outcome.
 
 A public table should have a machine-readable `results.json` and a human-readable `report.md`. A table without configuration quickly becomes indistinguishable from marketing.
 
@@ -887,7 +928,7 @@ The cross-course map is now:
 - a verifier formalizes success;
 - a benchmark is a verifier for the research process;
 - a safety eval is a verifier for risk;
-- a passport proves which experiment a number belongs to.
+- a passport provides an auditable link between a number and its experiment.
 
 The course does not promise one universal algorithm. It develops a more durable skill: locating the statistical assumption, software contract, proxy objective, or hidden degree of freedom in a real system.
 
@@ -909,4 +950,11 @@ Practice is optional for formal reading, but it is what turns formulas into the 
 - [Inspect AI](https://inspect.aisi.org.uk/) — the official `dataset + solver + scorer` task model and evaluation logs for complex scenarios.
 - [HELM](https://crfm.stanford.edu/helm/) — transparent scenarios and multidimensional evaluation; a framework does not replace a product threat model.
 
-The [English claim and source registry](module-13.md) contains the complete claim map, inference boundaries, and status of the course’s own experiments.
+- [NIST: *Confidence intervals for a proportion*](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm) — score-test inversion and Wilson limits; sampling uncertainty does not cover measurement-system bias.
+- [SciPy: paired bootstrap](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html) and [permutation tests](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.permutation_test.html) — shared-index resampling and label-swap semantics; executable calls must match the installed version.
+- [Howard et al., *Time-uniform, nonparametric, nonasymptotic confidence sequences*](https://arxiv.org/abs/1810.08240) — distinguishes a fixed-sample interval from monitoring over time.
+- [Lakens (2017), *Equivalence Tests: A Practical Primer*](https://doi.org/10.1177/1948550617697177) — failure to detect an effect versus exclusion of practically important differences; effect margins are prespecified.
+- [*Soft Contamination Means Benchmarks Test Shallow Generalization*](https://arxiv.org/abs/2602.12413) — limits of literal overlap checks for semantically related data.
+- [Sharma et al., *Towards Understanding Sycophancy in Language Models*](https://arxiv.org/abs/2310.13548) — sycophancy and preference-label evidence in studied systems, not a universal theorem about human-feedback optimization.
+
+The benchmark and software overview retains its 6 August 2026 factual snapshot. Course-owned synthetic results are distinguished from external research. The statistical explanations and their references do not replace validation of a concrete evaluation protocol.

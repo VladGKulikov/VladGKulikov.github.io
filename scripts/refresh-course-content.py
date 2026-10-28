@@ -325,7 +325,13 @@ def remove_notebook_routes(
 ) -> str:
     kept: list[str] = []
     for block in split_blocks(markdown):
-        if NOTEBOOK_ROUTE_RE.search(block):
+        # Published download links are part of the reviewed reader text.
+        # Only unpublished notebook routes are excluded from lecture exports.
+        route_check = re.sub(
+            r"\[[^\]]*\]\(https://vladkulikov\.com/downloads/[^)\s]+\)",
+            "", block,
+        )
+        if NOTEBOOK_ROUTE_RE.search(route_check):
             context.removed_notebook_blocks.append(
                 {
                     "course_key": course_key,
@@ -477,12 +483,22 @@ def sanitize_markdown(
         int(match.group(1)): heading_slug(match.group(0).removeprefix("## "))
         for match in re.finditer(r"(?m)^## (\d+)\. .+$", markdown)
     }
+    explicit_anchors = {
+        match.group(1): heading_slug(match.group(2))
+        for match in re.finditer(
+            r'<a\s+(?:id|name)=["\']([^"\']+)["\']\s*>\s*</a>\s*\n#{2,4}\s+([^\n]+)',
+            markdown,
+        )
+    }
     # Source HTML anchors are not executed by the Markdown reader. Resolve the
     # hand-written diffusion TOC against the retained public headings instead.
     markdown = re.sub(r'<a\s+(?:id|name)=["\'][^"\']+["\']\s*>\s*</a>', "", markdown)
-    link_re = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)\s]+)\)")
+    # A formula's unmatched '[' must never consume later image markup.
+    link_re = re.compile(r"(?<!!)\[([^\[\]\n]+)\]\(([^)\s]+)\)")
     def resolve_link(match: re.Match[str]) -> str:
         label, href = match.groups()
+        if href.startswith("#") and href[1:] in explicit_anchors:
+            return f"[{label}](#{explicit_anchors[href[1:]]})"
         custom_anchor = re.fullmatch(r"#m\d+-(\d+)", href)
         if custom_anchor:
             section = int(custom_anchor.group(1))
@@ -582,9 +598,9 @@ def module_document(
         module_key=module_key,
         context=context,
     )
-    if course_key == "modern-llms":
+    if course_key in {"modern-llms", "rl-for-llm"}:
         # Lecture navigation must stay on the current host, including mirrors.
-        markdown = re.sub(r"\]\(https://vladkulikov\.com/((?:ru/)?courses/)", r"](/\1", markdown)
+        markdown = re.sub(r"\]\(https://vladkulikov\.com/((?:ru/)?courses/|downloads/)", r"](/\1", markdown)
     relative_path = Path(course_key) / language / f"{module_key}.md"
     destination = context.content_root / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)

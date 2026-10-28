@@ -37,4 +37,4 @@ When reusing course content under CC BY-NC-SA 4.0, identify Vlad Kulikov as the
 author, name the course, link to the source edition when reasonably practical,
 link to the license, and indicate whether changes were made.
 
-Current publication edition: **2026.4**.
+Current publication edition: **2026.5**.

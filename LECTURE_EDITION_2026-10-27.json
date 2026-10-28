@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-27",
+  "status": "PASS",
+  "lectures": 26,
+  "source_files": {
+    "rl-for-llm:ru:module-01": {
+      "path": "modules/module-01/Module_1_RU.md",
+      "sha256": "34ac1238ec759ca930b5e7e7d9ac1d9cd45b8505da269d934b416c8edff3f06f"
+    },
+    "rl-for-llm:ru:module-02": {
+      "path": "modules/module-02/Module_2_RU.md",
+      "sha256": "4f2e388064d2879ac1e0fade4219074d077fb185404925ceaf9d5588470e6fa8"
+    },
+    "rl-for-llm:ru:module-03": {
+      "path": "modules/module-03/Module_3_RU.md",
+      "sha256": "4e2542a51819c5f9c08174ff80b5d6edfca2575e820466f4006dd5553fc23278"
+    },
+    "rl-for-llm:ru:module-04": {
+      "path": "modules/module-04/Module_4_RU.md",
+      "sha256": "eb99f870cf99728dde7cd76ebf8fc1d547d4f7c470e873b9e1a53a6cf18e8bc7"
+    },
+    "rl-for-llm:ru:module-05": {
+      "path": "modules/module-05/Module_5_RU.md",
+      "sha256": "c11b710cc12abff66565d1c5c06bb9f9f0ba5ec63a718ed69dec610ce7438d59"
+    },
+    "rl-for-llm:ru:module-06": {
+      "path": "modules/module-06/Module_6_RU.md",
+      "sha256": "b294668e656a96b441bce3d2dc9a978b69b5c374859a9f41685dde7dc2346996"
+    },
+    "rl-for-llm:ru:module-07": {
+      "path": "modules/module-07/Module_7_RU.md",
+      "sha256": "da5aca6f1382b581919f7cd9e16b5571913704fd1632de79c51cd7b954454927"
+    },
+    "rl-for-llm:ru:module-08": {
+      "path": "modules/module-08/Module_8_RU.md",
+      "sha256": "29d2a1bd28f5704522f8333649d342aa9620df33070e1f83e97890a33d2fc762"
+    },
+    "rl-for-llm:ru:module-09": {
+      "path": "modules/module-09/Module_9_RU.md",
+      "sha256": "8e5295f2ff0052a4024ad336f4c11ddd85827875012b481d42f714f8a959055e"
+    },
+    "rl-for-llm:ru:module-10": {
+      "path": "modules/module-10/Module_10_RU.md",
+      "sha256": "8bb5f59efb4319113e8de6e49a1e2268be45e51c716bdae9acdd206f4011469f"
+    },
+    "rl-for-llm:ru:module-11": {
+      "path": "modules/module-11/Module_11_RU.md",
+      "sha256": "41c852c939eacf4474a29ac575616e956961755438a3340d35d0b66303530ed4"
+    },
+    "rl-for-llm:ru:module-12": {
+      "path": "modules/module-12/Module_12_RU.md",
+      "sha256": "68ea5f858ca3b9f1f36edda4150e3ba02f2ed6b880d62afd212b6b285dfc0295"
+    },
+    "rl-for-llm:ru:module-13": {
+      "path": "modules/module-13/Module_13_RU.md",
+      "sha256": "f3d973b6b8da59c7d76e7425a801b46be591903521a3259bc4cb978800b9fdae"
+    },
+    "rl-for-llm:en:module-01": {
+      "path": "modules/module-01/Module_1_EN.md",
+      "sha256": "d7ce2b7366f8ee6b52216ec20f05fcb205abfbaa39c7e504c8874f363e6adf12"
+    },
+    "rl-for-llm:en:module-02": {
+      "path": "modules/module-02/Module_2_EN.md",
+      "sha256": "c382bd56539f32db27deab03740f354b330015a6e82065fd96992480602ee382"
+    },
+    "rl-for-llm:en:module-03": {
+      "path": "modules/module-03/Module_3_EN.md",
+      "sha256": "e24127146f4e384ace9895dd633be90bbc6ea36484e63aa52831f82e6a7539cf"
+    },
+    "rl-for-llm:en:module-04": {
+      "path": "modules/module-04/Module_4_EN.md",
+      "sha256": "fdf8512b6827db76bcba3005a78a447df12624799a1ec00a8810c2efa5390fcf"
+    },
+    "rl-for-llm:en:module-05": {
+      "path": "modules/module-05/Module_5_EN.md",
+      "sha256": "ac0a834bc4e78a7ad3daf8bf829216a5194194f067653b71f302fd8fcb000185"
+    },
+    "rl-for-llm:en:module-06": {
+      "path": "modules/module-06/Module_6_EN.md",
+      "sha256": "fff2d86907a7a026a2ca080935eca67518e6d8d8a4d078f2e0a4c2497dbff5ed"
+    },
+    "rl-for-llm:en:module-07": {
+      "path": "modules/module-07/Module_7_EN.md",
+      "sha256": "f4b374c4b3fa1bc59556de062ee6a759d5815838b6f5f50f54542bb2a7e4ca74"
+    },
+    "rl-for-llm:en:module-08": {
+      "path": "modules/module-08/Module_8_EN.md",
+      "sha256": "ec8427e48227ee5c67a76397c7ce005885e50c3dfcc4e37f27f909850e448945"
+    },
+    "rl-for-llm:en:module-09": {
+      "path": "modules/module-09/Module_9_EN.md",
+      "sha256": "dcc14ab810275b44b7d393024492dabfee19593cab422408ef9da1f7e8117e08"
+    },
+    "rl-for-llm:en:module-10": {
+      "path": "modules/module-10/Module_10_EN.md",
+      "sha256": "6f1c8aeda4d609ba6c638f58e3e0580c84380d75235a9869760b2773d23868c8"
+    },
+    "rl-for-llm:en:module-11": {
+      "path": "modules/module-11/Module_11_EN.md",
+      "sha256": "36954e845e5f8d40492fad6c78796d757eb0faf526a2244627784c6d408ebb1f"
+    },
+    "rl-for-llm:en:module-12": {
+      "path": "modules/module-12/Module_12_EN.md",
+      "sha256": "f21a878c3dbea196b0ef0b5492aa7f3d6857c265df524cd1e61cf5ab95440e2d"
+    },
+    "rl-for-llm:en:module-13": {
+      "path": "modules/module-13/Module_13_EN.md",
+      "sha256": "a5e17f4d2cf3baf349efe29c71f7c2505437e3167d696a3eaad289ec03ccb287"
+    }
+  },
+  "images": 220,
+  "practice": "unchanged"
+}

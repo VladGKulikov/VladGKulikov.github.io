@@ -1,13 +1,14 @@
 # Module 10. Search, verification, and test-time compute
 
 > **Material version:** 2026.22  
+> **Explanatory text revised:** 2026-10-27  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
 > **Core practice:** level A — browser and CPU; level B — free Colab T4 or an optional paid API route  
 > **Structure:** 5 lessons, 25 steps  
 > **Estimated time:** 9–11 hours without the optional model run
 
-Module 9 “RLVR and GRPO: verifiable rewards, group-relative estimates, and stability” (`rl_llm.module_09_rlvr_grpo`) changed the policy parameters using fresh rollouts. This module freezes the weights and asks a different question: **how can we spend more compute on one prompt, obtain a better answer, and avoid confusing more attempts with a better selected output?**
+Module 9 “RLVR and GRPO: verifiable rewards, group-relative estimates, and stability” ([open module](/courses/rl-for-llm/module-09/)) changed the policy parameters using fresh rollouts. This module freezes the weights and asks a different question: **how can we spend more compute on one prompt, obtain a better answer, and avoid confusing more attempts with a better selected output?**
 
 Additional compute can produce independent candidates, lengthen one trajectory, expand a search tree, or be allocated adaptively across prompts. Every design contains the same pipeline:
 
@@ -43,17 +44,11 @@ After completing the module, you will be able to:
 12. compare fixed training cost with higher per-query inference cost;
 13. run deterministic CPU experiments and prepare an optional small open-model demonstration.
 
+> **Practice route.** [Exercises](/courses/rl-for-llm/module-10/exercises/), [assessment questions](/courses/rl-for-llm/module-10/tests/), and [executable practice](/downloads/rl-for-llm/notebooks/module-10-test-time-search.en.ipynb) remain separate. The lecture can be read continuously without opening them.
+
 ---
 
 ## Lesson 10.1. What scales at generation time
-
-> **Lesson 10.1. What scales at generation time**
->
-> 1. Frozen weights, a different answer algorithm
-> 2. Units and definitions of compute budget
-> 3. Parallel and sequential scaling are different interventions
-> 4. Search adds states and a backup rule
-> 5. Write the evaluation contract first
 
 ### Step 10.1.1 — Frozen weights, a different answer algorithm
 
@@ -122,6 +117,8 @@ Parallel gains depend on candidate diversity and the selector. Sequential gains 
 
 Budget forcing controls reasoning length by preventing an early stop or truncating at a fixed limit. It is a useful diagnostic, not a monotonicity theorem. A longer trajectory can loop, overwrite a correct conclusion, or spend tokens on irrelevant detail.
 
+Frozen parameters do not imply an unchanged distribution of delivered responses. Preventing EOS changes which continuations are allowed; adding an instruction or a checker result changes the context of the next call. Module 6 distinguished network parameters from the actual generation policy. The same distinction matters here: drawing more independent responses with unchanged decoding and forcing one trajectory to continue are not interchangeable interventions in a sampling formula.
+
 ---
 
 ### Step 10.1.4 — Search adds states and a backup rule
@@ -165,21 +162,11 @@ Before the first run, fix:
 
 Otherwise different tasks can be compared under one budget label. pass@32 measures whether a success exists. self-consistency@32 measures a voting rule. Best-of-32 measures a particular ranker. The shared number 32 does not make the metrics interchangeable.
 
-> **Extension:** *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`), provides the broader history of reasoning models and product interfaces. This module owns the exact selection and cost mechanics.
+> **Extension:** *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” ([open module](/courses/modern-llms/module-15/)), provides the broader history of reasoning models and product interfaces. This module owns the exact selection and cost mechanics.
 
 ---
 
 ## Lesson 10.2. Repeated sampling and aggregation
-
-> **Lesson 10.2. Repeated sampling and aggregation**
->
-> 1. pass@N and its assumptions
-> 2. Marginal gain and diminishing returns
-> 3. The finite-sample pass@k estimator
-> 4. Self-consistency votes on canonical answers
-> 5. Canonicalization, ties, and abstention
->
-> then 4 assessment steps
 
 ### Step 10.2.1 — pass@N and its assumptions
 
@@ -205,6 +192,8 @@ The assumptions belong next to the formula:
 - $p$ refers to the same decoding policy used at larger $N$.
 
 When generations are positively dependent and repeat one failure mode, the independence formula usually overstates the gain. “Correlation” alone does not define a universal correction, however: dependence may be clustered, driven by latent prompt difficulty, or altered by temperature. Empirical `pass@k` should therefore be measured from candidate groups with prompt-level records.
+
+Here $p$ belongs to one prompt. For a dataset, compute coverage for each $p_i$ and then average using the declared prompt weights. In general, the average of $1-(1-p_i)^N$ is not $1-(1-\bar p)^N$. A pooled single-sample accuracy therefore does not determine the coverage curve: the same mean can describe broadly distributed success or success concentrated on a few easy prompts.
 
 If $p=0$, sampling cannot create support that the generator lacks. A small positive $p$ can still produce high coverage while a practical selector remains unreliable.
 
@@ -236,7 +225,7 @@ A large $N$ can still be worthwhile when a rare success is extremely valuable. T
 
 ### Step 10.2.3 — The finite-sample pass@k estimator
 
-The underlying $p$ is usually unknown. A common protocol generates $n$ candidates and observes $c$ verified successes. If $k$ candidates are conceptually sampled without replacement, the probability of selecting no success is
+The underlying $p$ is usually unknown. A common protocol generates $n$ candidates and observes $c$ verified successes. Take integer counts with $0\le c\le n$ and $1\le k\le n$. If $k$ candidates are conceptually sampled without replacement, the probability of selecting no success is
 
 $$
 \frac{\binom{n-c}{k}}{\binom{n}{k}}.
@@ -260,7 +249,9 @@ $$
 \approx0.228284.
 $$
 
-This estimator belongs to a specific finite-sample protocol. Candidate counts from one decoding policy cannot be silently reinterpreted as a property of another.
+Two kinds of randomness are involved. Once the pool is fixed, the formula gives the exact fraction of its size-$k$ subsets containing a success. That combinatorial statement needs no additional model call. Interpreting the number as an estimate of future generation quality requires an assumption about how the original pool was obtained. If its $n$ responses were independent draws from the same policy for this prompt, averaging the expression over newly collected pools gives $1-(1-p)^k$. This is the sense in which the estimator is unbiased.
+
+A hand-curated collection, dependent tree-search results, or a mixture of decoding regimes does not inherit that conclusion automatically. For multiple prompts, calculate the expression within each prompt's group and aggregate afterward. Counts collected under one generation protocol cannot silently become a claim about another.
 
 ---
 
@@ -269,6 +260,8 @@ This estimator belongs to a specific finite-sample protocol. Candidate counts fr
 **Self-consistency** samples several reasoning trajectories, extracts a canonical final answer from each, and returns the most frequent answer. It votes on answers, not on the wording of the reasoning trace.
 
 It helps when the correct canonical answer is the largest single mode while errors are dispersed across many alternatives. Under independent sampling, empirical frequencies converge to their probabilities and the correct mode wins more reliably.
+
+This is a plurality rule, not a requirement that the winner receive more than half the votes. The correct answer may have probability below $1/2$ and still be the unique largest category. Canonicalization matters because it determines which strings contribute to the same category rather than competing separately.
 
 Voting does not know which mode is correct. If one systematic error is more likely than the correct answer, additional votes reinforce the error.
 
@@ -291,7 +284,7 @@ $$
 C(y)=\text{canonical answer}
 $$
 
-has been specified. Numbers can be normalized; programs can be executed against tests. Free-form text is harder: semantically equivalent answers may be phrased differently, and similar strings may contradict each other.
+has been specified. Numerical representations can be normalized. Executing a program against tests, however, primarily checks a property; it does not by itself assign a unique canonical program. A protocol may group programs by their output vectors on a fixed input set, but those observed vectors then define the voting categories. Agreement on finitely many inputs does not establish complete program equivalence. Free-form text creates another difficulty: equivalent answers may be phrased differently, while similar strings may contradict one another.
 
 The protocol must define:
 
@@ -300,23 +293,15 @@ The protocol must define:
 - how ties are resolved;
 - whether abstention is allowed;
 - whether confidence or an external score is used;
-- whether duplicate text counts as independent evidence.
+- whether repeated answers retain all their occurrences or are subject to an explicit deduplication rule.
 
 A deterministic lowest-index tie rule is useful for code tests but creates a positional preference. Random tie breaking, an additional verification stage, or abstention is usually more defensible in a deployed system.
+
+Independence is a property of the sampling procedure, not a label assigned while counting votes. Independent generations can produce identical strings. Ordinary self-consistency counts every occurrence because frequency is precisely what it estimates. Keeping only one copy of each distinct string defines a different aggregation rule. That may suit another task, but it is no longer the same estimate of the original answer distribution's mode.
 
 ---
 
 ## Lesson 10.3. Verifiers and Best-of-N
-
-> **Lesson 10.3. Verifiers and Best-of-N**
->
-> 1. Candidate coverage versus selection
-> 2. An exact binary-verifier model
-> 3. Ranking and the winner's error
-> 4. Five selection protocols
-> 5. Verification is part of the threat model
->
-> then 7 assessment steps
 
 ### Step 10.3.1 — Candidate coverage versus selection
 
@@ -335,6 +320,8 @@ P(\text{no correct candidate})
 P(\text{a correct candidate exists but is not selected}).
 $$
 
+This decomposition assumes that the system returns a member of the original pool, with abstention counted as failure. The two events on the right are disjoint: either a correct choice was unavailable, or selection lost an available opportunity. A fresh candidate generated afterward enlarges the pool and must be treated explicitly.
+
 The first term concerns generator support and budget. The second concerns selection. Increasing $N$ may reduce the first while making the second harder because a larger pool contains more convincing false positives.
 
 A verifier may be an exact program, tests, a reward model, a process reward model (PRM), an LLM judge, or a hybrid. These mechanisms should not be collapsed into one word without an error model.
@@ -349,6 +336,8 @@ Consider a fully specified teaching protocol.
 - A correct candidate is accepted with true-positive rate $\alpha$.
 - An incorrect candidate is accepted with false-positive rate $\beta$.
 - If any candidate is accepted, select uniformly among accepted candidates.
+
+Assume that the $N$ candidate–verdict pairs are independent for this fixed prompt and protocol. This is what permits the power $(1-q)^N$. The marginal rates $p$, $\alpha$, and $\beta$ alone do not rule out a shared cause of checker errors. If such dependence exists, they do not determine the probability that every candidate is rejected.
 
 The single-candidate acceptance probability is
 
@@ -374,9 +363,11 @@ $$
 \qquad q<1.
 $$
 
+These are conditional probabilities: each numerator is the probability of correctness together with the relevant verdict, and each denominator is the probability of that verdict. Once rejection is known, the appropriate success probability is no longer the original $p$. Under independence, learning the verdicts on the other candidates does not further change the correctness distribution of a selected rejected candidate.
+
 The second conditional probability matters when no candidate is accepted. At least two fallback protocols are possible.
 
-**Fallback to the same rejected pool**
+**Fallback to the same rejected pool:** if none is accepted, select uniformly from the original rejected candidates.
 
 $$
 \boxed{
@@ -388,7 +379,7 @@ S_N^{\mathrm{rej}}
 }.
 $$
 
-**Draw a fresh independent candidate without verification**
+**Draw a fresh independent candidate without verification:** if none is accepted, make one additional draw from the same generator rather than returning to the checked pool.
 
 $$
 \boxed{
@@ -422,6 +413,10 @@ $$
 
 For $q>0$, the no-accept event vanishes as $N\to\infty$, so both protocols converge to $\rho_{\mathrm{acc}}$. Their finite-$N$ values differ. The term $p$ is wrong when fallback selects among candidates already known to have been rejected.
 
+A larger pool makes it increasingly likely that at least one candidate is accepted. It does not give uniform selection an additional ability to distinguish genuine successes from false positives inside that accepted set. The vanishing no-accept event, rather than a steadily improving accepted-set composition, explains the limit.
+
+The fresh-fallback protocol also spends more compute. It makes an extra generation with probability $(1-q)^N$, giving an expected total of $N+(1-q)^N$ generations rather than $N$. There are still exactly $N$ checks because the extra answer is unverified. At $N=8$ in this example, the expected addition is about $0.0899$ generations. The accuracy difference is therefore not a free gain under an identical strict candidate budget. At $q=0$ or $q=1$, reason directly about the reachable branch instead of evaluating an undefined conditional probability in an impossible branch.
+
 **Boundary.** This limit belongs to binary acceptance with uniform selection among accepted candidates. It is not a universal ceiling for continuous-score ranking, pairwise tournaments, or exact verification.
 
 ### Step 10.3.3 — Ranking and the winner's error
@@ -440,7 +435,19 @@ $$
 
 Zero unconditional mean of $\varepsilon_i$ alone does not imply positive mean error for the selected candidate: the joint distribution of utility and error matters. With independent, nondegenerate additive evaluator noise independent of candidate utilities, maximization favors favorable noise as well as utility. This winner's-curse mechanism can cause proxy overoptimization; without those assumptions, the sign is not guaranteed.
 
-In the module's synthetic experiment, the proxy score rises for every larger $N$, while the independent goal peaks at $N=32$ and then falls.
+The synthetic experiment uses the same two-feature construction introduced in Module 7, with a separately fixed sampling protocol. Each candidate has independent useful and nuisance features:
+
+$$
+g,h\overset{\mathrm{ind}}{\sim}\mathcal N(0,1),
+\qquad
+r_{\mathrm{proxy}}=g+h,
+\qquad
+r_{\mathrm{goal}}=g-\max(h-1,0)^2.
+$$
+
+Increasing $g$ helps both scores. Increasing $h$ always helps the proxy, but beyond one it incurs a quadratic penalty in the goal. This construction is not an instance of the independent additive-error assumption discussed above: its proxy error is structurally related to candidate features. It exhibits a specified, different route by which selection separates proxy improvement from actual improvement.
+
+The function `proxy_overoptimization_curve` uses 10,000 trials with `seed=202610`. Each trial draws one pool of 512 candidates. For budget $N$, the selector takes the first $N$ entries and returns the proxy maximum. Trials are independent, while the points along a trial's curve use nested subsets. Thus the selected proxy maximum cannot decrease as that subset grows. No model weights are updated. Among the budgets evaluated below, the mean independent goal peaks at $N=32$ and then declines.
 
 | $N$ | Proxy score | Independent goal |
 |---:|---:|---:|
@@ -491,16 +498,6 @@ The lesson is the same as in RLVR: reproducible reward remains a proxy. Selectio
 
 ## Lesson 10.4. Process scores and structured search
 
-> **Lesson 10.4. Process scores and structured search**
->
-> 1. Outcome versus process feedback
-> 2. Monte Carlo labels for a prefix
-> 3. Aggregating step scores
-> 4. Beam search, best-first search, and MCTS
-> 5. Search failure modes
->
-> then 4 assessment steps
-
 ### Step 10.4.1 — Outcome versus process feedback
 
 An outcome evaluator scores a complete answer:
@@ -545,7 +542,7 @@ V^{\mu}(s)
 P_{\mu}(\text{success}\mid s).
 $$
 
-This connects directly to Monte Carlo evaluation in Module 2 “State, Value, and Bellman Equations” (`rl_llm.module_02_values_bellman`). It also fixes the scope: the label depends on continuation policy $\mu$, decoding, budget, and final criterion. It may become stale when the policy changes.
+This connects directly to Monte Carlo evaluation in Module 2 “State, Value, and Bellman Equations” ([open module](/courses/rl-for-llm/module-02/)). It also fixes the scope: the label depends on continuation policy $\mu$, decoding, budget, and final criterion. It may become stale when the policy changes.
 
 A zero label from a small $K$ does not prove impossibility. If the true success probability is $0.05$, observing no success in ten continuations has probability
 
@@ -558,6 +555,8 @@ Even six successes out of eight give point estimate $0.75$ but a wide approximat
 ![Uncertainty in a Monte Carlo prefix label](assets/rl-for-llm/en/module-10/M10_prefix_uncertainty_EN.png)
 
 A label passport should record continuation count, policy and decoding parameters, final-verifier version, and an uncertainty or smoothing rule. Equal weighting of raw means also needs justification when prefixes receive different numbers of continuations.
+
+There is a further boundary when the estimate guides search. A low $V^\mu(s)$ says that this continuation policy seldom succeeds from this prefix under this budget. It does not prove that the prefix is logically invalid or that a stronger search procedure could not finish it. Conversely, a high predicted success rate does not certify every step already written. Decide whether branch selection needs a continuation forecast, a local-validity check, or both as distinct signals.
 
 ### Step 10.4.3 — Aggregating step scores
 
@@ -586,17 +585,25 @@ For $(0.95,0.95,0.30,0.95)$:
 
 A product contains an implicit length dependence. A constant score $q=0.9$ gives $0.9^{10}\approx0.349$ and $0.9^{50}\approx0.005$. This can be meaningful when scores are compatible conditional probabilities in one factorization. Otherwise it is a hidden length penalty.
 
-The minimum is sensitive to one noisy dip, the mean can conceal a fatal step, and the last score ignores early violations. Aggregation must follow label semantics rather than library habit.
+Return to the meaning of $q_t$ before selecting a row of the table. With genuinely local labels, the minimum highlights a suspect step, the mean can hide a fatal error, and $q_T$ does not combine earlier local checks. If the last prediction evaluates the entire prefix it has read, however, it can take earlier violations into account. “Last prediction” is not synonymous with “a judgment of the final sentence alone.”
+
+The product requires an equally careful reading. Compatible conditional probabilities of step validity can factorize the probability that a chain is valid; the chain rule does not require every step to be independent. But successive forecasts of the same eventual success, made at nested prefixes, are not separate factors of that event. Multiplying them mechanically reuses overlapping information and need not produce the probability claimed for it.
+
+This distinction is visible in the literature. In the setting of [Snell and colleagues](https://arxiv.org/html/2408.03314v1), the last prediction performed best among the tested aggregators. The authors related the difference from results using local labels to their soft Monte Carlo continuation labels. That finding supports checking label semantics, not adopting $S_{\mathrm{last}}$ universally.
+
+The table therefore compares ways to use the given numbers; it does not declare all four outputs to be probabilities of one event. Choose an aggregator from the meaning of the labels and validate it against an independent outcome, rather than inheriting a library default.
 
 ---
 
 ### Step 10.4.4 — Beam search, best-first search, and MCTS
 
-**Beam search** keeps the best $B$ current prefixes, expands them, and prunes back to $B$. It is simple and vectorizable, but early pruning is irreversible.
+A prefix score is not yet a rule for spending the next unit of compute. One question makes the algorithms' differences concrete: **what happens to an alternative that we do not pursue now?**
 
-**Best-first search** keeps a global frontier and expands the currently highest-scoring state. It supports uneven depth but requires scores that are comparable across depths.
+**Beam search** keeps the best $B$ current prefixes, expands them, and prunes back to $B$. Candidates at the next level compete for a limited set of surviving slots. A pruned branch no longer participates, even if its poor early score was misleading. This makes the method simple and vectorizable, but also makes beam width a limit on remembered alternatives. In this solution-search setting, “best” refers to the declared process score, not necessarily ordinary text log-likelihood.
 
-**Monte Carlo tree search** (MCTS) typically alternates selection, expansion, evaluation or simulation, and backup to ancestors.
+**Best-first search** maintains a global queue of states that remain available for expansion. Expanding one state inserts its continuations; alternatives need not vanish merely because another branch was selected. One line may grow deep while another waits near the root. This flexibility requires comparable scores across depths and explicit handling of memory, repeated states, and the total budget. Best-first alone does not guarantee an optimal path under an arbitrary heuristic.
+
+**Monte Carlo tree search** (MCTS) stores statistics from earlier investigations of branches, not just open candidates. Its usual cycle is selection, expansion, evaluation or simulation, and backup to ancestors. For a visited child, it needs at least a visit count and a mean of the values returned through that branch. Unlike a fixed prefix score, those statistics change as search proceeds.
 
 Classical UCT (Upper Confidence bounds applied to Trees) assigns a visited child an index of the form
 
@@ -610,7 +617,41 @@ $$
 
 where $\overline X_j$ is the child's mean return, $N$ is the parent's visit count, $n_j$ is the child's count, and $c$ controls exploration. Unvisited children normally receive a separate expansion priority.
 
-The relation to UCB in Module 3 “Bandits, exploration, and one-step decisions” (`rl_llm.module_03_bandits`) is conceptually useful, but it does not import guarantees automatically. Text trees have enormous branching, string-distinct semantic duplicates, biased evaluation, and variable-length actions. Modern systems often use priors and PUCT-like variants; the exact formula and cost unit should be named.
+The relation to UCB in Module 3 “Bandits, exploration, and one-step decisions” ([open module](/courses/rl-for-llm/module-03/)) is conceptually useful, but it does not import guarantees automatically. Text trees have enormous branching, string-distinct semantic duplicates, biased evaluation, and variable-length actions. Modern systems often use priors and PUCT-like variants; the exact formula and cost unit should be named.
+
+Consider one iteration in the reasoning-maze setting used in the next step. A node records a position and the path that reached it; a continuation is a legal move. Start at the root and traverse the already expanded part of the tree. At each branch, compare accumulated value with an exploration bonus. A child with a lower current mean can still be selected when it has received far fewer investigations. The mean summarizes what previous investigations returned; the bonus expresses why limited evidence is not yet a sufficient reason to abandon an alternative.
+
+At an unexpanded state, request legal continuations. This consumes one proposal-budget unit in the teaching environment. The new investigation then needs a value: either simulate onward to a checkable outcome or evaluate an unfinished prefix. These supply different kinds of evidence. An observed success is an outcome; a process-model prediction remains a prediction even after it enters a tree statistic.
+
+The existing PUCT-like lab creates children and stores their priors from the frozen proposer. Among the new children, it first evaluates the one favored by the process score. A reached goal returns 1, a terminal state without a goal returns 0, and an unfinished state receives its process value. A long random rollout is not mandatory in this implementation: the supplied evaluator plays the leaf-evaluation role.
+
+Let the returned value be $v$. Every node on the traversed path receives one additional visit and the same value in its accumulated total. With previous count $n_j$ and total $W_j$,
+
+$$
+n_j^{\mathrm{new}}=n_j+1,
+\qquad
+W_j^{\mathrm{new}}=W_j+v,
+\qquad
+\overline X_j^{\mathrm{new}}
+=\frac{W_j+v}{n_j+1}.
+$$
+
+This is the single-player task's convention: the same investigation value travels to its ancestors without alternating player signs or adding edge rewards. Other tasks must account for their own rewards and discounting. Nor should the mean in an adaptive search be identified automatically with $V^\mu$ for one fixed continuation policy from Step 10.4.2: the procedure exploring a subtree can itself change.
+
+The next iteration starts at the root again, but its evidence is different. The visited branch has a revised mean; its own exploration bonus generally falls with additional visits, while a larger parent count also changes other children's priorities. One investigation therefore changes what is worth exploring next. A systematically biased evaluator can make this same mechanism reinforce an unhelpful direction.
+
+**Backing up a tree value is not backpropagating a neural-network gradient.** Counts and value totals change in the search algorithm's memory. The proposer weights and evaluator parameters remain frozen. Search accumulates information within a prompt without thereby performing another RL update of the network.
+
+The lab uses a PUCT-like priority rather than the classical UCT expression above. Its child-selection score is
+
+$$
+\overline X_j+
+ c\,p_j\frac{\sqrt{\max(N,1)}}{1+n_j},
+$$
+
+where $p_j$ is the proposer's stored prior for that move. An unvisited child's mean is initialized to zero in this implementation. The prior directs exploration toward moves the generator finds plausible; it is not a probability that the branch is correct. This specifies the small teaching implementation, not a universal formula for every PUCT system.
+
+Finally, separate exploration from final selection. A large bonus can justify checking a branch next without justifying its immediate return as the answer. In the maze implementation, a discovered, exactly verified goal is returned as success. If the budget ends without a goal, the implementation retains a selected intermediate state but reports failure: its process score does not substitute for reaching the goal. A text system likewise needs a separate rule for returning a completed candidate or abstaining when no sufficiently checked solution exists.
 
 ![Process scoring and search](assets/rl-for-llm/en/module-10/M10_prm_search_EN.png)
 
@@ -638,16 +679,6 @@ Every comparison should therefore include cost-matched simple baselines: one ans
 ---
 
 ## Lesson 10.5. Adaptive budgets and economics
-
-> **Lesson 10.5. Adaptive budgets and economics**
->
-> 1. An objective with compute cost
-> 2. Marginal gain and adaptive allocation
-> 3. Stopping rules
-> 4. Train better or infer more expensively
-> 5. Release protocol for a search system
->
-> then 7 assessment steps
 
 ### Step 10.5.1 — An objective with compute cost
 
@@ -678,7 +709,7 @@ The non-dominated operating points form a Pareto frontier. Selecting one point i
 
 ### Step 10.5.2 — Marginal gain and adaptive allocation
 
-Suppose prompt $i$ has independent single-attempt success probability $p_i$. Its coverage after $n_i$ attempts is
+Suppose prompt $i$ has independent single-attempt success probability $p_i$. Give all attempts the same unit cost and all prompts equal weight, and allocate an integer budget in advance. Its coverage—the probability of at least one correct candidate—after $n_i$ attempts is
 
 $$
 f_i(n_i)=1-(1-p_i)^{n_i},
@@ -691,6 +722,8 @@ $$
 $$
 
 These gains are non-increasing. Under this exact model, an integer budget can be allocated greedily by repeatedly assigning the next sample to the prompt with the largest current $\Delta_i$. An exchange argument shows this is optimal **among allocations that satisfy the declared per-prompt minimum**.
+
+The exchange argument explains why the rule works. Each prompt offers a sequence of additions with diminishing gains; taking a later addition requires taking the earlier ones. Consider the first point where another feasible allocation differs from the greedy choice. Move the last non-mandatory attempt from an overallocated prompt to the next available addition chosen by the greedy rule. The receiving gain is no smaller: greedy selected the largest available gain, whereas a later attempt on the donor prompt cannot be more valuable than its earlier available attempt. The exchange respects the minimum counts and does not reduce total coverage. Repeating such exchanges produces the greedy allocation with no worse objective.
 
 That minimum is a separate product decision, not a consequence of the formula. `allocate_budget_greedy` defaults to `minimum_per_prompt = 1`: every prompt receives at least one attempt and the remainder is allocated greedily. It is a reasonable service guarantee — no prompt left without an answer — but it lowers achievable coverage.
 
@@ -716,7 +749,9 @@ and mean coverage $0.5173$ — the global optimum, confirmed by exhaustive searc
 
 ![Adaptive budget allocation](assets/rl-for-llm/en/module-10/M10_adaptive_budget_EN.png)
 
-This is exact for known $p_i$ and independent attempts. Real systems must estimate difficulty, and the difficulty estimator can itself be miscalibrated. Adaptivity adds another model that requires validation.
+The result is exact for the stated coverage objective with known $p_i$, independent equally priced attempts, and declared minima. It is not automatically optimal for the accuracy of the answer actually returned. Perfect verification makes the two qualities coincide; an imperfect ranker can instead be overoptimized as the pool grows, as in Step 10.3.3. Final-answer quality may then lack diminishing positive gains. If completion lengths or verification costs differ, even the common budget unit disappears. Simply replacing “attempts” with “tokens” in the description does not preserve the optimality argument.
+
+Real systems must estimate difficulty, and that estimator can be miscalibrated. Adaptivity introduces another component that needs validation. So far, the allocation adapts planned work to differences between prompts. Stopping an ongoing search in response to evidence already obtained is a separate layer of control.
 
 ---
 
@@ -732,7 +767,9 @@ A system may stop when:
 - proxy-overoptimization risk becomes unacceptable;
 - uncertainty remains high enough to justify abstention.
 
-For self-consistency, an irreversible lead can save samples relative to a fixed maximum, but it does not repair a systematically wrong leader.
+The decision now depends on what has happened, not only on the prompt's estimated difficulty. Exact verification may establish a solution before the planned budget is spent; accumulated votes may make further counting unnecessary. This differs from assigning an attempt count in advance using an estimated $p_i$.
+
+For self-consistency, suppose $R$ votes remain before a fixed maximum and the leader's margin over the strongest competitor is $d$. If $d>R$, even a tie is impossible, provided each remaining candidate contributes at most one vote and category definitions and vote weights stay fixed. At $d=R$, a tie remains possible and its handling matters. Stopping at an irreversible lead preserves the winner of the full vote up to the declared maximum. It saves samples, but does not establish that the leader is correct or repair a systematic wrong mode.
 
 For continuous-score BoN there is no universal “good enough” score. A calibrated probability of success and the cost of another candidate are more useful than the raw maximum score.
 
@@ -800,13 +837,13 @@ Record four layers before publication.
 - robustness to rephrasing and verifier changes;
 - audit cases where proxy and independent goal disagree.
 
-This module stayed within one prompt and a controlled reasoning tree. Module 11 “RL for LLM agents: tools, environments, and long trajectories” (`rl_llm.module_11_agentic_rl`) adds external state, tools, hidden variables, and multi-turn episodes. Module 12 “RL infrastructure for LLMs: memory, rollouts, and asynchrony” (`rl_llm.module_12_infrastructure`) covers distributed trajectory collection and policy versioning. Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety” (`rl_llm.module_13_evaluation`) develops independent evaluation and metric gaming in depth.
+This module stayed within one prompt and a controlled reasoning tree. Module 11 “RL for LLM agents: tools, environments, and long trajectories” ([open module](/courses/rl-for-llm/module-11/)) adds external state, tools, hidden variables, and multi-turn episodes. Module 12 “RL infrastructure for LLMs: memory, rollouts, and asynchrony” ([open module](/courses/rl-for-llm/module-12/)) covers distributed trajectory collection and policy versioning. Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety” ([open module](/courses/rl-for-llm/module-13/)) develops independent evaluation and metric gaming in depth.
 
 ---
 
 ## Sources and reading route
 
-The following primary sources support the module’s main external claims. Course-derived formulas, exact calculations, and synthetic results are documented in the [English claim and source registry](module-10.md).
+The following primary sources support the module’s main external claims. The corresponding lecture steps explain the course calculations and synthetic experiments; their implementations are available through the course’s executable practice.
 
 - [Wang et al., *Self-Consistency Improves Chain of Thought Reasoning in Language Models*](https://arxiv.org/abs/2203.11171) — the original multiple-trajectory and answer-aggregation protocol. It reports gains on selected tasks, not a guarantee under a dominant systematic error.
 - [Chen et al., *Evaluating Large Language Models Trained on Code*](https://arxiv.org/abs/2107.03374) — HumanEval and the finite-sample `pass@k` estimator. The expression belongs to a defined sampling and verification protocol.
@@ -823,15 +860,15 @@ The following primary sources support the module’s main external claims. Cours
 
 ## Cross-references
 
-- Module 2 “State, Value, and Bellman Equations” (`rl_llm.module_02_values_bellman`): Monte Carlo prefix values and value backup along trajectories.
-- Module 3 “Bandits, exploration, and one-step decisions” (`rl_llm.module_03_bandits`): UCB, exploration, and constrained budget allocation.
-- Module 6 “The LLM as a policy: tokens, log-probabilities, and KL” (`rl_llm.module_06_llm_policy`): the actual generation distribution and decoding parameters.
-- Module 7 “Reward models and preference data” (`rl_llm.module_07_reward_models`): calibration, winner's error, and proxy overoptimization.
-- Module 9 “RLVR and GRPO: verifiable rewards, group-relative estimates, and stability” (`rl_llm.module_09_rlvr_grpo`): verifier contracts, process feedback, and rollout cost.
-- *Information Theory for ML*, Module 2 “Entropy” (`it_ml.module_02_entropy`): candidate-distribution entropy and limits of diversity metrics.
-- *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`): logarithmic scores, KL, and distribution comparison.
-- *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`): engineering decoding modes, latency, and serving.
-- *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`): the broader landscape of reasoning models and current interfaces.
+- Module 2 “State, Value, and Bellman Equations” ([open module](/courses/rl-for-llm/module-02/)): Monte Carlo prefix values and value backup along trajectories.
+- Module 3 “Bandits, exploration, and one-step decisions” ([open module](/courses/rl-for-llm/module-03/)): UCB, exploration, and constrained budget allocation.
+- Module 6 “The LLM as a policy: tokens, log-probabilities, and KL” ([open module](/courses/rl-for-llm/module-06/)): the actual generation distribution and decoding parameters.
+- Module 7 “Reward models and preference data” ([open module](/courses/rl-for-llm/module-07/)): calibration, winner's error, and proxy overoptimization.
+- Module 9 “RLVR and GRPO: verifiable rewards, group-relative estimates, and stability” ([open module](/courses/rl-for-llm/module-09/)): verifier contracts, process feedback, and rollout cost.
+- *Information Theory for ML*, Module 2 “Entropy” ([open module](/courses/information-theory-for-ml/module-02/)): candidate-distribution entropy and limits of diversity metrics.
+- *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” ([open module](/courses/information-theory-for-ml/module-03/)): logarithmic scores, KL, and distribution comparison.
+- *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” ([open module](/courses/modern-llms/module-10/)): engineering decoding modes, latency, and serving.
+- *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” ([open module](/courses/modern-llms/module-15/)): the broader landscape of reasoning models and current interfaces.
 
 ## Key takeaways
 

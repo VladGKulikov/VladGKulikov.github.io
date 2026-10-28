@@ -1,13 +1,14 @@
 # Module 9. RLVR and GRPO: verifiable rewards, group-relative estimates, and stability
 
 > **Material version:** 2026.21  
+> **Explanatory prose revised:** 2026-10-27  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
 > **Core practice:** level A — browser and central processing unit (CPU); level B — free Colab T4 with Low-Rank Adaptation (LoRA)  
 > **Structure:** 5 lessons, 25 steps  
 > **Estimated time:** 10–13 hours, excluding optional model training
 
-Module 8 “RLHF and direct preference optimization” (`rl_llm.module_08_rlhf_dpo`) optimized a policy from a fixed preference dataset. We now let the policy create its own data: for each prompt it produces several responses, a checking procedure assigns rewards, and the next training update changes the distribution of future responses.
+[Module 8 “RLHF and direct preference optimization”](module-08.md) compared RLHF with policy optimization on fixed preference pairs. We now examine a fresh-data loop in detail: for each prompt it produces several responses, a checking procedure assigns rewards, and the next training update changes the distribution of future responses.
 
 This regime is called reinforcement learning with verifiable rewards (RLVR). Group Relative Policy Optimization (GRPO) is often used for it, but the two names are not synonyms:
 
@@ -31,7 +32,7 @@ After completing the module, you will be able to:
 9. discuss the “elicitation versus discovery” question without overstating pass@k evidence;
 10. run deterministic CPU exercises and prepare an optional experiment with a roughly 0.6-billion-parameter model.
 
-Dated claims, primary sources, and explicit boundaries are recorded in `Module_9_Sources.md`. The practical route has its own English notebook, the executable practice.
+Practice remains separate from the lecture: [exercises](/courses/rl-for-llm/module-09/exercises/), [assessment questions](/courses/rl-for-llm/module-09/tests/), and the [English notebook](/downloads/rl-for-llm/notebooks/module-09-rlvr-grpo.en.ipynb). Primary sources and the limits of the research claims are listed at the end of the chapter.
 
 ---
 
@@ -39,15 +40,7 @@ Dated claims, primary sources, and explicit boundaries are recorded in `Module_9
 
 ## Lesson 9.1. RLVR as a feedback contract
 
-> **Lesson 9.1. RLVR as a feedback contract**
->
-> 1. What makes a reward verifiable
-> 2. DeepSeek-R1-Zero as a historical case, not a universal recipe
-> 3. A verifier is a stack, not a single Boolean
-> 4. A numerical verifier: useful core, explicit limits
-> 5. When does a group carry a learning signal?
->
-> then 5 assessment steps
+Begin before the optimizer. Learning from a check requires knowing what it tests, how it can fail, and when a response group offers a comparison at all. Only then does a number in the log become a defensible basis for an update.
 
 ### Step 9.1.1 — What makes a reward verifiable
 
@@ -61,7 +54,7 @@ Examples include:
 - evaluating a tool call by the resulting environment state;
 - scoring a game or simulator trajectory under explicit rules.
 
-Verifiable does not mean binary. A reward can be real-valued, multi-component, or partially graded. The essential requirements are that a fixed checker returns the same result for the same input and that the criterion is close enough to the property we actually want to improve.
+Verifiable does not mean binary. A reward can be real-valued, multi-component, or partially graded. The score must come from a declared checking procedure, and that procedure must test something sufficiently close to the intended property. A deterministic checker returns the same result for the same complete input and version. With randomized tests or a stochastic environment, the test set, environment state, and random seed—or an explicitly defined distribution of trials—also belong to the experiment. Repeating the response text alone need not repeat the checking conditions. The numerical example below uses a deterministic rule.
 
 The loop is
 
@@ -193,7 +186,7 @@ $$
 
 ![Probability of an informative group](assets/rl-for-llm/en/module-09/M9_informative_groups_EN.png)
 
-When $p\approx0$, almost every group is all wrong; when $p\approx1$, almost every group is all correct. The signal is strongest near $p=1/2$.
+When $p\approx0$, almost every group is all wrong; when $p\approx1$, almost every group is all correct. The probability of a nondegenerate group is highest near $p=1/2$. Here “informative” means that centering leaves a relative reward signal. It says nothing yet about verifier correctness, the direction of the full update, or generalization. A group can distinguish responses according to the wrong criterion, and nonzero coefficients need not produce a nonzero vector sum. The calculation concerns availability of this particular signal, not overall learning value per unit of compute.
 
 For $G=8$:
 
@@ -215,21 +208,15 @@ $$
 
 This motivates dynamic resampling and a moving difficulty curriculum. It also changes the training distribution: easy and nearly impossible prompts stop contributing gradients. Keep the original stream, rejection reason, and evaluation on the complete held-out distribution.
 
+Under a draw-once-then-accept-or-reject protocol, prompts whose groups more often pass the filter appear more often in the accepted batch. Generation for rejected groups has still been paid for. The accepted task distribution and the cost per accepted prompt are therefore two consequences of the same selection rule. Retrying one prompt until it yields a mixed group would be a different protocol; the cost expression must be interpreted with the unit of a draw held fixed.
+
 The formula assumes independent draws conditional on one fixed prompt and generation protocol. Low temperature, a fixed template, and independently repeated prefixes can reduce entropy while preserving independence. Reusing a sampled prefix or a search branch across candidates can couple draws. Across prompts, different success probabilities also matter: average the per-prompt formula rather than substituting a pooled success rate. Duplicate answers alone do not identify dependence.
 
 ---
 
 ## Lesson 9.2. Canonical GRPO
 
-> **Lesson 9.2. Canonical GRPO**
->
-> 1. Three policies and one data source
-> 2. Group baseline and advantage estimate
-> 3. The clipped objective
-> 4. Why the first update may not need a nontrivial ratio
-> 5. Relationship to REINFORCE, RLOO, and PPO
->
-> then 3 assessment steps
+The checked responses are now available. We can follow their rewards into fixed coefficients, bring stored probabilities together with current ones, and trace the differentiable path to the parameters. The central object is one batch that is collected first and optimized afterwards.
 
 ### Step 9.2.1 — Three policies and one data source
 
@@ -265,6 +252,8 @@ $$
 
 The denominator must describe the **actual behavior policy** after temperature, masks, top-k/top-p, and any other logit processing. If generation used a transformed distribution, raw-softmax log-probabilities cannot be substituted merely because they are easier to obtain. Stored old log-probabilities, decoding parameters, and the generator version belong in the rollout record.
 
+The numerator needs an equally explicit definition: is it the current model's raw softmax, or its policy after the same generation transforms? When we equate old and current policies before an update, we mean these distributions, not merely their checkpoint files. A numerator and denominator using different decoding rules can disagree before the optimizer has taken a single step. That requires the separate interpretation developed in Module 6.
+
 ### Step 9.2.2 — Group baseline and advantage estimate
 
 For rewards $r_1,\ldots,r_G$, canonical GRPO uses
@@ -283,11 +272,28 @@ $$
 
 where $s_r$ is the within-group standard deviation.
 
+Each response is first compared with other attempts on the same prompt, then measured in units of that group's reward spread. The result is a relative training coefficient, not a correctness probability, an absolute utility, or the exact $A^\pi(s_t,a_t)$ at every prefix. When the batch is reused, rewards and their group statistics are held fixed. Backpropagation does not differentiate the checking procedure or the earlier random draw of responses.
+
 The same $\widehat A_i$ is usually applied to every token in response $o_i$. This removes the learned value model, but it does not solve token-level credit assignment: every token in a successful response receives the same sign.
 
 “GRPO has no baseline” is false. The group mean is a baseline. What GRPO removes is a **learned critic** that predicts state values.
 
-For a binary group with one success and population standard deviation,
+If every reward is equal, the centered reward contribution vanishes. A separate KL term, entropy regularizer, or other auxiliary objective may still produce an update. A positive numerical $\varepsilon$ makes zero spread well defined; it does not manufacture reward information.
+
+Now take a binary group of $G>1$ responses with exactly one success. With the population convention,
+
+$$
+\bar r=\frac1G,
+\qquad
+s_r^2
+=\frac1G\left[
+\left(1-\frac1G\right)^2
++(G-1)\left(0-\frac1G\right)^2
+\right]
+=\frac{G-1}{G^2}.
+$$
+
+Thus $s_r=\sqrt{G-1}/G$. Dividing the two possible deviations from $1/G$ by this scale gives
 
 $$
 \widehat A_{\mathrm{success}}
@@ -305,9 +311,17 @@ $$
 
 ignoring the numerical $\varepsilon$. The group estimates sum to zero, but their scale depends on group composition.
 
+A zero coefficient sum does not switch learning off. Each coefficient multiplies a different response's gradient vector. Those vectors need not cancel when combined with positive and negative weights. Centering defines a comparison; the response-dependent derivatives turn it into a redistribution of probability, just as in the group-baseline discussion in Module 4.
+
+The numbers above use divisor $G$ for the reward variance. A sample standard deviation with divisor $G-1$ changes the scale. Also keep the normalization constant $\varepsilon$ distinct from the clipping parameter $\epsilon$: the similar symbols have different jobs.
+
 ---
 
 ### Step 9.2.3 — The clipped objective
+
+Follow one response after the group has been checked. Its tokens are now fixed, and its old log-probabilities come from the rollout record. The current model rescores the same actions on the same prefixes. Each token receives a ratio $\rho_{i,t}$, a fixed response coefficient $\widehat A_i$, and a clipped-surrogate contribution. The contributions are then reduced. Verification determines which changes are desirable; current log-probabilities supply the differentiable route to the parameters.
+
+An implementation that minimizes a loss takes the negative of the objective $J$ below. This sign convention does not reverse the meaning of an advantage: a positive coefficient locally favors the selected action, while a negative coefficient disfavors it, subject to clipping and shared parameters.
 
 The original DeepSeekMath presentation uses token-level ratios and averages token terms within each response before averaging responses:
 
@@ -335,6 +349,8 @@ $$
 
 $K_{i,t}$ is the chosen estimator of deviation from the reference. Its exact form matters: a sampled log-ratio, a non-negative sample form such as $k_3$, and the exact categorical KL have different variance, bias, and gradient contracts.
 
+Choosing a scalar to log is not yet choosing its optimization gradient. Module 6 showed why one must specify the sampling distribution of actions and prefixes, the stop-gradient operations, and whether regularization enters the loss directly or has already been included in reward. Swapping diagnostic estimators without that derivation can change the update. Even an exact vocabulary sum on old prefixes is not automatically the exact gradient of current-policy sequence KL.
+
 Clipping behaves differently for the two advantage signs:
 
 - when $\widehat A_i>0$, the upper branch stops further growth of the surrogate contribution after the ratio has increased too far;
@@ -345,7 +361,7 @@ Notation differs across papers and libraries. DeepSeekMath uses token ratios; th
 
 ### Step 9.2.4 — Why the first update may not need a nontrivial ratio
 
-When rollouts were generated by the current weights and exactly one forward/backward pass occurs before any policy change,
+When rollouts were generated by the current policy, rescoring uses the same distributional transforms, and the parameters have not yet changed,
 
 $$
 \pi_\theta
@@ -353,9 +369,23 @@ $$
 \pi_{\theta_{\mathrm{old}}}
 $$
 
-at the evaluation point, so $\rho_{i,t}=1$. The objective still has a policy-gradient derivative through current log-probabilities, but clipping is inactive.
+at the evaluation point, so $\rho_{i,t}=1$. The denominator remains a recorded value or a frozen-policy result. Only the numerator varies with the trainable parameters:
+
+$$
+\begin{aligned}
+\nabla_\theta\rho_{i,t}(\theta)
+&=\rho_{i,t}(\theta)\,
+\nabla_\theta\log\pi_\theta(o_{i,t}\mid q,o_{i,<t}),\\[4pt]
+\left.\nabla_\theta\rho_{i,t}\right|_{\theta=\theta_{\mathrm{old}}}
+&=\left.\nabla_\theta\log\pi_\theta(o_{i,t}\mid q,o_{i,<t})\right|_{\theta=\theta_{\mathrm{old}}}.
+\end{aligned}
+$$
+
+A value of one is therefore compatible with a nonzero derivative. Replacing the ratio by the constant `1` in the computational graph would lose that derivative. With positive clipping widths, one is inside the interval, so the limiting branch is inactive at this initial evaluation.
 
 Ratios matter after repeated mini-batches, several optimization iterations on the same completions, or asynchronous generator lag. The data then becomes progressively less on-policy.
+
+Count actual parameter updates rather than backward calls alone: gradient accumulation across several pieces without an optimizer step does not yet change the policy. Conversely, after the first parameter update, the rest of the saved rollout belongs to an earlier distribution. A small reuse count is not itself a bound on policy distance; ratios and the other diagnostics must establish whether the reuse remains modest.
 
 A precise classification is:
 
@@ -369,7 +399,18 @@ Log `num_iterations`, rollout age, generator checkpoint, and the ratio distribut
 
 ### Step 9.2.5 — Relationship to REINFORCE, RLOO, and PPO
 
-Without clipping, KL, or rollout reuse, a group-mean baseline yields a REINFORCE-like estimator:
+Remove KL and examine the initial point where the policies coincide and clipping is inactive. For the fixed group, the derivative of the objective in 9.2.3 is
+
+$$
+\widehat g_{\mathrm{mean}}
+=\frac1G\sum_{i=1}^{G}
+\frac{\widehat A_i}{|o_i|}
+\left.\nabla_\theta\log\pi_\theta(o_i\mid q)\right|_{\theta=\theta_{\mathrm{old}}}.
+$$
+
+Summing token log-probabilities has produced a full-response log-probability, but the response-length denominator remains. Removing clipping or reuse does not remove that reduction.
+
+Make one additional choice: sum token contributions rather than averaging them within each response. This gives the full-response REINFORCE-like expression:
 
 $$
 \widehat g
@@ -381,6 +422,8 @@ $$
 \log\pi_\theta(o_i\mid q).
 $$
 
+With equal response lengths, these reductions differ by one common multiplier. With unequal lengths, they reweight examples relative to one another. “REINFORCE-like” describes the form, not an unbiasedness guarantee for arbitrary $\widehat A_i$. The common mean includes the response's own reward, and the random $s_r$ depends on the entire group. Neither dependence disappears by renaming the estimator.
+
 REINFORCE Leave-One-Out (RLOO) instead uses the mean of the **other** rewards for response $i$:
 
 $$
@@ -391,6 +434,8 @@ $$
 
 Under conditionally independent sampling, this baseline is independent of the current action and avoids the finite-sample $(G-1)/G$ scaling induced by the common sample mean. GRPO generally retains the common group mean and adds normalization, clipping, and sometimes KL.
 
+The $(G-1)/G$ statement belongs to the unstandardized group-baseline comparison from Module 4 before random standardization, clipping, or other reweighting operations are introduced. After those operations, the complete estimator needs its own analysis.
+
 PPO uses a learned critic and stepwise advantage estimates. GRPO replaces the critic with comparisons among responses to the same prompt. That saves model memory while increasing dependence on rollout count, verifier quality, and within-group diversity.
 
 **Compact map:** RLVR specifies where reward comes from; REINFORCE, RLOO, GRPO, and PPO specify how the gradient is estimated and applied.
@@ -399,15 +444,7 @@ PPO uses a learned critic and stepwise advantage estimates. GRPO replaces the cr
 
 ## Lesson 9.3. Normalization and algorithm variants
 
-> **Lesson 9.3. Normalization and algorithm variants**
->
-> 1. Dividing by group standard deviation reweights prompts
-> 2. Length normalization decides who receives gradient
-> 3. DAPO: four related but independent changes
-> 4. GSPO: an importance ratio for the whole response
-> 5. A method name is not a full specification
->
-> then 6 assessment steps
+The GRPO formula is assembled, but its averages are not merely implementation details. Different denominators change the coefficients assigned to prompts, responses, and tokens. We will separate those choices before reading algorithm names as combinations of specific operations.
 
 ### Step 9.3.1 — Dividing by group standard deviation reweights prompts
 
@@ -433,7 +470,11 @@ $$
 (-0.075,0.025,0.025,0.025).
 $$
 
-The second group has ten times smaller differences. Dividing each by its own standard deviation makes the normalized advantages identical. A barely differentiated partial signal receives the same scale as a large reward gap.
+The second group has ten times smaller differences. Ignoring the numerical $\varepsilon$, division by each group\'s own standard deviation makes the normalized advantages identical. A barely differentiated partial signal receives the same scale as a large reward gap.
+
+That example concerns reward scale, not yet binary task difficulty. For binary rewards, the connection becomes explicit: with empirical success fraction $\widehat p$, the population deviation is $s_r=\sqrt{\widehat p(1-\widehat p)}$. The scale now depends on the group's success composition. A rare success among failures gets a large positive coefficient, as the one-success calculation showed. If no success occurs at all, however, the centered signal is still zero. A large coefficient conditional on observing an event and a small probability of observing it must be considered together.
+
+Standardization is not merely a guaranteed variance reduction for unchanged REINFORCE. Its random denominator is computed from the same rewards as the numerator. It changes the estimator and the relative emphasis on prompts; preserving the original expected gradient requires an argument about the whole construction.
 
 *Understanding R1-Zero-Like Training: A Critical Perspective* calls this question-level difficulty bias and proposes Dr. GRPO with
 
@@ -444,6 +485,8 @@ r_i-\bar r
 $$
 
 and no within-group standard-deviation scaling.
+
+The correction removes the reweighting mechanism identified in that analysis. “Unbiased” should be read relative to the authors' particular objective and assumptions, not as a claim that every estimator used in a Dr. GRPO implementation is free of every source of bias.
 
 This is not free. Without normalization, update scale depends directly on reward units and batch composition. Components in $[0,1]$ and $[-100,100]$ cannot be combined without explicit calibration.
 
@@ -458,7 +501,7 @@ $$
 \sum_t \ell_{i,t}.
 $$
 
-Each response therefore has length-independent total weight, while each token receives weight proportional to $1/|o_i|$. A long failed response gets weaker negative pressure per token than a short failed response.
+Each response therefore has a length-independent sum of arithmetic coefficients, while each token term carries a coefficient proportional to $1/|o_i|$. All else equal, a long failure gives each token less negative weight than a short failure. This is a statement about reduction coefficients, not equal gradient norms: token derivatives differ in direction and magnitude and can partly cancel.
 
 Dr. GRPO replaces the response-specific denominator with a fixed constant $L$, such as the maximum completion length:
 
@@ -488,6 +531,8 @@ $$
 
 Both remove the per-response length denominator, but they are not identical. Dr. GRPO uses a denominator independent of random batch lengths; DAPO’s denominator changes with the active-token count. This can matter across distributed layouts and gradient accumulation schemes.
 
+Here $\ell_{i,t}$ denotes a token contribution to the chosen surrogate, not necessarily a bare log-probability. The summation domain must be explicit as well. DAPO's denominator counts all active tokens in the declared reduction batch. Averaging independently normalized sub-batches generally differs from dividing their combined numerator by their combined token count; matching the latter requires weighting the pieces accordingly. The denominator is therefore a mathematical choice before it becomes a distributed-systems detail in Module 12.
+
 Neither objective proves that longer responses are useful. It only allocates gradient budget among tokens.
 
 ---
@@ -499,14 +544,16 @@ Decoupled Clip and Dynamic sAmpling Policy Optimization (DAPO) combines four tec
 1. **Clip-Higher.** It separates the lower and upper ranges:
 
 $$
-\rho\in
-[1-\epsilon_{\mathrm{low}},
- 1+\epsilon_{\mathrm{high}}],
+\operatorname{clip}\!\left(
+\rho,\,1-\epsilon_{\mathrm{low}},\,
+1+\epsilon_{\mathrm{high}}\right),
 \qquad
 \epsilon_{\mathrm{high}}>\epsilon_{\mathrm{low}}.
 $$
 
 The authors argue that an early upper clip can suppress growth of rare but useful tokens. This is an empirical mechanism and stabilization choice, not a guarantee of diversity.
+
+These are boundaries of the clipping operation, not constraints that keep $\rho$ inside the interval. A ratio can cross a boundary while the surrogate changes branches. Clip-Higher should therefore be interpreted together with the positive contributions that actually reach the upper plateau, not merely with the configured width.
 
 2. **Dynamic sampling.** All-equal reward groups are rejected and generation continues until enough informative prompts have been collected. The costs are additional tokens and a changed prompt distribution.
 
@@ -565,9 +612,22 @@ J_{\mathrm{GSPO}}
 \right].
 $$
 
-This is the geometric mean of token ratios, not the unnormalized product of full-sequence probabilities. The GSPO authors argue that the unit of correction and clipping should match the sequence-level reward. They report improved stability in the long-response and mixture-of-experts settings they studied. These are reported experiments, not a theorem of universal superiority.
+This is the geometric mean of token ratios, not the unnormalized product of full-sequence probabilities.
 
-Length normalization keeps the sequence ratio numerically manageable, but the gradient still flows through all token log-probabilities. GSPO clip ranges are not numerically interchangeable with token-level GRPO ranges because the ratios live on different scales.
+Taking the root is part of the surrogate's design. Exact importance sampling of an expectation over whole responses uses the full likelihood ratio, not its root. Consequently, $s_i$ is not a universal unbiased correction for arbitrary sequence-level expectations. A more manageable clipping scale is a choice about the update, not an unchanged importance-sampling identity. The GSPO authors argue that the unit of correction and clipping should match the sequence-level reward. They report improved stability in the long-response and mixture-of-experts settings they studied. These are reported experiments, not a theorem of universal superiority.
+
+Differentiate one $s_i$ while holding the recorded response length and old-policy denominator fixed:
+
+$$
+\nabla_\theta s_i(\theta)
+=\frac{s_i(\theta)}{|o_i|}
+\sum_{t=1}^{|o_i|}
+\nabla_\theta\log\pi_\theta(o_{i,t}\mid q,o_{i,<t}).
+$$
+
+On the unclipped branch, this derivative is multiplied by $\widehat A_i$. All tokens share one sequence-level multiplier and one decision about whether the contribution is on a plateau. When the constant clipped branch is selected, this response's reward contribution through that term has zero derivative. Its probabilities may still change through other responses or auxiliary terms because the parameters are shared.
+
+Initially $s_i=1$. With identical fixed advantages, matching policies, no KL, and inactive clipping, this gradient equals $\widehat g_{\mathrm{mean}}$ from 9.2.5. The important difference emerges after departure from that point: a shared reweighting and clipping decision replaces tokenwise decisions. Token log-ratio changes can compensate inside the average, so a sequence-level plateau is not a bound on each token ratio. GSPO clip ranges are not numerically interchangeable with token-level GRPO ranges because the ratios live on different scales.
 
 ---
 
@@ -611,15 +671,7 @@ Other modes include `loss_type="dr_grpo"`, batch-level reward scaling, sequence-
 
 ## Lesson 9.4. Training dynamics and diagnosis
 
-> **Lesson 9.4. Training dynamics and diagnosis**
->
-> 1. Entropy: specify what is measured
-> 2. Loss of diversity and interventions
-> 3. Length, EOS, and technical truncation
-> 4. Elicitation of reachable behavior versus new effective strategies
-> 5. A minimum dashboard
->
-> then 5 assessment steps
+A completely consistent loss can still produce an unhelpful result. We now compare what the optimizer rewards with what the updated policy actually generates. Diagnosis should explain why one metric improves while another deteriorates, rather than simply record their movement.
 
 ### Step 9.4.1 — Entropy: specify what is measured
 
@@ -645,7 +697,9 @@ Distinguish:
 
 These quantities are related but not identical. High token entropy can be spent on punctuation; low entropy can encode a stable correct algorithm.
 
-The 2025 paper *The Entropy Mechanism of Reinforcement Learning for Reasoning Language Models* reports, in its studied runs, rapid entropy reduction and a disproportionate update contribution from a minority of high-entropy tokens. A later 2026 preprint proposes an explicit on-policy entropy-flow mechanism to resist collapse. Both are useful sources of diagnostic hypotheses, but neither defines a universal “healthy entropy” threshold across models, rewards, and response lengths; the 2026 result should additionally be treated as recent frontier evidence rather than settled theory.
+[*The Entropy Mechanism of Reinforcement Learning for Reasoning Language Models*](https://arxiv.org/abs/2505.22617) studies rapid entropy decline and relates entropy changes to a covariance property of updates; its interventions target tokens with a high corresponding contribution. A separate paper, [*Beyond the 80/20 Rule: High-Entropy Minority Tokens Drive Effective Reinforcement Learning for LLM Reasoning*](https://arxiv.org/abs/2506.01939), investigates updates restricted to a small fraction of high-entropy positions. High distributional entropy and a high covariance contribution are not interchangeable properties, so the findings should not be merged.
+
+The 2026 preprint [*Understanding and Preventing Entropy Collapse in RLVR with On-Policy Entropy Flow Optimization*](https://arxiv.org/abs/2605.11491) studies balancing entropy-increasing and entropy-decreasing updates. It supplies a further research hypothesis and results from the authors' experiments, not a universal prescription. None of these studies defines one transferable “healthy entropy” threshold for all models, rewards, and response lengths.
 
 ---
 
@@ -660,6 +714,8 @@ Warning signs include:
 5. upper clip fraction and heavy-tailed ratios grow;
 6. different random seeds converge to the same response template.
 
+Read these signals together. With binary reward, fewer mixed groups can mean near-universal success or near-universal failure. Track all-success and all-failure groups separately: one aggregate cannot distinguish task mastery from loss of access to a positive learning signal.
+
 Possible interventions are:
 
 - increase diversity of the actual behavior policy;
@@ -672,6 +728,8 @@ Possible interventions are:
 - separate reward components when one dominates.
 
 Every intervention has a cost. More sampling temperature can lower correctness and raise generation expense. An entropy bonus rewards useful and useless uncertainty. Larger $G$ costs more generation. Clip-Higher relaxes one constraint but cannot repair a wrong reward.
+
+An intervention should match a mechanism that is actually active. On the first fresh evaluation with $\rho=1$, widening the upper bound does not change the reward contribution because clipping is not yet active. It may matter later during reuse. A larger group gives more chances to observe differences when $0<p<1$; it does not guarantee a new solution strategy. Diagnose the operating mechanism before changing its setting.
 
 ---
 
@@ -716,9 +774,11 @@ A minimum comparison protocol is:
 4. repeat across random seeds;
 5. separate RL effects from later SFT or distillation.
 
+Pass@k curves describe access to correct outcomes under a sampling budget, not the origin of a particular strategy. The same answer can arise through different paths; failure to observe a strategy in a finite base-model sample does not prove that the base could never generate it. Trajectory analysis is therefore not decoration added to the metric—it addresses a different question.
+
 A 2025 study concludes that, for the models and tasks it examined, much of the gain could be explained by reweighting trajectories already reachable from the base model. This is an important counterweight to strong “reasoning creation” claims, not a final answer for all scales and domains.
 
-The full treatment of Best-of-N, self-consistency, and search is in Module 10 “Search, verification, and test-time compute” (`rl_llm.module_10_test_time_search`).
+The full treatment of Best-of-N, self-consistency, and search is in [Module 10 “Search, verification, and test-time compute”](module-10.md).
 
 ---
 
@@ -764,15 +824,7 @@ Define stopping criteria before training, such as no independent-quality improve
 
 ## Lesson 9.5. From formulas to a reproducible run
 
-> **Lesson 9.5. From formulas to a reproducible run**
->
-> 1. Data and verifier passport
-> 2. Rollout and update passport
-> 3. Resource profiles and the absence of a universal recipe
-> 4. Lab: synthetic loop and optional real-model GRPO
-> 5. Summary and module boundary
->
-> then 8 assessment steps
+Turn the preceding conditions into a reproducible run. A run record matters because it preserves the choices that determined rewards, group coefficients, and gradients. The small training example then shows why local improvement is not sufficient evidence of broader success.
 
 ### Step 9.5.1 — Data and verifier passport
 
@@ -796,7 +848,11 @@ Dynamic sampling must not erase the original distribution. Keep accepted and rej
 
 ### Step 9.5.2 — Rollout and update passport
 
-A rollout batch should reproduce the loss without regenerating outputs. Minimum fields are:
+A rollout batch should reproduce the loss without regenerating outputs.
+
+Module 6 established the tokens, masks, and probability record. Group learning adds another essential structure: which responses belong together and which rewards produced their statistics. Regrouping the same responses can change their coefficients. Group identity and the precise normalization convention therefore belong to the training example, not just incidental metadata.
+
+The record includes:
 
 - prompt identifier and tokens;
 - completion tokens and action mask;
@@ -825,7 +881,7 @@ Generator and trainer distributions may differ even with the same checkpoint ide
 
 ### Step 9.5.3 — Resource profiles and the absence of a universal recipe
 
-**Level A: CPU.** NumPy reference functions, verifier tests, synthetic groups, comparison of normalization, clipping, and sequence ratios. This path is required for understanding and uses no language model.
+**Level A: CPU.** NumPy reference functions, verifier tests, synthetic groups, comparison of normalization, clipping, and sequence ratios. These local checks do not require a neural network. The CPU route also contains the small GRU training loop described below: it has its own model, but requires no pretrained LLM download.
 
 **Level B: free Colab T4.** A roughly 0.6B model, LoRA, short completions, few generations, and an explicit smoke configuration. The goal is to observe the data path, not reproduce a large technical report.
 
@@ -837,7 +893,7 @@ Do not copy $G$, $\epsilon$, $\beta$, temperature, or learning rate as an “R1 
 
 ### Step 9.5.4 — Practice: an autoregressive CPU loop and an optional real model
 
-Practice is split by language:
+Separate Russian and English executable routes accompany the lecture.
 
 The core route runs on CPU and uses a small but genuine autoregressive model: an embedding layer, a GRU, and a language-model head. Responses are generated token by token under a constrained grammar. The versioned verifier returns correctness, intermediate consistency, format status, and total reward separately. Each prompt receives a group sampled by the frozen old policy; the current policy is then optimized with a clipped group-relative objective. A separate reference policy is retained for teacher-forced KL diagnostics.
 
@@ -866,6 +922,10 @@ The course’s fixed smoke profile produced:
 
 This is a **course-generated synthetic result**, not an external benchmark. Mean training accuracy rose, yet entropy and pass@4 fell, successes concentrated on fewer training prompts, and transfer to held-out combinations vanished. One mean reward is therefore not sufficient evidence of a good update. The small experiment does not claim that GRPO must collapse; it reproducibly demonstrates a failure pattern that a serious evaluation stack must be able to detect.
 
+Higher mean accuracy with lower pass@4 is not a contradiction. More successes can concentrate on already accessible tasks while other prompts become nearly unsolvable. The probability of at least one success is nonlinear in a particular prompt's success rate, so mean pass@4 across heterogeneous prompts cannot be recovered from pooled accuracy alone. Prompt-level coverage is needed to interpret the two averages.
+
+The KL row has a specific convention. Evaluation first samples a response from the policy under test. On each visited prefix, it computes exact categorical forward KL to the reference over grammar-allowed actions, averages those values within the response, and then averages responses. Teacher forcing means rescoring the selected sequence, not supplying a correct gold solution. This length-normalized diagnostic is not the sum defining sequence KL. The evaluated policies also visit different prefix distributions. The published numbers retain that protocol.
+
 The optional real-model branch is disabled by default:
 
 ```python
@@ -892,19 +952,21 @@ The main conclusions are:
 9. Elicitation-versus-discovery claims require matched sampling budgets and analysis of the trajectories themselves.
 10. A smoke run proves that the loop executes; it does not reproduce a large-scale paper result.
 
+A group can now be read as a connected computation: checking produces rewards, within-prompt comparison produces coefficients, reduction assigns weights to tokens and responses, and current probabilities provide the differentiable route to parameters. Changing one operation changes a particular part of the algorithm. The next module retains checking and multiple candidates but removes the weight update: the problem becomes selecting an answer under an inference budget.
+
 Continuation within this course:
 
-- Module 10 “Search, verification, and test-time compute” (`rl_llm.module_10_test_time_search`) develops Best-of-N, self-consistency, and search;
-- Module 12 “RL infrastructure for LLMs: memory, rollouts, and asynchrony” (`rl_llm.module_12_infrastructure`) covers distributed generation, policy versions, and rollout economics;
-- Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety” (`rl_llm.module_13_evaluation`) builds the statistical and safety evaluation stack.
+- [Module 10 “Search, verification, and test-time compute”](module-10.md) develops Best-of-N, self-consistency, and search;
+- [Module 12 “RL infrastructure for LLMs: memory, rollouts, and asynchrony”](module-12.md) covers distributed generation, policy versions, and rollout economics;
+- [Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety”](module-13.md) builds the statistical and safety evaluation stack.
 
 Extensions in the companion courses:
 
-- *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) provides the broader post-training context;
-- *Modern LLMs*, Module 15 “Reasoning Models and Test-Time Compute” (`modern_llms.module_13_reasoning`) connects RLVR to reasoning-model architectures and inference budgets;
-- *Information Theory for ML*, Module 2 “Entropy” (`it_ml.module_02_entropy`) develops entropy formally;
-- *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`) treats KL as a divergence between distributions;
-- *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) gives the variational view of KL-regularized policy updates.
+- *Modern LLMs*, [Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO”](/courses/modern-llms/module-14/) provides the broader post-training context;
+- *Modern LLMs*, [Module 15 “Reasoning Models and Test-Time Compute”](/courses/modern-llms/module-15/) connects RLVR to reasoning-model architectures and inference budgets;
+- *Information Theory for ML*, [Module 2 “Entropy”](/courses/information-theory-for-ml/module-02/) develops entropy formally;
+- *Information Theory for ML*, [Module 3 “Cross-Entropy and KL Divergence”](/courses/information-theory-for-ml/module-03/) treats KL as a divergence between distributions;
+- *Information Theory for ML*, [Module 8 “Maximum entropy, exponential models, and KL regularization”](/courses/information-theory-for-ml/module-08/) gives the variational view of KL-regularized policy updates.
 
 These references deepen selected topics, but Module 9 remains self-contained: every definition and equation required by its exercises and practice is introduced here.
 
@@ -916,7 +978,10 @@ These references deepen selected topics, but Module 9 remains self-contained: ev
 - [DAPO: An Open-Source LLM Reinforcement Learning System at Scale](https://arxiv.org/abs/2503.14476) — Clip-Higher, dynamic sampling, token-level reduction, and overlong reward shaping.
 - [Group Sequence Policy Optimization](https://arxiv.org/abs/2507.18071) — a response-level unit for the ratio and clipping decision.
 - [The Entropy Mechanism of Reinforcement Learning for Reasoning Language Models](https://arxiv.org/abs/2505.22617) — empirical and mechanistic entropy analysis in the authors’ studied runs.
+
+- [Beyond the 80/20 Rule: High-Entropy Minority Tokens Drive Effective Reinforcement Learning for LLM Reasoning](https://arxiv.org/abs/2506.01939) — a separate study of updates at high-entropy positions, not the covariance criterion of the preceding work.
+- [Understanding and Preventing Entropy Collapse in RLVR with On-Policy Entropy Flow Optimization](https://arxiv.org/abs/2605.11491) — a 2026 preprint on balancing entropy changes; preliminary evidence for a particular method and experimental suite.
 - [Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model?](https://arxiv.org/abs/2504.13837) — evidence on eliciting practically reachable trajectories; its conclusions are not universal across models and regimes.
 - [TRL GRPOTrainer documentation](https://huggingface.co/docs/trl/grpo_trainer) — the current engineering interface, not a primary source of mathematical guarantees.
 
-The complete claim registry, including the precise status of course-generated experiments, is in `Module_9_Sources.md`.
+The status of the course experiments is stated alongside their results: the published CPU numbers belong to a fixed teaching protocol, while the optional real-model branch is not presented as an executed experiment.

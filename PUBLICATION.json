@@ -1,8 +1,8 @@
 {
-  "edition": "2026.4",
+  "edition": "2026.5",
   "release_date": "2026-10-28",
   "concept_doi": "10.5281/zenodo.21877456",
-  "version_doi": "10.5281/zenodo.23722874",
+  "version_doi": "10.5281/zenodo.23725945",
   "status": "public",
   "courses": 3,
   "languages": [
@@ -12,7 +12,7 @@
   "content_license": "CC-BY-NC-SA-4.0",
   "code_license": "Apache-2.0",
   "content_updated": "2026-10-28",
-  "archived_edition_note": "The version DOI identifies collection 2026.4: confirmed Modern LLMs learner-review corrections, synchronized practice and updated RU/EN books. Other courses and their 2026.2 books are unchanged.",
+  "archived_edition_note": "The version DOI identifies collection 2026.5: the October 27 RL for LLM lecture revision in both languages, synchronized Stepik materials and rebuilt RU/EN books. Modern LLMs books retain edition 2026.4; Information Theory books retain edition 2026.2.",
   "archive_scope": [
     "lectures",
     "illustrations",
@@ -43,11 +43,17 @@
       "release_date": "2026-10-25",
       "version_doi": "10.5281/zenodo.23649045",
       "scope": "October 25 Modern LLMs text revision before the final Stepik learner-review corrections"
+    },
+    {
+      "edition": "2026.4",
+      "release_date": "2026-10-28",
+      "version_doi": "10.5281/zenodo.23722874",
+      "scope": "Modern LLMs learner-review corrections before the October 27 RL for LLM text revision"
     }
   ],
   "book_editions": {
     "modern-llms": "2026.4",
     "information-theory-for-ml": "2026.2",
-    "rl-for-llm": "2026.2"
+    "rl-for-llm": "2026.5"
   }
 }

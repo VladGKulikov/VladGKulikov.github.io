@@ -1,6 +1,7 @@
 # Module 2. State, Value, and Bellman Equations
 
 > **Material version:** 2026.7  
+> **Text revision:** 2026-10-26  
 > **Content snapshot:** 2026-08-04  
 > **Language:** EN  
 > **Core practice:** Tier A — browser, Python, NumPy, and a central processing unit (CPU)  
@@ -9,7 +10,9 @@
 
 Module 1 framed RL as a loop of action selection and feedback. We now face a harder question: **how can we evaluate a state or an action before the final outcome is known?** The answer begins with a well-chosen state representation, continues with value functions, and leads to the Bellman equations.
 
-A prior classical RL course is still not required. New concepts are introduced in plain language, formalized, and only then mapped to LLMs. Readers who already know RL can move quickly through §§2.1.1–2.1.4 and focus on the limits of the token-level model, termination versus truncation, the exact conditions behind convergence statements, and the bridges to modern LLM post-training.
+At the end of Module 1, we measured the performance of a policy that did not change. We now need more than an average outcome from the starting point: we need estimates of what remains possible after each intermediate decision. We will first compute those estimates when the environment is known, then learn them from observations, and finally use them to change behavior.
+
+A prior classical RL course is still not required. Readers who already know RL can move quickly through §§2.1.1–2.1.4 and focus on the limits of the token-level model, termination versus truncation, the exact conditions behind convergence statements, and the bridges to modern LLM post-training.
 
 **Learning goals.** By the end of the module, you will be able to:
 
@@ -23,7 +26,7 @@ A prior classical RL course is still not required. New concepts are introduced i
 8. recognize maximization bias and explain how separating selection from evaluation reduces it;
 9. reproduce numerical experiments on Gridworld, FrozenLake, the Corridor, and CliffWalking.
 
-The public computational lab is the executable practice. It implements exact policy evaluation, value iteration, Monte Carlo prediction, TD(0), multi-step TD, Q-learning, SARSA, and Double Q-learning. NumPy, Matplotlib, and a CPU are sufficient; no GPU is required.
+The computational lab is available in the existing executable-practice section. It implements exact policy evaluation, value iteration, Monte Carlo prediction, TD(0), multi-step TD, Q-learning, SARSA, and Double Q-learning. NumPy, Matplotlib, and a CPU are sufficient; no GPU is required.
 
 ---
 
@@ -31,19 +34,11 @@ The public computational lab is the executable practice. It implements exact pol
 
 ## Lesson 2.1. From history to state, then to value
 
-> **Lesson 2.1. From history to state, then to value**
->
-> 1. Why we need a state
-> 2. A finite MDP and the reward convention
-> 3. Task termination and technical truncation are different
-> 4. Three value functions: V, Q, and advantage A
-> 5. Reading value functions for an LLM
->
-> then 7 assessment steps
-
 ### Step 2.1.1 — Why we need a state
 
-The complete interaction history at time $t$ may be long:
+Consider a file-using agent. An earlier message identified the file currently open in its session, but that message has since fallen out of the context window. The file session has not disappeared: the next tool call still acts on the selected file. Two current windows can therefore look alike even though information observed earlier changes what we should expect from the call.
+
+The issue is not simply how long a record is. It is whether the record retains the information needed to predict the consequences of future actions. The complete interaction history at time $t$ may be long:
 
 $$
 H_t=(O_0,A_0,R_1,O_1,\ldots,A_{t-1},R_t,O_t).
@@ -84,11 +79,11 @@ If the transition only appends the chosen token, model parameters and decoding r
 
 A browser, file session, user, or external tool can carry hidden state. For a fixed environment model and initial distribution, the complete history $H_t$ can serve as a growing information state: it determines the conditional distribution of future observations and rewards without revealing the actual world state. The belief $b_t(s)=P(s_t=s\mid H_t)$ summarizes that history for prediction in a POMDP. Different hidden states compatible with one history can produce different outcomes while belonging to the same conditional probability law.
 
-A text-message window may contain only part of $H_t$. For example, the message identifying the open file may have been dropped, while the file session still uses that file. Two complete histories then produce the same window even though their earlier observations change the prediction of the next tool response. The loss of relevant information in the representation, rather than hidden state alone, makes that window insufficient.
+Now return to the context window at the beginning of this step. It contains only part of $H_t$: the file-selection information was available and then lost. The window can consequently merge histories with different conditional distributions for the next tool response. This loss of relevant information—not the mere existence of a hidden world—is what makes the representation insufficient. A complete history may support a sufficient probabilistic prediction without uniquely identifying the actual world state.
 
 > **Practical sufficiency test.** Can two complete histories mapped to the same record $S_t$ give different conditional distributions of the next observation and reward under the same action? If so, the representation has lost relevant information. Different random outcomes drawn from one conditional distribution do not violate the Markov property.
 
-**Architecture context:** *Modern LLMs*, Module 18 “Agents and Tool Use” (`modern_llms.module_16_agents`) develops the systems view. Here we only need the distinction among environment state, observation, and the agent's internal representation.
+**Architecture context:** *Modern LLMs*, [Module 18 “Agents and Tool Use”](/courses/modern-llms/module-18/) develops the systems view. Here we only need the distinction among environment state, observation, and the agent's internal representation.
 
 ---
 
@@ -119,7 +114,11 @@ $$
 \mathbb{E}[R_{t+1}\mid S_t=s,A_t=a,S_{t+1}=s'].
 $$
 
-The expected reward $\bar r(s,a)=\mathbb{E}[R_{t+1}\mid s,a]$ always exists when the reward is integrable and satisfies $\bar r(s,a)=\sum_{s'}P(s'\mid s,a)\bar r(s,a,s')$. This marginalization requires no conditional-independence assumption. Equating $\bar r(s,a,s')$ with the same $\bar r(s,a)$ for every reachable next state is an additional assumption about the conditional mean. Likewise, $\bar r(s)$ can average over actions under a specified policy, whereas an action-independent reward model is a stronger condition. This module uses the transition-conditioned form by default.
+This does not replace every reward in the environment with one fixed number. It asks for the mean reward conditional on a particular transition: where we started, which action we took, and where we arrived. Individual rewards can still differ under the same three conditions. Their conditional mean is what enters an expected-value calculation.
+
+We can also ask a question one step earlier. The action is fixed, but the next state is not yet known. We must then average over possible destinations as well. For an integrable reward, $\bar r(s,a)=\mathbb{E}[R_{t+1}\mid s,a]$ and $\bar r(s,a)=\sum_{s'}P(s'\mid s,a)\bar r(s,a,s')$. No conditional-independence assumption is needed: the dependence on the destination is accounted for inside the average, not assumed away.
+
+A stronger assertion would equate $\bar r(s,a,s')$ with the same $\bar r(s,a)$ for every reachable next state. That would say that learning the destination does not change the conditional mean reward. Similarly, $\bar r(s)$ may average over actions under a specified policy; an action-independent reward model is an extra assumption. We will keep the transition-conditioned form so that the notation makes clear which outcomes have already been averaged out.
 
 The policy $\pi(a\mid s)$ is **not part of the environment dynamics**. The same MDP can be paired with different policies. Under a fixed policy, a one-step joint distribution factors as
 
@@ -143,6 +142,8 @@ A trajectory file may record the same surface fact—“there is no next sample�
 
 1. **Termination** means the task itself reached a terminal state: success, failure, or an answer-ending token. The specified MDP has no continuation after that transition.
 2. **Truncation** means collection stopped because of an external budget: steps, wall-clock time, buffer capacity, or batch length. The underlying task could have continued.
+
+To turn this distinction into a calculation, form a target $y_t$ from two pieces. The reward for the transition just observed is known. The rest of the outcome is still unknown and is represented by a current estimate $V(S_{t+1})$. True termination removes that second piece by the definition of the task; stopping the recording does not remove it on its own. Lesson 2.3 will explain how the target updates a value table. For now, we need to decide which continuation belongs in the target at all.
 
 Define a continuation mask
 
@@ -183,6 +184,8 @@ Conflating the cases creates systematic bias. With positive continuation value, 
 
 ### Step 2.1.4 — Three value functions: V, Q, and advantage A
 
+The same situation can have different consequences under different rules of behavior. A value therefore belongs to a policy: it is not a measure of how good a cell is in isolation, but an expected outcome when the agent acts in a specified way from that cell.
+
 Fix a policy $\pi$ and define the return
 
 $$
@@ -199,7 +202,7 @@ V^\pi(s)
 \mathbb{E}_\pi[G_t\mid S_t=s].
 $$
 
-The **action-value function** fixes the first action and follows the policy afterward:
+The **action-value function** asks a more specific question. Fixing the first action does not fix the whole remaining route; subsequent decisions are again made by the policy. It is the expected outcome after imposing that first action and following the policy afterward:
 
 $$
 Q^\pi(s,a)
@@ -257,11 +260,15 @@ In a token-level model, state is the prompt plus generated prefix and action is 
 - $V^\pi(s)$ is the policy average over possible next-token choices;
 - $A^\pi(s,a)$ measures the token's deviation from that current-policy average.
 
-A tiny prefix tree makes the definitions concrete. Suppose the prefix “because” leads to “check” with probability $0.7$ and reward $1$, or to “skip” with probability $0.3$ and reward $0.4$. Then
+A tiny prefix tree makes the definitions concrete. Its words are labels for branches, not a claim about natural phrasing. In this calculation $\gamma=1$, and reward is paid when a branch ends. Suppose the prefix “because” leads to “check” with probability $0.7$ and reward $1$, or to “skip” with probability $0.3$ and reward $0.4$. Then
 
 $$
 V^\pi(\text{because})=0.7\cdot1+0.3\cdot0.4=0.82.
 $$
+
+Read the same node through $Q$ and $A$. Choosing “check” ends the branch with reward $1$; choosing “skip” ends it with $0.4$. These are the two action values. Their average under the current choice probabilities is $V=0.82$, so their advantages are $1-0.82=0.18$ and $0.4-0.82=-0.42$.
+
+The second branch has negative advantage without having negative reward. Its outcome is positive, but below this policy's average at the node. The zero-mean property is now visible in the original numbers: $0.7\cdot0.18+0.3\cdot(-0.42)=0$. No new quality measure has been introduced; the same two outcomes have been compared with a shared reference level.
 
 If the alternative prefix “guess” has value $-0.10$, and the empty prefix chooses “because” with probability $0.55$, then
 
@@ -277,21 +284,11 @@ A common overreach concerns **group relative policy optimization** (GRPO). In th
 
 > **The bridge worth keeping.** A value function asks what an unseen continuation is worth in expectation. A PPO critic, a GRPO group baseline, and a partial-reasoning evaluator approximate that broad question in different ways; they are not the same mathematical object.
 
-Module 4 (`rl_llm.module_04_policy_gradients`) will connect advantage to policy gradients and GAE. Module 9 (`rl_llm.module_09_rlvr_grpo`) develops GRPO variants. Module 15 “Reasoning Models and Test-Time Compute” in *Modern LLMs* (`modern_llms.module_13_reasoning`) supplies the architectural context for scoring intermediate steps.
+[Module 4](module-04.md) will connect advantage to policy gradients and GAE. [Module 9](module-09.md) develops GRPO variants. [Module 15 “Reasoning Models and Test-Time Compute”](/courses/modern-llms/module-15/) in *Modern LLMs* supplies the architectural context for scoring intermediate steps.
 
 ---
 
 ## Lesson 2.2. Bellman equations: evaluation and improvement
-
-> **Lesson 2.2. Bellman equations: evaluation and improvement**
->
-> 1. One-step decomposition of the return
-> 2. Exact policy evaluation as a linear system
-> 3. Optimality and the exact contraction condition
-> 4. Evaluation, improvement, and generalized policy iteration
-> 5. Reproducible example: FrozenLake
->
-> then 6 assessment steps
 
 ### Step 2.2.1 — One-step decomposition of the return
 
@@ -301,7 +298,18 @@ $$
 G_t=R_{t+1}+\gamma G_{t+1}.
 $$
 
-Take the conditional expectation at $S_t=s$ under a fixed policy $\pi$:
+Fix the current state $S_t=s$ and the policy $\pi$. The next reward is still random: the policy may choose different actions, and the environment may reach different next states. Once the next state $s'$ is specified, however, the expected remainder under the same policy already has a name: $V^\pi(s')$. The Markov property is what allows us to leave the earlier history out of that name.
+
+Taking the conditional expectation of the return recursion therefore gives an intermediate form:
+
+$$
+V^\pi(s)
+=
+\mathbb{E}_\pi[R_{t+1}\mid S_t=s]
++\gamma\mathbb{E}_\pi[V^\pi(S_{t+1})\mid S_t=s].
+$$
+
+We can now make the averaging explicit. An action is chosen with probability $\pi(a\mid s)$, followed by a destination with probability $P(s'\mid s,a)$. For that transition, the random immediate reward contributes its conditional mean $\bar r(s,a,s')$. Expanding those possibilities yields the **Bellman expectation equation**:
 
 $$
 V^\pi(s)
@@ -332,6 +340,8 @@ Q^\pi(s,a)
 \right].
 $$
 
+So far, the equation describes the true value $V^\pi$, which is usually unknown. To obtain a computational operation, allow an arbitrary current table $V$ on the right-hand side. It may be inaccurate, but it still lets us construct a new table: at each state, combine expected immediate reward with estimated continuation.
+
 Define the fixed-policy Bellman operator
 
 $$
@@ -350,7 +360,9 @@ $$
 V^\pi=T_\pi V^\pi.
 $$
 
-An operator is simply a rule that maps an entire value vector to a new one-step-backed-up vector.
+An operator is simply a rule that maps an entire value vector to a new one-step-backed-up vector. The identity $V^\pi=T_\pi V^\pi$ says that the correct table is already consistent with its own continuation: recomputing it changes nothing. Applying $T_\pi$ to an inaccurate table is a different operation. It provides a way to revise estimates; conditions for its convergence are still needed.
+
+Defining value through continuation is therefore not an empty circular argument. The states form a coupled system of equations. We can solve that system together, or, under suitable conditions, approach its solution by repeated updates.
 
 > **What Bellman consistency does not specify.** It does not choose a data source, a function class, or an optimizer, and it does not guarantee that neural training will reach the fixed point. Different exact and approximate algorithms are built from the same consistency relation.
 
@@ -373,6 +385,8 @@ r_\pi(s)
 \sum_{s'}P(s'\mid s,a)\bar r(s,a,s').
 $$
 
+The matrix $P_\pi$ now describes transitions under this particular action-selection rule. The environment has not changed; its possible transitions have been averaged with the policy's weights. A row of $P_\pi$ tells us where we may arrive from a state after letting that policy choose an action.
+
 The Bellman equation becomes
 
 $$
@@ -387,7 +401,7 @@ $$
 
 For a finite discounted MDP with $0\le\gamma<1$, $I-\gamma P_\pi$ is invertible and the solution is unique. At $\gamma=1$, the generic discount-based guarantee disappears. An episodic problem can still be solved over non-terminal states when the fixed policy reaches a terminal state almost surely and the resulting matrix is nonsingular.
 
-A classic $4\times4$ grid has terminal states in the upper-left and lower-right corners, reward $-1$ per move, and an equiprobable random policy. Its exact value function for $\gamma=1$ is
+A classic $4\times4$ grid has terminal states in the upper-left and lower-right corners, reward $-1$ per move, and an equiprobable random policy. Attempting to leave the grid keeps the agent in the same cell and still costs one move. Its exact value function for $\gamma=1$ is
 
 $$
 V^\pi=
@@ -407,7 +421,9 @@ $$
 e_\pi=T_\pi\widehat V-\widehat V.
 $$
 
-A zero residual solves the equation exactly. For $\gamma<1$,
+We can compute this residual without knowing $V^\pi$: it compares the current table with its own one-step backup. The error $\widehat V-V^\pi$ asks a different question—how far the table is from the correct expected outcome. A zero residual satisfies the equation exactly, but a small residual need not imply an equally small error.
+
+For the following bound, return to the discounted case $\gamma<1$. The bound does not apply directly to the Gridworld example just shown at $\gamma=1$:
 
 $$
 \|\widehat V-V^\pi\|_\infty
@@ -415,7 +431,9 @@ $$
 \frac{\|e_\pi\|_\infty}{1-\gamma}.
 $$
 
-Thus a small one-step residual can still correspond to a noticeable long-horizon error when $\gamma$ is close to one.
+The denominator $1-\gamma$ comes from a contraction property proved in the next step. One application of the operator leaves at most $\gamma$ times the distance between two tables. Writing $d=\|\widehat V-V^\pi\|_\infty$, we obtain $d\le\|e_\pi\|_\infty+\gamma d$: reach the true table from the current one by first passing through its backed-up version. Moving the last term to the left gives the bound above.
+
+A small one-step residual can therefore coexist with a noticeable long-horizon error when $\gamma$ is close to one. The residual measures local consistency, not the remaining route directly.
 
 ---
 
@@ -449,7 +467,9 @@ $$
 
 ![Two Bellman operators](assets/rl-for-llm/en/module-02/M2_bellman_operators_EN.png)
 
-For $0\le\gamma<1$, both operators are $\gamma$-contractions in the max norm. The key step for $T_*$ is
+To see why repeated backups can converge, compare any two tables $V$ and $W$. The max norm records their largest coordinate-wise difference. Averaging with transition probabilities cannot increase that difference, and multiplying continuation by $\gamma<1$ reduces it. Taking the maximum over actions cannot create a discrepancy larger than the largest discrepancy between corresponding action estimates either.
+
+For $0\le\gamma<1$, both operators are therefore $\gamma$-contractions in the max norm. The key step for $T_*$ is
 
 $$
 \begin{aligned}
@@ -472,13 +492,15 @@ $$
 \gamma\|V-W\|_\infty.
 $$
 
-This gives a unique fixed point and geometric convergence of $V_{k+1}=T_*V_k$.
+This gives a unique fixed point and geometric convergence of $V_{k+1}=T_*V_k$. In particular, compare each new table with the fixed point: a complete synchronous backup reduces the error bound by the same factor. The statement concerns distance between functions, not a requirement that every individual value increase monotonically.
 
 The boundary matters. At $\gamma=1$, the contraction factor is one, so this proof no longer establishes convergence. Some finite episodic problems at $\gamma=1$ are still well posed and admit convergent dynamic-programming schemes, but they require additional assumptions. In a stochastic-shortest-path formulation, for example, there must be a policy that reaches a terminal state from every relevant state almost surely in finite expected time, and non-terminating policies cannot be allowed to remain competitive as though they had an ordinary finite cost. Merely adding a terminal state is not enough. “The Bellman operator is always a strict contraction” is false without a regime qualifier.
 
 ---
 
 ### Step 2.2.4 — Evaluation, improvement, and generalized policy iteration
+
+We now know how to evaluate a rule of behavior. How can that evaluation help us choose a better rule? The word “greedy” can be misleading here. The maximization is not over immediate reward alone: each action estimate already includes the value of what comes afterward.
 
 The Bellman equations suggest two alternating operations.
 
@@ -493,13 +515,26 @@ Q(s,a)=
 \right].
 $$
 
+With exact evaluation, the continuation on the right is $V^\pi$: after the first action, the future is still assessed under the old policy. Let a new deterministic rule $\pi'$ choose greedily according to these $Q^\pi$ values. At each state,
+
+$$
+Q^\pi(s,\pi'(s))
+=\max_a Q^\pi(s,a)
+\ge\sum_a\pi(a\mid s)Q^\pi(s,a)
+=V^\pi(s).
+$$
+
+Initially, this establishes a local statement: take the new first action and then return to the old policy, and the expected result is no worse. In a finite discounted problem with bounded rewards, the argument extends to the entire new policy. Its Bellman operator preserves coordinate-wise order: larger continuation estimates cannot produce smaller one-step estimates. Repeatedly applying that operator from $V^\pi$ produces nondecreasing tables converging to $V^{\pi'}$. Exact greedy improvement therefore cannot reduce value at any state.
+
+The old table has not magically become the value table for the new policy, however. Future choices have changed, so expected continuations must be evaluated again. This is why evaluation and improvement form a loop. With inaccurate values, an action can look best because of estimation error; the exact argument is not a guarantee for every approximate update.
+
 Evaluating to convergence and then improving greedily gives **policy iteration**. Maximizing on every sweep gives **value iteration**:
 
 $$
 V_{k+1}(s)=\max_a Q_k(s,a).
 $$
 
-The broader pattern is **generalized policy iteration** (GPI): evaluation and improvement may be partial, asynchronous, and performed on different timescales, while each operation pushes the other toward consistency.
+The broader pattern is **generalized policy iteration** (GPI): evaluation and improvement may be partial, asynchronous, and performed on different timescales. Estimates influence action choices, while new choices alter the behavior that needs evaluating. This describes interacting processes; it is not a convergence guarantee under arbitrary approximation errors or arbitrary update schedules.
 
 | Method | What is fixed inside the update | Result at convergence |
 |---|---|---|
@@ -564,16 +599,6 @@ Neural approximation removes the simple tabular guarantees. Data distribution, o
 
 ## Lesson 2.3. Model-free prediction: from full trajectories to bootstrapping
 
-> **Lesson 2.3. Model-free prediction: from full trajectories to bootstrapping**
->
-> 1. Prediction from sampled trajectories
-> 2. Monte Carlo evaluation
-> 3. One observed step and a continuation estimate
-> 4. A multi-step target connects MC and TD
-> 5. The Corridor: compare estimators, not slogans
->
-> then 6 assessment steps
-
 ### Step 2.3.1 — Prediction from sampled trajectories
 
 So far, $P$ and $\bar r$ were known. In an actual environment, an agent usually sees only sampled transitions
@@ -583,6 +608,8 @@ S_t,A_t,R_{t+1},S_{t+1}.
 $$
 
 The **prediction problem** estimates $V^\pi$ or $Q^\pi$ for a fixed policy from interaction data without an explicit dynamics table.
+
+The policy in this lesson remains fixed. What changes is our knowledge of its consequences, not the action-selection rule itself. As in Module 1's Monte Carlo experiment, estimating behavior more accurately is not yet the same as improving it.
 
 Such a method chooses a target $Y_t$ and moves the current estimate toward it. For tabular $V$,
 
@@ -669,6 +696,19 @@ $$
 
 At a technical truncation where the process could continue, $V(S_{t+1})$ is normally retained.
 
+An obvious concern remains: if $V(S_{t+1})$ is wrong, are we merely teaching the table to repeat its own guesses? The target does contain an estimate, but it contains more than that. The next state and immediate reward came from the environment. They anchor the revision in observed consequences of actions.
+
+In our Corridor, moving from the adjacent cell into the right terminal yields reward $1$ without requiring a guess about any later path: the episode has ended. The update revises the adjacent cell's value. On later visits to earlier cells, that revised value can contribute to their targets. Information travels through observed transitions; its accuracy still depends on the data collected and the quality of current estimates.
+
+The connection to the previous lesson is exact. Hold the current table $V$ fixed and consider a fresh transition from state $s$ under policy $\pi$, with zero continuation at a terminal. Then
+
+$$
+\mathbb{E}_\pi[\delta_t\mid S_t=s]
+=(T_\pi V)(s)-V(s).
+$$
+
+The right-hand side is the Bellman residual of that table. Lesson 2.2 computed it by averaging through a known model; TD obtains a random contribution from one observed transition. Even with the exact $V^\pi$, a particular TD error can be nonzero: the realized outcome may be better or worse than expected. It is the conditional mean that vanishes, not necessarily every observed residual.
+
 TD(0) uses fewer random future rewards but relies on the current estimate. Its finite-sample target therefore inherits value-estimation error. This often reduces variance at the cost of bias, but there is no universal ordering in which TD always beats MC or vice versa. The outcome depends on the environment, representation, step size, and data budget.
 
 A useful intuition: MC waits for the bill for the whole route; TD revises the current estimate after each newly observed segment.
@@ -708,7 +748,7 @@ The reference `n_step_target()` receives observed rewards, a bootstrap value, $\
 
 ### Step 2.3.5 — The Corridor: compare estimators, not slogans
 
-Consider a symmetric five-cell Corridor with terminals at 0 and 4, a middle start, and equal-probability left/right actions. Reward $1$ is paid only on entry to the right terminal. At $\gamma=1$, the values are the probabilities of reaching the right side before the left:
+Consider a symmetric five-cell Corridor with terminals at 0 and 4, a middle start, and equal-probability left/right actions. Reward $1$ is paid only on entry to the right terminal. Module 1 separately measured success by the twentieth action. The exact value written here instead refers to the task through natural termination, without that cutoff in the definition of the outcome. At $\gamma=1$, the values are the probabilities of reaching the right side before the left:
 
 $$
 V^\pi=[0,\ 0.25,\ 0.50,\ 0.75,\ 0].
@@ -741,25 +781,19 @@ TD(0), 1000 episodes, seed=42, alpha=0.1:
 
 The different seeds in these lines are reproducibility fixtures, not a contest. Annealed step sizes, another horizon, function approximation, reused data, or non-stationarity would change the result.
 
-**LLM bridge.** A final score on a complete response resembles an MC observation. A critic, process evaluator, or continuation predictor introduces bootstrapping. Group normalization compares complete responses but does not by itself become an exact token-level value function.
+**LLM bridge.** A final score on a complete response can provide an MC target for a learned value predictor. Having a critic does not, by itself, imply bootstrapping: the critic may be trained against fully observed returns. Bootstrapping enters when the training target replaces unobserved continuation with a current estimate. What matters is how the target is constructed, not just what the model is called.
+
+Nor does a process evaluator become a TD method merely by scoring an intermediate step; it may learn from independently supplied labels. Group normalization compares complete responses but does not by itself become an exact token-level value function. These distinctions will matter again in Module 4, when we choose a signal for updating the policy rather than only evaluating it.
 
 ---
 
 ## Lesson 2.4. Control: behavior and target policies
 
-> **Lesson 2.4. Control: behavior and target policies**
->
-> 1. From fixed-policy prediction to behavior improvement
-> 2. Two update targets differ by one line, not by one detail
-> 3. CliffWalking: one protocol, different routes
-> 4. Why a maximum overestimates noisy values
-> 5. What transfers to LLM RL, and what remains a tabular teaching model
->
-> then 6 assessment steps
-
 ### Step 2.4.1 — From fixed-policy prediction to behavior improvement
 
-In control, the policy changes during learning. It helps to distinguish:
+So far, estimates have changed while the action rule stayed fixed. In control, the updated $Q$ table influences later choices. Those choices produce new data, the data revise $Q$, and the loop closes.
+
+We therefore need to distinguish not merely old and new tables, but two policy roles:
 
 - the **behavior policy**, which actually selects actions and collects data;
 - the **target policy**, whose value is being estimated or improved.
@@ -815,7 +849,7 @@ In a finite discounted tabular MDP with bounded rewards, classical Q-learning co
 
 ### Step 2.4.3 — CliffWalking: one protocol, different routes
 
-In CliffWalking, the agent moves from the lower-left to the lower-right corner. An ordinary step yields $-1$. Entering the cliff yields $-100$ and returns the agent to the start. Behavior remains $\varepsilon$-greedy during training.
+In CliffWalking, the agent moves from the lower-left to the lower-right corner. An ordinary step yields $-1$. Entering the cliff yields $-100$ and returns the agent to the start, but does not itself end the episode: the journey continues after the reset to that position. Behavior remains $\varepsilon$-greedy during training.
 
 The static figure uses
 
@@ -828,7 +862,7 @@ The static figure uses
 
 ![Q-learning and SARSA routes](assets/rl-for-llm/en/module-02/M2_cliff_routes_EN.png)
 
-Reproduced results for this run are
+The two columns measure different behavior. Greedy evaluation removes the exploratory component from action selection after training. Mean training return describes the behavior actually used to collect experience, which still explored and could stray from the preferred route. The recorded results for this run are
 
 | Method | Greedy-route return | Mean training return |
 |---|---:|---:|
@@ -873,7 +907,7 @@ Y_t^{\mathrm{Double}}
 R_{t+1}+\gamma Q^B(s',a^*).
 $$
 
-The tables can then swap roles. If their estimation errors are sufficiently independent, the positive error that drove selection in $Q^A$ need not recur in $Q^B$. The method reduces typical overestimation, but it does not eliminate all error and can underestimate in some regimes.
+The tables can then swap roles. The key is neither their mere number nor an average of their entries: one table chooses an action index, and the other supplies the value at that index. If their estimation errors are sufficiently independent, the positive error that drove selection in $Q^A$ need not recur in $Q^B$. The method reduces typical overestimation, but it does not eliminate all error and can underestimate in some regimes.
 
 There is a useful LLM analogy. When many responses are ranked by a noisy reward model and only the maximum is retained, the winner may benefit from evaluator noise as well as genuine quality. Separating generation, selection, and independent verification can reduce this effect. This is a shared statistical mechanism, not a claim that LLM reranking is literally Q-learning.
 
@@ -918,6 +952,6 @@ Links were checked on August 4, 2026. Each item supports a specific part of the 
 6. **Shao et al., *DeepSeekMath*.** — <https://arxiv.org/abs/2402.03300>. An author report describing the original GRPO group construction without a learned critic. It is not an independent replication of every empirical claim and does not cover all later variants.
 7. **Official Gymnasium FrozenLake and CliffWalking pages.** — <https://gymnasium.farama.org/environments/toy_text/frozen_lake/> and <https://gymnasium.farama.org/environments/toy_text/cliff_walking/>. These document the canonical teaching environments. The numerical values in this course come from its own tested NumPy implementations under a stated protocol.
 
-The expanded claim registry, verification status, and scope boundaries are in [`Module_2_Sources.md`](module-02.md).
+The expanded claim registry, verification status, and scope boundaries are included in the original course package as `Module_2_Sources.md`. For the distinction between a learned critic and bootstrapping, see also [Spinning Up on fitting a value function to observed returns](https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html#baselines-in-policy-gradients).
 
-**Next: Module 3, bandits and exploration.** We temporarily remove multi-step dynamics and study the cost of exploration, upper-confidence methods, Thompson sampling, and the connection between choosing among several LLM responses and contextual bandits.
+**Next: [Module 3, bandits and exploration](module-03.md).** We temporarily remove multi-step dynamics and study the cost of exploration, upper-confidence methods, Thompson sampling, and the connection between choosing among several LLM responses and contextual bandits.

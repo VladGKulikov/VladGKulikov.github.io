@@ -1,6 +1,7 @@
 # Module 11. RL for LLM agents: tools, environments, and long trajectories
 
 > **Material version:** 2026.23  
+> **Explanatory text revised:** 2026-10-27  
 > **Factual snapshot:** 2026-08-06  
 > **Language:** EN  
 > **Core practice:** tier A — browser and CPU; tier B — free Colab T4 or a paid API for the optional model run  
@@ -34,23 +35,13 @@ After completing the module, you will be able to:
 15. specify a reproducible and safe environment contract;
 16. run a synthetic tool-using agent and train it on CPU.
 
-The lecture remains self-contained: these files extend practice and traceability, but they do not replace the explanations below.
+The lecture can be read on its own: the definitions, examples, and reasoning needed to follow the argument are developed in the text.
 
 ---
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable practice follow the lecture. The explanation remains self-contained.
+> **Practice route.** [Exercises](/courses/rl-for-llm/module-11/exercises/), [review questions](/courses/rl-for-llm/module-11/tests/), and [executable practice](/courses/rl-for-llm/module-11/notebooks/) are provided separately. Reading the lecture does not require opening these materials first.
 
 ## Lesson 11.1. From an answer to environment interaction
-
-> **Lesson 11.1. From an answer to environment interaction**
->
-> 1. What changes when the model starts acting
-> 2. State, observation, history, and memory are different objects
-> 3. Token, tool call, and macro-action
-> 4. Success, termination, truncation, and infrastructure failure
-> 5. A minimal formal model of an agent episode
->
-> then 2 assessment steps
 
 ### Step 11.1.1 — What changes when the model starts acting
 
@@ -106,7 +97,7 @@ Two engineering consequences follow.
 - Truncating or summarizing context changes the policy's information state and may remove a fact needed later.
 - Adding external memory changes the agent's state space. Writing to memory becomes part of the policy or a separate controller, and retrieval errors become part of system dynamics.
 
-> **Extension:** ReAct, Plan-and-Execute, CodeAct, function calling, MCP, and production agent architecture are developed in *Modern LLMs*, Module 18 “Agents and Tool Use” (`modern_llms.module_16_agents`). Here they appear only as interfaces inside an RL formulation.
+> **Extension:** ReAct, Plan-and-Execute, CodeAct, function calling, MCP, and production agent architecture are developed in *Modern LLMs*, Module 18 “Agents and Tool Use” ([open module](/courses/modern-llms/module-18/)). Here they appear only as interfaces inside an RL formulation.
 
 ---
 
@@ -147,7 +138,11 @@ $$
 
 For an LLM agent, this is more than notation. A calculator call, a minute-long test run, and waiting for a user response have different costs. If the objective includes latency or API cost, action duration must appear in the reward, a constraint, or an explicit cost report.
 
+Unless stated otherwise, the remainder of this module uses one completed turn as one time step. A single factor $\gamma$ therefore separates adjacent turns. This is a modeling convention, not a claim that every tool takes the same time. If discounting is tied to elapsed time instead, retain $\gamma^{\tau_t}$ and the matching within-action return. The two clocks should not be mixed silently in one objective.
+
 There is another subtlety. Several strings may denote the same semantic action. Two JSON strings with different whitespace can parse to the same function call. The probability of that semantic action is the sum of the probabilities of all strings that the parser maps to it. Practical losses usually operate on the sampled string, so serialization and parsing rules are part of the behavior policy's definition.
+
+The log should consequently preserve the route from sampled text to executed operation. If a controller repairs malformed JSON, the original text remains the model's sampled action; the repair is another transformation. Scoring the repaired string and assigning that likelihood to the original choice would describe an action the model did not actually take.
 
 ![Three action scales and variable duration](assets/rl-for-llm/en/module-11/M11_action_granularity_EN.png)
 
@@ -164,7 +159,7 @@ A multi-turn environment should distinguish at least four stopping causes.
 | Technical truncation | an external time or length cap ends the run but is not a task rule | continuation is unknown; bootstrapping or exclusion may be required |
 | Environment failure | the container fails, an API is unavailable, or the verifier crashes | not necessarily a policy error; record a separate status |
 
-This course’s Module 2 “State, Value, and Bellman Equations” (`rl_llm.module_02_values_bellman`) separated `terminated` from `truncated`. For agents, the distinction is even more important: an expensive episode may be cut off by infrastructure even though the policy could still finish.
+This course’s Module 2 “State, Value, and Bellman Equations” ([open module](/courses/rl-for-llm/module-02/)) separated `terminated` from `truncated`. For agents, the distinction is even more important: an expensive episode may be cut off by infrastructure even though the policy could still finish.
 
 There is no universal rule that all truncated trajectories must be excluded or assigned zero reward.
 
@@ -209,7 +204,9 @@ P(s_{t+1}\mid s_t,a_t)
 O(o_{t+1}\mid s_{t+1}).
 $$
 
-The formula makes the boundary explicit. The gradient with respect to $\theta$ passes through policy action probabilities; transitions and observations determine which future states become reachable.
+This compact factorization treats the reward rule and history update as specified mechanisms and includes the initial observation in the initial setup. A stochastic reward would contribute its conditional law as well. The relevant assumption is that these environment mechanisms are fixed with respect to the trainable policy parameters.
+
+For a recorded trajectory, explicit differentiation of its log-probability therefore leaves the policy action terms. The environment has not disappeared from the learning problem: its responses determine future context, rewards, and reachable continuations. By changing its choices, the policy changes which states it visits without differentiating through the implementation of a file system or search service.
 
 A reproducible description requires more than the phrase “we used Agentic RL.” It must specify:
 
@@ -226,16 +223,6 @@ The next lesson develops the last item.
 ---
 
 ## Lesson 11.2. Trajectories, masks, and loss construction
-
-> **Lesson 11.2. Trajectories, masks, and loss construction**
->
-> 1. Who generated each token
-> 2. Trainable-token masks and signal dilution
-> 3. Log-probabilities must be captured at every turn
-> 4. Trajectory-, turn-, and token-level reduction
-> 5. The multi-turn rollout contract
->
-> then 6 assessment steps
 
 ### Step 11.2.1 — Who generated each token
 
@@ -254,7 +241,7 @@ For the policy, this sequence is heterogeneous.
 
 The decisive criterion is token provenance rather than a role label:
 
-> **A token belongs in the policy loss only when the probability of choosing that token under the behavior policy is known in the state where it was chosen.**
+> **A token belongs in the policy objective considered here when the behavior policy actually chose it under the recorded context and the probability of that choice is stored or can be reproduced exactly.**
 
 If a deterministic controller constructs JSON from a latent model command, only the latent command is the learned action. If the controller repairs or rewrites an action, that transformation belongs to the environment or to a composite policy and must be logged separately.
 
@@ -277,10 +264,13 @@ $$
 
 ![Masking a multi-turn trajectory](assets/rl-for-llm/en/module-11/M11_trajectory_mask_EN.png)
 
-The mask performs two distinct jobs.
+The diagram uses its own transcript size: 39 policy tokens out of 269 total tokens. The calculation below illustrates the same effect with round numbers; it is a separate numerical example, not a recalculation of the diagram.
 
-1. It prevents gradients on observations that the policy did not choose.
-2. It defines the normalization denominator.
+The first question answered by the mask is **which choices belong to the policy**. After `inspect`, the door-color clue comes from the environment. There is no policy-loss term rewarding the model for having “generated” that color. The subsequent key choice, however, depends on the clue and is a trainable action.
+
+Masking the clue as a target does not prevent gradients from passing through its processing. A loss on the next action can update the parameters that turn tool text into a useful context representation. **The loss mask excludes observations from the action targets; the attention mask controls which information the model can read.** In an ordinary causal forward pass, later policy tokens still attend to the observation. Detaching part of the computation or reusing a detached cache would be an additional implementation decision, not a consequence of the loss mask itself.
+
+The mask's second role in the displayed expression is to specify the averaging denominator. We have chosen a mean over the policy tokens of one episode. That choice is separate from the requirement to exclude environment tokens from the numerator.
 
 Suppose the policy generated 40 tokens and the environment added 290. Dividing by the full length 330 rather than by the 40 policy tokens reduces the contribution of each policy token by
 
@@ -288,7 +278,9 @@ $$
 \frac{330}{40}=8.25.
 $$
 
-This is not merely a global constant. Verbose observations receive smaller updates even though the policy often does not control the length of tool output.
+For this particular episode the ratio is a constant. Across episodes, tool-output length changes. Dividing by the entire transcript therefore downweights episodes with verbose observations even when the policy has little control over that verbosity.
+
+A correct mask does not make the remaining normalization neutral either. The exact trajectory log-probability contains a **sum** of action log-probabilities. Dividing each episode by its own policy-token count changes the relative weight of short and long trajectories. The expression is therefore described as REINFORCE-like: it illustrates masking and one reduction, rather than declaring that reduction to be the unique form of the original policy gradient. Step 11.2.4 compares the alternatives.
 
 Excluding observations from the policy loss does not forbid world-model training. Such training is possible, but it is a separate objective with a separate interpretation. It should not enter the policy gradient through an accidentally unmasked transcript.
 
@@ -297,6 +289,10 @@ Excluding observations from the policy loss does not forbid world-model training
 ### Step 11.2.3 — Log-probabilities must be captured at every turn
 
 A one-shot generation call can return tokens and log-probabilities in one operation. An agent rollout contains several generation calls, with environment observations changing the context between them.
+
+Suppose the key-selection call received the full door-color message, but the later door-opening call received only a controller-generated summary. The final log might contain both. Running the model over that complete log would expose the second action to information that was not in its original input. It would compute a different conditional probability, even if the action text were unchanged.
+
+Reevaluation must reconstruct the **actual input to each call**: selected messages, summaries, retrieved memory, service templates, and positions. A recurrent policy also requires an account of its memory and how that memory was obtained. Evaluating a new policy normally means replaying its processing of the stored inputs; substituting an old hidden vector is a separate approximation.
 
 For every policy token, the record should retain:
 
@@ -307,7 +303,15 @@ For every policy token, the record should retain:
 - decoding parameters;
 - the exact context or a sufficient recipe for reconstructing it.
 
-The log-probability of one turn is the sum of its token log-probabilities:
+A turn's log-probability is still a sum of token log-probabilities, but the conditioning context must be unambiguous. Below, $z_{<k}$ is shorthand for the context actually available when the token was chosen, not necessarily the complete prefix of the archived transcript. For token $k$ in turn $t$, a more explicit notation is
+
+$$
+c_{t,k}=\operatorname{serialize}(h_t,z_{t,<k}),
+\qquad
+\log\pi_\theta(z_{t,k}\mid c_{t,k}).
+$$
+
+If history is append-only and serialization is unchanged, one causal pass over the combined sequence may reproduce all these inputs. When context is shortened or rearranged, the training examples must preserve the corresponding per-turn views. Under that convention, ordinary factorization gives:
 
 $$
 \log\pi_{\mathrm{beh}}(a_t\mid h_t)
@@ -336,7 +340,7 @@ Two common errors are easy to miss.
 - Recomputing behavior log-probabilities with a different model, tokenizer, or chat template.
 - Using base-softmax probabilities instead of the actual behavior distribution after temperature, top-p, masks, and other transformations.
 
-This course’s Module 6 “The LLM as a Policy: Tokens, Log-Probabilities, and KL” (`rl_llm.module_06_llm_policy`) established this contract for one answer. An agent system must satisfy it at every turn.
+This course’s Module 6 “The LLM as a Policy: Tokens, Log-Probabilities, and KL” ([open module](/courses/rl-for-llm/module-06/)) established this contract for one answer. An agent system must satisfy it at every turn.
 
 ---
 
@@ -379,6 +383,8 @@ L_{\mathrm{turn}}
 $$
 
 The three objectives answer different statistical questions.
+
+Here, weight means an arithmetic coefficient on a loss term, not the norm of the resulting parameter-gradient vector. Different actions can produce gradients of different magnitudes and directions. Equal total coefficients do not force two episodes to have equally large effects on the parameters.
 
 - Token reduction gives more weight to longer answers.
 - Trajectory reduction gives each episode equal total weight.
@@ -436,19 +442,9 @@ If these quantities cannot be recovered, the rollout may be suitable for a demo 
 
 ## Lesson 11.3. Credit assignment over long horizons
 
-> **Lesson 11.3. Credit assignment over long horizons**
->
-> 1. What one outcome reward provides
-> 2. Turn returns and TD residuals
-> 3. Process feedback and hindsight critics
-> 4. Potential-based reward shaping
-> 5. Verify world state, not persuasive text
->
-> then 3 assessment steps
-
 ### Step 11.3.1 — What one outcome reward provides
 
-Suppose an episode receives only outcome reward $R(\tau)$. The simplest policy-gradient estimator is
+Start with a finite, undiscounted episode, $\gamma=1$, receiving one outcome reward $R(\tau)$. The simplest policy-gradient estimator is
 
 $$
 \widehat g
@@ -458,13 +454,15 @@ R(\tau)
 \nabla_\theta\log\pi_\theta(a_t\mid h_t).
 $$
 
-Under the usual assumptions, this estimator is not necessarily biased. The same return may legitimately multiply every action in the trajectory. The difficulties are different.
+With on-policy sampling, fixed environment mechanisms, and the usual differentiation conditions, this is an unbiased estimator of the expected-outcome gradient. For a discounted objective, the same expression applies when $R(\tau)$ denotes the complete discounted return; an undiscounted terminal score cannot silently replace it. Trajectories from an earlier policy require a separate justification for their sampling distribution.
+
+The same return may legitimately multiply every action. Unlike the illustrative reduction in Step 11.2.2, this estimator does not divide each episode by its own length. Its principal difficulties lie elsewhere.
 
 - **High variance.** A random early choice, a lucky tool response, and a late mistake are compressed into one number.
 - **Coarse credit.** Every action in a successful trajectory receives the same sign, including redundant or harmful actions.
 - **Long horizon.** The number of plausible causes grows while environment rollouts remain expensive.
 
-A baseline reduces variance but does not by itself identify the decisive turn. Group-relative advantages compare trajectories for the same prompt, but remain trajectory-level when one coefficient is broadcast to every turn.
+A suitable baseline can reduce variance. Action independence preserves the expected gradient when the baseline is used correctly; it does not promise that an arbitrary inaccurate predictor will reduce noise. Even a useful baseline does not identify the decisive turn by itself. Group-relative advantages compare trajectories for the same prompt, but remain trajectory-level when one coefficient is broadcast to every turn.
 
 Outcome reward is therefore a valid starting point rather than a complete theory of credit assignment.
 
@@ -472,7 +470,7 @@ Outcome reward is therefore a valid starting point rather than a complete theory
 
 ### Step 11.3.2 — Turn returns and TD residuals
 
-When the environment or a critic provides information at turn boundaries, the familiar objects from this course’s Module 2 “State, Value, and Bellman Equations” (`rl_llm.module_02_values_bellman`) and Module 4 “Policy Gradients: From REINFORCE to PPO” (`rl_llm.module_04_policy_gradients`) become available.
+When the environment or a critic provides information at turn boundaries, the familiar objects from this course’s Module 2 “State, Value, and Bellman Equations” ([open module](/courses/rl-for-llm/module-02/)) and Module 4 “Policy Gradients: From REINFORCE to PPO” ([open module](/courses/rl-for-llm/module-04/)) become available.
 
 The return from turn $t$ is
 
@@ -526,6 +524,10 @@ Three common routes produce denser feedback.
 
 Density is not truth. A hindsight model may produce a persuasive causal story and still be wrong. A PRM may learn style cues. A verifiable milestone may be farmed in a loop.
 
+The next question is where the new number enters learning. Adding it to reward, using it as a supervised target for a critic, and multiplying a policy log-gradient by it are different operations. The word “score” does not establish that they optimize the same objective.
+
+A completed outcome can legitimately supply a training target for a predictor that conditions on the current state. But a retrospective score computed after observing the chosen action and its consequences is not automatically an action-independent baseline. Detaching that number removes a computational derivative; it does not remove its statistical dependence on the action. Using it in an update needs an estimator argument, not merely a convincing account of the episode.
+
 For each intermediate signal, ask:
 
 - which object is being estimated;
@@ -559,6 +561,8 @@ $$
 
 ![Naive progress rewards and potential-based shaping](assets/rl-for-llm/en/module-11/M11_reward_shaping_EN.png)
 
+The diagram ends its illustrated fragment at a state with nonzero potential. Treating that vertex as a true terminal requires a boundary convention—the issue developed next.
+
 The discounted shaping terms telescope:
 
 $$
@@ -567,15 +571,37 @@ $$
 -\Phi(s_0)+\gamma^T\Phi(s_T).
 $$
 
-In the classical setting, this preserves the set of optimal policies. The result requires its conditions to remain nearby.
+Why does this cancellation preserve a policy preference? Compare complete paths from the same initial state. If **every true terminal state has zero potential**, the final term vanishes regardless of the path taken or the number of turns. Under this sufficient episodic convention,
+
+$$
+\begin{aligned}
+G'_0 &= G_0-\Phi(s_0),\\
+V'^{\pi}(s) &= V^{\pi}(s)-\Phi(s),\\
+Q'^{\pi}(s,a) &= Q^{\pi}(s,a)-\Phi(s).
+\end{aligned}
+$$
+
+Every action from a given state has received the same shift in expected return. Shaping alone has not made one action preferable to another. The same conclusion holds for policy comparisons under a fixed initial-state distribution. This is the reason for invariance; it is not a special ability of the potential to recognize good actions.
+
+Consider the key-and-door task. A designer may assign higher potential to selected intermediate stages of progress, but cannot leave an arbitrary bonus at the terminal boundary. Otherwise, the agent would optimize the original task reward plus the remaining potential. A negative shaping increment on the final transition is not necessarily a mistake: with zero terminal potential, it can be the correction that balances earlier progress bonuses.
+
+An arbitrary $\Phi(s_T)$ makes the residual depend on the reached outcome. Even the same nonzero constant at every terminal can alter timing preferences when $\gamma<1$ and episode lengths differ, because the residual contains $\gamma^T$. Boundary handling is consequently part of the construction. In a continuing discounted problem, the corresponding tail vanishes as the horizon grows when the potential is bounded.
+
+A collector's truncation is a different boundary. If recording stops while the task continues, setting the remaining potential to zero silently treats that interruption as task termination. A bootstrapped continuation must be transformed consistently with the shaped reward. If the limit really defines the task, include it in the state—for example as remaining budget—and terminate that finite task explicitly.
+
+The classical policy-invariance claim therefore comes with the following conditions.
 
 - The shaping term has exactly the potential form with the same $\gamma$.
 - The state used by $\Phi$ belongs to the Markov formulation.
-- Boundary terms are handled consistently, for example by assigning appropriate terminal potentials.
+- Boundary terms are handled consistently: the sufficient episodic convention above sets all terminal-outcome potentials to zero; a continuing formulation needs its tail-vanishing conditions.
 - The reward and stopping rules are not changed elsewhere.
-- Under partial observability, a potential over observations need not be a potential over true states and requires separate analysis.
+- Under partial observability, specify the state or history on which the potential depends and what information the policy receives. Telescoping also works for a sequence of information states, but transferring invariance to the task still requires consistent boundaries and an unchanged class of admissible policies. If the shaping reward is exposed to the acting policy and reveals new hidden information, its information problem has changed as well.
 
 Potential-based shaping preserves optimality under the theorem's assumptions. It does not guarantee faster learning, accurate value approximation, or stable neural-network optimization.
+
+The resemblance to the TD identity in Step 11.3.2 is useful for checking the algebra, but the two mechanisms do different jobs. TD compares rewards with continuation predictions. Shaping changes the rewards and controls what that change does to the complete return. The potential need not be an accurate value function for the identity to hold. With duration-aware macro-actions, the matching increment is $\gamma^{\tau_t}\Phi(s_{t+1})-\Phi(s_t)$, not a single factor $\gamma$ regardless of elapsed time.
+
+[Grześ, *Reward Shaping in Episodic Reinforcement Learning*](https://www.ifaamas.org/Proceedings/aamas2017/pdfs/p565.pdf) examines this episodic boundary issue in detail. The distinction needed here is narrower: producing denser feedback and preserving preferences among complete paths are separate requirements.
 
 ---
 
@@ -612,19 +638,11 @@ The lesson's main rule is:
 
 ## Lesson 11.4. Exploration and agent-policy optimization
 
-> **Lesson 11.4. Exploration and agent-policy optimization**
->
-> 1. When a rollout group contains no relative signal
-> 2. Difficulty bands and dynamic task filtering
-> 3. Token-level and sequence-level probability ratios
-> 4. Branching after tool observations and ARPO
-> 5. A map of contemporary Agentic RL methods
->
-> then 3 assessment steps
-
 ### Step 11.4.1 — When a rollout group contains no relative signal
 
 Suppose $G$ independent trajectories are generated for one prompt and reward is binary. If one trajectory succeeds with probability $p$, the group contains relative signal only when it includes both a success and a failure.
+
+For an agent, “one prompt” must include a clear account of the task instance. Identical instructions can start from different database contents, object locations, or door colors. Below, $p$ refers either to one declared instance or to one fixed distribution of instances from which each episode independently begins. If a hidden initial state is sampled once for the whole group, independence must instead be considered conditional on that state before averaging across states. Each execution also needs an isolated environment: one attempt's side effect must not become another attempt's unrecorded clue.
 
 The probability of a degenerate group is
 
@@ -657,7 +675,7 @@ $$
 \frac1{P_{\mathrm{info}}}\approx12.94.
 $$
 
-Increasing the learning rate does not repair missing information: zero relative signal times a larger step size remains zero. More direct levers include:
+A larger learning rate cannot create a missing relative reward signal: a zero coefficient remains zero. A separate KL penalty or auxiliary objective may still have a nonzero gradient. More direct ways to obtain a reward comparison include:
 
 - increasing group size;
 - selecting tasks of intermediate difficulty;
@@ -671,7 +689,7 @@ Increasing the learning rate does not repair missing information: zero relative 
 
 ### Step 11.4.2 — Difficulty bands and dynamic task filtering
 
-Tasks with $p\approx0$ almost always produce all failures; tasks with $p\approx1$ produce all successes. Prompts between those extremes are most informative for group-relative learning.
+Tasks with $p\approx0$ almost always produce all failures; tasks with $p\approx1$ produce all successes. At a fixed group size, observing both outcomes is more likely between the extremes. That is a statement about nondegenerate internal comparisons, not an automatic measure of learning value or transfer.
 
 This creates a **difficulty band**. It is not a fixed dataset: once the policy improves, yesterday's difficult prompt may become easy.
 
@@ -721,6 +739,19 @@ $$
 
 For a whole trajectory, the product extends across turns. On long horizons it becomes numerically and statistically fragile: small differences multiply, and rare large weights dominate.
 
+Why are tool-output probabilities absent from the product? Compare the probability of the same recorded trajectory under two policies while holding the initial distribution, transitions, and observation mechanism fixed. The environment factors in Step 11.1.5 are identical and cancel. Subject to the required support condition,
+
+$$
+\frac{p_\theta(\tau)}{p_{\mathrm{beh}}(\tau)}
+=
+\prod_{t=0}^{T-1}
+\frac{\pi_\theta(a_t\mid h_t)}{\pi_{\mathrm{beh}}(a_t\mid h_t)}
+=
+\prod_{t=0}^{T-1}r_t^{\mathrm{seq}}.
+$$
+
+The cancellation relies on an unchanged environment; it does not make tool outcomes irrelevant. A new database version, modified tool, or changed verifier can alter the task itself. Policy ratios alone do not correct that replacement. If behavior versions differ across turns, each denominator must describe the choice actually made on that turn.
+
 Practical methods therefore make different compromises:
 
 - clip local ratios;
@@ -739,7 +770,7 @@ These choices do not all optimize one identical estimator. A comparison must sta
 - how old the behavior policy may be;
 - which rule rejects extreme weights.
 
-Module 12 “RL Infrastructure for LLMs: Memory, Rollouts, and Asynchrony” (`rl_llm.module_12_infrastructure`) develops policy lag and asynchronous pipelines. Here the essential point is that long agent trajectories magnify the off-policy problem.
+Module 12 “RL Infrastructure for LLMs: Memory, Rollouts, and Asynchrony” ([open module](/courses/rl-for-llm/module-12/)) develops policy lag and asynchronous pipelines. Here the essential point is that long agent trajectories magnify the off-policy problem.
 
 ---
 
@@ -755,6 +786,16 @@ a_t^{(1)},\ldots,a_t^{(K)}
 \pi_\theta(\cdot\mid h_t).
 $$
 
+Return to the key-and-door setting. The agent has called `inspect` and received the clue. Several continuations can now be compared without repeating the initial inspection. Before branching, however, preserve **both sides of the situation**: the world after inspection and the information from which the policy will act. For a recurrent agent this includes the memory carrying the color; for an LLM it includes the actual context and controller state.
+
+Give each branch a separate restored environment: the same hidden color, carried key, door state, and remaining task budget. The policy then chooses a continuation, the environment executes it, and the verifier checks the outcome. Picking up a key in one branch must not alter another branch's world. A stochastic environment also needs an explicit randomness protocol: a shared starting state does not require all future random outcomes to be identical.
+
+This produces comparisons **after the same observation**. Copying the clue text is not enough. In a real service, identical messages can conceal different files, sessions, or completed operations. If the relevant world state cannot be restored, branching may be suitable for a simulator but not for a live resource with irreversible effects.
+
+The outcomes must then be turned into learning data. Distinct continuations provide evidence about choices after the branch point. The shared prefix was obtained once; several descendant outcomes are not independent repetitions showing that the earlier action should have been chosen. They can inform an estimate of continuation value, but the prefix's statistical weight and advantage assignment need an explicit rule. Duplicating it across training rows otherwise changes its contribution simply because more branches were explored.
+
+Cost has the same distinction. Earlier calls were executed once, but snapshots, new continuations, and verification still consume resources. Storing the same text in several rows does not mean it was generated repeatedly, just as saving prefix generation does not make branch execution free.
+
 This design may offer a more local comparison, but raises new questions:
 
 - who chooses the branch point;
@@ -765,6 +806,10 @@ This design may offer a more local comparison, but raises new questions:
 - whether branch selection changes the training distribution.
 
 **Agentic Reinforced Policy Optimization** (ARPO) uses uncertainty-aware adaptive branching after tool interaction together with a step-oriented advantage attribution mechanism. It is a specific 2025 algorithm, not a generic name for all agent RL.
+
+ARPO distinguishes shared segments from branch-specific segments when assigning advantages. Their common origin matters; repeated prefix tokens are not new independent choices. This is one concrete response to the questions above, not a guarantee that every branching experiment supplies causally exact credit. The details belong to the [original algorithm](https://arxiv.org/html/2507.19849v1).
+
+Module 10 used a similar search structure to choose an answer with fixed weights. Here, branch outcomes become data for changing the policy. A snapshot and a tree can look the same in both systems, while serving different purposes: selecting a result now and learning how to behave later.
 
 A different method is called **Agentic Replay Policy Optimization**, also abbreviated ARPO. It reuses successful experience when training GUI agents. The acronym collision is genuine; a table or first mention must expand the name.
 
@@ -794,16 +839,6 @@ The practical choice begins with one question: **can the system obtain new world
 ---
 
 ## Lesson 11.5. Environments, safety, and reproducible practice
-
-> **Lesson 11.5. Environments, safety, and reproducible practice**
->
-> 1. A training environment is stricter than a demo environment
-> 2. Sandboxes, permissions, and irreversible actions
-> 3. Environments and benchmarks: what they actually test
-> 4. Practice: a key-and-door tool agent
-> 5. The final agent-experiment protocol
->
-> then 7 assessment steps
 
 ### Step 11.5.1 — A training environment is stricter than a demo environment
 
@@ -896,7 +931,7 @@ open_blue
 finish
 ```
 
-The controller masks **syntactically impossible phases**—for example, it does not expose `open_*` before a key has been picked up—but it does not reveal the hidden color. The mask removes meaningless actions without solving the semantic choice for the policy.
+The controller uses a **state-phase action-admissibility mask**—for example, it does not expose `open_*` before a key has been picked up—but it does not reveal the hidden color. A command can be syntactically valid yet unavailable in the current phase. The mask removes meaningless actions without solving the semantic choice for the policy.
 
 The practical route demonstrates the complete loop:
 
@@ -913,6 +948,8 @@ The practical route demonstrates the complete loop:
 The smoke profile runs on CPU. The plotted numbers belong to the course’s fixed synthetic environment and do not transfer to real LLMs. The full profile increases the number of independent runs. An optional Qwen3-0.6B branch with `GRPOTrainer(environment_factory=...)` is provided as an engineering template, disabled by default, and not used for quality claims.
 
 The point is not to call a small recurrent agent a “realistic LLM.” The realistic part is the **contract**: partial observability, multi-turn actions, environment state, token provenance, stop reasons, policy versions, and reproducible outcome verification.
+
+The verifier is allowed to know the true door color and inspect world state. That does not grant the acting policy the same information. Only the declared observations and signals should reach it. In particular, a mask that depended on the hidden color would reveal part of the solution, unlike a mask based on an openly known task phase. Reward design and branch restoration both need this information-boundary check.
 
 ---
 
@@ -973,20 +1010,23 @@ The module's central idea is now complete:
 
 > **Agentic RL does not begin with a new optimizer. It begins by defining where the policy ends, where the environment begins, and which data connect an action to a change in the world.**
 
-Module 12 “RL Infrastructure for LLMs: Memory, Rollouts, and Asynchrony” (`rl_llm.module_12_infrastructure`) carries this contract into a distributed pipeline: generation and training move into separate processes, introducing stragglers, weight versions, queues, freshness controls, and systems cost.
+Module 12 “RL Infrastructure for LLMs: Memory, Rollouts, and Asynchrony” ([open module](/courses/rl-for-llm/module-12/)) carries this contract into a distributed pipeline: generation and training move into separate processes, introducing stragglers, weight versions, queues, freshness controls, and systems cost.
 
 ---
 
 ## Sources and snapshot status
 
-The full claim registry, evidence classes, and limitations are in `Module_11_Sources.md`. The following route is sufficient for sequential reading.
+The primary sources below support the main external claims. Formula conventions and the scope of the synthetic practice are stated in the relevant steps; executable materials are available through the practice links.
 
 - [Kaelbling, Littman, and Cassandra — *Planning and Acting in Partially Observable Stochastic Domains*](https://www.sciencedirect.com/science/article/pii/S000437029800023X) provides the classical distinction among hidden state, observation, and belief state; it does not make an LLM transcript an exact belief state automatically.
 - [Ng, Harada, and Russell — *Policy Invariance Under Reward Transformations*](https://people.eecs.berkeley.edu/~russell/papers/icml99-shaping.pdf) states the potential-based shaping result and its conditions; arbitrary progress bonuses do not inherit the guarantee.
+
+- [Grześ — *Reward Shaping in Episodic Reinforcement Learning*](https://www.ifaamas.org/Proceedings/aamas2017/pdfs/p565.pdf) examines terminal potentials and the boundary term in finite episodes.
+- [Spinning Up — *Introduction to Policy Optimization*](https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html) develops trajectory log-gradients and the assumptions behind baseline subtraction.
 - [ReAct](https://arxiv.org/abs/2210.03629), [Search-R1](https://arxiv.org/abs/2503.09516), and [ReTool](https://arxiv.org/abs/2504.11536) connect the reasoning–action–observation interface to multi-turn training with search or execution. Their empirical results remain specific to the reported environments and budgets.
 - [Agentic Reinforced Policy Optimization](https://arxiv.org/abs/2507.19849), [AT$^2$PO](https://arxiv.org/abs/2601.04767), [TRACE](https://arxiv.org/abs/2607.13988), and [ToolVerse](https://arxiv.org/abs/2607.15660) implement different forms of branching and turn-level attribution. Their shared vocabulary does not imply identical definitions of a turn or an identical estimator.
 - [Agent Lightning](https://arxiv.org/abs/2508.03680) and [Agentic-DPO](https://arxiv.org/abs/2607.10601) respectively decouple agent execution from training and convert expert states into offline action preferences; neither removes trace-correctness or coverage requirements.
 - [TRL GRPOTrainer](https://huggingface.co/docs/trl/grpo_trainer), [OpenEnv](https://huggingface.co/docs/trl/openenv), and [Harbor](https://huggingface.co/docs/trl/harbor) document a dated engineering contract for stateful environment training. Pin the actually installed version before execution.
 - [WebArena](https://arxiv.org/abs/2307.13854), [OSWorld](https://arxiv.org/abs/2404.07972), [$\tau$-bench](https://arxiv.org/abs/2406.12045), and [SWE-bench](https://arxiv.org/abs/2310.06770) represent different environment classes. A final score entangles the model, controller, budget, infrastructure, and verifier.
 
-All dated statements in this revision reflect sources checked on **6 August 2026**. Notebook results are explicitly course-owned synthetic experiments, not external benchmarks.
+The methods and software survey retains its factual snapshot of **6 August 2026**. The explanatory revision dated **27 October 2026** clarifies existing mechanisms without updating that survey as a whole. Practice results remain course-owned synthetic experiments, not external benchmarks.

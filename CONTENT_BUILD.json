@@ -1,13 +1,14 @@
 {
   "schema": "course-publication.local-content-build.v2",
-  "content_updated": "2026-10-25",
+  "content_updated": "2026-10-27",
   "source_repositories": {
     "modern-llms": {
       "commit": "ccb2e5098b05fdbc16b9b041af3d6985164cb8ad",
       "working_tree_changes": false
     },
     "rl-for-llm": {
-      "commit": "02e9235baf5dbb55e04d78e7df1e702d8cd427dc"
+      "commit": "200bef1b73cd00f031f18f58ea983046c637061f",
+      "working_tree_changes": false
     },
     "information-theory-for-ml": {
       "commit": "6eebd71a0a0043b23250655c559a8a2d6d9357a2"
@@ -141,110 +142,6 @@
     "information-theory-for-ml:ru:module-16": {
       "path": "Module_16/Module_16__Course_reference_RU.md",
       "sha256": "1b9d5cb92f1f6d23c90cdf1fe3c0b8bbe485c07958dbe0b1849d4302036001ed"
-    },
-    "rl-for-llm:en:module-01": {
-      "path": "modules/module-01/Module_1_EN.md",
-      "sha256": "28a0793726e5466acc76a649cb18c7b66cadc91590621a0fb9d540db357616ec"
-    },
-    "rl-for-llm:en:module-02": {
-      "path": "modules/module-02/Module_2_EN.md",
-      "sha256": "ad62593c874c9cde469d485435537fde25addbc60a84ad282e8ed2674167ca9b"
-    },
-    "rl-for-llm:en:module-03": {
-      "path": "modules/module-03/Module_3_EN.md",
-      "sha256": "6d4575880aee33b38e4795df4b95fdb8424d456747b04a4d5c8c382d81283037"
-    },
-    "rl-for-llm:en:module-04": {
-      "path": "modules/module-04/Module_4_EN.md",
-      "sha256": "20c0453f8af0551a3500fc0c36e5b85fa1fcbb6ef5b7a70503cc041a164e41e7"
-    },
-    "rl-for-llm:en:module-05": {
-      "path": "modules/module-05/Module_5_EN.md",
-      "sha256": "65fe47b401dc2676a6c15c54250abec97eb6e9cfea7261929573350ac68a3749"
-    },
-    "rl-for-llm:en:module-06": {
-      "path": "modules/module-06/Module_6_EN.md",
-      "sha256": "55cbfd15d63dec71b16baa941bc585d4ad660dd3da45aec7498afe75e9794891"
-    },
-    "rl-for-llm:en:module-07": {
-      "path": "modules/module-07/Module_7_EN.md",
-      "sha256": "15e3ab5f4593587e25858fda44477859d670d6e5bdf00f6faa23da5989962a52"
-    },
-    "rl-for-llm:en:module-08": {
-      "path": "modules/module-08/Module_8_EN.md",
-      "sha256": "502db865886257e6e2df199117caa69f6500482faa2e7568a5552f25838c2d7d"
-    },
-    "rl-for-llm:en:module-09": {
-      "path": "modules/module-09/Module_9_EN.md",
-      "sha256": "6e4d7ae62de1fa3f0d520806cb043d78f64624a95b2e1a2dae8461c53b3fd966"
-    },
-    "rl-for-llm:en:module-10": {
-      "path": "modules/module-10/Module_10_EN.md",
-      "sha256": "575c115c92800ba58633ad743e7903d81510d3eb4b0148a3899beda458d2caa9"
-    },
-    "rl-for-llm:en:module-11": {
-      "path": "modules/module-11/Module_11_EN.md",
-      "sha256": "d91a687f3adab66ea48adf6d06b878956e8c50f0017f14f383afdb1b34802b22"
-    },
-    "rl-for-llm:en:module-12": {
-      "path": "modules/module-12/Module_12_EN.md",
-      "sha256": "809b83fea63a7e0bf94f247e60294a60a856b5cb19a22091dd9ffd751bc7f0f9"
-    },
-    "rl-for-llm:en:module-13": {
-      "path": "modules/module-13/Module_13_EN.md",
-      "sha256": "0ea44b675d6090d08a7778df8a4ff3155e80250a11d73d84e01605e99001b6fe"
-    },
-    "rl-for-llm:ru:module-01": {
-      "path": "modules/module-01/Module_1_RU.md",
-      "sha256": "fd65a70c2c6e62ea6d5b181155f7b8a3b8b39312e5d0094703070e5ef69a3a47"
-    },
-    "rl-for-llm:ru:module-02": {
-      "path": "modules/module-02/Module_2_RU.md",
-      "sha256": "818d42a66b89916d3d239768d8a9928c2d7fdf04ece5a1f2fb716fa5600eeba2"
-    },
-    "rl-for-llm:ru:module-03": {
-      "path": "modules/module-03/Module_3_RU.md",
-      "sha256": "963566f39843ce451838564ca79880546554a0206dfc59bcfdb1ac2b053b9aa6"
-    },
-    "rl-for-llm:ru:module-04": {
-      "path": "modules/module-04/Module_4_RU.md",
-      "sha256": "b2b026cb1dcd22e6769e0b8815db7f33d5ade1da6ef129f654abaf8fb4c5ffa4"
-    },
-    "rl-for-llm:ru:module-05": {
-      "path": "modules/module-05/Module_5_RU.md",
-      "sha256": "badc2f85a7cb9dff7136869c3abdce29bd55df0c97b52fa380017e795be44339"
-    },
-    "rl-for-llm:ru:module-06": {
-      "path": "modules/module-06/Module_6_RU.md",
-      "sha256": "535e87707b92b83aff2f4fcec45d9ca6feb60fd8633b081a877bee9f094cbd99"
-    },
-    "rl-for-llm:ru:module-07": {
-      "path": "modules/module-07/Module_7_RU.md",
-      "sha256": "6a99a19635b374d4a39e19f1728a0e4df6ab02dd90a60177458f008dae8ca52b"
-    },
-    "rl-for-llm:ru:module-08": {
-      "path": "modules/module-08/Module_8_RU.md",
-      "sha256": "c374c45d57688cd6cd69938f55167f84c3772c17c04a33bd41480b85b99d40d8"
-    },
-    "rl-for-llm:ru:module-09": {
-      "path": "modules/module-09/Module_9_RU.md",
-      "sha256": "522c20a95a09d413d7169550376f5b493e3ee95a4b209c7e5219783d3f69145a"
-    },
-    "rl-for-llm:ru:module-10": {
-      "path": "modules/module-10/Module_10_RU.md",
-      "sha256": "64eddd26323c0d67e90e78a24c9c9068d4f627a3f33a4f1a8e2093f54300fe68"
-    },
-    "rl-for-llm:ru:module-11": {
-      "path": "modules/module-11/Module_11_RU.md",
-      "sha256": "9c8208d3c2f9809660b6a3a4217dbe7ac3a3bc46e1b4722934a164f5298ae274"
-    },
-    "rl-for-llm:ru:module-12": {
-      "path": "modules/module-12/Module_12_RU.md",
-      "sha256": "6de17a9714b979b1ceaa8a4af96179e8595638abbeabffac1e607c9782c96ecf"
-    },
-    "rl-for-llm:ru:module-13": {
-      "path": "modules/module-13/Module_13_RU.md",
-      "sha256": "5e50842673d59e76fa05c40c2b7228c5db937ad20a054ece0ed4387b589bbd6e"
     },
     "modern-llms:ru:module-01": {
       "path": "modules/module-01/ru/module_01_lecture_RU.md",
@@ -405,6 +302,110 @@
     "modern-llms:en:module-20": {
       "path": "modules/module-20/en/module_20_lecture_EN.md",
       "sha256": "fd3943bd66ea06d06da32242151608e6802a6d2ff27b8ce0669022b4d19a0a37"
+    },
+    "rl-for-llm:ru:module-01": {
+      "path": "modules/module-01/Module_1_RU.md",
+      "sha256": "34ac1238ec759ca930b5e7e7d9ac1d9cd45b8505da269d934b416c8edff3f06f"
+    },
+    "rl-for-llm:ru:module-02": {
+      "path": "modules/module-02/Module_2_RU.md",
+      "sha256": "4f2e388064d2879ac1e0fade4219074d077fb185404925ceaf9d5588470e6fa8"
+    },
+    "rl-for-llm:ru:module-03": {
+      "path": "modules/module-03/Module_3_RU.md",
+      "sha256": "4e2542a51819c5f9c08174ff80b5d6edfca2575e820466f4006dd5553fc23278"
+    },
+    "rl-for-llm:ru:module-04": {
+      "path": "modules/module-04/Module_4_RU.md",
+      "sha256": "eb99f870cf99728dde7cd76ebf8fc1d547d4f7c470e873b9e1a53a6cf18e8bc7"
+    },
+    "rl-for-llm:ru:module-05": {
+      "path": "modules/module-05/Module_5_RU.md",
+      "sha256": "c11b710cc12abff66565d1c5c06bb9f9f0ba5ec63a718ed69dec610ce7438d59"
+    },
+    "rl-for-llm:ru:module-06": {
+      "path": "modules/module-06/Module_6_RU.md",
+      "sha256": "b294668e656a96b441bce3d2dc9a978b69b5c374859a9f41685dde7dc2346996"
+    },
+    "rl-for-llm:ru:module-07": {
+      "path": "modules/module-07/Module_7_RU.md",
+      "sha256": "da5aca6f1382b581919f7cd9e16b5571913704fd1632de79c51cd7b954454927"
+    },
+    "rl-for-llm:ru:module-08": {
+      "path": "modules/module-08/Module_8_RU.md",
+      "sha256": "29d2a1bd28f5704522f8333649d342aa9620df33070e1f83e97890a33d2fc762"
+    },
+    "rl-for-llm:ru:module-09": {
+      "path": "modules/module-09/Module_9_RU.md",
+      "sha256": "8e5295f2ff0052a4024ad336f4c11ddd85827875012b481d42f714f8a959055e"
+    },
+    "rl-for-llm:ru:module-10": {
+      "path": "modules/module-10/Module_10_RU.md",
+      "sha256": "8bb5f59efb4319113e8de6e49a1e2268be45e51c716bdae9acdd206f4011469f"
+    },
+    "rl-for-llm:ru:module-11": {
+      "path": "modules/module-11/Module_11_RU.md",
+      "sha256": "41c852c939eacf4474a29ac575616e956961755438a3340d35d0b66303530ed4"
+    },
+    "rl-for-llm:ru:module-12": {
+      "path": "modules/module-12/Module_12_RU.md",
+      "sha256": "68ea5f858ca3b9f1f36edda4150e3ba02f2ed6b880d62afd212b6b285dfc0295"
+    },
+    "rl-for-llm:ru:module-13": {
+      "path": "modules/module-13/Module_13_RU.md",
+      "sha256": "f3d973b6b8da59c7d76e7425a801b46be591903521a3259bc4cb978800b9fdae"
+    },
+    "rl-for-llm:en:module-01": {
+      "path": "modules/module-01/Module_1_EN.md",
+      "sha256": "d7ce2b7366f8ee6b52216ec20f05fcb205abfbaa39c7e504c8874f363e6adf12"
+    },
+    "rl-for-llm:en:module-02": {
+      "path": "modules/module-02/Module_2_EN.md",
+      "sha256": "c382bd56539f32db27deab03740f354b330015a6e82065fd96992480602ee382"
+    },
+    "rl-for-llm:en:module-03": {
+      "path": "modules/module-03/Module_3_EN.md",
+      "sha256": "e24127146f4e384ace9895dd633be90bbc6ea36484e63aa52831f82e6a7539cf"
+    },
+    "rl-for-llm:en:module-04": {
+      "path": "modules/module-04/Module_4_EN.md",
+      "sha256": "fdf8512b6827db76bcba3005a78a447df12624799a1ec00a8810c2efa5390fcf"
+    },
+    "rl-for-llm:en:module-05": {
+      "path": "modules/module-05/Module_5_EN.md",
+      "sha256": "ac0a834bc4e78a7ad3daf8bf829216a5194194f067653b71f302fd8fcb000185"
+    },
+    "rl-for-llm:en:module-06": {
+      "path": "modules/module-06/Module_6_EN.md",
+      "sha256": "fff2d86907a7a026a2ca080935eca67518e6d8d8a4d078f2e0a4c2497dbff5ed"
+    },
+    "rl-for-llm:en:module-07": {
+      "path": "modules/module-07/Module_7_EN.md",
+      "sha256": "f4b374c4b3fa1bc59556de062ee6a759d5815838b6f5f50f54542bb2a7e4ca74"
+    },
+    "rl-for-llm:en:module-08": {
+      "path": "modules/module-08/Module_8_EN.md",
+      "sha256": "ec8427e48227ee5c67a76397c7ce005885e50c3dfcc4e37f27f909850e448945"
+    },
+    "rl-for-llm:en:module-09": {
+      "path": "modules/module-09/Module_9_EN.md",
+      "sha256": "dcc14ab810275b44b7d393024492dabfee19593cab422408ef9da1f7e8117e08"
+    },
+    "rl-for-llm:en:module-10": {
+      "path": "modules/module-10/Module_10_EN.md",
+      "sha256": "6f1c8aeda4d609ba6c638f58e3e0580c84380d75235a9869760b2773d23868c8"
+    },
+    "rl-for-llm:en:module-11": {
+      "path": "modules/module-11/Module_11_EN.md",
+      "sha256": "36954e845e5f8d40492fad6c78796d757eb0faf526a2244627784c6d408ebb1f"
+    },
+    "rl-for-llm:en:module-12": {
+      "path": "modules/module-12/Module_12_EN.md",
+      "sha256": "f21a878c3dbea196b0ef0b5492aa7f3d6857c265df524cd1e61cf5ab95440e2d"
+    },
+    "rl-for-llm:en:module-13": {
+      "path": "modules/module-13/Module_13_EN.md",
+      "sha256": "a5e17f4d2cf3baf349efe29c71f7c2505437e3167d696a3eaad289ec03ccb287"
     }
   },
   "validation": {
@@ -849,7 +850,7 @@
       "description": "Обучение с подкреплением, оптимизация предпочтений, проверяемые награды, агенты и безопасность.",
       "stepik_url": "https://stepik.org/296688",
       "module_count": 13,
-      "characters": 604050,
+      "characters": 791398,
       "modules": [
         {
           "id": "rl-for-llm:ru:module-01",
@@ -857,8 +858,8 @@
           "position": 1.0,
           "title": "Модуль 1. Введение: Reinforcement Learning для LLM",
           "content_file": "rl-for-llm/ru/module-01.md",
-          "content_hash": "1fceea23b80779bf956a1ff1806804dc05bbd73c7b504be3469babf74d0e5172",
-          "characters": 51021,
+          "content_hash": "aff0bf3904ff829f3f5b8bbcde0a9e193792c2a1c25d13a80c902841cbd1b507",
+          "characters": 66914,
           "image_count": 7
         },
         {
@@ -867,8 +868,8 @@
           "position": 2.0,
           "title": "Модуль 2. Состояние, ценность и уравнения Беллмана",
           "content_file": "rl-for-llm/ru/module-02.md",
-          "content_hash": "6a47d6edfe48eebc19e257b94abf86afc2af181670d95a319da1753e3ffd47e3",
-          "characters": 44270,
+          "content_hash": "f4421865c5c743ef7fcc7c165ae49936fe3f2fa8b5bb99c18c0f6b4189b75387",
+          "characters": 54870,
           "image_count": 8
         },
         {
@@ -877,8 +878,8 @@
           "position": 3.0,
           "title": "Модуль 3. Бандиты, исследование и одношаговые решения",
           "content_file": "rl-for-llm/ru/module-03.md",
-          "content_hash": "fb8bb1a4a73b38c13933c5646f0c8cf1b2b05e52a072545dd20cf8467efe90cf",
-          "characters": 43541,
+          "content_hash": "06c852a58a47a592792c13bc46f28ad91ba2d032de8133f8302e6e7df43215f8",
+          "characters": 57577,
           "image_count": 6
         },
         {
@@ -887,8 +888,8 @@
           "position": 4.0,
           "title": "Модуль 4. Градиенты политики: от REINFORCE к PPO",
           "content_file": "rl-for-llm/ru/module-04.md",
-          "content_hash": "3d47cc6b2bfa189e0d04a125bb2cf434cb587b64203eb504b5e914f654a9f483",
-          "characters": 51122,
+          "content_hash": "ed7c7cb4b7b9c5389ddc8bc962d6f9fdf89b0cecf599fb3642e0a94c35298d72",
+          "characters": 63678,
           "image_count": 9
         },
         {
@@ -897,8 +898,8 @@
           "position": 5.0,
           "title": "Модуль 5. Обучение по фиксированным данным: имитация, глубокие Q-методы и офлайн-RL",
           "content_file": "rl-for-llm/ru/module-05.md",
-          "content_hash": "470b959c2caadc062421e14df79fd3ab747ab39ea2174c9aed88dd3bb2ded4fb",
-          "characters": 48176,
+          "content_hash": "599341b4b4ae896e8b4b91d1de9f40a3fc416549e8134525ecb29e5bab2b8b9d",
+          "characters": 66745,
           "image_count": 10
         },
         {
@@ -907,8 +908,8 @@
           "position": 6.0,
           "title": "Модуль 6. LLM как политика: токены, логарифмы вероятностей и KL",
           "content_file": "rl-for-llm/ru/module-06.md",
-          "content_hash": "0af2c7736fae12e6c140ec6a4e6baca8740a8a4121c245c7eb592d6b3d4e9400",
-          "characters": 43639,
+          "content_hash": "038e7df795a912a540369330dbfe4df64b5196e910067b937e1d208d72db5187",
+          "characters": 60809,
           "image_count": 9
         },
         {
@@ -917,8 +918,8 @@
           "position": 7.0,
           "title": "Модуль 7. Модели награды и данные о предпочтениях",
           "content_file": "rl-for-llm/ru/module-07.md",
-          "content_hash": "2293b37e958ff50c054f48265a5a5d220c2766fbf80ee9d0445fe60b347e5d6f",
-          "characters": 44769,
+          "content_hash": "d8956b7d7bffbd25f467930814aef064b9462c4ff18edde678e461ee1d94b8bb",
+          "characters": 59619,
           "image_count": 7
         },
         {
@@ -927,9 +928,9 @@
           "position": 8.0,
           "title": "Модуль 8. RLHF и прямые методы оптимизации предпочтений",
           "content_file": "rl-for-llm/ru/module-08.md",
-          "content_hash": "16d91b5c87543df3f42c25ae5be08ada850d456670369dec7c736822934e6396",
-          "characters": 37636,
-          "image_count": 8
+          "content_hash": "af9b29480f03ba36a279f7cdddf7014944442c42b36df3d0ce5763885564b13a",
+          "characters": 49230,
+          "image_count": 9
         },
         {
           "id": "rl-for-llm:ru:module-09",
@@ -937,8 +938,8 @@
           "position": 9.0,
           "title": "Модуль 9. RLVR и GRPO: проверяемые награды, групповые оценки и устойчивость",
           "content_file": "rl-for-llm/ru/module-09.md",
-          "content_hash": "057583338ee22dea642cd4510e029c7ae044a5a81f4bdd56b978ad97120a495b",
-          "characters": 45365,
+          "content_hash": "27a4807f5544b5b09a05037ae28abd102d05f84ac60adefac32d6c45ff6382df",
+          "characters": 61020,
           "image_count": 9
         },
         {
@@ -947,8 +948,8 @@
           "position": 10.0,
           "title": "Модуль 10. Поиск, проверка и вычислительный бюджет на этапе генерации",
           "content_file": "rl-for-llm/ru/module-10.md",
-          "content_hash": "ec2d5edc6f391c32f4a16743c9547516da4e11e3b608af5a47d9074f7bc4a4e2",
-          "characters": 38652,
+          "content_hash": "e6f4dfc3bcefdae4ef2241f98da3283da7ce592eabfe8bfa7e41edd712022997",
+          "characters": 54113,
           "image_count": 9
         },
         {
@@ -957,8 +958,8 @@
           "position": 11.0,
           "title": "Модуль 11. RL для LLM-агентов: инструменты, среда и длинные траектории",
           "content_file": "rl-for-llm/ru/module-11.md",
-          "content_hash": "9a7126a9b1dcecbb28186a39f34bd6409910a68765ba1253bf3c133d446cedb7",
-          "characters": 46556,
+          "content_hash": "2164e819330e5091e4d3190cd631c25d74cf003a2de8ac25227f8a87106b3387",
+          "characters": 61105,
           "image_count": 9
         },
         {
@@ -967,8 +968,8 @@
           "position": 12.0,
           "title": "Модуль 12. Инфраструктура RL для LLM: память, роллауты и асинхронность",
           "content_file": "rl-for-llm/ru/module-12.md",
-          "content_hash": "53a6a10bed396f20957cffd5573225025f5766fa8be1541e5f9157f94883da79",
-          "characters": 54693,
+          "content_hash": "21edce5dfdc668e4c7292d6403a37241703f6ce984bf7b8c0d85c64381945f91",
+          "characters": 67449,
           "image_count": 9
         },
         {
@@ -977,8 +978,8 @@
           "position": 13.0,
           "title": "Модуль 13. Оценивание RL-систем для LLM: статистика, взлом награды и безопасность",
           "content_file": "rl-for-llm/ru/module-13.md",
-          "content_hash": "e9542c531abf0f609187597f357941dfcbc433d1cc83fc31481a2928aaad32da",
-          "characters": 54610,
+          "content_hash": "ce055330234915aef6c19def9d968dea099e3d1b5e7b274a832ce67a71bd27d8",
+          "characters": 68269,
           "image_count": 9
         }
       ]
@@ -990,7 +991,7 @@
       "description": "Reinforcement learning, preference optimization, verifiable rewards, agents, and safety.",
       "stepik_url": "https://stepik.org/296686",
       "module_count": 13,
-      "characters": 553077,
+      "characters": 733893,
       "modules": [
         {
           "id": "rl-for-llm:en:module-01",
@@ -998,8 +999,8 @@
           "position": 1.0,
           "title": "Module 1. Introduction: Reinforcement Learning for LLMs",
           "content_file": "rl-for-llm/en/module-01.md",
-          "content_hash": "24281669ba272ddbb4484069546a8a0d28b933037be275d954ac692423fe29ff",
-          "characters": 46849,
+          "content_hash": "dc129620d6cec5ebafa98d43b52a55e94f9219b08d5929bd57474f6600f4e7f0",
+          "characters": 63389,
           "image_count": 7
         },
         {
@@ -1008,8 +1009,8 @@
           "position": 2.0,
           "title": "Module 2. State, Value, and Bellman Equations",
           "content_file": "rl-for-llm/en/module-02.md",
-          "content_hash": "aba65ae02116bbaa494f030bcf64c28be9a81a3e89280dfe706303afe1bfc17d",
-          "characters": 40918,
+          "content_hash": "6b6666825b94cded366c51e10e85cd517f42e033f21a4a4beaa693a45885c4ee",
+          "characters": 51584,
           "image_count": 8
         },
         {
@@ -1018,8 +1019,8 @@
           "position": 3.0,
           "title": "Module 3. Bandits, exploration, and one-step decisions",
           "content_file": "rl-for-llm/en/module-03.md",
-          "content_hash": "6ab9202235f92aeb55e9b09102be4c09e96fdd042bab1eadeb1521df4496e91c",
-          "characters": 40791,
+          "content_hash": "c736a7ae9d17787233e1982280d64a2f30127bf960ba3aa235ddac1605760daf",
+          "characters": 54452,
           "image_count": 6
         },
         {
@@ -1028,8 +1029,8 @@
           "position": 4.0,
           "title": "Module 4. Policy gradients: from REINFORCE to PPO",
           "content_file": "rl-for-llm/en/module-04.md",
-          "content_hash": "32284561a0ade7f10693db6b762d16b69902f0d899569994c660bf73253685ec",
-          "characters": 48445,
+          "content_hash": "dc068dc31763d48c8af8bc09cb6b024be150f4cea362ab7df6e63da87f591bb6",
+          "characters": 60647,
           "image_count": 9
         },
         {
@@ -1038,8 +1039,8 @@
           "position": 5.0,
           "title": "Module 5. Learning from fixed data: imitation, deep Q-methods, and offline RL",
           "content_file": "rl-for-llm/en/module-05.md",
-          "content_hash": "77e1f4f91dda50936d03628b760161399c35294cb961412a297b57d3c1a4859f",
-          "characters": 44552,
+          "content_hash": "f29891cdad05474039c965fd2e39f2934093dc217c940569e054a7770ea78fe4",
+          "characters": 62465,
           "image_count": 10
         },
         {
@@ -1048,8 +1049,8 @@
           "position": 6.0,
           "title": "Module 6. The LLM as a policy: tokens, log-probabilities, and KL",
           "content_file": "rl-for-llm/en/module-06.md",
-          "content_hash": "c7c8a8e9a81a90528059e7806c16dbff98bae20d85f1bc12d3ea5f944ae62e0e",
-          "characters": 41109,
+          "content_hash": "15d5749fcd81cc13728f72cbcea089712adfe2c6b2b041707be962e60bebd5b8",
+          "characters": 58029,
           "image_count": 9
         },
         {
@@ -1058,8 +1059,8 @@
           "position": 7.0,
           "title": "Module 7. Reward models and preference data",
           "content_file": "rl-for-llm/en/module-07.md",
-          "content_hash": "0c2d1f4704217e732d0fc5e70c04f1d7531795332d68bdae12db59511f4c6b4e",
-          "characters": 40446,
+          "content_hash": "fe84d5a03fb67da52695043e80daa8ccd160ac834d01c56265265dbbc93e3e4f",
+          "characters": 54593,
           "image_count": 7
         },
         {
@@ -1068,9 +1069,9 @@
           "position": 8.0,
           "title": "Module 8. RLHF and direct preference optimization",
           "content_file": "rl-for-llm/en/module-08.md",
-          "content_hash": "340b36d1185a1d0a9babc1aabad61396b2aa395454465f5da779ab31d39b69cf",
-          "characters": 33912,
-          "image_count": 8
+          "content_hash": "05313350f7cdfb847f46520d8bb959c23d483e90f9b1c81923a3c7540040fc06",
+          "characters": 45339,
+          "image_count": 9
         },
         {
           "id": "rl-for-llm:en:module-09",
@@ -1078,8 +1079,8 @@
           "position": 9.0,
           "title": "Module 9. RLVR and GRPO: verifiable rewards, group-relative estimates, and stability",
           "content_file": "rl-for-llm/en/module-09.md",
-          "content_hash": "767f9c94041c5a2c5cf73896a41364ae4f03083bb7252337eb1a3c9c48d340c2",
-          "characters": 41584,
+          "content_hash": "cf0c5d984f7a20ce1f832d09fbb9e059feacc3d63ffeda42107dc8dd4842d576",
+          "characters": 56329,
           "image_count": 9
         },
         {
@@ -1088,8 +1089,8 @@
           "position": 10.0,
           "title": "Module 10. Search, verification, and test-time compute",
           "content_file": "rl-for-llm/en/module-10.md",
-          "content_hash": "74c7f68e687f0e6008207b7c46f57df68a505126fdf2e30e9d3c7b4ca869cbb7",
-          "characters": 35021,
+          "content_hash": "6ebc7ff19c2d6c08bf1b9c60704b003748f8a6f3373408dfae4bac434fa7806c",
+          "characters": 49551,
           "image_count": 9
         },
         {
@@ -1098,8 +1099,8 @@
           "position": 11.0,
           "title": "Module 11. RL for LLM agents: tools, environments, and long trajectories",
           "content_file": "rl-for-llm/en/module-11.md",
-          "content_hash": "ef523d10a3754afe600ac387e9a09ba4b8d1936aeb964a56393721c47de81ef8",
-          "characters": 43573,
+          "content_hash": "fac9f097ec71a8388610fbbad008461a5ef1dfbb4d9e18087d6886110aa13e18",
+          "characters": 57487,
           "image_count": 9
         },
         {
@@ -1108,8 +1109,8 @@
           "position": 12.0,
           "title": "Module 12. RL infrastructure for LLMs: memory, rollouts, and asynchrony",
           "content_file": "rl-for-llm/en/module-12.md",
-          "content_hash": "b73ec094da73b1c82985286984a8d449adbb7ef236d3ff2b5a66743be0ea259f",
-          "characters": 48354,
+          "content_hash": "6f3cc7d47672c3e1e1226aa56a44db6dee52165b6461eab998e4802921470c97",
+          "characters": 59683,
           "image_count": 9
         },
         {
@@ -1118,8 +1119,8 @@
           "position": 13.0,
           "title": "Module 13. Evaluating RL systems for LLMs: statistics, reward hacking, and safety",
           "content_file": "rl-for-llm/en/module-13.md",
-          "content_hash": "28231d9ee6753b980cd6b038f183ebf14671f5eee10847a8fb1111fb4c3fdc79",
-          "characters": 47523,
+          "content_hash": "7d19d94e8da98de909d887ca34e5b85b7bb4f896b176904276bb2a2ce31f6414",
+          "characters": 60345,
           "image_count": 9
         }
       ]
@@ -1666,9 +1667,9 @@
     }
   ],
   "latest_refresh": {
-    "scope": "Modern LLMs only",
-    "lecture_edition": "2026-10-25",
-    "inventory": "LECTURE_EDITION_2026-10-25.json",
+    "scope": "RL for LLM only",
+    "lecture_edition": "2026-10-27",
+    "inventory": "LECTURE_EDITION_2026-10-27.json",
     "practice": "unchanged",
     "other_courses": "unchanged"
   }

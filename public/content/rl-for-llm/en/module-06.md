@@ -1,6 +1,7 @@
 # Module 6. The LLM as a policy: tokens, log-probabilities, and KL
 
 > **Material version:** 2026.11  
+> **Text revision:** 2026-10-26  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
 > **Core practice:** level A — browser and CPU; level B — free Colab T4  
@@ -9,7 +10,9 @@
 
 The first five modules developed the general RL toolkit. We now connect it to the concrete objects of an autoregressive model: tokens, logits, masks, log-probabilities, and generation settings. This is where errors hidden by a compact PPO or GRPO formula usually appear: a one-token shift, a wrong response mask, a log-probability from the wrong policy, or a confusion between natural termination and a length limit.
 
-In this module, KL denotes Kullback–Leibler divergence. The deeper information-theoretic development is in *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`). The present module remains self-contained: it derives and measures KL in the token-policy setting, while the cross-course pointer supplies the broader entropy and coding perspective.
+The practical question is simple: **how do we ensure that the generator, the saved rollout, and the trainer describe the same policy actions and probabilities?**
+
+In this module, KL denotes Kullback–Leibler divergence. The deeper information-theoretic development is in *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” ([open module](/courses/information-theory-for-ml/module-03/)). The present module remains self-contained: it derives and measures KL in the token-policy setting, while the cross-course pointer supplies the broader entropy and coding perspective.
 
 **Learning objectives.** By the end of the module, you will be able to:
 
@@ -24,23 +27,15 @@ In this module, KL denotes Kullback–Leibler divergence. The deeper information
 9. describe a minimal rollout-batch contract for training an LLM with verifiable reward;
 10. reproduce these measurements on an open 0.6-billion-parameter model in Colab.
 
-The English computational route is the executable practice, and the claim/source registry is `Module_6_Sources.md`.
+Exercises, quiz questions, and executable practice are available on separate module pages. Worked solutions support a first attempt of your own. The [source section](#sources-and-further-reading) identifies the primary references and the scope of their use.
 
 ---
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable practice follow the lecture. The explanation remains self-contained.
+> **Practice route.** [Exercises](/courses/rl-for-llm/module-06/exercises/), [quiz questions](/courses/rl-for-llm/module-06/tests/), and [executable practice](/courses/rl-for-llm/module-06/notebooks/) are on separate pages. The lecture remains self-contained.
 
 ## Lesson 6.1. A token-level MDP without hidden assumptions
 
-> **Lesson 6.1. A token-level MDP without hidden assumptions**
->
-> 1. Why say “the LLM is a policy” again?
-> 2. Formal model for an ordinary text response
-> 3. EOS, stop tokens, stop strings, and length limits
-> 4. Probability of a variable-length response
-> 5. Where reward lives in a token trajectory
->
-> then 3 assessment steps
+First establish what counts as an action and as a completed response. The same visible text can conceal different token trajectories. Until that distinction is settled, even the phrase “response probability” is underspecified.
 
 ### Step 6.1.1 — Why say “the LLM is a policy” again?
 
@@ -97,7 +92,7 @@ The word *admissible* matters. The tokenizer vocabulary and the actual action se
 
 **Model boundary.** The state $(x,y_{<t})$ is sufficient only when no hidden external state changes between tokens. Tool calls, search results, user responses, and persistent memory must be included as observations or state variables. Module 11 develops that setting.
 
-> **Architecture extension:** *Modern LLMs*, Module 2 “Tokenization and Embeddings” (`modern_llms.module_02_tokenization`) covers tokenization, special tokens, and chat templates. This module remains self-contained by treating $x$ as an already-tokenized initial sequence.
+> **Architecture extension:** *Modern LLMs*, Module 2 “Tokenization and Embeddings” ([open module](/courses/modern-llms/module-02/)) covers tokenization, special tokens, and chat templates. This module remains self-contained by treating $x$ as an already-tokenized initial sequence.
 
 ---
 
@@ -145,7 +140,11 @@ $$
 \log \pi_\theta(y_t\mid x,y_{<t}).
 $$
 
-The sum usually decreases with length because each factor is at most one and each log-probability is non-positive. Sequence log-probabilities therefore cannot be compared across different lengths without a convention. We will normalize by the number of active tokens later, but that does not remove every length or tokenization effect.
+The product describes a particular complete response under the chosen stopping convention. **Responses of different lengths can be compared mathematically** when they belong to that same distribution. A more probable response is not thereby more useful or correct: probability describes the policy's tendency to produce it, not an external quality criterion.
+
+The length issue is more precise than a blanket prohibition. Extending a given prefix multiplies its probability by factors no greater than one. The event “this prefix followed by this continuation” cannot be more probable than the prefix event alone. That does not establish an ordering between every long response and every short one: different responses follow different branches of the distribution.
+
+Lesson 6.2 will also introduce the mean log-probability per active token. It answers another question—how surprising the tokens were on average—but it is no longer the log-probability of the whole response. In Module 4, summation followed from exact factorization. Dividing by length in a training objective changes the relative weight of short and long responses; it does not merely repair the same quantity. Neither statistic, by itself, settles response quality.
 
 A stop string creates another boundary case: the output can end after a multi-token pattern rather than one designated action. A strict probabilistic model must either include the stopping rule in the environment or retain the original tokens before the stop string is stripped.
 
@@ -153,7 +152,7 @@ A stop string creates another boundary case: the output can end after a multi-to
 
 ### Step 6.1.5 — Where reward lives in a token trajectory
 
-Tasks with verifiable outcomes often use sparse terminal reward:
+Tasks with verifiable outcomes often use sparse terminal reward. The next display numbers transitions from $t=0$ to $T-1$, following the earlier MDP convention: transition $t$ produces token $y_{t+1}$ and reward $r_{t+1}$. The last of the $T$ transitions therefore carries $r_T$:
 
 $$
 r_{t+1}=0\quad (t<T-1),
@@ -179,15 +178,7 @@ Each addition changes the task. The log should therefore separate raw task rewar
 
 ## Lesson 6.2. Logits, masks, and log-probabilities
 
-> **Lesson 6.2. Logits, masks, and log-probabilities**
->
-> 1. From logits to the selected-token probability
-> 2. The one-token shift and the response mask
-> 3. Sum, mean, and perplexity
-> 4. Three roles for log-probabilities
-> 5. Numeric precision and a reproducible protocol
->
-> then 4 assessment steps
+We can now follow recorded actions into the model tensors. The goal is not to retain every number a model can emit, but to recover the probability of each chosen token under the prefix from which it was chosen.
 
 ### Step 6.2.1 — From logits to the selected-token probability
 
@@ -228,6 +219,8 @@ Keep three tensors distinct:
 
 PPO or GRPO usually needs the third tensor plus a response mask. Full distributions are required for quantities such as exact conditional KL over the vocabulary.
 
+Here $L$ counts positions whose distributions are being considered. Rescoring a complete saved string requires shifting and discarding positions so that each prediction is paired with its actual next token. The resulting tensor is shorter, but gathering still means selecting the chosen action's column. The symbol $m_t$ in LSE denotes a maximum logit; the binary mask introduced below is a different object despite using the same letter.
+
 ---
 
 ### Step 6.2.2 — The one-token shift and the response mask
@@ -256,6 +249,10 @@ shifted_tokens = input_ids[:, 1:]
 logp_all = torch.log_softmax(shifted_logits.float(), dim=-1)
 selected_logp = logp_all.gather(-1, shifted_tokens[..., None]).squeeze(-1)
 ```
+
+In this listing, $L$ is the full length of `input_ids`. Slicing leaves $L-1$ prediction–target pairs: `shifted_logits` has shape $[B,L-1,V]$, while `selected_logp` has shape $[B,L-1]$. The final input token has no next-token label inside this string. The mask must follow the shifted **target tokens**, rather than be applied unchanged to the original input positions.
+
+The prompt–response boundary is the crucial case. **The last prompt position predicts the first response token.** That logit position is not excluded merely because its input token belonged to the prompt: the target action already belongs to the response. Every later response token is scored by the same rule, under its own preceding prefix.
 
 A mask is then applied. It answers a semantic question: **which actions belong to the policy optimized by this objective?**
 
@@ -295,13 +292,15 @@ $$
 
 With natural logarithms, PPL is the exponential of mean cross-entropy in nats per token. If every active token had probability $1/K$, then PPL equals $K$. This motivates the “effective number of equally likely choices” intuition, but it is not a literal count for a general distribution.
 
+The mean and PPL require at least one active token; an empty mask must not silently become an ordinary result by substituting zero. The sum $L_{\mathrm{seq}}$ is a complete-response log-probability only when the mask includes all of that response's actions under the chosen contract. Removing actions from the middle leaves a partial sum, not automatically the probability of a shortened string: the conditional probabilities were still computed on the original prefixes.
+
 Three limitations are essential.
 
 1. **PPL depends on the tokenizer.** Different tokenizations produce different token counts, so PPL values are not a universal physical scale.
 2. **PPL depends on the mask and template.** Response-only, full-dialogue, and content-token PPL are different quantities.
 3. **PPL is not response utility.** A model can assign high probability to a bland or incorrect continuation.
 
-> **Mathematical extension:** *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`) develops cross-entropy, KL, and the coding-length interpretation.
+> **Mathematical extension:** *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” ([open module](/courses/information-theory-for-ml/module-03/)) develops cross-entropy, KL, and the coding-length interpretation.
 
 ---
 
@@ -315,14 +314,16 @@ Post-training systems often keep several models or snapshots of one model side b
 - $\log\pi_\theta$ is the probability under the current trainable parameters. The trainer recomputes it and differentiates through it.
 - $\log\pi_{\mathrm{ref}}$ is the probability under a frozen reference policy. It anchors a KL term.
 
-The three are not interchangeable even when all models started from the same checkpoint.
+The three are not interchangeable even when all models started from the same checkpoint. Here $\pi_{\mathrm{old}}$ denotes the **actual** old policy, including its sampling rules, not just old weights. Lesson 6.4 will name that distribution explicitly as $\mu_{\theta_{\mathrm{old}},\psi}$. Current and reference log-probabilities likewise need a declared interpretation: base distributions or distributions after specified transforms.
 
 There are also two computation modes.
 
 1. **Sampling.** A token is drawn from the actual behavior policy and its log-probability is recorded during rollout.
 2. **Rescoring a known sequence.** The whole sequence is passed through the model under teacher forcing, and selected-token probabilities are gathered in parallel.
 
-In an ideal synchronous system, the rescored $\log\pi_{\mathrm{old}}$ equals the stored value. Distributed systems may disagree because of a different version of the weights, processor order, numeric precision, or generation-engine behavior. A small discrepancy is not automatically a bug, but it must be measured and explained.
+In rescoring, the supplied prefix is **recorded**, not necessarily expert-written or correct. We are not asking the model to choose the same token again. We present the existing sequence and ask what probability it assigns to each recorded action. The causal mask preserves the prefix available at that position; the target token does not become part of the context used to predict itself.
+
+Stored and rescored $\log\pi_{\mathrm{old}}$ should agree when weights, input tokens, positional and context conventions, and **all distribution transforms** agree. A plain forward pass through unscaled logits does not reproduce temperature-scaled or truncated generation probabilities. Distributed execution can add numeric, kernel, and engine differences. Measure and explain small discrepancies, but first establish that the two paths refer to the same mathematical object.
 
 ---
 
@@ -340,23 +341,19 @@ Log-probability differences can accumulate over long sequences. Rarity alone doe
 
 A useful safeguard is to normalize the softmax and accumulate long sums in at least FP32 even when the matrix operations use BF16. That does not force byte-identical outputs across kernels and devices, but it removes one common source of avoidable error.
 
-Inference APIs expose different slices of the distribution. Current vLLM documentation states that a non-`None` `logprobs` result includes the chosen token even when it is outside the requested top alternatives, and that `-1` requests all vocabulary log-probabilities subject to engine limits. Full-vocabulary output is useful for exact checks but can be expensive in memory and bandwidth, so the API version and engine cap belong in the experiment record.
+Inference APIs differ both in how much information they return and in what those numbers mean. In vLLM's `SamplingParams` description, requesting `logprobs` includes the selected token even when it lies outside the requested top alternatives; `-1` requests the whole vocabulary when engine limits permit it. This establishes **which vocabulary entries are returned**, not which distribution supplied their probabilities.
 
-Hugging Face Transformers can recover the selected generation scores with `compute_transition_scores`. The course notebook requests `normalize_logits=True` and independently teacher-forces the same sequence. Agreement between those two paths is a stronger invariant than a single plausible-looking score table.
+Check separately whether values precede or follow generation transforms. The versioned vLLM 0.11.1 documentation, for example, distinguishes `raw_logprobs` from `processed_logprobs`: values before processors versus after them, including temperature and top-k/top-p. Availability and configuration are version-specific. A field called `logprobs` is not, by its name alone, a valid behavior-policy denominator. Full-vocabulary output can also be expensive in memory and bandwidth; output volume and output semantics are separate concerns.
 
-> **Engineering extension:** KV caching, batching, and efficient autoregressive inference are covered in *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`).
+Hugging Face Transformers provides `compute_transition_scores` to recover scores for the tokens selected during generation. Its `normalize_logits=True` option normalizes the supplied scores. When those scores already follow processors, normalization does not undo temperature, penalties, or truncation and does not recover the original softmax.
+
+An independent teacher-forced check therefore has two clear regimes: disable transforms and compare the base policy, or replay the same transforms in the same order on the same prefixes. The latter includes history-dependent rules such as repetition penalties. Only then is agreement a meaningful invariant. The optional route uses `normalize_logits=True` and independent rescoring; those operations must be compared under this common contract, not by assuming that any two returned arrays should match.
+
+> **Engineering extension:** KV caching, batching, and efficient autoregressive inference are covered in *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” ([open module](/courses/modern-llms/module-10/)).
 
 ## Lesson 6.3. KL to a reference policy
 
-> **Lesson 6.3. KL to a reference policy**
->
-> 1. A price for policy drift, not a certificate of quality
-> 2. The chain rule for sequence KL
-> 3. Exact conditional KL and a sampled log-ratio
-> 4. The k1, k2, and k3 estimators
-> 5. Estimating a number and differentiating the right objective are different tasks
->
-> then 4 assessment steps
+The probability of one response is not yet a divergence between policies. We first identify the responses and prefixes over which KL is averaged, then distinguish measuring that number from constructing an update that reduces it.
 
 ### Step 6.3.1 — A price for policy drift, not a certificate of quality
 
@@ -387,7 +384,7 @@ A KL anchor can:
 
 Small KL does not prove truthfulness, safety, or utility. The reference policy can be wrong, and a small probability shift can still alter a rare but important behavior. Nor is this the same as offline-RL pessimism from Module 5: that mechanism responds to uncertain values outside data coverage, whereas KL imposes a geometric cost on distributional change.
 
-The full variational derivation of a KL-regularized optimum appears in *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`). Here we focus on how the measurement is computed for an autoregressive LLM.
+The full variational derivation of a KL-regularized optimum appears in *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)). Here we focus on how the measurement is computed for an autoregressive LLM.
 
 ---
 
@@ -418,7 +415,16 @@ D_{\mathrm{KL}}(\pi\|\pi_{\mathrm{ref}}\mid x)
 \right].
 $$
 
-Equivalently,
+To replace sampled log-ratios with conditional KL, pause at a prefix $s_t$ that has already been reached. Averaging the next token under $\pi(\cdot\mid s_t)$ gives
+
+$$
+\mathbb E_{a\sim\pi(\cdot\mid s_t)}
+\left[\left.\log\frac{\pi(a\mid s_t)}{\pi_{\mathrm{ref}}(a\mid s_t)}\right|s_t\right]
+=
+\sum_v\pi(v\mid s_t)\log\frac{\pi(v\mid s_t)}{\pi_{\mathrm{ref}}(v\mid s_t)}.
+$$
+
+The right side is KL between two next-token distributions on the **same** prefix. We must still average over the prefixes that policy $\pi$ visits. This is iterated expectation, not independence between token positions. Hence the equivalent sequence-level expression:
 
 $$
 D_{\mathrm{KL}}(\pi\|\pi_{\mathrm{ref}}\mid x)
@@ -455,7 +461,7 @@ D_t
 \log\frac{\pi(v\mid s_t)}{\pi_{\mathrm{ref}}(v\mid s_t)}.
 $$
 
-It requires both full vocabulary distributions and is always non-negative.
+It requires both full vocabulary distributions and is always non-negative. “Exact” describes the sum over actions **at this fixed $s_t$**. It does not mean that all possible prefixes have been enumerated. Computing these sums on an old batch still uses prefixes visited by the batch's collection policy, not automatically by the current one.
 
 If $a_t$ is sampled from $\pi(\cdot\mid s_t)$, one can instead compute
 
@@ -485,6 +491,8 @@ This distinction—exact over actions at visited prefixes versus sampled over bo
 
 ### Step 6.3.4 — The k1, k2, and k3 estimators
 
+Temporarily separate the estimator from the language model. In the abstract notation below, $x$ is a sampled outcome, **not the prompt** used earlier. For conditional KL it can be the next token: $q$ is the sampling distribution and $p$ is the comparison distribution. Estimating $D_{\mathrm{KL}}(\pi_\theta\|\pi_{\mathrm{ref}})$ from current-policy actions means $q=\pi_\theta$ and $p=\pi_{\mathrm{ref}}$. The ratio $p/q$ below should therefore not be confused with PPO's current/old ratio.
+
 Let $x\sim q$ and suppose the target quantity is
 
 $$
@@ -511,6 +519,18 @@ k_2=\frac12(\log r)^2,
 \qquad
 k_3=(r-1)-\log r.
 $$
+
+The three expressions arise for different reasons. $k_1$ is the integrand in the definition of KL. To form $k_3$, add $r-1$. If this addition has zero expectation, it changes individual samples without changing their mean. This is the control-variate idea from Module 4, now applied to measuring KL rather than centering reward.
+
+The motivation for $k_2$ is local. For a small log-ratio near matching distributions,
+
+$$
+u=\log r,\qquad
+k_3=e^u-1-u=\frac12u^2+O(u^3),
+\qquad k_2=\frac12u^2.
+$$
+
+The quadratic part approximates $k_3$ near $r=1$; it is not equal to it for arbitrary ratios. Carrying a local approximation into an expectation requires tail control: rare large ratios may dominate error and variance. Similarity near one is therefore no substitute for support conditions or a dispersion check. We can now state those conditions precisely.
 
 ![KL estimators](assets/rl-for-llm/en/module-06/M6_kl_estimators_EN.png)
 
@@ -546,28 +566,105 @@ A finite synthetic example shows both regimes. For two nearby four-point distrib
 
 ### Step 6.3.5 — Estimating a number and differentiating the right objective are different tasks
 
-The k1–k3 formulas first answer a question about estimating a **KL value**. It does not follow that placing any one of them in an autograd graph produces the gradient of the intended sequence-level KL objective.
+The $k_1$–$k_3$ formulas answer a question about a **KL value**. Training asks a different question: how does that value change when the policy parameters change? When those parameters also determine which samples are observed, averaging derivatives of recorded numbers is not the same operation as differentiating their expectation.
 
-There are two distinct reasons.
+Module 4 already supplied the relevant rule. There is a contribution from the changing distribution of outcomes and another from the integrand changing at a fixed outcome. We can now apply that rule to KL rather than select a loss because its values look convenient.
 
-1. Samples depend on the policy parameters, but differentiating through an already selected discrete token does not by itself account for the derivative of the sampling distribution.
-2. In an autoregressive policy, an early token changes the distribution over every later prefix and therefore every later KL contribution.
+**Begin with one fixed prefix.** Keep $s$ fixed, let the reference be independent of $\theta$, and assume that both policies assign positive probability to every action in a finite vocabulary. Write $c_\theta(a)=\log\pi_\theta(a\mid s)-\log\pi_{\mathrm{ref}}(a\mid s)$ and $g_\theta(a)=\nabla_\theta\log\pi_\theta(a\mid s)$. The quantity to differentiate is $D(\theta)=\mathbb E_{a\sim\pi_\theta}[c_\theta(a)]$. Applying the rule from Module 4 gives
 
-Tang and Munos analyze implementations in which a scalar estimate has the desired expectation while direct differentiation produces a different gradient or drops the sequential dependency. Later analyses of KL regularization likewise separate three properties: unbiased value estimation, finite variance, and a correct optimization gradient. In this module k1–k3 are **stop-gradient diagnostics and numerical estimators**. A training loss should be derived from the desired regularized policy gradient, not from the cosmetic appeal of a non-negative scalar.
+$$
+\begin{aligned}
+\nabla_\theta D(\theta)
+&=\mathbb E_{a\sim\pi_\theta}
+\left[c_\theta(a)g_\theta(a)+\nabla_\theta c_\theta(a)\right]\\
+&=\mathbb E_{a\sim\pi_\theta}
+\left[c_\theta(a)g_\theta(a)\right],
+\qquad
+\mathbb E_{a\sim\pi_\theta}[g_\theta(a)]=0.
+\end{aligned}
+$$
 
-> **Snapshot 2026-08-05.** Current TRL PPO Trainer documentation describes `k1` as the default logging estimator and offers `k3` as a non-negative alternative that the documentation characterizes as lower-variance. That is an implementation description, not a universal theorem: heavy probability-ratio tails can make $k_3$ far noisier. The full placement of old, current, and reference policies in PPO, DPO, RLOO, and GRPO is covered in *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`).
+The second equality is not permission to discard every direct derivative. Here that derivative is $g_\theta(a)$ because the reference is fixed, and its expectation vanishes because the current policy is normalized. We included both terms before establishing that one averages to zero. A parameter-dependent reference, a changing support, or a different regularized quantity requires a fresh argument.
+
+**What happens when autograd differentiates $k_1$ alone?** In this notation, $k_1=c_\theta(a)$. Once sampling has occurred, the action identifier is fixed data. Autograd can differentiate its log-probability, but the saved identifier does not tell it how often other actions would have been sampled under different parameters. Consequently, for on-policy samples,
+
+$$
+\mathbb E_{a\sim\pi_\theta}
+\left[\nabla_\theta k_1(a)\right]
+=
+\mathbb E_{a\sim\pi_\theta}[g_\theta(a)]
+=0.
+$$
+
+The average value of $k_1$ estimates KL correctly; the average direct derivative of that scalar is not the general KL gradient. A finite batch may produce a nonzero derivative, but that does not recover the missing term: it is sampling variation around a zero expectation. At equality of the distributions, the true gradient may also vanish. The failure is the absence of the required signal away from that special case.
+
+The correct single-prefix contribution above is $c_\theta(a)g_\theta(a)$. One way to obtain it is to differentiate the product of a stop-gradient coefficient $c_\theta(a)$ and $\log\pi_\theta(a\mid s)$. The numerical value of this surrogate product need not equal KL. Its purpose is to produce the desired derivative, just as a REINFORCE loss is constructed for its gradient.
+
+**Why can a value-biased $k_2$ yield the right gradient?** Under the same assumptions, $k_2=\tfrac12 c_\theta(a)^2$, so direct differentiation gives
+
+$$
+\mathbb E_{a\sim\pi_\theta}
+\left[\nabla_\theta\frac12 c_\theta(a)^2\right]
+=
+\mathbb E_{a\sim\pi_\theta}
+\left[c_\theta(a)g_\theta(a)\right]
+=
+\nabla_\theta D(\theta).
+$$
+
+There is no contradiction: matching the expectation of a value and matching the expectation of its derivative are different properties. This result assumes a **fixed prefix, a fixed reference, and samples drawn from the current policy**. Reusing actions collected by another policy does not preserve the argument automatically. Nor does a correct local derivative settle the sequential problem.
+
+**Now restore the sequence.** Consider KL for a complete response to a fixed prompt $x$. To isolate the derivative, use a finite generation process with compatible stopping rules and common support; include EOS when it is a policy action. The reference remains fixed. For a recorded response, write $c_{\theta,t}=\log\pi_\theta(y_t\mid s_t)-\log\pi_{\mathrm{ref}}(y_t\mid s_t)$, $g_{\theta,t}=\nabla_\theta\log\pi_\theta(y_t\mid s_t)$, and $C_\theta(y)=\sum_t c_{\theta,t}$. Each derivative holds the recorded prefix fixed. Changes in how frequently prefixes are visited enter through the distribution of the complete response:
+
+$$
+\begin{aligned}
+\nabla_\theta D_{\mathrm{seq}}(\theta)
+&=\mathbb E_{y\sim\pi_\theta}
+\left[
+C_\theta(y)\sum_{t=1}^{T}g_{\theta,t}
++\sum_{t=1}^{T}g_{\theta,t}
+\right]\\
+&=\mathbb E_{y\sim\pi_\theta}
+\left[
+C_\theta(y)\sum_{t=1}^{T}g_{\theta,t}
+\right].
+\end{aligned}
+$$
+
+This is the single-prefix argument applied to the whole response as one random object. Again, the direct term averages to zero: it is the expected score of a normalized distribution over complete responses. Random length requires a sound termination model and conditions allowing differentiation under the expectation. Simply dropping an unobserved tail does not establish those conditions.
+
+Expanding the remaining product reveals the sequential dependence. An early token's score multiplies not only its own log-ratio, but also later log-ratios. Its choice changes which later prefixes become possible. Terms that occur **before** the current action are already fixed by history and vanish in conditional expectation. The causality argument that produced reward-to-go in Module 4 therefore gives
+
+$$
+\begin{aligned}
+\nabla_\theta D_{\mathrm{seq}}(\theta)
+&=\mathbb E_{y\sim\pi_\theta}
+\left[
+\sum_{t=1}^{T}
+\left(\sum_{j=t}^{T}c_{\theta,j}\right)g_{\theta,t}
+\right],\\
+\nabla_\theta J_x(\theta)
+&=\mathbb E_{y\sim\pi_\theta}
+\left[
+\sum_{t=1}^{T}
+\left(R(x,y)-\beta\sum_{j=t}^{T}c_{\theta,j}\right)g_{\theta,t}
+\right].
+\end{aligned}
+$$
+
+The second line returns to Step 6.3.1. The terminal reward $R(x,y)$ has no direct parameter dependence, $\gamma=1$, and KL enters with coefficient $-\beta$. We now have one consistent route from the regularized objective to its gradient. A surrogate loss implementing this estimator treats the computed coefficient of each score as a numerical weight; it does not differentiate that same coefficient a second time.
+
+By contrast, differentiating a sum of token-wise $k_2$ values on saved prefixes retains only the local products $c_{\theta,t}g_{\theta,t}$. The contributions from later log-ratios are missing. Summing over the full vocabulary likewise gives an exact derivative of **conditional** KL at a fixed prefix, but does not by itself differentiate the distribution of visited prefixes. An exact local sum does not remove the sequential part of the problem.
+
+There is therefore no blanket prohibition on differentiating estimators. The obligation is to establish which objective and sampling distribution a proposed derivative represents. For $k_1$, we identified a missing term; for $k_2$, a valid single-prefix result with a clear boundary; for a sequence, the need to account for future contributions. Tang and Munos and the later KL-regularization analysis listed in the sources examine these distinctions.
+
+In this module's computational route, $k_1$–$k_3$ remain **stop-gradient diagnostics and numerical estimators**. The derivation explains why a training loss must be designed from the intended gradient. A diagnostic scalar and a surrogate used to update parameters may use related expressions, but they answer different questions.
+
+> **Snapshot 2026-08-05.** Current TRL PPO Trainer documentation describes `k1` as the default logging estimator and offers `k3` as a non-negative alternative that the documentation characterizes as lower-variance. That is an implementation description, not a universal theorem: heavy probability-ratio tails can make $k_3$ far noisier. The full placement of old, current, and reference policies in PPO, DPO, RLOO, and GRPO is covered in *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)).
 
 ## Lesson 6.4. The actual behavior policy during generation
 
-> **Lesson 6.4. The actual behavior policy during generation**
->
-> 1. Base softmax versus post-decoding policy
-> 2. Temperature preserves full support when positive
-> 3. Top-k and top-p are truncation followed by renormalization
-> 4. Log-probability mismatch and the support condition
-> 5. A practical consistency rule
->
-> then 6 assessment steps
+Having established what a probability means, we can reconstruct the distribution the generator actually sampled. Temperature and filters affect more than textual variety: they determine probability-ratio denominators and the coverage available to an estimator.
 
 ### Step 6.4.1 — Base softmax versus post-decoding policy
 
@@ -618,7 +715,7 @@ For fixed finite logits:
 - $\tau>1$ flattens it;
 - every token retains positive probability.
 
-The last point matters for probability ratios: positive temperature changes mass but not support. Temperature zero is a different rule, typically greedy `argmax`, not an ordinary member of the positive-temperature softmax family.
+The last point matters for probability ratios: positive temperature changes mass but not support. This is a mathematical statement about softmax with finite logits; numeric underflow is a separate issue. Equal support does not imply equal distributions: base and temperature-scaled policies generally assign different probabilities to the same admissible tokens. Temperature zero is a different rule, typically greedy `argmax`, not an ordinary member of the positive-temperature softmax family.
 
 A log-probability recorded under temperature $\tau$ is
 
@@ -631,6 +728,8 @@ $$
 $$
 
 Storing the temperature while recomputing log-probabilities from unscaled logits creates the wrong denominator even though the selected token is perfectly valid under both distributions.
+
+In Module 4, the initial PPO ratio was one because numerator and denominator described the same policy before updating. A base-softmax numerator and a temperature-scaled behavior denominator need not give one even with identical weights. Such reweighting may be studied, but it is not silently the same on-policy construction. When the temperature-scaled policy itself is optimized, its gradient must likewise use its scaled, normalized logits.
 
 ---
 
@@ -661,6 +760,8 @@ A reproducible implementation must specify:
 - whether truncation happens before or after temperature scaling.
 
 The exercises use a stable descending sort with lower token identifiers breaking ties, followed by temperature, then top-k, then top-p.
+
+This sharpens the connection to Module 3. Positive temperature preserves the ordering of finite logits, so a top-k set with the same tie rule remains unchanged. Cumulative probability masses do change, however: recomputing top-p after temperature scaling can change the retained set. A token excluded by a separate fixed ban does not reappear merely because temperature changes. The operation order determines which statement applies to a given run.
 
 ---
 
@@ -698,13 +799,17 @@ $$
 
 The error repeats at every position and exponentiates in a sequence probability ratio.
 
+Correcting a retained action's log-probability and restoring missing coverage are different tasks. The $-\log Z_S$ correction solves the first. It supplies no observations for tokens outside $S$. As in Module 5, a more accurate calculation on existing records cannot make an unobserved outcome observed. Even with shared support, small behavior probabilities and large ratios can produce high variance: a well-defined weight is not yet a reliable finite-sample estimate.
+
 ---
 
 ### Step 6.4.5 — A practical consistency rule
 
 There is no universal commandment that “top-p is always forbidden during training.” The more precise rule is:
 
-> **The data, stored log-probabilities, and mathematical objective must refer to the same behavior policy.**
+> **Identify the policy that collected the data, the policy being optimized, and why the stored probabilities justify the chosen estimator.**
+
+The two policies need not be identical. The description of the data source must match its actual probabilities. When the target differs, that difference requires a mathematical treatment with the relevant support conditions. One correct local denominator is not, by itself, a complete off-policy correction for a sequence.
 
 The simplest regime uses full support, a fixed positive temperature, and no hard truncation. Then a ratio is defined for every sampled token and base and behavior supports coincide.
 
@@ -722,15 +827,7 @@ Greedy decoding and beam search are search procedures rather than ordinary sampl
 
 ## Lesson 6.5. A rollout contract for RL with verifiable rewards
 
-> **Lesson 6.5. A rollout contract for RL with verifiable rewards**
->
-> 1. A five-component system
-> 2. A minimal batch schema
-> 3. Where deterministic concatenation stops being enough
-> 4. Level B practice: real logits from a 0.6B model
-> 5. Module map
->
-> then 7 assessment steps
+The preceding distinctions now become a rollout record. It must preserve enough information for the trainer to recover what each action, probability, and episode boundary meant—not merely the text that happened to be generated.
 
 ### Step 6.5.1 — A five-component system
 
@@ -778,6 +875,8 @@ Some fields can be reconstructed, but doing so increases dependence on external 
 
 Token-level log-probabilities are preferable to only one sequence sum because PPO, masking, length analysis, and local diagnostics all require positional information.
 
+Follow one response through the record. The generator creates `response_ids`, records the probabilities of its actual choices, and reports why generation stopped. The verifier adds a score and its own version metadata without rewriting the provenance of the actions. The trainer receives an already executed trajectory, constructs an aligned mask, and recomputes current log-probabilities and, when needed, reference values. Rescoring with today's model does not change which policy originally produced the answer. The record preserves that distinction between observed data and their current evaluation.
+
 ---
 
 ### Step 6.5.3 — Where deterministic concatenation stops being enough
@@ -804,7 +903,7 @@ This distinction prepares a central topic of Module 11: the gradient mask must s
 
 ### Step 6.5.4 — Level B practice: real logits from a 0.6B model
 
-The module now ships two separate notebooks:
+The two language-specific notebooks are available through the [executable-practice page](/courses/rl-for-llm/module-06/notebooks/).
 
 They share the computational kernel but have independently written explanations and labels. Three profiles are available: `smoke`, `full`, and `real-model`. The canonical release executes only the local synthetic profiles; weight download is disabled by default (`RUN_REAL_MODEL=False`). This keeps the release gate offline and reproducible, and it avoids presenting an unexecuted model branch as a validated result.
 
@@ -815,7 +914,7 @@ The optional run:
 1. applies the chat template and stores exact `prompt_ids`;
 2. generates a short response with `return_dict_in_generate=True` and `output_scores=True`;
 3. obtains selected-token generation scores through `compute_transition_scores(..., normalize_logits=True)`;
-4. independently teacher-forces the same sequence and verifies the one-token shift;
+4. independently rescores the same recorded prefixes and verifies the one-token shift; probability comparisons are interpreted under matching transforms, as in Step 6.2.5;
 5. computes sum, mean, and PPL over `response_mask` only;
 6. compares exact conditional KL between two temperature-scaled distributions at visited prefixes;
 7. measures top-p support and its renormalization correction;
@@ -824,6 +923,8 @@ The optional run:
 A direct `transformers.generate()` call reliably returns sequences and scores, but it does not expose one production-grade `stop_reason` contract equivalent to a serving-engine finish reason. The notebook therefore labels the reason as **inferred** from EOS and generated length. When an explicit finish reason is required, use a serving API that provides one and record that API version.
 
 The real profile records the resolved model and tokenizer revisions, chat-template mode, library versions, device, dtype, generation settings, and random seed. Outputs may change with any of them; the assertions target alignment and probability identities rather than a preselected response string.
+
+This describes an optional verification route, not a substitute for executing it. Comparing base distributions and comparing post-transform generation distributions answer different questions; a run must identify which it tests. Successfully extracting a tensor does not, on its own, validate sequence-level KL or the gradient of a later training algorithm.
 
 ### Step 6.5.5 — Module map
 
@@ -883,7 +984,7 @@ The core set contains [20 exercises](/courses/rl-for-llm/module-06/exercises/): 
 
 ## Sources and further reading
 
-The items below support specific mathematical or implementation claims. `Module_6_Sources.md` contains the full claim registry, allowed inference, and limitations.
+The references below support the module’s mathematical and implementation claims. Scope and limitations are stated beside the relevant explanations. The course’s factual snapshot is retained; the separately versioned vLLM reference makes explicit why a field name cannot establish universal probability semantics.
 
 1. [Hugging Face Transformers: Generation](https://huggingface.co/docs/transformers/main_classes/text_generation) — `compute_transition_scores`, generation score structures, and `normalize_logits`; used for the selected-token cross-check.
 2. [Hugging Face Transformers: internal generation utilities](https://huggingface.co/docs/transformers/internal/generation_utils) — the separation between logits processors and stopping criteria. The API does not decide the RL semantics of a boundary for you.
@@ -894,10 +995,12 @@ The items below support specific mathematical or implementation claims. `Module_
 7. [Holtzman et al., “The Curious Case of Neural Text Degeneration”](https://arxiv.org/abs/1904.09751) — the primary nucleus-sampling paper; it defines the mechanism but does not make one top-p setting universally appropriate for RL.
 8. [Official Qwen3-0.6B model card](https://huggingface.co/Qwen/Qwen3-0.6B) — the optional open-weight model’s architecture metadata and Transformers requirement.
 
+9. [vLLM 0.11.1: `logprobs_mode`](https://docs.vllm.ai/en/v0.11.1/api/vllm/config/#vllm.config.ModelConfig.logprobs_mode) — the version-specific distinction between `raw_logprobs` and `processed_logprobs`; output coverage alone does not specify which distribution was scored.
+
 For deeper links within the course series:
 
-- *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`) — entropy, cross-entropy, KL, and perplexity;
-- *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) — the variational logic of a KL anchor;
-- *Modern LLMs*, Module 2 “Tokenization and Embeddings” (`modern_llms.module_02_tokenization`) — tokenizers, special tokens, and templates;
-- *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” (`modern_llms.module_09_inference`) — efficient generation mechanics;
-- *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) — the roles of old, current, and reference policies in the full training loop.
+- *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” ([open module](/courses/information-theory-for-ml/module-03/)) — entropy, cross-entropy, KL, and perplexity;
+- *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)) — the variational logic of a KL anchor;
+- *Modern LLMs*, Module 2 “Tokenization and Embeddings” ([open module](/courses/modern-llms/module-02/)) — tokenizers, special tokens, and templates;
+- *Modern LLMs*, Module 10 “KV Caches and Efficient Inference” ([open module](/courses/modern-llms/module-10/)) — efficient generation mechanics;
+- *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)) — the roles of old, current, and reference policies in the full training loop.

@@ -1,17 +1,20 @@
 # Module 5. Learning from fixed data: imitation, deep Q-methods, and offline RL
 
 > **Material version:** 2026.10  
+> **Text revision:** 2026-10-26  
 > **Factual snapshot:** 2026-08-05  
 > **Language:** EN  
 > **Core practice:** NumPy for local calculations plus a separate English PyTorch notebook with a self-contained KeyDoorGrid environment, BC, DAgger, DQN, Double DQN, a BCQ-like constraint, CQL, IQL, FQE, Decision Transformer, and a token-level ILQL-like pipeline  
 > **Structure:** 5 lessons, 25 steps  
 > **Estimated time:** 9–13 hours including the main notebook; the full experiment profile is optional
 
-In [Module 4](module-04.md), the policy improved from trajectories that it collected itself. We now forbid new interaction during optimization. All that remains is a fixed collection of demonstrations, logged transitions, rewards, or preference pairs, and we must determine what can actually be learned from it.
+In [Module 4](/courses/rl-for-llm/module-04/), an updated policy could collect another batch of trajectories and find out whether its behavior had improved. This module asks what remains possible **when there will be no next batch from the environment**. Demonstrations, transition logs, rewards, and preference pairs are still available. The learner can revisit them repeatedly, but it cannot ask what would have happened after a choice that the records never contain.
 
-This is a fundamental change rather than a minor engineering choice. Fixed data can make learning cheaper and safer, but the algorithm can no longer test its own guesses. If an action never appears in the log, its consequences may be unknown not because the neural network is insufficiently capable, but because the data do not identify the answer.
+Avoiding fresh interaction can reduce both collection costs and the risks of exploration. It also removes a way of correcting mistaken predictions. An unseen action may remain uncertain not because the network is too small, but because several incompatible explanations fit exactly the same observations.
 
-No prior course in classical RL is required. We begin with imitation learning and the exact relation between behavioral cloning (BC) and supervised fine-tuning (SFT), then study the deep Q-network, formulate the central difficulty of offline RL, compare several method families, and finish with Decision Transformer and a data-centric map of LLM post-training methods.
+We will approach that restriction in stages. Behavioral cloning first shows what can be learned by imitating demonstrations. DAgger then adds labels at states visited by the learner, while ordinary DQN keeps replenishing a transition buffer. **These two methods still have access to new interaction.** They let us see what additional experience can repair before Lesson 5.3 takes that option away. We will then study methods designed for a fixed dataset, followed by Decision Transformer and language-based ILQL: two different ways of turning recorded trajectories into behavior.
+
+No separate background course in classical RL is needed. We will build on the value functions, bootstrapping, and behavior–target policy distinction already developed, introducing each new construction when those familiar tools encounter a specific limitation.
 
 **Learning objectives.** By the end of the module, you will be able to:
 
@@ -27,7 +30,7 @@ No prior course in classical RL is required. We begin with imitation learning an
 10. describe Decision Transformer as a conditional sequence model and correctly update a desired return-to-go;
 11. separate SFT, classical offline RL, Direct Preference Optimization (DPO), Implicit Language Q-Learning (ILQL), and online policy optimization for LLMs.
 
-The graded practice places every task next to a worked solution inside a `` block. The English and Russian executable routes share a computational core and use independently written explanations. Verified claims and primary sources are registered in `Module_5_Sources.md`.
+Exercises, quizzes, and executable practice are published on separate pages for this module. Worked exercise solutions expand on request. The English and Russian executable routes share a computational core and use independently written explanations. The [source list](#sources-and-further-reading) identifies the primary papers and the scope of the claims supported by each.
 
 The practical thread uses a single compact environment, **KeyDoorGrid**. The agent starts from several cells, must collect a key, pass a locked door, and reach the goal while avoiding traps. A trap is a true terminal; an external step limit merely truncates data collection. Reusing one environment connects demonstrations, DAgger, DQN, a fixed offline log, policy evaluation, and conditional trajectory modeling without pretending that their objectives are identical.
 
@@ -35,19 +38,11 @@ The practical thread uses a single compact environment, **KeyDoorGrid**. The age
 
 ---
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable practice follow the lecture. The explanation remains self-contained.
+> **Practice route.** [Exercises](/courses/rl-for-llm/module-05/exercises/), [quizzes](/courses/rl-for-llm/module-05/tests/), and [executable practice](/courses/rl-for-llm/module-05/notebooks/) have separate pages. This lecture provides a self-contained explanation.
 
 ## Lesson 5.1. Imitation learning and SFT
 
-> **Lesson 5.1. Imitation learning and SFT**
->
-> 1. Demonstrations instead of reward
-> 2. Dataset prefixes during training, model prefixes during generation
-> 3. Tightrope: an exact compounding-error calculation
-> 4. DAgger: label the states visited by the learner
-> 5. What BC explains in LLM post-training, and what it does not
->
-> then 6 assessment steps
+We start with records that already specify an action. Before estimating its value, we need to understand what a model learns by reproducing someone else’s choices—and what changes when its own choices determine the next input.
 
 ### Step 5.1.1 — Demonstrations instead of reward
 
@@ -78,15 +73,15 @@ Under the token-level abstraction $s_t=(x,y_{<t})$ and $a_t=y_t$, this is BC on 
 
 ![Behavioral cloning and token-level SFT](assets/rl-for-llm/en/module-05/M5_bc_sft_bridge_EN.png)
 
-Demonstration preparation, sequence packing, masking, and the complete SFT pipeline are developed in *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`). Tokenization, special tokens, and message boundaries are covered in *Modern LLMs*, Module 2 “Tokenization and Embeddings” (`modern_llms.module_02_tokenization`). Both references are optional here: the algorithmic fact needed in this module is narrower—training observes demonstrator actions in states generated by the demonstrator.
+Demonstration preparation, sequence packing, masking, and the complete SFT pipeline are developed in *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” ([open module](/courses/modern-llms/module-13/)). Tokenization, special tokens, and message boundaries are covered in *Modern LLMs*, Module 2 “Tokenization and Embeddings” ([open module](/courses/modern-llms/module-02/)). Both references are optional here: the algorithmic fact needed in this module is narrower—training observes demonstrator actions in states generated by the demonstrator.
 
-For a deeper treatment of negative log-likelihood, cross-entropy, and KL divergence, see *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`).
+For a deeper treatment of negative log-likelihood, cross-entropy, and KL divergence, see *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” ([open module](/courses/information-theory-for-ml/module-03/)).
 
 ---
 
 ### Step 5.1.2 — Dataset prefixes during training, model prefixes during generation
 
-During training, a token model receives the correct preceding prefix from the dataset. This is **teacher forcing**. During generation, the next input contains the model's own tokens.
+During training, a token model receives the preceding prefix from the demonstration. This is **teacher forcing**: the prefix is the one recorded in the training example, not necessarily the only valid way to express the answer. During generation, the next input contains the model’s own tokens.
 
 Let $d_t^{\pi_E}(s)$ be the state distribution at time $t$ under the expert and $d_t^{\pi_\theta}(s)$ the distribution under the learned policy. A standard BC error is measured on expert states:
 
@@ -95,6 +90,8 @@ $$
 =\mathbb E_{s\sim d_t^{\pi_E}}
 \left[\Pr_{a\sim\pi_\theta(\cdot\mid s)}\{a\ne \pi_E(s)\}\right].
 $$
+
+Here the expert supplies a particular action $\pi_E(s)$, so the error counts disagreement with that choice. For language, disagreement is not automatically a failure of the user’s task: another wording or solution may be equally valid. The formula measures reproduction of the chosen demonstrator, which must be distinguished from the quality of the resulting behavior.
 
 Deployment quality, however, depends on states visited by the learned policy: $s\sim d_t^{\pi_\theta}$.
 
@@ -163,6 +160,10 @@ That sentence is meaningful only together with its assumptions. The cost-to-go b
 
 In the course run, an initial BC policy trained on only four KeyDoorGrid demonstrations solved 14 of 24 evaluation episodes. After one DAgger round labeled learner-visited states, it solved all 24 and retained that rate in later rounds. This single-seed synthetic run illustrates the mechanism; it is not an external performance claim. The exact protocol is stored in `data/M5_experiment_protocol.json`.
 
+The tightrope example makes one assumption especially concrete. The linear-in-horizon statement contains a bound on the cost of taking a wrong action and then following the expert. If one error destroys the entire remaining route, that bound can itself grow with $T$. DAgger does not automatically turn the resulting quadratic loss into a linear one. Additional labels tell the learner what to do at more of its own states; they do not make an irreversible mistake reversible. A more favorable horizon dependence requires the cost of recovery to be genuinely controlled.
+
+This also explains DAgger’s place in the module. It is not restricted to the original fixed dataset: it needs fresh state visits and fresh expert labels. While that access remains available, we can repair the distribution of training inputs as well as the predictor. Offline learning will have to proceed without that option.
+
 DAgger is also not the same as reinforcement learning from human feedback (RLHF). DAgger asks an expert for the **action** that should be taken in a particular state. RLHF more often obtains a comparison, rating, or preference over **whole responses**. Both collect feedback on behavior produced by the current policy, but the signal and objective differ.
 
 ---
@@ -197,19 +198,11 @@ The answers may coincide, but they need not.
 
 ## Lesson 5.2. DQN: Q-learning with a neural network
 
-> **Lesson 5.2. DQN: Q-learning with a neural network**
->
-> 1. From a Q-table to a deep Q-network
-> 2. Experience replay
-> 3. The target network: a slower right-hand side
-> 4. Maximization bias and Double DQN
-> 5. The deadly triad and the boundary of the LLM analogy
->
-> then 3 assessment steps
+Observed outcomes now join states and actions. A value function lets us compare consequences, and a neural network replaces the table. The buffer can still receive fresh transitions; that permission will be removed in the following lesson.
 
 ### Step 5.2.1 — From a Q-table to a deep Q-network
 
-[Module 2](module-02.md) updated a tabular estimate through
+[Module 2](/courses/rl-for-llm/module-02/) updated a tabular estimate through
 
 $$
 Q(s_t,a_t)\leftarrow Q(s_t,a_t)+\alpha\left[r_{t+1}+\gamma\max_a Q(s_{t+1},a)-Q(s_t,a_t)\right].
@@ -217,7 +210,9 @@ $$
 
 A table is impossible for images, long observations, or enormous state spaces. A **Deep Q-Network** (DQN) replaces it with $Q_\theta(s,a)$. For a discrete action space, the network commonly maps one state to a vector of values, one per action.
 
-For a transition $(s,a,r,s',d)$, construct
+This changes more than the storage format. A table update affects one entry; a neural update changes shared parameters and may alter predictions for many states and actions. That coupling makes generalization possible, but it also means that fitting one transition can move estimates elsewhere.
+
+Follow one recorded transition. Action $a$ has already been taken, reward $r$ observed, and successor $s'$ stored. The main network predicts $Q_\theta(s,a)$ for the action that actually appears in the record. A separate target network supplies the continuation estimate. For a transition $(s,a,r,s',d)$, construct
 
 $$
 y=r+\gamma(1-d)\max_{a'}Q_{\theta^-}(s',a'),
@@ -229,7 +224,9 @@ $$
 \mathcal L_Q(\theta)=\mathbb E_D\left[\ell\bigl(Q_\theta(s,a)-y\bigr)\right].
 $$
 
-Data collection usually uses an $\varepsilon$-greedy policy:
+For this optimization step, $y$ is a fixed numerical target. The gradient changes the main network’s prediction $Q_\theta(s,a)$; it does not run through the target network. The reward component is an observation, while the continuation component remains a prediction. A later target-network update will change future regression targets, not the target halfway through this step.
+
+Updated values then influence which actions will be collected next. Data collection usually uses an $\varepsilon$-greedy policy:
 
 $$
 a_t=\begin{cases}
@@ -277,7 +274,9 @@ The DQN target network and an RLHF reference model may both be frozen copies, bu
 - The DQN target network supplies a bootstrapped value on the right-hand side of a Bellman target and is updated periodically.
 - The RLHF reference policy defines a distance or regularization term, such as a Kullback–Leibler (KL) penalty, and is not a future-return estimate.
 
-The same engineering pattern does not imply the same objective.
+The shared engineering pattern—a frozen copy—does not make the mathematical roles identical.
+
+A slower target is not necessarily a more accurate target. If it overvalues an unobserved action, the target network can pass that error to the learner quite consistently. Online interaction still offers a way to test the action and collect corrective evidence. A fixed log removes that route. The target network organizes optimization; it does not by itself establish that the data support the values being propagated.
 
 ---
 
@@ -335,19 +334,11 @@ The notebook implements DQN and Double DQN with replay, a target network, $\vare
 
 ## Lesson 5.3. Offline RL: what can be learned from a fixed log
 
-> **Lesson 5.3. Offline RL: what can be learned from a fixed log**
->
-> 1. A fixed transition dataset
-> 2. Impossibility without coverage: two worlds, one dataset
-> 3. Extrapolation error and a self-reinforcing loop
-> 4. Four protection mechanisms for out-of-data actions
-> 5. Dataset quality, evaluation, and model selection
->
-> then 4 assessment steps
+DAgger could acquire new labels, and an online Q-learner could test its predictions through further interaction. The log is now closed. We need to distinguish conclusions supported by its records from improvements that depend on untested extrapolation.
 
 ### Step 5.3.1 — A fixed transition dataset
 
-In **offline reinforcement learning** (offline RL), we receive
+The restriction now applies throughout optimization: neither a value update nor a policy change can add fresh transitions. In **offline reinforcement learning** (offline RL), we receive
 
 $$
 D=\{(s_i,a_i,r_i,s'_i,d_i)\}_{i=1}^{N},
@@ -408,11 +399,13 @@ Stronger generic regularization is not a universal solution. It may shrink the f
 
 ### Step 5.3.4 — Four protection mechanisms for out-of-data actions
 
-The following is a map of mechanisms, not a ranking.
+The same extrapolation failure can be addressed at different points in the learning process: restrict which actions may be considered, make departures from recorded behavior costly, change the values themselves, or construct value updates without querying new actor-generated actions. The four approaches below are alternatives at those interfaces, not stages in a ranking.
 
 #### 1. Restrict the action set
 
 **Batch-Constrained deep Q-learning** (BCQ) learns a model of actions similar to those in the dataset and searches for improvement within that supported set. The actor is not allowed to freely exploit a Q-value for an action on which the value model was not trained.
+
+The ordering matters: first propose admissible candidates, then use value estimates to select among them. In a continuous action space, a supported candidate need not be an exact copy of a stored vector. It comes from a learned model, whose generalization can also be imperfect. The restriction reduces freedom to exploit the value function; it does not turn the behavior model into an infallible list of safe actions.
 
 #### 2. Add a behavioral anchor
 
@@ -423,11 +416,13 @@ $$
 \left[\lambda Q_\theta(s,\pi_\phi(s))-\|\pi_\phi(s)-a\|_2^2\right].
 $$
 
-The first term improves according to $Q$; the second keeps the policy close to the data.
+The first term improves according to $Q$; the second keeps the policy close to the data. An apparently valuable action far from the recorded choice must offer enough estimated benefit to offset the penalty. Unlike a hard candidate restriction, this need not prohibit a departure altogether: it gives that departure a price within the objective.
+
+Here an action is a numerical vector and $\pi_\phi(s)$ is the output of a deterministic actor in a continuous-control problem. Distance between those vectors has a specified meaning. Distance between two token IDs does not: neighboring vocabulary indices need not describe similar decisions. A behavioral anchor is a transferable idea; this particular squared-distance term is not a ready-made language-model loss.
 
 #### 3. Lower the values of unsupported actions
 
-**Conservative Q-Learning** (CQL) adds a penalty whose minimization reduces the gap between log-sum-exp values over all actions and the mean value on dataset actions. Its conservative pressure lowers unsupported actions relative to dataset actions. For discrete actions, one form is
+**Conservative Q-Learning** (CQL) intervenes in value learning. Rather than only restraining an actor’s eventual choice, it changes the estimates on which that choice will rely. For discrete actions, one form is
 
 $$
 \mathcal L_{\mathrm{CQL}}
@@ -436,27 +431,86 @@ $$
 \left[\log\sum_a e^{Q(s,a)}-\mathbb E_{a\sim D(\cdot\mid s)}Q(s,a)\right].
 $$
 
-The original analysis establishes a lower-bound property under stated conditions. A finite neural implementation with arbitrary hyperparameters does not inherit an unconditional guarantee.
+The Bellman term still asks the value of an observed action to agree with reward and continuation. The additional expression compares the collection of action values at a state with the values assigned to actions represented in the log. Log-sum-exp is particularly sensitive to large entries, so an unsupported action with an inflated Q-value can contribute strongly to the penalty. Subtracting the dataset-action average counterbalances that pressure where the data actually provide actions.
+
+To make the direction explicit, write the conditional dataset-action distribution as $p_D(a\mid s)$ and call the bracketed penalty $C_s(Q)$. Treating the Q-values at this state temporarily as separate coordinates gives
+
+$$
+\frac{\partial C_s}{\partial Q(s,a)}
+=
+\frac{e^{Q(s,a)}}{\sum_b e^{Q(s,b)}}-p_D(a\mid s).
+$$
+
+For an action absent from that conditional data distribution, the second term vanishes: this component of the gradient pushes its value downward under minimization. A frequently recorded action receives a compensating term that may weaken or reverse the direction. What matters is not merely whether an action appears, but how its dataset frequency compares with its mass under the softmax of current Q-values. That softmax arises from differentiating the penalty; it need not be the policy actually deployed.
+
+A common shift provides another useful reading of the formula. Add the same constant to every action value at a state. Log-sum-exp increases by that constant, and so does the dataset average. Their difference stays unchanged. The penalty therefore does not simply lower every number. It changes relative values, while the reward and Bellman term still help determine their absolute level.
+
+With a neural network, these coordinate derivatives propagate through shared parameters and combine with other gradient contributions. They do not guarantee that every unsupported action’s predicted value decreases after every optimizer step. The calculation explains the pressure supplied by this loss component, not a pointwise guarantee about the complete training trajectory.
+
+Under its stated assumptions, the relevant construction in the original analysis gives a lower bound on expected policy value. It should not be read as certifying every individual neural Q-value as a lower bound for arbitrary data and hyperparameters. Excessive conservatism can also suppress useful improvement: the coefficient expresses a substantive trade-off, not merely a convenient numerical scale.
 
 #### 4. Avoid querying out-of-data actions while learning value
 
-**Implicit Q-Learning** (IQL) fits $V(s)$ to an upper expectile of the values of dataset actions. For $u=Q(s,a)-V(s)$, it uses
+**Implicit Q-Learning** (IQL) changes how the continuation target is constructed. An ordinary maximizing target asks the Q-function about possible next actions, including choices that the data do not support. IQL seeks improvement among values supported by the dataset-action distribution without introducing arbitrary new actor actions into value learning.
+
+It does so using a function called $V(s)$, but the familiar letter needs a fresh interpretation. Earlier modules used $V^\pi$ for the expected continuation of a specified policy. Here the fitted quantity is an **upper expectile** of the values of dataset actions. We should not automatically identify it with that earlier fixed-policy expectation.
+
+For $u=Q(s,a)-V(s)$, it uses
 
 $$
-L_2^\tau(u)=\left|\tau-\mathbf 1\{u<0\}\right|u^2,\qquad \tau>\tfrac12.
+L_2^\tau(u)=\left|\tau-\mathbf 1\{u<0\}\right|u^2,\qquad \tfrac12<\tau<1.
 $$
 
-Then $Q$ is trained toward $r+\gamma V(s')$, and the policy is extracted by advantage-weighted BC:
+Hold the Q-function fixed for a moment and consider one state. When an action’s Q-value exceeds $V$, the prediction underestimates it and the squared discrepancy receives weight $\tau$. When the Q-value is below $V$, the overestimate receives the smaller weight $1-\tau$. For $\tau>1/2$, errors on the upper side exert more pressure, shifting the fitted value above the ordinary mean. At $\tau=1/2$, both sides would receive equal weight and ordinary mean regression would be recovered.
+
+The pointwise quantity that the learned value function aims to approximate is
+
+$$
+V_\tau(s)
+=\arg\min_v\,
+\mathbb E_{a\sim D(\cdot\mid s)}
+\left[L_2^\tau\bigl(Q(s,a)-v\bigr)\right].
+$$
+
+In a continuous state space, we do not form a separate list of repeated observations for every exact state. The network approximates this conditional relationship across the observed pairs. The target’s meaning remains important: the randomness here comes from drawing an **action from the data distribution**, not from choosing the luckiest realization of an environment transition.
+
+An expectile is not a quantile. Squared loss balances the magnitudes of deviations, not just the probability mass above and below the fitted point. With $[z]_+=\max(z,0)$, differentiating the objective with respect to $v$ gives the balance condition
+
+$$
+\tau\,\mathbb E_{a\sim D(\cdot\mid s)}
+\left[(Q(s,a)-v)_+\right]
+=
+(1-\tau)\,\mathbb E_{a\sim D(\cdot\mid s)}
+\left[(v-Q(s,a))_+\right].
+$$
+
+The two sides balance distances with different weights. Thus $\tau$ is not an instruction to retain the best $\tau$ fraction of actions. Every recorded pair still participates; the price of its discrepancy changes. Nor is an upper expectile the exact maximum at an arbitrary fixed $\tau<1$.
+
+Now return to a recorded transition $(s,a,r,s',d)$. After fitting $V$, train $Q$ toward $r+\gamma V(s')$. As before, a true terminal has no continuation, so the target with its terminal mask is $r+\gamma(1-d)V(s')$. The left-hand prediction concerns an action actually present in the log. The right-hand side combines observed reward with a continuation estimate that favors higher-valued supported choices at the successor state.
+
+The division of labor is now clear. Expectile regression shifts $V$ toward the better values among dataset actions. The Q-update propagates that continuation backward through an observed transition. This is more than copying each trajectory’s average performance: improvements can propagate through a sequence of states. At the same time, the Q-regression does not retain only lucky rewards or successor states; ordinary regression averages the observed transition randomness. Approximation error and incomplete coverage remain possible.
+
+The learned values do not yet supply an explicit policy. IQL extracts one by advantage-weighted BC: larger $Q(s,a)-V(s)$ produces a larger coefficient,
 
 $$
 w(s,a)=\exp\!\left(\beta[Q(s,a)-V(s)]\right),
 $$
 
-usually with weight clipping.
+usually with weight clipping. In this expression, $\beta>0$ is a scalar controlling the strength of reweighting, not the behavior-policy symbol used in Step 5.3.1. The coefficients enter a familiar likelihood objective:
+
+$$
+\max_\phi\,
+\mathbb E_{(s,a)\sim D}
+\left[w(s,a)\log\pi_\phi(a\mid s)\right].
+$$
+
+During the policy update, those weights are treated as already computed numbers. The demonstration target remains the recorded action; what changes is each example’s influence. A negative value difference produces a small **positive** weight, not a negative REINFORCE coefficient that directly reverses the direction of a cloning update. Actions still compete through policy normalization, but weighted imitation and a signed policy-gradient update should not be conflated.
+
+Clipping prevents a very large weight from dominating the update; it does not establish that the underlying value estimate is correct. Likewise, avoiding out-of-data action queries during value learning is not a hard guarantee that the fitted policy can never emit an unseen action. The policy also generalizes. IQL changes where targets come from and how behavior is extracted; it does not remove uncertainty from a fixed dataset.
 
 ![Families of offline RL methods](assets/rl-for-llm/en/module-05/M5_offline_method_map_EN.png)
 
-All four approaches encode the idea that improvement must respect what the data support. “Stay near the data,” however, is not one equation. Action constraints, behavior penalties, conservative value estimates, and dataset-action-only updates introduce different biases and hyperparameters.
+The four approaches can now be located precisely. BCQ restricts candidates. TD3+BC anchors actor outputs to recorded actions. CQL applies conservative pressure to value estimates. IQL builds improvement through a statistic of dataset-action values and transfers it to a policy by weighted imitation. Their shared caution does not make them one equation: the interfaces, induced biases, and hyperparameters differ.
 
 ---
 
@@ -483,25 +537,30 @@ r_i+
 \sum_{a'}\pi(a'\mid s_i')\widehat Q_{\bar\phi}(s_i',a').
 $$
 
-There is no action maximum here: FQE evaluates a chosen policy rather than improving it. It still bootstraps from a fixed log. Weak coverage, finite data, approximation error, and policy–data shift can therefore corrupt the estimate. FQE should be paired with coverage diagnostics, multiple data splits, hyperparameter sensitivity checks, and—when safe—an independent simulator or a limited online test.
+There is no action maximum here: FQE evaluates a chosen policy rather than improving it. The parameters denoted by $\bar\phi$ are held fixed while constructing the current targets, and the fitted Q-function is regressed toward those numbers. Every backup asks about continuation under the same evaluation policy $\pi$.
+
+A policy-level score also requires an initial-state distribution $\rho_0$. Average the fitted values over the policy’s actions at a starting state, then over starting states themselves:
+
+$$
+\widehat J_{\mathrm{FQE}}(\pi)
+=
+\mathbb E_{s_0\sim\rho_0}
+\left[\sum_a\pi(a\mid s_0)\widehat Q(s_0,a)\right].
+$$
+
+With a finite collection of starts, the outer expectation becomes an average using the declared weights. Averaging over every state in the log need not estimate the same quantity: a frequently visited intermediate state is not thereby a frequent starting point for a new task. FQE first fits continuation values and then uses them to score a specified evaluation setting. It still bootstraps from a fixed log. Weak coverage, finite data, approximation error, and policy–data shift can therefore corrupt the estimate. FQE should be paired with coverage diagnostics, multiple data splits, hyperparameter sensitivity checks, and—when safe—an independent simulator or a limited online test.
 
 ![Methods compared on one fixed KeyDoorGrid log](assets/rl-for-llm/en/module-05/M5_offline_results_EN.png)
 
 In the pinned course experiment, one log of 80 trajectories was used for BC, naive offline DQN, a BCQ-like support restriction, CQL, and IQL. With `seed=41`, 16 training epochs, and 24 evaluation episodes, BC, the BCQ-like method, CQL, and IQL solved every episode, whereas naive offline DQN solved none and averaged $-2.175$ return. This is one concrete extrapolation failure in this environment, not a universal method ranking. In the same run, FQE assigned initial-state values of roughly $-0.005$ and $-0.056$ to BC and IQL even though direct simulator evaluation gave both policies about $0.703$. On this small log, the evaluator was poorly calibrated and separated policies with the same observed performance. The full protocol is stored in `data/M5_experiment_protocol.json`.
 
-[Module 3](module-03.md) evaluated policies from one-step logs with known logging propensities. The sequential setting is harder: value errors propagate through transitions, and a new policy may visit a different part of state space. Pessimism does not remove model selection. Too little allows exploitation of error; too much collapses improvement toward mediocre behavior cloning.
+Training on the log, selecting hyperparameters, and directly testing behavior are three distinct procedures. Simulator evaluation does not itself make training online: those transitions need not enter the training dataset. But choosing a regularization coefficient or checkpoint from simulator outcomes uses additional environmental feedback for selection. That access should be reported separately, and the final independent check kept distinct from tuning.
+
+[Module 3](/courses/rl-for-llm/module-03/) evaluated policies from one-step logs with known logging propensities. The sequential setting is harder: value errors propagate through transitions, and a new policy may visit a different part of state space. Pessimism does not remove model selection. Too little allows exploitation of error; too much collapses improvement toward mediocre behavior cloning.
 
 ## Lesson 5.4. Decision Transformer: a policy as a conditional trajectory model
 
-> **Lesson 5.4. Decision Transformer: a policy as a conditional trajectory model**
->
-> 1. Put desired return into the sequence
-> 2. Updating the return condition at deployment
-> 3. How DT differs from Q-learning
-> 4. Stitching behavior fragments is not guaranteed
-> 5. Why the LLM resemblance is useful but limited
->
-> then 2 assessment steps
+A fixed trajectory can carry useful reward information without requiring an explicit Q-function. Decision Transformer puts that information into the condition for predicting an action. The key is to follow how the condition changes meaning between training and deployment.
 
 ### Step 5.4.1 — Put desired return into the sequence
 
@@ -517,15 +576,19 @@ $$
 G_t=\sum_{k=t}^{T}r_k
 $$
 
-is the return-to-go when $\gamma=1$.
+is the return-to-go when $\gamma=1$. In this local DT notation, $r_t$ is the reward for action $a_t$, rather than the $r_{t+1}$ convention used after $a_t$ in earlier lessons.
 
-A causal transformer predicts an action from desired return-to-go and history:
+At dataset preparation time, the future is already a recorded past: the trajectory has ended. Its actual rewards can therefore be summed retrospectively. Here $G_t$ is neither a user request nor a model prediction. It describes the continuation in one stored example. Similar states and actions can occur within trajectories of different quality, and the numerical condition lets the model distinguish those records.
+
+The causal transformer predicts an action conditioned on that recorded return-to-go and the history available at the decision point:
 
 $$
 \pi_\theta\left(a_t\mid G_{\le t},s_{\le t},a_{<t}\right).
 $$
 
-Discrete actions can use negative log-likelihood; continuous actions can use a regression loss. Optimization resembles supervised sequence modeling on fixed trajectories.
+Discrete actions can use negative log-likelihood; continuous actions can use a regression loss. Optimization resembles supervised sequence modeling on fixed trajectories. When predicting $a_t$, the action label itself is not among the available actions $a_{<t}$; the causal computation must preserve that boundary.
+
+Does the return condition reveal the future? During training it deliberately describes the outcome of a recorded continuation, but the learned object is a **conditional** action distribution. At deployment, nobody supplies the unknown future outcome. A requested value takes its place. Predicting actions well in return-labeled trajectories is therefore not a proof that every requested return can be achieved.
 
 In that sense DT is **conditional imitation learning**: it copies actions while receiving an additional trajectory-quality condition. It can distinguish behavior in high-return trajectories from behavior in low-return ones.
 
@@ -533,7 +596,7 @@ In that sense DT is **conditional imitation learning**: it copies actions while 
 
 ### Step 5.4.2 — Updating the return condition at deployment
 
-Before an episode, choose a desired return $G_1^{\mathrm{target}}$. After action $a_t$, the environment returns $r_t$. For the undiscounted convention,
+Now replace the completed record with a live interaction. Before the episode, choose $G_1^{\mathrm{target}}$. The model receives that condition and the current state, then selects an action. The **environment**, not the transformer, supplies the successor state and reward $r_t$. The condition is then updated for the next decision. Under the undiscounted convention,
 
 $$
 G_{t+1}^{\mathrm{target}}=G_t^{\mathrm{target}}-r_t.
@@ -551,7 +614,7 @@ $$
 G_{t+1}^{\mathrm{target}}=\frac{G_t^{\mathrm{target}}-r_t}{\gamma}.
 $$
 
-The model sees how much reward remains to be achieved, the current state, and previous actions.
+The model sees how much reward remains to be achieved, the current state, and previous actions. Subtracting what was received is bookkeeping for the remaining request, not a test of feasibility. An unexpected reward or an unfavorable successor state may leave a condition that is easy to compute but impossible to satisfy. The recorded history must contain what the environment actually returned, not the continuation one hoped to generate.
 
 ![Training and deployment of Decision Transformer](assets/rl-for-llm/en/module-05/M5_decision_transformer_EN.png)
 
@@ -586,7 +649,9 @@ Neither dominates in every setting. The original DT paper reported competitive r
 
 Suppose one trajectory shows how to go from $A$ to $B$ and another from $B$ to $C$. We might hope the model will generate $A\to B\to C$ even though the complete trajectory is absent.
 
-Dynamic programming makes such composition explicit through state values. A sequence model may learn it through representation generalization and attention, but its supervised objective does not supply a universal theorem of stitching for arbitrary data.
+For the fragments to compose, $B$ must identify the same relevant state, not merely a similar observation. In KeyDoorGrid, the same cell with or without the key can permit different continuations. If the representation merges those situations, matching the symbol $B$ does not make the second segment executable.
+
+Dynamic programming makes this composition explicit through state values. A sequence model may learn it through representation generalization and attention, but its supervised objective does not supply a universal theorem of stitching for arbitrary data.
 
 The opposite absolute claim is also wrong: DT is not fundamentally incapable of novel trajectory composition. Its ability depends on data structure, architecture, context length, scale, and optimization.
 
@@ -608,15 +673,7 @@ The useful connection is that a complex policy can be represented as a condition
 
 ## Lesson 5.5. A map of fixed-data LLM post-training
 
-> **Lesson 5.5. A map of fixed-data LLM post-training**
->
-> 1. First identify what was logged
-> 2. Why DPO should not simply be renamed offline RL
-> 3. ILQL: value-based offline RL for language
-> 4. A KL anchor and pessimism solve different problems
-> 5. Module summary
->
-> then 10 assessment steps
+We return to language models with a more precise question: does a text record provide a demonstration, a preference, or a reward-labeled transition? Its learning role depends on that information, not on the fact that all three can be stored as text.
 
 ### Step 5.5.1 — First identify what was logged
 
@@ -645,7 +702,7 @@ Its mathematical setting nevertheless differs from classical offline RL:
 - the objective is derived from a KL-regularized RLHF formulation and a pairwise preference model;
 - training becomes a classification-style loss involving likelihood ratios under the current and reference policies.
 
-This course therefore calls DPO **direct preference optimization on fixed pairs**, not a synonym for classical offline RL. The full derivation appears in [Module 8](module-08.md). For parallel reading, *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) places DPO in a modern LLM pipeline, while *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) develops the KL-regularized variational optimum.
+This course therefore calls DPO **direct preference optimization on fixed pairs**, not a synonym for classical offline RL. The full derivation appears in [Module 8](/courses/rl-for-llm/module-08/). For parallel reading, *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)) places DPO in a modern LLM pipeline, while *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)) develops the KL-regularized variational optimum.
 
 ---
 
@@ -654,6 +711,14 @@ This course therefore calls DPO **direct preference optimization on fixed pairs*
 **Implicit Language Q-Learning** (ILQL) adapts IQL ideas to text generation. A prefix is a state, a next token is an action, and fixed text trajectories carry rewards or outcome scores.
 
 The method learns $Q$ and $V$ while treating out-of-data actions conservatively, then uses advantages to tilt generation toward higher-valued tokens. Unlike SFT, example quality affects more than token frequency because reward distinguishes preferred continuations. Unlike DPO, token-level value functions and sequential transitions remain central objects.
+
+Follow a stored response through that construction. Each prefix and its next recorded token define a transition. The outcome score is assigned at the end or distributed across the trajectory according to the stated reward convention. Q-learning relates a recorded token to reward and continuation, while V is fitted through expectile regression. With terminal reward, repeated value updates can propagate its influence to earlier prefixes. This does not require sampling counterfactual responses at every update, but it does require the recorded transitions and rewards to represent the intended task.
+
+Fitting values still leaves a policy-extraction question. The original ILQL combines a behavioral language model with learned values at decoding time: add a scaled $Q(s,a)-V(s)$ to the token’s behavioral log-probability, then normalize the modified scores. In compact form, this is the exponential reweighting already encountered in IQL, now applied to generation: $\pi(a\mid s)\propto\pi_{\mathrm{beh}}(a\mid s)\exp(\beta[Q(s,a)-V(s)])$.
+
+The two components have different jobs. The behavioral model supplies plausible tokens for the prefix; the value adjustment changes their relative attractiveness under the specified reward. Because $V(s)$ is common to the candidate actions, it cancels in normalization at a fixed state. Writing the adjustment as $Q-V$ connects it to the familiar value difference without creating an extra independent label for each token. Nor does a merely nonzero softmax probability prove that an action is well supported by data. Conservative value learning and restrictions on selection therefore remain substantive choices.
+
+This decoding route does not require fitting a separate actor with a weighted cloning loss. It differs from distilling the values into a new policy and then using that policy directly. The reduced course pipeline below contains both interfaces—advantage-weighted policy fitting and value-guided decoding—which is another reason not to present its results as a precise replication of the original ILQL algorithm.
 
 ILQL matters here as a counterexample to the claim that Q-methods cannot apply to LLMs. They can. The practical question is whether their computational cost, value-estimation stability, and reward requirements beat more direct objectives in the target setting.
 
@@ -684,7 +749,7 @@ Their mechanisms differ.
 
 Small KL does not prove that the reward model is correct or that important states are covered. A conservative Q-function does not validate the reward and can become excessively pessimistic. The analogy is useful as a risk map, not as an identity of objectives.
 
-The full variational derivation of a KL-anchored policy appears in *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`). Here the important point is the interface: KL acts on a policy distribution, whereas pessimistic methods alter candidate actions, value estimates, or example weights.
+The full variational derivation of a KL-anchored policy appears in *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)). Here the important point is the interface: KL acts on a policy distribution, whereas pessimistic methods alter candidate actions, value estimates, or example weights.
 
 ---
 
@@ -704,7 +769,7 @@ The central conclusion is:
 
 > Fixing the data is not a minor implementation detail. It determines which counterfactual actions can be evaluated, which errors cannot be corrected by new experience, and which forms of regularization are meaningful.
 
-[Module 6](module-06.md) returns directly to the LLM policy: token log-probabilities, KL to a reference model, sampling, and sequence-level objectives.
+[Module 6](/courses/rl-for-llm/module-06/) returns directly to the LLM policy: token log-probabilities, KL to a reference model, sampling, and sequence-level objectives. The question of where data came from will become a question about concrete probabilities: does a saved log-probability describe the policy that actually selected the token?
 
 ---
 
@@ -724,7 +789,7 @@ Practice contains [20 core tasks](/courses/rl-for-llm/module-05/exercises/) and 
 
 ## Sources and further reading
 
-These primary sources support the historical and algorithm-specific claims in the module. `Module_5_Sources.md` provides a claim-level registry, limitations, and the status of course-generated experiments.
+These primary papers support the module’s historical and algorithm-specific claims. Their theoretical results retain their stated assumptions. The KeyDoorGrid numbers reported in the lecture are separate course experiments, not replications of external benchmarks.
 
 1. [Ross, Gordon, and Bagnell — DAgger](https://proceedings.mlr.press/v15/ross11a.html). Read with Step 5.1.4 for the online-learning reduction and its assumptions; the paper does not promise that one aggregation round repairs every task.
 2. [Mnih et al. — DQN](https://www.nature.com/articles/nature14236). The source for combining a deep Q-network, replay, and a target network. Atari results do not transfer automatically to KeyDoorGrid or language models.
@@ -737,4 +802,6 @@ These primary sources support the historical and algorithm-specific claims in th
 9. [Rafailov et al. — DPO](https://arxiv.org/abs/2305.18290). Supports the classification-style objective on fixed preference pairs and its KL-regularized derivation; DPO is not a Bellman method.
 10. [Snell et al. — ILQL](https://arxiv.org/abs/2206.11871). The source for token-level values and value-guided language generation. The course implementation is a reduced ILQL-like model, not a reproduction of every paper result.
 
-**Optional cross-course depth:** *Modern LLMs*, Module 2 “Tokenization and Embeddings” (`modern_llms.module_02_tokenization`) covers special tokens and message boundaries; *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`) covers demonstration preparation and masking; *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) places fixed preferences in the LLM post-training stack; *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” (`it_ml.module_03_cross_entropy_kl`) develops log-likelihood and cross-entropy; *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) develops the variational logic of a KL anchor.
+11. [Fujimoto and Gu — TD3+BC](https://arxiv.org/abs/2106.06860). The source for the actor’s behavioral-cloning term in continuous control. Squared action distance cannot be transferred unchanged to token IDs.
+
+**Optional cross-course depth:** *Modern LLMs*, Module 2 “Tokenization and Embeddings” ([open module](/courses/modern-llms/module-02/)) covers special tokens and message boundaries; *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” ([open module](/courses/modern-llms/module-13/)) covers demonstration preparation and masking; *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)) places fixed preferences in the LLM post-training stack; *Information Theory for ML*, Module 3 “Cross-Entropy and KL Divergence” ([open module](/courses/information-theory-for-ml/module-03/)) develops log-likelihood and cross-entropy; *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)) develops the variational logic of a KL anchor.

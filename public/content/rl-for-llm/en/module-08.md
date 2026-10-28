@@ -2,12 +2,13 @@
 
 > **Material version:** 2026.20  
 > **Factual snapshot:** 2026-08-05  
+> **Explanatory-text revision:** 2026-10-27  
 > **Language:** EN  
 > **Primary practice:** level A — a reproducible CPU workflow; level B — an optional open-model run with Low-Rank Adaptation (LoRA) on a suitable accelerator  
 > **Structure:** 5 lessons, 25 steps  
 > **Estimated time:** 9–11 hours excluding optional model training
 
-Module 7 “Reward models and preference data” (`rl_llm.module_07_reward_models`) took us from pairwise labels to reward models. The next problem is operational: **how do we change a policy so that preferred responses become more likely without discarding useful behavior from the starting model or learning to exploit defects in the feedback signal?**
+Module 7 “Reward models and preference data” ([open module](module-07.md)) took us from pairwise labels to reward models. The next problem is operational: **how do we change a policy so that preferred responses become more likely without discarding useful behavior from the starting model or learning to exploit defects in the feedback signal?**
 
 The classical answer is reinforcement learning from human feedback (RLHF): train a reward model, sample fresh responses, and optimize expected reward while limiting deviation from a reference policy. A more direct answer is direct preference optimization (DPO): convert fixed preference pairs into a policy loss without fitting an explicit reward model or collecting new rollouts inside that stage.
 
@@ -26,25 +27,18 @@ After completing the module, you will be able to:
 7. audit lengths, masks, chat templates, stop reasons, and cached reference log-probabilities;
 8. distinguish DPO, IPO, SimPO, KTO, and ORPO by their data contracts;
 9. choose among fixed pairs, iterative preference collection, and online RL;
-10. run a synthetic CPU experiment and prepare a DPO smoke test on an open 0.6B-class model.
+10. distinguish reward and cost models, formulate expected-cost constraints, and interpret the multiplier update;
+11. run a synthetic CPU experiment and prepare a DPO smoke test on an open 0.6B-class model.
 
-The English practical route is the executable practice; dated claims, primary sources, and inference limits are recorded in `Module_8_Sources.md`.
+The English executable practice accompanies the lecture. Primary works and the limits of their use are identified in the [sources section](#sources-and-further-study-route).
 
 ---
 
-> **Practice route.** Graded tasks, worked solutions revealed after an attempt, and executable practice follow the lecture. The explanation remains self-contained.
+> **Practice route.** [Exercises and solutions](/courses/rl-for-llm/module-08/exercises/), [assessment questions](/courses/rl-for-llm/module-08/tests/), and [executable practice](/courses/rl-for-llm/module-08/notebooks/) are separate resources. The lecture remains self-contained.
 
 ## Lesson 8.1. From preferences to a KL-regularized policy
 
-> **Lesson 8.1. From preferences to a KL-regularized policy**
->
-> 1. What classical RLHF optimizes
-> 2. Four logical roles, not four mandatory copies
-> 3. Turning sequence KL into token rewards
-> 4. Exact optimum: exponential tilting of the reference
-> 5. A numerical reward–deviation frontier
->
-> then 5 assessment steps
+Module 7 turned comparisons into a numerical scoring function. We now ask how that score should reshape a distribution over responses. An explicit reward gives us a useful starting point: a finite optimization problem that we can solve exactly. Its solution will then let us express preference learning without a separately trained reward model.
 
 ### Step 8.1.1 — What classical RLHF optimizes
 
@@ -137,9 +131,13 @@ $$
 R(x,y)-\beta\log\frac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}.
 $$
 
-A sampled log-ratio can be negative. It is not a negative KL divergence: its expectation under the current policy equals forward KL. Module 6 “The LLM as a policy: tokens, log-probabilities, and KL” (`rl_llm.module_06_llm_policy`) develops this distinction in detail.
+A sampled log-ratio can be negative. It is not a negative KL divergence: its expectation under the current policy equals forward KL. Module 6 “The LLM as a policy: tokens, log-probabilities, and KL” ([open module](module-06.md)) develops this distinction in detail.
 
 The response mask and stop reason are part of the objective. Prompt tokens, padding, and environment observations must not accidentally receive policy reward.
+
+The equation describes an objective, not yet the lifetime of the tensors in an optimizer. At the start of an iteration, a behavior snapshot $\pi_{\mathrm{old}}$ is fixed. Its sampled completions receive reward-model scores and token-level penalties relative to the reference. Advantages are then constructed from these quantities. In a conventional PPO update with several epochs over one batch, those rewards and advantages remain fixed numerical inputs. The trainable policy is rescored for the surrogate loss, while the denominator still refers to the policy that collected the batch.
+
+At collection time, the current and old policies coincide; after an update they need not. The reference has a different job and does not become the behavior snapshot merely because both models were once initialized from the same checkpoint. Reusing the frozen batch is a local optimization procedure, not an exact reevaluation of the original objective at arbitrarily changed parameters. A new iteration refreshes the data and learning signal. An implementation with a separate differentiable KL loss must specify its derivative path instead. Module 6 explains why an identity between scalar values alone cannot establish that two gradient implementations optimize the same objective.
 
 ---
 
@@ -157,7 +155,20 @@ $$
 \right\}.
 $$
 
-Introducing a multiplier for normalization and differentiating gives
+For now, the optimization variables are the probabilities themselves, not the parameters of a particular neural network. Assume $\beta>0$ and finite rewards, and restrict attention to reference support: putting positive mass outside it would incur infinite KL. Form weights $\pi_{\mathrm{ref}}(y)\exp(r(y)/\beta)$, let $Z$ be their sum, and normalize them to obtain a distribution $\widetilde\pi$. The reference, rewards, and $\beta$ determine $Z$; the trial policy $\pi$ does not.
+
+Writing the original objective as $\mathcal J(\pi)$, we can combine its reward and penalty terms:
+
+$$
+\begin{aligned}
+\mathcal J(\pi)
+&=\beta\sum_y\pi(y)
+  \log\frac{\pi_{\mathrm{ref}}(y)\exp(r(y)/\beta)}{\pi(y)}\\
+&=\beta\log Z-\beta D_{\mathrm{KL}}(\pi\|\widetilde\pi).
+\end{aligned}
+$$
+
+The first term is constant with respect to our choice of policy. The second is nonpositive and vanishes exactly at $\pi=\widetilde\pi$. This identifies a global maximum of the finite problem, not merely a stationary candidate:
 
 $$
 \boxed{
@@ -185,7 +196,9 @@ Reward reweights mass already available under the reference. If $\pi_{\mathrm{re
 
 As $\beta\to\infty$, the optimum approaches the reference. As $\beta\to0^+$, it concentrates on reward maxima inside reference support.
 
-> **Mathematical extension:** *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`) develops variational forms, partition functions, and maximum-entropy connections.
+This is an exact result for an unrestricted finite distribution. A parameterized LLM can express only a particular family of distributions and is fitted with finite data and finite optimization. The formula identifies the target of the idealized problem; it does not guarantee the endpoint of a neural training run. We will first inspect the exact solution numerically, then return to a trainable parameterization in Lesson 8.2.
+
+> **Mathematical extension:** *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)) develops variational forms, partition functions, and maximum-entropy connections.
 
 ---
 
@@ -273,7 +286,7 @@ $$
 
 The functions `two_action_constrained_optimum` and `dual_ascent_step` reproduce the calculation.
 
-**Where the guarantee ends.** An average constraint $\mathbb E[C]\le d$ does not guarantee safety on every prompt. Critical actions require additional mechanisms such as hard filters, safe action sets, refusal or abort paths, and scenario-level checks. A learned cost model can also be wrong and can itself be optimized against. Training-time constraints and the release controls in Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety” (`rl_llm.module_13_evaluation`) therefore complement rather than replace one another.
+**Where the guarantee ends.** An average constraint $\mathbb E[C]\le d$ does not guarantee safety on every prompt. Critical actions require additional mechanisms such as hard filters, safe action sets, refusal or abort paths, and scenario-level checks. A learned cost model can also be wrong and can itself be optimized against. Training-time constraints and the release controls in Module 13 “Evaluating RL systems for LLMs: statistics, reward hacking, and safety” ([open module](module-13.md)) therefore complement rather than replace one another.
 
 Constrained Policy Optimization (CPO) is a classical policy-optimization line for expected-cost constraints. Safe RLHF adapts the reward-versus-cost separation to LLM alignment. These sources provide mathematical and empirical grounding; neither turns an average constraint into an absolute safety guarantee.
 
@@ -281,15 +294,7 @@ Constrained Policy Optimization (CPO) is a classical policy-optimization line fo
 
 ## Lesson 8.2. DPO: derivation, loss, and gradient
 
-> **Lesson 8.2. DPO: derivation, loss, and gradient**
->
-> 1. Preference pairs as probabilistic observations
-> 2. Implicit reward and cancellation of the normalizer
-> 3. The DPO loss
-> 4. Gradient weight and the role of β
-> 5. DPO assumptions and the boundary with classical offline RL
->
-> then 3 assessment steps
+The optimum expresses a policy in terms of a reward. Reading that relationship backwards is the key to DPO. We will substitute a policy-based expression for the reward in the preference likelihood, then turn the resulting likelihood into a loss for a trainable generator.
 
 ### Step 8.2.1 — Preference pairs as probabilistic observations
 
@@ -301,7 +306,7 @@ P(y^+\succ y^-\mid x)
 \sigma\left(r(x,y^+)-r(x,y^-)\right).
 $$
 
-Module 7 “Reward models and preference data” (`rl_llm.module_07_reward_models`) used this likelihood to fit an explicit reward model. DPO instead expresses reward through a policy and substitutes that expression directly into the preference likelihood.
+Module 7 “Reward models and preference data” ([open module](module-07.md)) used this likelihood to fit an explicit reward model. DPO instead expresses reward through a policy and substitutes that expression directly into the preference likelihood.
 
 The label remains conditional on a prompt, two candidates, a rubric, and a protocol. It does not turn the chosen response into globally correct ground truth or identify an absolute reward scale across prompts.
 
@@ -335,7 +340,13 @@ r(x,y^+)-r(x,y^-)
 \right].
 $$
 
-Replacing the unknown optimum with a trainable policy produces a preference logit. No explicit reward-model training is required during this stage: the policy-to-reference log-ratio acts as an implicit reward.
+So far, the equations relate a reward to its corresponding ideal policy. Neither the true reward nor that completed ideal policy has been supplied to us. We therefore do not train by copying an already known optimum. Instead, we make the preference probability a function of a trainable policy and fit that function to the observed comparisons.
+
+For a positive policy on common support, $r_\theta(x,y)=\beta\log[\pi_\theta(y\mid x)/\pi_{\mathrm{ref}}(y\mid x)]$ is a valid representative of an implicit reward. Substituting that particular reward into the variational solution returns $\pi_\theta$ after normalization. This is a property of the parameterization, not evidence that the current model already optimizes human preferences. Learning must still find policy parameters whose induced preference probabilities explain the data.
+
+Replacing $\pi^*$ with $\pi_\theta$ thus changes what is parameterized. Module 7 fitted a separate scoring function; DPO fits the generator, using its log-ratio to a fixed reference as the score in the preference likelihood. The empirical comparisons determine which relative probabilities are encouraged.
+
+Cancellation of $Z(x)$ is also what makes the construction computationally useful. Evaluating one pair does not require enumerating all possible completions. We need the likelihoods of the two recorded responses under the policy and the reference, obtainable as sums of autoregressive token log-probabilities. The separate reward-model fit and RL loop disappear from this stage, but the need for informative preference data does not.
 
 ![From KL-regularized reward to DPO](assets/rl-for-llm/en/module-08/M8_dpo_derivation_EN.png)
 
@@ -396,6 +407,21 @@ $$
 w(h)=\beta\sigma(-\beta h).
 $$
 
+The weight is a scalar; the update acts on the parameters of the whole model. With the reference held fixed, the chain rule gives
+
+$$
+\nabla_\theta\mathcal L_{\mathrm{DPO}}
+=-w(h_\theta)
+\left[
+\nabla_\theta\log\pi_\theta(y^+\mid x)
+-\nabla_\theta\log\pi_\theta(y^-\mid x)
+\right].
+$$
+
+Gradient descent reverses the leading sign and moves along a difference of two sensitivity vectors. It does not operate two independent probability controls. Both responses share parameters with each other and with unlabelled completions, which will matter in Lesson 8.3.
+
+At initialization, a policy identical to the reference has $h_\theta=0$ and $w(0)=\beta/2$. Unit-valued likelihood ratios do not imply zero derivatives: the reference is constant while the policy branch is trainable. The difference between the response gradients supplies the learning signal. A large scalar weight is therefore not, by itself, a claim about the norm of the complete parameter update; the vectors may be close, or contributions from other pairs may counteract them.
+
 ![DPO gradient weight](assets/rl-for-llm/en/module-08/M8_dpo_gradient_EN.png)
 
 Negative-margin pairs receive strong pressure. At a large positive margin the weight decays. Because $\beta$ both scales the logit and multiplies the derivative, “larger $\beta$ always means a stronger update” is not a valid statement without the current margin, learning rate, and exact implementation.
@@ -421,19 +447,13 @@ DPO uses no explicit Q-function, Bellman target, or bootstrapping. Calling it �
 
 If BT is misspecified, DPO remains a well-defined pairwise loss. Its interpretation changes from exact implicit-reward recovery to a discriminative approximation.
 
+The reference ratio also serves a different purpose from the current-to-old ratio in PPO. PPO uses its ratio in a construction for reusing sampled trajectories. In DPO, the log-ratio parameterizes a preference probability on a fixed pair; it is not an importance weight that turns the recorded dataset into samples from the updated policy. Candidate generators need not therefore be identical to the reference. Their provenance still matters for coverage and transfer, but the standard DPO loss does not acquire an extra behavior-policy denominator simply because candidates came from another model.
+
 ---
 
 ## Lesson 8.3. Where the simple picture breaks
 
-> **Lesson 8.3. Where the simple picture breaks**
->
-> 1. Relative margin is not absolute probability
-> 2. An exact likelihood-displacement toy
-> 3. Length, masks, and chat templates
-> 4. Noisy pairs and conservative DPO (cDPO)
-> 5. Fixed pairs grow stale
->
-> then 4 assessment steps
+A convenient loss does not specify every aspect of a model’s behavior. We now examine what a pairwise margin controls, what it leaves unconstrained, and why the exact tokens and preprocessing of a preference pair belong to the mathematical problem rather than merely to data engineering.
 
 ### Step 8.3.1 — Relative margin is not absolute probability
 
@@ -459,7 +479,9 @@ $$
 \log p_1(t)-\log p_2(t)=2t,
 $$
 
-which grows strictly, while probabilities are:
+which grows strictly.
+
+For a direct comparison with DPO, take the uniform distribution at $t=0$ as the reference. Its pairwise log-probability difference is zero, so $h_\theta=2t$. A different fixed reference subtracts a constant without changing the growth of the margin. The parameter $t$ controls all three logits together; the model cannot independently raise the first probability while holding the others unchanged. The resulting probabilities are:
 
 | $t$ | $p_1$ | $p_2$ | $p_3$ | pair margin |
 |---:|---:|---:|---:|---:|
@@ -486,13 +508,13 @@ Cached reference log-probabilities become stale after changing tokenization, tem
 
 Tokenizer revision, chat template, truncation rule, reference checkpoint, and completion mask are part of the pair's mathematical contract.
 
-> **Engineering extension:** *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`) covers dialogue-data and chat-template engineering in more depth.
+> **Engineering extension:** *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” ([open module](/courses/modern-llms/module-13/)) covers dialogue-data and chat-template engineering in more depth.
 
 ---
 
 ### Step 8.3.4 — Noisy pairs and conservative DPO (cDPO)
 
-Conservative DPO (cDPO) smooths the binary target. With a possible label-flip rate, for $\varepsilon\in0,1/2)$,
+Conservative DPO (cDPO) smooths the binary target. Rather than treating each recorded preference as certain, it uses a soft target $1-\varepsilon$, with $\varepsilon\in[0,1/2)$:
 
 $$
 \mathcal L_{\mathrm{cDPO}}
@@ -502,7 +524,19 @@ $$
 \varepsilon\operatorname{softplus}(z).
 $$
 
-At $\varepsilon=0$ this is ordinary DPO. Positive smoothing avoids treating every observed label as perfectly certain. In this form, cDPO is a practical label-smoothing heuristic; it should not be conflated with Robust DPO, whose correction is derived under a specified symmetric label-flip model and retains that model's assumptions.
+At $\varepsilon=0$, the ordinary DPO loss is recovered. The effect of positive smoothing is visible by differentiating with respect to one scalar logit:
+
+$$
+\frac{\partial\mathcal L_{\mathrm{cDPO}}}{\partial z}
+=\sigma(z)-(1-\varepsilon),
+\qquad
+z^*=\log\frac{1-\varepsilon}{\varepsilon}
+\quad(0<\varepsilon<1/2).
+$$
+
+For an independently adjustable pair, the minimum predicts probability $1-\varepsilon$. Below that probability the gradient increases the margin; above it, the gradient reverses. When $\varepsilon=0$, no finite scalar minimizer remains. A shared neural model couples many pairs, so this calculation explains the local learning signal, not a guarantee that every training row attains its individual optimum.
+
+Smoothing deliberately limits confidence in a label. It is not a general procedure for recovering an unknown clean preference distribution. In particular, it should not be conflated with Robust DPO, whose correction is derived for a specified symmetric label-flip model. A common motivation—noisy feedback—does not make the two losses interchangeable.
 
 Neither variant repairs a systematically wrong rubric, position leakage, generator bias, or arbitrary distribution shift. Monitor held-out pair accuracy, chosen/rejected log-probabilities, margin distribution, KL, lengths, domain slices, and independent fresh-generation evaluations. Training loss can keep improving after useful quality plateaus.
 
@@ -526,15 +560,7 @@ Store `policy_version`, `reference_version`, decoding settings, date, label sour
 
 ## Lesson 8.4. Variants of direct preference optimization
 
-> **Lesson 8.4. Variants of direct preference optimization**
->
-> 1. IPO: a finite target margin
-> 2. SimPO: mean log-probability and a target gap
-> 3. KTO: unpaired binary feedback
-> 4. ORPO: supervised fine-tuning and odds ratio in one objective
-> 5. Method map: data first, name second
->
-> then 3 assessment steps
+The following methods change different parts of the construction: the loss shape, response normalization, the reference, or the feedback format. They are alternatives with distinct assumptions, not successive upgrades that every training pipeline must adopt.
 
 ### Step 8.4.1 — IPO: a finite target margin
 
@@ -552,6 +578,8 @@ $$
 Ordinary DPO keeps decreasing as a positive margin grows. IPO penalizes both undershooting and overshooting its target. This is useful when unbounded margin growth is not the desired behavior.
 
 A finite target does not repair bad pairs, stale templates, or weak coverage. Its $\tau$ is not numerically comparable to DPO's $\beta$ without mapping the exact objectives.
+
+Here $\tau>0$. There is a useful connection to cDPO, but not an identity: smoothing specifies a soft preference probability, whereas IPO places a quadratic target directly on $h_\theta$. Even when hyperparameters produce the same isolated minimizer, the losses can have different curvature and different gradients away from it. Their finite targets do not make their update rules equivalent.
 
 ---
 
@@ -577,6 +605,8 @@ r_{\mathrm{SimPO}}(x,y^-)
 -
 \gamma.
 $$
+
+The symbol $\gamma$ denotes a preference margin here, not an RL discount factor. Applying the usual logistic loss $\operatorname{softplus}(-z)$ clarifies its role. When the score difference reaches $\gamma$, the logit is zero and the predicted preference probability is $1/2$; the gradient has not vanished. A larger difference still reduces the loss. SimPO’s target margin therefore shifts the comparison threshold rather than creating IPO’s finite scalar minimizer.
 
 It avoids a separate reference forward pass and explicitly normalizes by length. The trade-off is a different mathematical contract: no reference anchor remains, and mean log-probability has its own biases.
 
@@ -606,6 +636,19 @@ $$
 \lambda\mathcal L_{\mathrm{odds}}(y^+,y^-).
 $$
 
+The odds term needs one additional definition. The original construction starts with the mean log-likelihood of the active response tokens. Let $q_\theta(x,y)$ denote its exponential, keeping it distinct from the probability of the whole sequence:
+
+$$
+\begin{aligned}
+q_\theta(x,y)&=\exp\!\left(\frac{1}{|y|}\log\pi_\theta(y\mid x)\right),\\
+o_\theta(x,y)&=\frac{q_\theta(x,y)}{1-q_\theta(x,y)},\\
+\mathcal L_{\mathrm{odds}}
+&=-\log\sigma\!\left(\log\frac{o_\theta(x,y^+)}{o_\theta(x,y^-)}\right).
+\end{aligned}
+$$
+
+For $0<q_\theta<1$, the odds transformation is nonlinear and becomes particularly sensitive near the upper boundary. Here $q_\theta$ is a geometric mean of token probabilities, not a normalized probability over complete responses. Its complement should therefore not be read literally as the probability of every other possible text. Length normalization is part of the definition; inserting a raw sequence probability would produce a different loss.
+
 No separate reference model is required during training. The SFT component supports chosen likelihood, while the pair component separates chosen from rejected.
 
 ORPO is not literally DPO with one model removed; the loss, scale, and anchoring mechanism differ. Report the chosen-response negative log-likelihood (NLL) and the pairwise preference loss separately so one cannot hide degradation in the other.
@@ -614,7 +657,7 @@ ORPO is not literally DPO with one model removed; the loss, scale, and anchoring
 
 ### Step 8.4.5 — Method map: data first, name second
 
-![Map of direct preference methods
+![Map of direct preference methods](assets/rl-for-llm/en/module-08/M8_method_map_EN.png)
 
 | Method | Primary data | Reference in loss | Characteristic mechanism |
 |---|---|---|---|
@@ -627,21 +670,13 @@ ORPO is not literally DPO with one model removed; the loss, scale, and anchoring
 
 No method is uniformly best. Ask whether the data are paired, whether an explicit reference anchor is needed, how lengths differ, how much label noise is expected, whether data will be refreshed, and whether independent generation evaluation is available.
 
-> **Survey extension:** *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`) provides a broader post-training map. This module focuses on the RL interpretation, derivations, and diagnostics.
+> **Survey extension:** *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)) provides a broader post-training map. This module focuses on the RL interpretation, derivations, and diagnostics.
 
 ---
 
 ## Lesson 8.5. From equations to a reproducible run
 
-> **Lesson 8.5. From equations to a reproducible run**
->
-> 1. Minimal DPO data flow
-> 2. Practice A: exact CPU experiments
-> 3. Practice B: DPO on Qwen3-0.6B
-> 4. What to measure after training
-> 5. Decision rule: DPO, RLHF, or online RL
->
-> then 6 assessment steps
+We can now follow a recorded pair through one update and ask how to evaluate the resulting generator. Computing a preference loss does not require sampling a new response at each optimization step. Establishing that the model has become more useful, however, requires evidence beyond that same loss.
 
 ### Step 8.5.1 — Minimal DPO data flow
 
@@ -658,6 +693,10 @@ A reproducible pipeline contains:
 Retain prompt identity, candidate provenance, generator and reference versions, rubric, label source, decoding settings, and stop reason. Split by prompt, not by pair row.
 
 Libraries may optimize reference storage when the initial policy and reference coincide and LoRA is used. The logical reference nevertheless remains part of the DPO definition.
+
+Follow one pair through an update. Both completions already exist in the dataset. The policy and reference receive the same prompt and the recorded prefixes of each completion. Causal rescoring supplies the probabilities of the tokens actually present. Four sequence log-probabilities—two completions under two models—produce $h_\theta$, the preference logit, and the loss. Backpropagation traverses both trainable policy branches; the reference stays fixed.
+
+A generative model can therefore be trained without sampling a new completion at every optimization step. The training objects are given, while their likelihoods change with the parameters. Fresh generation is still needed to assess the learned behavior, and iterative preference learning may introduce separate rounds that collect new pairs.
 
 ---
 
@@ -683,6 +722,8 @@ The graded practice provides tasks and worked solutions revealed after an attemp
 
 ### Step 8.5.3 — Practice B: DPO on Qwen3-0.6B
 
+The executable practice provides two routes:
+
 - a synthetic CPU path without model downloads;
 - a real path using `Qwen/Qwen3-0.6B`, `trl-lib/ultrafeedback_binarized`, TRL `DPOTrainer`, and LoRA.
 
@@ -706,22 +747,24 @@ Use at least:
 
 High pair accuracy does not prove strong generation. The model may learn style shortcuts or improve relative ordering while chosen absolute likelihood falls.
 
+The metric definition matters. In the teaching DPO implementation, `pair_accuracy` is the fraction of pairs with $h_\theta>0$; a zero margin is not counted as a win. It measures the order of implicit reference-relative rewards, not the raw condition $\pi_\theta(y^+\mid x)>\pi_\theta(y^-\mid x)$ and not a match between free generation and the recorded completion. These measurements may therefore disagree without contradiction. Similarly, exact vocabulary KL evaluated at the prefixes of fixed pairs must be labelled as such: it is not automatically sequence KL averaged over fresh trajectories from the current policy.
+
 ---
 
 ### Step 8.5.5 — Decision rule: DPO, RLHF, or online RL
 
 A useful sequence is:
 
-1. Is the feedback reliable? If not, repair the rubric and data first.
-2. Are there fixed same-prompt pairs? DPO and its variants provide a strong baseline.
-3. Must data follow the current policy? Use iterative collection or online RL.
-4. Is reward programmatically verifiable? This naturally leads to reinforcement learning with verifiable rewards (RLVR), covered in Module 9 “RLVR and GRPO: verifiable rewards, group-relative estimates, and stability” (`rl_llm.module_09_rlvr_grpo`).
-5. Is open-ended reward and token-level credit assignment required? PPO or REINFORCE Leave-One-Out (RLOO) loops remain relevant despite their cost.
-6. Is a simple one-stage path required? Consider ORPO or SimPO with their own assumptions.
+1. **Is the feedback reliable?** If not, clarify the rubric and data first. A different loss cannot resolve an underspecified criterion.
+2. **Are there same-prompt preference pairs?** Fixed pairs make DPO a useful starting point, with its assumptions and diagnostics checked explicitly.
+3. **Must the data track the current policy?** Choose how to refresh them: separate rounds of candidate generation and pair annotation, or a direct RL loop using fresh trajectories.
+4. **Can reward be checked programmatically?** This is useful for reinforcement learning with verifiable rewards (RLVR), covered in Module 9 “RLVR and GRPO: verifiable rewards, group-relative estimates, and stability” ([open module](module-09.md)). The same verifier can also filter demonstrations or construct preference pairs. A feedback source does not, by itself, choose an update algorithm.
+5. **Should new responses be optimized directly against reward?** PPO and REINFORCE Leave-One-Out (RLOO) provide such update mechanisms. Basic RLOO uses a whole-response signal, not local causal labels for tokens. A PPO critic likewise does not magically identify each token’s contribution from a sparse terminal reward.
+6. **Which part should be simplified?** Removing a reference model and combining SFT with preference learning are different choices. ORPO combines the two losses; SimPO removes the reference but does not, by that fact alone, remove a preceding SFT or instruction-tuning stage.
 
 The final map is deliberately less dramatic than “DPO replaced RLHF”:
 
-> DPO replaces a particular expensive loop when fixed pairs and its assumptions fit the task. Online RL remains necessary when data must track the current policy or interaction and verifiable reward are part of the objective.
+> DPO avoids a separate reward-model fit and RL stage when the pairwise data and preference model suit the task. A fresh RL loop is useful when updates should directly use the consequences of current behavior. Iterative pair collection is another way to keep data relevant; changing policies or using a verifier does not rule it out.
 
 ---
 
@@ -759,4 +802,4 @@ The final map is deliberately less dramatic than “DPO replaced RLHF”:
 - [Razin et al. (2024), *Unintentional Unalignment: Likelihood Displacement in DPO*](https://arxiv.org/abs/2410.08847) — motivation for tracking chosen and rejected absolute likelihoods separately.
 - [Current TRL DPOTrainer documentation](https://huggingface.co/docs/trl/dpo_trainer) — a dated implementation interface, not a mathematical guarantee.
 
-The line-by-line registry of claims, limitations, and reproduced values is in `Module_8_Sources.md`. For the variational derivation, use *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” (`it_ml.module_08_maxent_kl_policy`); for SFT data engineering, use *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” (`modern_llms.module_11_sft`); for the broader post-training map, use *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” (`modern_llms.module_12_preference_optimization`).
+The works above support the corresponding methods; they do not replace the protocols of the course’s own experiments. For the variational derivation, use *Information Theory for ML*, Module 8 “Maximum entropy, exponential models, and KL regularization” ([open module](/courses/information-theory-for-ml/module-08/)); for SFT data engineering, use *Modern LLMs*, Module 13 “Supervised Fine-Tuning and Data Work” ([open module](/courses/modern-llms/module-13/)); for the broader post-training map, use *Modern LLMs*, Module 14 “Learning from Feedback: RLHF, DPO, RLOO, and GRPO” ([open module](/courses/modern-llms/module-14/)).
