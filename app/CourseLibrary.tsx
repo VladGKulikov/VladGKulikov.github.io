@@ -30,6 +30,7 @@ import { captureReadingPosition, readingPositionAtAnchor, restoreReadingPosition
 import config from "../SITE_CONFIG.json";
 import { buildLocation, courses, parseUrl, updatePageMetadata, type Language, type CourseKey, type CourseModule as Module, type PageRoute, type PageSection } from "./site";
 import { trackPage } from "./analytics";
+import { AnalyticsConsent } from "./AnalyticsConsent";
 import { quizFor, quizModules, type Quiz } from './quizzes';
 import { QuizReader, QuizMarkdown, questionAnchor, questionLabel } from './QuizReader';
 import { practiceFor, practiceModules, practiceAnchor, type Practice } from './practice';
@@ -884,8 +885,10 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
                   remarkPlugins={[remarkGfm, remarkMath]}
                   rehypePlugins={[rehypeKatex]}
                   components={{
-                    span: ({ node, ...props }) => {
+                    span: ({ node, ...props }: React.ComponentProps<"span"> & { node?: Parameters<typeof module20Equation>[0] }) => {
                       const equation = courseKey === 'modern-llms' && moduleKey === 'module-20' && props.className?.split(' ').includes('katex-display');
+                      // Focus allows keyboard users to scroll wide equations.
+                      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                       if (equation) return <span className="reference-equation" tabIndex={0} role="group" aria-label={language === 'ru' ? 'Формула' : 'Equation'} dangerouslySetInnerHTML={{ __html: module20Equation(node, language) }} />;
                       return <span {...props} />;
                     },
@@ -1020,6 +1023,7 @@ export function CourseLibrary({ initialLanguage = "en", initialPage, initialMark
           </a>
         </nav>
       </footer>
+      <AnalyticsConsent language={language} />
     </div>
   );
 }

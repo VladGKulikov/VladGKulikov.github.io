@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["pages-main.tsx", "pages-render.tsx", "vite.pages.config.ts", "vite.prerender.config.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": { "incremental": false }
+}

@@ -25,6 +25,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck:pages
+      - run: npm run test:analytics
       - run: npm run check:markup
       - run: npm run check:practice-markup
       - run: npm run check:quiz-markup

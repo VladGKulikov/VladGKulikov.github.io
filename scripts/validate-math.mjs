@@ -32,8 +32,7 @@ for (const file of files) {
       createElement(ReactMarkdown, {
         remarkPlugins: [remarkGfm, remarkMath],
         rehypePlugins: [rehypeKatex],
-        children: markdown,
-      }),
+      }, markdown),
     );
     renderedFormulas += (html.match(/class="katex(?:-display)?"/g) ?? []).length;
     if (html.includes("katex-error")) {

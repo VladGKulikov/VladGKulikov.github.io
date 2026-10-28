@@ -67,14 +67,51 @@ agent API or capabilities that the site does not provide.
 
 `SITE_CONFIG.json` holds the canonical origin, the optional dismissible Stepik
 notice, search-verification values and one optional GA4 integration. All
-verification values and analytics identifiers are empty by default; no analytics
-script is loaded in that state. To enable GA4, set provider to `ga4` and supply
-the real measurement ID. In the GA4 web stream, disable automatic enhanced
-measurement (including history-based page views, outbound clicks, site search
-and form tracking): the reader sends its own page views and Stepik/Leanpub
-outbound events once, with canonical paths and without query strings or hashes.
+search-verification values remain optional. GA4 is configured as `ga4` with
+measurement ID `G-MTQTZTSE97`, using the existing `app/analytics.ts` loader only.
+Enhanced Measurement is disabled in this web stream (including history-based
+page views, outbound clicks, site search and forms). Keep it disabled: the
+reader sends its own page views and Stepik/Leanpub outbound events once.
+`send_page_view: false` alone does not disable automatic history page views.
 Do not add a second tag manager or tracker. Search Console and Yandex Webmaster
 verification meta tags are emitted only when their actual values are supplied.
+
+### Analytics consent and privacy
+
+Every visitor, in every country, must explicitly opt in using the RU/EN banner
+before GA4 loads. This is Basic Consent Mode: no Google analytics requests,
+analytics cookies or cookieless pings before opt-in or after rejection. Advertising
+storage, advertising user data, personalization and Google Signals stay disabled.
+GPC and Do Not Track override saved grants. Course use never requires analytics.
+The persistent **Privacy & analytics / Приватность и аналитика** control lets a
+visitor change the choice. Withdrawal sets GA's disable flag, removes `_ga` and
+`_ga_*` cookies and reloads to remove the loaded tag's timers and listeners.
+Choices expire after 180 days, are versioned in localStorage, and synchronize
+across tabs. If storage is unavailable, the choice works in memory for that page.
+Analytics cookies expire within 180 days without rolling renewal. Course progress,
+answers, free-form drafts and module searches stay local and are never included
+in analytics events. The banner links to Google's privacy and partner-data notices
+and explains processing, cookies, international processing and withdrawal.
+
+Page locations use known canonical routes. Only the following public marketing
+labels may appear on the first consented view: `utm_id`, `utm_source`, `utm_medium`,
+`utm_campaign`, `utm_term`, `utm_content`, `utm_source_platform`,
+`utm_creative_format`, `utm_marketing_tactic`. Labels allow up to 100 letters,
+numbers, spaces, underscores, periods or hyphens; emails, URLs and long digit
+sequences are rejected. Never place personal data in campaign labels: no syntax
+filter can recognize every personal name. Other query parameters, advertising
+click IDs and hashes are excluded. External referrers retain only their origin;
+SPA referrers use the previous canonical page. Safe landing attribution is held
+only in memory while deciding; pre-consent browsing is not replayed. Legacy
+query links canonicalize in place to preserve UTM and the original referrer.
+
+`npm run test:analytics` covers consent, attribution, pageview deduplication,
+SPA routes/languages/sections, outbound events and withdrawal. It runs in Pages CI.
+The global opt-in implementation follows [Google's Basic Consent Mode](https://developers.google.com/tag-platform/security/concepts/consent-mode)
+and the [ICO analytics-cookie consent guidance](https://ico.org.uk/media2/kz0doybw/guidance-on-the-use-of-cookies-and-similar-technologies-1-0.pdf).
+Deployment does not establish legal compliance in every jurisdiction. The property
+owner should review GA account retention, data-sharing and international-transfer
+terms separately; these account-level settings are not controlled by this code.
 
 The GitHub Pages custom domain is managed in repository settings. The existing
 GitHub Actions deployment is preserved; DNS and HTTPS are not reconfigured by

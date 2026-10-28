@@ -1117,6 +1117,50 @@ a {
   color: var(--ink);
 }
 
+.privacy-settings {
+  position: fixed;
+  bottom: 8px;
+  right: 12px;
+  z-index: 45;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: var(--paper, #fff);
+  color: var(--ink);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.analytics-choice {
+  position: fixed;
+  z-index: 46;
+  right: 12px;
+  bottom: 48px;
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  background: var(--paper, #fff);
+  color: var(--ink);
+  box-shadow: 0 6px 28px #0002;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.analytics-choice p { margin: 10px 0; }
+.analytics-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.analytics-actions button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 14px;
+  background: var(--paper, #fff);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
 .drawer-scrim {
   display: none;
 }

@@ -1,6 +1,6 @@
 {
   "origin": "https://vladkulikov.com",
   "stepikNotice": true,
-  "analytics": { "provider": null, "measurementId": null },
+  "analytics": { "provider": "ga4", "measurementId": "G-MTQTZTSE97" },
   "verification": { "google": null, "yandex": null }
 }
