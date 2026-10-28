@@ -52,7 +52,7 @@
         {
           "id": "markdown-005",
           "type": "markdown",
-          "source": "## 3. Shift invariance and position precision\n\nWith fixed vectors and frequencies, shifting both positions leaves their dot product unchanged:\n\n$$\\langle R_{m+c}q,R_{n+c}k\\rangle=\\langle R_mq,R_nk\\rangle.$$\n\nWe test 200 cases and reproduce the lecture's worked example. The function `rope_attention_logits` returns **unscaled dot products**. Standard attention divides by √D; at D=4, the example becomes 1.144248/2 ≈ 0.572124.\n\nIDs remain integers until float64 phase construction. Float32 loses consecutive-integer resolution after 2²⁴; the example near 10⁸ exhibits a collision. Storing IDs as integers does not remove the precision limit of their eventual floating representation."
+          "source": "## 3. Shift invariance and position precision\n\nWith fixed vectors and frequencies, shifting both positions leaves their dot product unchanged:\n\n$$\n\\langle R_{m+c}q,R_{n+c}k\\rangle=\\langle R_mq,R_nk\\rangle.\n$$\n\nWe test 200 cases and reproduce the lecture's worked example. The function `rope_attention_logits` returns **unscaled dot products**. Standard attention divides by √D; at D=4, the example becomes 1.144248/2 ≈ 0.572124.\n\nIDs remain integers until float64 phase construction. Float32 loses consecutive-integer resolution after 2²⁴; the example near 10⁸ exhibits a collision. Storing IDs as integers does not remove the precision limit of their eventual floating representation."
         },
         {
           "id": "code-004",
@@ -186,7 +186,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

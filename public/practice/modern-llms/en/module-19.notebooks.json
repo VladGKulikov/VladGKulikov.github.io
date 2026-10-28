@@ -42,7 +42,7 @@
         {
           "id": "markdown-004",
           "type": "markdown",
-          "source": "## 2. `pass@k`: a finite sample, not a plug-in probability\n\nWith $n$ sampled solutions and $c$ successes, the unbiased estimator is\n\n$$\\operatorname{pass@}k=1-\\frac{\\binom{n-c}{k}}{\\binom{n}{k}}.$$\n\nIt describes selecting $k$ candidates without replacement from the observed finite sample. The plug-in expression $1-(1-c/n)^k$ substitutes an estimated probability into a nonlinear function. The implementation validates $0\\le c\\le n$, $1\\le k\\le n$, and the all-fail and all-pass boundaries.\n\nUnbiasedness for 1−(1−p)^k requires independent draws from a fixed policy. The plug-in formula targets the same probability but introduces bias through nonlinear substitution. Estimate each task separately, then average; preselecting favorable candidates breaks the sampling contract."
+          "source": "## 2. `pass@k`: a finite sample, not a plug-in probability\n\nWith $n$ sampled solutions and $c$ successes, the unbiased estimator is\n\n$$\n\\operatorname{pass@}k=1-\\frac{\\binom{n-c}{k}}{\\binom{n}{k}}.\n$$\n\nIt describes selecting $k$ candidates without replacement from the observed finite sample. The plug-in expression $1-(1-c/n)^k$ substitutes an estimated probability into a nonlinear function. The implementation validates $0\\le c\\le n$, $1\\le k\\le n$, and the all-fail and all-pass boundaries.\n\nUnbiasedness for 1−(1−p)^k requires independent draws from a fixed policy. The plug-in formula targets the same probability but introduces bias through nonlinear substitution. Estimate each task separately, then average; preselecting favorable candidates breaks the sampling contract."
         },
         {
           "id": "code-003",
@@ -201,7 +201,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

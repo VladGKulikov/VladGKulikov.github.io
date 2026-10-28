@@ -20,6 +20,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
+from export_io import write_text
 
 
 DEFAULT_ROOTS = {
@@ -587,7 +588,7 @@ def module_document(
     relative_path = Path(course_key) / language / f"{module_key}.md"
     destination = context.content_root / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(markdown, encoding="utf-8")
+    write_text(destination, markdown)
     return {
         "id": f"{course_key}:{language}:{module_key}",
         "course_key": course_key,
@@ -644,7 +645,7 @@ def export_module20_equations(source_root: Path, project_root: Path) -> None:
             raise ValueError(f"M20 {language}: no display equations")
         equations[language] = items
     destination = project_root / "app/generated/module-20-equations.json"
-    destination.write_text(json.dumps(equations, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    write_text(destination, json.dumps(equations, ensure_ascii=False, indent=2) + "\n")
 
 
 def build_modern(boundary: dict[str, Any], language: str, context: BuildContext) -> list[dict[str, Any]]:

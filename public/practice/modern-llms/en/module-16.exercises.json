@@ -16,7 +16,7 @@
       "id": "exercise-02",
       "title": "E2. InfoNCE and projector size",
       "prompt": "For diagonal similarity 0.8, off-diagonal similarity 0.2, and $N=4$, calculate positive probability and loss at $\\tau=0.1$ and $0.5$. Then count parameters in a biased 1024→4096→4096 MLP.",
-      "answer": "*Solution.* One row contains one positive score 0.8 and three negative scores 0.2, so\n\n$$p_+=\\frac{e^{0.8/\\tau}}{e^{0.8/\\tau}+3e^{0.2/\\tau}}=\\frac1{1+3e^{-0.6/\\tau}},\\qquad L=-\\log p_+.$$\n\nAt $\\tau=0.1$, $p_+=0.992619$ and $L=0.007409$; at $\\tau=0.5$, $p_+=0.525325$ and $L=0.643738$. Equal scores give $p_+=1/4$ and $L=\\log4=1.386294$.\n\nThe first biased linear layer has $1024\\cdot4096+4096=4{,}198{,}400$ parameters; the second has $4096^2+4096=16{,}781{,}312$. Total: **20,979,712**.",
+      "answer": "*Solution.* One row contains one positive score 0.8 and three negative scores 0.2, so\n\n$$\np_+=\\frac{e^{0.8/\\tau}}{e^{0.8/\\tau}+3e^{0.2/\\tau}}=\\frac1{1+3e^{-0.6/\\tau}},\\qquad L=-\\log p_+.\n$$\n\nAt $\\tau=0.1$, $p_+=0.992619$ and $L=0.007409$; at $\\tau=0.5$, $p_+=0.525325$ and $L=0.643738$. Equal scores give $p_+=1/4$ and $L=\\log4=1.386294$.\n\nThe first biased linear layer has $1024\\cdot4096+4096=4{,}198{,}400$ parameters; the second has $4096^2+4096=16{,}781{,}312$. Total: **20,979,712**.",
       "answerKind": "solution"
     },
     {
@@ -50,7 +50,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

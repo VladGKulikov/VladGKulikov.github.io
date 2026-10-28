@@ -16,7 +16,7 @@
       "id": "exercise-02",
       "title": "E2. Chunking and the cascade budget",
       "prompt": "A corpus has 20M tokens, chunk size 400, overlap 64, and embedding dimension 1024. Find the number of chunks and the binary-vector payload. Then add 0.0776 ms query encoding, 0.4096 ms ANN-scenario distance work, 104.7273 ms reranking, 120.4338 ms prefill, and 1432.6648 ms decode.",
-      "answer": "*Solution.* Stride is $400-64=336$. The first window covers 400 tokens; the rest require\n\n$$1+\\left\\lceil\\frac{20{,}000{,}000-400}{336}\\right\\rceil=59{,}524$$\n\nchunks. A binary 1024D vector uses $1024/8=128$ bytes, so payload is $59{,}524\\cdot128=7{,}619{,}072$ bytes = **7.266 MiB**.\n\nAdding stages gives $0.0776+0.4096+104.7273+120.4338+1432.6648=\\mathbf{1658.313}$ ms. Decode share is 86.39%; retrieval stages before prefill contribute 6.34%. These shares belong only to the stated scenario.",
+      "answer": "*Solution.* Stride is $400-64=336$. The first window covers 400 tokens; the rest require\n\n$$\n1+\\left\\lceil\\frac{20{,}000{,}000-400}{336}\\right\\rceil=59{,}524\n$$\n\nchunks. A binary 1024D vector uses $1024/8=128$ bytes, so payload is $59{,}524\\cdot128=7{,}619{,}072$ bytes = **7.266 MiB**.\n\nAdding stages gives $0.0776+0.4096+104.7273+120.4338+1432.6648=\\mathbf{1658.313}$ ms. Decode share is 86.39%; retrieval stages before prefill contribute 6.34%. These shares belong only to the stated scenario.",
       "answerKind": "solution"
     },
     {
@@ -43,7 +43,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

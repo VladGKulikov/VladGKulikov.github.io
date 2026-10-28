@@ -9,14 +9,14 @@
       "id": "exercise-01",
       "title": "E1. Exact block accounting",
       "prompt": "Compute the matrix-only and full counts for the Llama-3.1-8B block.",
-      "answer": "*Solution.* In GQA, $Q$ and $O$ are $d\\times d$, while K/V width is one quarter of $d$. The two K/V matrices therefore contribute $2d(d/4)=0.5d^2$, giving\n\n$$P_{attn}=2d^2+0.5d^2=2.5d^2.$$\n\nSwiGLU has gate, up, and down projections. With $d_{ff}=3.5d$, their count is $3dd_{ff}=10.5d^2$. Thus\n\n$$P_{matrix}=13d^2=13\\cdot4096^2=218{,}103{,}808.$$\n\nTwo RMSNorm scales add $2d=8192$, yielding **218,112,000**. Biases are excluded by this architecture contract.",
+      "answer": "*Solution.* In GQA, $Q$ and $O$ are $d\\times d$, while K/V width is one quarter of $d$. The two K/V matrices therefore contribute $2d(d/4)=0.5d^2$, giving\n\n$$\nP_{attn}=2d^2+0.5d^2=2.5d^2.\n$$\n\nSwiGLU has gate, up, and down projections. With $d_{ff}=3.5d$, their count is $3dd_{ff}=10.5d^2$. Thus\n\n$$\nP_{matrix}=13d^2=13\\cdot4096^2=218{,}103{,}808.\n$$\n\nTwo RMSNorm scales add $2d=8192$, yielding **218,112,000**. Biases are excluded by this architecture contract.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
       "title": "E2. Epsilon and gain",
       "prompt": "Compare the RMSNorm multipliers at input RMS $10^{-3}$ for $\\epsilon=10^{-6}$ and $10^{-5}$.",
-      "answer": "*Solution.* RMSNorm divides by $\\sqrt{\\operatorname{RMS}(x)^2+\\epsilon}$. Here the signal-square term is $10^{-6}$, so\n\n$$g_{10^{-6}}=1/\\sqrt{2\\cdot10^{-6}}\\approx707.1,$$\n$$g_{10^{-5}}=1/\\sqrt{11\\cdot10^{-6}}\\approx301.5.$$\n\nThe larger epsilon more than halves the gain because it dominates this small signal. Epsilon must therefore reflect reduction precision and expected activation scale, not dtype machine epsilon alone.",
+      "answer": "*Solution.* RMSNorm divides by $\\sqrt{\\operatorname{RMS}(x)^2+\\epsilon}$. Here the signal-square term is $10^{-6}$, so\n\n$$\ng_{10^{-6}}=1/\\sqrt{2\\cdot10^{-6}}\\approx707.1,\n$$\n$$\ng_{10^{-5}}=1/\\sqrt{11\\cdot10^{-6}}\\approx301.5.\n$$\n\nThe larger epsilon more than halves the gain because it dominates this small signal. Epsilon must therefore reflect reduction precision and expected activation scale, not dtype machine epsilon alone.",
       "answerKind": "solution"
     },
     {
@@ -57,7 +57,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

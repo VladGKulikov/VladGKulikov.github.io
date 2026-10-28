@@ -23,7 +23,7 @@
       "id": "exercise-03",
       "title": "E3. Compute, best-of-$N$, and LoRA",
       "prompt": "Revisit the four scenarios in §§7, 10, 11 and 16. For SFT, use an 8.03B model, 200,000 examples averaging 1,200 tokens and three epochs. Calculate FLOP and runtime on one accelerator with a 990 TFLOP/s peak at 40% MFU, then compare the workload with pretraining the same model on 15 trillion tokens.\n\n\nFor independent candidates with $p_{\\mathrm{pass}}=0.3$, find best-of-$N$ coverage at $N=1,4,8,16$. Next, estimate FLOP and runtime for one pass of a 32B model over 1,000 traces of 9,000 tokens, using eight accelerators with the same peak rate and MFU. For the LoRA calculation, adapt q/k/v/o in 32 layers with $d=4096$, $d_{kv}=1024$ and rank 16. Report adapter parameters, their fraction of the 8.03B base and training-state MiB at 16 bytes per trainable parameter.",
-      "answer": "*Solution.* One epoch contains $200000\\cdot1200=240$M tokens; three contain $D=720$M. With $C\\approx6ND$,\n\n$$C_{SFT}=6\\cdot8.03\\text{B}\\cdot720\\text{M}=3.46896\\times10^{19}\\ \\text{FLOP}.$$\n\nDividing by $990\\cdot10^{12}\\cdot0.4$ FLOP/s gives 24.33 hours; the stated 15T-token pretraining workload is about 20,833 times larger. Independent best-of-$N$ coverage is $1-(1-0.3)^N$: 0.3000, 0.7599, 0.9424, and 0.9967 for $N=1,4,8,16$.\n\nThe 32B scenario has $1000\\cdot9000=9$M tokens, hence $6\\cdot32\\text{B}\\cdot9\\text{M}=1.728\\times10^{18}$ FLOP and 9.09 minutes on eight stated devices.\n\nA LoRA adapter for a $d_{out}\\times d_{in}$ matrix has $r(d_{in}+d_{out})$ parameters. Per layer q/o contribute $16(4096+4096)$ each and k/v $16(4096+1024)$ each: 425,984 per layer, or **13,631,488** over 32 layers (0.1698% of the base). At the teaching 16-byte parameter-state accounting, that is **208 MiB**.",
+      "answer": "*Solution.* One epoch contains $200000\\cdot1200=240$M tokens; three contain $D=720$M. With $C\\approx6ND$,\n\n$$\nC_{SFT}=6\\cdot8.03\\text{B}\\cdot720\\text{M}=3.46896\\times10^{19}\\ \\text{FLOP}.\n$$\n\nDividing by $990\\cdot10^{12}\\cdot0.4$ FLOP/s gives 24.33 hours; the stated 15T-token pretraining workload is about 20,833 times larger. Independent best-of-$N$ coverage is $1-(1-0.3)^N$: 0.3000, 0.7599, 0.9424, and 0.9967 for $N=1,4,8,16$.\n\nThe 32B scenario has $1000\\cdot9000=9$M tokens, hence $6\\cdot32\\text{B}\\cdot9\\text{M}=1.728\\times10^{18}$ FLOP and 9.09 minutes on eight stated devices.\n\nA LoRA adapter for a $d_{out}\\times d_{in}$ matrix has $r(d_{in}+d_{out})$ parameters. Per layer q/o contribute $16(4096+4096)$ each and k/v $16(4096+1024)$ each: 425,984 per layer, or **13,631,488** over 32 layers (0.1698% of the base). At the teaching 16-byte parameter-state accounting, that is **208 MiB**.",
       "answerKind": "solution"
     },
     {
@@ -43,7 +43,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

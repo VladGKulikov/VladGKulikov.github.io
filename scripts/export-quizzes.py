@@ -13,6 +13,7 @@ import runpy
 import sys
 from collections import Counter
 from pathlib import Path
+from export_io import write_text, write_json, merge_courses
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULTS = {
@@ -124,19 +125,23 @@ def parse_rl(records, module, lang, overrides):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-root', action='append', default=[], metavar='COURSE=PATH')
+    parser.add_argument('--course', action='append', choices=sorted(DEFAULTS), help='Export the complete course; default: all courses')
     args = parser.parse_args()
     roots = dict(DEFAULTS)
+    selected = set(args.course or roots)
     for value in args.source_root:
         key, value = value.split('=', 1); roots[key] = Path(value)
     overrides = json.loads((ROOT / 'scripts/quiz-grading-overrides.json').read_text(encoding='utf8'))
-    sys.path.insert(0, str(roots['rl-for-llm'] / 'tools'))
-    from assessment_source import load_all_assessments
-    manifest = json.loads((roots['modern-llms'] / 'course_manifest.json').read_text(encoding='utf8'))
+    if 'rl-for-llm' in selected:
+        sys.path.insert(0, str(roots['rl-for-llm'] / 'tools'))
+        from assessment_source import load_all_assessments
+    manifest = json.loads((roots['modern-llms'] / 'course_manifest.json').read_text(encoding='utf8')) if 'modern-llms' in selected else {'modules':[]}
     modern_ids = {f'module-{m["id"]}': m['id'] for m in manifest['modules']}
     catalog = json.loads((ROOT / 'app/generated/content.json').read_text(encoding='utf8'))
     entries, sources = [], []
     for course in catalog['courses']:
         key, lang = course['course_key'], course['language']
+        if key not in selected: continue
         for module in course['modules']:
             mk = module['module_key']; n = int(module['position'])
             if key == 'modern-llms':
@@ -168,7 +173,7 @@ def main():
             data = {'courseKey': key, 'moduleKey': mk, 'language': lang, 'questions': questions}
             raw = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
             output = ROOT / 'public/quizzes' / file
-            output.parent.mkdir(parents=True, exist_ok=True); output.write_text(raw, encoding='utf8')
+            write_text(output, raw)
             entries.append({'courseKey': key, 'moduleKey': mk, 'language': lang, 'file': file, 'hash': digest(raw),
                 'count': len(questions), 'kinds': dict(Counter(q['type'] for q in questions))})
             sources.append({'course': key, 'module': mk, 'language': lang, 'source': relative, 'sha256': digest(source_text), 'count': len(questions)})
@@ -183,9 +188,16 @@ def main():
         a,b = contract(entry), contract(counterpart)
         assert a == b, (entry['file'], 'RU/EN grading contracts differ', [(x,y) for x,y in zip(a,b) if x != y])
         entry['revision'] = digest(json.dumps(a, sort_keys=True))[:16]
-    (ROOT / 'app/generated/quizzes.json').write_text(json.dumps({'modules': entries}, ensure_ascii=False, indent=2)+'\n', encoding='utf8')
+    index_path = ROOT / 'app/generated/quizzes.json'
+    previous = json.loads(index_path.read_text(encoding='utf8'))['modules'] if index_path.exists() else []
+    entries = merge_courses(previous, entries, selected, 'courseKey')
+    write_json(index_path, {'modules': entries})
     report = {'status': 'PASS', 'sources': sources, 'counts': {key: sum(e['count'] for e in entries if e['courseKey']==key and e['language']=='en') for key in roots}}
-    (ROOT / 'QUIZ_CONTENT_AUDIT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+    audit_path = ROOT / 'QUIZ_CONTENT_AUDIT.json'
+    if audit_path.exists():
+        old = json.loads(audit_path.read_text(encoding='utf8'))
+        report['sources'] = merge_courses(old['sources'], sources, selected, 'course')
+    write_json(audit_path, report)
     print(json.dumps({'status': 'PASS', 'localizedModules': len(entries), 'questionsPerLanguage': report['counts']},ensure_ascii=False))
 
 if __name__ == '__main__': main()

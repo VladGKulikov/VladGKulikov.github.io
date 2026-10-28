@@ -415,9 +415,15 @@ The learning rate $\eta_t$ controls the overall step size. Momentum carries a de
 
 Write $\theta_{t-1}$ for the parameters and $g_t$ for the loss gradient. Initialize two running averages at $m_0=v_0=0$, with decay coefficients $\beta_1,\beta_2\in[0,1)$. All operations are coordinate-wise:
 
-$$m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,\qquad v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2,$$
-$$\hat m_t=\frac{m_t}{1-\beta_1^t},\qquad\hat v_t=\frac{v_t}{1-\beta_2^t},$$
-$$\theta_t=(1-\eta_t\lambda)\theta_{t-1}-\eta_t\frac{\hat m_t}{\sqrt{\hat v_t}+\varepsilon}.$$
+$$
+m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,\qquad v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2,
+$$
+$$
+\hat m_t=\frac{m_t}{1-\beta_1^t},\qquad\hat v_t=\frac{v_t}{1-\beta_2^t},
+$$
+$$
+\theta_t=(1-\eta_t\lambda)\theta_{t-1}-\eta_t\frac{\hat m_t}{\sqrt{\hat v_t}+\varepsilon}.
+$$
 
 The hats correct for initializing the averages at zero. Here $\lambda\ge0$ controls weight decay and $\varepsilon>0$ keeps the denominator positive. This is the common API convention in which decay is multiplied by the current learning rate.
 

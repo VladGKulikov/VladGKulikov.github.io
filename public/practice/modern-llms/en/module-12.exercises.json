@@ -16,7 +16,7 @@
       "id": "exercise-02",
       "title": "E2. Dense arithmetic versus DiffusionGemma",
       "prompt": "Reproduce the bf16 and idealized four-bit lower bounds for a dense 8B block of 256 positions. Explain why neither describes DiffusionGemma.",
-      "answer": "*Solution.* Eight billion dense weights occupy $8\\text{B}\\cdot2=16$ GB in bf16 and $8\\text{B}\\cdot0.5=4$ GB at ideal four-bit packing. At 3.35 TB/s, one weight read takes $16\\,\\mathrm{GB}/(3350\\,\\mathrm{GB/s})=0.004776\\,\\mathrm{s}=4.776$ ms or $4\\,\\mathrm{GB}/(3350\\,\\mathrm{GB/s})=0.001194\\,\\mathrm{s}=1.194$ ms. A 256-position pass has dense arithmetic floor\n\n$$\\frac{2\\cdot8\\text{B}\\cdot256}{990\\text{ TFLOP/s}}=4.137\\text{ ms}.$$\n\nThe bf16 case is therefore memory-limited by the larger 4.776-ms floor, while ideal four-bit weights expose the 4.137-ms compute floor. These are lower bounds, not their sum under perfect overlap.\n\nDiffusionGemma is instead a 25.2B-total/3.8B-active sparse MoE. Different canvas positions can select different experts, so one pass may read the union of many experts; tensor precisions are heterogeneous and runtime placement matters. Its H100 result uses FP8, while NVFP4 refers to Blackwell. Dense-8B arithmetic therefore cannot be relabeled as a DiffusionGemma prediction.",
+      "answer": "*Solution.* Eight billion dense weights occupy $8\\text{B}\\cdot2=16$ GB in bf16 and $8\\text{B}\\cdot0.5=4$ GB at ideal four-bit packing. At 3.35 TB/s, one weight read takes $16\\,\\mathrm{GB}/(3350\\,\\mathrm{GB/s})=0.004776\\,\\mathrm{s}=4.776$ ms or $4\\,\\mathrm{GB}/(3350\\,\\mathrm{GB/s})=0.001194\\,\\mathrm{s}=1.194$ ms. A 256-position pass has dense arithmetic floor\n\n$$\n\\frac{2\\cdot8\\text{B}\\cdot256}{990\\text{ TFLOP/s}}=4.137\\text{ ms}.\n$$\n\nThe bf16 case is therefore memory-limited by the larger 4.776-ms floor, while ideal four-bit weights expose the 4.137-ms compute floor. These are lower bounds, not their sum under perfect overlap.\n\nDiffusionGemma is instead a 25.2B-total/3.8B-active sparse MoE. Different canvas positions can select different experts, so one pass may read the union of many experts; tensor precisions are heterogeneous and runtime placement matters. Its H100 result uses FP8, while NVFP4 refers to Blackwell. Dense-8B arithmetic therefore cannot be relabeled as a DiffusionGemma prediction.",
       "answerKind": "solution"
     },
     {
@@ -50,7 +50,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

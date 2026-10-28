@@ -22,7 +22,9 @@ Notice where we have paused the model. The prompt has already been processed, bu
 
 Previously computed K/V can be retained in a **KV cache**. For one sequence, $L$ identical layers, and equal key/value width $d_h$, one retained token costs
 
-$$b_{KV}=2LH_{kv}d_hb,$$
+$$
+b_{KV}=2LH_{kv}d_hb,
+$$
 
 where $b$ is bytes per element; the factor 2 counts both keys and values. With $L=36$, $H_{kv}=8$, $d_h=64$, and BF16 ($b=2$), this is 73,728 bytes, or **72 KiB per token**. If every layer retains all 131,072 positions, the K/V payload is **9 GiB**. Here $1\text{ KiB}=2^{10}$ bytes and $1\text{ GiB}=2^{30}$ bytes. Windows and heterogeneous layers require the layer-by-layer sum in §5.
 
@@ -61,7 +63,9 @@ This section can be read later. It connects attention to familiar mathematical i
 
 The Nadaraya–Watson estimator averages values using a similarity function $\kappa$:
 
-$$\hat f(q)=\frac{\sum_i\kappa(q,k_i)v_i}{\sum_i\kappa(q,k_i)}.$$
+$$
+\hat f(q)=\frac{\sum_i\kappa(q,k_i)v_i}{\sum_i\kappa(q,k_i)}.
+$$
 
 For visible keys in softmax attention, use $\kappa(q,k_i)=\exp(q^\top k_i/\sqrt{d_h})$. Index $i$ runs over keys, with corresponding values $v_i$. The analogy is useful, but Q/K/V are learned together and later layers transform the resulting mixture. Here a *kernel* is a similarity function; a GPU kernel in §8 is executable code.
 
@@ -69,7 +73,9 @@ For visible keys in softmax attention, use $\kappa(q,k_i)=\exp(q^\top k_i/\sqrt{
 
 With unscaled scores $s_i=q^\top k_i$ and temperature $T>0$,
 
-$$p_i=\frac{e^{s_i/T}}{\sum_j e^{s_j/T}}$$
+$$
+p_i=\frac{e^{s_i/T}}{\sum_j e^{s_j/T}}
+$$
 
 has the Gibbs form. The energy convention $e^{-E_i/T}$ gives $E_i=-s_i$. Choosing $T=\sqrt{d_h}$ recovers the SDPA scale, motivated by the variance calculation in §4. If scores have already been divided by $\sqrt{d_h}$, applying that factor again changes the function.
 
@@ -281,7 +287,9 @@ Now restore the actual gpt-oss layer schedule. Each GQA layer needs $2\cdot8\cdo
 
 For ordinary K/V, $B$ equal-length sequences and heterogeneous layers, use
 
-$$M_{KV}=B\sum_{\ell=1}^L n_\ell H_{kv,\ell}(d_{k,\ell}+d_{v,\ell})b_\ell.$$
+$$
+M_{KV}=B\sum_{\ell=1}^L n_\ell H_{kv,\ell}(d_{k,\ell}+d_{v,\ell})b_\ell.
+$$
 
 Here $n_\ell=N$ for a full layer and $n_\ell=\min(N,W_\ell)$ for a bounded local cache. Sum over sequences when their lengths differ. This is array payload: it excludes alignment, paging, replication, and quantization metadata. MLA stores a different object and needs its own formula.
 
@@ -455,13 +463,17 @@ MQA and GQA reduced the number of key/value sets. MLA takes a different step: av
 
 For one head, write $k_t=A c_t$ and $v_t=B c_t$, with $c_t\in\mathbb R^{d_c}$, $A\in\mathbb R^{d_k\times d_c}$, and $B\in\mathbb R^{d_v\times d_c}$. Then
 
-$$q^\top k_t=q^\top A c_t=(A^\top q)^\top c_t.$$
+$$
+q^\top k_t=q^\top A c_t=(A^\top q)^\top c_t.
+$$
 
 Read the two sides as different execution plans. The left side expands a key before taking its dot product with the query. Moving $A$ to the query side instead produces one transformed query that can be compared with every cached latent. Rather than expanding each stored key, we transform the current query once per head and reuse that result across positions. The dot products are unchanged.
 
 The values offer a related opportunity. The output needs their weighted sum, not each expanded value in isolation. Because expansion is linear, we can combine the compact representations first and expand only the resulting aggregate. Once attention weights $p_t$ are available,
 
-$$\sum_t p_t v_t=B\left(\sum_t p_t c_t\right).$$
+$$
+\sum_t p_t v_t=B\left(\sum_t p_t c_t\right).
+$$
 
 The projection now acts on one accumulated vector rather than on every stored value before aggregation. Both rearrangements apply to keys and values already defined through the shared latent. They do not say that any arbitrary MHA cache can be replaced losslessly by a smaller vector: the factorized construction is part of the MLA architecture.
 
@@ -469,7 +481,9 @@ If an output projection $W^O$ follows, the product $W^OB$ can be combined in adv
 
 **Where does position enter?** The useful step above was to compute one transformed query and reuse it for all keys. Bring back RoPE from Module 4 and ask whether that step still works. A rotation is linear at a fixed position, but its angle changes with position. Rotating reconstructed keys therefore gives, for query position $m$ and key position $n$,
 
-$$(R_mq)^\top R_n A c_n=q^\top R_{n-m}A c_n.$$
+$$
+(R_mq)^\top R_n A c_n=q^\top R_{n-m}A c_n.
+$$
 
 The effective query $A^\top R_{n-m}^\top q$ now depends on $n$. It cannot be computed once and reused for all keys as before. Comparing $RA$ with $AR$ would also be ill-formed in general: $A$ is rectangular.
 
@@ -502,8 +516,12 @@ Both accumulated sums must be rescaled together. Earlier exponentials were expre
 
 For one query, let $x_j$ be scores of allowed keys in the new tile and $v_j$ their values. Update the running state as follows:
 
-$$m'=\max(m,\max_j x_j),\quad \alpha=e^{m-m'},\quad \widetilde p_j=e^{x_j-m'},$$
-$$\ell'=\alpha\ell+\sum_j\widetilde p_j,\qquad n'=\alpha n+\sum_j\widetilde p_jv_j,\qquad O=n'/\ell'.$$
+$$
+m'=\max(m,\max_j x_j),\quad \alpha=e^{m-m'},\quad \widetilde p_j=e^{x_j-m'},
+$$
+$$
+\ell'=\alpha\ell+\sum_j\widetilde p_j,\qquad n'=\alpha n+\sum_j\widetilde p_jv_j,\qquad O=n'/\ell'.
+$$
 
 Initialize $m=-\infty$, $\ell=0$, $n=0$. Set $\alpha=0$ for the first nonempty tile and skip fully masked tiles. If every tile is empty, apply the explicit policy from §4. This avoids $-\infty-(-\infty)$. The existing [exercises](/courses/modern-llms/module-05/exercises/) and [module notebook](/courses/modern-llms/module-05/notebooks/) work through numerical updates.
 
@@ -583,7 +601,9 @@ A window is cheap to specify, but relevant information need not be nearby. A glo
 
 A window selects keys by distance. **Content-based selection** estimates relevance from query and key features. Given a selected set $I(q)$, the main attention operation is
 
-$$O(q)=\operatorname{softmax}\left(qK_{I(q)}^\top/\sqrt{d_h}\right)V_{I(q)}.$$
+$$
+O(q)=\operatorname{softmax}\left(qK_{I(q)}^\top/\sqrt{d_h}\right)V_{I(q)}.
+$$
 
 This is exact attention on the selected subset, but generally differs from attention on every visible position. A cheaper selector can miss information the main operation needs.
 
@@ -830,7 +850,9 @@ With **early fusion**, visual representations join the language decoder's sequen
 
 Consider a hypothetical decoder with full attention in every layer and a K/V payload of 72 KiB per position. For one sequence, 4,096 additional visual positions require
 
-$$4096\cdot72\text{ KiB}=288\text{ MiB}.$$
+$$
+4096\cdot72\text{ KiB}=288\text{ MiB}.
+$$
 
 This counts only the added K/V, excluding weights, vision-encoder activations, and temporary arrays. Windowed layers require a separate count of visual positions still retained in each window.
 

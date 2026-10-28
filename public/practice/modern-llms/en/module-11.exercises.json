@@ -9,14 +9,14 @@
       "id": "exercise-01",
       "title": "Exercise 1. Exact mass balance",
       "prompt": "For $p=(0.40,0.30,0.15,0.10,0.05)$ and $q=(0.25,0.35,0.20,0.10,0.10)$, compute $\\alpha$, the residual distribution, and the final emitted distribution.",
-      "answer": "*Solution.* Accepted mass is the overlap\n\n$$\\min(p,q)=(0.25,0.30,0.15,0.10,0.05),\\qquad \\alpha=0.85.$$\n\nMissing target mass is $(p-q)_+=(0.15,0,0,0,0)$. Normalize it by rejection probability $1-\\alpha=0.15$ to get $r=(1,0,0,0,0)$. The emitted law is\n\n$$\\min(p,q)+(1-\\alpha)r=(0.40,0.30,0.15,0.10,0.05)=p.$$\n\nNormalizing this residual—rather than simply resampling from $p$—is what corrects the distribution after rejection.",
+      "answer": "*Solution.* Accepted mass is the overlap\n\n$$\n\\min(p,q)=(0.25,0.30,0.15,0.10,0.05),\\qquad \\alpha=0.85.\n$$\n\nMissing target mass is $(p-q)_+=(0.15,0,0,0,0)$. Normalize it by rejection probability $1-\\alpha=0.15$ to get $r=(1,0,0,0,0)$. The emitted law is\n\n$$\n\\min(p,q)+(1-\\alpha)r=(0.40,0.30,0.15,0.10,0.05)=p.\n$$\n\nNormalizing this residual—rather than simply resampling from $p$—is what corrects the distribution after rejection.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-02",
       "title": "Exercise 2. Proposal-length scan",
       "prompt": "Use $S=E/(1+\\gamma c)$ with $\\alpha=0.8$, $c=0.1$, and $\\gamma\\le9$. Then evaluate the illustrative point $\\gamma=1$, $\\alpha=0.875$, $c=0.05$.",
-      "answer": "*Solution.* Expected emitted length, counting accepted proposals plus one correction or bonus token, is\n\n$$E_\\gamma=1+\\alpha+\\cdots+\\alpha^\\gamma=\\frac{1-\\alpha^{\\gamma+1}}{1-\\alpha}.$$\n\nFor $\\alpha=0.8$, $S=E_\\gamma/(1+0.1\\gamma)$ over $\\gamma=1,\\ldots,9$ is 1.6364, 2.0333, 2.2708, 2.4011, 2.4595, **2.4696**, 2.4477, 2.4050, and 2.3490. Thus the peak is $\\gamma=6$, with $E=3.951424$: beyond it, acceptance gain no longer pays for the extra draft work.\n\nFor the MTP point, $E=1+0.875=1.875$ and the denominator is 1.05, so $S=1.78571$. These are results of the stated cost model, not universal runtime measurements.",
+      "answer": "*Solution.* Expected emitted length, counting accepted proposals plus one correction or bonus token, is\n\n$$\nE_\\gamma=1+\\alpha+\\cdots+\\alpha^\\gamma=\\frac{1-\\alpha^{\\gamma+1}}{1-\\alpha}.\n$$\n\nFor $\\alpha=0.8$, $S=E_\\gamma/(1+0.1\\gamma)$ over $\\gamma=1,\\ldots,9$ is 1.6364, 2.0333, 2.2708, 2.4011, 2.4595, **2.4696**, 2.4477, 2.4050, and 2.3490. Thus the peak is $\\gamma=6$, with $E=3.951424$: beyond it, acceptance gain no longer pays for the extra draft work.\n\nFor the MTP point, $E=1+0.875=1.875$ and the denominator is 1.05, so $S=1.78571$. These are results of the stated cost model, not universal runtime measurements.",
       "answerKind": "solution"
     },
     {
@@ -43,7 +43,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

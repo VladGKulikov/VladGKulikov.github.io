@@ -30,7 +30,7 @@
       "id": "exercise-04",
       "title": "E4. FP8 KV",
       "prompt": "Recompute the KV table for 48 layers, KV width 512, and fp8 storage.",
-      "answer": "*Solution.* FP8 uses one byte per element, and K and V are stored separately:\n\n$$M_{token}=2\\cdot48\\cdot512\\cdot1=49152\\ \\text{bytes}=48\\ \\text{KiB}.$$\n\n| Tokens | KV per request |\n|---:|---:|\n| 512 | 0.023438 GiB |\n| 1,000 | 0.045776 GiB |\n| 4,000 | 0.183105 GiB |\n| 16,000 | 0.732422 GiB |\n| 64,000 | 2.929688 GiB |\n\nThis is $128/48=2.667$ times smaller than the original 128 KiB/token scenario. It is payload only, excluding scales, alignment, allocator overhead, and runtime buffers.",
+      "answer": "*Solution.* FP8 uses one byte per element, and K and V are stored separately:\n\n$$\nM_{token}=2\\cdot48\\cdot512\\cdot1=49152\\ \\text{bytes}=48\\ \\text{KiB}.\n$$\n\n| Tokens | KV per request |\n|---:|---:|\n| 512 | 0.023438 GiB |\n| 1,000 | 0.045776 GiB |\n| 4,000 | 0.183105 GiB |\n| 16,000 | 0.732422 GiB |\n| 64,000 | 2.929688 GiB |\n\nThis is $128/48=2.667$ times smaller than the original 128 KiB/token scenario. It is payload only, excluding scales, alignment, allocator overhead, and runtime buffers.",
       "answerKind": "solution"
     },
     {
@@ -64,7 +64,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

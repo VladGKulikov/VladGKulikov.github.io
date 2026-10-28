@@ -372,7 +372,9 @@ Take a batch of $T$ tokens and $E$ experts. The router assigns a softmax probabi
 
 The Switch auxiliary term, before its external coefficient, is
 
-$$L_{\text{aux}}=E\sum_i f_iP_i.$$
+$$
+L_{\text{aux}}=E\sum_i f_iP_i.
+$$
 
 If both distributions are uniform, each product is $1/E^2$; summing $E$ terms and multiplying by $E$ gives 1. During differentiation, the discrete assignments in $f_i$ are treated as fixed. Gradients pass through $P_i$, providing a learning signal that reflects the observed load.
 

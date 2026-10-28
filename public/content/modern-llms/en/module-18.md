@@ -354,7 +354,9 @@ In the build task, a command can run correctly and a patch can apply cleanly wit
 
 First define success. This calculation requires every one of the $n$ steps to succeed and assumes that a verifier can distinguish success from failure. Let $S_t$ denote success on step $t$. The chain rule gives
 
-$$P(S_1\cap\cdots\cap S_n)=\prod_{t=1}^{n}P(S_t\mid S_1,\ldots,S_{t-1}).$$
+$$
+P(S_1\cap\cdots\cap S_n)=\prod_{t=1}^{n}P(S_t\mid S_1,\ldots,S_{t-1}).
+$$
 
 If every conditional probability equals $p$, the product is $p^n$. Independent identically reliable steps are a sufficient special case. Real trajectories change difficulty and state, so raising a pooled average step accuracy to a power can be misleading.
 

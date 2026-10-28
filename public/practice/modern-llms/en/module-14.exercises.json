@@ -23,7 +23,7 @@
       "id": "exercise-03",
       "title": "E3. Rollout economics",
       "prompt": "Generate 8 completions of 4,000 tokens for each of 256 prompts. Estimate generation time on eight accelerators at 209.4 tokens/s each. Compare it with a $6ND$ training estimate for an 8.03B model at 990 TFLOP/s per accelerator and 40% MFU.",
-      "answer": "*Solution.* Rollout volume is $D=256\\cdot8\\cdot4000=8{,}192{,}000$ tokens. Eight devices provide aggregate rate $8\\cdot209.4=1675.2$ tok/s, so generation takes $D/1675.2=4890.2$ s = **81.50 minutes**.\n\nTraining arithmetic is\n\n$$C=6ND=6\\cdot8.03\\text{B}\\cdot8.192\\text{M}\\approx3.946\\cdot10^{17}\\ \\text{FLOP}.$$\n\nEffective throughput is $8\\cdot990\\text{ TFLOP/s}\\cdot0.4=3.168\\cdot10^{15}$ FLOP/s, hence 124.6 s = **2.076 minutes**. The ratio is 39.25: autoregressive rollout, not one training pass, dominates this scenario. It is not a universal RLVR constant.",
+      "answer": "*Solution.* Rollout volume is $D=256\\cdot8\\cdot4000=8{,}192{,}000$ tokens. Eight devices provide aggregate rate $8\\cdot209.4=1675.2$ tok/s, so generation takes $D/1675.2=4890.2$ s = **81.50 minutes**.\n\nTraining arithmetic is\n\n$$\nC=6ND=6\\cdot8.03\\text{B}\\cdot8.192\\text{M}\\approx3.946\\cdot10^{17}\\ \\text{FLOP}.\n$$\n\nEffective throughput is $8\\cdot990\\text{ TFLOP/s}\\cdot0.4=3.168\\cdot10^{15}$ FLOP/s, hence 124.6 s = **2.076 minutes**. The ratio is 39.25: autoregressive rollout, not one training pass, dominates this scenario. It is not a universal RLVR constant.",
       "answerKind": "solution"
     },
     {
@@ -43,7 +43,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

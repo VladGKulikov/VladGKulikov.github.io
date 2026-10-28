@@ -130,7 +130,9 @@ Assistant-only masking is common, not mandatory. Full-sequence loss may be appro
 
 Let $x_0,\ldots,x_{T-1}$ be the stored tokens and let $m_t$ indicate that $x_t$ is a supervised target. Token-averaged training minimizes
 
-$$L=-\frac{\sum_{t=1}^{T-1}m_t\log p_\theta(x_t\mid x_{<t})}{\sum_{t=1}^{T-1}m_t}.$$
+$$
+L=-\frac{\sum_{t=1}^{T-1}m_t\log p_\theta(x_t\mid x_{<t})}{\sum_{t=1}^{T-1}m_t}.
+$$
 
 The numerator adds the errors we have chosen to supervise; the denominator counts those same targets after alignment. A batch with no active shifted targets has no defined mean loss and needs an explicit filtering or skip rule. The example below has 21 supervised tokens among 56 stored tokens. There are 55 next-token pairs after excluding the unpredicted BOS, of which 21 are scored.
 

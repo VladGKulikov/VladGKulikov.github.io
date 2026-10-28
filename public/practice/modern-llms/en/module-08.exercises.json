@@ -16,14 +16,14 @@
       "id": "exercise-02",
       "title": "E2. Complete recurrent cache",
       "prompt": "For 32 layers, $d_{inner}=8192$, $d_{state}=16$, $d_{conv}=4$, and bf16, compute the two state components and the crossover against 128 KiB/token.",
-      "answer": "*Solution.* One layer's SSM state has $d_{inner}d_{state}$ bf16 elements:\n\n$$8192\\cdot16\\cdot2=262144\\ \\text{bytes}=0.25\\ \\text{MiB}.$$\n\nAcross 32 layers this is 8 MiB. Convolution state uses $d_{inner}d_{conv}$ elements: $8192\\cdot4\\cdot2=65536$ bytes per layer, or 2 MiB total. Complete recurrent cache is **10 MiB** and does not grow with sequence length. At 128 KiB/token, KV reaches it at $10\\text{ MiB}/128\\text{ KiB}=\\mathbf{80}$ tokens and exceeds it afterward.",
+      "answer": "*Solution.* One layer's SSM state has $d_{inner}d_{state}$ bf16 elements:\n\n$$\n8192\\cdot16\\cdot2=262144\\ \\text{bytes}=0.25\\ \\text{MiB}.\n$$\n\nAcross 32 layers this is 8 MiB. Convolution state uses $d_{inner}d_{conv}$ elements: $8192\\cdot4\\cdot2=65536$ bytes per layer, or 2 MiB total. Complete recurrent cache is **10 MiB** and does not grow with sequence length. At 128 KiB/token, KV reaches it at $10\\text{ MiB}/128\\text{ KiB}=\\mathbf{80}$ tokens and exceeds it afterward.",
       "answerKind": "solution"
     },
     {
       "id": "exercise-03",
       "title": "E3. Mamba-2-like cache",
       "prompt": "Set $d_{state}=128$ and convolution channels to $8192+2\\cdot128$. Find the complete cache and the first integer token beyond crossover.",
-      "answer": "*Solution.* The SSM component is\n\n$$32\\cdot8192\\cdot128\\cdot2=64\\ \\text{MiB}.$$\n\nConvolution has $8192+2\\cdot128=8448$ channels, so its state uses $32\\cdot8448\\cdot4\\cdot2=2.0625$ MiB. Total is **66.0625 MiB**. Dividing by 0.125 MiB of KV per token gives 528.5: KV is still smaller at 528 tokens and first becomes strictly larger at **529**.",
+      "answer": "*Solution.* The SSM component is\n\n$$\n32\\cdot8192\\cdot128\\cdot2=64\\ \\text{MiB}.\n$$\n\nConvolution has $8192+2\\cdot128=8448$ channels, so its state uses $32\\cdot8448\\cdot4\\cdot2=2.0625$ MiB. Total is **66.0625 MiB**. Dividing by 0.125 MiB of KV per token gives 528.5: KV is still smaller at 528 tokens and first becomes strictly larger at **529**.",
       "answerKind": "solution"
     },
     {
@@ -43,7 +43,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650305,
-    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+    "bytes": 2650304,
+    "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
   }
 }

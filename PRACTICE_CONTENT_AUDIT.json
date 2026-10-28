@@ -2,8 +2,8 @@
   "status": "PASS",
   "sources": [
     {
-      "source": "modules/module-01/ru/module_01_lecture_RU.md",
-      "sha256": "06da6e2054ca2db31004fd7b8101b81226bba985bc84ede221e31d4f7c830c94",
+      "source": "modules/module-01/ru/module_01_practice_RU.md",
+      "sha256": "e5db9fcd2d826f15e6fd607f1977b9f60bc028f196a06c4f74ed7d31d5cbb64b",
       "course": "modern-llms"
     },
     {
@@ -17,8 +17,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-02/ru/module_02_lecture_RU.md",
-      "sha256": "b16374cbccf23c87f463dab74380396320c7e7d023486509c8cac27c527de22f",
+      "source": "modules/module-02/ru/module_02_practice_RU.md",
+      "sha256": "cb5767799ffba50ab4d52290320963d8c34278dda70303c7b0778a149acdf4da",
       "course": "modern-llms"
     },
     {
@@ -32,8 +32,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-03/ru/module_03_lecture_RU.md",
-      "sha256": "5b6c1f9e80c10c17176d6048b8066ec552c0ebb5e7f5f3b0bae3b77d52434f67",
+      "source": "modules/module-03/ru/module_03_practice_RU.md",
+      "sha256": "c7ee25de097ec2769d954fc86c0e2ac19ba016895046a8e328215b615da66330",
       "course": "modern-llms"
     },
     {
@@ -42,8 +42,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-04/ru/module_04_lecture_RU.md",
-      "sha256": "abbbb2cd2acb677c8e681d7b66b71ef44e518a5e78b2e68005c6336b0829ba29",
+      "source": "modules/module-04/ru/module_04_practice_RU.md",
+      "sha256": "71548c5ee6954eae424de3dda5a05c55d25d5d0dc1ed83ea85600160b1f756cf",
       "course": "modern-llms"
     },
     {
@@ -57,8 +57,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-05/ru/module_05_lecture_RU.md",
-      "sha256": "6215563453f33c6ded180b5766878441ec0f50d63505497e86ac4b77c3265069",
+      "source": "modules/module-05/ru/module_05_practice_RU.md",
+      "sha256": "04fde6dc98660cccce9286809d6f7d009e964e5c1db518d4d10ec50be640963b",
       "course": "modern-llms"
     },
     {
@@ -72,8 +72,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-06/ru/module_06_lecture_RU.md",
-      "sha256": "71110cae4852fed9cf9c308aedd061321e42b3c38b87aed81893edb738d90e00",
+      "source": "modules/module-06/ru/module_06_practice_RU.md",
+      "sha256": "429803b728b909d65cbc21921c85413ff40be03314b60b1dbe121d600e3ef932",
       "course": "modern-llms"
     },
     {
@@ -87,8 +87,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-07/ru/module_07_lecture_RU.md",
-      "sha256": "9ae689abd4736713974231c63052681d88d27873f3ba187cd19be1ba5c5dbd82",
+      "source": "modules/module-07/ru/module_07_practice_RU.md",
+      "sha256": "46f61ddb5eca377f2ad5bd4ade554d5bbc090b2977d17caab43ad27cafecc708",
       "course": "modern-llms"
     },
     {
@@ -102,8 +102,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-08/ru/module_08_lecture_RU.md",
-      "sha256": "cfe16e110c1f8d5f3f3a14404a84472908a57c462a27224d4db792ecacc4672c",
+      "source": "modules/module-08/ru/module_08_practice_RU.md",
+      "sha256": "9bd688b29d855b81fd5ce3901837341b51495017fb49055f247444eeb3bf0e83",
       "course": "modern-llms"
     },
     {
@@ -117,8 +117,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-09/ru/module_09_lecture_RU.md",
-      "sha256": "00a2580e787d69b2d56e61fada9634dd784c75c6c551f8c1bc1d9b6ad7f1803f",
+      "source": "modules/module-09/ru/module_09_practice_RU.md",
+      "sha256": "3f3664977a8924fcede8c59b77612d6292a13077294c42dc46a53b2ec1929669",
       "course": "modern-llms"
     },
     {
@@ -132,8 +132,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-10/ru/module_10_lecture_RU.md",
-      "sha256": "d6873531547bc8841abde6dc86d89fdcace71f8f7a765a1e7e65128695f7b69b",
+      "source": "modules/module-10/ru/module_10_practice_RU.md",
+      "sha256": "9d6957367180c27c5473a4f20bb34a7c1e318541760350ebdfa5ee634b2fd981",
       "course": "modern-llms"
     },
     {
@@ -147,8 +147,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-11/ru/module_11_lecture_RU.md",
-      "sha256": "11bcc884c0e1c6d317aa1873685f7991b029a8ca99a7d7c546f5c20b9939a168",
+      "source": "modules/module-11/ru/module_11_practice_RU.md",
+      "sha256": "f3d1495a4bbb418df0d08d77335f201b38fe016268be6dab0943db26f466ab4e",
       "course": "modern-llms"
     },
     {
@@ -162,8 +162,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-12/ru/module_12_lecture_RU.md",
-      "sha256": "69a068737db6e48a61092df4f5e7b513ba143c4e0b4f6ea8acfdf98009b10ed6",
+      "source": "modules/module-12/ru/module_12_practice_RU.md",
+      "sha256": "fd31db1a997d3abb5bf7f593b72edbd72b3cbbbba49abac4b627efd07171d049",
       "course": "modern-llms"
     },
     {
@@ -177,8 +177,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-13/ru/module_13_lecture_RU.md",
-      "sha256": "c53b476e7a4bb7f9013830f2352d899ea8936287bbe2005f57805e6a0c9de2cd",
+      "source": "modules/module-13/ru/module_13_practice_RU.md",
+      "sha256": "b6f68f52de4815afa7390a73c4fa197a7f87e00aa9550c55b2aebad804d6151d",
       "course": "modern-llms"
     },
     {
@@ -192,8 +192,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-14/ru/module_14_lecture_RU.md",
-      "sha256": "d600c5424c057e89b54f9d4ec70b0809c6089bd230724d973eeb540f4bfbe856",
+      "source": "modules/module-14/ru/module_14_practice_RU.md",
+      "sha256": "288b5cf2b62c921b0117cf86f65c4cd59388181605a33a434d73ea2a3095da7c",
       "course": "modern-llms"
     },
     {
@@ -207,8 +207,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-15/ru/module_15_lecture_RU.md",
-      "sha256": "19c180984eabe27604bef1d1bea397521d5e6ea45ef0217db9e5b38fbc9bd602",
+      "source": "modules/module-15/ru/module_15_practice_RU.md",
+      "sha256": "12befd0a5d379c479b0ab9333b2195823e498fecfe6ca02d2c8d4b3b58d4cd64",
       "course": "modern-llms"
     },
     {
@@ -222,8 +222,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-16/ru/module_16_lecture_RU.md",
-      "sha256": "7ef216e21a29bab5476d26b7034496efba5e9c20863363b29fb1a73f20e2610d",
+      "source": "modules/module-16/ru/module_16_practice_RU.md",
+      "sha256": "0e8be642350ff6ce7181d610201d22e2e1c29bc8aa847660298f62605c70b740",
       "course": "modern-llms"
     },
     {
@@ -237,8 +237,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-17/ru/module_17_lecture_RU.md",
-      "sha256": "7fb55dfcbe1e869dab3b50c4f9db308a76d4395c000186dea934d57b708fcc3c",
+      "source": "modules/module-17/ru/module_17_practice_RU.md",
+      "sha256": "56064ab1ad10b562249b612de3e2399116353a938f44aab8c178eda15391efbf",
       "course": "modern-llms"
     },
     {
@@ -252,8 +252,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-18/ru/module_18_lecture_RU.md",
-      "sha256": "9b92889805b66a389ff8c2108f95ffccea4c595db5dbfc780bfc0840e50447fb",
+      "source": "modules/module-18/ru/module_18_practice_RU.md",
+      "sha256": "e9aa9f18fb54ef747456ed629b34368d32c4bb421f7b7548190f7936e86be32b",
       "course": "modern-llms"
     },
     {
@@ -267,8 +267,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-19/ru/module_19_lecture_RU.md",
-      "sha256": "b67aec9abe39364dce967a574b205266c48a19e1760191358809b5df7c46d155",
+      "source": "modules/module-19/ru/module_19_practice_RU.md",
+      "sha256": "238d1edaf8b17f724ba980f636e5d4a9716c7ff6ea7147a025a6b6cb928099fb",
       "course": "modern-llms"
     },
     {
@@ -282,8 +282,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-20/ru/module_20_lecture_RU.md",
-      "sha256": "c8f336ff0744888cb281474954d2e44d6125f6dd09681e265468ad73ddc4c8b0",
+      "source": "modules/module-20/ru/module_20_practice_RU.md",
+      "sha256": "48168f81a6ab30831b9d6195fa157c4f27d4061e403e307593648f4bf982a7e8",
       "course": "modern-llms"
     },
     {
@@ -312,8 +312,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-01/en/module_01_lecture_EN.md",
-      "sha256": "054925b7db5ded06944c496a959edf1a812b639491db66d37eef0c03359fd906",
+      "source": "modules/module-01/en/module_01_practice_EN.md",
+      "sha256": "7eb62a52960c2d2e0ff377545be5faf124501804a9a428894ce9aced26a16ccf",
       "course": "modern-llms"
     },
     {
@@ -327,8 +327,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-02/en/module_02_lecture_EN.md",
-      "sha256": "32741c71b9627fbfbd4a4d4c7d0b6cb720653a989ef5aca93585cb76214056fe",
+      "source": "modules/module-02/en/module_02_practice_EN.md",
+      "sha256": "da888467a06e6af99dd436c3a9f2da0b9c6d633afb70e4c2e884f9ebce24546b",
       "course": "modern-llms"
     },
     {
@@ -342,8 +342,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-03/en/module_03_lecture_EN.md",
-      "sha256": "944878e4c841505cb4aedfa5233f8e072a5ba2918291f6a1c4112aa7ef0d1c75",
+      "source": "modules/module-03/en/module_03_practice_EN.md",
+      "sha256": "769977ef9f760e3c08c3dec14de4417c88bb008a1ca14dcafbdc298a4c27da6a",
       "course": "modern-llms"
     },
     {
@@ -352,8 +352,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-04/en/module_04_lecture_EN.md",
-      "sha256": "7b5226b4469d8fcdb18cf50f5c5372e8a2d4ef8c216383d2dcb74f5e21362802",
+      "source": "modules/module-04/en/module_04_practice_EN.md",
+      "sha256": "1d4b04c0ba4d572c354157490e1324dd52e79bde56d9b7322f3a02029adac6b8",
       "course": "modern-llms"
     },
     {
@@ -367,8 +367,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-05/en/module_05_lecture_EN.md",
-      "sha256": "be0a1eee9002b437d7e1e38086b85178bf8fe5fb6e3ecd5bbe238333b077a3ac",
+      "source": "modules/module-05/en/module_05_practice_EN.md",
+      "sha256": "db11ee009af0dce7e2454f8161cbb24a7bc5d78341255d0ec6171e55c98b387f",
       "course": "modern-llms"
     },
     {
@@ -382,8 +382,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-06/en/module_06_lecture_EN.md",
-      "sha256": "19918d5ddeeb78aec0e506c38fa397a76c310b97925d95b1f73d93931f0268ba",
+      "source": "modules/module-06/en/module_06_practice_EN.md",
+      "sha256": "5b392dc0a136079e5eb2a98c807c4f1f532339b90be74b9f00b7e45e27055a81",
       "course": "modern-llms"
     },
     {
@@ -397,8 +397,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-07/en/module_07_lecture_EN.md",
-      "sha256": "97cd2cbc94c2ea9f1d3a3fafd65d378627bbe912d35f1bdf4a7b5046e25cb3de",
+      "source": "modules/module-07/en/module_07_practice_EN.md",
+      "sha256": "babacc162ce0f74870d60e9e11437b47902b0b86ab8d0d94c74ec4b95f570660",
       "course": "modern-llms"
     },
     {
@@ -412,8 +412,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-08/en/module_08_lecture_EN.md",
-      "sha256": "88eb938e64f374a6d093ce11d26ce5fb88b744e9314538509e27907b54469e33",
+      "source": "modules/module-08/en/module_08_practice_EN.md",
+      "sha256": "27b1d0595398fe7390b1466f2a502a9e78e788e0624a82f992ea3fbda2b23a40",
       "course": "modern-llms"
     },
     {
@@ -427,8 +427,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-09/en/module_09_lecture_EN.md",
-      "sha256": "6be0d82a5d9f939dffe2b6840259eb555532647ad7996948d80e619bf50cd8a7",
+      "source": "modules/module-09/en/module_09_practice_EN.md",
+      "sha256": "6c7035d75d3b49d7419bddf1f64bc9a042ec76b1dd97d3fbc1565b6647ba89bf",
       "course": "modern-llms"
     },
     {
@@ -442,8 +442,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-10/en/module_10_lecture_EN.md",
-      "sha256": "ea32e5c31fd079e9274e37951fcc46273ed7e7fd32fb4db41b3328743daa98b2",
+      "source": "modules/module-10/en/module_10_practice_EN.md",
+      "sha256": "a262fd3c03f16f6a178a87c33effeacde0f1fc76016a4cb2f375fe1ffbcc0b57",
       "course": "modern-llms"
     },
     {
@@ -457,8 +457,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-11/en/module_11_lecture_EN.md",
-      "sha256": "2318ea4825cfc3352d0680f28f6446df01de53a311ade338a624450dfc6ade7f",
+      "source": "modules/module-11/en/module_11_practice_EN.md",
+      "sha256": "b5f36adfafb38c0997f7b2c8e79bdcf6217f5f62582a24de09c0efcc22733393",
       "course": "modern-llms"
     },
     {
@@ -472,8 +472,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-12/en/module_12_lecture_EN.md",
-      "sha256": "c5562fb090934bebb01140b973efc562368911dbb35e1015db3a85bfaabd22c0",
+      "source": "modules/module-12/en/module_12_practice_EN.md",
+      "sha256": "2ce8b35b780a47fa0515cbd8c3b88bfa6b6b6fb694e231530bf548936f90301d",
       "course": "modern-llms"
     },
     {
@@ -487,8 +487,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-13/en/module_13_lecture_EN.md",
-      "sha256": "375045da9c03d811ef904550989f4bdd4ad06b4e10cc9468148f1039890ee81e",
+      "source": "modules/module-13/en/module_13_practice_EN.md",
+      "sha256": "924320d47ecf479ee07f136f917eed13307e0155a1e5e61e696b75a171df4a8f",
       "course": "modern-llms"
     },
     {
@@ -502,8 +502,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-14/en/module_14_lecture_EN.md",
-      "sha256": "f5f9cb04e6fb2b48b2d0018a5a5b6b67c363d3b252baaa37138ea26059a2892e",
+      "source": "modules/module-14/en/module_14_practice_EN.md",
+      "sha256": "c39eb0ff4f3c5953d4fcf9c82ac56549f01dc2dcfb0bbe4158ebf0f396775afd",
       "course": "modern-llms"
     },
     {
@@ -517,8 +517,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-15/en/module_15_lecture_EN.md",
-      "sha256": "ed0f564f451a4a2f6a817695eccfc16381e71b1d3c1bfc604b532a38d38cf96f",
+      "source": "modules/module-15/en/module_15_practice_EN.md",
+      "sha256": "9dc46f0b77c10d128fed1ddcced50401e63a3e5b57cb510dcc16e6c402717649",
       "course": "modern-llms"
     },
     {
@@ -532,8 +532,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-16/en/module_16_lecture_EN.md",
-      "sha256": "5609a74b46497a92c03dc6556f699dee502841c5f62ff05ba851338ca7b10a08",
+      "source": "modules/module-16/en/module_16_practice_EN.md",
+      "sha256": "ea6aa5c13dbcfb5cb18486085a048e1f8f2640cf2493711258b57a577118be7d",
       "course": "modern-llms"
     },
     {
@@ -547,8 +547,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-17/en/module_17_lecture_EN.md",
-      "sha256": "a0c6a27fff5898fd15152e2d442c56ed7a03a1c49484e01eba26f8727d081d0f",
+      "source": "modules/module-17/en/module_17_practice_EN.md",
+      "sha256": "45d62e11d9674ab1ad473fc7bbdc5ec550a4d1644009d33633b1d6ee954949de",
       "course": "modern-llms"
     },
     {
@@ -562,8 +562,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-18/en/module_18_lecture_EN.md",
-      "sha256": "5b2c28a90ac87e65ded386e982566cd9c9d7eaa936d82fb59a2a82c4a011dc66",
+      "source": "modules/module-18/en/module_18_practice_EN.md",
+      "sha256": "8682c0de994b8a5345ad936111010bbb4876f5aa30b43ec2d6c29eb7be549557",
       "course": "modern-llms"
     },
     {
@@ -577,8 +577,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-19/en/module_19_lecture_EN.md",
-      "sha256": "81bdd7243286042672300c3b0d11fa98c25ccf9d644921c4c027638f7f7d676f",
+      "source": "modules/module-19/en/module_19_practice_EN.md",
+      "sha256": "3380020f6987ad4a2c751445467d31d014e3f300a47c815e7860f832e8c4d05a",
       "course": "modern-llms"
     },
     {
@@ -592,8 +592,8 @@
       "course": "modern-llms"
     },
     {
-      "source": "modules/module-20/en/module_20_lecture_EN.md",
-      "sha256": "5dc3c7c1e2caaf2dfdd08aba5920ad6c7842bfb177b100e46d5abd876e846812",
+      "source": "modules/module-20/en/module_20_practice_EN.md",
+      "sha256": "9ecef5d81400a3a4958e56e5622f809ddb3d560b2795d82d3579065a5f884f8c",
       "course": "modern-llms"
     },
     {
@@ -5153,8 +5153,8 @@
   "bundles": {
     "modern-llms": {
       "url": "/downloads/modern-llms/course-materials.zip",
-      "bytes": 2650305,
-      "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
+      "bytes": 2650304,
+      "sha256": "a62cf63f060f7d263930598519fa9e7091c6debd22d5a24766b038a7ba517362"
     },
     "rl-for-llm": {
       "url": "/downloads/rl-for-llm/course-materials.zip",

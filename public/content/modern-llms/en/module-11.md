@@ -22,7 +22,9 @@ Consider a model that has already processed its prompt. The KV cache is resident
 
 A deliberately narrow model of the weight-streaming limit is
 
-$$Q_{\text{weights}}\lesssim\frac{BW}{W},$$
+$$
+Q_{\text{weights}}\lesssim\frac{BW}{W},
+$$
 
 Here $Q_{\text{weights}}$ is tokens per second for one sequence, $BW$ is bytes per second, and $W$ is bytes read per step. The dense 8B example assumes one read of all weights per step. KV traffic, temporary storage, communication, scheduling, and imperfect utilization are absent. The expression is not a service benchmark; it is a lens for seeing two independent interventions.
 
@@ -73,13 +75,17 @@ The decisions that commit tokens still have to proceed in order. A later target 
 
 Verification here is not a factuality check, nor does it ask whether the draft guessed the target’s single most likely token. The objective is to reproduce a sampling law. At position $i$, the proposed token is accepted with probability
 
-$$a(x_i)=\min\!\left(1,\frac{p(x_i)}{q(x_i)}\right).$$
+$$
+a(x_i)=\min\!\left(1,\frac{p(x_i)}{q(x_i)}\right).
+$$
 
 The ratio has a direct interpretation. If the draft proposes a token more often than the target distribution allows, some of those appearances must be rejected. If the draft proposes it less often, every appearance can be kept, but additional probability mass is still needed.
 
 Acceptance proceeds from left to right. At the first rejection, the remaining draft suffix is invalidated. Why not now draw a replacement directly from the target distribution? Because the accepted branch already supplies part of the required mass. The correction branch must fill the deficit, not distribute its probability over the full target again. In general, doing the latter would upset the balance. The replacement is therefore sampled from
 
-$$r(t)=\operatorname{norm}\bigl((p(t)-q(t))_+\bigr).$$
+$$
+r(t)=\operatorname{norm}\bigl((p(t)-q(t))_+\bigr).
+$$
 
 The target pass remains causal: the row predicting $x_i$ cannot see later proposals. Aligning inputs and outputs matters because logits at an input position predict the following token; the prediction must not already depend on the token it is meant to predict. If all proposals survive, the next-position distribution supplies a bonus token. Otherwise, the unaccepted suffix and its cache entries are discarded before continuing from the corrected prefix. This gives the rollback operation from Module 10 a specific purpose: remove the state of a branch that will no longer be continued.
 
@@ -90,11 +96,15 @@ The notation $(u)_+$ means $\max(u,0)$ entry by entry, and $\operatorname{norm}$
 
 To verify the argument, count both routes by which a token can be emitted. The accepted route contributes the probability of proposing that token multiplied by the probability of keeping it. Summing this shared mass over the vocabulary gives the overall chance of acceptance. Define
 
-$$\alpha=\sum_t\min(p_t,q_t).$$
+$$
+\alpha=\sum_t\min(p_t,q_t).
+$$
 
 The accepted branch emits token $t$ with mass $\min(p_t,q_t)$, the amount that both distributions can supply. The correction branch is entered with probability $1-\alpha$ and contributes $(1-\alpha)r_t$. That contribution goes exactly where the accepted branch left a deficit. Adding the two routes gives
 
-$$\min(p_t,q_t)+(1-\alpha)r_t=p_t.$$
+$$
+\min(p_t,q_t)+(1-\alpha)r_t=p_t.
+$$
 
 The proposer supplies shared mass; correction supplies the missing target mass. Applying this identity at each reached history preserves the autoregressive law of the full continuation. Distributional equality does not require the same output string under the same seed: the algorithms consume random numbers differently.
 
@@ -106,7 +116,9 @@ The reference distribution is the target that actually produced $p$. If the depl
 
 A small vocabulary lets us follow both routes without hiding them in notation. The overall acceptance rate is only part of the story: we also want to see how much probability reaches each token through acceptance and how much must arrive through correction. Use a five-token vocabulary with
 
-$$p=(0.40,0.30,0.15,0.10,0.05),\qquad q=(0.25,0.35,0.20,0.10,0.10).$$
+$$
+p=(0.40,0.30,0.15,0.10,0.05),\qquad q=(0.25,0.35,0.20,0.10,0.10).
+$$
 
 | token | $p$ | $q$ | $\min(1,p/q)$ | $(p-q)_+$ |
 |---:|---:|---:|---:|---:|
@@ -118,17 +130,23 @@ $$p=(0.40,0.30,0.15,0.10,0.05),\qquad q=(0.25,0.35,0.20,0.10,0.10).$$
 
 The expected acceptance probability at this position is the overlap mass
 
-$$\alpha=\sum_t\min(p_t,q_t)=0.85.$$
+$$
+\alpha=\sum_t\min(p_t,q_t)=0.85.
+$$
 
 For two discrete distributions,
 
-$$\alpha=1-\operatorname{TV}(p,q).$$
+$$
+\alpha=1-\operatorname{TV}(p,q).
+$$
 
 Total variation is $\operatorname{TV}(p,q)=\frac12\sum_t|p_t-q_t|$. Thus at one position it is one minus total variation distance between the proposer and target distributions.
 
 The only positive entry of $p-q$ is 0.15 at token 0, so $r=(1,0,0,0,0)$. Adding accepted and corrected mass gives
 
-$$\min(p,q)+0.15r=p.$$
+$$
+\min(p,q)+0.15r=p.
+$$
 
 ![VIZ m11/03 — the exactness check in numbers](assets/modern-llms/en/module-11/m11_03_rejection_trace.svg)
 *The overlap, residual mass, and exact reconstruction of the target distribution for the five-token example.*
@@ -250,11 +268,15 @@ A compact model assumes conditional acceptance probability $\alpha$ for each nex
 
 Every cycle emits at least one token. It emits a second token if the first proposal is accepted, a third if the first two are accepted, and so on. Thus
 
-$$E(\alpha,\gamma)=1+\alpha+\alpha^2+\cdots+\alpha^\gamma.$$
+$$
+E(\alpha,\gamma)=1+\alpha+\alpha^2+\cdots+\alpha^\gamma.
+$$
 
 For $\alpha\ne1$,
 
-$$E(\alpha,\gamma)=\frac{1-\alpha^{\gamma+1}}{1-\alpha};$$
+$$
+E(\alpha,\gamma)=\frac{1-\alpha^{\gamma+1}}{1-\alpha};
+$$
 
 for $\alpha=1$, the finite sum is simply $\gamma+1$.
 
@@ -265,30 +287,40 @@ The diminishing return is visible in the limiting value $1/(1-\alpha)$. The targ
 ## 7. A cost model, an optimum, and an illustrative MTP point
 
 The general progress expression is a tail sum. Let $A_k$ mean that the first $k$ proposals were accepted. Then
-$$E=1+\sum_{k=1}^{\gamma}\Pr(A_k).$$
+$$
+E=1+\sum_{k=1}^{\gamma}\Pr(A_k).
+$$
 With $a_i=\Pr(A_i\mid A_{i-1})$, we have $\Pr(A_k)=\prod_{i=1}^k a_i$. Two conditional rates, 0.9 and 0.5, give $1+0.9+0.45=2.35$ emitted tokens. Replacing them with their average, 0.7, gives 2.19. A mean acceptance rate alone therefore does not determine mean cycle length.
 
 Expected tokens are not elapsed time. Let $c$ denote the cost of one draft step relative to one target step. A transparent first-order scenario is
 
-$$S(\alpha,\gamma,c)=\frac{E(\alpha,\gamma)}{1+\gamma c}.$$
+$$
+S(\alpha,\gamma,c)=\frac{E(\alpha,\gamma)}{1+\gamma c}.
+$$
 
 The denominator assumes that block verification costs one ordinary target step. A measured model can use $\gamma c+v(\gamma)+h(\gamma)$ instead, where $v$ is verification time and $h$ other overhead, in the same units. Exactness makes no claim about these costs. Include ordinary decoding, $\gamma=0$ and normalized speed 1, when choosing a method: every positive proposal length may be slower.
 
 This expression is intentionally incomplete. Tree construction, KV movement, launch overhead, batching, and a non-linear verification cost are outside it. Its value is conceptual: it exposes the tradeoff between more accepted work and more proposal work.
 
 **Second pass: should the draft grow by one token?** Holding $\alpha$ and $c$ fixed gives $E_{\gamma+1}=E_\gamma+\alpha^{\gamma+1}$. Comparing adjacent speed ratios yields
-$$S_{\gamma+1}>S_\gamma\quad\Longleftrightarrow\quad\alpha^{\gamma+1}>cS_\gamma.$$
+$$
+S_{\gamma+1}>S_\gamma\quad\Longleftrightarrow\quad\alpha^{\gamma+1}>cS_\gamma.
+$$
 The right-hand side converts the extra proposal time into tokens at the current rate. Comparing the output increment directly with $c$ would mix an expected token count with a time cost. The notebook exercise checks this condition against a full scan.
 
 With $\alpha=0.8$ and $c=0.1$, scanning $\gamma=1,\ldots,10$ gives the maximum at $\gamma=6$:
 
-$$E=3.951424,\qquad S=2.46964.$$
+$$
+E=3.951424,\qquad S=2.46964.
+$$
 
 The optimum is broad rather than sharp. $\gamma=5$ gives 2.46, while $\gamma=9$ still gives 2.35. In practice, reducing proposer cost or improving overlap often matters more than choosing the last decimal of proposal length.
 
 Now take an **illustrative native-MTP scenario** with one proposed token: $\gamma=1$, $\alpha=0.875$, and $c=0.05$. Then
 
-$$E=1.875,\qquad S=\frac{1.875}{1.05}=1.78571.$$
+$$
+E=1.875,\qquad S=\frac{1.875}{1.05}=1.78571.
+$$
 
 The 1.79× result belongs to these chosen parameters. It is not a derivation of a vendor benchmark. It is a useful calibration: a cheap, high-acceptance, one-step proposer can plausibly produce a gain of that order, while $\gamma=1$ enforces the simple upper bound $E\le2$.
 
@@ -339,7 +371,9 @@ There is an important difference in what the processed tokens mean. A prompt is 
 
 Using the same simple speed scenario, take $\alpha=0.8$, $\gamma=5$, and $c=0.06$. The multiplier is 2.83790769. Applied to the 209.4 token/s weight-only bf16 ceiling,
 
-$$Q_{\text{scenario}}=209.375\cdot2.83790769\approx594.2\ \text{tokens/s}.$$
+$$
+Q_{\text{scenario}}=209.375\cdot2.83790769\approx594.2\ \text{tokens/s}.
+$$
 
 The number is an arithmetic what-if. It assumes that one target verification is close to one target decode read and that weight bandwidth remains the bottleneck. KV traffic, wider activation work, tree masks, scheduling, and kernel efficiency all reduce or reshape the gain.
 
@@ -365,7 +399,9 @@ GPTQ quantizes weights while accounting for how local weight error affects a lay
 
 Once we have chosen an approximation, we can return to the storage question that motivated it. Recovering weights requires not only the short codes but also the information describing their scales and layout. For $N$ parameters at an effective $b_{\text{eff}}$ bits per weight,
 
-$$W_{\text{payload}}=N\frac{b_{\text{eff}}}{8}.$$
+$$
+W_{\text{payload}}=N\frac{b_{\text{eff}}}{8}.
+$$
 
 The module’s 8B accounting is:
 
@@ -396,13 +432,17 @@ That flexibility has a storage cost. More groups require more scales. We can now
 
 NVIDIA documents NVFP4 as E2M1 values with hierarchical block scaling. In the one-dimensional recipe, a block of 16 values shares an E4M3 scale and the tensor has an additional FP32 global scale. Counting only the local eight-bit scale gives
 
-$$\frac{16\cdot4+8}{16}=4.5\ \text{bits/value}.$$
+$$
+\frac{16\cdot4+8}{16}=4.5\ \text{bits/value}.
+$$
 
 The actual training recipe may use different geometry for weights, including 16×16 blocks, and a concrete checkpoint has additional metadata and unquantized tensors.
 
 MXFP4 is commonly represented as 32 E2M1 values sharing an E8M0 scale:
 
-$$\frac{32\cdot4+8}{32}=4.25\ \text{bits/value}.$$
+$$
+\frac{32\cdot4+8}{32}=4.25\ \text{bits/value}.
+$$
 
 The lower metadata rate does not imply universally better performance. Both calculations pay for short values and shared scales, but the group geometry and available scale values differ. Those choices affect approximation error. A further question remains after the representation is chosen: can the kernel efficiently execute that particular packing and scale scheme? Scale expressiveness, block granularity, calibration, and native kernel support jointly determine the quality–speed tradeoff.
 
@@ -567,7 +607,9 @@ The concepts compose cleanly. Quantization lowers the target payload; speculatio
 
 An 8B model at 4.5 GB has a weight-only ceiling of 744.44 tokens/s at 3.35 TB/s. Applying the illustrative MTP multiplier from Section 7 gives
 
-$$\frac{3.35\cdot10^{12}}{4.5\cdot10^9}\cdot\frac{1.875}{1.05}\approx1329.37\ \text{tokens/s}.$$
+$$
+\frac{3.35\cdot10^{12}}{4.5\cdot10^9}\cdot\frac{1.875}{1.05}\approx1329.37\ \text{tokens/s}.
+$$
 
 That is 6.35 times the bf16 weight-only baseline. It is not a predicted end-to-end result. The calculation omits KV traffic, quantization/dequantization overhead, extra proposer parameters, scheduling, and the possibility that the system becomes compute-bound.
 
@@ -621,11 +663,15 @@ A group size of 16 does not uniquely identify NVFP4. A filename suffix does not 
 
 Exact speculative sampling uses a cheap proposal without replacing the target distribution:
 
-$$a(t)=\min(1,p_t/q_t),\qquad r\propto(p-q)_+.$$
+$$
+a(t)=\min(1,p_t/q_t),\qquad r\propto(p-q)_+.
+$$
 
 Assuming the same conditional acceptance probability at each reached position,
 
-$$E=\sum_{k=0}^{\gamma}\alpha^k,$$
+$$
+E=\sum_{k=0}^{\gamma}\alpha^k,
+$$
 
 but elapsed-time benefit depends on proposal and verification cost. $S=E/(1+\gamma c)$ is a teaching model and an initial sanity check, not a runtime contract.
 

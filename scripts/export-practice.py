@@ -4,6 +4,7 @@ import argparse, hashlib, json, re, runpy, shutil, sys, zipfile
 from collections import Counter
 from pathlib import Path
 from urllib.parse import quote, unquote
+from export_io import write_bytes, write_text, write_json, write_bundle, merge_courses
 
 ROOT=Path(__file__).resolve().parents[1]
 TOOLS=runpy.run_path(str(ROOT/'scripts/refresh-course-content.py'))
@@ -70,7 +71,10 @@ def copy_file(course,root,path):
     assert path.suffix.lower() in {'.ipynb','.py','.json','.csv','.txt','.yaml','.yml','.svg','.png','.jpg','.jpeg','.webp','.npz','.npy','.md'},path
     target=ROOT/'public/downloads'/course/relative
     original=path.read_bytes();raw=publish_download_bytes(course,relative,original)
-    target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(raw)
+    # Preserve existing download bytes when only checkout line endings differ.
+    if target.exists() and target.read_bytes().replace(b'\r\n',b'\n')==raw.replace(b'\r\n',b'\n'):
+        raw=target.read_bytes()
+    write_bytes(target,raw)
     entry={'source':relative,'url':'/downloads/'+course+'/'+quote(relative),'sha256':sha(raw),'bytes':len(raw)}
     if raw!=original:entry.update(source_sha256=sha(original),publication_edits=['capstone-website-downloads-v1'])
     files[(course,relative)]=entry
@@ -184,17 +188,21 @@ def notebook(path,course,root,key,language,kind):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source-root',action='append',default=[])
+    parser.add_argument('--course',action='append',choices=sorted(DEFAULTS),help='Export the complete course; default: all courses')
     args=parser.parse_args();roots=dict(DEFAULTS)
+    selected=set(args.course or roots)
     for value in args.source_root:
         key,value=value.split('=',1);roots[key]=Path(value)
-    sys.path.insert(0,str(roots['rl-for-llm']/'tools'))
-    from assessment_source import load_canonical_tasks
+    if 'rl-for-llm' in selected:
+        sys.path.insert(0,str(roots['rl-for-llm']/'tools'))
+        from assessment_source import load_canonical_tasks
     catalog=json.loads((ROOT/'app/generated/content.json').read_text(encoding='utf8'))
-    modern=json.loads((roots['modern-llms']/'course_manifest.json').read_text(encoding='utf8'))['modules']
+    modern=json.loads((roots['modern-llms']/'course_manifest.json').read_text(encoding='utf8'))['modules'] if 'modern-llms' in selected else []
     modern_ids={f'module-{m["id"]}':m['id'] for m in modern}
     pages=[]
     for course in catalog['courses']:
         key,language=course['course_key'],course['language'];root=roots[key]
+        if key not in selected:continue
         for module in course['modules']:
             mk=module['module_key'];n=int(module['position']);items=[];intro='';books=[]
             if key=='modern-llms':
@@ -231,6 +239,7 @@ def main():
     # Include original support files in an offline archive, preserving source
     # hierarchy. Exclude authoring generators, caches, HTML and internal audits.
     for course,root in roots.items():
+        if course not in selected:continue
         if course=='information-theory-for-ml':continue
         bases=[root/'modules',root/'notebooks',root/'configs',root/'capstones'] if course=='rl-for-llm' else [root/'modules',root/'project_demos',root/'capstone/minillm',root/'capstone/configs',root/'capstone/data',root/'bridges']
         for base in bases:
@@ -242,14 +251,17 @@ def main():
                 copy_file(course,root,p)
     bundles={}
     for course in roots:
+        if course not in selected:continue
         destination=ROOT/f'public/downloads/{course}/course-materials.zip';destination.parent.mkdir(parents=True,exist_ok=True)
-        with zipfile.ZipFile(destination,'w',compression=zipfile.ZIP_DEFLATED) as archive:
-            for (key,relative),entry in sorted(files.items()):
-                if key!=course:continue
-                info=zipfile.ZipInfo(relative,date_time=(2026,10,16,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED
-                archive.writestr(info,(ROOT/'public'/unquote(entry['url']).lstrip('/')).read_bytes())
-            for name in ['LICENSE.md','LICENSE-CONTENT.md','LICENSE-CODE','NOTICE']:
-                info=zipfile.ZipInfo(name,date_time=(2026,10,16,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;archive.writestr(info,(ROOT/name).read_bytes())
+        members={relative:(ROOT/'public'/unquote(entry['url']).lstrip('/')).read_bytes() for (key,relative),entry in sorted(files.items()) if key==course}
+        old_members={}
+        if destination.exists():
+            with zipfile.ZipFile(destination) as previous:
+                old_members={name:previous.read(name) for name in previous.namelist() if name in {'LICENSE.md','LICENSE-CONTENT.md','LICENSE-CODE','NOTICE'}}
+        for name in ['LICENSE.md','LICENSE-CONTENT.md','LICENSE-CODE','NOTICE']:
+            raw=(ROOT/name).read_bytes().replace(b'\r\n',b'\n')
+            members[name]=old_members[name] if name in old_members and old_members[name].replace(b'\r\n',b'\n')==raw else raw
+        write_bundle(destination,members)
         raw=destination.read_bytes();bundles[course]={'url':f'/downloads/{course}/course-materials.zip','bytes':len(raw),'sha256':sha(raw)}
     entries=[]
     for page in pages:
@@ -263,15 +275,25 @@ def main():
                 assert {c['id'] for c in a['cells']}=={c['id'] for c in b['cells']},(page['moduleKey'],a['id'],'Notebook cell alignment')
         page['bundle']=bundles[page['courseKey']]
         file=f'{page["courseKey"]}/{page["language"]}/{page["moduleKey"]}.{page["section"]}.json';raw=json.dumps(page,ensure_ascii=False,indent=2)+'\n'
-        destination=ROOT/'public/practice'/file;destination.parent.mkdir(parents=True,exist_ok=True);destination.write_text(raw,encoding='utf8')
+        destination=ROOT/'public/practice'/file;write_text(destination,raw)
         revision=text_hash(json.dumps([i['id'] for i in page['items']]))[:16]
         entries.append({k:page[k] for k in ['courseKey','moduleKey','language','section']}|{'file':file,'hash':text_hash(raw),'revision':revision,'count':len(page['items'])})
-    (ROOT/'app/generated/practice.json').write_text(json.dumps({'modules':entries},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+    index_path=ROOT/'app/generated/practice.json'
+    previous=json.loads(index_path.read_text(encoding='utf8'))['modules'] if index_path.exists() else []
+    entries=merge_courses(previous,entries,selected,'courseKey')
+    write_json(index_path,{'modules':entries})
     for entry in sources:
         path=Path(entry['source']);course=next(key for key,root in roots.items() if path.is_relative_to(root));entry['course']=course;entry['source']=path.relative_to(roots[course]).as_posix()
     report={'status':'PASS','sources':sources,'files':[dict(course=course,**entry) for (course,_),entry in sorted(files.items())],'bundles':bundles,
         'counts':{'localizedPages':len(entries),'exercisesPerLanguage':{key:sum(len(p['items']) for p in pages if p['language']=='en' and p['section']=='exercises' and p['courseKey']==key) for key in roots},'notebooksPerLanguage':sum(len(p['items']) for p in pages if p['language']=='en' and p['section']=='notebooks'),'itPythonSolutions':9}}
-    (ROOT/'PRACTICE_CONTENT_AUDIT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+    audit_path=ROOT/'PRACTICE_CONTENT_AUDIT.json'
+    if audit_path.exists():
+        old=json.loads(audit_path.read_text(encoding='utf8'))
+        for key in ('sources','files'):report[key]=merge_courses(old[key],report[key],selected,'course')
+        report['bundles']={**old['bundles'],**bundles}
+        report['counts']['exercisesPerLanguage']={**old['counts']['exercisesPerLanguage'],**{key:report['counts']['exercisesPerLanguage'][key] for key in selected}}
+    report['counts']['notebooksPerLanguage']=sum(e['count'] for e in entries if e['section']=='notebooks' and e['language']=='en')
+    write_json(audit_path,report)
     print(json.dumps(report['counts'],ensure_ascii=False))
 
 if __name__=='__main__':main()

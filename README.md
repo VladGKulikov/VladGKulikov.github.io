@@ -240,3 +240,21 @@ supplied M1–M8 used legacy routes, whereas M9–M20 already used current route
 The source inventory is in `LECTURE_EDITION_2026-10-25.json`. For a bounded
 refresh run `python scripts/refresh-modern-edition.py <course-source-root>`.
 The other courses and their 2026.2 PDF/EPUB books remain unchanged.
+# Content refresh
+
+The authoring repositories are the content sources; this repository is their
+publication layer. To refresh all Modern LLMs modules and both languages:
+
+```text
+python scripts/refresh-modern-edition.py "C:/PersonalProjects/Modern LLMs"
+python scripts/export-quizzes.py --course modern-llms
+python scripts/export-practice.py --course modern-llms
+python scripts/test-export-reproducibility.py
+```
+
+Without `--course`, the assessment/practice exporters process all courses.
+The option selects a whole course, not individual changed files. Repeated
+exports preserve identical outputs and ZIP bytes; other courses remain intact.
+Display-math normalization is intentional. Module 20 uses the reference MathML
+from the canonical standalone HTML. Run the markup checks and `npm run build:pages`
+after refreshing, and visually inspect changed layouts before publishing.

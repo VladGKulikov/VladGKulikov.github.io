@@ -229,7 +229,9 @@ $$
 
 That is 1.345 percentage points. The assumed difference $\Delta=0.005$ is only
 
-$$z=\frac{\Delta}{SE_\Delta}=0.3717$$
+$$
+z=\frac{\Delta}{SE_\Delta}=0.3717
+$$
 
 standard errors. A normal 95% confidence interval uses an estimate plus or minus $1.96SE$. Under this planning scenario, its approximate half-width is 2.64 points, much larger than the assumed 0.5-point effect. An actual interval must use observed data. The 95% coverage refers to repeated applications of the procedure to fresh samples; it is not a probability assigned to the fixed parameter after this particular interval has been computed.
 
@@ -248,7 +250,9 @@ Read each row as a comparison on the same task. A shared success raises both acc
 
 The **null hypothesis** of exact McNemar inference gives equal probability to the two directions of disagreement. Scenario I has 30 disagreements, 20 favoring A. Conditioning on that disagreement count, we ask how unusual the imbalance of directions would be under equal odds. At most ten outcomes favoring A is as far from balance as at least twenty, so the two-sided value is
 
-$$p_{\mathrm{test}}=2P[\operatorname{Bin}(30,0.5)\le10]\approx0.098737.$$
+$$
+p_{\mathrm{test}}=2P[\operatorname{Bin}(30,0.5)\le10]\approx0.098737.
+$$
 
 Here $\operatorname{Bin}(n,p)$ counts successes in $n$ independent trials with probability $p$. A p-value describes how likely an equally or more extreme deviation is under the null; it is not the probability that the null is true. In scenario II all ten disagreements favor A, giving $p_{\mathrm{test}}=2/2^{10}=0.001953$. The aggregate accuracies are identical, yet the evidence differs. At this fixed difference, fewer discordant outcomes provide stronger evidence. Failing to reject the first null does not establish equivalence.
 
@@ -262,7 +266,9 @@ We now return to a decision made before collecting data: how large should the ex
 
 For two independent proportions near $p$, targeting an interval half-width $\delta$ gives
 
-$$N\approx2p(1-p)\left(\frac{1.96}{\delta}\right)^2.$$
+$$
+N\approx2p(1-p)\left(\frac{1.96}{\delta}\right)^2.
+$$
 
 At $p=0.95$, rounding up gives 146, 913, 3650, and 14,599 tasks **per system** for half-widths of 5, 2, 1, and 0.5 points. This does not guarantee 80% or 90% power to detect an effect of that size. **Power** is the probability of rejecting the null under a specified true alternative; planning it is a separate calculation that must also account for pairing. The useful lesson here is the precision cost: $N$ grows as $1/\delta^2$.
 

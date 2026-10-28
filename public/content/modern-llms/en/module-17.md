@@ -89,7 +89,9 @@ The parameter $k_1>0$ controls frequency saturation; $b\in[0,1]$ controls length
 
 Our implementation chooses the positive IDF convention
 
-$$\operatorname{IDF}(t)=\ln\left(1+\frac{N-\operatorname{df}(t)+0.5}{\operatorname{df}(t)+0.5}\right).$$
+$$
+\operatorname{IDF}(t)=\ln\left(1+\frac{N-\operatorname{df}(t)+0.5}{\operatorname{df}(t)+0.5}\right).
+$$
 
 $N$ counts documents; $\operatorname{df}(t)$ counts documents containing the term. With 100 documents, a term found in one has weight $\ln(202/3)\approx4.210$, whereas one found in fifty has weight $\ln2\approx0.693$. Repeating a query term repeats its contribution in this implementation; other query-frequency conventions need not match it.
 
@@ -153,7 +155,9 @@ A dense index may contain millions or billions of vectors. The storage question 
 
 For $N$ vectors of dimension $d$ and $b$ bytes per coordinate, the raw payload is
 
-$$M=Ndb.$$
+$$
+M=Ndb.
+$$
 
 Take $N=10{,}000{,}000$ and $d=1024$.
 
@@ -221,17 +225,23 @@ The architectural choice can now be read as a compression decision. A bi-encoder
 
 For normalized vectors, exact cosine search is a matrix-vector product. Comparing one query with $N$ vectors of dimension $d$ requires approximately
 
-$$2Nd$$
+$$
+2Nd
+$$
 
 floating-point operations.
 
 With $N=10^7$ and $d=1024$:
 
-$$2Nd=2.048\cdot10^{10}\ \text{FLOP}.$$
+$$
+2Nd=2.048\cdot10^{10}\ \text{FLOP}.
+$$
 
 At an illustrative sustained rate of 10 GFLOP/s, the arithmetic-only time estimate is
 
-$$2.048\ \text{s}.$$
+$$
+2.048\ \text{s}.
+$$
 
 Now imagine that an ANN structure navigates to a shortlist requiring 2000 full vector distances. The corresponding arithmetic is
 
@@ -506,11 +516,15 @@ $$
 
 Under the same linearized prefill model, the full document requires 6.4889 seconds and the RAG context 0.120434 seconds. With a KV cost of 128 KiB per token, the payloads are
 
-$$24.4141\ \text{GiB}$$
+$$
+24.4141\ \text{GiB}
+$$
 
 for the full document and
 
-$$0.453125\ \text{GiB}$$
+$$
+0.453125\ \text{GiB}
+$$
 
 for the RAG context. The same ratio appears because the scenario holds architecture and bytes per token constant.
 

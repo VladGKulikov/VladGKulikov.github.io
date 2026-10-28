@@ -22,7 +22,9 @@ Attention reads across positions. The **feed-forward network (FFN)** transforms 
 
 Each layer adds new vectors to the state. Alongside the information those vectors carry, we therefore need to track the numerical range presented to the next operation. We measure scale using the root mean square:
 
-$$\operatorname{RMS}(h)=\sqrt{\frac1d\sum_{i=1}^d h_i^2}.$$
+$$
+\operatorname{RMS}(h)=\sqrt{\frac1d\sum_{i=1}^d h_i^2}.
+$$
 
 The vector $(1,-1)$ has mean zero but RMS one. Squaring prevents opposite signs from hiding the size of the coordinates.
 
@@ -44,7 +46,9 @@ LayerNorm resembles per-example standardization, but it is not whitening: it nei
 
 Residual updates resemble Euler steps:
 
-$$h_{l+1}=h_l+F_l(h_l).$$
+$$
+h_{l+1}=h_l+F_l(h_l).
+$$
 
 This viewpoint is useful for asking how large an update is and how errors accumulate with depth. It is not an exact continuous-time model because the functions change from layer to layer and the step size need not be small.
 
@@ -54,8 +58,12 @@ Gated FFNs illustrate a third idea: multiplicative interaction. Two separately l
 
 At a residual addition, two vectors meet: the incoming state and the update computed by a branch. A normalizer can act at several points along these paths, so it helps to start with one specific arrangement. In **Pre-LN**, attention reads a normalized version of the state, while the original state takes the direct route to the addition. The FFN then reads the state **after** the attention update:
 
-$$\tilde h_l=h_l+\operatorname{Attn}(N_{l,1}(h_l)),$$
-$$h_{l+1}=\tilde h_l+\operatorname{FFN}(N_{l,2}(\tilde h_l)).$$
+$$
+\tilde h_l=h_l+\operatorname{Attn}(N_{l,1}(h_l)),
+$$
+$$
+h_{l+1}=\tilde h_l+\operatorname{FFN}(N_{l,2}(\tilde h_l)).
+$$
 
 Here $l$ identifies the layer, and $N_{l,1},N_{l,2}$ are its two normalizers. Read the first line as two paths through the computation. The direct path carries the state to the addition unchanged. The other path normalizes it and lets attention compute an update. Pre-LN therefore does not replace the residual stream with a normalized stream; it normalizes what the branch reads.
 
@@ -74,12 +82,18 @@ Set the residual graph aside for a moment and inspect the normalizer itself. It 
 
 For a token vector $x\in\mathbb R^d$, define its feature mean and variance:
 
-$$\mu=\frac1d\sum_i x_i,\qquad \sigma^2=\frac1d\sum_i(x_i-\mu)^2.$$
+$$
+\mu=\frac1d\sum_i x_i,\qquad \sigma^2=\frac1d\sum_i(x_i-\mu)^2.
+$$
 
 Computing one statistic from several coordinates is a **reduction**. The divisor is $d$, not the $d-1$ sample-variance correction. The two norms are
 
-$$\operatorname{LN}(x)_i=\gamma_i\frac{x_i-\mu}{\sqrt{\sigma^2+\epsilon}}+\beta_i,$$
-$$\operatorname{RMSNorm}(x)_i=\gamma_i\frac{x_i}{\sqrt{d^{-1}\sum_jx_j^2+\epsilon}}.$$
+$$
+\operatorname{LN}(x)_i=\gamma_i\frac{x_i-\mu}{\sqrt{\sigma^2+\epsilon}}+\beta_i,
+$$
+$$
+\operatorname{RMSNorm}(x)_i=\gamma_i\frac{x_i}{\sqrt{d^{-1}\sum_jx_j^2+\epsilon}}.
+$$
 
 The learned vectors $\gamma,\beta$ rescale and shift features; $\epsilon>0$ keeps the denominator away from zero. Our RMSNorm definition has a scale and no bias. Both reductions operate on features of one token, not across tokens or the batch.
 
@@ -87,8 +101,12 @@ There are two distinct sources of variation here. The statistics are calculated 
 
 For $x=(2,-1,3,0)$, $\gamma=1$, $\beta=0$, and $\epsilon=10^{-6}$, we have $\mu=1$, $\sigma^2=2.5$, and $\operatorname{RMS}(x)=\sqrt{3.5}$. The outputs are approximately
 
-$$\operatorname{LN}(x)=(0.632,-1.265,1.265,-0.632),$$
-$$\operatorname{RMSNorm}(x)=(1.069,-0.535,1.604,0).$$
+$$
+\operatorname{LN}(x)=(0.632,-1.265,1.265,-0.632),
+$$
+$$
+\operatorname{RMSNorm}(x)=(1.069,-0.535,1.604,0).
+$$
 
 Before its learned scale, RMSNorm preserves signs and coordinate ratios but does not enforce zero mean. A constant nonzero vector distinguishes the norms: centered LayerNorm returns zero before its affine step, whereas RMSNorm does not.
 
@@ -304,7 +322,9 @@ Choosing a scalar nonlinearity is distinct from choosing the structure of the su
 
 A gated FFN learns two projections, $g=W_gx$ and $u=W_ux$, then multiplies their transformed outputs coordinate by coordinate. SwiGLU is
 
-$$\operatorname{SwiGLU}(x)=W_d\bigl(\operatorname{SiLU}(W_gx)\odot W_ux\bigr).$$
+$$
+\operatorname{SwiGLU}(x)=W_d\bigl(\operatorname{SiLU}(W_gx)\odot W_ux\bigr).
+$$
 
 Here $\odot$ means element-wise multiplication. One branch provides features; the other changes their contribution for this particular input. Although the gate depends on the input, $\operatorname{SiLU}(g)$ is not a probability or a value restricted to $[0,1]$. Only after the two branches have interacted does the third matrix $W_d$ combine their product and restore width $d$ for residual addition. ReGLU and GEGLU use ReLU and GELU gates instead; Shazeer compared these variants under matched budgets. [GLU Variants](https://arxiv.org/abs/2002.05202).
 
@@ -312,7 +332,9 @@ Here $\odot$ means element-wise multiplication. One branch provides features; th
 
 The added branch has a concrete parameter cost. Two bias-free FFN matrices cost $2dd_{ff}$ parameters; SwiGLU costs $3dd_{ff}$. Keeping the same intermediate width would therefore increase the matrix budget. A matched-budget comparison adjusts that width rather than treating the new projection as free. Matching a conventional FFN of width $4d$ gives
 
-$$3dd_{ff}=2d(4d)\quad\Rightarrow\quad d_{ff}=\frac83d.$$
+$$
+3dd_{ff}=2d(4d)\quad\Rightarrow\quad d_{ff}=\frac83d.
+$$
 
 Real models may choose another width or round it for implementation reasons. $8d/3$ is a budget match, not part of SwiGLU's definition.
 
@@ -321,8 +343,12 @@ Real models may choose another width or round it for implementation reasons. $8d
 
 That defines the general SwiGLU construction, but it does not specify every detail of a particular checkpoint. Implementations can change the sigmoid coefficient, constrain a branch's range, or introduce a shift. We now move from the general mechanism to one such recipe, not to an additional requirement for every SwiGLU. The gpt-oss reference uses a specific variant:
 
-$$\bar g=\min(g,7),\qquad\bar u=\operatorname{clip}(u,-7,7),$$
-$$a=\bar g\,\sigma(1.702\bar g)\odot(\bar u+1).$$
+$$
+\bar g=\min(g,7),\qquad\bar u=\operatorname{clip}(u,-7,7),
+$$
+$$
+a=\bar g\,\sigma(1.702\bar g)\odot(\bar u+1).
+$$
 
 Only the upper gate tail is clamped; the up branch is clamped at both ends. This defines the checkpoint's activation. Its training motivation cannot be established from a function body alone. [Pinned implementation](https://github.com/openai/gpt-oss/blob/7b583341fe16729127f6d5b94a7b09ccae97e1a1/gpt_oss/torch/model.py).
 
@@ -453,29 +479,41 @@ Take $V=128256$, $d=4096$, 32 layers, $d_{ff}=14336$, 32 query heads, 8 KV heads
 
 Q and O each have $dH_qd_h$ entries; K and V each have $dH_{kv}d_h$. In general,
 
-$$P_{attn}=2dH_qd_h+2dH_{kv}d_h.$$
+$$
+P_{attn}=2dH_qd_h+2dH_{kv}d_h.
+$$
 
 The Llama 3 report lists the principal dimensions and rounds the vocabulary to 128K. The exact $V=128256$ above is part of our frozen counting contract. [Report, Table 3](https://arxiv.org/html/2407.21783v3).
 
 With this geometry the attention matrices cost
 
-$$P_{attn}=2.5d^2=41{,}943{,}040.$$
+$$
+P_{attn}=2.5d^2=41{,}943{,}040.
+$$
 
 The SwiGLU matrices cost
 
-$$P_{ffn}=3d\,d_{ff}=176{,}160{,}768.$$
+$$
+P_{ffn}=3d\,d_{ff}=176{,}160{,}768.
+$$
 
 Two RMSNorm scales add $2d=8192$. Therefore
 
-$$P_{matrix}=13d^2=218{,}103{,}808,$$
+$$
+P_{matrix}=13d^2=218{,}103{,}808,
+$$
 
 but the complete block is
 
-$$P_{block}=13d^2+2d=218{,}112{,}000.$$
+$$
+P_{block}=13d^2+2d=218{,}112{,}000.
+$$
 
 With two embedding tables and one final norm:
 
-$$2Vd+32P_{block}+d=8{,}030{,}261{,}248.$$
+$$
+2Vd+32P_{block}+d=8{,}030{,}261{,}248.
+$$
 
 ![VIZ m6/07 — exact parameter ledger](assets/modern-llms/en/module-06/m6_07_param_budget.svg)
 *The $13d^2$ matrix estimate and the exact $13d^2+2d$ block are shown separately.*
@@ -488,17 +526,23 @@ Activations, masks, caches, and rotary buffers are not learned parameters in thi
 
 The main block has now been assembled and counted. On the reference route, we can revisit a choice that has so far remained fixed: computing a shared statistic across a vector's features. Rather than moving a norm to another point in the graph, could we replace that reduction with a function acting independently on each coordinate? **Dynamic Tanh (DyT)** computes
 
-$$\operatorname{DyT}(x)=\gamma\odot\tanh(\alpha x)+\beta,$$
+$$
+\operatorname{DyT}(x)=\gamma\odot\tanh(\alpha x)+\beta,
+$$
 
 with a learned scalar $\alpha$ and feature vectors $\gamma,\beta$. It has no shared denominator: a coordinate's output is independent of neighboring coordinates. The paper reports competitive results in several vision and language settings. [DyT](https://arxiv.org/abs/2503.10622).
 
 For the construction behind **DyISRU**, set aside epsilon and affine parameters and write RMS normalization as
 
-$$\frac{\sqrt d\,x_i}{\sqrt{\sum_{j\ne i}x_j^2+x_i^2}}.$$
+$$
+\frac{\sqrt d\,x_i}{\sqrt{\sum_{j\ne i}x_j^2+x_i^2}}.
+$$
 
 Replace the sum over other coordinates by a positive learned parameter $b$ and absorb $\sqrt d$ into the scale:
 
-$$\operatorname{DyISRU}(x)=\gamma\odot\frac{x}{\sqrt{b+x^2}}+\beta,\qquad b>0.$$
+$$
+\operatorname{DyISRU}(x)=\gamma\odot\frac{x}{\sqrt{b+x^2}}+\beta,\qquad b>0.
+$$
 
 This is the paper's decoupled construction, not equality to vector RMSNorm on arbitrary inputs. One way to learn a positive $b$ is to optimize an unconstrained scalar $r$ and set $b=\operatorname{softplus}(r)=\log(1+e^r)$. This function is positive for every finite real $r$ in exact arithmetic. The notebook uses a stable library implementation and adds a small floor for finite precision. [DyISRU analysis, version 4](https://arxiv.org/html/2503.21708v4).
 
@@ -521,7 +565,9 @@ Hyper-Connections carry $n$ streams. Put their states in the rows of $X\in\mathb
 
 Manifold-Constrained Hyper-Connections (**mHC**) constrain the residual matrix to be **doubly stochastic**:
 
-$$A_{ij}\ge0,\qquad\sum_jA_{ij}=1,\qquad\sum_iA_{ij}=1.$$
+$$
+A_{ij}\ge0,\qquad\sum_jA_{ij}=1,\qquad\sum_iA_{ij}=1.
+$$
 
 This set is the Birkhoff polytope. The row and column conditions do different jobs. Nonnegative entries and unit row sums make each output row a convex combination of input rows. Unit column sums additionally preserve each feature's sum, and hence its mean, across streams during this mixing step. Neither statement yet describes the complete layer with its computed branch update.
 
