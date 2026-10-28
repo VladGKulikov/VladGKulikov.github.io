@@ -11,8 +11,8 @@
       "format": "ipynb",
       "filename": "module_01_notebook_passports.ipynb",
       "download": "/downloads/modern-llms/modules/module-01/en/module_01_notebook_passports.ipynb",
-      "bytes": 117868,
-      "sha256": "f3f4c725cf34a51871cf1116e2f8a02ce63749e409bd6a3a69866dd06e7a31b3",
+      "bytes": 117911,
+      "sha256": "96893cd7e739096adb9a55e014d92f4d46a5c343dfe172f7f37d0f17a9918855",
       "cells": [
         {
           "id": "markdown-001",
@@ -72,7 +72,7 @@
         {
           "id": "markdown-007",
           "type": "markdown",
-          "source": "## 3. Cost per accepted task\n\nReproduce Section 12's document-assistant comparison on 100 shared questions. Prices and\noutcomes are **fictional**. Charge every attempt, including failures, then divide by the\nnumber of accepted tasks. Human review and infrastructure are outside this example.\n\nA spends 3.60 USD for 60 accepted tasks: 0.060 USD each. B spends 2.80 USD for 80: 0.035 USD.\nOnly B meets the 80-out-of-100 requirement. This conclusion describes the supplied run;\nlatency, uncertainty, and generalization need separate measurements. With no accepted\ntasks, the ratio is undefined; the function returns `None`."
+          "source": "## 3. Cost per accepted task\n\nIn this independent teaching scenario, compare systems A and B on 100 shared document questions. Prices and\noutcomes are **fictional**. Charge every attempt, including failures, then divide by the\nnumber of accepted tasks. Human review and infrastructure are outside this example.\n\nA spends 3.60 USD for 60 accepted tasks: 0.060 USD each. B spends 2.80 USD for 80: 0.035 USD.\nOnly B meets the 80-out-of-100 requirement. This conclusion describes the supplied run;\nlatency, uncertainty, and generalization need separate measurements. With no accepted\ntasks, the ratio is undefined; the function returns `None`."
         },
         {
           "id": "code-006",
@@ -187,12 +187,12 @@
         {
           "id": "markdown-019",
           "type": "markdown",
-          "source": "## 12. Context memory\n\nReproduce §§7–8 with an explicit retained length per layer, one request, and two bytes per value. Weight memory and runtime workspaces are excluded."
+          "source": "## 12. Context memory\n\nApply the approach from lecture Appendix B with an explicit retained length per layer, one request, and two bytes per value. Weight memory and runtime workspaces are excluded."
         },
         {
           "id": "code-017",
           "type": "code",
-          "source": "\"\"\"KV examples for M1 §§7–8; weight payload and runtime overhead are excluded.\"\"\"\nfrom decimal import Decimal\n\n\ndef kv_payload_bytes(retained_lengths, kv_heads, head_dim, bytes_per_value):\n    \"\"\"Count K and V for one request, with an explicit retained length per layer.\"\"\"\n    lengths = list(retained_lengths)\n    for name, value in ((\"kv_heads\", kv_heads), (\"head_dim\", head_dim), (\"bytes_per_value\", bytes_per_value)):\n        if type(value) is not int or value <= 0:\n            raise ValueError(f\"{name} must be a positive integer\")\n    if any(type(length) is not int or length < 0 for length in lengths):\n        raise ValueError(\"retained lengths must be non-negative integers\")\n    return 2 * sum(lengths) * kv_heads * head_dim * bytes_per_value\n\n\ndef run_context_examples():\n    lengths = [131072 if layer % 2 == 0 else 128 for layer in range(36)]\n    hybrid = kv_payload_bytes(lengths, 8, 64, 2)\n    full = kv_payload_bytes([131072]*36, 8, 64, 2)\n    million = kv_payload_bytes([1_000_000]*80, 8, 128, 2)\n    # Independent arithmetic: enumerate the K and V payload of each layer.\n    enumerated = sum(length*8*64*2 for length in lengths for _ in (\"K\", \"V\"))\n    assert hybrid == enumerated == 4_836_556_800\n    assert Decimal(hybrid)/Decimal(2**30) == Decimal(\"4.50439453125\")\n    assert full == 9*2**30\n    assert million == 327_680_000_000\n    assert round(Decimal(million)/Decimal(2**30), 2) == Decimal(\"305.18\")\n    assert kv_payload_bytes([0, 0], 8, 64, 2) == 0\n    for bad in ([True], [-1], [1.5]):\n        try:\n            kv_payload_bytes(bad, 8, 64, 2)\n        except ValueError:\n            pass\n        else:\n            raise AssertionError(\"Invalid cache length accepted\")\n    return {\"hybrid_GiB\": hybrid/2**30, \"all_full_GiB\": full/2**30,\n            \"million_token_GiB\": million/2**30}\n\n\n\nprint(run_context_examples())"
+          "source": "\"\"\"KV examples for M1 Appendix B; weight payload and runtime overhead are excluded.\"\"\"\nfrom decimal import Decimal\n\n\ndef kv_payload_bytes(retained_lengths, kv_heads, head_dim, bytes_per_value):\n    \"\"\"Count K and V for one request, with an explicit retained length per layer.\"\"\"\n    lengths = list(retained_lengths)\n    for name, value in ((\"kv_heads\", kv_heads), (\"head_dim\", head_dim), (\"bytes_per_value\", bytes_per_value)):\n        if type(value) is not int or value <= 0:\n            raise ValueError(f\"{name} must be a positive integer\")\n    if any(type(length) is not int or length < 0 for length in lengths):\n        raise ValueError(\"retained lengths must be non-negative integers\")\n    return 2 * sum(lengths) * kv_heads * head_dim * bytes_per_value\n\n\ndef run_context_examples():\n    lengths = [131072 if layer % 2 == 0 else 128 for layer in range(36)]\n    hybrid = kv_payload_bytes(lengths, 8, 64, 2)\n    full = kv_payload_bytes([131072]*36, 8, 64, 2)\n    million = kv_payload_bytes([1_000_000]*80, 8, 128, 2)\n    # Independent arithmetic: enumerate the K and V payload of each layer.\n    enumerated = sum(length*8*64*2 for length in lengths for _ in (\"K\", \"V\"))\n    assert hybrid == enumerated == 4_836_556_800\n    assert Decimal(hybrid)/Decimal(2**30) == Decimal(\"4.50439453125\")\n    assert full == 9*2**30\n    assert million == 327_680_000_000\n    assert round(Decimal(million)/Decimal(2**30), 2) == Decimal(\"305.18\")\n    assert kv_payload_bytes([0, 0], 8, 64, 2) == 0\n    for bad in ([True], [-1], [1.5]):\n        try:\n            kv_payload_bytes(bad, 8, 64, 2)\n        except ValueError:\n            pass\n        else:\n            raise AssertionError(\"Invalid cache length accepted\")\n    return {\"hybrid_GiB\": hybrid/2**30, \"all_full_GiB\": full/2**30,\n            \"million_token_GiB\": million/2**30}\n\n\n\nprint(run_context_examples())"
         },
         {
           "id": "markdown-020",
@@ -306,7 +306,7 @@
   ],
   "bundle": {
     "url": "/downloads/modern-llms/course-materials.zip",
-    "bytes": 2650261,
-    "sha256": "e5da7b61384fb9c6b635991c8574abca0bd933ce030ca141a372749e6dbb3ce8"
+    "bytes": 2650305,
+    "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
   }
 }

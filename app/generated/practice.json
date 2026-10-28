@@ -6,7 +6,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-01.exercises.json",
-      "hash": "bc9e18ab3bffe00c5c907b44389e4d039e4b8b92424fcebca99b89f788ae4b88",
+      "hash": "28830d1ac43ebcf02c54b141231ce8d97976f0bb9a9b8c1b2c0aec368c8f67ae",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -16,7 +16,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-01.notebooks.json",
-      "hash": "5d3e72fbdb5f14ddd4afef128a0385ee8d2e76f4dde93bec79b27c71b10b9027",
+      "hash": "698b0f321bf3a7993ba2820672d87384f8d637720e691f0df7c81ff0289c5342",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -26,7 +26,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-02.exercises.json",
-      "hash": "bf5821a873bd2972808e0b739a71106c6d4356735b54dc10b1ddd0662fc9dee6",
+      "hash": "520a658d781b8aadb72dace448f2cd154ed3c6e9de22a0ccc8c3843ae6b39854",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -36,7 +36,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-02.notebooks.json",
-      "hash": "1516f19e94d0aab78263d3c2c3968fe383bf7170c2f59a4786cb4c3e90eeebe7",
+      "hash": "7e50647516bebdcc7a0282d7697e64d3d1d1e04645702906c80215601beebf6b",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -46,7 +46,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-03.exercises.json",
-      "hash": "32a1c20b2c9c5406024b7c06e8669ca37ae0f3720e48d9d34d12ccdfdd06901a",
+      "hash": "50364258410f512443a004af1c8e46027462b584dbc0e2126d40490e6116a4ad",
       "revision": "f54cd4c256af7aff",
       "count": 8
     },
@@ -56,7 +56,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-03.notebooks.json",
-      "hash": "88be280c9117771908171a0ebd5e43f3214fda1f321676b0a138872e3019f59b",
+      "hash": "a2f78d3e3ee56cca0d802597ac2fc4b69e0cf2db11695b6c593b439b1958219a",
       "revision": "747354f83eb6b671",
       "count": 1
     },
@@ -66,7 +66,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-04.exercises.json",
-      "hash": "5e44477bd764a40e352dc6ea04e3ffa6448bf330422d5e0a0f0e6d72ccd9d9c2",
+      "hash": "360c58aa70bfbbb29855d54a3566657d7cd26d028b3627fb483c41b23897eae7",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -76,7 +76,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-04.notebooks.json",
-      "hash": "f200628e436cc56a0d6e17c7b5450577d4ca055262e8d8c6debe83eea8ae307a",
+      "hash": "f1e398755b046b6dd16313f468f468e79f87a361f73501a7e9b0ba0abfff8e4e",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -86,7 +86,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-05.exercises.json",
-      "hash": "613655afcce744bb836896b569c9cfd5409d01b609b8a9385db00c08e24490aa",
+      "hash": "58e2ec812a08c1755b95b8d47a2133b22d7c8c727743d6a8d66c2b3ec95f6a13",
       "revision": "d80f6348b622830f",
       "count": 7
     },
@@ -96,7 +96,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-05.notebooks.json",
-      "hash": "4ee948e560325f1e869973c77f5e29f101433d599b882585c9a7ab2f426d8b09",
+      "hash": "2107c3643498cda157289de7cc6c1222f2a6b09850f2d1974f4849f306841cb1",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -106,7 +106,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-06.exercises.json",
-      "hash": "5affc08cb854ac2acbbd939278d3d3f768b3072776458cf7b7a89c76719b2db6",
+      "hash": "2e4ef4f6a3c124727f8bf911ab1702d93f762bb8baa055a7576615194fa937a3",
       "revision": "d80f6348b622830f",
       "count": 7
     },
@@ -116,7 +116,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-06.notebooks.json",
-      "hash": "7fb4c04c4045c9928d45080d9ee78721ada66d0dcfde3cff3ebfc336575ad6b1",
+      "hash": "3a945421cbfafb98be44f4870ef4e0b86a67393a1292092cbbe9932850c90437",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -126,7 +126,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-07.exercises.json",
-      "hash": "963e3705e68d9f92d4746dff7b470a55170fdf02c79cea56cd46dd1c1f04e161",
+      "hash": "11cdbc9280b2819818e486f6e4091c912c2fc878e791395bb415c58e2ddf71c2",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -136,7 +136,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-07.notebooks.json",
-      "hash": "4e86c86117e1d53f1f79210d586392487fd0de62bd90d52875660cf1d97d9058",
+      "hash": "38da5e692b685d4af72985a6514b8e4a9c8ab74c0f01033feaa4f5c552238586",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -146,7 +146,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-08.exercises.json",
-      "hash": "5adc803d7b2ffd0dfaf7ff995ec7690c7fb9dfec09c88778fdfb987a13ad313a",
+      "hash": "36a74c51dd6734f659f8c332e506f516b4a9a28b9997f81300b72c53a6b06c53",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -156,7 +156,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-08.notebooks.json",
-      "hash": "374843b2a59ba9c0c3adcf5ec2411a4b4ba7a20950e47c17afc6098a97d06b29",
+      "hash": "19acd09fa62ce3a2cefb074ba81f7865297224eb0dc0a7bfda10e1d1399fe23f",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -166,7 +166,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-09.exercises.json",
-      "hash": "233c23c54e614bd71ceabdb38a7a6ec0d64ddaf5f17c8c517ad0e3c1fa31944a",
+      "hash": "eac61378d4c69bdf1229c58834391469c8716ba18e5155278ecd073c877e2850",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -176,7 +176,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-09.notebooks.json",
-      "hash": "39ca6347c2f9a473e6ce14cef1fefb38c18d1a19a0ee10dff5c108b8adb78795",
+      "hash": "7cb9031a3ed7d914b916957952d6e74d7b7cfbb05d121931ad364b45e311b052",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -186,7 +186,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-10.exercises.json",
-      "hash": "5a26c9da2cba4c05daa8a0cc7612593077c415e2d930c553641463d15708d3c7",
+      "hash": "1d055246504e7a1b88ba1e8b673c50c3cd9c191a06c8b75934f367d1c976abbf",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -196,7 +196,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-10.notebooks.json",
-      "hash": "5caebaa02d663a5e428e64e822640e9a677a6eb350be1c299b7e88c26e3ca81f",
+      "hash": "ad6fc88643f43027c9d53b4d859c02f612547d82754f4c24ef967e7007162904",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -206,7 +206,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-11.exercises.json",
-      "hash": "04ff313d67e90fcf4307837d5686520e32729bc41a299ebc0e6c8a03181ee2dd",
+      "hash": "7dcba44b052cff519d3839dea5877003f9e04cc79f97585f14a047c1d53dcc6a",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -216,7 +216,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-11.notebooks.json",
-      "hash": "1c6b476e12054f7a54653bac9773ca2bfe1dd2946fb421d5210368d78651044c",
+      "hash": "60153eda710c689b890e982cfbecac976b7e09faa5a27817cd514acf837c14d4",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -226,7 +226,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-12.exercises.json",
-      "hash": "a9181bf419fd37910367866078551951cecc89cc2a8a766bd5a57309be7e748f",
+      "hash": "3a413682055e6b35495d2d3090ba95f25815246a51060403a39c448052093448",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -236,7 +236,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-12.notebooks.json",
-      "hash": "265c75e6010568e77640268d7fe7e2dd61ef79eb8d22674e89386dfb849c77c5",
+      "hash": "541f3ac8be36956944851e2db9d324d7e9e95534f2b0d8900528a47c67619b34",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -246,7 +246,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-13.exercises.json",
-      "hash": "46c2ddee6a1d870ecf8d1a9dd92babeeaea56c0e93464cf69fb2d44efb43fb17",
+      "hash": "bfb36b76d277e2bb48d55b8d542a06eb6a699c8077e55856b8e730bed4bc5551",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -256,7 +256,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-13.notebooks.json",
-      "hash": "0d2203a5e12c90a49a44a2aa8deef7511b0b014494cac1050ef92cd8bcdf4748",
+      "hash": "67c105660e894349599086e683d33ab25ffbcee8e463948d8f538c7d24d0e2fd",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -266,7 +266,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-14.exercises.json",
-      "hash": "294758bf4080b3172368e7f4c81ad3e75656aebcdc9c2793cc8b20bc7d6107a8",
+      "hash": "028d17fc3eba52b3a225b9bbca868a6d22fc4a0ceb7d2c70784514600a6fc852",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -276,7 +276,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-14.notebooks.json",
-      "hash": "269d85c5f568ebc8b4656946a74e76bc8fb611dc6b209f715d7d94226eb98f22",
+      "hash": "94d681e29b9833fda9d1849955d4ee543420149489ce7be80e2a071e0a261963",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -286,7 +286,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-15.exercises.json",
-      "hash": "8847bafa442d3b49220c1b18ef18221140cb76f5fdd39b3d3fae42b8ee2056b2",
+      "hash": "69ffabce041dea009e0653b40d62a3a772428a1229dab80144ac93ac310def78",
       "revision": "f54cd4c256af7aff",
       "count": 8
     },
@@ -296,7 +296,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-15.notebooks.json",
-      "hash": "a37c68ee60f4ae7e37b88ed850235a830f2c32cbdf17292a81494da3af15badf",
+      "hash": "ab7271b2d3f61b5f7f93c367bfc62f6367a9d62f636dd8f1b7e39e083a61a795",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -306,7 +306,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-16.exercises.json",
-      "hash": "c2b041f7c6e996749356c683bf8181960b083758df19c4f540d235779800f98c",
+      "hash": "a4e3d7881ea3719a7361cecc5f03e2ea3bd2fbc284ee69f85a6be969c2ad9b58",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -316,7 +316,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-16.notebooks.json",
-      "hash": "eadea62bb7a764228cbebf28c4911a5f489bcb7b67ee45760a2c9efe06cfe494",
+      "hash": "4e26c30f4a2cd2504e1e00b7c9aff340a97cd545a44112d54f8ecb088541db82",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -326,7 +326,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-17.exercises.json",
-      "hash": "4eab1fe453a17216a53b60794c275ffebf9b42030a7af46cd6fb8c405a37d951",
+      "hash": "4be526b04fc39331903abd0de0fd0f5c75e6f3b28fbc2ccd492a225bf35cfb73",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -336,7 +336,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-17.notebooks.json",
-      "hash": "86bfed7169a4165b8ac48b6db4900afb982a4fb9a667fcf7369a5681298968cc",
+      "hash": "e791ae065a0b23387ef0fae833e3ffb8bd7b724782310f55e8a5dc741808ed72",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -346,7 +346,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-18.exercises.json",
-      "hash": "8e76c014ffae56978c4c0e04b932475f5088e4045e4edf82a5b7d27a16177208",
+      "hash": "6426201b8778b9d58aec31d20a653a6307c72265769d966f7701a72f31165fa2",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -356,7 +356,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-18.notebooks.json",
-      "hash": "84e3fc314203aa5ee8c5180ad71cb114339f85e99eec89a305b4805eedf31e10",
+      "hash": "df4dd8e4eacdf78b2599856fcc61546d4aaa58d1d62e4ed36f84303132024ef9",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -366,7 +366,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-19.exercises.json",
-      "hash": "04ad76cf77abf95777512b558914c2cf569b0f9c446cdef1b3417305f6259d87",
+      "hash": "c873c0d95ba16cb0fa739705f5dbf4c925003e43095e0a06abbeb89f49c4b3f7",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -376,7 +376,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-19.notebooks.json",
-      "hash": "74761ea213ebce1c26c2636ffdba2268bc33814c92f1cf01cb385c05389e8bc6",
+      "hash": "961118cf89e519bdc056181736b4b4cfa89e5d98bd178cf4738e3d3561dd863e",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -386,7 +386,7 @@
       "language": "ru",
       "section": "exercises",
       "file": "modern-llms/ru/module-20.exercises.json",
-      "hash": "07602258ac4261209091158a5ada9809672526918b4eae6e0c97e938fb40b2ff",
+      "hash": "c51fe3a756e24d078d46ef323358f48e597dd92fe5d71848433344594044e1cf",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -396,7 +396,7 @@
       "language": "ru",
       "section": "notebooks",
       "file": "modern-llms/ru/module-20.notebooks.json",
-      "hash": "e7fd0188dc668742f2938e82379b8346b8e1ff55f2f9ac771cfa87e904080d49",
+      "hash": "d6c31d5c969c7342dd5495e3caa4a13982616b8058d2d2702d7867127e4f4fa4",
       "revision": "13eb35371e1be6be",
       "count": 5
     },
@@ -406,7 +406,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-01.exercises.json",
-      "hash": "bc524f0ea6da8c12318a52e30c6c327e9b3cdc913d873c90f177d5f05b41c8fe",
+      "hash": "5f5c384f0deed00155fd5a4988bd501511107b0b086d3df93ac53786141804a0",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -416,7 +416,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-01.notebooks.json",
-      "hash": "3bbc79b16733b1319c09ae8542171c8ca72124504b10286b9b1fc48927aa3ec5",
+      "hash": "c8d5a8d92dfa6674a284db02c0e32ca50c4d8b0289700a3e695f5a80aad3ba98",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -426,7 +426,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-02.exercises.json",
-      "hash": "fdc7ae42e597fcad61a82698a3157e0c053b260e8bf91fe943b8460fde363d3b",
+      "hash": "f88717775b6d4950c62eabe008d56feafb24ac95dd8447f951b7ff41fbec353c",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -436,7 +436,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-02.notebooks.json",
-      "hash": "b7bd3445c5571d26a3d8c92712a4eaf831ed6bc1cb665aac39465ee905ec00a5",
+      "hash": "00e71d5865d72b96c285f5883cdc6025b79c8137d088feef410f9ec1e0542e01",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -446,7 +446,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-03.exercises.json",
-      "hash": "3c96e8f851153a0bf1e5de3cfa414eb68f60512467702126c9552a4683d3b17c",
+      "hash": "61f448bd848dcfe8e54acb5a5e2a5da6b21085f19bd4868f3882a70a802065df",
       "revision": "f54cd4c256af7aff",
       "count": 8
     },
@@ -456,7 +456,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-03.notebooks.json",
-      "hash": "60df3d3466d595f22398c26dce716d14731639eb7db9b55ac23b6ce6c0130605",
+      "hash": "7ee8b719833941785175be6a853a7800a081b1cdf3d97591a40839946dbe793e",
       "revision": "747354f83eb6b671",
       "count": 1
     },
@@ -466,7 +466,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-04.exercises.json",
-      "hash": "ae186416c60ce2cec0b80dd6ad6d94f0a13ac8cf96ded4ac7851f0077e93f180",
+      "hash": "3f32ce24936d6d1d932b7ad0d74c30d58b0ab9cfc8c77bf2be78377641f466ed",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -476,7 +476,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-04.notebooks.json",
-      "hash": "2fc118203be6cf94aa0f81f68c7839c12c9891675e420abceb727d8048852fd7",
+      "hash": "82e6f4551bced381be115a638984ae4c75ec30c5dc5632ecb1afec9bd403498d",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -486,7 +486,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-05.exercises.json",
-      "hash": "fb626bc43db3548690d95edc1615f7207a4152fce8e47b11f733416f4e64d6ae",
+      "hash": "2459dc210925dd1b07e583aa68f27392a8eba60a51e514840732ecfd7523c7c9",
       "revision": "d80f6348b622830f",
       "count": 7
     },
@@ -496,7 +496,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-05.notebooks.json",
-      "hash": "d6db2a30be65f8d81c707771c18eadd1e4cb9c5cc6eb0481cb1be392821ba628",
+      "hash": "8a9eff0f13b9ee436e927ba8734cdd2b6cb5859f6968f3de7f6ad08c5648939e",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -506,7 +506,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-06.exercises.json",
-      "hash": "02357774df9b1578ad35f920e88b560e22ec48a227d7d0c77963c0f786a781ed",
+      "hash": "92b7f18f3298feeac1d9a498c15b3d4d622788818d323722d971fb05d3d686be",
       "revision": "d80f6348b622830f",
       "count": 7
     },
@@ -516,7 +516,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-06.notebooks.json",
-      "hash": "926f4760a8bf7008c91aab5e623b86564121f6719a8302bd9d7e6096ec47cf4b",
+      "hash": "4fea9fc634b35a5da2cb4dcf50e4c20f0b890240fcf51077a66e78001c1221a0",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -526,7 +526,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-07.exercises.json",
-      "hash": "852185387dc7575e24dd0b22da1424374ff44866bb31b46e61080199d7fc67e7",
+      "hash": "014d580336a82bb5bfea98bfe8889cb79465a0e1ff85b85a6a046bd5bf80fecc",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -536,7 +536,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-07.notebooks.json",
-      "hash": "7ed8fc8fda62dde75a122d7096c8d8d19ab5f89210d274756520cfe9384e4975",
+      "hash": "31d76e8e9f20ed24b1dae0a972fcc9fa17a5ca3d14f23ce15a172249d99f33fc",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -546,7 +546,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-08.exercises.json",
-      "hash": "cd27c3c24382bd402e73dfed38413cbf2e54b3318f98fbfeb3a01357978e59e2",
+      "hash": "ca2d518b4bf6e61cb97f4b02297d587427bf27d4cd048ad85d8e3992bc059d8f",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -556,7 +556,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-08.notebooks.json",
-      "hash": "8b591299e95154f5402a440b5fbdbb82a5b85c2d6323461a9b5b00659e30f3e6",
+      "hash": "36273b8bbaf1e30d0f911617000b14731e89f459aedc9d52b005ff4328fc3744",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -566,7 +566,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-09.exercises.json",
-      "hash": "673331b2f6adb70b97e6890edc486046cf280801e339dfeac5e8b9db6c351b87",
+      "hash": "b4671251f897d47a486cc1aa53f49a05e9a334b8245286ca2b82f48c58124d6a",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -576,7 +576,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-09.notebooks.json",
-      "hash": "0ee0552d676fec469acd4a6e812c60e5f7df6ebd4db0113840a5aabe4d2a0cb1",
+      "hash": "b8e270671fb768e113c2a3b9991b937e8b25c74dd08b6505860a68866b2d1131",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -586,7 +586,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-10.exercises.json",
-      "hash": "36d7d5cd03c12b0cb66769326159ae8a5f2405c8db2476a17841652e9248ef6f",
+      "hash": "0af3e6dcfd869dcce4db74eb8cf21e26ecfe10eab469d24b8f2c94d733f635a5",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -596,7 +596,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-10.notebooks.json",
-      "hash": "38421a1854a5b5f473f2cd702b4b5a7a9b3b1a39fa3953d176bdf89cff14e8cb",
+      "hash": "8abb64d17377ca33fc4a54a41f01e9cbd75af405f070510726ebc78b5e3c2f59",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -606,7 +606,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-11.exercises.json",
-      "hash": "b479dda1f8ff82dedca4843c4a3c0a165a60ade1f601fb54a1b46172222a8a54",
+      "hash": "1c92d541679bfe3d144f27fa7c0d12e6a1a761f31dd68015134ffcaf8a75124c",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -616,7 +616,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-11.notebooks.json",
-      "hash": "de86239efd3ccd31b39273a32ce23aa9ad9ce95a20ad4337368d6aca32f4c21a",
+      "hash": "091427967c6352b8e9b883f3e8ef3ddd7778571f984cfb7e8c10d21b984560d7",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -626,7 +626,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-12.exercises.json",
-      "hash": "086e7f222f66cbec26e03c8733aa37c6ed1b15d405925a2d9d9b89a15396e1dc",
+      "hash": "9eefd952ede996e45c33dc5d89f5b47246c8922b1a616b3156388042f6568edd",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -636,7 +636,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-12.notebooks.json",
-      "hash": "cd580da612e61bdd8cc16c04e5b32d64d4be3c686c47f54976a5597c92b62484",
+      "hash": "47626da3782a0ade313a962c0eaf66f0b30d0e77933e20f552628a05df1498d7",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -646,7 +646,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-13.exercises.json",
-      "hash": "2835f873b9cb36377f1696f52703e55f51cc4dd3ed5ea3b7b5774d9efbc14f8e",
+      "hash": "9e976c7ffb9415165efd14fab967a91e965a6157bcdd1f930fd12741e5784c66",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -656,7 +656,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-13.notebooks.json",
-      "hash": "56b9afbdb771f0372e272cf473a47ce43de61d5774b6b00bfe0e8a18e4f8563a",
+      "hash": "7b47f12d4ff86c94178a2909fa68b3191d6a28562501bc1ba04c8453ba95e17d",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -666,7 +666,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-14.exercises.json",
-      "hash": "c3eaca454b23a33137efd8750585c4c2fd7fcbd75e5928203ac968b19706c980",
+      "hash": "8edcce2a3466f5a120fba85dda8df99b0ad0e45c1a439ccdbeb2afe58192827e",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -676,7 +676,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-14.notebooks.json",
-      "hash": "bfd8de8f0a989df909791e2c43310747f26fc649a809847707cd9254450169e9",
+      "hash": "91ee258569ac8eebaff2a883b0e9b11f7c4471cc11860fe1a61431a942074fb8",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -686,7 +686,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-15.exercises.json",
-      "hash": "6b9ac7a2e27be7d79f62885ce3486474d070ea8aa1b9c79f6583b8fff8da6e49",
+      "hash": "dc25dec4d8da0c02c0a956569a8ef27d2998f6d4c012e2e1d935d1acd60100bf",
       "revision": "f54cd4c256af7aff",
       "count": 8
     },
@@ -696,7 +696,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-15.notebooks.json",
-      "hash": "e1dc9caa3d01e371f5511425858ecca3f72bcf35e0cf5d87effdcb0619e5b8d8",
+      "hash": "2017696375fd70abffc23b59c72aecbe743b3fcd66988e6cd0627c47167d7087",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -706,7 +706,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-16.exercises.json",
-      "hash": "cd3494bea72e0f12ec0f5d58c030a7ac9d48e0d2c0d4dd460e638b7ec4444965",
+      "hash": "d58515af5428d9e612bf074894b67e2e477c8bc16511bc8c253ba2bca89f0ba4",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -716,7 +716,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-16.notebooks.json",
-      "hash": "ce208f131752b65e7682ed4790b67602b9bfe59600b84c0a4960af82e0b2fcfe",
+      "hash": "c73a6eebc43391ebbd7811c357f9556d5f291af5b76a2eaa340df54348bf6959",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -726,7 +726,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-17.exercises.json",
-      "hash": "17765dabc52135a8fc2b36966d7e4bbf6fcb391ad5f8478cece7be30fc863ac0",
+      "hash": "375894c438b889fc79f20c3ab805c96b0ca297fda58e045f24e6f8c6d12de5f3",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -736,7 +736,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-17.notebooks.json",
-      "hash": "d76214846b5533ca8b33c18ae7b481a2abe5f3ae6560f80e80f12fee7cb34c23",
+      "hash": "66d439019fed24f009afa5a37caad5c237dce96353654114456c8a6402ecf18f",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -746,7 +746,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-18.exercises.json",
-      "hash": "fe252e714f00b8883e66facbb4d28e7a8ac11d6874382e63f103a373edb792bc",
+      "hash": "e32ec4ba366b9b2fad98edbe9503336fa8c17faf5937848be088a664be28722e",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -756,7 +756,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-18.notebooks.json",
-      "hash": "d6ab910b5542ea2fee095a825b45d230df96d3c3da35efbf34bf0e1ab93429a1",
+      "hash": "3d7cdd4d3340311ccc280de8850108625d7e29f94f984b886908b8cdfb541c45",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -766,7 +766,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-19.exercises.json",
-      "hash": "da0ebf5bf184505924e7ea230f51db73bd5143991e8909bc9e3b9899c88a1509",
+      "hash": "97dbe690f0090f6829b5aef9c7a227ad061d72a05059b7d8b1da97fd4f8e7c1c",
       "revision": "3a246cf1f943262c",
       "count": 5
     },
@@ -776,7 +776,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-19.notebooks.json",
-      "hash": "ca713efce134291334f7158b735181f39c9c7cb1bdbbf4b6e29159658ec14794",
+      "hash": "1b139d0ff244283fcb60596d92faef1b2a9a462ff38d7caf38bca14fb4aa1298",
       "revision": "b3b65c518c3534aa",
       "count": 2
     },
@@ -786,7 +786,7 @@
       "language": "en",
       "section": "exercises",
       "file": "modern-llms/en/module-20.exercises.json",
-      "hash": "a6b77f7d49d41a12ed01f8ef8c9a3844d27f9dfec1c33e8d97c69032b7f73ccf",
+      "hash": "8dfef24e82978b4542c5e53e7c8bb23e21d66d1bf56c72e23dee2729778e56e2",
       "revision": "cf5534e0b67f49e0",
       "count": 6
     },
@@ -796,7 +796,7 @@
       "language": "en",
       "section": "notebooks",
       "file": "modern-llms/en/module-20.notebooks.json",
-      "hash": "f1111c1d5b17fd76ded623d8e4589a9f4bcf6a9f81ce7ae26d15c8ac49585884",
+      "hash": "68c4ffd389c9d5100819648f37acee7a2382eec01bf53cb29373572c2369c071",
       "revision": "13eb35371e1be6be",
       "count": 5
     },

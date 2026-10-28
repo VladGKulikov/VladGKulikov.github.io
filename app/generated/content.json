@@ -15,9 +15,11 @@
           "position": 1.0,
           "title": "Модуль 1. Современный ландшафт LLM",
           "content_file": "modern-llms/ru/module-01.md",
-          "content_hash": "04d1da0d5242972cf704322b95ade3e64978ced3358f48af61afb27b4d8d1dba",
-          "characters": 80504,
-          "image_count": 0
+          "content_hash": "18f42a89f36a2d467117998f5bbf5a1cceb3c7a8227714585e2c23809e997e09",
+          "characters": 80849,
+          "image_count": 0,
+          "course_key": "modern-llms",
+          "language": "ru"
         },
         {
           "id": "modern-llms:ru:module-02",
@@ -165,9 +167,11 @@
           "position": 16.0,
           "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
           "content_file": "modern-llms/ru/module-16.md",
-          "content_hash": "67c9b32083b0990bc16eee2fb4646ff518ec63a6a5eaf67fedf009cf58a6ce05",
-          "characters": 72607,
-          "image_count": 11
+          "content_hash": "bd558a4d164f438587af8d8f6480faffed9814fc80cc848ee7df1e06634e704d",
+          "characters": 72606,
+          "image_count": 11,
+          "course_key": "modern-llms",
+          "language": "ru"
         },
         {
           "id": "modern-llms:ru:module-17",
@@ -226,9 +230,11 @@
           "position": 1.0,
           "title": "Module 1. The Modern LLM Landscape",
           "content_file": "modern-llms/en/module-01.md",
-          "content_hash": "aefe2decca924d69935e6beb9321631e46e93e2af526334d6d65ae5ea7da4898",
-          "characters": 81640,
-          "image_count": 0
+          "content_hash": "c137190625ac767a94ac7cf4aa710a85033bdc79d4cacb72f17f213a778a6f36",
+          "characters": 81868,
+          "image_count": 0,
+          "course_key": "modern-llms",
+          "language": "en"
         },
         {
           "id": "modern-llms:en:module-02",
@@ -1440,8 +1446,8 @@
       "position": 1.0,
       "title": "Module 1. The Modern LLM Landscape",
       "content_file": "modern-llms/en/module-01.md",
-      "content_hash": "aefe2decca924d69935e6beb9321631e46e93e2af526334d6d65ae5ea7da4898",
-      "characters": 81640,
+      "content_hash": "c137190625ac767a94ac7cf4aa710a85033bdc79d4cacb72f17f213a778a6f36",
+      "characters": 81868,
       "image_count": 0
     },
     {
@@ -1680,8 +1686,8 @@
       "position": 1.0,
       "title": "Модуль 1. Современный ландшафт LLM",
       "content_file": "modern-llms/ru/module-01.md",
-      "content_hash": "04d1da0d5242972cf704322b95ade3e64978ced3358f48af61afb27b4d8d1dba",
-      "characters": 80504,
+      "content_hash": "18f42a89f36a2d467117998f5bbf5a1cceb3c7a8227714585e2c23809e997e09",
+      "characters": 80849,
       "image_count": 0
     },
     {
@@ -1860,8 +1866,8 @@
       "position": 16.0,
       "title": "Модуль 16. Мультимодальные LLM: зрение, аудио и видео",
       "content_file": "modern-llms/ru/module-16.md",
-      "content_hash": "67c9b32083b0990bc16eee2fb4646ff518ec63a6a5eaf67fedf009cf58a6ce05",
-      "characters": 72607,
+      "content_hash": "bd558a4d164f438587af8d8f6480faffed9814fc80cc848ee7df1e06634e704d",
+      "characters": 72606,
       "image_count": 11
     },
     {

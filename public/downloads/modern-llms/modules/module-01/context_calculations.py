@@ -1,4 +1,4 @@
-"""KV examples for M1 §§7–8; weight payload and runtime overhead are excluded."""
+"""KV examples for M1 Appendix B; weight payload and runtime overhead are excluded."""
 from decimal import Decimal
 
 

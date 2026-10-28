@@ -8,7 +8,7 @@
     },
     {
       "source": "modules/module-01/ru/module_01_notebook_passports.ipynb",
-      "sha256": "cd5727b17d613793cc7d0e5c989bc0ab99df8f59fdeb6daf3603a580d6cacd0d",
+      "sha256": "988da73f96c723a7a18084ab3287786fd21894a935bc19955e5cac606059637b",
       "course": "modern-llms"
     },
     {
@@ -318,7 +318,7 @@
     },
     {
       "source": "modules/module-01/en/module_01_notebook_passports.ipynb",
-      "sha256": "f3f4c725cf34a51871cf1116e2f8a02ce63749e409bd6a3a69866dd06e7a31b3",
+      "sha256": "96893cd7e739096adb9a55e014d92f4d46a5c343dfe172f7f37d0f17a9918855",
       "course": "modern-llms"
     },
     {
@@ -1772,8 +1772,8 @@
       "course": "modern-llms",
       "source": "modules/module-01/context_calculations.py",
       "url": "/downloads/modern-llms/modules/module-01/context_calculations.py",
-      "sha256": "6942dc09cbda6dc75a9efabd577516e4c59b7cdca67c13024193113e7d3101d4",
-      "bytes": 1879
+      "sha256": "ede9596b012738b69afc79381eb379aa1e030e89c830bdb82c2c316e0618a49c",
+      "bytes": 1880
     },
     {
       "course": "modern-llms",
@@ -1905,8 +1905,8 @@
       "course": "modern-llms",
       "source": "modules/module-01/en/module_01_notebook_passports.ipynb",
       "url": "/downloads/modern-llms/modules/module-01/en/module_01_notebook_passports.ipynb",
-      "sha256": "f3f4c725cf34a51871cf1116e2f8a02ce63749e409bd6a3a69866dd06e7a31b3",
-      "bytes": 117868
+      "sha256": "96893cd7e739096adb9a55e014d92f4d46a5c343dfe172f7f37d0f17a9918855",
+      "bytes": 117911
     },
     {
       "course": "modern-llms",
@@ -1961,8 +1961,8 @@
       "course": "modern-llms",
       "source": "modules/module-01/ru/module_01_notebook_passports.ipynb",
       "url": "/downloads/modern-llms/modules/module-01/ru/module_01_notebook_passports.ipynb",
-      "sha256": "cd5727b17d613793cc7d0e5c989bc0ab99df8f59fdeb6daf3603a580d6cacd0d",
-      "bytes": 129689
+      "sha256": "988da73f96c723a7a18084ab3287786fd21894a935bc19955e5cac606059637b",
+      "bytes": 129795
     },
     {
       "course": "modern-llms",
@@ -5153,8 +5153,8 @@
   "bundles": {
     "modern-llms": {
       "url": "/downloads/modern-llms/course-materials.zip",
-      "bytes": 2650261,
-      "sha256": "e5da7b61384fb9c6b635991c8574abca0bd933ce030ca141a372749e6dbb3ce8"
+      "bytes": 2650305,
+      "sha256": "4a9d5afe6831f17333bb79a85849d438b36988558ec05bc059d17390aecc6cb5"
     },
     "rl-for-llm": {
       "url": "/downloads/rl-for-llm/course-materials.zip",

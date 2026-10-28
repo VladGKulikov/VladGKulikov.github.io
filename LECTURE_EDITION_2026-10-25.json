@@ -5,7 +5,7 @@
   "source_files": {
     "modern-llms:ru:module-01": {
       "path": "modules/module-01/ru/module_01_lecture_RU.md",
-      "sha256": "c212b5037a5109a7d17491e367aea1271765fee062f70a10e279bb0cbe1fa694"
+      "sha256": "ae0b7b0fcd94466db35756bbab7a9eb3464c36b3072026d5f062e848996a4f16"
     },
     "modern-llms:ru:module-02": {
       "path": "modules/module-02/ru/module_02_lecture_RU.md",
@@ -65,7 +65,7 @@
     },
     "modern-llms:ru:module-16": {
       "path": "modules/module-16/ru/module_16_lecture_RU.md",
-      "sha256": "4cf8cd38203e88222fee4788f48a06ee435fd6cdc4c0180515302006829ee19a"
+      "sha256": "9ebab9b4e0865f51a0e92e99a1ded29324fb2057a9e735971f45114cbe24dc79"
     },
     "modern-llms:ru:module-17": {
       "path": "modules/module-17/ru/module_17_lecture_RU.md",
@@ -85,7 +85,7 @@
     },
     "modern-llms:en:module-01": {
       "path": "modules/module-01/en/module_01_lecture_EN.md",
-      "sha256": "02e5fe09fb461828bebe2658a8e1c50d8505947395b55f586e06f0ddd1a4633d"
+      "sha256": "c7cf2ab45ba7f328bb030a8d4c73ac02152af4e049d71f09c6ab91e20e7da2f3"
     },
     "modern-llms:en:module-02": {
       "path": "modules/module-02/en/module_02_lecture_EN.md",
