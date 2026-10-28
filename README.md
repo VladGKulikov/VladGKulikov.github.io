@@ -76,6 +76,10 @@ reader sends its own page views and Stepik/Leanpub outbound events once.
 Do not add a second tag manager or tracker. Search Console and Yandex Webmaster
 verification meta tags are emitted only when their actual values are supplied.
 
+Google Search Console uses the separate HTML-file method for the URL-prefix
+property `https://vladkulikov.com/`. Keep `public/google81bd33e9c04a0837.html`
+published at the site root after verification; future deployments must retain it.
+
 ### Analytics consent and privacy
 
 Every visitor, in every country, must explicitly opt in using the RU/EN banner
